@@ -27,6 +27,7 @@ import Animated, {
 import { StyleSheet } from "react-native-unistyles"
 import { scheduleOnUI } from "react-native-worklets"
 
+import { useLanguageStore } from "~/stores/language.store"
 import { logger } from "~/utils/logger"
 
 import { Text } from "./text"
@@ -57,7 +58,7 @@ export const TooltipProvider = ({ children }: { children: ReactNode }) => {
   const { width: screenWidth } = useWindowDimensions()
   const [tooltip, setTooltip] = useState<TooltipData | null>(null)
   const [tooltipWidth, setTooltipWidth] = useState(0)
-
+  const isRTL = useLanguageStore((s) => s.isRTL)
   // Track the position for exit animation - only updates when tooltip is visible
   const exitPositionRef = useRef<ExitPositionType>("top")
   const exitPosition = useSharedValue<ExitPositionType>("top")
@@ -79,22 +80,26 @@ export const TooltipProvider = ({ children }: { children: ReactNode }) => {
     if (!tooltip || tooltipWidth === 0)
       return { top: 0, left: 0, translateX: 0 }
 
-    const targetCenterX = tooltip.x + tooltip.width / 2
     const tooltipPosition = tooltip.position || "top"
 
-    const left = targetCenterX
-    let tooltipTranslateX = -tooltipWidth / 2
+    // Logical start anchor
+    const anchorX = isRTL
+      ? tooltip.x + tooltip.width // right edge in RTL
+      : tooltip.x // left edge in LTR
 
-    if (left + tooltipTranslateX < SCREEN_EDGE_PADDING) {
-      tooltipTranslateX = SCREEN_EDGE_PADDING - left
+    const left = anchorX
+    let translateX = isRTL ? -tooltipWidth : 0
+
+    // Physical clamping (screen coordinates never change)
+    const physicalLeft = left + translateX
+    const physicalRight = physicalLeft + tooltipWidth
+
+    if (physicalLeft < SCREEN_EDGE_PADDING) {
+      translateX += SCREEN_EDGE_PADDING - physicalLeft
     }
 
-    if (
-      left + tooltipTranslateX + tooltipWidth >
-      screenWidth - SCREEN_EDGE_PADDING
-    ) {
-      tooltipTranslateX =
-        screenWidth - SCREEN_EDGE_PADDING - tooltipWidth - left
+    if (physicalRight > screenWidth - SCREEN_EDGE_PADDING) {
+      translateX -= physicalRight - (screenWidth - SCREEN_EDGE_PADDING)
     }
 
     const top =
@@ -105,9 +110,9 @@ export const TooltipProvider = ({ children }: { children: ReactNode }) => {
     return {
       top,
       left,
-      translateX: tooltipTranslateX,
+      translateX,
     }
-  }, [tooltip, tooltipWidth, screenWidth])
+  }, [tooltip, tooltipWidth, screenWidth, isRTL])
 
   // Extract tooltip position for use in worklets
   const tooltipPosition = tooltip?.position || "top"

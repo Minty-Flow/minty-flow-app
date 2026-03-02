@@ -1,25 +1,22 @@
-import * as Updates from "expo-updates"
-import { useState } from "react"
+// import * as Updates from "expo-updates"
 import { useTranslation } from "react-i18next"
-import { DevSettings, ScrollView } from "react-native"
+import { ScrollView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { ConfirmModal } from "~/components/confirm-modal"
 import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import {
-  DirectionEnum,
   LangCodeEnum,
   type LangCodeType,
   useLanguageStore,
 } from "~/stores/language.store"
 
-const languageOptions: Array<{
+const languageOptions: {
   value: LangCodeType
   label: string
-}> = [
+}[] = [
   {
     value: LangCodeEnum.EN,
     label: "English",
@@ -34,40 +31,43 @@ export default function LanguageOptionsScreen() {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const languageCode = useLanguageStore((s) => s.languageCode)
-  const direction = useLanguageStore((s) => s.direction)
+  // const direction = useLanguageStore((s) => s.direction)
   const setLanguageCode = useLanguageStore((s) => s.setLanguageCode)
 
-  const [pendingLang, setPendingLang] = useState<LangCodeType | null>(null)
+  // const [pendingLang, setPendingLang] = useState<LangCodeType | null>(null)
 
   const handleSelectLanguage = (code: LangCodeType) => {
-    const newDirection =
-      code === LangCodeEnum.AR ? DirectionEnum.RTL : DirectionEnum.LTR
+    // const newDirection =
+    //   code === LangCodeEnum.AR ? DirectionEnum.RTL : DirectionEnum.LTR
 
+    setLanguageCode(code)
+
+    // if the app needs restart/reload use this code commented code instead
     // If the direction is changing (LTR <-> RTL), show the modal first
-    if (newDirection !== direction) {
-      setPendingLang(code)
-    } else {
-      // If it's just a language change (e.g., EN to FR), just swap it
-      setLanguageCode(code)
-    }
+    // if (newDirection !== direction) {
+    //   setPendingLang(code)
+    // } else {
+    //   // If it's just a language change (e.g., EN to FR), just swap it
+    //   setLanguageCode(code)
+    // }
   }
 
-  const handleConfirmReload = async () => {
-    if (pendingLang) {
-      // Finalize the choice in the store right before the app restarts
-      setLanguageCode(pendingLang)
+  // const handleConfirmReload = async () => {
+  //   if (pendingLang) {
+  //     // Finalize the choice in the store right before the app restarts
+  //     setLanguageCode(pendingLang)
 
-      try {
-        await Updates.reloadAsync()
-      } catch {
-        DevSettings.reload()
-      }
-    }
-  }
+  //     try {
+  //       await Updates.reloadAsync()
+  //     } catch {
+  //       DevSettings.reload()
+  //     }
+  //   }
+  // }
 
-  const handleCancelReload = () => {
-    setPendingLang(null)
-  }
+  // const handleCancelReload = () => {
+  //   setPendingLang(null)
+  // }
 
   return (
     <>
@@ -110,7 +110,7 @@ export default function LanguageOptionsScreen() {
         </View>
       </ScrollView>
 
-      <ConfirmModal
+      {/* <ConfirmModal
         visible={pendingLang !== null}
         onRequestClose={handleCancelReload}
         onConfirm={handleConfirmReload}
@@ -124,7 +124,7 @@ export default function LanguageOptionsScreen() {
           "screens.settings.preferences.language.rtlReloadConfirm.confirmLabel",
         )}
         icon="repeat"
-      />
+      /> */}
     </>
   )
 }
