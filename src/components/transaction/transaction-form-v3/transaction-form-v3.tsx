@@ -27,13 +27,7 @@ import {
 } from "react"
 import { Controller, type Resolver, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import {
-  ActivityIndicator,
-  Modal,
-  Platform,
-  ScrollView,
-  useWindowDimensions,
-} from "react-native"
+import { Modal, Platform, ScrollView, useWindowDimensions } from "react-native"
 import { EnrichedTextInput } from "react-native-enriched"
 import { useUnistyles } from "react-native-unistyles"
 
@@ -50,6 +44,7 @@ import {
 import { LocationPickerModal } from "~/components/transaction/location-picker-modal"
 import { NotesModal } from "~/components/transaction/notes-modal"
 import { TransactionTypeSelector } from "~/components/transaction/transaction-type-selector"
+import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Input } from "~/components/ui/input"
@@ -1968,7 +1963,7 @@ export function TransactionFormV3({
           disabled={isSaving || (!isNew && !isDirty)}
         >
           {isSaving ? (
-            <ActivityIndicator
+            <ActivityIndicatorMinty
               size="small"
               color={theme.colors.onPrimary}
               style={styles.saveSpinner}

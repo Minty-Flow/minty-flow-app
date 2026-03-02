@@ -818,7 +818,7 @@
     "locationPicker": {
       "title": "Pick Location",
       "gettingLocation": "Getting location...",
-      "tapOrDrag": "Tap or drag pin to select",
+      "tapOrDrag": "Pan map to position pin",
       "myLocation": "My location",
       "tapToEdit": "Tap on the map to edit",
       "addLocation": "Add a location",

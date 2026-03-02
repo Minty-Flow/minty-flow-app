@@ -113,6 +113,7 @@ export const VALID_ICON_NAMES = defineValidIcons([
   "pulse",
   // Places
   "map-marker",
+  "crosshairs-gps",
   "office-building",
   "school",
   "car",

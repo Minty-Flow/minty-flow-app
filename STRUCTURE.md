@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-03-02T20:17:11.569Z
+Generated on: 2026-03-02T22:53:57.204Z
 
 ```
 ./
@@ -233,6 +233,7 @@ Generated on: 2026-03-02T20:17:11.569Z
 │   │   │   ├── transaction-section-list.tsx
 │   │   │   └── transaction-type-selector.tsx
 │   │   ├── ui/
+│   │   │   ├── activity-indicator-minty.tsx
 │   │   │   ├── button.tsx
 │   │   │   ├── chips.tsx
 │   │   │   ├── collapsible.tsx

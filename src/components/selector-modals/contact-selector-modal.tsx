@@ -9,11 +9,12 @@ import * as Contacts from "expo-contacts"
 import i18n from "i18next"
 import { Suspense, use, useCallback, useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ActivityIndicator, FlatList, Modal, View } from "react-native"
+import { FlatList, Modal, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { StyleSheet } from "react-native-unistyles"
 
 import { SearchInput } from "~/components/search-input"
+import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Pressable } from "~/components/ui/pressable"
@@ -302,7 +303,7 @@ export function ContactSelectorModal({
               <Suspense
                 fallback={
                   <View style={modalStyles.loadingContainer}>
-                    <ActivityIndicator size="small" />
+                    <ActivityIndicatorMinty size="small" />
                   </View>
                 }
               >
@@ -314,7 +315,7 @@ export function ContactSelectorModal({
               </Suspense>
             ) : (
               <View style={modalStyles.loadingContainer}>
-                <ActivityIndicator size="small" />
+                <ActivityIndicatorMinty size="small" />
               </View>
             )}
           </View>

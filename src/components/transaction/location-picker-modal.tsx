@@ -1,14 +1,15 @@
+import * as Haptics from "expo-haptics"
 import * as Location from "expo-location"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ActivityIndicator, Modal, Platform } from "react-native"
+import { Modal, Platform } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import {
-  StyleSheet as UnistylesSheet,
-  useUnistyles,
-} from "react-native-unistyles"
+import { StyleSheet as UnistylesSheet } from "react-native-unistyles"
 import { WebView, type WebViewMessageEvent } from "react-native-webview"
 
+import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
+import { Button } from "~/components/ui/button"
+import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -21,51 +22,89 @@ interface LocationPickerModalProps {
   onRequestClose: () => void
 }
 
-/** Generates self-contained Leaflet HTML with a draggable/tappable pin. */
-function buildLeafletHtml(lat: number, lng: number): string {
+/**
+ * Generates self-contained MapLibre GL HTML with a static center-pin crosshair.
+ * The user pans the map under the pin — much more precise for thumb-driven navigation.
+ */
+function buildMaplibreHtml(lat: number, lng: number): string {
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css"/>
+  <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: rgba(0,0,0,0); }
     html, body, #map { width:100%; height:100%; }
+    body { -webkit-user-select: none; user-select: none; }
+    #pin {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -100%);
+      pointer-events: none;
+      z-index: 2;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+    }
+    #pin.lifting { transform: translate(-50%, -120%) scale(1.15); }
+    #pin-dot {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: rgba(14,165,233,0.3);
+      pointer-events: none;
+      z-index: 1;
+    }
   </style>
 </head>
 <body>
   <div id="map"></div>
+  <div id="pin">
+    <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24C32 7.163 24.837 0 16 0z" fill="#0EA5E9"/>
+      <circle cx="16" cy="16" r="6" fill="white"/>
+    </svg>
+  </div>
+  <div id="pin-dot"></div>
   <script>
-    const map = L.map('map', { zoomControl: true }).setView([${lat}, ${lng}], 15);
+    maplibregl.setRTLTextPlugin(
+      'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js',
+      false
+    );
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19,
-    }).addTo(map);
+    const map = new maplibregl.Map({
+      container: 'map',
+      style: 'https://tiles.openfreemap.org/styles/liberty',
+      center: [${lng}, ${lat}],
+      zoom: 15
+    });
 
-    let marker = L.marker([${lat}, ${lng}], { draggable: true }).addTo(map);
+    const pin = document.getElementById('pin');
 
-    function emit(latlng) {
+    function postCoords(type) {
+      const c = map.getCenter();
       window.ReactNativeWebView.postMessage(
-        JSON.stringify({ type: 'pin_moved', lat: latlng.lat, lng: latlng.lng })
+        JSON.stringify({ type: type, lat: c.lat, lng: c.lng })
       );
     }
 
-    marker.on('dragend', () => emit(marker.getLatLng()));
-
-    map.on('click', (e) => {
-      marker.setLatLng(e.latlng);
-      emit(e.latlng);
+    let initialLoad = true;
+    map.on('moveend', () => {
+      const type = initialLoad ? 'map_loaded' : 'pin_moved';
+      initialLoad = false;
+      postCoords(type);
     });
 
-    // Receive 'reset_pin' from React Native
+    map.on('dragstart', () => pin.classList.add('lifting'));
+    map.on('dragend', () => pin.classList.remove('lifting'));
+
     function onRNMessage(raw) {
       try {
         const msg = JSON.parse(raw);
         if (msg.type === 'reset_pin') {
-          marker.setLatLng([msg.lat, msg.lng]);
-          map.setView([msg.lat, msg.lng], 15);
+          map.flyTo({ center: [msg.lng, msg.lat], zoom: 15 });
         }
       } catch (_) {}
     }
@@ -82,10 +121,10 @@ function LocationPickerContent({
   onRequestClose,
 }: Omit<LocationPickerModalProps, "visible">) {
   const { t } = useTranslation()
-  const { theme } = useUnistyles()
   const insets = useSafeAreaInsets()
 
   const webviewRef = useRef<WebView>(null)
+  const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [mapHtml, setMapHtml] = useState<string | null>(null)
   const [coords, setCoords] = useState<{
     latitude: number
@@ -95,12 +134,12 @@ function LocationPickerContent({
     latitude: number
     longitude: number
   } | null>(null)
+  const [address, setAddress] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
 
     const init = async () => {
-      // Resolve current GPS location for the "reset" button
       let gpsLat = 37.7749
       let gpsLng = -122.4194
       try {
@@ -117,38 +156,63 @@ function LocationPickerContent({
 
       setGpsCoords({ latitude: gpsLat, longitude: gpsLng })
 
-      // Initial pin: prefer existing location, fall back to GPS
       const initLat = initialLocation?.latitude ?? gpsLat
       const initLng = initialLocation?.longitude ?? gpsLng
 
       setCoords({ latitude: initLat, longitude: initLng })
-      setMapHtml(buildLeafletHtml(initLat, initLng))
+      setMapHtml(buildMaplibreHtml(initLat, initLng))
     }
 
     init()
     return () => {
       cancelled = true
+      if (geocodeTimer.current) clearTimeout(geocodeTimer.current)
     }
   }, [initialLocation])
 
-  const handleMessage = useCallback((event: WebViewMessageEvent) => {
-    try {
-      const data = JSON.parse(event.nativeEvent.data) as {
-        type: string
-        lat: number
-        lng: number
+  const triggerReverseGeocode = useCallback((lat: number, lng: number) => {
+    if (geocodeTimer.current) clearTimeout(geocodeTimer.current)
+    geocodeTimer.current = setTimeout(async () => {
+      try {
+        const results = await Location.reverseGeocodeAsync({
+          latitude: lat,
+          longitude: lng,
+        })
+        if (results.length > 0) {
+          const r = results[0]
+          const parts = [r.name, r.city].filter(Boolean)
+          setAddress(parts.join(", ") || null)
+        }
+      } catch {
+        setAddress(null)
       }
-      if (data.type === "pin_moved") {
-        setCoords({ latitude: data.lat, longitude: data.lng })
-      }
-    } catch {
-      // ignore malformed messages
-    }
+    }, 800)
   }, [])
+
+  const handleMessage = useCallback(
+    (event: WebViewMessageEvent) => {
+      try {
+        const data = JSON.parse(event.nativeEvent.data) as {
+          type: string
+          lat: number
+          lng: number
+        }
+        if (data.type === "pin_moved" || data.type === "map_loaded") {
+          setCoords({ latitude: data.lat, longitude: data.lng })
+          triggerReverseGeocode(data.lat, data.lng)
+        }
+        if (data.type === "pin_moved") {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+        }
+      } catch {
+        // ignore malformed messages
+      }
+    },
+    [triggerReverseGeocode],
+  )
 
   const handleResetToGps = useCallback(() => {
     if (!gpsCoords) return
-    setCoords(gpsCoords)
     webviewRef.current?.postMessage(
       JSON.stringify({
         type: "reset_pin",
@@ -163,117 +227,82 @@ function LocationPickerContent({
     onConfirm({ latitude: coords.latitude, longitude: coords.longitude })
   }, [onConfirm, coords])
 
+  const footerLabel =
+    address ??
+    (coords
+      ? `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`
+      : t("components.locationPicker.tapOrDrag"))
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
-      {/* Header */}
+    <View style={styles.container}>
+      {/* Header: title only */}
       <View
-        style={[
-          styles.header,
-          {
-            paddingTop: Math.max(insets.top, 16),
-            backgroundColor: theme.colors.surface,
-            borderBottomColor: `${theme.colors.customColors.semi}30`,
-          },
-        ]}
+        style={[styles.header, { paddingTop: Math.max(insets.top + 10, 20) }]}
       >
-        <Pressable
-          onPress={onRequestClose}
-          hitSlop={12}
-          style={styles.headerSideBtn}
-        >
-          <Text style={[styles.cancelText, { color: theme.colors.onSurface }]}>
-            {t("common.actions.cancel")}
-          </Text>
-        </Pressable>
-        <Text style={[styles.title, { color: theme.colors.onSurface }]}>
-          {t("components.locationPicker.title")}
-        </Text>
-        <Pressable
-          onPress={handleConfirm}
-          hitSlop={12}
-          style={[styles.headerSideBtn, styles.confirmBtn]}
-          disabled={!coords}
-        >
-          <Text
-            style={[
-              styles.confirmText,
-              {
-                color: coords
-                  ? theme.colors.primary
-                  : theme.colors.customColors.semi,
-              },
-            ]}
-          >
-            {t("common.actions.confirm")}
-          </Text>
-        </Pressable>
+        <Text style={styles.title}>{t("components.locationPicker.title")}</Text>
       </View>
 
-      {/* Map */}
+      {/* Map + floating My Location FAB */}
       {!mapHtml ? (
-        <View
-          style={[
-            styles.loadingOverlay,
-            { backgroundColor: theme.colors.surface },
-          ]}
-        >
-          <ActivityIndicator color={theme.colors.primary} />
-          <Text
-            style={[
-              styles.loadingText,
-              { color: theme.colors.customColors.semi },
-            ]}
-          >
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicatorMinty />
+          <Text style={styles.loadingText}>
             {t("components.locationPicker.gettingLocation")}
           </Text>
         </View>
       ) : (
-        <WebView
-          ref={webviewRef}
-          style={styles.map}
-          source={{ html: mapHtml }}
-          onMessage={handleMessage}
-          javaScriptEnabled
-          domStorageEnabled
-          originWhitelist={["*"]}
-        />
+        <View style={styles.mapWrapper}>
+          <WebView
+            ref={webviewRef}
+            style={styles.map}
+            source={{ html: mapHtml }}
+            onMessage={handleMessage}
+            javaScriptEnabled
+            domStorageEnabled
+            originWhitelist={["*"]}
+          />
+          {gpsCoords && (
+            <Pressable
+              onPress={handleResetToGps}
+              hitSlop={8}
+              style={styles.fabMyLocation}
+            >
+              <IconSymbol name="crosshairs-gps" size={24} />
+            </Pressable>
+          )}
+        </View>
       )}
 
-      {/* Footer: coordinates + reset button */}
+      {/* Footer: address/coords + Cancel/Confirm */}
       <View
         style={[
           styles.footer,
-          {
-            backgroundColor: theme.colors.surface,
-            borderTopColor: `${theme.colors.customColors.semi}30`,
-            paddingBottom: Math.max(insets.bottom, 20),
-          },
+          { paddingBottom: Math.max(insets.bottom + 10, 20) },
         ]}
       >
-        <Text
-          style={[styles.coordsText, { color: theme.colors.customColors.semi }]}
-          numberOfLines={1}
-        >
-          {coords
-            ? `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`
-            : t("components.locationPicker.tapOrDrag")}
+        <Text style={styles.addressText} numberOfLines={1}>
+          {footerLabel}
         </Text>
-        {gpsCoords && (
-          <Pressable
-            onPress={handleResetToGps}
-            hitSlop={8}
-            style={[
-              styles.myLocationBtn,
-              { borderColor: theme.colors.primary },
-            ]}
+
+        <View style={styles.actions}>
+          <Button
+            variant="outline"
+            size="lg"
+            onPress={onRequestClose}
+            style={styles.actionBtn}
           >
-            <Text
-              style={[styles.myLocationText, { color: theme.colors.primary }]}
-            >
-              {t("components.locationPicker.myLocation")}
-            </Text>
-          </Pressable>
-        )}
+            <Text variant="default">{t("common.actions.cancel")}</Text>
+          </Button>
+          <Button
+            variant="default"
+            size="lg"
+            onPress={handleConfirm}
+            disabled={!coords}
+            style={styles.actionBtn}
+          >
+            <Text variant="default">{t("common.actions.confirm")}</Text>
+          </Button>
+        </View>
       </View>
     </View>
   )
@@ -292,45 +321,35 @@ export function LocationPickerModal({
       presentationStyle={Platform.OS === "ios" ? "pageSheet" : "fullScreen"}
       onRequestClose={onRequestClose}
     >
-      {visible ? (
-        <LocationPickerContent
-          initialLocation={initialLocation}
-          onConfirm={onConfirm}
-          onRequestClose={onRequestClose}
-        />
-      ) : null}
+      <LocationPickerContent
+        initialLocation={initialLocation}
+        onConfirm={onConfirm}
+        onRequestClose={onRequestClose}
+      />
     </Modal>
   )
 }
 
-const styles = UnistylesSheet.create({
+const styles = UnistylesSheet.create((t) => ({
   container: {
     flex: 1,
+    backgroundColor: t.colors.surface,
   },
   header: {
-    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-  },
-  headerSideBtn: {
-    minWidth: 72,
-  },
-  confirmBtn: {
-    alignItems: "flex-end",
+    borderBottomColor: `${t.colors.customColors.semi}30`,
+    backgroundColor: t.colors.surface,
   },
   title: {
     fontSize: 17,
     fontWeight: "600",
+    color: t.colors.onSurface,
   },
-  cancelText: {
-    fontSize: 17,
-  },
-  confirmText: {
-    fontSize: 17,
-    fontWeight: "600",
+  mapWrapper: {
+    flex: 1,
   },
   map: {
     flex: 1,
@@ -340,33 +359,46 @@ const styles = UnistylesSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 12,
+    backgroundColor: t.colors.surface,
   },
   loadingText: {
     fontSize: 15,
+    color: t.colors.customColors.semi,
+  },
+  fabMyLocation: {
+    position: "absolute",
+    bottom: 70,
+    right: 16,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: t.colors.surface,
+    shadowColor: t.colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
   },
   footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingTop: 14,
-    gap: 12,
+    paddingTop: 16,
+    gap: 14,
     borderTopWidth: 1,
-    minHeight: 70,
+    borderTopColor: `${t.colors.customColors.semi}30`,
+    backgroundColor: t.colors.surface,
   },
-  coordsText: {
+  addressText: {
+    fontSize: 13,
+    textAlign: "center",
+    color: t.colors.customColors.semi,
+  },
+  actions: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  actionBtn: {
     flex: 1,
-    fontSize: 13,
-    fontVariant: ["tabular-nums"],
   },
-  myLocationBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  myLocationText: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
-})
+}))

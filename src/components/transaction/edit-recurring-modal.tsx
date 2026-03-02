@@ -11,7 +11,6 @@
 import { useCallback, useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
-  ActivityIndicator,
   Modal,
   Pressable,
   Text,
@@ -25,6 +24,7 @@ import {
   useUnistyles,
 } from "react-native-unistyles"
 
+import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { IconSymbol } from "~/components/ui/icon-symbol"
 import type RecurringTransactionModel from "~/database/models/recurring-transaction"
 import type TransactionModel from "~/database/models/transaction"
@@ -85,7 +85,7 @@ function OptionRow({
         <Text style={styles.optionSublabel}>{sublabel}</Text>
       </View>
       {loading ? (
-        <ActivityIndicator size="small" color={successColor} />
+        <ActivityIndicatorMinty size="small" color={successColor} />
       ) : (
         <IconSymbol
           name="chevron-right"

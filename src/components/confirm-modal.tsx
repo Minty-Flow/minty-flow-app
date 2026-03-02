@@ -6,7 +6,6 @@
 import { useCallback, useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
-  ActivityIndicator,
   Modal,
   TouchableWithoutFeedback,
   useWindowDimensions,
@@ -15,6 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context"
 import { StyleSheet } from "react-native-unistyles"
 
+import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import { IconSymbol, type IconSymbolName } from "~/components/ui/icon-symbol"
 import { Text } from "~/components/ui/text"
@@ -131,7 +131,7 @@ export function ConfirmModal({
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator />
+                  <ActivityIndicatorMinty />
                 ) : (
                   <Text variant="default">
                     {confirmLabel || t("common.actions.confirm")}

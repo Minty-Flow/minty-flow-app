@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import { ActivityIndicator, StyleSheet } from "react-native"
+import { StyleSheet } from "react-native"
 import {
   StyleSheet as UnistylesSheet,
   useUnistyles,
@@ -8,6 +8,7 @@ import {
 import { WebView } from "react-native-webview"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
+import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -130,7 +131,7 @@ export function FormLocationPicker({
       disabled={isCapturingLocation}
     >
       {isCapturingLocation ? (
-        <ActivityIndicator color={theme.colors.primary} />
+        <ActivityIndicatorMinty color={theme.colors.primary} />
       ) : (
         <View
           style={[styles.addBtn, { backgroundColor: theme.colors.surface }]}

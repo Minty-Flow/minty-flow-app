@@ -9,13 +9,14 @@ import {
   useState,
 } from "react"
 import { useTranslation } from "react-i18next"
-import { ActivityIndicator, FlatList } from "react-native"
+import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { ExternalLink } from "~/components/external-link"
 import { InfoModal } from "~/components/info-modal"
 import { SearchInput } from "~/components/search-input"
 import { SmartAmountInput } from "~/components/smart-amount-input"
+import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Pressable } from "~/components/ui/pressable"
@@ -327,7 +328,7 @@ export default function ExchangeRatesScreen() {
       <Suspense
         fallback={
           <View style={styles.centered}>
-            <ActivityIndicator size="large" />
+            <ActivityIndicatorMinty size="large" />
             <Text style={styles.loadingText}>
               {t("screens.settings.exchangeRates.loading")}
             </Text>

@@ -815,7 +815,7 @@
     "locationPicker": {
       "title": "اختر الموقع",
       "gettingLocation": "جاري تحديد الموقع...",
-      "tapOrDrag": "اضغط أو اسحب الدبوس للاختيار",
+      "tapOrDrag": "حرك الخريطة لتحديد الموقع",
       "myLocation": "موقعي",
       "tapToEdit": "اضغط على الخريطة للتعديل",
       "addLocation": "إضافة موقع",
