@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-03-02T19:40:17.131Z
+Generated on: 2026-03-02T19:57:39.309Z
 
 ```
 ./
@@ -412,8 +412,6 @@ Generated on: 2026-03-02T19:40:17.131Z
 ├── 📄 eas.json
 ├── 📄 expo-env.d.ts
 ├── 📄 index.ts
-├── 📄 logo@16.png
-├── 📄 logo@32.png
 ├── 📄 package.json
 ├── 📄 pnpm-lock.yaml
 ├── 📄 pnpm-workspace.yaml
