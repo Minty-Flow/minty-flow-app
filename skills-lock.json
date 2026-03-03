@@ -11,20 +11,10 @@
       "sourceType": "github",
       "computedHash": "cc54bc37531c0221b2bfde241ef18c5f6e22423665955587f6dd63b0454355d8"
     },
-    "sleek-design-mobile-apps": {
-      "source": "sleekdotdesign/agent-skills",
-      "sourceType": "github",
-      "computedHash": "344009860c9d6f527b22695696c766cf153a3c90028a51119d08779b530067f0"
-    },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",
       "computedHash": "e688fcd4c5693e14ebd00d48e982dbd2be060fbea89f5f60531e79c704a1bc28"
-    },
-    "upgrading-expo": {
-      "source": "expo/skills",
-      "sourceType": "github",
-      "computedHash": "b10c092308d8d7401e2fc75fd773a79762ba4dad4ec1c7f5f5551efb0ba2cfdc"
     }
   }
 }
