@@ -39,6 +39,11 @@ const appearanceItems: PreferenceItem[] = [
     route: "/settings/preferences/transaction-appearance",
     icon: "format-list-bulleted",
   },
+  {
+    titleKey: "screens.settings.preferences.appearance.buttonPlacement.title",
+    route: "/settings/preferences/button-placement",
+    icon: "dots-triangle",
+  },
 ]
 
 const otherPreferenceItems: PreferenceItem[] = [

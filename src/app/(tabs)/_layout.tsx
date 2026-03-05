@@ -10,6 +10,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { Button } from "~/components/ui/button"
@@ -17,6 +18,8 @@ import { IconSymbol, type IconSymbolName } from "~/components/ui/icon-symbol"
 import { Pressable } from "~/components/ui/pressable"
 import { Tooltip } from "~/components/ui/tooltip"
 import { View } from "~/components/ui/view"
+import { FAB_BUTTON_STYLE } from "~/constants/fab-button"
+import { useButtonPlacementStore } from "~/stores/button-placement.store"
 import { DirectionEnum, useLanguageStore } from "~/stores/language.store"
 import { NewEnum } from "~/types/new"
 
@@ -90,6 +93,7 @@ const AnimatedFABOption = ({
 }
 
 const TabLayout = () => {
+  const insets = useSafeAreaInsets()
   const { theme } = useUnistyles()
   const { t } = useTranslation()
   const {
@@ -127,9 +131,10 @@ const TabLayout = () => {
   }
 
   const router = useRouter()
+  const buttonOrder = useButtonPlacementStore((s) => s.order)
 
-  const fabOptions: FABOption[] = [
-    {
+  const fabOptionsByType: Record<string, FABOption> = {
+    income: {
       icon: "chevron-double-down",
       color: theme.colors.customColors.income,
       iconColor: theme.colors.onError,
@@ -139,7 +144,7 @@ const TabLayout = () => {
         toggleFab()
       },
     },
-    {
+    expense: {
       icon: "chevron-double-up",
       color: theme.colors.customColors.expense,
       iconColor: theme.colors.onError,
@@ -149,7 +154,7 @@ const TabLayout = () => {
         toggleFab()
       },
     },
-    {
+    transfer: {
       icon: "swap-horizontal",
       color: theme.colors.secondary,
       iconColor: theme.colors.onSecondary,
@@ -159,7 +164,11 @@ const TabLayout = () => {
         toggleFab()
       },
     },
-  ]
+  }
+
+  const fabOptions: FABOption[] = buttonOrder.map(
+    (type) => fabOptionsByType[type],
+  )
 
   // Animated styles
   const rotateStyle = useAnimatedStyle(() => ({
@@ -193,7 +202,7 @@ const TabLayout = () => {
       </AnimatedPagerView>
 
       {/* Tab Bar Background & Icons - Lower Z-Index */}
-      <View style={[styles.tabBarContainer, { zIndex: 10 }]}>
+      <View style={[styles.tabBarContainer(insets.bottom), { zIndex: 10 }]}>
         <View
           style={[styles.tabBar, { backgroundColor: theme.colors.secondary }]}
         >
@@ -265,7 +274,7 @@ const TabLayout = () => {
 
       {/* FAB Options & Center Button - Higher Z-Index */}
       <View
-        style={[styles.tabBarContainer, { zIndex: 30 }]}
+        style={[styles.tabBarContainer(insets.bottom), { zIndex: 30 }]}
         pointerEvents="box-none"
       >
         {/* FAB Options - disable entire area when collapsed so invisible options don't receive touches */}
@@ -340,7 +349,7 @@ const styles = StyleSheet.create((t) => ({
   },
 
   // Tab bar container
-  tabBarContainer: {
+  tabBarContainer: (insetBottom: number) => ({
     position: "absolute",
     left: 0,
     right: 0,
@@ -348,7 +357,8 @@ const styles = StyleSheet.create((t) => ({
     alignItems: "center",
     backgroundColor: "transparent",
     pointerEvents: "box-none",
-  },
+    marginBottom: insetBottom,
+  }),
 
   // FAB options
   fabOptionsContainer: {
@@ -365,16 +375,7 @@ const styles = StyleSheet.create((t) => ({
     pointerEvents: "box-none",
   },
   fabOption: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    ...FAB_BUTTON_STYLE,
     pointerEvents: "auto",
   },
 

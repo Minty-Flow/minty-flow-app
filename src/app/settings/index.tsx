@@ -138,7 +138,7 @@ const styles = StyleSheet.create((theme) => ({
   content: {
     marginTop: 40,
     marginBottom: 10,
-    paddingBottom: 100,
+    paddingBottom: 200,
   },
   section: {
     marginBottom: 20,

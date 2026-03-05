@@ -11,7 +11,6 @@ import {
   useWindowDimensions,
   View,
 } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
 import { StyleSheet } from "react-native-unistyles"
 
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
@@ -88,7 +87,7 @@ export function ConfirmModal({
         disableRipple
       >
         <TouchableWithoutFeedback onPress={() => {}}>
-          <SafeAreaView
+          <View
             style={[styles.card, { maxWidth: maxCardWidth }]}
             accessible
             accessibilityLabel={title}
@@ -139,7 +138,7 @@ export function ConfirmModal({
                 )}
               </Button>
             </View>
-          </SafeAreaView>
+          </View>
         </TouchableWithoutFeedback>
       </Pressable>
     </Modal>

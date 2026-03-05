@@ -160,6 +160,7 @@ export const VALID_ICON_NAMES = defineValidIcons([
   "playlist-remove",
   "format-list-bulleted",
   "restore",
+  "dots-triangle",
 ] as const)
 
 /**

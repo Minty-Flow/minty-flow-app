@@ -18,7 +18,6 @@ import {
   useWindowDimensions,
   View,
 } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
 import {
   StyleSheet as UnistylesSheet,
   useUnistyles,
@@ -193,7 +192,7 @@ export function EditRecurringModal({
         accessibilityRole="button"
       >
         <TouchableWithoutFeedback onPress={() => {}}>
-          <SafeAreaView
+          <View
             style={[
               styles.card,
               {
@@ -261,7 +260,7 @@ export function EditRecurringModal({
                 {t("components.recurring.editModal.cancel")}
               </Text>
             </Pressable>
-          </SafeAreaView>
+          </View>
         </TouchableWithoutFeedback>
       </Pressable>
     </Modal>

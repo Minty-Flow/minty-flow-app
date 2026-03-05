@@ -316,6 +316,11 @@
               "account": "Account"
             },
             "info": "Changes apply immediately to all transaction lists across the app."
+          },
+          "buttonPlacement": {
+            "title": "Button Placement",
+            "subtitle": "Drag the buttons to reorder",
+            "info": "This order is reflected in the transaction buttons on the home screen"
           }
         },
         "buttonFeedback": {

@@ -10,7 +10,6 @@ import {
   useWindowDimensions,
   View,
 } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
 import { StyleSheet } from "react-native-unistyles"
 
 import { Button } from "~/components/ui/button"
@@ -65,7 +64,7 @@ export function InfoModal({
         disableRipple
       >
         <TouchableWithoutFeedback onPress={() => {}}>
-          <SafeAreaView
+          <View
             style={[styles.card, { maxWidth: maxCardWidth }]}
             accessible
             accessibilityLabel={title}
@@ -96,7 +95,7 @@ export function InfoModal({
             >
               <Text variant="default">{resolvedOkLabel}</Text>
             </Button>
-          </SafeAreaView>
+          </View>
         </TouchableWithoutFeedback>
       </Pressable>
     </Modal>

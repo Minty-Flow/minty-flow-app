@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-03-05T00:15:35.441Z
+Generated on: 2026-03-05T17:24:00.166Z
 
 ```
 ./
@@ -170,6 +170,7 @@ Generated on: 2026-03-05T00:15:35.441Z
 │   │   │   │   └── presets.tsx
 │   │   │   ├── preferences/
 │   │   │   │   ├── theme/
+│   │   │   │   ├── button-placement.tsx
 │   │   │   │   ├── exchange-rates.tsx
 │   │   │   │   ├── index.tsx
 │   │   │   │   ├── language.tsx
@@ -343,6 +344,7 @@ Generated on: 2026-03-05T00:15:35.441Z
 │   │   ├── tabs-minty.tsx
 │   │   └── toggle-item.tsx
 │   ├── constants/
+│   │   ├── fab-button.ts
 │   │   ├── minty-icons-selection.ts
 │   │   ├── pre-sets-categories.ts
 │   │   └── site-data.ts
@@ -415,6 +417,7 @@ Generated on: 2026-03-05T00:15:35.441Z
 │   ├── stores/
 │   │   ├── android-sound.store.ts
 │   │   ├── app-lock.store.ts
+│   │   ├── button-placement.store.ts
 │   │   ├── exchange-rates-preferences.store.ts
 │   │   ├── language.store.ts
 │   │   ├── letter-emoji.store.ts
