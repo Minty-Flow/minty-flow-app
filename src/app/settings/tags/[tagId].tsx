@@ -1,20 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { withObservables } from "@nozbe/watermelondb/react"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useState } from "react"
-import { Controller, useForm } from "react-hook-form"
+import { useCallback, useState } from "react"
+import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
-import { ChangeIconInline } from "~/components/change-icon-inline"
-import { ColorVariantInline } from "~/components/color-variant-inline"
-import { ConfirmModal } from "~/components/confirm-modal"
-import { ContactSelectorModal } from "~/components/selector-modals"
-import { TabsMinty } from "~/components/tabs-minty"
-import { Button } from "~/components/ui/button"
-import { IconSymbol } from "~/components/ui/icon-symbol"
-import { Input } from "~/components/ui/input"
-import { Separator } from "~/components/ui/separator"
+import { ActionButtons } from "~/components/tag/action-buttons"
+import { DeleteSection } from "~/components/tag/delete-section"
+import { FormTagFields } from "~/components/tag/form-tag-fields"
+import { FormTagModals } from "~/components/tag/form-tag-modals"
+import { LocationComingSoon } from "~/components/tag/location-coming-soon"
+import { TypeTabs } from "~/components/tag/type-tabs"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
@@ -27,7 +24,6 @@ import {
 } from "~/database/services/tag-service"
 import { modelToTag } from "~/database/utils/model-to-tag"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
-import type { TranslationKey } from "~/i18n/config"
 import { type AddTagsFormSchema, addTagsSchema } from "~/schemas/tags.schema"
 import { getThemeStrict } from "~/styles/theme/registry"
 import { NewEnum } from "~/types/new"
@@ -44,19 +40,18 @@ interface EditTagScreenProps {
 const EditTagScreenInner = ({ tagId, tagModel, tag }: EditTagScreenProps) => {
   const { t } = useTranslation()
   const router = useRouter()
-  const isAddMode = tagId === NewEnum.NEW || !tagId
 
-  const iconBasedType = (type?: TagKindType) => {
-    if (type === TagKindEnum.CONTACT) return "account"
-    if (type === TagKindEnum.LOCATION) return "map"
-    return "tag"
-  }
+  // Navigation guard: block leave when dirty, show confirm modal
+  const navigation = useNavigation()
+  const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
+
+  const isAddMode = tagId === NewEnum.NEW || !tagId
 
   // Form state
   const {
     control,
     handleSubmit: handleFormSubmit,
-    formState: { errors, isDirty },
+    formState: { errors, isDirty, isSubmitting },
     watch,
     setValue,
   } = useForm({
@@ -74,22 +69,30 @@ const EditTagScreenInner = ({ tagId, tagModel, tag }: EditTagScreenProps) => {
   const formColorSchemeName = watch("colorSchemeName")
   const formType = watch("type")
 
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const iconBasedType = (type?: TagKindType) => {
+    if (type === TagKindEnum.CONTACT) return "account"
+    if (type === TagKindEnum.LOCATION) return "map"
+    return "tag"
+  }
 
-  // Navigation guard: block leave when dirty, show confirm modal
-  const navigation = useNavigation()
-  const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
+  const handleConfirm = useCallback(() => {
+    router.back()
+  }, [router])
+
+  const handleBlock = useCallback(() => {
+    setUnsavedModalVisible(true)
+  }, [])
+
   const { confirmNavigation, allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSubmitting,
-    onConfirm: () => router.back(),
-    onBlock: () => setUnsavedModalVisible(true),
+    onConfirm: handleConfirm,
+    onBlock: handleBlock,
   })
 
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
 
   const onSubmit = async (data: AddTagsFormSchema) => {
-    setIsSubmitting(true)
     try {
       if (isAddMode) {
         await createTag({
@@ -124,7 +127,6 @@ const EditTagScreenInner = ({ tagId, tagModel, tag }: EditTagScreenProps) => {
           : t("screens.settings.tags.form.toast.updateFailed"),
       })
     }
-    setIsSubmitting(false)
   }
 
   const handleDelete = async () => {
@@ -164,212 +166,52 @@ const EditTagScreenInner = ({ tagId, tagModel, tag }: EditTagScreenProps) => {
         contentContainerStyle={styles.scrollContent}
       >
         {/* Type selector (Tabs) */}
-        <TabsMinty<TagKindType>
-          items={[
-            {
-              value: TagKindEnum.GENERIC,
-              label: t("screens.settings.tags.form.tabs.generic"),
-              icon: "tag",
-            },
-            {
-              value: TagKindEnum.LOCATION,
-              label: t("screens.settings.tags.form.tabs.location"),
-              icon: "map",
-            },
-            {
-              value: TagKindEnum.CONTACT,
-              label: t("screens.settings.tags.form.tabs.contact"),
-              icon: "account",
-            },
-          ]}
-          activeValue={formType}
+        <TypeTabs
+          value={formType}
           onValueChange={(value) => {
             setValue("type", value, { shouldDirty: true })
             setValue("icon", iconBasedType(value), { shouldDirty: true })
           }}
-          variant="segmented"
         />
 
-        {formType === "location" ? (
-          <View style={styles.comingSoon}>
-            <Text variant="h4">
-              {t("screens.settings.tags.form.locationComingSoon.title")}
-            </Text>
-            <Text variant="muted">
-              {t("screens.settings.tags.form.locationComingSoon.description")}
-            </Text>
-          </View>
+        {formType === TagKindEnum.LOCATION ? (
+          <LocationComingSoon />
         ) : (
-          <View style={styles.form} key={tag?.id || NewEnum.NEW}>
-            {/* Icon Selection – inline toggle (Icon / Emoji/Letter / Image) */}
-            <ChangeIconInline
-              currentIcon={formIcon}
-              onIconSelected={(icon) =>
-                setValue("icon", icon, { shouldDirty: true })
-              }
-              colorScheme={currentColorScheme}
-            />
-
-            {/* Name Section */}
-            <View style={styles.nameSection}>
-              <Text variant="small" style={styles.label}>
-                {formType === "contact"
-                  ? t("screens.settings.tags.form.nameLabelContact")
-                  : t("screens.settings.tags.form.nameLabelGeneric")}
-              </Text>
-              <Controller
-                control={control}
-                name="name"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <Input
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    placeholder={
-                      formType === "contact"
-                        ? t("screens.settings.tags.form.placeholderContact")
-                        : t("screens.settings.tags.form.placeholderGeneric")
-                    }
-                    error={!!errors.name}
-                    editable={true}
-                  />
-                )}
-              />
-              {errors.name && (
-                <Text variant="small" style={styles.errorText}>
-                  {t(errors.name.message as TranslationKey)}
-                </Text>
-              )}
-            </View>
-
-            {/* Settings List */}
-            <View style={styles.settingsList}>
-              {/* Person: contact selector – inline with search and scroll */}
-              {formType === "contact" && (
-                <ContactSelectorModal
-                  onContactSelected={(contact) => {
-                    if (contact.name) {
-                      setValue("name", contact.name, { shouldDirty: true })
-                    }
-                  }}
-                  onPermissionDenied={() => {
-                    Toast.warn({
-                      title: t(
-                        "screens.settings.tags.form.contactPermission.denied",
-                      ),
-                      description: t(
-                        "screens.settings.tags.form.contactPermission.deniedDescription",
-                      ),
-                    })
-                    logger.warn("Contacts permission denied")
-                  }}
-                />
-              )}
-
-              {/* Color Selection – inline panel */}
-              <ColorVariantInline
-                selectedSchemeName={formColorSchemeName || undefined}
-                onColorSelected={(scheme) => {
-                  setValue("colorSchemeName", scheme, { shouldDirty: true })
-                }}
-                onClearSelection={() =>
-                  setValue("colorSchemeName", undefined, {
-                    shouldDirty: true,
-                  })
-                }
-              />
-            </View>
-
-            {/* Divider */}
-            {!isAddMode && <Separator />}
-          </View>
+          <FormTagFields
+            control={control}
+            errors={errors}
+            formType={formType}
+            formIcon={formIcon}
+            formColorSchemeName={formColorSchemeName}
+            currentColorScheme={currentColorScheme}
+            setValue={setValue}
+            tag={tag}
+            isAddMode={isAddMode}
+          />
         )}
 
-        {!isAddMode && formType !== "location" && (
-          <View style={styles.deleteSection}>
-            <Button
-              variant="ghost"
-              onPress={() => setDeleteModalVisible(true)}
-              style={styles.actionButton}
-            >
-              <IconSymbol
-                name="trash-can"
-                size={20}
-                style={styles.deleteIcon}
-              />
-              <Text variant="default" style={styles.deleteText}>
-                {t("screens.settings.tags.form.deleteLabel")}
-              </Text>
-            </Button>
-          </View>
+        {!isAddMode && formType !== TagKindEnum.LOCATION && (
+          <DeleteSection onDeletePress={() => setDeleteModalVisible(true)} />
         )}
       </ScrollIntoViewProvider>
 
-      {/* <KeyboardStickyViewMinty> */}
-      <View style={styles.actions}>
-        <Button
-          variant="outline"
-          onPress={() => router.back()}
-          style={styles.button}
-        >
-          <Text variant="default" style={styles.cancelText}>
-            {t("common.actions.cancel")}
-          </Text>
-        </Button>
-        <Button
-          variant="default"
-          onPress={handleFormSubmit(onSubmit)}
-          style={styles.button}
-          disabled={
-            !formName.trim() || (!isAddMode && !isDirty) || isSubmitting
-          }
-        >
-          <Text variant="default" style={styles.saveText}>
-            {isSubmitting
-              ? t("common.form.saving")
-              : isAddMode
-                ? t("common.form.create")
-                : t("common.form.saveChanges")}
-          </Text>
-        </Button>
-      </View>
-      {/* </KeyboardStickyViewMinty> */}
+      <ActionButtons
+        onCancelPress={() => router.back()}
+        onSavePress={handleFormSubmit(onSubmit)}
+        isSubmitting={isSubmitting}
+        isAddMode={isAddMode}
+        isDirty={isDirty}
+        formName={formName}
+      />
 
-      {!isAddMode && tag && (
-        <ConfirmModal
-          visible={deleteModalVisible}
-          onRequestClose={() => setDeleteModalVisible(false)}
-          onConfirm={handleDelete}
-          title={t("screens.settings.tags.form.deleteModal.title", {
-            name: tag.name,
-          })}
-          description={
-            (tag.transactionCount ?? 0) > 0
-              ? t(
-                  "screens.settings.tags.form.deleteModal.descriptionWithCount",
-                  { count: tag.transactionCount ?? 0 },
-                )
-              : t("screens.settings.tags.form.deleteModal.descriptionEmpty")
-          }
-          confirmLabel={t("common.actions.delete")}
-          cancelLabel={t("common.actions.cancel")}
-          variant="destructive"
-          icon="trash-can"
-        />
-      )}
-
-      <ConfirmModal
-        visible={unsavedModalVisible}
-        onRequestClose={() => setUnsavedModalVisible(false)}
-        onConfirm={() => {
-          setUnsavedModalVisible(false)
-          confirmNavigation()
-        }}
-        title={t("common.modals.closeWithoutSaving")}
-        description={t("common.form.unsavedDescription")}
-        confirmLabel={t("common.form.discard")}
-        cancelLabel={t("common.actions.cancel")}
-        variant="default"
+      <FormTagModals
+        deleteModalVisible={deleteModalVisible}
+        setDeleteModalVisible={setDeleteModalVisible}
+        tag={tag}
+        handleDelete={handleDelete}
+        unsavedModalVisible={unsavedModalVisible}
+        setUnsavedModalVisible={setUnsavedModalVisible}
+        confirmNavigation={confirmNavigation}
       />
     </View>
   )
@@ -390,107 +232,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   scrollContent: {
     paddingBottom: 100,
-  },
-  comingSoon: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 60,
-    gap: 10,
-    marginHorizontal: 20,
-  },
-  form: {
-    gap: 30,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: theme.colors.onSurface,
-    letterSpacing: 0.5,
-  },
-  nameSection: {
-    gap: 10,
-    paddingHorizontal: 20,
-  },
-  settingsList: {
-    gap: 0,
-  },
-  settingsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-  },
-  settingsLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  settingsLabel: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: theme.colors.onSurface,
-  },
-  settingsRight: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  chevronIcon: {
-    color: theme.colors.onSecondary,
-    opacity: 0.4,
-  },
-  colorPreview: {
-    width: 24,
-    height: 24,
-    borderRadius: 16,
-  },
-  defaultColorText: {
-    fontSize: 16,
-    color: theme.colors.onSecondary,
-    opacity: 0.6,
-  },
-  errorText: {
-    fontSize: 12,
-    color: theme.colors.error,
-    marginTop: 4,
-    textAlign: "center",
-  },
-  deleteSection: {
-    marginTop: 30,
-    marginHorizontal: 20,
-    gap: 10,
-  },
-  actionButton: {
-    width: "100%",
-  },
-  deleteIcon: {
-    color: theme.colors.error,
-  },
-  deleteText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: theme.colors.error,
-  },
-  actions: {
-    flexDirection: "row",
-    gap: 10,
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-  },
-  button: {
-    flex: 1,
-  },
-  cancelText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: theme.colors.onSurface,
-  },
-  saveText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: theme.colors.onPrimary,
   },
 }))
 

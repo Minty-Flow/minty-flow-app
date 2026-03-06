@@ -3,8 +3,9 @@ import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
 import { createJSONStorage, devtools, persist } from "zustand/middleware"
 
-const SHAKE_UPDATE_INTERVAL_MS = 100
-const SHAKE_THRESHOLD = 150
+// was 100 and 150
+const SHAKE_UPDATE_INTERVAL_MS = 500
+const SHAKE_THRESHOLD = 550
 
 export const moneyFormattingStorage = createMMKV({
   id: "money-formatting-storage",
@@ -103,6 +104,7 @@ export const useMoneyFormattingStore = create<MoneyFormattingStore>()(
           const sub = Accelerometer.addListener(({ x, y, z }) => {
             const now = Date.now()
             const timeDelta = now - lastUpdate
+
             if (timeDelta > SHAKE_UPDATE_INTERVAL_MS) {
               const speed =
                 (Math.abs(x + y + z - lastX - lastY - lastZ) / timeDelta) *

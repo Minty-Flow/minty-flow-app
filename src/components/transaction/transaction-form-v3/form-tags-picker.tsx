@@ -20,7 +20,7 @@ import { getThemeStrict } from "~/styles/theme/registry"
 import { NewEnum } from "~/types/new"
 import type { Tag } from "~/types/tags"
 
-import { styles } from "./form.styles"
+import { transactionFormStyles } from "./form.styles"
 
 export interface FormTagsPickerProps {
   tags: Tag[]
@@ -71,10 +71,10 @@ export function FormTagsPicker({
   }
 
   return (
-    <RNView ref={wrapperRef} style={styles.fieldBlock}>
-      <View style={styles.sectionLabelRow}>
-        <Text variant="small" style={styles.sectionLabelInRow}>
-          Tags
+    <RNView ref={wrapperRef} style={transactionFormStyles.fieldBlock}>
+      <View style={transactionFormStyles.sectionLabelRow}>
+        <Text variant="small" style={transactionFormStyles.sectionLabelInRow}>
+          {t("components.transactionForm.fields.tags")}
         </Text>
         <Pressable
           onPress={() =>
@@ -82,8 +82,9 @@ export function FormTagsPicker({
             setValue("tags", [], { shouldDirty: true })
           }
           style={[
-            styles.clearButton,
-            (tagIds ?? []).length === 0 && styles.clearButtonDisabled,
+            transactionFormStyles.clearButton,
+            (tagIds ?? []).length === 0 &&
+              transactionFormStyles.clearButtonDisabled,
           ]}
           pointerEvents={(tagIds ?? []).length > 0 ? "auto" : "none"}
           accessibilityLabel={t("components.transactionForm.a11y.clearAllTags")}
@@ -91,17 +92,17 @@ export function FormTagsPicker({
             disabled: (tagIds ?? []).length === 0,
           }}
         >
-          <Text variant="small" style={styles.clearButtonText}>
+          <Text variant="small" style={transactionFormStyles.clearButtonText}>
             {t("common.actions.clear")}
           </Text>
         </Pressable>
       </View>
-      <View style={styles.tagsWrapGrid}>
+      <View style={transactionFormStyles.tagsWrapGrid}>
         <Pressable
           style={[
-            styles.tagChipBase,
-            styles.tagChipAdd,
-            tagPickerOpen && styles.tagChipCancel,
+            transactionFormStyles.tagChipBase,
+            transactionFormStyles.tagChipAdd,
+            tagPickerOpen && transactionFormStyles.tagChipCancel,
           ]}
           onPress={handleToggle}
           accessible
@@ -115,7 +116,7 @@ export function FormTagsPicker({
           <Text
             variant="default"
             style={[
-              styles.tagChipAddText,
+              transactionFormStyles.tagChipAddText,
               tagPickerOpen && { color: theme.colors.customColors.semi },
             ]}
           >
@@ -132,7 +133,10 @@ export function FormTagsPicker({
         {selectedTags.map((tag) => (
           <Pressable
             key={tag.id}
-            style={[styles.tagChipBase, styles.tagChip]}
+            style={[
+              transactionFormStyles.tagChipBase,
+              transactionFormStyles.tagChip,
+            ]}
             onPress={() => removeTag(tag.id)}
             accessible
             accessibilityRole="button"
@@ -148,7 +152,7 @@ export function FormTagsPicker({
             />
             <Text
               variant="default"
-              style={styles.tagChipText}
+              style={transactionFormStyles.tagChipText}
               numberOfLines={1}
             >
               {tag.name}
@@ -156,24 +160,24 @@ export function FormTagsPicker({
             <IconSymbol
               name="close"
               size={14}
-              style={styles.tagChipRemoveIcon}
+              style={transactionFormStyles.tagChipRemoveIcon}
             />
           </Pressable>
         ))}
       </View>
 
       {tagPickerOpen && (
-        <View native style={styles.inlineTagPicker}>
+        <View native style={transactionFormStyles.inlineTagPicker}>
           <Input
             placeholder="Search tags..."
             value={tagSearchQuery}
             onChangeText={setTagSearchQuery}
             placeholderTextColor={theme.colors.customColors.semi}
-            style={styles.tagSearchInput}
+            style={transactionFormStyles.tagSearchInput}
           />
           <ScrollView
-            style={styles.tagPickerList}
-            contentContainerStyle={styles.pickerListContent}
+            style={transactionFormStyles.tagPickerList}
+            contentContainerStyle={transactionFormStyles.pickerListContent}
             keyboardShouldPersistTaps="handled"
             nestedScrollEnabled
             showsVerticalScrollIndicator
@@ -184,8 +188,8 @@ export function FormTagsPicker({
                 <Pressable
                   key={tag.id}
                   style={[
-                    styles.tagPickerRow,
-                    isSelected && styles.inlinePickerRowSelected,
+                    transactionFormStyles.tagPickerRow,
+                    isSelected && transactionFormStyles.inlinePickerRowSelected,
                   ]}
                   onPress={() => {
                     if (isSelected) removeTag(tag.id)
@@ -200,7 +204,7 @@ export function FormTagsPicker({
                   />
                   <Text
                     variant="default"
-                    style={styles.tagPickerRowText}
+                    style={transactionFormStyles.tagPickerRowText}
                     numberOfLines={1}
                   >
                     {tag.name}
@@ -210,7 +214,7 @@ export function FormTagsPicker({
             })}
           </ScrollView>
           <Pressable
-            style={styles.createTagRow}
+            style={transactionFormStyles.createTagRow}
             onPress={() => {
               setTagPickerOpen(false)
               router.push({
@@ -220,7 +224,10 @@ export function FormTagsPicker({
             }}
           >
             <IconSymbol name="tag-plus" size={20} />
-            <Text variant="default" style={styles.createTagRowText}>
+            <Text
+              variant="default"
+              style={transactionFormStyles.createTagRowText}
+            >
               Create new tag
             </Text>
           </Pressable>

@@ -7,7 +7,6 @@ import { useTranslation } from "react-i18next"
 import { CategoryTypeInline } from "~/components/categories/category-type-inline"
 import { ChangeIconInline } from "~/components/change-icon-inline"
 import { ColorVariantInline } from "~/components/color-variant-inline"
-import { ConfirmModal } from "~/components/confirm-modal"
 import { Button } from "~/components/ui/button"
 import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Input } from "~/components/ui/input"
@@ -34,6 +33,8 @@ import { TransactionTypeEnum } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
+import { CategoryFormFooter } from "./category-form-footer"
+import { CategoryFormModals } from "./category-form-modals"
 import { categoryModifyStyles } from "./category-modify.styles"
 import type { CategoryModifyContentProps } from "./types"
 
@@ -59,7 +60,7 @@ export function CategoryModifyContent({
   const {
     control,
     handleSubmit: handleFormSubmit,
-    formState: { errors, isDirty },
+    formState: { errors, isDirty, isSubmitting },
     watch,
     setValue,
   } = useForm({
@@ -78,8 +79,6 @@ export function CategoryModifyContent({
   const formColorSchemeName = watch("colorSchemeName")
   const formType = watch("type")
 
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
   const navigation = useNavigation()
   const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
   const { confirmNavigation, allowNavigation } = useNavigationGuard({
@@ -93,7 +92,6 @@ export function CategoryModifyContent({
 
   const onSubmit = async (data: AddCategoriesFormSchema) => {
     const trimmedName = data.name.trim()
-    setIsSubmitting(true)
 
     try {
       if (isAddMode) {
@@ -113,7 +111,6 @@ export function CategoryModifyContent({
             title: t("common.toast.error"),
             description: t("components.categories.form.toast.notFound"),
           })
-          setIsSubmitting(false)
           return
         }
 
@@ -136,7 +133,6 @@ export function CategoryModifyContent({
           : t("components.categories.form.toast.updateFailed"),
       })
     }
-    setIsSubmitting(false)
   }
 
   const handleSubmit = handleFormSubmit(onSubmit)
@@ -315,69 +311,27 @@ export function CategoryModifyContent({
         )}
       </ScrollIntoViewProvider>
 
-      <View style={categoryModifyStyles.actions}>
-        <Button
-          variant="outline"
-          onPress={handleGoBack}
-          style={categoryModifyStyles.button}
-        >
-          <Text variant="default" style={categoryModifyStyles.cancelText}>
-            {t("common.actions.cancel")}
-          </Text>
-        </Button>
-        <Button
-          variant="default"
-          onPress={handleSubmit}
-          style={categoryModifyStyles.button}
-          disabled={
-            !formName.trim() || (!isAddMode && !isDirty) || isSubmitting
-          }
-        >
-          <Text variant="default" style={categoryModifyStyles.saveText}>
-            {isSubmitting
-              ? t("common.form.saving")
-              : isAddMode
-                ? t("common.form.create")
-                : t("common.form.saveChanges")}
-          </Text>
-        </Button>
-      </View>
+      <CategoryFormFooter
+        formName={formName}
+        isAddMode={isAddMode}
+        isDirty={isDirty}
+        isSubmitting={isSubmitting}
+        onCancel={handleGoBack}
+        onSave={handleSubmit}
+      />
 
-      {!isAddMode && category && (
-        <ConfirmModal
-          visible={deleteModalVisible}
-          onRequestClose={() => setDeleteModalVisible(false)}
-          onConfirm={handleDelete}
-          title={t("components.categories.form.deleteModal.title", {
-            name: category.name,
-          })}
-          description={
-            category.transactionCount > 0
-              ? t(
-                  "components.categories.form.deleteModal.descriptionWithCount",
-                  { count: category.transactionCount },
-                )
-              : t("components.categories.form.deleteModal.descriptionEmpty")
-          }
-          confirmLabel={t("common.actions.delete")}
-          cancelLabel={t("common.actions.cancel")}
-          variant="destructive"
-          icon="trash-can"
-        />
-      )}
-
-      <ConfirmModal
-        visible={unsavedModalVisible}
-        onRequestClose={() => setUnsavedModalVisible(false)}
-        onConfirm={() => {
+      <CategoryFormModals
+        deleteModalVisible={deleteModalVisible}
+        unsavedModalVisible={unsavedModalVisible}
+        isAddMode={isAddMode}
+        category={category}
+        onCloseDeleteModal={() => setDeleteModalVisible(false)}
+        onCloseUnsavedModal={() => setUnsavedModalVisible(false)}
+        onConfirmDelete={handleDelete}
+        onDiscardAndNavigate={() => {
           setUnsavedModalVisible(false)
           confirmNavigation()
         }}
-        title={t("common.modals.closeWithoutSaving")}
-        description={t("common.form.unsavedDescription")}
-        confirmLabel={t("common.form.discard")}
-        cancelLabel={t("common.actions.cancel")}
-        variant="default"
       />
     </View>
   )

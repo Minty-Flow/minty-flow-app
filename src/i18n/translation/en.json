@@ -16,7 +16,11 @@
       "apply": "Apply",
       "done": "Done",
       "next": "Next",
-      "ok": "OK"
+      "ok": "OK",
+      "saving": "Saving...",
+      "create": "Create",
+      "saveChanges": "Save Changes",
+      "discard": "Discard"
     },
     "states": {
       "soon": "Soon",
@@ -28,16 +32,11 @@
       "toggleOff": "Off"
     },
     "modals": {
+      "unsavedDescription": "All changes will be lost.",
       "closeWithoutSaving": "Close without saving?",
       "deletePermanently": "Delete permanently"
     },
-    "form": {
-      "saving": "Saving...",
-      "create": "Create",
-      "saveChanges": "Save Changes",
-      "discard": "Discard",
-      "unsavedDescription": "All changes will be lost."
-    },
+
     "timePeriods": {
       "hour": "By hour",
       "day": "By day",
@@ -53,6 +52,13 @@
         "credit": "Credit",
         "investment": "Investment",
         "other": "Other"
+      }
+    },
+    "transaction": {
+      "types": {
+        "expense": "Expense",
+        "income": "Income",
+        "transfer": "Transfer"
       }
     },
     "toast": {
@@ -546,6 +552,10 @@
         },
         "remindAt": "Remind me at",
         "footerCaption": "Reminders will stop if you don't open the app for 7 consecutive days",
+        "notification": {
+          "title": "Time for a check-in! 🍃",
+          "body": "Don't forget to log your transactions for today."
+        },
         "a11y": {
           "grantNotifications": "Grant notifications permission",
           "permissionWarning": "Notifications permission not granted"
@@ -593,7 +603,39 @@
         "notes": "Notes",
         "notesPlaceholder": "Add notes about this transaction...",
         "transactionDate": "Transaction date",
-        "fileAttachments": "File attachments"
+        "fileAttachments": "File attachments",
+        "conversion": "Conversion",
+        "conversionRate": "Rate",
+        "category": "Category",
+        "account": "Account",
+        "toAccount": "To Account",
+        "tags": "Tags",
+        "clear": "Clear",
+        "addCategories": "Add categories",
+        "now": "Now",
+        "pending": "Pending",
+        "tapToEditNotes": "Tap to edit notes",
+        "addNotes": "Add notes...",
+        "moveToTrash": "Move to trash",
+        "restore": "Restore"
+      },
+      "recurring": {
+        "label": "Recurring transaction",
+        "recurrence": "Recurrence",
+        "startsOn": "Starts on",
+        "endsOn": "Ends on",
+        "never": "Never",
+        "onADate": "On a date",
+        "occurrences": "Occurrences",
+        "timesCount_one": "{{count}} time",
+        "timesCount_other": "{{count}} times"
+      },
+      "addFiles": {
+        "label": "Add files",
+        "selectFromFiles": "Select from files",
+        "takeAPhoto": "Take a photo",
+        "selectMultipleMedia": "Select multiple media",
+        "selectAPhoto": "Select a photo"
       },
       "save": "Save",
       "create": "Create",
@@ -608,9 +650,7 @@
       "destroyModal": {
         "description": "This transaction will be removed forever and cannot be restored."
       },
-      "unsavedModal": {
-        "description": "All changes will be lost."
-      },
+
       "amountInput": {
         "hint": "Enter amount or a math expression (e.g. 100/4)",
         "showMathActions": "Show math actions",

@@ -8,7 +8,6 @@ import { useTranslation } from "react-i18next"
 import { Linking, Platform, ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
-import { Button } from "~/components/ui/button"
 import { InfoBanner } from "~/components/ui/info-banner"
 import { PermissionBanner } from "~/components/ui/permission-banner"
 import { Pressable } from "~/components/ui/pressable"
@@ -74,8 +73,8 @@ export default function ReminderScreen() {
     await Notifications.scheduleNotificationAsync({
       identifier: DAILY_REMINDER_ID,
       content: {
-        title: "Time for a check-in! 🍃",
-        body: "Don't forget to log your transactions for today.",
+        title: t("screens.settings.reminders.notification.title"),
+        body: t("screens.settings.reminders.notification.body"),
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -182,8 +181,8 @@ export default function ReminderScreen() {
               />
             )}
 
-            {/* TODO: DELETE LATER */}
-            <Button
+            {/* For Testing  */}
+            {/* <Button
               variant="default"
               onPress={async () => await schedulePushNotification()}
               style={[styles.actionButton, { marginTop: 100 }]}
@@ -191,7 +190,7 @@ export default function ReminderScreen() {
               <Text variant="default">
                 {t("screens.settings.reminders.testNotification")}
               </Text>
-            </Button>
+            </Button> */}
           </View>
 
           <InfoBanner text={t("screens.settings.reminders.footerCaption")} />
@@ -199,21 +198,6 @@ export default function ReminderScreen() {
       )}
     </ScrollView>
   )
-}
-
-// TODO: refactore this LATER
-async function schedulePushNotification() {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: "You've got mail! 📬",
-      body: "Here is the notification body",
-      data: { data: "goes here", test: { test1: "more data" } },
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-      seconds: 1,
-    },
-  })
 }
 
 const styles = StyleSheet.create((theme) => ({

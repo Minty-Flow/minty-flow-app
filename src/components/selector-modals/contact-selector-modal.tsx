@@ -7,7 +7,7 @@
 import type { Contact } from "expo-contacts"
 import * as Contacts from "expo-contacts"
 import i18n from "i18next"
-import { Suspense, use, useCallback, useEffect, useMemo, useState } from "react"
+import { Suspense, use, useCallback, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList, Modal, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -219,20 +219,13 @@ export function ContactSelectorModal({
   }> | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
 
-  useEffect(() => {
-    if (visible && !contactsPromise) {
-      setContactsPromise(createContactsPromise(onPermissionDenied))
-    }
-    if (!visible) {
-      setContactsPromise(null)
-    }
-  }, [visible, contactsPromise, onPermissionDenied])
-
   const open = useCallback(() => {
     if (!editable) return
+
     setSearchQuery("")
+    setContactsPromise(createContactsPromise(onPermissionDenied))
     setVisible(true)
-  }, [editable])
+  }, [editable, onPermissionDenied])
 
   const close = useCallback(() => {
     setVisible(false)

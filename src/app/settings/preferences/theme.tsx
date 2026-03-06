@@ -8,15 +8,7 @@ import { ThemeCategorySegmentedControl } from "~/components/theme/theme-category
 import { ThemeColorGrid } from "~/components/theme/theme-color-grid"
 import { ThemeHeader } from "~/components/theme/theme-header"
 import { ThemeVariantPills } from "~/components/theme/theme-variant-pills"
-import { Button } from "~/components/ui/button"
-import { Text } from "~/components/ui/text"
-import {
-  DEFAULT_THEME,
-  THEME_PERSIST_STORE_KEY,
-  type ThemeMode,
-  themeStorage,
-  useThemeStore,
-} from "~/stores/theme.store"
+import { type ThemeMode, useThemeStore } from "~/stores/theme.store"
 import { STANDALONE_THEMES, THEME_GROUPS } from "~/styles/theme/registry"
 import {
   getCategoryForTheme,
@@ -52,12 +44,12 @@ const ThemeSettingsScreen = () => {
     )
   })()
 
-  const clearSavedTheme = () => {
-    themeStorage.remove(THEME_PERSIST_STORE_KEY)
-    setThemeMode(DEFAULT_THEME)
-    setSelectedCategory(getCategoryForTheme(DEFAULT_THEME))
-    setSelectedVariant(getVariantForTheme(DEFAULT_THEME))
-  }
+  // const clearSavedTheme = () => {
+  //   themeStorage.remove(THEME_PERSIST_STORE_KEY)
+  //   setThemeMode(DEFAULT_THEME)
+  //   setSelectedCategory(getCategoryForTheme(DEFAULT_THEME))
+  //   setSelectedVariant(getVariantForTheme(DEFAULT_THEME))
+  // }
 
   const handleThemeChange = (mode: ThemeMode) => {
     setThemeMode(mode)
@@ -162,10 +154,10 @@ const ThemeSettingsScreen = () => {
         onThemeSelect={handleThemeChange}
       />
 
-      {/* TODO: remove later is for testing: clear saved theme */}
-      <Button variant="destructive" onPress={clearSavedTheme}>
+      {/* is for testing: clear saved theme */}
+      {/* <Button variant="destructive" onPress={clearSavedTheme}>
         <Text>Clear saved theme (testing)</Text>
-      </Button>
+      </Button> */}
     </ScrollView>
   )
 }

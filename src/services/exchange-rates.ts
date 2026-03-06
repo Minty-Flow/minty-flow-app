@@ -85,6 +85,7 @@ class ExchangeRatesService {
     _type: "error" | "success" = "error",
   ): void {
     // TODO: Implement toast notification
+    // and implement full translation
   }
 
   /**

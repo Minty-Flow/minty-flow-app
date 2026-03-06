@@ -261,7 +261,7 @@ const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.surface,
-    paddingHorizontal: 20,
+    marginHorizontal: 20,
   },
   scrollView: { flex: 1 },
   scrollContent: {

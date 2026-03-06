@@ -102,3 +102,7 @@ export function getFieldError(
 ): string | undefined {
   return message ?? undefined
 }
+
+export function mergeReducer<S>(state: S, update: Partial<S>): S {
+  return { ...state, ...update }
+}

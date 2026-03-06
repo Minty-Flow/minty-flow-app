@@ -15,7 +15,7 @@ export const CATEGORY_CELL_SIZE = 74
 export const CATEGORY_GAP = 10
 const BUTTON_PAD_H = 14
 
-export const styles = StyleSheet.create((theme) => ({
+export const transactionFormStyles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.surface,

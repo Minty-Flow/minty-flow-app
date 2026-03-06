@@ -136,8 +136,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.surface,
   },
   content: {
-    marginTop: 40,
-    marginBottom: 10,
+    marginVertical: 40,
     paddingBottom: 200,
   },
   section: {

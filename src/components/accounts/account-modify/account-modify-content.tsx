@@ -1,43 +1,26 @@
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useNavigation, useRouter } from "expo-router"
-import { useCallback, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
+import { Controller } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
 import { AccountTypeInline } from "~/components/accounts/account-type-inline"
 import { ChangeIconInline } from "~/components/change-icon-inline"
 import { ColorVariantInline } from "~/components/color-variant-inline"
-import { ConfirmModal } from "~/components/confirm-modal"
 import { CurrencySelectorModal } from "~/components/selector-modals"
 import { SmartAmountInput } from "~/components/smart-amount-input"
-import { Button } from "~/components/ui/button"
-import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Input } from "~/components/ui/input"
-import { Pressable } from "~/components/ui/pressable"
 import { Separator } from "~/components/ui/separator"
-import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
-import {
-  createAccount,
-  destroyAccount,
-  updateAccount,
-} from "~/database/services/account-service"
-import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import type { TranslationKey } from "~/i18n/config"
-import {
-  type AddAccountsFormSchema,
-  addAccountsSchema,
-} from "~/schemas/accounts.schema"
-import { getThemeStrict } from "~/styles/theme/registry"
-import { AccountTypeEnum } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
-import { logger } from "~/utils/logger"
-import { Toast } from "~/utils/toast"
 
+import { AccountDeleteSection } from "./account-delete-section"
+import { AccountFormFooter } from "./account-form-footer"
+import { AccountFormModals } from "./account-form-modals"
 import { accountModifyStyles } from "./account-modify.styles"
+import { AccountSwitchesSection } from "./account-switches-section"
 import type { AccountModifyContentProps } from "./types"
+import { useAccountForm } from "./use-account-form"
 
 export function AccountModifyContent({
   accountId,
@@ -46,147 +29,34 @@ export function AccountModifyContent({
   transactionCount = 0,
 }: AccountModifyContentProps) {
   const { t } = useTranslation()
-  const router = useRouter()
-  const isAddMode = accountId === NewEnum.NEW || !accountId
-
-  const handleGoBack = useCallback(() => {
-    router.back()
-  }, [router])
-
   const {
+    isAddMode,
     control,
-    handleSubmit: handleFormSubmit,
-    formState: { errors, isDirty },
-    watch,
+    errors,
+    isDirty,
+    isSubmitting,
+    formName,
+    formIcon,
+    formColorSchemeName,
+    formType,
+    formCurrencyCode,
+    formIsPrimary,
+    currentColorScheme,
+    unsavedModalVisible,
+    deleteModalVisible,
+    confirmNavigation,
+    handleGoBack,
     setValue,
-  } = useForm({
-    resolver: zodResolver(addAccountsSchema),
-    defaultValues: {
-      name: account?.name || "",
-      type: account?.type || AccountTypeEnum.CHECKING,
-      balance: account?.balance || 0,
-      currencyCode: account?.currencyCode || "USD",
-      icon: account?.icon || "wallet-bifold-outline",
-      colorSchemeName: account?.colorSchemeName || undefined,
-      isPrimary: account?.isPrimary || false,
-      excludeFromBalance: account?.excludeFromBalance || false,
-      isArchived: account?.isArchived || false,
-    },
-  })
-
-  const formName = watch("name")
-  const formIcon = watch("icon")
-  const formColorSchemeName = watch("colorSchemeName")
-  const formType = watch("type")
-  const formCurrencyCode = watch("currencyCode")
-  const formIsPrimary = watch("isPrimary")
-
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const navigation = useNavigation()
-  const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
-  const { confirmNavigation, allowNavigation } = useNavigationGuard({
-    navigation,
-    when: isDirty && !isSubmitting,
-    onConfirm: handleGoBack,
-    onBlock: () => setUnsavedModalVisible(true),
-  })
-
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-
-  const onSubmit = async (data: AddAccountsFormSchema) => {
-    setIsSubmitting(true)
-
-    try {
-      if (isAddMode) {
-        await createAccount({
-          name: data.name,
-          type: data.type,
-          balance: data.balance,
-          currencyCode: data.currencyCode,
-          icon: data.icon,
-          colorSchemeName: data.colorSchemeName,
-          isPrimary: false,
-          excludeFromBalance: data.excludeFromBalance,
-          isArchived: data.isArchived,
-        })
-
-        allowNavigation()
-        handleGoBack()
-      } else {
-        if (!accountModel) {
-          Toast.error({
-            title: t("common.toast.error"),
-            description: t("screens.accounts.form.toast.notFound"),
-          })
-          setIsSubmitting(false)
-          return
-        }
-
-        await updateAccount(accountModel, {
-          name: data.name,
-          type: data.type,
-          balance: data.balance,
-          currencyCode: data.currencyCode,
-          icon: data.icon,
-          colorSchemeName: data.colorSchemeName,
-          isPrimary: data.isArchived ? false : data.isPrimary,
-          excludeFromBalance: data.excludeFromBalance,
-          isArchived: data.isArchived,
-        })
-
-        allowNavigation()
-        handleGoBack()
-      }
-    } catch (error) {
-      logger.error("Error saving account", { error })
-      Toast.error({
-        title: t("common.toast.error"),
-        description: isAddMode
-          ? t("screens.accounts.form.toast.createFailed")
-          : t("screens.accounts.form.toast.updateFailed"),
-      })
-    }
-    setIsSubmitting(false)
-  }
-
-  const handleSubmit = handleFormSubmit(onSubmit)
-
-  const handleDelete = async () => {
-    try {
-      if (!accountModel) return
-
-      await destroyAccount(accountModel)
-
-      allowNavigation()
-      router.dismissAll()
-      router.push("/settings/all-accounts")
-    } catch (error) {
-      logger.error("Error deleting account", { error })
-      Toast.error({
-        title: t("common.toast.error"),
-        description: t("screens.accounts.form.toast.deleteFailed"),
-      })
-    }
-  }
-
-  const handleIconSelected = (icon: string) => {
-    setValue("icon", icon, { shouldDirty: true })
-  }
-
-  const handleColorSelected = (schemeName: string) => {
-    setValue("colorSchemeName", schemeName, { shouldDirty: true })
-  }
-
-  const handleColorCleared = () => {
-    setValue("colorSchemeName", undefined, { shouldDirty: true })
-  }
-
-  const handleCurrencySelected = (code: string) => {
-    setValue("currencyCode", code, { shouldDirty: true })
-  }
-
-  const currentColorScheme = getThemeStrict(formColorSchemeName)
+    handleSubmit,
+    handleDelete,
+    handleIconSelected,
+    handleColorSelected,
+    handleColorCleared,
+    handleCurrencySelected,
+    openDeleteModal,
+    closeDeleteModal,
+    closeUnsavedModal,
+  } = useAccountForm({ accountId, accountModel, account })
 
   if (!isAddMode && !account) {
     return (
@@ -281,222 +151,46 @@ export function AccountModifyContent({
 
           <Separator />
 
-          <View style={accountModifyStyles.switchesSection}>
-            <Controller
-              control={control}
-              name="excludeFromBalance"
-              render={({ field: { value, onChange } }) => (
-                <Pressable
-                  style={accountModifyStyles.switchRow}
-                  onPress={() => onChange(!value)}
-                  accessibilityRole="switch"
-                  accessibilityState={{ checked: value }}
-                >
-                  <View style={accountModifyStyles.switchLeft}>
-                    <IconSymbol name="playlist-remove" size={24} />
-                    <Text
-                      variant="default"
-                      style={accountModifyStyles.switchLabel}
-                    >
-                      {t("screens.accounts.form.excludeFromBalanceLabel")}
-                    </Text>
-                  </View>
-
-                  <View pointerEvents="none">
-                    <Switch value={value} />
-                  </View>
-                </Pressable>
-              )}
-            />
-
-            {!isAddMode && (
-              <View style={accountModifyStyles.primaryAccountBlock}>
-                <Controller
-                  control={control}
-                  name="isPrimary"
-                  render={({ field: { value, onChange } }) => (
-                    <Pressable
-                      style={accountModifyStyles.switchRow}
-                      onPress={() => {
-                        const next = !value
-                        if (next)
-                          setValue("isArchived", false, { shouldDirty: true })
-                        onChange(next)
-                      }}
-                      accessibilityRole="switch"
-                      accessibilityState={{ checked: value }}
-                    >
-                      <View style={accountModifyStyles.switchLeft}>
-                        <IconSymbol name="star" size={24} />
-                        <Text
-                          variant="default"
-                          style={accountModifyStyles.switchLabel}
-                        >
-                          {t("screens.accounts.form.primaryAccountLabel")}
-                        </Text>
-                      </View>
-
-                      <View pointerEvents="none">
-                        <Switch value={value} />
-                      </View>
-                    </Pressable>
-                  )}
-                />
-                {formIsPrimary && (
-                  <View style={accountModifyStyles.primaryAccountHintContainer}>
-                    <IconSymbol
-                      name="information"
-                      style={accountModifyStyles.primaryAccountHintIcon}
-                      size={14}
-                    />
-                    <Text
-                      variant="small"
-                      style={accountModifyStyles.primaryAccountHint}
-                    >
-                      {t("screens.accounts.form.primaryAccountHint")}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            )}
-
-            {!isAddMode && (
-              <Controller
-                control={control}
-                name="isArchived"
-                render={({ field: { value, onChange } }) => (
-                  <Pressable
-                    style={accountModifyStyles.switchRow}
-                    onPress={() => {
-                      const next = !value
-                      if (next)
-                        setValue("isPrimary", false, { shouldDirty: true })
-                      onChange(next)
-                    }}
-                    accessibilityRole="switch"
-                    accessibilityState={{ checked: value }}
-                  >
-                    <View style={accountModifyStyles.switchLeft}>
-                      <IconSymbol name="archive-arrow-down" size={24} />
-                      <Text
-                        variant="default"
-                        style={accountModifyStyles.switchLabel}
-                      >
-                        {t("screens.accounts.form.archiveLabel")}
-                      </Text>
-                    </View>
-
-                    <View pointerEvents="none">
-                      <Switch value={value} />
-                    </View>
-                  </Pressable>
-                )}
-              />
-            )}
-          </View>
+          <AccountSwitchesSection
+            control={control}
+            isAddMode={isAddMode}
+            formIsPrimary={formIsPrimary}
+            setValue={setValue}
+          />
 
           {!isAddMode && <Separator />}
         </View>
 
         {!isAddMode && (
-          <View style={accountModifyStyles.deleteSection}>
-            {account?.isArchived ? (
-              <Button
-                variant="ghost"
-                onPress={() => setDeleteModalVisible(true)}
-                style={accountModifyStyles.actionButton}
-              >
-                <IconSymbol
-                  name="trash-can"
-                  size={20}
-                  style={accountModifyStyles.deleteIcon}
-                />
-                <Text variant="default" style={accountModifyStyles.deleteText}>
-                  {t("screens.accounts.form.deleteLabel")}
-                </Text>
-              </Button>
-            ) : (
-              <View style={accountModifyStyles.archiveContainer}>
-                <IconSymbol
-                  name="information"
-                  style={accountModifyStyles.archiveWarningIcon}
-                  size={14}
-                />
-
-                <Text
-                  variant="small"
-                  style={accountModifyStyles.archiveWarning}
-                >
-                  {t("screens.accounts.form.archiveWarning")}
-                </Text>
-              </View>
-            )}
-          </View>
+          <AccountDeleteSection
+            account={account}
+            onDeletePress={openDeleteModal}
+          />
         )}
       </ScrollIntoViewProvider>
 
-      <View style={accountModifyStyles.actions}>
-        <Button
-          variant="outline"
-          onPress={handleGoBack}
-          style={accountModifyStyles.button}
-        >
-          <Text variant="default" style={accountModifyStyles.cancelText}>
-            {t("common.actions.cancel")}
-          </Text>
-        </Button>
-        <Button
-          variant="default"
-          onPress={handleSubmit}
-          style={accountModifyStyles.button}
-          disabled={
-            !formName.trim() || (!isAddMode && !isDirty) || isSubmitting
-          }
-        >
-          <Text variant="default" style={accountModifyStyles.saveText}>
-            {isSubmitting
-              ? t("common.form.saving")
-              : isAddMode
-                ? t("common.form.create")
-                : t("common.form.saveChanges")}
-          </Text>
-        </Button>
-      </View>
+      <AccountFormFooter
+        formName={formName}
+        isAddMode={isAddMode}
+        isDirty={isDirty}
+        isSubmitting={isSubmitting}
+        onCancel={handleGoBack}
+        onSave={handleSubmit}
+      />
 
-      {!isAddMode && account && (
-        <ConfirmModal
-          visible={deleteModalVisible}
-          onRequestClose={() => setDeleteModalVisible(false)}
-          onConfirm={handleDelete}
-          title={t("screens.accounts.form.deleteModal.title", {
-            name: account.name,
-          })}
-          description={
-            transactionCount > 0
-              ? t("screens.accounts.form.deleteModal.descriptionWithCount", {
-                  count: transactionCount,
-                })
-              : t("screens.accounts.form.deleteModal.descriptionEmpty")
-          }
-          confirmLabel={t("common.actions.delete")}
-          cancelLabel={t("common.actions.cancel")}
-          variant="destructive"
-          icon="trash-can"
-        />
-      )}
-
-      <ConfirmModal
-        visible={unsavedModalVisible}
-        onRequestClose={() => setUnsavedModalVisible(false)}
-        onConfirm={() => {
-          setUnsavedModalVisible(false)
+      <AccountFormModals
+        deleteModalVisible={deleteModalVisible}
+        unsavedModalVisible={unsavedModalVisible}
+        isAddMode={isAddMode}
+        account={account}
+        transactionCount={transactionCount}
+        onCloseDeleteModal={closeDeleteModal}
+        onCloseUnsavedModal={closeUnsavedModal}
+        onConfirmDelete={handleDelete}
+        onDiscardAndNavigate={() => {
+          closeUnsavedModal()
           confirmNavigation()
         }}
-        title={t("common.modals.closeWithoutSaving")}
-        description={t("common.form.unsavedDescription")}
-        confirmLabel={t("common.form.discard")}
-        cancelLabel={t("common.actions.cancel")}
-        variant="default"
       />
     </View>
   )

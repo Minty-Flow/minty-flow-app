@@ -78,9 +78,14 @@ export default function RootLayout() {
                 headerShadowVisible: false,
                 statusBarStyle: theme.isDark ? "light" : "dark",
 
+                contentStyle: {
+                  paddingBottom: UnistylesRuntime.insets.bottom, // Global horizontal gutter
+                  backgroundColor: theme.colors.surface, // Ensure background matches
+                },
+                // animation: "fade",
+
                 // if you decided to use this some screens wont have the edit pen in them so be careful
                 // header: (props) =>   <ScreenSharedHeader props={props} />,
-                // animation: "fade",
               }}
             >
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

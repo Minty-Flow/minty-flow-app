@@ -3,17 +3,11 @@ import { useTranslation } from "react-i18next"
 import Swipeable, {
   type SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable"
-import Animated, {
-  interpolate,
-  type SharedValue,
-  useAnimatedStyle,
-} from "react-native-reanimated"
-import { StyleSheet, useUnistyles } from "react-native-unistyles"
+import type { SharedValue } from "react-native-reanimated"
+import { useUnistyles } from "react-native-unistyles"
 
-import { Money } from "~/components/money"
 import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Pressable } from "~/components/ui/pressable"
-import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TransactionWithRelations } from "~/database/services/transaction-service"
 import { deleteTransactionModel } from "~/database/services/transaction-service"
@@ -26,7 +20,11 @@ import { TransactionTypeEnum } from "~/types/transactions"
 import { formatFriendlyDate, formatReadableTime } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
-import { DynamicIcon } from "../dynamic-icon"
+import { LeftAction } from "./left-action"
+import { RightAction } from "./right-action"
+import { transactionItemStyles } from "./styles"
+import { TransactionItemLeft } from "./transaction-item-left"
+import { TransactionItemRight } from "./transaction-item-right"
 
 const TRASH_ACTION_WIDTH = 100
 
@@ -47,128 +45,6 @@ interface TransactionItemProps {
   variant?: TransactionItemVariant
 }
 
-function RightAction({
-  progress,
-  onTrashPress,
-  accessibilityLabel: accessibilityLabelProp,
-}: {
-  progress: SharedValue<number>
-  translation: SharedValue<number> // required by Swipeable renderRightActions signature
-  onTrashPress: () => void
-  accessibilityLabel?: string
-}) {
-  const { t } = useTranslation()
-  const accessibilityLabel =
-    accessibilityLabelProp ?? t("screens.settings.trash.a11y.moveToTrash")
-  const iconStyle = useAnimatedStyle(() => {
-    const scale = interpolate(progress.value, [0, 1], [0.5, 1], "clamp")
-    const opacity = interpolate(
-      progress.value,
-      [0, 0.5, 1],
-      [0, 0.5, 1],
-      "clamp",
-    )
-    return {
-      transform: [{ scale }],
-      opacity,
-    }
-  })
-
-  return (
-    <View style={rightActionStyles.container}>
-      <Pressable
-        style={rightActionStyles.pressable}
-        onPress={onTrashPress}
-        accessibilityLabel={accessibilityLabel}
-      >
-        <Animated.View style={iconStyle}>
-          <IconSymbol
-            name="trash-can"
-            size={24}
-            color={rightActionStyles.trashIcon.color}
-          />
-        </Animated.View>
-      </Pressable>
-    </View>
-  )
-}
-
-const rightActionStyles = StyleSheet.create((theme) => ({
-  container: {
-    width: TRASH_ACTION_WIDTH,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: theme.colors.error,
-  },
-  pressable: {
-    flex: 1,
-    width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  trashIcon: {
-    color: theme.colors.onError,
-  },
-}))
-
-function LeftAction({
-  progress,
-  onRestorePress,
-  accessibilityLabel,
-}: {
-  progress: SharedValue<number>
-  translation: SharedValue<number>
-  onRestorePress: () => void
-  accessibilityLabel?: string
-}) {
-  const iconStyle = useAnimatedStyle(() => {
-    const scale = interpolate(progress.value, [0, 1], [0.5, 1], "clamp")
-    const opacity = interpolate(
-      progress.value,
-      [0, 0.5, 1],
-      [0, 0.5, 1],
-      "clamp",
-    )
-    return { transform: [{ scale }], opacity }
-  })
-
-  return (
-    <View style={leftActionStyles.container}>
-      <Pressable
-        style={leftActionStyles.pressable}
-        onPress={onRestorePress}
-        accessibilityLabel={accessibilityLabel}
-      >
-        <Animated.View style={iconStyle}>
-          <IconSymbol
-            name="restore"
-            size={24}
-            color={leftActionStyles.restoreIcon.color}
-          />
-        </Animated.View>
-      </Pressable>
-    </View>
-  )
-}
-
-const leftActionStyles = StyleSheet.create((theme) => ({
-  container: {
-    width: TRASH_ACTION_WIDTH,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: theme.colors.customColors.success,
-  },
-  pressable: {
-    flex: 1,
-    width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  restoreIcon: {
-    color: theme.colors.onError,
-  },
-}))
-
 export const TransactionItem = ({
   transactionWithRelations,
   onPress,
@@ -186,6 +62,7 @@ export const TransactionItem = ({
   const { theme } = useUnistyles()
   const { transaction, account, category, relatedAccount, conversionRate } =
     transactionWithRelations
+
   const colorScheme = category?.colorScheme ?? account.colorScheme
   const isTransfer =
     transaction.isTransfer || transaction.type === TransactionTypeEnum.TRANSFER
@@ -206,14 +83,13 @@ export const TransactionItem = ({
         : transaction.amount / conversionRate
       : null
   const icon = isTransfer ? "swap-horizontal" : category?.icon
-  // For transfers: debit (source) = negative → show as expense; credit (destination) = positive → show as income
   const amountTone = isTransfer
     ? transaction.amount < 0
       ? TransactionTypeEnum.EXPENSE
       : TransactionTypeEnum.INCOME
     : transaction.type
 
-  // ── Appearance preferences ──────────────────────────────────────────────────
+  // ── Appearance preferences ──────────────────────────────────────────────
   const appearanceVariant = useTransactionItemAppearanceStore((s) => s.variant)
   const showCategoryInSubtitle = useTransactionItemAppearanceStore(
     (s) => s.showCategory,
@@ -225,8 +101,6 @@ export const TransactionItem = ({
     (s) => s.leadingIcon,
   )
 
-  // Derive display title: replace the sentinel "Untitled Transaction" with
-  // the category name when the user has opted in.
   const UNTITLED = "Untitled Transaction"
   const untitledLabel = t("components.transactionForm.fields.titlePlaceholder")
   const isUntitled =
@@ -236,7 +110,6 @@ export const TransactionItem = ({
       ? (category?.name ?? untitledLabel)
       : transaction.title || untitledLabel
 
-  // Derive leading icon & color scheme based on user preference
   const displayIcon =
     leadingIconPref === "account" ? (account.icon ?? icon) : icon
   const displayColorScheme =
@@ -252,7 +125,6 @@ export const TransactionItem = ({
   const isConfirmable = useIsConfirmable(transaction)
   const isAutoRecurring = Boolean(transaction.extra?.recurringId)
 
-  // Derive subtitle string (account · [category] · time) — needs isUpcoming
   const accountLabel =
     isCombinedTransfer && relatedAccount
       ? `${account.name} → ${relatedAccount.name}`
@@ -266,7 +138,6 @@ export const TransactionItem = ({
     : ` · ${formatReadableTime(transaction.transactionDate)}`
   const subtitleText = `${accountLabel}${categorySegment}${timeSegment}`
 
-  // Only two badges: Recurring and Pending
   const showRecurringBadge = isUpcoming && isAutoRecurring
   const showPendingBadge = isUpcoming && !isAutoRecurring
 
@@ -294,7 +165,6 @@ export const TransactionItem = ({
     [handleRestorePress, leftActionAccessibilityLabel],
   )
 
-  // When isDeleted is false: move to trash (soft delete). When isDeleted is true: parent handles (e.g. confirm then destroy).
   const handleTrashPress = useCallback(
     async (closeSwipe: () => void) => {
       if (onBeforeDelete) {
@@ -307,12 +177,10 @@ export const TransactionItem = ({
         }
       }
       if (transaction.isDeleted) {
-        // Already in trash: delegate to parent (e.g. show confirm modal then destroy).
         closeSwipe()
         onDelete?.()
         return
       }
-      // Move to trash (soft delete).
       const promise =
         transaction.isTransfer && transaction.transferId
           ? deleteTransfer(transaction)
@@ -361,107 +229,40 @@ export const TransactionItem = ({
   )
 
   const content = (
-    <View style={styles.container}>
+    <View style={transactionItemStyles.container}>
       <Pressable
         style={[
-          styles.mainTouchable,
-          appearanceVariant === "elevated" && styles.mainTouchableElevated,
+          transactionItemStyles.mainTouchable,
+          appearanceVariant === "elevated" &&
+            transactionItemStyles.mainTouchableElevated,
         ]}
         onPress={onPress}
       >
-        <View style={styles.leftSection}>
-          <DynamicIcon
-            icon={displayIcon}
-            size={20}
-            colorScheme={displayColorScheme}
-            variant="badge"
-          />
-
-          <View style={styles.details}>
-            <Text variant="small" style={styles.title} numberOfLines={1}>
-              {displayTitle}
-            </Text>
-            <View style={styles.subtitleRow}>
-              <Text style={styles.subtitle} numberOfLines={1}>
-                {subtitleText}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.rightSection}>
-          <View style={styles.amountBlock}>
-            <Money
-              value={transaction.amount}
-              currency={account.currencyCode}
-              tone={amountTone}
-              visualTone={isTransfer ? TransactionTypeEnum.TRANSFER : undefined}
-              hideSign={isCombinedTransfer}
-              native
-              style={styles.amount}
-            />
-            {isCrossCurrencyTransfer &&
-              otherCurrencyAmount != null &&
-              relatedAccount && (
-                <Money
-                  value={otherCurrencyAmount}
-                  currency={relatedAccount.currencyCode}
-                  style={styles.secondaryAmount}
-                  variant="small"
-                  tone="transfer"
-                  native
-                />
-              )}
-          </View>
-
-          {/* Recurring badge */}
-          {showRecurringBadge && (
-            <View style={styles.statusBadge}>
-              <IconSymbol
-                name="repeat"
-                size={12}
-                color={theme.colors.customColors.info}
-              />
-              <Text
-                style={[
-                  styles.statusBadgeText,
-                  { color: theme.colors.customColors.info },
-                ]}
-              >
-                {t("components.transactionItem.recurring")}
-              </Text>
-            </View>
-          )}
-
-          {/* Pending badge */}
-          {showPendingBadge && (
-            <View style={styles.statusBadge}>
-              <IconSymbol
-                name="progress-clock"
-                size={12}
-                color={theme.colors.customColors.warning}
-              />
-              <Text
-                style={[
-                  styles.statusBadgeText,
-                  { color: theme.colors.customColors.warning },
-                ]}
-              >
-                {t("components.transactionItem.pending")}
-              </Text>
-            </View>
-          )}
-        </View>
+        <TransactionItemLeft
+          displayIcon={displayIcon}
+          displayColorScheme={displayColorScheme}
+          displayTitle={displayTitle}
+          subtitleText={subtitleText}
+        />
+        <TransactionItemRight
+          amount={transaction.amount}
+          currencyCode={account.currencyCode}
+          amountTone={amountTone}
+          isTransfer={isTransfer}
+          isCombinedTransfer={isCombinedTransfer}
+          isCrossCurrencyTransfer={isCrossCurrencyTransfer}
+          otherCurrencyAmount={otherCurrencyAmount}
+          relatedAccountCurrencyCode={relatedAccount?.currencyCode}
+          showRecurringBadge={showRecurringBadge}
+          showPendingBadge={showPendingBadge}
+        />
       </Pressable>
 
-      {/* Manual confirm button - only show if manual confirmation required */}
       {isUpcoming && isConfirmable && requireConfirmation && onConfirm && (
         <Pressable
           style={[
-            styles.confirmButton,
-            {
-              backgroundColor: theme.colors.customColors.success,
-            },
+            transactionItemStyles.confirmButton,
+            { backgroundColor: theme.colors.customColors.success },
           ]}
           onPress={onConfirm}
           accessibilityLabel={t("screens.home.upcoming.a11y.confirm")}
@@ -486,7 +287,7 @@ export const TransactionItem = ({
       overshootRight={false}
       overshootLeft={false}
       containerStyle={[
-        styles.swipeableContainer,
+        transactionItemStyles.swipeableContainer,
         { backgroundColor: theme.colors.error },
       ]}
       renderRightActions={renderRightActions}
@@ -500,79 +301,3 @@ export const TransactionItem = ({
     </Swipeable>
   )
 }
-
-const styles = StyleSheet.create((theme) => ({
-  swipeableContainer: {
-    overflow: "hidden",
-  },
-  container: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    backgroundColor: theme.colors.surface,
-  },
-  mainTouchable: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    paddingLeft: 20,
-    paddingRight: 20,
-  },
-  mainTouchableElevated: {
-    paddingVertical: 16,
-  },
-  leftSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    gap: 12,
-  },
-  details: {
-    flex: 1,
-  },
-  title: {
-    fontWeight: "500",
-    color: theme.colors.onSurface,
-  },
-  subtitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    flexWrap: "wrap",
-  },
-  subtitle: {
-    color: theme.colors.onSecondary,
-    fontSize: 12,
-  },
-  rightSection: {
-    alignItems: "flex-end",
-  },
-  amountBlock: {
-    alignItems: "flex-end",
-    gap: 2,
-  },
-  amount: {},
-  secondaryAmount: {
-    fontSize: 12,
-    color: theme.colors.customColors?.semi,
-  },
-  statusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    // paddingHorizontal: 6,
-    // paddingVertical: 2,
-    // borderRadius: 6,
-  },
-  statusBadgeText: {
-    fontSize: 10,
-    fontWeight: "600",
-  },
-  confirmButton: {
-    // minWidth: 44,
-    paddingHorizontal: 14,
-    // marginLeft: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-}))

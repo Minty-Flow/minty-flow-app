@@ -1,5 +1,4 @@
 import { Image } from "expo-image"
-import type { FC } from "react"
 import { Text as RNText } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
@@ -21,13 +20,13 @@ interface DynamicIconProps {
   variant?: "badge" | "raw"
 }
 
-export const DynamicIcon: FC<DynamicIconProps> = ({
+export function DynamicIcon({
   icon,
   size = 24,
   colorScheme,
   color: explicitColor,
   variant = "badge",
-}) => {
+}: DynamicIconProps) {
   const color = explicitColor || colorScheme?.primary || undefined
   const bgColor = colorScheme?.secondary || undefined
   const containerSize = size * 2

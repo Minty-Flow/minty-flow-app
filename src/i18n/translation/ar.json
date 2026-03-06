@@ -16,7 +16,11 @@
       "apply": "تطبيق",
       "done": "تم",
       "next": "التالي",
-      "ok": "حسناً"
+      "ok": "حسناً",
+      "saving": "جارٍ الحفظ...",
+      "create": "إنشاء",
+      "saveChanges": "حفظ التغييرات",
+      "discard": "تجاهل"
     },
     "states": {
       "soon": "قريباً",
@@ -28,15 +32,9 @@
       "toggleOff": "إيقاف"
     },
     "modals": {
+      "unsavedDescription": "سيتم فقدان كافة التغييرات.",
       "closeWithoutSaving": "إغلاق دون حفظ؟",
       "deletePermanently": "حذف نهائي"
-    },
-    "form": {
-      "saving": "جارٍ الحفظ...",
-      "create": "إنشاء",
-      "saveChanges": "حفظ التغييرات",
-      "discard": "تجاهل",
-      "unsavedDescription": "ستُفقد جميع التغييرات."
     },
     "timePeriods": {
       "hour": "حسب الساعة",
@@ -53,6 +51,13 @@
         "credit": "ائتماني",
         "investment": "استثماري",
         "other": "أخرى"
+      }
+    },
+    "transaction": {
+      "types": {
+        "expense": "مصروف",
+        "income": "دخل",
+        "transfer": "تحويل"
       }
     },
     "toast": {
@@ -543,6 +548,10 @@
         },
         "remindAt": "تذكيري في تمام الساعة",
         "footerCaption": "ستتوقف التذكيرات إذا لم تقم بفتح التطبيق لمدة 7 أيام متتالية",
+        "notification": {
+          "title": "وقت مراجعة حساباتك! 🍃",
+          "body": "لا تنسَ تسجيل معاملاتك المالية لهذا اليوم."
+        },
         "a11y": {
           "grantNotifications": "منح إذن الإشعارات",
           "permissionWarning": "لم يتم منح إذن الإشعارات"
@@ -590,7 +599,39 @@
         "notes": "ملاحظات",
         "notesPlaceholder": "أضف ملاحظات حول هذه المعاملة...",
         "transactionDate": "تاريخ المعاملة",
-        "fileAttachments": "مرفقات الملفات"
+        "fileAttachments": "مرفقات الملفات",
+        "conversion": "التحويل",
+        "conversionRate": "السعر",
+        "category": "الفئة",
+        "clear": "مسح",
+        "addCategories": "إضافة فئات",
+        "now": "الآن",
+        "pending": "معلقة",
+        "tapToEditNotes": "اضغط لتعديل الملاحظات",
+        "addNotes": "أضف ملاحظات...",
+        "moveToTrash": "نقل إلى سلة المحذوفات",
+        "restore": "استعادة",
+        "account": "حساب",
+        "toAccount": "إلى الحساب",
+        "tags": "العلامات"
+      },
+      "recurring": {
+        "label": "معاملة متكررة",
+        "recurrence": "التكرار",
+        "startsOn": "تبدأ في",
+        "endsOn": "تنتهي في",
+        "never": "أبداً",
+        "onADate": "في تاريخ محدد",
+        "occurrences": "المرات",
+        "timesCount_one": "مرة واحدة",
+        "timesCount_other": "{{count}} مرات"
+      },
+      "addFiles": {
+        "label": "إضافة ملفات",
+        "selectFromFiles": "اختر من الملفات",
+        "takeAPhoto": "التقط صورة",
+        "selectMultipleMedia": "اختر وسائط متعددة",
+        "selectAPhoto": "اختر صورة"
       },
       "save": "حفظ",
       "create": "إنشاء",
@@ -604,9 +645,6 @@
       },
       "destroyModal": {
         "description": "ستُزال هذه المعاملة نهائياً ولا يمكن استعادتها."
-      },
-      "unsavedModal": {
-        "description": "ستُفقد جميع التغييرات."
       },
       "amountInput": {
         "hint": "أدخل المبلغ أو تعبيراً رياضياً (مثال: 100/4)",

@@ -1,6 +1,7 @@
-// src/components/ui/icon-symbol.tsx
-// Icon component using MaterialCommunityIcons
-
+/**
+ * TODO: migrate to svg icons instead like
+ * https://iconoir.com/ or https://lucide.dev/guide/packages/lucide-react-native
+ */
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons"
 import type { ComponentProps } from "react"
 import type { OpaqueColorValue, StyleProp, TextStyle } from "react-native"

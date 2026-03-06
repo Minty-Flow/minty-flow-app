@@ -1,19 +1,35 @@
+import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import type { TranslationKey } from "~/i18n/config"
 import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
+
+import { IconSymbol, type IconSymbolName } from "../ui/icon-symbol"
 
 interface TransactionTypeSelectorProps {
   value: TransactionType
   onChange: (type: TransactionType) => void
 }
 
-const TYPE_CONFIG: Record<TransactionType, { label: string }> = {
-  [TransactionTypeEnum.EXPENSE]: { label: "Expense" },
-  [TransactionTypeEnum.INCOME]: { label: "Income" },
-  [TransactionTypeEnum.TRANSFER]: { label: "Transfer" },
+const TYPE_CONFIG: Record<
+  TransactionType,
+  { labelKey: TranslationKey; icon: IconSymbolName }
+> = {
+  [TransactionTypeEnum.EXPENSE]: {
+    labelKey: "common.transaction.types.expense",
+    icon: "chevron-double-up",
+  },
+  [TransactionTypeEnum.INCOME]: {
+    labelKey: "common.transaction.types.income",
+    icon: "chevron-double-down",
+  },
+  [TransactionTypeEnum.TRANSFER]: {
+    labelKey: "common.transaction.types.transfer",
+    icon: "swap-horizontal",
+  },
 }
 
 const TYPES: TransactionType[] = [
@@ -26,7 +42,7 @@ export const TransactionTypeSelector = ({
   value,
   onChange,
 }: TransactionTypeSelectorProps) => {
-  // TODO: add proper icon on each segment
+  const { t } = useTranslation()
   return (
     <View style={styles.segmented}>
       {TYPES.map((type) => {
@@ -38,10 +54,14 @@ export const TransactionTypeSelector = ({
             onPress={() => onChange(type)}
             style={[styles.segment, isSelected && styles.active]}
           >
+            <IconSymbol
+              name={config.icon}
+              style={isSelected && styles.activeText}
+            />
             <Text
               style={[styles.segmentLabel, isSelected && styles.activeText]}
             >
-              {config.label}
+              {t(config.labelKey)}
             </Text>
           </Pressable>
         )

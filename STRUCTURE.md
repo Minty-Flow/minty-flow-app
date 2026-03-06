@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-03-05T17:24:00.166Z
+Generated on: 2026-03-06T23:48:57.904Z
 
 ```
 ./
@@ -169,7 +169,6 @@ Generated on: 2026-03-05T17:24:00.166Z
 │   │   │   │   ├── index.tsx
 │   │   │   │   └── presets.tsx
 │   │   │   ├── preferences/
-│   │   │   │   ├── theme/
 │   │   │   │   ├── button-placement.tsx
 │   │   │   │   ├── exchange-rates.tsx
 │   │   │   │   ├── index.tsx
@@ -212,14 +211,21 @@ Generated on: 2026-03-05T17:24:00.166Z
 │   ├── components/
 │   │   ├── accounts/
 │   │   │   ├── account-modify/
+│   │   │   │   ├── account-delete-section.tsx
+│   │   │   │   ├── account-form-footer.tsx
+│   │   │   │   ├── account-form-modals.tsx
 │   │   │   │   ├── account-modify-content.tsx
 │   │   │   │   ├── account-modify.styles.ts
+│   │   │   │   ├── account-switches-section.tsx
 │   │   │   │   ├── index.ts
-│   │   │   │   └── types.ts
+│   │   │   │   ├── types.ts
+│   │   │   │   └── use-account-form.ts
 │   │   │   ├── account-card.tsx
 │   │   │   └── account-type-inline.tsx
 │   │   ├── categories/
 │   │   │   ├── category-modify/
+│   │   │   │   ├── category-form-footer.tsx
+│   │   │   │   ├── category-form-modals.tsx
 │   │   │   │   ├── category-modify-content.tsx
 │   │   │   │   ├── category-modify.styles.ts
 │   │   │   │   ├── index.ts
@@ -251,6 +257,21 @@ Generated on: 2026-03-05T17:24:00.166Z
 │   │   │   ├── currency-selector-modal.tsx
 │   │   │   ├── index.ts
 │   │   │   └── styles.ts
+│   │   ├── smart-amount-input/
+│   │   │   ├── amount-input-row.tsx
+│   │   │   ├── amount-label-row.tsx
+│   │   │   ├── amount-preview-chip.tsx
+│   │   │   ├── index.tsx
+│   │   │   ├── math-toolbar.tsx
+│   │   │   ├── math-utils.ts
+│   │   │   └── styles.ts
+│   │   ├── tag/
+│   │   │   ├── action-buttons.tsx
+│   │   │   ├── delete-section.tsx
+│   │   │   ├── form-tag-fields.tsx
+│   │   │   ├── form-tag-modals.tsx
+│   │   │   ├── location-coming-soon.tsx
+│   │   │   └── type-tabs.tsx
 │   │   ├── tags/
 │   │   │   └── tag-card.tsx
 │   │   ├── theme/
@@ -283,14 +304,34 @@ Generated on: 2026-03-05T17:24:00.166Z
 │   │   │   ├── transaction-form-v3/
 │   │   │   │   ├── constants.ts
 │   │   │   │   ├── form-account-picker.tsx
+│   │   │   │   ├── form-attachments-section.tsx
+│   │   │   │   ├── form-category-picker.tsx
+│   │   │   │   ├── form-conversion-section.tsx
+│   │   │   │   ├── form-date-picker-modal.tsx
+│   │   │   │   ├── form-date-section.tsx
+│   │   │   │   ├── form-delete-actions.tsx
+│   │   │   │   ├── form-footer.tsx
 │   │   │   │   ├── form-location-picker.tsx
+│   │   │   │   ├── form-modals.tsx
+│   │   │   │   ├── form-notes-section.tsx
+│   │   │   │   ├── form-recurring-section.tsx
 │   │   │   │   ├── form-tags-picker.tsx
 │   │   │   │   ├── form-to-account-picker.tsx
 │   │   │   │   ├── form-utils.ts
 │   │   │   │   ├── form.styles.ts
-│   │   │   │   ├── index.ts
-│   │   │   │   ├── transaction-form-v3.tsx
-│   │   │   │   └── types.ts
+│   │   │   │   ├── index.tsx
+│   │   │   │   ├── types.ts
+│   │   │   │   ├── use-form-attachments.ts
+│   │   │   │   ├── use-form-conversion-rate.ts
+│   │   │   │   ├── use-form-date-picker.ts
+│   │   │   │   └── use-form-location.ts
+│   │   │   ├── transaction-item/
+│   │   │   │   ├── index.tsx
+│   │   │   │   ├── left-action.tsx
+│   │   │   │   ├── right-action.tsx
+│   │   │   │   ├── styles.ts
+│   │   │   │   ├── transaction-item-left.tsx
+│   │   │   │   └── transaction-item-right.tsx
 │   │   │   ├── upcoming-transactions-section/
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── types.ts
@@ -303,7 +344,6 @@ Generated on: 2026-03-05T17:24:00.166Z
 │   │   │   ├── edit-recurring-modal.tsx
 │   │   │   ├── location-picker-modal.tsx
 │   │   │   ├── notes-modal.tsx
-│   │   │   ├── transaction-item.tsx
 │   │   │   ├── transaction-section-list.tsx
 │   │   │   └── transaction-type-selector.tsx
 │   │   ├── ui/
@@ -334,12 +374,10 @@ Generated on: 2026-03-05T17:24:00.166Z
 │   │   ├── keyboard-sticky-view-minty.tsx
 │   │   ├── money.tsx
 │   │   ├── month-year-picker.tsx
-│   │   ├── parallax-scroll-view.tsx
 │   │   ├── reorderable-list-v1.tsx
 │   │   ├── reorderable-list-v2.tsx
 │   │   ├── screen-shared-header.tsx
 │   │   ├── search-input.tsx
-│   │   ├── smart-amount-input.tsx
 │   │   ├── summary-card.tsx
 │   │   ├── tabs-minty.tsx
 │   │   └── toggle-item.tsx

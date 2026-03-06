@@ -21,7 +21,7 @@ import { getThemeStrict } from "~/styles/theme/registry"
 import type { Account } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
 
-import { styles } from "./form.styles"
+import { transactionFormStyles } from "./form.styles"
 
 export interface FormToAccountPickerProps {
   accounts: Account[]
@@ -74,32 +74,32 @@ export function FormToAccountPicker({
   if (transactionType !== "transfer") return null
 
   return (
-    <View native ref={wrapperRef} style={styles.fieldBlock}>
-      <View style={styles.sectionLabelRow}>
-        <Text variant="small" style={styles.sectionLabelInRow}>
-          To account
+    <View native ref={wrapperRef} style={transactionFormStyles.fieldBlock}>
+      <View style={transactionFormStyles.sectionLabelRow}>
+        <Text variant="small" style={transactionFormStyles.sectionLabelInRow}>
+          {t("components.transactionForm.fields.toAccount")}
         </Text>
         <Pressable
           onPress={() =>
             toAccountId && setValue("toAccountId", "", { shouldDirty: true })
           }
           style={[
-            styles.clearButton,
-            !toAccountId && styles.clearButtonDisabled,
+            transactionFormStyles.clearButton,
+            !toAccountId && transactionFormStyles.clearButtonDisabled,
           ]}
           pointerEvents={toAccountId ? "auto" : "none"}
           accessibilityLabel={t("screens.accounts.a11y.clearTo")}
           accessibilityState={{ disabled: !toAccountId }}
         >
-          <Text variant="small" style={styles.clearButtonText}>
+          <Text variant="small" style={transactionFormStyles.clearButtonText}>
             {t("common.actions.clear")}
           </Text>
         </Pressable>
       </View>
       <Pressable
         style={[
-          styles.accountTrigger,
-          selectedToAccount && styles.accountTriggerSelected,
+          transactionFormStyles.accountTrigger,
+          selectedToAccount && transactionFormStyles.accountTriggerSelected,
         ]}
         onPress={handleToggle}
         accessibilityLabel={
@@ -116,10 +116,10 @@ export function FormToAccountPicker({
               colorScheme={getThemeStrict(selectedToAccount.colorSchemeName)}
               variant="badge"
             />
-            <View style={styles.accountTriggerContent}>
+            <View style={transactionFormStyles.accountTriggerContent}>
               <Text
                 variant="default"
-                style={styles.accountTriggerName}
+                style={transactionFormStyles.accountTriggerName}
                 numberOfLines={1}
               >
                 {selectedToAccount.name}
@@ -127,13 +127,13 @@ export function FormToAccountPicker({
               <Money
                 value={selectedToAccount.balance}
                 currency={selectedToAccount.currencyCode}
-                style={styles.accountTriggerBalance}
+                style={transactionFormStyles.accountTriggerBalance}
               />
             </View>
             <IconSymbol
               name={toAccountPickerOpen ? "chevron-up" : "chevron-right"}
               size={20}
-              style={styles.chevronIcon}
+              style={transactionFormStyles.chevronIcon}
             />
           </>
         ) : (
@@ -146,7 +146,7 @@ export function FormToAccountPicker({
             />
             <Text
               variant="default"
-              style={styles.accountTriggerPlaceholder}
+              style={transactionFormStyles.accountTriggerPlaceholder}
               numberOfLines={1}
             >
               {t("screens.accounts.a11y.selectTo")}
@@ -154,23 +154,23 @@ export function FormToAccountPicker({
             <IconSymbol
               name={toAccountPickerOpen ? "close" : "chevron-down"}
               size={20}
-              style={styles.chevronIcon}
+              style={transactionFormStyles.chevronIcon}
             />
           </>
         )}
       </Pressable>
       {toAccountPickerOpen && (
-        <View native style={styles.inlineAccountPicker}>
+        <View native style={transactionFormStyles.inlineAccountPicker}>
           <Input
             placeholder={t("screens.accounts.a11y.searchPlaceholder")}
             value={toAccountSearchQuery}
             onChangeText={setToAccountSearchQuery}
             placeholderTextColor={theme.colors.customColors.semi}
-            style={styles.pickerSearchInput}
+            style={transactionFormStyles.pickerSearchInput}
           />
           <ScrollView
-            style={styles.pickerList}
-            contentContainerStyle={styles.pickerListContent}
+            style={transactionFormStyles.pickerList}
+            contentContainerStyle={transactionFormStyles.pickerListContent}
             keyboardShouldPersistTaps="handled"
             nestedScrollEnabled
             showsVerticalScrollIndicator
@@ -179,8 +179,9 @@ export function FormToAccountPicker({
               <Pressable
                 key={account.id}
                 style={[
-                  styles.accountPickerRow,
-                  account.id === toAccountId && styles.inlinePickerRowSelected,
+                  transactionFormStyles.accountPickerRow,
+                  account.id === toAccountId &&
+                    transactionFormStyles.inlinePickerRowSelected,
                 ]}
                 onPress={() => {
                   setValue("toAccountId", account.id, { shouldDirty: true })
@@ -196,10 +197,13 @@ export function FormToAccountPicker({
                   colorScheme={getThemeStrict(account.colorSchemeName)}
                   variant="badge"
                 />
-                <View style={styles.accountPickerRowContent} native>
+                <View
+                  style={transactionFormStyles.accountPickerRowContent}
+                  native
+                >
                   <Text
                     variant="default"
-                    style={styles.accountPickerRowName}
+                    style={transactionFormStyles.accountPickerRowName}
                     numberOfLines={1}
                   >
                     {account.name}
@@ -207,14 +211,14 @@ export function FormToAccountPicker({
                   <Money
                     value={account.balance}
                     currency={account.currencyCode}
-                    style={styles.accountPickerRowBalance}
+                    style={transactionFormStyles.accountPickerRowBalance}
                   />
                 </View>
               </Pressable>
             ))}
             {filteredToAccountsForPicker.length === 0 && (
               <Pressable
-                style={styles.accountPickerRowAdd}
+                style={transactionFormStyles.accountPickerRowAdd}
                 onPress={() => {
                   router.push({
                     pathname: "/accounts/[accountId]/modify",
@@ -236,7 +240,7 @@ export function FormToAccountPicker({
                 />
                 <Text
                   variant="default"
-                  style={styles.accountPickerRowAddLabel}
+                  style={transactionFormStyles.accountPickerRowAddLabel}
                   numberOfLines={1}
                 >
                   {t("screens.accounts.a11y.add")}

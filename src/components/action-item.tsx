@@ -15,13 +15,13 @@ interface ActionItemProps {
   soon?: boolean
 }
 
-export const ActionItem = ({
+export function ActionItem({
   icon,
   title,
   description,
   onPress,
   soon,
-}: ActionItemProps) => {
+}: ActionItemProps) {
   const { t } = useTranslation()
   const isRTL = useLanguageStore((s) => s.isRTL)
 

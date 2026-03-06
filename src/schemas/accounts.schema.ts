@@ -31,4 +31,5 @@ const updateAccountsSchema = addAccountsSchema
 
 export { addAccountsSchema, updateAccountsSchema }
 export type AddAccountsFormSchema = z.infer<typeof addAccountsSchema>
+export type AddAccountsFormInput = z.input<typeof addAccountsSchema>
 export type UpdateAccountsFormSchema = z.infer<typeof updateAccountsSchema>

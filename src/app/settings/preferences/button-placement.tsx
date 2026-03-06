@@ -201,8 +201,7 @@ export default function ButtonPlacementScreen() {
         {/* Dashed slot placeholders behind buttons */}
         {slotPositions.map((pos, i) => (
           <View
-            // biome-ignore lint/suspicious/noArrayIndexKey: fixed 3-item list
-            key={i}
+            key={`${pos.x}-${pos.y}-${i.toString()}`}
             style={[
               styles.slotPlaceholder,
               {
