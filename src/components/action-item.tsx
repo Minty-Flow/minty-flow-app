@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
+import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { IconSymbol, type IconSymbolName } from "~/components/ui/icon-symbol"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useLanguageStore } from "~/stores/language.store"
 
 interface ActionItemProps {
   icon: IconSymbolName
@@ -23,7 +23,6 @@ export function ActionItem({
   soon,
 }: ActionItemProps) {
   const { t } = useTranslation()
-  const isRTL = useLanguageStore((s) => s.isRTL)
 
   return (
     <Pressable
@@ -56,7 +55,7 @@ export function ActionItem({
           )}
         </View>
       </View>
-      <IconSymbol name={isRTL ? "chevron-left" : "chevron-right"} size={18} />
+      <ChevronIcon direction="trailing" size={18} />
     </Pressable>
   )
 }

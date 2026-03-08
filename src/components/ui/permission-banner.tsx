@@ -9,14 +9,18 @@ import { View } from "~/components/ui/view"
 interface PermissionBannerProps extends PressableProps {
   message: string
   icon?: IconSymbolName
+  showBanner: boolean
 }
 
 export function PermissionBanner({
   message,
   icon = "alert",
   onPress,
+  showBanner,
   ...props
 }: PermissionBannerProps) {
+  if (!showBanner) return null
+
   return (
     <Pressable onPress={onPress} style={styles.container} {...props}>
       <View style={styles.iconWrap}>

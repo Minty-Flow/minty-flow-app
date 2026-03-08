@@ -1,6 +1,12 @@
+import type { TranslationKey } from "~/i18n/config"
 import type { Category } from "~/types/categories"
 
-export type CategoryPreset = Omit<Category, "id">
+export type CategoryPreset = Omit<
+  Category,
+  "id" | "colorScheme" | "isArchived" | "name"
+> & {
+  name: TranslationKey // translation key
+}
 
 /**
  * Preset expense categories for quick setup.
@@ -10,7 +16,7 @@ export type CategoryPreset = Omit<Category, "id">
  */
 export const ExpensePresets: CategoryPreset[] = [
   {
-    name: "Groceries",
+    name: "components.categories.presets.expense.groceries",
     type: "expense",
     icon: "basket-outline",
     colorSchemeName: "",
@@ -19,7 +25,7 @@ export const ExpensePresets: CategoryPreset[] = [
     updatedAt: new Date(),
   },
   {
-    name: "Transportation",
+    name: "components.categories.presets.expense.transportation",
     type: "expense",
     icon: "car-outline",
     colorSchemeName: "",
@@ -28,7 +34,7 @@ export const ExpensePresets: CategoryPreset[] = [
     updatedAt: new Date(),
   },
   {
-    name: "Healthcare",
+    name: "components.categories.presets.expense.healthcare",
     type: "expense",
     icon: "heart-outline",
     colorSchemeName: "",
@@ -37,7 +43,7 @@ export const ExpensePresets: CategoryPreset[] = [
     updatedAt: new Date(),
   },
   {
-    name: "Education",
+    name: "components.categories.presets.expense.education",
     type: "expense",
     icon: "school-outline",
     colorSchemeName: "",
@@ -46,7 +52,7 @@ export const ExpensePresets: CategoryPreset[] = [
     updatedAt: new Date(),
   },
   {
-    name: "Shopping",
+    name: "components.categories.presets.expense.shopping",
     type: "expense",
     icon: "shopping-outline",
     colorSchemeName: "",
@@ -64,7 +70,7 @@ export const ExpensePresets: CategoryPreset[] = [
  */
 export const IncomePresets: CategoryPreset[] = [
   {
-    name: "Salary",
+    name: "components.categories.presets.income.salary",
     type: "income",
     icon: "wallet",
     colorSchemeName: "",
@@ -73,7 +79,7 @@ export const IncomePresets: CategoryPreset[] = [
     updatedAt: new Date(),
   },
   {
-    name: "Freelance",
+    name: "components.categories.presets.income.freelance",
     type: "income",
     icon: "briefcase-outline",
     colorSchemeName: "",
@@ -82,7 +88,7 @@ export const IncomePresets: CategoryPreset[] = [
     updatedAt: new Date(),
   },
   {
-    name: "Investment",
+    name: "components.categories.presets.income.investment",
     type: "income",
     icon: "trending-up",
     colorSchemeName: "",
@@ -91,7 +97,7 @@ export const IncomePresets: CategoryPreset[] = [
     updatedAt: new Date(),
   },
   {
-    name: "Business",
+    name: "components.categories.presets.income.business",
     type: "income",
     icon: "office-building-outline",
     colorSchemeName: "",
@@ -100,7 +106,7 @@ export const IncomePresets: CategoryPreset[] = [
     updatedAt: new Date(),
   },
   {
-    name: "Gift",
+    name: "components.categories.presets.income.gift",
     type: "income",
     icon: "gift-outline",
     colorSchemeName: "",

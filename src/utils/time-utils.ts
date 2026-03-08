@@ -3,6 +3,7 @@ import {
   type Day,
   differenceInCalendarDays,
   differenceInDays,
+  type FormatOptions,
   format,
   formatDistanceToNow,
   isSameWeek,
@@ -11,6 +12,7 @@ import {
   isTomorrow,
   isValid,
   isYesterday,
+  type Locale,
   startOfDay,
   startOfWeek,
   subWeeks,
@@ -20,8 +22,6 @@ import { ar, enUS } from "date-fns/locale"
 import i18n from "~/i18n/config"
 import { LangCodeEnum, type LangCodeType } from "~/i18n/language.constants"
 
-// import { useLanguageStore } from "~/stores/language.store"
-
 const { t } = i18n
 
 export const DATE_FNS_LOCALES = {
@@ -30,20 +30,6 @@ export const DATE_FNS_LOCALES = {
 } as const
 
 export const WEEK_STARTS_ON = 1 // Monday
-export const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-]
 
 export type DateRangePresetId =
   | "last30"
@@ -81,13 +67,26 @@ const FORMAT = {
   CREATED_AT: "PPpp",
   READABLE_TIME: "p",
   LOAN_DATE: "PP",
+  MONTH_NAME: "LLLL",
+  MONTH_NAME_YEAR: "LLLL yyyy",
 } as const
 
 // Helper to get the current locale object from the store
-function getCurrentLocale() {
-  // const code = useLanguageStore.getState().languageCode
-  const code = i18n.language as LangCodeType
-  return (code && DATE_FNS_LOCALES[code]) || enUS
+/**
+ * Return the current date-fns Locale object (from i18n).
+ * Exported so components can default to app locale when caller doesn't pass a locale.
+ */
+export function getCurrentLocale(): Locale {
+  const code = (i18n.language || LangCodeEnum.EN) as LangCodeType
+  return (DATE_FNS_LOCALES[code] as Locale) || enUS
+}
+
+function fmt(
+  date: string | number | Date,
+  formatStr: string,
+  options?: FormatOptions | undefined,
+): string {
+  return format(date, formatStr, { locale: getCurrentLocale(), ...options })
 }
 
 function toDate(date: DateInput): Date | null {
@@ -101,7 +100,7 @@ function formatWithPattern(date: DateInput, pattern: string): string {
   if (!dateObj) return ""
 
   // Pass the locale here
-  return format(dateObj, pattern, { locale: getCurrentLocale() })
+  return fmt(dateObj, pattern)
 }
 
 /** RELATIVE TIME: "2 minutes ago" */
@@ -136,8 +135,8 @@ export function formatExpiryDate(date: DateInput): string {
  */
 export function formatReadableTime(date: DateInput): string {
   const dateObj = toDate(date)
-  if (!dateObj) return "Unknown"
-  return format(dateObj, FORMAT.READABLE_TIME, { locale: getCurrentLocale() })
+  if (!dateObj) return t("dates.unknown")
+  return fmt(dateObj, FORMAT.READABLE_TIME)
 }
 
 /** FRIENDLY: "Today", "Last Wednesday", etc. */
@@ -145,35 +144,34 @@ export function formatFriendlyDate(date: DateInput): string {
   const dateObj = toDate(date)
   if (!dateObj) return t("dates.unknown")
 
-  const locale = getCurrentLocale()
   if (isToday(dateObj)) return t("dates.today")
   if (isYesterday(dateObj)) return t("dates.yesterday")
   if (isTomorrow(dateObj)) return t("dates.tomorrow")
 
   const now = new Date()
-  const options = { weekStartsOn: WEEK_STARTS_ON as Day, locale }
+  const options = { weekStartsOn: WEEK_STARTS_ON as Day }
 
   if (isThisWeek(dateObj, options)) {
     return t("dates.thisDay", {
-      day: format(dateObj, FORMAT.DAY_NAME, { locale }),
+      day: fmt(dateObj, FORMAT.DAY_NAME),
     })
   }
 
   const lastWeekStart = startOfWeek(subWeeks(now, 1), options)
   if (isSameWeek(dateObj, lastWeekStart, options)) {
     return t("dates.lastDay", {
-      day: format(dateObj, FORMAT.DAY_NAME, { locale }),
+      day: fmt(dateObj, FORMAT.DAY_NAME),
     })
   }
 
   const nextWeekStart = startOfWeek(addWeeks(now, 1), options)
   if (isSameWeek(dateObj, nextWeekStart, options)) {
     return t("dates.nextDay", {
-      day: format(dateObj, FORMAT.DAY_NAME, { locale }),
+      day: fmt(dateObj, FORMAT.DAY_NAME),
     })
   }
 
-  return format(dateObj, FORMAT.FRIENDLY_FALLBACK, { locale })
+  return fmt(dateObj, FORMAT.FRIENDLY_FALLBACK)
 }
 
 /**
@@ -185,7 +183,7 @@ export function formatFriendlyDate(date: DateInput): string {
 export function formatDate(date: DateInput): string {
   const dateObj = toDate(date)
   if (!dateObj) return t("dates.unknown")
-  return format(dateObj, FORMAT.FRIENDLY_FALLBACK)
+  return fmt(dateObj, FORMAT.FRIENDLY_FALLBACK)
 }
 
 /**
@@ -297,4 +295,29 @@ export function calculateDaysUntilDue(
     isOverdue: days < 0,
     isDueToday: days === 0,
   }
+}
+
+/**
+ * Return all 12 month names localized (stand-alone form).
+ * Uses "LLLL" token (stand-alone month) which is appropriate for UI labels.
+ */
+export function getMonthNames(): string[] {
+  // Use an arbitrary year where months are stable (no DST weirdness concerns)
+  return Array.from({ length: 12 }, (_, i) =>
+    fmt(new Date(2026, i, 1), FORMAT.MONTH_NAME),
+  )
+}
+
+/**
+ * Return one month name by index (0-11), localized.
+ */
+export function getMonthName(monthIndex: number): string {
+  return getMonthNames()[monthIndex] ?? ""
+}
+
+/**
+ * Return a display string "March 2026" localized.
+ */
+export function getDisplayMonthTitle(year: number, monthIndex: number) {
+  return fmt(new Date(year, monthIndex, 1), FORMAT.MONTH_NAME_YEAR)
 }

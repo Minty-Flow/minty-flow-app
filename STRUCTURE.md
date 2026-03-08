@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-03-06T23:48:57.904Z
+Generated on: 2026-03-08T14:42:09.514Z
 
 ```
 ./
@@ -109,10 +109,376 @@ Generated on: 2026-03-06T23:48:57.904Z
 │           │   └── search.py
 │           └── SKILL.md
 ├── .claude/
+│   ├── context/
+│   │   ├── content-creation/
+│   │   │   ├── examples/
+│   │   │   │   └── navigation.md
+│   │   │   ├── formats/
+│   │   │   │   ├── audio-content.md
+│   │   │   │   ├── image-content.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── video-content.md
+│   │   │   │   └── written-content.md
+│   │   │   ├── principles/
+│   │   │   │   ├── audience-targeting.md
+│   │   │   │   ├── copywriting-frameworks.md
+│   │   │   │   ├── hooks.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   └── tone-voice.md
+│   │   │   ├── workflows/
+│   │   │   │   ├── audience-review.md
+│   │   │   │   ├── content-ideas.md
+│   │   │   │   ├── content-matrix.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   └── remix-repurpose.md
+│   │   │   └── navigation.md
+│   │   ├── core/
+│   │   │   ├── config/
+│   │   │   │   ├── navigation.md
+│   │   │   │   └── paths.json
+│   │   │   ├── context-system/
+│   │   │   │   ├── examples/
+│   │   │   │   │   ├── navigation-examples.md
+│   │   │   │   │   └── navigation.md
+│   │   │   │   ├── guides/
+│   │   │   │   │   ├── compact.md
+│   │   │   │   │   ├── creation.md
+│   │   │   │   │   ├── navigation-design-basics.md
+│   │   │   │   │   ├── navigation-templates.md
+│   │   │   │   │   ├── navigation.md
+│   │   │   │   │   ├── organizing-context.md
+│   │   │   │   │   └── workflows.md
+│   │   │   │   ├── operations/
+│   │   │   │   │   ├── error.md
+│   │   │   │   │   ├── extract.md
+│   │   │   │   │   ├── harvest.md
+│   │   │   │   │   ├── migrate.md
+│   │   │   │   │   ├── navigation.md
+│   │   │   │   │   ├── organize.md
+│   │   │   │   │   └── update.md
+│   │   │   │   ├── standards/
+│   │   │   │   │   ├── codebase-references.md
+│   │   │   │   │   ├── frontmatter.md
+│   │   │   │   │   ├── mvi.md
+│   │   │   │   │   ├── navigation.md
+│   │   │   │   │   ├── structure.md
+│   │   │   │   │   ├── templates.md
+│   │   │   │   │   └── typescript-coding.md
+│   │   │   │   ├── CHANGELOG.md
+│   │   │   │   └── navigation.md
+│   │   │   ├── guides/
+│   │   │   │   ├── navigation.md
+│   │   │   │   └── resuming-sessions.md
+│   │   │   ├── standards/
+│   │   │   │   ├── code-analysis.md
+│   │   │   │   ├── code-quality.md
+│   │   │   │   ├── code.md
+│   │   │   │   ├── docs.md
+│   │   │   │   ├── documentation.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── project-intelligence-management.md
+│   │   │   │   ├── project-intelligence.md
+│   │   │   │   ├── security-patterns.md
+│   │   │   │   ├── test-coverage.md
+│   │   │   │   ├── tests.md
+│   │   │   │   └── typescript.md
+│   │   │   ├── system/
+│   │   │   │   ├── context-guide.md
+│   │   │   │   ├── context-paths.md
+│   │   │   │   └── navigation.md
+│   │   │   ├── task-management/
+│   │   │   │   ├── guides/
+│   │   │   │   │   ├── managing-tasks.md
+│   │   │   │   │   ├── navigation.md
+│   │   │   │   │   └── splitting-tasks.md
+│   │   │   │   ├── lookup/
+│   │   │   │   │   ├── navigation.md
+│   │   │   │   │   └── task-commands.md
+│   │   │   │   ├── standards/
+│   │   │   │   │   ├── enhanced-task-schema.md
+│   │   │   │   │   ├── navigation.md
+│   │   │   │   │   └── task-schema.md
+│   │   │   │   └── navigation.md
+│   │   │   ├── workflows/
+│   │   │   │   ├── code-review.md
+│   │   │   │   ├── component-planning.md
+│   │   │   │   ├── delegation.md
+│   │   │   │   ├── design-iteration-best-practices.md
+│   │   │   │   ├── design-iteration-overview.md
+│   │   │   │   ├── design-iteration-plan-file.md
+│   │   │   │   ├── design-iteration-plan-iterations.md
+│   │   │   │   ├── design-iteration-stage-animation.md
+│   │   │   │   ├── design-iteration-stage-implementation.md
+│   │   │   │   ├── design-iteration-stage-layout.md
+│   │   │   │   ├── design-iteration-stage-theme.md
+│   │   │   │   ├── design-iteration-visual-content.md
+│   │   │   │   ├── external-context-integration.md
+│   │   │   │   ├── external-context-management.md
+│   │   │   │   ├── external-libraries-faq.md
+│   │   │   │   ├── external-libraries-scenarios.md
+│   │   │   │   ├── external-libraries-workflow.md
+│   │   │   │   ├── feature-breakdown.md
+│   │   │   │   ├── lightweight-context-handoff-example.md
+│   │   │   │   ├── lightweight-context-handoff.md
+│   │   │   │   ├── multi-stage-orchestration.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── review.md
+│   │   │   │   ├── session-context-pattern.md
+│   │   │   │   ├── session-management.md
+│   │   │   │   ├── task-delegation-basics.md
+│   │   │   │   ├── task-delegation-caching.md
+│   │   │   │   ├── task-delegation-specialists.md
+│   │   │   │   └── task-delegation.md
+│   │   │   ├── context-system.md
+│   │   │   ├── essential-patterns.md
+│   │   │   ├── navigation.md
+│   │   │   └── visual-development.md
+│   │   ├── data/
+│   │   │   ├── navigation.md
+│   │   │   └── README.md
+│   │   ├── development/
+│   │   │   ├── ai/
+│   │   │   │   ├── mastra-ai/
+│   │   │   │   │   ├── concepts/
+│   │   │   │   │   │   ├── agents-tools.md
+│   │   │   │   │   │   ├── core.md
+│   │   │   │   │   │   ├── evaluations.md
+│   │   │   │   │   │   ├── navigation.md
+│   │   │   │   │   │   ├── storage.md
+│   │   │   │   │   │   └── workflows.md
+│   │   │   │   │   ├── errors/
+│   │   │   │   │   │   ├── mastra-errors.md
+│   │   │   │   │   │   └── navigation.md
+│   │   │   │   │   ├── examples/
+│   │   │   │   │   │   ├── navigation.md
+│   │   │   │   │   │   └── workflow-example.md
+│   │   │   │   │   ├── guides/
+│   │   │   │   │   │   ├── modular-building.md
+│   │   │   │   │   │   ├── navigation.md
+│   │   │   │   │   │   ├── testing.md
+│   │   │   │   │   │   └── workflow-step-structure.md
+│   │   │   │   │   ├── lookup/
+│   │   │   │   │   │   ├── mastra-config.md
+│   │   │   │   │   │   └── navigation.md
+│   │   │   │   │   └── navigation.md
+│   │   │   │   └── navigation.md
+│   │   │   ├── backend/
+│   │   │   │   └── navigation.md
+│   │   │   ├── data/
+│   │   │   │   └── navigation.md
+│   │   │   ├── frameworks/
+│   │   │   │   ├── tanstack-start/
+│   │   │   │   │   └── navigation.md
+│   │   │   │   └── navigation.md
+│   │   │   ├── frontend/
+│   │   │   │   ├── react/
+│   │   │   │   │   └── navigation.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   └── when-to-delegate.md
+│   │   │   ├── infrastructure/
+│   │   │   │   └── navigation.md
+│   │   │   ├── integration/
+│   │   │   │   └── navigation.md
+│   │   │   ├── principles/
+│   │   │   │   ├── api-design.md
+│   │   │   │   ├── clean-code.md
+│   │   │   │   └── navigation.md
+│   │   │   ├── backend-navigation.md
+│   │   │   ├── fullstack-navigation.md
+│   │   │   ├── navigation.md
+│   │   │   └── ui-navigation.md
+│   │   ├── learning/
+│   │   │   ├── navigation.md
+│   │   │   └── README.md
+│   │   ├── openagents-repo/
+│   │   │   ├── blueprints/
+│   │   │   │   ├── context-bundle-template.md
+│   │   │   │   └── navigation.md
+│   │   │   ├── concepts/
+│   │   │   │   ├── agent-skills.md
+│   │   │   │   ├── compatibility-layer.md
+│   │   │   │   ├── hooks-system.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── subagent-testing-modes.md
+│   │   │   │   └── subagents-system.md
+│   │   │   ├── core-concepts/
+│   │   │   │   ├── agent-metadata.md
+│   │   │   │   ├── agents.md
+│   │   │   │   ├── categories.md
+│   │   │   │   ├── evals.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   └── registry.md
+│   │   │   ├── errors/
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── skills-errors.md
+│   │   │   │   └── tool-permission-errors.md
+│   │   │   ├── examples/
+│   │   │   │   ├── hooks/
+│   │   │   │   │   ├── formatting-hook.md
+│   │   │   │   │   ├── markdown-formatter.md
+│   │   │   │   │   ├── navigation.md
+│   │   │   │   │   └── protection-hook.md
+│   │   │   │   ├── skills/
+│   │   │   │   │   ├── multi-file-skill.md
+│   │   │   │   │   └── navigation.md
+│   │   │   │   ├── subagents/
+│   │   │   │   │   ├── code-reviewer.md
+│   │   │   │   │   ├── db-validator.md
+│   │   │   │   │   ├── debugger.md
+│   │   │   │   │   └── navigation.md
+│   │   │   │   ├── baseadapter-implementation.md
+│   │   │   │   ├── baseadapter-pattern.md
+│   │   │   │   ├── context-bundle-example.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── subagent-prompt-structure.md
+│   │   │   │   └── zod-schema-migration.md
+│   │   │   ├── features/
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── oac-package-refactor.md
+│   │   │   │   ├── oac-refactor-feedback.md
+│   │   │   │   └── oac-refactor-quickstart.md
+│   │   │   ├── guides/
+│   │   │   │   ├── adding-agent-basics.md
+│   │   │   │   ├── adding-agent-testing.md
+│   │   │   │   ├── adding-skill-basics.md
+│   │   │   │   ├── adding-skill-example.md
+│   │   │   │   ├── adding-skill-implementation.md
+│   │   │   │   ├── building-cli-compact.md
+│   │   │   │   ├── compatibility-layer-development.md
+│   │   │   │   ├── compatibility-layer-workflow.md
+│   │   │   │   ├── creating-release.md
+│   │   │   │   ├── creating-skills.md
+│   │   │   │   ├── creating-subagents.md
+│   │   │   │   ├── debugging.md
+│   │   │   │   ├── external-libraries-workflow.md
+│   │   │   │   ├── github-issues-workflow.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── npm-publishing.md
+│   │   │   │   ├── profile-validation.md
+│   │   │   │   ├── resolving-installer-wildcard-failures.md
+│   │   │   │   ├── subagent-invocation.md
+│   │   │   │   ├── testing-agent.md
+│   │   │   │   ├── testing-subagents-approval.md
+│   │   │   │   ├── testing-subagents.md
+│   │   │   │   └── updating-registry.md
+│   │   │   ├── lookup/
+│   │   │   │   ├── builtin-subagents.md
+│   │   │   │   ├── commands.md
+│   │   │   │   ├── compatibility-layer-adapters.md
+│   │   │   │   ├── compatibility-layer-progress.md
+│   │   │   │   ├── compatibility-layer-structure.md
+│   │   │   │   ├── compatibility-layer-summary.md
+│   │   │   │   ├── compatibility-learnings.md
+│   │   │   │   ├── file-locations.md
+│   │   │   │   ├── hook-events.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── skill-metadata.md
+│   │   │   │   ├── skills-comparison.md
+│   │   │   │   ├── subagent-framework-maps.md
+│   │   │   │   ├── subagent-frontmatter.md
+│   │   │   │   ├── subagent-test-commands.md
+│   │   │   │   └── tool-feature-parity.md
+│   │   │   ├── plugins/
+│   │   │   │   ├── context/
+│   │   │   │   │   ├── architecture/
+│   │   │   │   │   │   ├── lifecycle.md
+│   │   │   │   │   │   ├── navigation.md
+│   │   │   │   │   │   └── overview.md
+│   │   │   │   │   ├── capabilities/
+│   │   │   │   │   │   ├── agents.md
+│   │   │   │   │   │   ├── events_skills.md
+│   │   │   │   │   │   ├── events.md
+│   │   │   │   │   │   ├── navigation.md
+│   │   │   │   │   │   └── tools.md
+│   │   │   │   │   ├── concepts/
+│   │   │   │   │   │   ├── navigation.md
+│   │   │   │   │   │   └── plugin-architecture.md
+│   │   │   │   │   ├── guides/
+│   │   │   │   │   │   ├── creating-plugins.md
+│   │   │   │   │   │   ├── migrating-to-plugins.md
+│   │   │   │   │   │   └── navigation.md
+│   │   │   │   │   ├── lookup/
+│   │   │   │   │   │   ├── navigation.md
+│   │   │   │   │   │   └── plugin-structure.md
+│   │   │   │   │   ├── reference/
+│   │   │   │   │   │   ├── best-practices.md
+│   │   │   │   │   │   └── navigation.md
+│   │   │   │   │   ├── context-overview.md
+│   │   │   │   │   └── navigation.md
+│   │   │   │   └── navigation.md
+│   │   │   ├── quality/
+│   │   │   │   ├── navigation.md
+│   │   │   │   └── registry-dependencies.md
+│   │   │   ├── standards/
+│   │   │   │   ├── agent-frontmatter.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── opencode-typescript.md
+│   │   │   │   ├── permission-patterns.md
+│   │   │   │   └── subagent-structure.md
+│   │   │   ├── templates/
+│   │   │   │   ├── context-bundle-template.md
+│   │   │   │   └── navigation.md
+│   │   │   ├── navigation.md
+│   │   │   └── quick-start.md
+│   │   ├── product/
+│   │   │   ├── navigation.md
+│   │   │   └── README.md
+│   │   ├── project/
+│   │   │   ├── navigation.md
+│   │   │   └── project-context.md
+│   │   ├── project-intelligence/
+│   │   │   ├── business-domain.md
+│   │   │   ├── business-tech-bridge.md
+│   │   │   ├── decisions-log.md
+│   │   │   ├── living-notes.md
+│   │   │   ├── navigation.md
+│   │   │   └── technical-domain.md
+│   │   ├── ui/
+│   │   │   ├── terminal/
+│   │   │   │   └── navigation.md
+│   │   │   ├── web/
+│   │   │   │   ├── design/
+│   │   │   │   │   ├── concepts/
+│   │   │   │   │   │   ├── navigation.md
+│   │   │   │   │   │   └── scroll-linked-animations.md
+│   │   │   │   │   ├── examples/
+│   │   │   │   │   │   ├── navigation.md
+│   │   │   │   │   │   └── scrollytelling-headphone.md
+│   │   │   │   │   ├── guides/
+│   │   │   │   │   │   ├── building-scrollytelling-pages.md
+│   │   │   │   │   │   ├── navigation.md
+│   │   │   │   │   │   ├── premium-dark-ui-advanced.md
+│   │   │   │   │   │   ├── premium-dark-ui-colors.md
+│   │   │   │   │   │   ├── premium-dark-ui-components.md
+│   │   │   │   │   │   ├── premium-dark-ui-layouts.md
+│   │   │   │   │   │   └── premium-dark-ui-visual-reference.md
+│   │   │   │   │   ├── lookup/
+│   │   │   │   │   │   ├── navigation.md
+│   │   │   │   │   │   └── scroll-animation-prompts.md
+│   │   │   │   │   └── navigation.md
+│   │   │   │   ├── animation-advanced.md
+│   │   │   │   ├── animation-basics.md
+│   │   │   │   ├── animation-chat.md
+│   │   │   │   ├── animation-components.md
+│   │   │   │   ├── animation-forms.md
+│   │   │   │   ├── animation-loading.md
+│   │   │   │   ├── cdn-resources.md
+│   │   │   │   ├── design-systems.md
+│   │   │   │   ├── fonts-guide.md
+│   │   │   │   ├── icons-guide.md
+│   │   │   │   ├── images-guide.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── react-patterns.md
+│   │   │   │   └── ui-styling-standards.md
+│   │   │   └── navigation.md
+│   │   ├── CODEBASE_STANDARDS.md
+│   │   ├── index.md
+│   │   └── navigation.md
 │   ├── skills/
 │   │   ├── building-native-ui
 │   │   ├── react-native-best-practices
 │   │   └── ui-ux-pro-max
+│   ├── .context-manifest.json
 │   └── settings.local.json
 ├── .github/
 │   └── CODEOWNERS
@@ -250,6 +616,8 @@ Generated on: 2026-03-06T23:48:57.904Z
 │   │   │   ├── index.ts
 │   │   │   ├── presets.ts
 │   │   │   └── types.ts
+│   │   ├── location/
+│   │   │   └── form-location-picker.tsx
 │   │   ├── profile/
 │   │   │   └── profile-section.tsx
 │   │   ├── selector-modals/
@@ -270,7 +638,6 @@ Generated on: 2026-03-06T23:48:57.904Z
 │   │   │   ├── delete-section.tsx
 │   │   │   ├── form-tag-fields.tsx
 │   │   │   ├── form-tag-modals.tsx
-│   │   │   ├── location-coming-soon.tsx
 │   │   │   └── type-tabs.tsx
 │   │   ├── tags/
 │   │   │   └── tag-card.tsx
@@ -311,7 +678,6 @@ Generated on: 2026-03-06T23:48:57.904Z
 │   │   │   │   ├── form-date-section.tsx
 │   │   │   │   ├── form-delete-actions.tsx
 │   │   │   │   ├── form-footer.tsx
-│   │   │   │   ├── form-location-picker.tsx
 │   │   │   │   ├── form-modals.tsx
 │   │   │   │   ├── form-notes-section.tsx
 │   │   │   │   ├── form-recurring-section.tsx
@@ -349,6 +715,7 @@ Generated on: 2026-03-06T23:48:57.904Z
 │   │   ├── ui/
 │   │   │   ├── activity-indicator-minty.tsx
 │   │   │   ├── button.tsx
+│   │   │   ├── chevron-icon.tsx
 │   │   │   ├── chips.tsx
 │   │   │   ├── collapsible.tsx
 │   │   │   ├── icon-symbol.ios.tsx.md
@@ -374,6 +741,7 @@ Generated on: 2026-03-06T23:48:57.904Z
 │   │   ├── keyboard-sticky-view-minty.tsx
 │   │   ├── money.tsx
 │   │   ├── month-year-picker.tsx
+│   │   ├── privacy-eye-control.tsx
 │   │   ├── reorderable-list-v1.tsx
 │   │   ├── reorderable-list-v2.tsx
 │   │   ├── screen-shared-header.tsx
@@ -523,6 +891,7 @@ Generated on: 2026-03-06T23:48:57.904Z
 │       ├── toast.ts
 │       └── transaction-list-utils.ts
 ├── .gitignore
+├── .oac.json
 ├── app.json
 ├── babel.config.js
 ├── biome.json

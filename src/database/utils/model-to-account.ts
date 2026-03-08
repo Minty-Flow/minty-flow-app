@@ -20,5 +20,6 @@ export const modelToAccount = (model: AccountModel): Account => {
     isArchived: model.isArchived,
     createdAt: model.createdAt,
     updatedAt: model.updatedAt,
+    sortOrder: model.sortOrder,
   }
 }

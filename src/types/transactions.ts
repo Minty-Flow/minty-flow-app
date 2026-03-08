@@ -37,7 +37,7 @@ export type TransactionType =
 export interface TransactionLocation {
   latitude: number
   longitude: number
-  address?: string
+  address: string | null
 }
 
 /**
@@ -56,28 +56,28 @@ export interface Transaction {
   type: TransactionType // "expense" | "income" | "transfer"
   transactionDate: Date
   isDeleted: boolean
-  deletedAt?: Date
-  title?: string
-  description?: string
+  deletedAt: Date | null
+  title: string | null
+  description: string | null
   amount: number
   isPending: boolean
-  requiresManualConfirmation?: boolean
+  requiresManualConfirmation: boolean | null
 
-  subtype?: string // More specific classification
-  extra?: Record<string, string> // Custom metadata object (stored as JSON)
+  subtype: string | null // More specific classification
+  extra: Record<string, string> | null // Custom metadata object (stored as JSON)
 
   /** True on both debit and credit rows of a transfer. */
-  isTransfer?: boolean
+  isTransfer: boolean
   /** Shared UUID linking the two halves of a transfer. */
-  transferId?: string | null
+  transferId: string | null
   /** The other account in the transfer. */
-  relatedAccountId?: string | null
+  relatedAccountId: string | null
   /** Balance of account before this transaction was applied (snapshot at creation). */
-  accountBalanceBefore?: number
+  accountBalanceBefore: number
 
-  categoryId?: string | null
+  categoryId: string | null
   accountId: string
-  location?: string
+  location: string | null
   createdAt: Date
   updatedAt: Date
 }

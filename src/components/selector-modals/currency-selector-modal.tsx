@@ -4,7 +4,7 @@
  * FlatList virtualization handles performance; search auto-focuses when modal opens.
  */
 
-import { memo, useCallback, useMemo, useRef, useState } from "react"
+import { memo, useCallback, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList, Modal, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -12,6 +12,7 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { SearchInput } from "~/components/search-input"
 import { Button } from "~/components/ui/button"
+import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -118,15 +119,13 @@ export function CurrencySelectorModal({
     setVisible(false)
   }, [])
 
-  const onCurrencySelectedRef = useRef(onCurrencySelected)
-  const closeRef = useRef(close)
-  onCurrencySelectedRef.current = onCurrencySelected
-  closeRef.current = close
-
-  const handleSelect = useCallback((code: string) => {
-    onCurrencySelectedRef.current(code)
-    closeRef.current()
-  }, [])
+  const handleSelect = useCallback(
+    (code: string) => {
+      onCurrencySelected(code)
+      close()
+    },
+    [onCurrencySelected, close],
+  )
 
   const renderItem = useCallback(
     ({ item }: { item: Currency }) => (
@@ -171,8 +170,8 @@ export function CurrencySelectorModal({
               {selectedCurrencyCode}
             </Text>
             {editable && (
-              <IconSymbol
-                name="chevron-right"
+              <ChevronIcon
+                direction="trailing"
                 size={20}
                 style={triggerStyles.chevronIcon}
               />
@@ -208,7 +207,6 @@ export function CurrencySelectorModal({
               placeholder={t(
                 "components.selectors.currency.searchPlaceholderEx",
               )}
-              autoFocus
             />
           </View>
           <View style={modalStyles.listWrapper}>

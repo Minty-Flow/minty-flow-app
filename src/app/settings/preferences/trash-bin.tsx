@@ -5,6 +5,7 @@ import { ScrollView } from "react-native-gesture-handler"
 import { StyleSheet } from "react-native-unistyles"
 
 import { ConfirmModal } from "~/components/confirm-modal"
+import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { ChoiceChips } from "~/components/ui/chips"
 import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Pressable } from "~/components/ui/pressable"
@@ -110,10 +111,11 @@ export default function TrashBinScreen() {
             </View>
           </View>
         </View>
-        <IconSymbol
-          style={styles.actionItemIcon}
-          name="chevron-right"
+
+        <ChevronIcon
+          direction={"trailing"}
           size={18}
+          style={styles.actionItemIcon}
         />
       </Pressable>
 

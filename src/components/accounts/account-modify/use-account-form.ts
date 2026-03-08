@@ -140,8 +140,7 @@ export function useAccountForm({
       await destroyAccount(accountModel)
 
       allowNavigation()
-      router.dismissAll()
-      router.push("/settings/all-accounts")
+      router.dismiss(2)
     } catch (error) {
       logger.error("Error deleting account", { error })
       Toast.error({
@@ -151,7 +150,7 @@ export function useAccountForm({
     }
   }
 
-  const handleIconSelected = (icon: string) => {
+  const handleIconSelected = (icon: string | null) => {
     setValue("icon", icon, { shouldDirty: true })
   }
 

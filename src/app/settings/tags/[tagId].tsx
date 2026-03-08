@@ -10,7 +10,6 @@ import { ActionButtons } from "~/components/tag/action-buttons"
 import { DeleteSection } from "~/components/tag/delete-section"
 import { FormTagFields } from "~/components/tag/form-tag-fields"
 import { FormTagModals } from "~/components/tag/form-tag-modals"
-import { LocationComingSoon } from "~/components/tag/location-coming-soon"
 import { TypeTabs } from "~/components/tag/type-tabs"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -174,23 +173,19 @@ const EditTagScreenInner = ({ tagId, tagModel, tag }: EditTagScreenProps) => {
           }}
         />
 
-        {formType === TagKindEnum.LOCATION ? (
-          <LocationComingSoon />
-        ) : (
-          <FormTagFields
-            control={control}
-            errors={errors}
-            formType={formType}
-            formIcon={formIcon}
-            formColorSchemeName={formColorSchemeName}
-            currentColorScheme={currentColorScheme}
-            setValue={setValue}
-            tag={tag}
-            isAddMode={isAddMode}
-          />
-        )}
+        <FormTagFields
+          control={control}
+          errors={errors}
+          formType={formType}
+          formIcon={formIcon}
+          formColorSchemeName={formColorSchemeName}
+          currentColorScheme={currentColorScheme}
+          setValue={setValue}
+          tag={tag}
+          isAddMode={isAddMode}
+        />
 
-        {!isAddMode && formType !== TagKindEnum.LOCATION && (
+        {!isAddMode && (
           <DeleteSection onDeletePress={() => setDeleteModalVisible(true)} />
         )}
       </ScrollIntoViewProvider>

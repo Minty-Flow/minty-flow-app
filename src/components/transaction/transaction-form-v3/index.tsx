@@ -11,6 +11,7 @@ import { Controller, type Resolver, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
+import { FormLocationPicker } from "~/components/location/form-location-picker"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { TransactionTypeSelector } from "~/components/transaction/transaction-type-selector"
 import { Input } from "~/components/ui/input"
@@ -59,7 +60,6 @@ import { FormConversionSection } from "./form-conversion-section"
 import { FormDateSection } from "./form-date-section"
 import { FormDeleteActions } from "./form-delete-actions"
 import { FormFooter } from "./form-footer"
-import { FormLocationPicker } from "./form-location-picker"
 import { FormModals } from "./form-modals"
 import { FormNotesSection } from "./form-notes-section"
 import { FormRecurringSection } from "./form-recurring-section"
@@ -288,8 +288,10 @@ export function TransactionFormV3({
             Toast.error({
               title:
                 conversionRate === 1
-                  ? "Rate is still loading, please wait"
-                  : "Please set the converted amount for different currencies",
+                  ? t("components.transactionForm.toast.rateLoading")
+                  : t(
+                      "components.transactionForm.toast.setDifferentCurrencies",
+                    ),
             })
             setIsSaving(false)
             return
@@ -365,7 +367,7 @@ export function TransactionFormV3({
         transactionDate: effectiveDate,
         categoryId: data.categoryId ?? null,
         accountId: data.accountId,
-        title: data.title?.trim() || "Untitled Transaction",
+        title: data.title?.trim() ?? null,
         description: data.description?.trim() ?? undefined,
         isPending: effectiveIsPending,
         requiresManualConfirmation,
@@ -390,9 +392,9 @@ export function TransactionFormV3({
               type: data.type,
               accountId: data.accountId,
               categoryId: data.categoryId ?? null,
-              title: data.title?.trim() || "Untitled Transaction",
-              description: data.description?.trim() ?? undefined,
-              subtype: transaction?.subtype ?? undefined,
+              title: data.title?.trim() ?? null,
+              description: data.description?.trim() ?? null,
+              subtype: transaction?.subtype ?? null,
               tags: data.tags ?? [],
               range: {
                 from: recurring.startDate.getTime(),
@@ -579,6 +581,10 @@ export function TransactionFormV3({
           onChange={(type) => {
             onTransactionTypeChange(type)
             setValue("type", type, { shouldDirty: true })
+            // Clear title so placeholder takes over
+            if (type === "transfer") {
+              setValue("title", "", { shouldDirty: false })
+            }
           }}
         />
       </View>
@@ -598,11 +604,11 @@ export function TransactionFormV3({
               name="title"
               render={({ field: { value, onChange } }) => (
                 <Input
-                  value={value}
+                  value={value ?? ""}
                   onChangeText={onChange}
                   placeholder={
                     derivedTransferTitle ||
-                    t("components.transactionForm.fields.titlePlaceholder")
+                    t("common.transaction.untitledTransaction")
                   }
                   placeholderTextColor={theme.colors.customColors.semi}
                 />
@@ -775,7 +781,7 @@ export function TransactionFormV3({
           {locationEnabled && (
             <View style={transactionFormStyles.fieldBlock}>
               <Text variant="small" style={transactionFormStyles.sectionLabel}>
-                Location
+                {t("components.transactionForm.fields.location")}
               </Text>
               <FormLocationPicker
                 location={location}

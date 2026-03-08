@@ -17,12 +17,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useUnistyles } from "react-native-unistyles"
 
 import { Button } from "~/components/ui/button"
-import { IconSymbol } from "~/components/ui/icon-symbol"
+import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { Input } from "~/components/ui/input"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import type { DateRangePresetId } from "~/utils/time-utils"
-import { formatLoanDate, MONTH_NAMES } from "~/utils/time-utils"
+import { formatLoanDate, getMonthNames } from "~/utils/time-utils"
 
 import { dateRangePresetModalStyles as styles } from "./date-range-preset-modal.styles"
 import { PRESETS } from "./presets"
@@ -34,6 +34,7 @@ import type {
   PresetOption,
 } from "./types"
 
+// TODO: redo this component to be aligned with src/components/month-year-picker.tsx
 export const DateRangePresetModalContent = ({
   initialStart,
   initialEnd,
@@ -47,18 +48,24 @@ export const DateRangePresetModalContent = ({
 
   const [selectedPresetId, setSelectedPresetId] =
     useState<DateRangePresetId | null>(null)
+
   const [activeSource, setActiveSource] = useState<ActiveSource>("preset")
   const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null)
 
-  const [customStart, setCustomStart] = useState<Date>(
-    () => initialStart ?? now,
-  )
-  const [customEnd, setCustomEnd] = useState<Date>(() => initialEnd ?? now)
-  const [byMonthYear, setByMonthYear] = useState(() => now.getFullYear())
-  const [byMonthYearInput, setByMonthYearInput] = useState(() =>
-    String(now.getFullYear()),
-  )
-  const [byMonthMonth, setByMonthMonth] = useState(() => now.getMonth())
+  /** Custom range */
+  const [customRange, setCustomRange] = useState(() => ({
+    start: initialStart ?? now,
+    end: initialEnd ?? now,
+  }))
+
+  /** Month picker */
+  const [monthState, setMonthState] = useState(() => ({
+    year: now.getFullYear(),
+    yearInput: String(now.getFullYear()),
+    month: now.getMonth(),
+  }))
+
+  /** Year picker */
   const [byYearInput, setByYearInput] = useState(() =>
     String(now.getFullYear()),
   )
@@ -69,6 +76,7 @@ export const DateRangePresetModalContent = ({
 
   const toggleSection = useCallback((section: ExpandedSection) => {
     setExpandedSection((prev) => (prev === section ? null : section))
+
     if (section) {
       if (section === "byMonth") setActiveSource("byMonth")
       else if (section === "byYear") setActiveSource("byYear")
@@ -78,7 +86,8 @@ export const DateRangePresetModalContent = ({
 
   const openNativePicker = useCallback(
     (target: "start" | "end") => {
-      const value = target === "start" ? customStart : customEnd
+      const value = target === "start" ? customRange.start : customRange.end
+
       if (Platform.OS === "android") {
         DateTimePickerAndroid.open({
           value,
@@ -86,13 +95,18 @@ export const DateRangePresetModalContent = ({
           display: "calendar",
           onChange: (_evt: DateTimePickerEvent, selectedDate?: Date) => {
             if (selectedDate && _evt.type === "set") {
-              if (target === "start") {
-                setCustomStart(selectedDate)
-                if (selectedDate > customEnd) setCustomEnd(selectedDate)
-              } else {
-                setCustomEnd(selectedDate)
-                if (selectedDate < customStart) setCustomStart(selectedDate)
-              }
+              setCustomRange((prev) => {
+                if (target === "start") {
+                  return {
+                    start: selectedDate,
+                    end: selectedDate > prev.end ? selectedDate : prev.end,
+                  }
+                }
+                return {
+                  start: selectedDate < prev.start ? selectedDate : prev.start,
+                  end: selectedDate,
+                }
+              })
             }
           },
         })
@@ -100,24 +114,31 @@ export const DateRangePresetModalContent = ({
         setIosPickerTarget(target)
       }
     },
-    [customStart, customEnd],
+    [customRange],
   )
 
   const handleIosDateChange = useCallback(
     (target: "start" | "end") =>
       (event: DateTimePickerEvent, selectedDate?: Date) => {
         if (event.type === "set" && selectedDate) {
-          if (target === "start") {
-            setCustomStart(selectedDate)
-            if (selectedDate > customEnd) setCustomEnd(selectedDate)
-          } else {
-            setCustomEnd(selectedDate)
-            if (selectedDate < customStart) setCustomStart(selectedDate)
-          }
+          setCustomRange((prev) => {
+            if (target === "start") {
+              return {
+                start: selectedDate,
+                end: selectedDate > prev.end ? selectedDate : prev.end,
+              }
+            }
+
+            return {
+              start: selectedDate < prev.start ? selectedDate : prev.start,
+              end: selectedDate,
+            }
+          })
         }
+
         setIosPickerTarget(null)
       },
-    [customStart, customEnd],
+    [],
   )
 
   const handlePresetSelect = useCallback((preset: PresetOption) => {
@@ -127,7 +148,7 @@ export const DateRangePresetModalContent = ({
   }, [])
 
   const handleByMonthSelect = useCallback((monthIndex: number) => {
-    setByMonthMonth(monthIndex)
+    setMonthState((s) => ({ ...s, month: monthIndex }))
   }, [])
 
   const handleByYearNow = useCallback(() => {
@@ -136,9 +157,11 @@ export const DateRangePresetModalContent = ({
 
   const handleByMonthNow = useCallback(() => {
     const y = now.getFullYear()
-    setByMonthYear(y)
-    setByMonthYearInput(String(y))
-    setByMonthMonth(now.getMonth())
+    setMonthState({
+      year: y,
+      yearInput: String(y),
+      month: now.getMonth(),
+    })
   }, [now])
 
   const getSaveRange = useCallback((): { start: Date; end: Date } => {
@@ -146,29 +169,39 @@ export const DateRangePresetModalContent = ({
       const preset = PRESETS.find((p) => p.id === selectedPresetId)
       if (preset) return preset.getRange()
     }
+
     if (activeSource === "byMonth") {
-      const d = new Date(byMonthYear, byMonthMonth, 1)
+      const d = new Date(monthState.year, monthState.month, 1)
       return { start: startOfMonth(d), end: endOfMonth(d) }
     }
+
     if (activeSource === "byYear") {
       const y = Number.parseInt(byYearInput, 10)
       const year =
         Number.isFinite(y) && y >= 1970 && y <= 2100 ? y : now.getFullYear()
+
       const d = new Date(year, 0, 1)
+
       return { start: startOfYear(d), end: endOfYear(d) }
     }
-    const start = customStart < customEnd ? customStart : customEnd
-    const end = customStart < customEnd ? customEnd : customStart
-    return { start: startOfDay(start), end: endOfDay(end) }
+
+    const start =
+      customRange.start < customRange.end ? customRange.start : customRange.end
+
+    const end =
+      customRange.start < customRange.end ? customRange.end : customRange.start
+
+    return {
+      start: startOfDay(start),
+      end: endOfDay(end),
+    }
   }, [
     activeSource,
     selectedPresetId,
-    byMonthYear,
-    byMonthMonth,
+    monthState,
     byYearInput,
     now,
-    customStart,
-    customEnd,
+    customRange,
   ])
 
   const handleSave = useCallback(() => {
@@ -176,6 +209,8 @@ export const DateRangePresetModalContent = ({
     onSave(start, end)
     onRequestClose()
   }, [getSaveRange, onSave, onRequestClose])
+
+  const MONTH_NAMES = getMonthNames()
 
   const mutedColor = theme.colors.customColors?.semi ?? theme.colors.onSurface
   const fgColor = theme.colors.onSurface
@@ -196,10 +231,12 @@ export const DateRangePresetModalContent = ({
         <Text variant="small" style={styles.sectionLabelCommonOptions}>
           {t("components.dateRange.commonOptions")}
         </Text>
+
         <View style={styles.presetsRow}>
           {PRESETS.map((preset) => {
             const isSelected =
               activeSource === "preset" && selectedPresetId === preset.id
+
             return (
               <Pressable
                 key={preset.id}
@@ -226,6 +263,8 @@ export const DateRangePresetModalContent = ({
           })}
         </View>
 
+        {/* MONTH SECTION */}
+
         <View style={styles.collapsibleSection}>
           <Pressable
             onPress={() => toggleSection("byMonth")}
@@ -234,74 +273,92 @@ export const DateRangePresetModalContent = ({
             <Text variant="default" style={styles.rowText}>
               {t("common.timePeriods.month")}
             </Text>
-            <IconSymbol
-              name={
-                expandedSection === "byMonth" ? "chevron-down" : "chevron-right"
-              }
+
+            <ChevronIcon
+              direction={expandedSection === "byMonth" ? "down" : "trailing"}
               size={20}
               color={mutedColor}
             />
           </Pressable>
+
           {expandedSection === "byMonth" && (
             <View style={styles.expandedContent}>
               <View style={styles.monthYearRow}>
                 <Button
                   variant="secondary"
-                  onPress={() => {
-                    const next = Math.max(1970, byMonthYear - 1)
-                    setByMonthYear(next)
-                    setByMonthYearInput(String(next))
-                  }}
                   size="icon"
                   hitSlop={8}
+                  onPress={() => {
+                    const next = Math.max(1970, monthState.year - 1)
+
+                    setMonthState((s) => ({
+                      ...s,
+                      year: next,
+                      yearInput: String(next),
+                    }))
+                  }}
                 >
-                  <IconSymbol name="chevron-left" size={24} color={fgColor} />
+                  <ChevronIcon direction="leading" size={24} color={fgColor} />
                 </Button>
+
                 <Input
-                  value={byMonthYearInput}
-                  onChangeText={(t) => {
-                    const digits = t.replace(/\D/g, "").slice(0, 4)
-                    setByMonthYearInput(digits)
-                    const num = Number.parseInt(digits, 10)
-                    if (!Number.isNaN(num)) {
-                      setByMonthYear(Math.min(2100, Math.max(1970, num)))
-                    }
+                  value={monthState.yearInput}
+                  onChangeText={(val) => {
+                    const digits = val.replace(/\D/g, "").slice(0, 4)
+
+                    setMonthState((s) => ({
+                      ...s,
+                      yearInput: digits,
+                      year: Number.isNaN(Number.parseInt(digits, 10))
+                        ? s.year
+                        : Math.min(
+                            2100,
+                            Math.max(1970, Number.parseInt(digits, 10)),
+                          ),
+                    }))
                   }}
                   keyboardType="number-pad"
                   maxLength={4}
                   placeholder={t("components.dateRange.yearInputPlaceholder")}
                   style={styles.monthYearInput}
                 />
+
                 <Button
                   variant="secondary"
-                  onPress={() => {
-                    const next = Math.min(2100, byMonthYear + 1)
-                    setByMonthYear(next)
-                    setByMonthYearInput(String(next))
-                  }}
                   hitSlop={8}
                   size="icon"
+                  onPress={() => {
+                    const next = Math.min(2100, monthState.year + 1)
+
+                    setMonthState((s) => ({
+                      ...s,
+                      year: next,
+                      yearInput: String(next),
+                    }))
+                  }}
                 >
-                  <IconSymbol name="chevron-right" size={24} color={fgColor} />
+                  <ChevronIcon direction="trailing" size={24} color={fgColor} />
                 </Button>
               </View>
+
               <View style={styles.monthGrid}>
                 {MONTH_NAMES.map((name, idx) => {
-                  const isMonthSelected = byMonthMonth === idx
+                  const isSelected = monthState.month === idx
+
                   return (
                     <Pressable
                       key={name}
                       onPress={() => handleByMonthSelect(idx)}
                       style={[
                         styles.monthCell,
-                        isMonthSelected && styles.monthCellSelected,
+                        isSelected && styles.monthCellSelected,
                       ]}
                     >
                       <Text
                         variant="default"
                         style={[
                           styles.monthCellText,
-                          isMonthSelected && styles.monthCellTextSelected,
+                          isSelected && styles.monthCellTextSelected,
                         ]}
                       >
                         {name}
@@ -310,6 +367,7 @@ export const DateRangePresetModalContent = ({
                   )
                 })}
               </View>
+
               <Button
                 variant="secondary"
                 onPress={handleByMonthNow}
@@ -321,6 +379,8 @@ export const DateRangePresetModalContent = ({
           )}
         </View>
 
+        {/* YEAR SECTION */}
+
         <View style={styles.collapsibleSection}>
           <Pressable
             onPress={() => toggleSection("byYear")}
@@ -329,19 +389,20 @@ export const DateRangePresetModalContent = ({
             <Text variant="default" style={styles.rowText}>
               {t("common.timePeriods.year")}
             </Text>
-            <IconSymbol
-              name={
-                expandedSection === "byYear" ? "chevron-down" : "chevron-right"
-              }
+
+            <ChevronIcon
+              direction={expandedSection === "byYear" ? "down" : "trailing"}
               size={20}
               color={mutedColor}
             />
           </Pressable>
+
           {expandedSection === "byYear" && (
             <View style={styles.expandedContent}>
               <Text variant="small" style={styles.sectionLabel}>
                 {t("components.dateRange.yearPlaceholder")}
               </Text>
+
               <Input
                 value={byYearInput}
                 onChangeText={(val) => {
@@ -352,6 +413,7 @@ export const DateRangePresetModalContent = ({
                 maxLength={4}
                 placeholder={t("components.dateRange.yearInputPlaceholder")}
               />
+
               <Button
                 variant="secondary"
                 onPress={handleByYearNow}
@@ -363,6 +425,8 @@ export const DateRangePresetModalContent = ({
           )}
         </View>
 
+        {/* CUSTOM RANGE */}
+
         <View style={styles.collapsibleSection}>
           <Pressable
             onPress={() => toggleSection("custom")}
@@ -371,14 +435,14 @@ export const DateRangePresetModalContent = ({
             <Text variant="default" style={styles.rowText}>
               {t("components.dateRange.customRange")}
             </Text>
-            <IconSymbol
-              name={
-                expandedSection === "custom" ? "chevron-down" : "chevron-right"
-              }
+
+            <ChevronIcon
+              direction={expandedSection === "custom" ? "down" : "trailing"}
               size={20}
               color={mutedColor}
             />
           </Pressable>
+
           {expandedSection === "custom" && (
             <View style={styles.expandedContentCompact}>
               <Pressable
@@ -388,17 +452,20 @@ export const DateRangePresetModalContent = ({
                 <Text variant="default" style={styles.rowText}>
                   {t("components.dateRange.startDate")}
                 </Text>
+
                 <View style={styles.customRangeValue}>
                   <Text variant="default" style={styles.customRangeValueText}>
-                    {formatLoanDate(customStart)}
+                    {formatLoanDate(customRange.start)}
                   </Text>
-                  <IconSymbol
-                    name="chevron-right"
+
+                  <ChevronIcon
+                    direction="trailing"
                     size={18}
                     color={mutedColor}
                   />
                 </View>
               </Pressable>
+
               <Pressable
                 onPress={() => openNativePicker("end")}
                 style={styles.customRangeRow}
@@ -406,12 +473,14 @@ export const DateRangePresetModalContent = ({
                 <Text variant="default" style={styles.rowText}>
                   {t("components.dateRange.endDate")}
                 </Text>
+
                 <View style={styles.customRangeValue}>
                   <Text variant="default" style={styles.customRangeValueText}>
-                    {formatLoanDate(customEnd)}
+                    {formatLoanDate(customRange.end)}
                   </Text>
-                  <IconSymbol
-                    name="chevron-right"
+
+                  <ChevronIcon
+                    direction="trailing"
                     size={18}
                     color={mutedColor}
                   />
@@ -426,6 +495,7 @@ export const DateRangePresetModalContent = ({
         <Button variant="outline" onPress={onRequestClose} style={{ flex: 1 }}>
           <Text variant="default">{t("common.actions.cancel")}</Text>
         </Button>
+
         <Button variant="default" onPress={handleSave} style={{ flex: 1 }}>
           <Text variant="default">{t("common.actions.save")}</Text>
         </Button>
@@ -458,11 +528,13 @@ export const DateRangePresetModalContent = ({
                     {t("common.actions.cancel")}
                   </Text>
                 </Pressable>
+
                 <Text variant="default" style={styles.iosPickerHeaderTitle}>
                   {iosPickerTarget === "start"
                     ? t("components.dateRange.startDate")
                     : t("components.dateRange.endDate")}
                 </Text>
+
                 <Pressable
                   onPress={() => setIosPickerTarget(null)}
                   hitSlop={12}
@@ -472,9 +544,14 @@ export const DateRangePresetModalContent = ({
                   </Text>
                 </Pressable>
               </View>
+
               <View style={styles.datePickerWrapper}>
                 <DateTimePicker
-                  value={iosPickerTarget === "start" ? customStart : customEnd}
+                  value={
+                    iosPickerTarget === "start"
+                      ? customRange.start
+                      : customRange.end
+                  }
                   mode="date"
                   display="spinner"
                   onChange={handleIosDateChange(iosPickerTarget)}

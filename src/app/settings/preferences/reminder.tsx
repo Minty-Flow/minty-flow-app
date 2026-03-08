@@ -130,13 +130,14 @@ export default function ReminderScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {permissionStatus !== null &&
-        permissionStatus !== Notifications.PermissionStatus.GRANTED && (
-          <PermissionBanner
-            message={t("screens.settings.reminders.a11y.permissionWarning")}
-            onPress={handleRequestPermission}
-          />
-        )}
+      <PermissionBanner
+        message={t("screens.settings.reminders.a11y.permissionWarning")}
+        onPress={handleRequestPermission}
+        showBanner={
+          permissionStatus !== null &&
+          permissionStatus !== Notifications.PermissionStatus.GRANTED
+        }
+      />
 
       {/* Remind daily */}
       <Pressable

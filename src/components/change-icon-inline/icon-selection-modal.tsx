@@ -20,9 +20,9 @@ import { IconSymbol } from "../ui/icon-symbol"
 export interface IconSelectionModalProps {
   visible: boolean
   onClose: () => void
-  onIconSelected?: (icon: string) => void
-  initialIcon?: string
-  colorScheme?: MintyColorScheme
+  onIconSelected?: (icon: string | null) => void
+  initialIcon?: string | null
+  colorScheme?: MintyColorScheme | null
 }
 
 // Grid layout configuration

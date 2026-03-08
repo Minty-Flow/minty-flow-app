@@ -350,9 +350,17 @@ export async function synchronizeRecurringTransaction(
         extra: { ...extra },
         isPending,
       }
-      await createTransactionModel(outData)
-      await createTransactionModel(inData)
-      // TODO: link transfer pair via extra.transferPairId when we have both ids
+      const outModel = await createTransactionModel(outData)
+      const inModel = await createTransactionModel(inData)
+      // Link transfer pair via extra.transferPairId so getPairedTransaction fallback works
+      await database.write(async () => {
+        await outModel.update((t) => {
+          t.extra = { ...(t.extra ?? {}), transferPairId: inModel.id }
+        })
+        await inModel.update((t) => {
+          t.extra = { ...(t.extra ?? {}), transferPairId: outModel.id }
+        })
+      })
     }
 
     // ── Update lastGeneratedTransactionDate ──────────────────────────
@@ -414,10 +422,10 @@ export interface CreateRecurringRuleInput {
   type: string
   accountId: string
   categoryId: string | null
-  title?: string
-  description?: string
-  subtype?: string
-  tags?: string[]
+  title: string | null
+  description: string | null
+  subtype: string | null
+  tags: string[] | null
   /** Range start = first occurrence date; end = last (or far future). */
   range: { from: number; to: number }
   rules: string[]
@@ -438,10 +446,11 @@ export async function createRecurringRule(
       type: data.type,
       accountId: data.accountId,
       categoryId: data.categoryId ?? null,
-      title: data.title,
-      description: data.description,
-      subtype: data.subtype,
-      tags: data.tags,
+      title: data.title ?? null,
+      description: data.description ?? null,
+      subtype: data.subtype ?? null,
+      tags: data.tags ?? null,
+      extra: null,
     }
   const rangeEncoded = JSON.stringify(data.range)
   const rulesEncoded = JSON.stringify(data.rules)
@@ -494,6 +503,7 @@ export async function createRecurringFromTransaction(
       description: transaction.description,
       subtype: transaction.subtype,
       extra: transaction.extra,
+      tags: null,
     }
 
   const tags = await database
@@ -600,7 +610,7 @@ export async function disableRecurringRule(ruleId: string): Promise<void> {
 
 export type RecurringRuleTemplateUpdate = Partial<{
   amount: number
-  title: string
+  title: string | null
   description: string
   categoryId: string | null
   accountId: string

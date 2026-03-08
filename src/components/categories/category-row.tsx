@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
-import { IconSymbol } from "~/components/ui/icon-symbol"
+import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -55,7 +55,7 @@ export const CategoryRow = ({
         </View>
       </View>
 
-      <IconSymbol name="chevron-right" size={20} style={styles.chevron} />
+      <ChevronIcon direction="trailing" size={20} style={styles.chevron} />
     </Pressable>
   )
 }

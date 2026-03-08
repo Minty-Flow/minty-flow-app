@@ -143,7 +143,7 @@ export async function createTransfer({
   const transfers = transfersCollection()
 
   const debit = transactions.prepareCreate((r) => {
-    r.title = title
+    r.title = title ?? null
     r.amount = -amount
     r.transactionDate = new Date(dateMs)
     r.type = "transfer"
@@ -154,19 +154,19 @@ export async function createTransfer({
     r.accountBalanceBefore = debitBalanceBefore
     r.isPending = false
     r.isDeleted = false
-    r.description = notes ?? ""
+    r.description = notes ?? null
     r.categoryId = null
     r.createdAt = now
     r.updatedAt = now
-    r.extra = undefined
+    r.extra = null
     r.recurringId = null
     r.hasAttachments = false
-    r.subtype = undefined
-    r.location = undefined
+    r.subtype = null
+    r.location = null
   })
 
   const credit = transactions.prepareCreate((r) => {
-    r.title = title
+    r.title = title ?? null
     r.amount = creditAmount
     r.transactionDate = new Date(dateMs)
     r.type = "transfer"
@@ -177,15 +177,15 @@ export async function createTransfer({
     r.accountBalanceBefore = creditBalanceBefore
     r.isPending = false
     r.isDeleted = false
-    r.description = notes ?? ""
+    r.description = notes ?? null
     r.categoryId = null
     r.createdAt = now
     r.updatedAt = now
-    r.extra = undefined
+    r.extra = null
     r.recurringId = null
     r.hasAttachments = false
-    r.subtype = undefined
-    r.location = undefined
+    r.subtype = null
+    r.location = null
   })
 
   const updateFrom = fromAccount.prepareUpdate((a) => {
@@ -300,9 +300,9 @@ export async function editTransfer(
       r.accountId = newFromAccountId
       r.relatedAccountId = newToAccountId
       r.accountBalanceBefore = fromBalanceBeforeApply
-      if (fields.title !== undefined) r.title = fields.title
-      if (fields.notes !== undefined) r.description = fields.notes ?? ""
-      r.extra = undefined
+      if (fields.title !== undefined) r.title = fields.title ?? null
+      if (fields.notes !== undefined) r.description = fields.notes ?? null
+      r.extra = null
       r.updatedAt = now
     })
 
@@ -312,9 +312,9 @@ export async function editTransfer(
       r.accountId = newToAccountId
       r.relatedAccountId = newFromAccountId
       r.accountBalanceBefore = toBalanceBeforeApply
-      if (fields.title !== undefined) r.title = fields.title
-      if (fields.notes !== undefined) r.description = fields.notes ?? ""
-      r.extra = undefined
+      if (fields.title !== undefined) r.title = fields.title ?? null
+      if (fields.notes !== undefined) r.description = fields.notes ?? null
+      r.extra = null
       r.updatedAt = now
     })
 

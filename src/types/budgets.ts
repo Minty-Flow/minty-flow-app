@@ -23,19 +23,19 @@ export interface Budget {
   currencyCode: string
   period: BudgetPeriod
   startDate: Date
-  endDate?: Date
-  categoryId?: string
-  alertThreshold?: number // Percentage (e.g., 80 for 80%)
+  endDate: Date | null
+  categoryId: string | null
+  alertThreshold: number | null // Percentage (e.g., 80 for 80%)
   isActive: boolean
-  isArchived?: boolean
+  isArchived: boolean
   createdAt: Date
   updatedAt: Date
   // Computed properties (from model getters)
-  remainingAmount?: number
-  spentPercentage?: number
-  isAboveAlertThreshold?: boolean
-  isExceeded?: boolean
-  isCurrentlyActive?: boolean
+  remainingAmount: number
+  spentPercentage: number
+  isAboveAlertThreshold: boolean
+  isExceeded: boolean
+  isCurrentlyActive: boolean
 }
 
 export interface BudgetFormData {

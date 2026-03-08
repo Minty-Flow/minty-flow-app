@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next"
+
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -6,8 +8,8 @@ import type { MintyColorScheme } from "~/styles/theme"
 import { transactionItemStyles } from "./styles"
 
 type TransactionItemLeftProps = {
-  displayIcon: string | undefined
-  displayColorScheme: MintyColorScheme | undefined
+  displayIcon: string | null | undefined
+  displayColorScheme: MintyColorScheme | null | undefined
   displayTitle: string
   subtitleText: string
 }
@@ -18,6 +20,7 @@ export const TransactionItemLeft = ({
   displayTitle,
   subtitleText,
 }: TransactionItemLeftProps) => {
+  const { t } = useTranslation()
   return (
     <View style={transactionItemStyles.leftSection}>
       <DynamicIcon
@@ -32,7 +35,7 @@ export const TransactionItemLeft = ({
           style={transactionItemStyles.title}
           numberOfLines={1}
         >
-          {displayTitle}
+          {displayTitle || t("common.transaction.untitledTransaction")}
         </Text>
         <View style={transactionItemStyles.subtitleRow}>
           <Text style={transactionItemStyles.subtitle} numberOfLines={1}>

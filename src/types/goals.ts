@@ -22,20 +22,20 @@
 export interface Goal {
   id: string
   name: string
-  description?: string
+  description: string | null
   targetAmount: number
   currentAmount: number
   currencyCode: string
-  targetDate?: Date
-  icon?: string
-  color?: string
+  targetDate: Date | null
+  icon: string | null
+  color: string | null
   isCompleted: boolean
-  isArchived?: boolean
+  isArchived: boolean
   createdAt: Date
   updatedAt: Date
   // Computed properties (from model getters)
-  progressPercentage?: number
-  remainingAmount?: number
+  progressPercentage: number
+  remainingAmount: number
 }
 
 export interface GoalFormData {

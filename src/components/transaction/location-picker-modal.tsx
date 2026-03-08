@@ -1,6 +1,6 @@
 import * as Haptics from "expo-haptics"
 import * as Location from "expo-location"
-import { useCallback, useEffect, useReducer, useRef, useState } from "react"
+import { useCallback, useReducer, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Modal, Platform } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -146,6 +146,10 @@ async function fetchGpsCoords(): Promise<{
   longitude: number
 }> {
   try {
+    const { status } = await Location.requestForegroundPermissionsAsync()
+    if (status !== Location.PermissionStatus.GRANTED) {
+      return { latitude: 37.7749, longitude: -122.4194 }
+    }
     const pos = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
     })
@@ -188,36 +192,22 @@ function LocationPickerContent({
 
   const webviewRef = useRef<WebView>(null)
   const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [locState, setLocState] = useReducer(
-    mergeReducer<LocationContentState>,
-    {
-      mapHtml: null,
-      coords: null,
-      gpsCoords: null,
-    },
-  )
+
   const [address, setAddress] = useState<string | null>(null)
 
-  useEffect(() => {
-    let cancelled = false
-
-    // async/await with try/finally moved into fetchGpsCoords() above
-    fetchGpsCoords().then((gpsCoords) => {
-      if (cancelled) return
-      const initLat = initialLocation?.latitude ?? gpsCoords.latitude
-      const initLng = initialLocation?.longitude ?? gpsCoords.longitude
-      setLocState({
-        gpsCoords,
-        coords: { latitude: initLat, longitude: initLng },
+  const [locState, setLocState] = useReducer(
+    mergeReducer<LocationContentState>,
+    initialLocation, // passed as the seed
+    (init) => {
+      const initLat = init?.latitude ?? 37.7749
+      const initLng = init?.longitude ?? -122.4194
+      return {
         mapHtml: buildMaplibreHtml(initLat, initLng),
-      })
-    })
-
-    return () => {
-      cancelled = true
-      if (geocodeTimer.current) clearTimeout(geocodeTimer.current)
-    }
-  }, [initialLocation])
+        coords: { latitude: initLat, longitude: initLng },
+        gpsCoords: null,
+      }
+    },
+  )
 
   const triggerReverseGeocode = useCallback((lat: number, lng: number) => {
     if (geocodeTimer.current) clearTimeout(geocodeTimer.current)
@@ -242,13 +232,18 @@ function LocationPickerContent({
     [triggerReverseGeocode],
   )
 
-  const handleResetToGps = useCallback(() => {
-    if (!locState.gpsCoords) return
+  const handleResetToGps = useCallback(async () => {
+    // Use cached coords if already fetched
+    let gps = locState.gpsCoords
+    if (!gps) {
+      gps = await fetchGpsCoords()
+      setLocState({ gpsCoords: gps })
+    }
     webviewRef.current?.postMessage(
       JSON.stringify({
         type: "reset_pin",
-        lat: locState.gpsCoords.latitude,
-        lng: locState.gpsCoords.longitude,
+        lat: gps.latitude,
+        lng: gps.longitude,
       }),
     )
   }, [locState.gpsCoords])
@@ -258,8 +253,9 @@ function LocationPickerContent({
     onConfirm({
       latitude: locState.coords.latitude,
       longitude: locState.coords.longitude,
+      address,
     })
-  }, [onConfirm, locState.coords])
+  }, [onConfirm, locState.coords, address])
 
   const footerLabel =
     address ??
@@ -295,15 +291,14 @@ function LocationPickerContent({
             domStorageEnabled
             originWhitelist={["*"]}
           />
-          {locState.gpsCoords && (
-            <Pressable
-              onPress={handleResetToGps}
-              hitSlop={8}
-              style={styles.fabMyLocation}
-            >
-              <IconSymbol name="crosshairs-gps" size={24} />
-            </Pressable>
-          )}
+
+          <Pressable
+            onPress={handleResetToGps}
+            hitSlop={8}
+            style={styles.fabMyLocation}
+          >
+            <IconSymbol name="crosshairs-gps" size={24} />
+          </Pressable>
         </View>
       )}
 

@@ -18,6 +18,7 @@ import { getThemeStrict, THEME_GROUPS } from "~/styles/theme/registry"
 import type { MintyColorScheme } from "~/styles/theme/types"
 
 import { Button } from "./ui/button"
+import { ChevronIcon } from "./ui/chevron-icon"
 
 export interface ColorVariantInlineProps {
   /** Currently selected scheme name (for controlled component). */
@@ -153,8 +154,9 @@ export function ColorVariantInline({
               {t("components.colorPicker.defaultColor")}
             </Text>
           )}
-          <IconSymbol
-            name={expanded ? "chevron-up" : "chevron-right"}
+
+          <ChevronIcon
+            direction={expanded ? "up" : "trailing"}
             size={20}
             style={styles.chevronIcon}
           />

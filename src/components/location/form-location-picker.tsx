@@ -15,8 +15,7 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TransactionLocation } from "~/types/transactions"
 
-import { H_PAD } from "./form.styles"
-
+const H_PAD = 20
 const CARD_HEIGHT = 200
 
 /** Static, non-interactive Leaflet map for the inline preview card. */

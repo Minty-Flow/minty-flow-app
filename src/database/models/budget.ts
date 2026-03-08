@@ -25,10 +25,10 @@ export default class BudgetModel extends Model implements BudgetType {
   @field("currency_code") currencyCode!: string
   @field("period") period!: BudgetPeriod
   @date("start_date") startDate!: Date
-  @date("end_date") endDate?: Date
-  @field("category_id") categoryId?: string
-  @relation("categories", "category_id") category?: CategoryModel
-  @field("alert_threshold") alertThreshold?: number
+  @date("end_date") endDate!: Date | null
+  @field("category_id") categoryId!: string | null
+  @relation("categories", "category_id") category!: CategoryModel | null
+  @field("alert_threshold") alertThreshold!: number | null
   @field("is_active") isActive!: boolean
   @field("is_archived") isArchived!: boolean
   @date("created_at") createdAt!: Date

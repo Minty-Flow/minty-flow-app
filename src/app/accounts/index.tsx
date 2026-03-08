@@ -9,6 +9,7 @@ import {
   type AccountCardProps,
 } from "~/components/accounts/account-card"
 import { Money } from "~/components/money"
+import { PrivacyEyeControl } from "~/components/privacy-eye-control"
 import { ReorderableListV2 } from "~/components/reorderable-list-v2"
 import { SearchInput } from "~/components/search-input"
 import { Button } from "~/components/ui/button"
@@ -23,7 +24,6 @@ import {
   updateAccountsOrder,
 } from "~/database/services/account-service"
 import { modelToAccount } from "~/database/utils/model-to-account"
-import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import { NewEnum } from "~/types/new"
 import { logger } from "~/utils/logger"
@@ -39,8 +39,6 @@ const AccountsScreenInner = ({
 }: AccountsScreenInnerProps) => {
   const { t } = useTranslation()
   const router = useRouter()
-  const { privacyMode: privacyModeEnabled, togglePrivacyMode: togglePrivacy } =
-    useMoneyFormattingStore()
   const [searchQuery, setSearchQuery] = useState("")
   const [isReorderMode, setIsReorderMode] = useState(false)
   const [reorderedModels, setReorderedModels] = useState<AccountModel[]>([])
@@ -145,12 +143,7 @@ const AccountsScreenInner = ({
                 <IconSymbol name="swap-vertical" size={24} />
               </Button>
 
-              <Button variant="ghost" onPress={togglePrivacy}>
-                <IconSymbol
-                  name={privacyModeEnabled ? "eye-off" : "eye"}
-                  size={24}
-                />
-              </Button>
+              <PrivacyEyeControl />
             </>
           )}
         </View>

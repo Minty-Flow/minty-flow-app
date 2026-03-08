@@ -36,7 +36,6 @@
       "closeWithoutSaving": "Close without saving?",
       "deletePermanently": "Delete permanently"
     },
-
     "timePeriods": {
       "hour": "By hour",
       "day": "By day",
@@ -59,7 +58,9 @@
         "expense": "Expense",
         "income": "Income",
         "transfer": "Transfer"
-      }
+      },
+      "untitledTransaction": "Untitled Transaction",
+      "uncategorized": "uncategorized"
     },
     "toast": {
       "error": "Error",
@@ -285,11 +286,8 @@
             "optionsLabel": "Options",
             "demo": {
               "successDescription": "This is a success message",
-
               "errorDescription": "This is an error message",
-
               "infoDescription": "This is an info message",
-
               "warningDescription": "This is a warning message"
             }
           },
@@ -489,6 +487,14 @@
             "createFailed": "Failed to create tag.",
             "updateFailed": "Failed to update tag."
           },
+          "nameLabelLocation": "Location name",
+          "placeholderLocation": "Home, Work, Coffee Shop...",
+          "locationPermission": {
+            "warning": "Location permission required to use current location"
+          },
+          "locationPicker": {
+            "triggerLabel": "Pick from map"
+          },
           "contactPermission": {
             "denied": "Permission denied",
             "deniedDescription": "We need contacts permission to select a contact from your phone."
@@ -514,7 +520,12 @@
           "ok": "OK"
         },
         "errors": {
-          "invalidRate": "Rate must be greater than 0"
+          "invalidRate": "Rate must be greater than 0",
+          "invalidCurrencyCode": "Invalid currency code. Please use a valid ISO 4217 currency code.",
+          "fetchFailed": "Failed to fetch exchange rates. Please check your connection and try again.",
+          "invalidData": "Invalid exchange rate data. Please try again later.",
+          "usingCachedRates": "Using cached exchange rates. Rates may be outdated.",
+          "rateNotFound": "Exchange rate not found. Please try again or set a custom rate in Settings."
         },
         "a11y": {
           "info": "Information about exchange rates"
@@ -595,7 +606,6 @@
         "edit": "Edit Transaction"
       },
       "fields": {
-        "titlePlaceholder": "Untitled transaction",
         "transferTitle": "Transfer",
         "transferTitleFull": "From {{from}} to {{to}}",
         "amountLabel": "Amount",
@@ -617,7 +627,8 @@
         "tapToEditNotes": "Tap to edit notes",
         "addNotes": "Add notes...",
         "moveToTrash": "Move to trash",
-        "restore": "Restore"
+        "restore": "Restore",
+        "location": "Location"
       },
       "recurring": {
         "label": "Recurring transaction",
@@ -650,7 +661,6 @@
       "destroyModal": {
         "description": "This transaction will be removed forever and cannot be restored."
       },
-
       "amountInput": {
         "hint": "Enter amount or a math expression (e.g. 100/4)",
         "showMathActions": "Show math actions",
@@ -704,9 +714,10 @@
         "editRecurringFailed": "Failed to save transaction",
         "upcomingConfirmFailed": "Failed to confirm",
         "upcomingConfirmAllFailed": "Failed to confirm all",
-
         "deletedDescription": "Transaction permanently removed.",
-        "deleteFailed": "Failed to delete transaction."
+        "deleteFailed": "Failed to delete transaction.",
+        "rateLoading": "Rate is still loading, please wait",
+        "setDifferentCurrencies": "Please set the converted amount for different currencies"
       },
       "a11y": {
         "closePreview": "Close preview",
@@ -765,7 +776,21 @@
       "transactionsComingSoon": "Transactions coming soon",
       "presets": {
         "added": "Added",
-        "addSelected": "Add {{count}} Selected"
+        "addSelected": "Add {{count}} Selected",
+        "expense": {
+          "groceries": "Groceries",
+          "transportation": "Transportation",
+          "healthcare": "Healthcare",
+          "education": "Education",
+          "shopping": "Shopping"
+        },
+        "income": {
+          "salary": "Salary",
+          "freelance": "Freelance",
+          "investment": "Investment",
+          "business": "Business",
+          "gift": "Gift"
+        }
       },
       "search": {
         "placeholder": "Search {{tab}} categories..."
@@ -1023,22 +1048,30 @@
       }
     },
     "loan": {
-      "name": { "required": "Loan name is required" },
+      "name": {
+        "required": "Loan name is required"
+      },
       "amount": {
         "required": "Amount is required",
         "invalid": "Enter a valid amount"
       },
-      "contact": { "invalidPhone": "Enter a valid phone number" }
+      "contact": {
+        "invalidPhone": "Enter a valid phone number"
+      }
     },
     "goal": {
-      "name": { "required": "Goal name is required" },
+      "name": {
+        "required": "Goal name is required"
+      },
       "targetAmount": {
         "required": "Target amount is required",
         "invalid": "Enter a valid amount"
       }
     },
     "budget": {
-      "name": { "required": "Budget name is required" },
+      "name": {
+        "required": "Budget name is required"
+      },
       "amount": {
         "required": "Amount is required",
         "invalid": "Enter a valid amount"

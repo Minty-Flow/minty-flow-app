@@ -4,8 +4,8 @@ import { TransactionTypeEnum } from "~/types/transactions"
 
 const addCategoriesSchema = z.object({
   name: z.string().min(1, "validation.category.name.required"),
-  icon: z.string().optional(),
-  colorSchemeName: z.string().optional(),
+  icon: z.string().nullable().optional(),
+  colorSchemeName: z.string().nullable().optional(),
   type: z.enum(TransactionTypeEnum),
   isArchived: z.boolean().default(false),
 })

@@ -5,7 +5,9 @@
  * Uses in-memory caching (no database storage as per requirements).
  */
 
+import i18n, { type TranslationKey } from "~/i18n/config"
 import { logger } from "~/utils/logger"
+import { Toast } from "~/utils/toast"
 
 import { currencyRegistryService } from "./currency-registry"
 
@@ -81,11 +83,24 @@ class ExchangeRatesService {
    * @internal
    */
   private showToast(
-    _message: string,
-    _type: "error" | "success" = "error",
+    key: TranslationKey,
+    type: "error" | "success" | "warn" = "error",
   ): void {
-    // TODO: Implement toast notification
-    // and implement full translation
+    const description = i18n.t(key)
+    const title = i18n.t(
+      type === "warn"
+        ? "common.toast.warning"
+        : type === "success"
+          ? "common.toast.success"
+          : "common.toast.error",
+    )
+    if (type === "warn") {
+      Toast.warn({ title, description })
+    } else if (type === "success") {
+      Toast.success({ title, description })
+    } else {
+      Toast.error({ title, description })
+    }
   }
 
   /**
@@ -104,7 +119,9 @@ class ExchangeRatesService {
     // Use registry service for validation
     if (!currencyRegistryService.isCurrencyCodeValid(baseCurrency)) {
       const errorMessage = `Invalid currency code: ${baseCurrency}. Please use a valid ISO 4217 currency code.`
-      this.showToast(errorMessage)
+      this.showToast(
+        "screens.settings.exchangeRates.errors.invalidCurrencyCode",
+      )
       logger.error("Invalid currency code", {
         baseCurrency,
         error: errorMessage,
@@ -188,7 +205,7 @@ class ExchangeRatesService {
 
     if (!apiResponse) {
       const errorMessage = `Failed to fetch exchange rates for ${baseCurrency} from all sources. Please check your internet connection and try again.`
-      this.showToast(errorMessage)
+      this.showToast("screens.settings.exchangeRates.errors.fetchFailed")
       logger.error(errorMessage)
       return null
     }
@@ -202,8 +219,7 @@ class ExchangeRatesService {
       typeof ratesData !== "object" ||
       Array.isArray(ratesData)
     ) {
-      const errorMessage = `Invalid exchange rate data received for ${baseCurrency}. Please try again later.`
-      this.showToast(errorMessage)
+      this.showToast("screens.settings.exchangeRates.errors.invalidData")
       logger.error("Invalid API response structure", {
         baseCurrency: normalizedCurrency,
         responseKeys: Object.keys(apiResponse),
@@ -248,8 +264,8 @@ class ExchangeRatesService {
       const cached = this.getCachedRates(normalizedCurrency)
       if (cached) {
         this.showToast(
-          `Using cached exchange rates for ${baseCurrency}. Rates may be outdated.`,
-          "error",
+          "screens.settings.exchangeRates.errors.usingCachedRates",
+          "warn",
         )
       }
       return cached
@@ -276,7 +292,9 @@ class ExchangeRatesService {
     // Validate both currencies
     if (!currencyRegistryService.isCurrencyCodeValid(fromCurrency)) {
       const errorMessage = `Invalid source currency code: ${fromCurrency}. Please use a valid ISO 4217 currency code.`
-      this.showToast(errorMessage)
+      this.showToast(
+        "screens.settings.exchangeRates.errors.invalidCurrencyCode",
+      )
       logger.error("Invalid source currency code", {
         fromCurrency,
         error: errorMessage,
@@ -286,7 +304,9 @@ class ExchangeRatesService {
 
     if (!currencyRegistryService.isCurrencyCodeValid(toCurrency)) {
       const errorMessage = `Invalid target currency code: ${toCurrency}. Please use a valid ISO 4217 currency code.`
-      this.showToast(errorMessage)
+      this.showToast(
+        "screens.settings.exchangeRates.errors.invalidCurrencyCode",
+      )
       logger.error("Invalid target currency code", {
         toCurrency,
         error: errorMessage,
@@ -315,7 +335,7 @@ class ExchangeRatesService {
     }
 
     const errorMessage = `Exchange rate not found for ${fromCurrency} to ${toCurrency}. Please try again or set a custom rate in Settings.`
-    this.showToast(errorMessage)
+    this.showToast("screens.settings.exchangeRates.errors.rateNotFound")
     logger.error("Exchange rate not found", {
       fromCurrency,
       toCurrency,

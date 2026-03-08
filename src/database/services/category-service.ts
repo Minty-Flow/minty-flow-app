@@ -144,14 +144,12 @@ export const createCategory = async (
     return await getCategoryCollection().create((category) => {
       category.name = data.name
       category.type = data.type
-      category.icon = data.icon
+      category.icon = data.icon ?? null
       category.transactionCount = 0
       category.isArchived = false
       category.createdAt = new Date()
       category.updatedAt = new Date()
-      if (data.colorSchemeName) {
-        category.setColorScheme(data.colorSchemeName)
-      }
+      category.setColorScheme(data.colorSchemeName ?? null)
     })
   })
 }
@@ -166,9 +164,9 @@ export const updateCategory = async (
   return await database.write(async () => {
     return await category.update((c) => {
       if (updates.name !== undefined) c.name = updates.name
-      if (updates.icon !== undefined) c.icon = updates.icon
+      if (updates.icon !== undefined) c.icon = updates.icon ?? null
       if (updates.colorSchemeName !== undefined)
-        c.setColorScheme(updates.colorSchemeName)
+        c.setColorScheme(updates.colorSchemeName ?? null)
       if (updates.isArchived !== undefined) c.isArchived = updates.isArchived
       c.updatedAt = new Date()
     })
@@ -182,8 +180,8 @@ export const updateCategoryById = async (
   id: string,
   updates: Partial<{
     name: string
-    icon: string | undefined
-    colorSchemeName: string | undefined
+    icon: string | null | undefined
+    colorSchemeName: string | null | undefined
     isArchived: boolean
   }>,
 ): Promise<CategoryModel> => {

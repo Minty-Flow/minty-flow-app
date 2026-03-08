@@ -13,6 +13,8 @@ import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { useScrollIntoView } from "~/hooks/use-scroll-into-view"
 import type { TransactionType } from "~/types/transactions"
+
+import { ChevronIcon } from "../ui/chevron-icon"
 export interface CategoryTypeInlineProps {
   /** Currently selected type. */
   selectedType: TransactionType
@@ -83,8 +85,8 @@ export function CategoryTypeInline({
             {displayLabel}
           </Text>
           {editable && (
-            <IconSymbol
-              name={expanded ? "chevron-up" : "chevron-right"}
+            <ChevronIcon
+              direction={expanded ? "up" : "trailing"}
               size={20}
               style={styles.chevronIcon}
             />

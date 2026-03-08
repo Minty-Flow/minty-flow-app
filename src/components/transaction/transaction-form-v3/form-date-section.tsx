@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
-import { IconSymbol } from "~/components/ui/icon-symbol"
+import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { Pressable } from "~/components/ui/pressable"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
@@ -63,8 +63,8 @@ export function FormDateSection({
           <Text variant="default" style={transactionFormStyles.inlineDateText}>
             {formatCreatedAt(date)}
           </Text>
-          <IconSymbol
-            name="chevron-right"
+          <ChevronIcon
+            direction="trailing"
             size={20}
             style={[
               transactionFormStyles.chevronIcon,

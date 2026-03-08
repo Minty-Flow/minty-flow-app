@@ -4,7 +4,7 @@ import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { NotesModal } from "~/components/transaction/notes-modal"
-import { IconSymbol } from "~/components/ui/icon-symbol"
+import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -13,7 +13,7 @@ import type { TranslationKey } from "~/i18n/config"
 import { transactionFormStyles } from "./form.styles"
 
 type Props = {
-  description: string | undefined
+  description: string | null | undefined
   descriptionErrorKey: string | undefined
   notesModalVisible: boolean
   onOpenModal: () => void
@@ -63,8 +63,8 @@ export function FormNotesSection({
               ? t("components.transactionForm.fields.tapToEditNotes")
               : t("components.transactionForm.fields.addNotes")}
           </Text>
-          <IconSymbol
-            name="chevron-right"
+          <ChevronIcon
+            direction="trailing"
             size={20}
             style={transactionFormStyles.chevronIcon}
           />

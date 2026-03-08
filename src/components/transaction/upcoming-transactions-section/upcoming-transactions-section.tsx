@@ -4,6 +4,7 @@ import { useUnistyles } from "react-native-unistyles"
 
 import { ConfirmModal } from "~/components/confirm-modal"
 import { Button } from "~/components/ui/button"
+import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -244,8 +245,9 @@ export function UpcomingTransactionsSection({
               <Text style={sectionStyles.seeAllText}>
                 {t("screens.home.upcoming.seeAll")}
               </Text>
-              <IconSymbol
-                name="chevron-right"
+
+              <ChevronIcon
+                direction={"trailing"}
                 size={18}
                 color={theme.colors.customColors.semi}
               />

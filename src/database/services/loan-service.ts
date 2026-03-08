@@ -115,16 +115,16 @@ export const createLoanModel = async (data: {
 
     return await loans.create((loan) => {
       loan.name = data.name
-      loan.description = data.description
+      loan.description = data.description ?? null
       loan.principalAmount = data.principalAmount
       loan.remainingAmount = data.remainingAmount ?? data.principalAmount
-      loan.interestRate = data.interestRate
+      loan.interestRate = data.interestRate ?? null
       loan.currencyCode = data.currencyCode
       loan.loanType = data.loanType
-      loan.contactName = data.contactName
-      loan.contactPhone = data.contactPhone
-      loan.dueDate = data.dueDate
-      loan.accountId = data.accountId
+      loan.contactName = data.contactName ?? null
+      loan.contactPhone = data.contactPhone ?? null
+      loan.dueDate = data.dueDate ?? null
+      loan.accountId = data.accountId ?? null
       loan.isPaid = false
       loan.isArchived = false
       loan.createdAt = new Date()
@@ -140,12 +140,12 @@ export const updateLoanModel = async (
   loan: LoanModel,
   updates: Partial<{
     name: string
-    description: string | undefined
+    description: string | null | undefined
     remainingAmount: number
-    interestRate: number | undefined
-    contactName: string | undefined
-    contactPhone: string | undefined
-    dueDate: Date | undefined
+    interestRate: number | null | undefined
+    contactName: string | null | undefined
+    contactPhone: string | null | undefined
+    dueDate: Date | null | undefined
     isPaid: boolean
     isArchived: boolean
   }>,
@@ -153,15 +153,17 @@ export const updateLoanModel = async (
   return await database.write(async () => {
     return await loan.update((l) => {
       if (updates.name !== undefined) l.name = updates.name
-      if (updates.description !== undefined) l.description = updates.description
+      if (updates.description !== undefined)
+        l.description = updates.description ?? null
       if (updates.remainingAmount !== undefined)
         l.remainingAmount = updates.remainingAmount
       if (updates.interestRate !== undefined)
-        l.interestRate = updates.interestRate
-      if (updates.contactName !== undefined) l.contactName = updates.contactName
+        l.interestRate = updates.interestRate ?? null
+      if (updates.contactName !== undefined)
+        l.contactName = updates.contactName ?? null
       if (updates.contactPhone !== undefined)
-        l.contactPhone = updates.contactPhone
-      if (updates.dueDate !== undefined) l.dueDate = updates.dueDate
+        l.contactPhone = updates.contactPhone ?? null
+      if (updates.dueDate !== undefined) l.dueDate = updates.dueDate ?? null
       if (updates.isPaid !== undefined) l.isPaid = updates.isPaid
       if (updates.isArchived !== undefined) l.isArchived = updates.isArchived
       l.updatedAt = new Date()
@@ -176,12 +178,12 @@ export const updateLoanModelById = async (
   id: string,
   updates: Partial<{
     name: string
-    description: string | undefined
+    description: string | null | undefined
     remainingAmount: number
-    interestRate: number | undefined
-    contactName: string | undefined
-    contactPhone: string | undefined
-    dueDate: Date | undefined
+    interestRate: number | null | undefined
+    contactName: string | null | undefined
+    contactPhone: string | null | undefined
+    dueDate: Date | null | undefined
     isPaid: boolean
     isArchived: boolean
   }>,

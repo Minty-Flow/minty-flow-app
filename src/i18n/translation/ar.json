@@ -58,7 +58,9 @@
         "expense": "مصروف",
         "income": "دخل",
         "transfer": "تحويل"
-      }
+      },
+      "untitledTransaction": "معاملة بدون عنوان",
+      "uncategorized": "غير مصنف"
     },
     "toast": {
       "error": "خطأ",
@@ -469,8 +471,16 @@
           },
           "nameLabelGeneric": "اسم الوسم",
           "nameLabelContact": "اسم جهة الاتصال",
+          "nameLabelLocation": "اسم الموقع",
           "placeholderGeneric": "عمل، تسوق...",
           "placeholderContact": "محمد علي",
+          "placeholderLocation": "المنزل، العمل، المقهى...",
+          "locationPermission": {
+            "warning": "مطلوب إذن الموقع لاستخدام الموقع الحالي"
+          },
+          "locationPicker": {
+            "triggerLabel": "اختيار من الخريطة"
+          },
           "deleteLabel": "حذف نهائي",
           "loadingText": "جارٍ تحميل الوسم...",
           "deleteModal": {
@@ -510,7 +520,12 @@
           "ok": "حسناً"
         },
         "errors": {
-          "invalidRate": "يجب أن يكون السعر أكبر من 0"
+          "invalidRate": "يجب أن يكون السعر أكبر من 0",
+          "invalidCurrencyCode": "رمز عملة غير صالح. يرجى استخدام رمز عملة ISO 4217 صالح.",
+          "fetchFailed": "فشل جلب أسعار الصرف. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
+          "invalidData": "بيانات سعر صرف غير صالحة. يرجى المحاولة مرة أخرى لاحقاً.",
+          "usingCachedRates": "جاري استخدام أسعار صرف مخزنة مؤقتاً. قد تكون الأسعار قديمة.",
+          "rateNotFound": "سعر الصرف غير موجود. يرجى المحاولة مرة أخرى أو تعيين سعر مخصص في الإعدادات."
         },
         "a11y": {
           "info": "معلومات عن أسعار الصرف"
@@ -591,7 +606,6 @@
         "edit": "تعديل المعاملة"
       },
       "fields": {
-        "titlePlaceholder": "معاملة بدون عنوان",
         "transferTitle": "تحويل",
         "transferTitleFull": "من {{from}} إلى {{to}}",
         "amountLabel": "المبلغ",
@@ -613,7 +627,8 @@
         "restore": "استعادة",
         "account": "حساب",
         "toAccount": "إلى الحساب",
-        "tags": "العلامات"
+        "tags": "العلامات",
+        "location": "موقع"
       },
       "recurring": {
         "label": "معاملة متكررة",
@@ -700,7 +715,9 @@
         "upcomingConfirmFailed": "فشل التأكيد",
         "upcomingConfirmAllFailed": "فشل تأكيد الكل",
         "deletedDescription": "تم حذف المعاملة نهائياً.",
-        "deleteFailed": "فشل حذف المعاملة."
+        "deleteFailed": "فشل حذف المعاملة.",
+        "rateLoading": "لا يزال السعر قيد التحميل، يرجى الانتظار",
+        "setDifferentCurrencies": "يرجى تحديد المبلغ المحول لعملات مختلفة"
       },
       "a11y": {
         "closePreview": "إغلاق المعاينة",
@@ -759,7 +776,21 @@
       "transactionsComingSoon": "المعاملات قريباً",
       "presets": {
         "added": "مُضاف",
-        "addSelected": "إضافة {{count}} محدد"
+        "addSelected": "إضافة {{count}} محدد",
+        "expense": {
+          "education": "تعليم",
+          "groceries": "بقالة",
+          "healthcare": "الرعاية الصحية",
+          "shopping": "التسوق",
+          "transportation": "مواصلات"
+        },
+        "income": {
+          "business": "عمل",
+          "freelance": "مستقل",
+          "gift": "هدية",
+          "investment": "استثمار",
+          "salary": "مرتب"
+        }
       },
       "search": {
         "placeholder": "بحث في فئات {{tab}}..."

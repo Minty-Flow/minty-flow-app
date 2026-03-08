@@ -30,11 +30,11 @@ export interface Category {
   id: string
   name: string
   type: TransactionType
-  icon?: string
-  colorSchemeName?: string
-  colorScheme?: MintyColorScheme // Computed from colorSchemeName via registry
+  icon: string | null
+  colorSchemeName: string | null
+  colorScheme: MintyColorScheme | null // Computed from colorSchemeName via registry
   transactionCount: number
-  isArchived?: boolean
+  isArchived: boolean
   createdAt: Date
   updatedAt: Date
 }
