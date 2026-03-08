@@ -46,8 +46,6 @@ function PermissionWarnings() {
     permissionStatus !== null &&
     permissionStatus !== Notifications.PermissionStatus.GRANTED
 
-  if (!showNotificationsRow) return null
-
   return (
     <PermissionBanner
       message={t("screens.settings.reminders.a11y.permissionWarning")}
@@ -56,6 +54,7 @@ function PermissionWarnings() {
         "screens.settings.reminders.a11y.grantNotifications",
       )}
       accessibilityRole="button"
+      showBanner={showNotificationsRow}
     />
   )
 }

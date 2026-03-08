@@ -6,8 +6,8 @@ const addTagsSchema = z.object({
     .min(1, "validation.tag.name.required")
     .max(50, "validation.tag.name.tooLong"),
   type: z.enum(["generic", "location", "contact"]),
-  icon: z.string().optional(),
-  colorSchemeName: z.string().optional(),
+  icon: z.string().nullable().optional(),
+  colorSchemeName: z.string().nullable().optional(),
 })
 
 export { addTagsSchema }

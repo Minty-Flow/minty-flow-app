@@ -78,13 +78,13 @@ export const createGoal = async (data: {
   return await database.write(async () => {
     return await getGoalCollection().create((goal) => {
       goal.name = data.name
-      goal.description = data.description
+      goal.description = data.description ?? null
       goal.targetAmount = data.targetAmount
       goal.currentAmount = data.currentAmount || 0
       goal.currencyCode = data.currencyCode
-      goal.targetDate = data.targetDate
-      goal.icon = data.icon
-      goal.color = data.color
+      goal.targetDate = data.targetDate ?? null
+      goal.icon = data.icon ?? null
+      goal.color = data.color ?? null
       goal.isCompleted = false
       goal.isArchived = false
       goal.createdAt = new Date()
@@ -100,12 +100,12 @@ export const updateGoal = async (
   goal: GoalModel,
   updates: Partial<{
     name: string
-    description: string | undefined
+    description: string | null | undefined
     targetAmount: number
     currentAmount: number
-    targetDate: Date | undefined
-    icon: string | undefined
-    color: string | undefined
+    targetDate: Date | null | undefined
+    icon: string | null | undefined
+    color: string | null | undefined
     isCompleted: boolean
     isArchived: boolean
   }>,
@@ -113,14 +113,16 @@ export const updateGoal = async (
   return await database.write(async () => {
     return await goal.update((g) => {
       if (updates.name !== undefined) g.name = updates.name
-      if (updates.description !== undefined) g.description = updates.description
+      if (updates.description !== undefined)
+        g.description = updates.description ?? null
       if (updates.targetAmount !== undefined)
         g.targetAmount = updates.targetAmount
       if (updates.currentAmount !== undefined)
         g.currentAmount = updates.currentAmount
-      if (updates.targetDate !== undefined) g.targetDate = updates.targetDate
-      if (updates.icon !== undefined) g.icon = updates.icon
-      if (updates.color !== undefined) g.color = updates.color
+      if (updates.targetDate !== undefined)
+        g.targetDate = updates.targetDate ?? null
+      if (updates.icon !== undefined) g.icon = updates.icon ?? null
+      if (updates.color !== undefined) g.color = updates.color ?? null
       if (updates.isCompleted !== undefined) g.isCompleted = updates.isCompleted
       if (updates.isArchived !== undefined) g.isArchived = updates.isArchived
       g.updatedAt = new Date()
@@ -135,12 +137,12 @@ export const updateGoalById = async (
   id: string,
   updates: Partial<{
     name: string
-    description: string | undefined
+    description: string | null | undefined
     targetAmount: number
     currentAmount: number
-    targetDate: Date | undefined
-    icon: string | undefined
-    color: string | undefined
+    targetDate: Date | null | undefined
+    icon: string | null | undefined
+    color: string | null | undefined
     isCompleted: boolean
     isArchived: boolean
   }>,

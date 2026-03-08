@@ -29,8 +29,8 @@ export default class CategoryModel extends Model implements Category {
 
   @field("name") name!: string
   @field("type") type!: TransactionType
-  @field("icon") icon?: string
-  @field("color_scheme_name") colorSchemeName?: string
+  @field("icon") icon!: string | null
+  @field("color_scheme_name") colorSchemeName!: string | null
   @field("transaction_count") transactionCount!: number
   @field("is_archived") isArchived!: boolean
   @date("created_at") createdAt!: Date
@@ -46,7 +46,7 @@ export default class CategoryModel extends Model implements Category {
   /**
    * Sets the color scheme by name.
    */
-  setColorScheme(schemeName: string | undefined) {
+  setColorScheme(schemeName: string | null) {
     this.colorSchemeName = schemeName
   }
 }

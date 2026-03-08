@@ -361,8 +361,8 @@ export const createAccount = async (
       account.type = data.type
       account.balance = data.balance
       account.currencyCode = data.currencyCode
-      account.icon = data.icon
-      account.colorSchemeName = data.colorSchemeName
+      account.icon = data.icon ?? null
+      account.colorSchemeName = data.colorSchemeName ?? null
       account.isPrimary = data.isPrimary
       account.sortOrder = nextSortOrder
       account.excludeFromBalance = data.excludeFromBalance
@@ -399,9 +399,9 @@ const applyAccountUpdates = (
   if (updates.name !== undefined) a.name = updates.name
   if (updates.type !== undefined) a.type = updates.type
   if (updates.currencyCode !== undefined) a.currencyCode = updates.currencyCode
-  if (updates.icon !== undefined) a.icon = updates.icon
+  if (updates.icon !== undefined) a.icon = updates.icon ?? null
   if (updates.colorSchemeName !== undefined)
-    a.colorSchemeName = updates.colorSchemeName
+    a.colorSchemeName = updates.colorSchemeName ?? null
   if (updates.isArchived !== undefined) a.isArchived = updates.isArchived
   if (updates.isPrimary !== undefined) a.isPrimary = updates.isPrimary
   if (updates.excludeFromBalance !== undefined)

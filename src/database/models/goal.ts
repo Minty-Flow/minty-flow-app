@@ -18,13 +18,13 @@ export default class GoalModel extends Model implements GoalType {
   static table = "goals"
 
   @field("name") name!: string
-  @field("description") description?: string
+  @field("description") description!: string | null
   @field("target_amount") targetAmount!: number
   @field("current_amount") currentAmount!: number
   @field("currency_code") currencyCode!: string
-  @date("target_date") targetDate?: Date
-  @field("icon") icon?: string
-  @field("color") color?: string
+  @date("target_date") targetDate!: Date | null
+  @field("icon") icon!: string | null
+  @field("color") color!: string | null
   @field("is_completed") isCompleted!: boolean
   @field("is_archived") isArchived!: boolean
   @date("created_at") createdAt!: Date

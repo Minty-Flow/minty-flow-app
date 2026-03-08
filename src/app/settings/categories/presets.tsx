@@ -31,18 +31,16 @@ const PRESETS_BY_TYPE: Record<TransactionType, readonly CategoryPreset[]> = {
   transfer: [],
 }
 
-function alreadyAddedPresetNames(
+function alreadyAddedPresetKeys(
   categories: Category[],
   presets: readonly CategoryPreset[],
 ): Set<string> {
   const added = new Set<string>()
   for (const preset of presets) {
     const match = categories.some(
-      (c) =>
-        c.name.trim().toLowerCase() === preset.name.trim().toLowerCase() &&
-        c.type === preset.type,
+      (c) => c.icon === preset.icon && c.type === preset.type,
     )
-    if (match) added.add(preset.name)
+    if (match) added.add(`${preset.icon}:${preset.type}`)
   }
   return added
 }
@@ -70,7 +68,7 @@ const CategoryPresetsScreenInner = ({
 
   const presets = PRESETS_BY_TYPE[type] ?? []
   const addedPresets = useMemo(
-    () => alreadyAddedPresetNames(categories, presets),
+    () => alreadyAddedPresetKeys(categories, presets),
     [categories, presets],
   )
 
@@ -88,13 +86,12 @@ const CategoryPresetsScreenInner = ({
 
   const handleAddSelected = async () => {
     const selected = presets.filter((preset) =>
-      selectedPresets.has(preset.name),
+      selectedPresets.has(`${preset.icon}:${preset.type}`),
     )
-
     if (selected.length === 0) return
 
     const toCreate = selected.map((preset) => ({
-      name: preset.name,
+      name: t(preset.name), // resolve the translation at save time
       type: preset.type,
       icon: preset.icon,
       colorSchemeName: preset.colorSchemeName,
@@ -116,15 +113,16 @@ const CategoryPresetsScreenInner = ({
   }
 
   const renderPresetItem = ({ item }: { item: (typeof presets)[0] }) => {
-    const isSelected = selectedPresets.has(item.name)
-    const isAdded = addedPresets.has(item.name)
+    const presetKey = `${item.icon}:${item.type}`
+    const isAdded = addedPresets.has(presetKey)
+    const isSelected = selectedPresets.has(presetKey)
 
     return (
       <Pressable
         style={styles.presetItem}
         onPress={() => {
           if (!isAdded) {
-            togglePreset(item.name)
+            togglePreset(`${item.icon}:${item.type}`)
           }
         }}
         disabled={isAdded}
@@ -135,7 +133,7 @@ const CategoryPresetsScreenInner = ({
         {/* Text content */}
         <View style={styles.textContainer}>
           <Text variant="default" style={styles.presetName}>
-            {item.name}
+            {t(item.name)}
           </Text>
         </View>
 
@@ -167,7 +165,7 @@ const CategoryPresetsScreenInner = ({
     <View style={styles.container}>
       <FlatList
         data={presets}
-        keyExtractor={(item) => item.name}
+        keyExtractor={(item) => `${item.icon}:${item.type}`}
         renderItem={renderPresetItem}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}

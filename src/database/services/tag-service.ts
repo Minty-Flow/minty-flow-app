@@ -83,15 +83,15 @@ export const observeTagById = (id: string): Observable<TagModel> => {
 export const createTag = async (data: {
   name: string
   type: TagKindType
-  colorSchemeName?: string
-  icon?: string
+  colorSchemeName?: string | null
+  icon?: string | null
 }): Promise<TagModel> => {
   return await database.write(async () => {
     return await getTagCollection().create((tag) => {
       tag.name = data.name
       tag.type = data.type
-      tag.colorSchemeName = data.colorSchemeName
-      tag.icon = data.icon
+      tag.colorSchemeName = data.colorSchemeName ?? null
+      tag.icon = data.icon ?? null
       tag.transactionCount = 0
       tag.createdAt = new Date()
       tag.updatedAt = new Date()
@@ -107,8 +107,8 @@ export const updateTag = async (
   updates: Partial<{
     name: string
     type: TagKindType
-    colorSchemeName: string | undefined
-    icon: string | undefined
+    colorSchemeName: string | null | undefined
+    icon: string | null | undefined
     transactionCount: number
   }>,
 ): Promise<TagModel> => {
@@ -117,8 +117,8 @@ export const updateTag = async (
       if (updates.name !== undefined) t.name = updates.name
       if (updates.type !== undefined) t.type = updates.type
       if (updates.colorSchemeName !== undefined)
-        t.colorSchemeName = updates.colorSchemeName
-      if (updates.icon !== undefined) t.icon = updates.icon
+        t.colorSchemeName = updates.colorSchemeName ?? null
+      if (updates.icon !== undefined) t.icon = updates.icon ?? null
       if (updates.transactionCount !== undefined)
         t.transactionCount = updates.transactionCount
       t.updatedAt = new Date()
@@ -134,8 +134,8 @@ export const updateTagById = async (
   updates: Partial<{
     name: string
     type: TagKindType
-    colorSchemeName: string | undefined
-    icon: string | undefined
+    colorSchemeName: string | null | undefined
+    icon: string | null | undefined
     transactionCount: number
   }>,
 ): Promise<TagModel> => {

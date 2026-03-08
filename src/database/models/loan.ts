@@ -23,17 +23,17 @@ export default class LoanModel extends Model implements LoanType {
   static table = "loans"
 
   @field("name") name!: string
-  @field("description") description?: string
+  @field("description") description!: string | null
   @field("principal_amount") principalAmount!: number
   @field("remaining_amount") remainingAmount!: number
-  @field("interest_rate") interestRate?: number
+  @field("interest_rate") interestRate!: number | null
   @field("currency_code") currencyCode!: string
   @field("loan_type") loanType!: LoanTypeEnum
-  @field("contact_name") contactName?: string
-  @field("contact_phone") contactPhone?: string
-  @date("due_date") dueDate?: Date
-  @field("account_id") accountId?: string
-  @relation("accounts", "account_id") account?: AccountModel
+  @field("contact_name") contactName!: string | null
+  @field("contact_phone") contactPhone!: string | null
+  @date("due_date") dueDate!: Date | null
+  @field("account_id") accountId!: string | null
+  @relation("accounts", "account_id") account!: AccountModel | null
   @field("is_paid") isPaid!: boolean
   @field("is_archived") isArchived!: boolean
   @date("created_at") createdAt!: Date

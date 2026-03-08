@@ -161,9 +161,8 @@ export function CategoryModifyContent({
       await destroyCategory(categoryModel)
 
       allowNavigation()
-      router.replace({
-        pathname: "/settings/categories",
-      })
+      // This is cleaner than replace because it actually removes the screens from history rather than stacking a new one on top. The number 2 matches exactly how deep you pushed from /settings/categories.
+      router.dismiss(2)
     } catch (error) {
       logger.error("Error deleting category", { error })
       Toast.error({
@@ -173,7 +172,7 @@ export function CategoryModifyContent({
     }
   }
 
-  const handleIconSelected = (icon: string) => {
+  const handleIconSelected = (icon: string | null) => {
     setValue("icon", icon, { shouldDirty: true })
   }
 

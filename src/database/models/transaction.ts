@@ -24,12 +24,14 @@ export default class TransactionModel extends Model implements Transaction {
   @field("type") type!: TransactionType // "expense" | "income" | "transfer"
   @date("transaction_date") transactionDate!: Date
   @field("is_deleted") isDeleted!: boolean
-  @date("deleted_at") deletedAt?: Date
-  @field("title") title?: string
-  @field("description") description?: string
+  @date("deleted_at") deletedAt!: Date | null
+  @field("title") title!: string | null
+  @field("description") description!: string | null
   @field("amount") amount!: number
   @field("is_pending") isPending!: boolean
-  @field("requires_manual_confirmation") requiresManualConfirmation?: boolean
+  @field("requires_manual_confirmation") requiresManualConfirmation!:
+    | boolean
+    | null
 
   // Transfer-linked pair (shared transfer_id; debit = negative amount, credit = positive)
   @field("is_transfer") isTransfer!: boolean
@@ -39,7 +41,7 @@ export default class TransactionModel extends Model implements Transaction {
   @field("account_balance_before") accountBalanceBefore!: number
 
   // Additional fields
-  @field("subtype") subtype?: string
+  @field("subtype") subtype!: string | null
   @field("extra") private extraJson!: string | null
   @field("has_attachments") hasAttachments!: boolean
 
@@ -65,21 +67,21 @@ export default class TransactionModel extends Model implements Transaction {
 
   /**
    * Gets extra metadata as an object.
-   * Returns parsed JSON or undefined if empty.
+   * Returns parsed JSON or null if empty.
    */
-  get extra(): Record<string, string> | undefined {
-    if (!this.extraJson) return undefined
+  get extra(): Record<string, string> | null {
+    if (!this.extraJson) return null
     try {
       return JSON.parse(this.extraJson) as Record<string, string>
     } catch {
-      return undefined
+      return null
     }
   }
 
   /**
    * Sets extra metadata from an object.
    */
-  set extra(value: Record<string, string> | undefined) {
+  set extra(value: Record<string, string> | null) {
     this.extraJson = value ? JSON.stringify(value) : null
   }
 
@@ -87,27 +89,27 @@ export default class TransactionModel extends Model implements Transaction {
    * Gets location as a string (as per the Transaction interface).
    * Returns the raw JSON string stored in the database.
    */
-  get location(): string | undefined {
-    return this.locationJson || undefined
+  get location(): string | null {
+    return this.locationJson
   }
 
   /**
    * Sets location from a string.
    */
-  set location(value: string | undefined) {
-    this.locationJson = value || null
+  set location(value: string | null) {
+    this.locationJson = value
   }
 
   /**
    * Helper method to get location as an object.
    * Use this when you need to work with the parsed location data.
    */
-  getLocationObject(): TransactionLocation | undefined {
-    if (!this.locationJson) return undefined
+  getLocationObject(): TransactionLocation | null {
+    if (!this.locationJson) return null
     try {
       return JSON.parse(this.locationJson) as TransactionLocation
     } catch {
-      return undefined
+      return null
     }
   }
 
@@ -115,7 +117,7 @@ export default class TransactionModel extends Model implements Transaction {
    * Helper method to set location from an object.
    * Use this when you want to store location data.
    */
-  setLocationObject(value: TransactionLocation | undefined): void {
+  setLocationObject(value: TransactionLocation | null): void {
     this.locationJson = value ? JSON.stringify(value) : null
   }
 

@@ -101,14 +101,16 @@ export const TransactionItem = ({
     (s) => s.leadingIcon,
   )
 
-  const UNTITLED = "Untitled Transaction"
-  const untitledLabel = t("components.transactionForm.fields.titlePlaceholder")
-  const isUntitled =
-    !transaction.title?.trim() || transaction.title === UNTITLED
+  const untitledLabel = t("common.transaction.untitledTransaction")
+
+  const title = transaction.title?.trim()
+
+  const isUntitled = !title
+
   const displayTitle =
     showCategoryForUntitled && isUntitled
       ? (category?.name ?? untitledLabel)
-      : transaction.title || untitledLabel
+      : (title ?? untitledLabel)
 
   const displayIcon =
     leadingIconPref === "account" ? (account.icon ?? icon) : icon
@@ -130,8 +132,10 @@ export const TransactionItem = ({
       ? `${account.name} → ${relatedAccount.name}`
       : account.name
   const categorySegment =
-    showCategoryInSubtitle && !isTransfer && category?.name
-      ? ` · ${category.name}`
+    showCategoryInSubtitle && !isTransfer
+      ? category === null
+        ? ` · ${t("common.transaction.uncategorized")}`
+        : ` · ${category.name}`
       : ""
   const timeSegment = isUpcoming
     ? ` · ${formatFriendlyDate(transaction.transactionDate)}, ${formatReadableTime(transaction.transactionDate)}`

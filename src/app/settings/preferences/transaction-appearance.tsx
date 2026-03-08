@@ -50,7 +50,7 @@ const MOCK_TX_1 = {
 } as unknown as TransactionModel
 
 const MOCK_TX_2 = {
-  title: "Untitled Transaction",
+  title: null,
   amount: -1.27,
   transactionDate: new Date(2024, 0, 15, 19, 16, 0),
   type: "expense" as const,

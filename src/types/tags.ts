@@ -33,9 +33,9 @@ export interface Tag {
   id: string
   name: string
   type: TagKindType
-  colorSchemeName?: string
-  colorScheme?: MintyColorScheme // Computed from colorSchemeName via registry
-  icon?: string
+  colorSchemeName: string | null
+  colorScheme: MintyColorScheme | null // Computed from colorSchemeName via registry
+  icon: string | null
   transactionCount: number
   createdAt: Date
   updatedAt: Date

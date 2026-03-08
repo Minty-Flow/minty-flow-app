@@ -15,6 +15,8 @@ import { useScrollIntoView } from "~/hooks/use-scroll-into-view"
 import type { AccountType } from "~/types/accounts"
 import { accountTypesList } from "~/utils/account-types-list"
 
+import { ChevronIcon } from "../ui/chevron-icon"
+
 export interface AccountTypeInlineProps {
   /** Currently selected type. */
   selectedType: AccountType
@@ -70,8 +72,8 @@ export function AccountTypeInline({
             {displayLabel}
           </Text>
           {editable && (
-            <IconSymbol
-              name={expanded ? "chevron-up" : "chevron-right"}
+            <ChevronIcon
+              direction={expanded ? "up" : "trailing"}
               size={20}
               style={styles.chevronIcon}
             />

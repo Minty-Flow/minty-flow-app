@@ -37,14 +37,15 @@ export interface Account {
   type: AccountType
   balance: number
   currencyCode: string
-  icon?: string
-  colorSchemeName?: string
-  colorScheme?: MintyColorScheme // Computed from colorSchemeName via registry
-  isArchived?: boolean
-  isPrimary?: boolean
-  excludeFromBalance?: boolean
+  icon: string | null
+  colorSchemeName: string | null
+  colorScheme: MintyColorScheme | null // Computed from colorSchemeName via registry
+  isArchived: boolean
+  isPrimary: boolean
+  excludeFromBalance: boolean
   createdAt: Date
   updatedAt: Date
+  sortOrder: number | null
 }
 
 /**

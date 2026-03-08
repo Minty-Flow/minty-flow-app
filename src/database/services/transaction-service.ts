@@ -130,7 +130,7 @@ const loadTransactionTags = async (
  * must be set in the same write so the cache never drifts.
  */
 function hasAttachmentsFromExtra(
-  extra: Record<string, string> | undefined,
+  extra: Record<string, string> | null,
 ): boolean {
   if (!extra?.attachments) return false
   try {
@@ -642,20 +642,20 @@ export const createTransactionModel = async (
       t.transactionDate = data.transactionDate
       t.accountId = data.accountId
       t.categoryId = data.categoryId ?? null
-      t.title = data.title ?? ""
-      t.description = data.description ?? ""
+      t.title = data.title ?? null
+      t.description = data.description ?? null
       t.isPending = data.isPending ?? false
       if (data.requiresManualConfirmation !== undefined)
-        t.requiresManualConfirmation = data.requiresManualConfirmation
+        t.requiresManualConfirmation = data.requiresManualConfirmation ?? null
       t.isDeleted = false
       t.createdAt = new Date()
       t.updatedAt = new Date()
-      t.extra = data.extra
+      t.extra = data.extra ?? null
       t.recurringId = data.recurringId ?? null
       // Cached derivative: set in same write so has_attachments never drifts from extra.attachments
-      t.hasAttachments = hasAttachmentsFromExtra(data.extra)
-      t.subtype = data.subtype
-      t.location = data.location
+      t.hasAttachments = hasAttachmentsFromExtra(data.extra ?? null)
+      t.subtype = data.subtype ?? null
+      t.location = data.location ?? null
       // Transfer link fields: single-row (income/expense or legacy transfer) have no pair
       t.isTransfer = data.type === TransactionTypeEnum.TRANSFER
       t.transferId = null
@@ -728,11 +728,13 @@ export const updateTransactionModel = async (
       if (updates.type !== undefined) t.type = updates.type
       if (updates.transactionDate !== undefined)
         t.transactionDate = updates.transactionDate
-      if (updates.title !== undefined) t.title = updates.title
-      if (updates.description !== undefined) t.description = updates.description
+      if (updates.title !== undefined) t.title = updates.title ?? null
+      if (updates.description !== undefined)
+        t.description = updates.description ?? null
       if (updates.isPending !== undefined) t.isPending = updates.isPending
       if (updates.requiresManualConfirmation !== undefined)
-        t.requiresManualConfirmation = updates.requiresManualConfirmation
+        t.requiresManualConfirmation =
+          updates.requiresManualConfirmation ?? null
 
       if (updates.categoryId !== undefined) {
         t.categoryId = updates.categoryId ?? null
@@ -743,15 +745,15 @@ export const updateTransactionModel = async (
 
       t.updatedAt = new Date()
       if (updates.extra !== undefined) {
-        t.extra = updates.extra
+        t.extra = updates.extra ?? null
         // Cached derivative: always update both in same write (atomic, no drift)
-        t.hasAttachments = hasAttachmentsFromExtra(updates.extra)
+        t.hasAttachments = hasAttachmentsFromExtra(updates.extra ?? null)
       }
       if (updates.subtype !== undefined) {
-        t.subtype = updates.subtype
+        t.subtype = updates.subtype ?? null
       }
       if (updates.location !== undefined) {
-        t.location = updates.location
+        t.location = updates.location ?? null
       }
       if (updates.recurringId !== undefined) {
         t.recurringId = updates.recurringId ?? null
@@ -960,7 +962,7 @@ export interface RecurringEditPayload {
   transactionDate: Date
   categoryId: string | null
   accountId: string
-  title: string
+  title: string | null
   description?: string
   isPending: boolean
   requiresManualConfirmation?: boolean
@@ -1018,7 +1020,7 @@ export const restoreTransactionModel = async (
   return database.write(async () => {
     await transaction.update((t) => {
       t.isDeleted = false
-      t.deletedAt = undefined
+      t.deletedAt = null
       t.updatedAt = new Date()
     })
 

@@ -21,8 +21,8 @@ export default class TagModel extends Model implements Tag {
 
   @field("name") name!: string
   @field("type") type!: TagKindType
-  @field("color_scheme_name") colorSchemeName?: string
-  @field("icon") icon?: string
+  @field("color_scheme_name") colorSchemeName!: string | null
+  @field("icon") icon!: string | null
   @field("transaction_count") transactionCount!: number
   @date("created_at") createdAt!: Date
   @date("updated_at") updatedAt!: Date
@@ -40,7 +40,7 @@ export default class TagModel extends Model implements Tag {
    * Sets the color scheme by name.
    * Only the name is stored in the database.
    */
-  setColorScheme(schemeName: string | undefined) {
+  setColorScheme(schemeName: string | null) {
     this.colorSchemeName = schemeName
   }
 }

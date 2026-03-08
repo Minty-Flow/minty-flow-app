@@ -12,7 +12,6 @@ import { TransactionFilterHeader } from "~/components/transaction/transaction-fi
 import { TransactionSectionList } from "~/components/transaction/transaction-section-list"
 import { Button } from "~/components/ui/button"
 import { IconSymbol } from "~/components/ui/icon-symbol"
-import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import {
@@ -37,7 +36,6 @@ import {
   DEFAULT_TRANSACTION_LIST_FILTER_STATE,
 } from "~/types/transaction-filters"
 import { TransactionTypeEnum } from "~/types/transactions"
-import { MONTH_NAMES } from "~/utils/time-utils"
 import { buildTransactionListFilters } from "~/utils/transaction-list-utils"
 
 const EMPTY_TRANSACTIONS: TransactionWithRelations[] = []
@@ -81,7 +79,6 @@ const AccountDetailsScreenInner = ({
   const { theme } = useUnistyles()
 
   const [showFilters, setShowFilters] = useState(false)
-  const [monthPickerOpen, setMonthPickerOpen] = useState(false)
 
   const categoriesByType = useMemo(
     () => ({
@@ -136,25 +133,8 @@ const AccountDetailsScreenInner = ({
     )
   }
 
-  const displayMonthName = MONTH_NAMES[selectedMonth] ?? "Month"
   const net = account.monthNet
   const typeLabel = account.type.charAt(0).toUpperCase() + account.type.slice(1)
-
-  const goPrevMonth = () => {
-    if (selectedMonth <= 0) {
-      onMonthYearChange(selectedYear - 1, 11)
-    } else {
-      onMonthYearChange(selectedYear, selectedMonth - 1)
-    }
-  }
-
-  const goNextMonth = () => {
-    if (selectedMonth >= 11) {
-      onMonthYearChange(selectedYear + 1, 0)
-    } else {
-      onMonthYearChange(selectedYear, selectedMonth + 1)
-    }
-  }
 
   const headerContent = (
     <>
@@ -243,45 +223,13 @@ const AccountDetailsScreenInner = ({
 
   return (
     <View style={styles.container}>
-      {/* Top: month selector — left arrow, pill (month), right arrow */}
-      <View style={styles.topMonthRow}>
-        <Button variant="secondary" size="icon" onPress={goPrevMonth}>
-          <IconSymbol
-            name="chevron-left"
-            size={24}
-            color={theme.colors.onSurface}
-          />
-        </Button>
-        <Pressable
-          style={styles.monthHeaderButton}
-          onPress={() => setMonthPickerOpen((v) => !v)}
-        >
-          <Text style={styles.monthHeaderButtonText}>{displayMonthName}</Text>
-        </Pressable>
-        <Button variant="secondary" size="icon" onPress={goNextMonth}>
-          <IconSymbol
-            name="chevron-right"
-            size={24}
-            color={theme.colors.onSurface}
-          />
-        </Button>
-      </View>
-
-      {/* Inline month/year picker */}
-      {monthPickerOpen && (
-        <View style={styles.monthPickerContainer}>
-          <MonthYearPicker
-            key={`${selectedYear}-${selectedMonth}`}
-            initialYear={selectedYear}
-            initialMonth={selectedMonth}
-            onSelect={(y, m) => {
-              onMonthYearChange(y, m)
-              setMonthPickerOpen(false)
-            }}
-            onDone={() => setMonthPickerOpen(false)}
-          />
-        </View>
-      )}
+      <MonthYearPicker
+        initialYear={selectedYear}
+        initialMonth={selectedMonth}
+        onSelect={(y, m) => {
+          onMonthYearChange(y, m)
+        }}
+      />
 
       {/* Filter header (when More options is on) */}
       {showFilters && (
@@ -396,37 +344,6 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.customColors.semi,
   },
 
-  // ── Top: Month selector (arrow | pill | arrow) ─────────────────
-  topMonthRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    marginHorizontal: 20,
-    marginTop: 8,
-    paddingVertical: 6,
-  },
-  monthHeaderButton: {
-    backgroundColor: theme.colors.secondary,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: theme.colors.radius,
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  monthHeaderButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: theme.colors.onSecondary,
-  },
-  monthPickerContainer: {
-    marginHorizontal: 20,
-    marginVertical: 8,
-    backgroundColor: theme.colors.secondary,
-    borderRadius: theme.colors.radius,
-    overflow: "hidden",
-  },
   // ── Summary: Income & Expense pills + Net card ─────────────────
   summaryRow: {
     flexDirection: "row",

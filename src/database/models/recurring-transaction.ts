@@ -13,11 +13,11 @@ export interface RecurringTransactionTemplate {
   type: string
   accountId: string
   categoryId: string | null
-  title?: string
-  description?: string
-  subtype?: string
-  tags?: string[]
-  extra?: Record<string, string>
+  title: string | null
+  description: string | null
+  subtype: string | null
+  tags: string[] | null
+  extra: Record<string, string> | null
 }
 
 export default class RecurringTransactionModel extends Model {

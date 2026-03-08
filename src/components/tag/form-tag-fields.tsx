@@ -1,3 +1,4 @@
+import { useState } from "react"
 import {
   type Control,
   Controller,
@@ -9,7 +10,9 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { ChangeIconInline } from "~/components/change-icon-inline"
 import { ColorVariantInline } from "~/components/color-variant-inline"
+import { FormLocationPicker } from "~/components/location/form-location-picker"
 import { ContactSelectorModal } from "~/components/selector-modals"
+import { LocationPickerModal } from "~/components/transaction/location-picker-modal"
 import { Input } from "~/components/ui/input"
 import { Separator } from "~/components/ui/separator"
 import { Text } from "~/components/ui/text"
@@ -19,6 +22,7 @@ import type { AddTagsFormSchema } from "~/schemas/tags.schema"
 import type { MintyColorScheme } from "~/styles/theme/types"
 import { NewEnum } from "~/types/new"
 import type { Tag, TagKindType } from "~/types/tags"
+import type { TransactionLocation } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
@@ -26,9 +30,9 @@ interface FormTagFieldsProps {
   control: Control<AddTagsFormSchema>
   errors: FieldErrors<AddTagsFormSchema>
   formType: TagKindType
-  formIcon?: string
-  formColorSchemeName?: string
-  currentColorScheme?: MintyColorScheme
+  formIcon?: string | null
+  formColorSchemeName?: string | null
+  currentColorScheme: MintyColorScheme | null
   setValue: UseFormSetValue<AddTagsFormSchema>
   tag?: Tag
   isAddMode: boolean
@@ -46,6 +50,21 @@ export const FormTagFields = ({
   isAddMode,
 }: FormTagFieldsProps) => {
   const { t } = useTranslation()
+  const [locationPickerVisible, setLocationPickerVisible] = useState(false)
+  const [selectedLocation, setSelectedLocation] =
+    useState<TransactionLocation | null>(null)
+
+  const handleLocationConfirm = (location: TransactionLocation) => {
+    setSelectedLocation(location)
+    if (location.address) {
+      setValue("name", location.address, { shouldDirty: true })
+    }
+    setLocationPickerVisible(false)
+  }
+
+  const handleLocationClear = () => {
+    setSelectedLocation(null)
+  }
 
   return (
     <View style={styles.form} key={tag?.id || NewEnum.NEW}>
@@ -61,7 +80,9 @@ export const FormTagFields = ({
         <Text variant="small" style={styles.label}>
           {formType === "contact"
             ? t("screens.settings.tags.form.nameLabelContact")
-            : t("screens.settings.tags.form.nameLabelGeneric")}
+            : formType === "location"
+              ? t("screens.settings.tags.form.nameLabelLocation")
+              : t("screens.settings.tags.form.nameLabelGeneric")}
         </Text>
         <Controller
           control={control}
@@ -74,7 +95,9 @@ export const FormTagFields = ({
               placeholder={
                 formType === "contact"
                   ? t("screens.settings.tags.form.placeholderContact")
-                  : t("screens.settings.tags.form.placeholderGeneric")
+                  : formType === "location"
+                    ? t("screens.settings.tags.form.placeholderLocation")
+                    : t("screens.settings.tags.form.placeholderGeneric")
               }
               error={!!errors.name}
               editable={true}
@@ -108,6 +131,24 @@ export const FormTagFields = ({
               logger.warn("Contacts permission denied")
             }}
           />
+        )}
+
+        {/* Location: map preview picker */}
+        {formType === "location" && (
+          <>
+            <FormLocationPicker
+              location={selectedLocation}
+              isCapturingLocation={false}
+              onPress={() => setLocationPickerVisible(true)}
+              onClear={handleLocationClear}
+            />
+            <LocationPickerModal
+              visible={locationPickerVisible}
+              initialLocation={selectedLocation}
+              onConfirm={handleLocationConfirm}
+              onRequestClose={() => setLocationPickerVisible(false)}
+            />
+          </>
         )}
 
         {/* Color Selection – inline panel */}

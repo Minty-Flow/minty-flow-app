@@ -32,14 +32,13 @@ export default function TransactionLocationScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {showBanner && (
-        <PermissionBanner
-          message={t(
-            "screens.settings.preferences.transactionLocation.permissionWarning",
-          )}
-          onPress={handleRequestPermission}
-        />
-      )}
+      <PermissionBanner
+        message={t(
+          "screens.settings.preferences.transactionLocation.permissionWarning",
+        )}
+        onPress={handleRequestPermission}
+        showBanner={showBanner}
+      />
 
       <Pressable
         style={styles.settingRow}

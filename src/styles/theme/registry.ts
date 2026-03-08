@@ -119,9 +119,9 @@ export const validateThemeName = (themeName: string): boolean => {
  */
 export const getThemeStrict = (
   themeName?: string | null,
-): MintyColorScheme | undefined => {
-  if (!themeName) return undefined
-  return ALL_THEMES[themeName]
+): MintyColorScheme | null => {
+  if (!themeName) return null
+  return ALL_THEMES[themeName] ?? null
 }
 
 /**

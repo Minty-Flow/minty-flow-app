@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next"
 
+import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -34,7 +35,11 @@ export function ModeSelectorList({
             {t("components.iconPicker.iconMode")}
           </Text>
         </View>
-        <IconSymbol name="chevron-right" size={20} style={styles.itemChevron} />
+        <ChevronIcon
+          direction="trailing"
+          size={20}
+          style={styles.itemChevron}
+        />
       </Pressable>
       <Pressable
         style={({ pressed }: { pressed: boolean }) => [
@@ -49,7 +54,11 @@ export function ModeSelectorList({
             {t("components.iconPicker.emojiLetter")}
           </Text>
         </View>
-        <IconSymbol name="chevron-right" size={20} style={styles.itemChevron} />
+        <ChevronIcon
+          direction="trailing"
+          size={20}
+          style={styles.itemChevron}
+        />
       </Pressable>
       <Pressable
         style={({ pressed }: { pressed: boolean }) => [
@@ -64,7 +73,11 @@ export function ModeSelectorList({
             {t("components.iconPicker.imageMode")}
           </Text>
         </View>
-        <IconSymbol name="chevron-right" size={20} style={styles.itemChevron} />
+        <ChevronIcon
+          direction="trailing"
+          size={20}
+          style={styles.itemChevron}
+        />
       </Pressable>
     </>
   )

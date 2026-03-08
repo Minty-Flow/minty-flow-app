@@ -37,6 +37,8 @@ import {
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
+import { ChevronIcon } from "../ui/chevron-icon"
+
 export type { RecurringEditPayload }
 
 type EditScope = "this" | "this_and_future"
@@ -86,8 +88,8 @@ function OptionRow({
       {loading ? (
         <ActivityIndicatorMinty size="small" color={successColor} />
       ) : (
-        <IconSymbol
-          name="chevron-right"
+        <ChevronIcon
+          direction={"trailing"}
           size={20}
           color={theme.colors.onSecondary}
           style={styles.optionChevron}

@@ -16,6 +16,7 @@ import { StyleSheet } from "react-native-unistyles"
 import { SearchInput } from "~/components/search-input"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
+import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -255,8 +256,8 @@ export function ContactSelectorModal({
             </Text>
           </View>
           {editable && (
-            <IconSymbol
-              name="chevron-right"
+            <ChevronIcon
+              direction="trailing"
               size={20}
               style={triggerStyles.chevronIcon}
             />

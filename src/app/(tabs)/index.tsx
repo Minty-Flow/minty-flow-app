@@ -2,14 +2,14 @@ import { withObservables } from "@nozbe/watermelondb/react"
 import { useRouter } from "expo-router"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { StyleSheet, useUnistyles } from "react-native-unistyles"
+import { StyleSheet } from "react-native-unistyles"
 import { startWith } from "rxjs"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
+import { PrivacyEyeControl } from "~/components/privacy-eye-control"
 import { SummarySection } from "~/components/summary-card"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionSectionList } from "~/components/transaction/transaction-section-list"
-import { Button } from "~/components/ui/button"
 import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -22,7 +22,6 @@ import { observeCategoriesByType } from "~/database/services/category-service"
 import { observeTags } from "~/database/services/tag-service"
 import type { TransactionWithRelations } from "~/database/services/transaction-service"
 import { observeTransactionModelsFull } from "~/database/services/transaction-service"
-import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { useProfileStore } from "~/stores/profile.store"
 import type { Account } from "~/types/accounts"
@@ -89,11 +88,9 @@ function HomeScreenInner({
   const filteredList = useMemo(() => transactionsFull ?? [], [transactionsFull])
 
   const router = useRouter()
-  const { theme } = useUnistyles()
+
   const profileName = useProfileStore((s) => s.name)
   const image = useProfileStore((s) => s.imageUri)
-  const { privacyMode: privacyModeEnabled, togglePrivacyMode: togglePrivacy } =
-    useMoneyFormattingStore()
 
   const summaryHeader = useMemo(
     () => (
@@ -122,15 +119,7 @@ function HomeScreenInner({
           </Text>
         </Pressable>
 
-        <Button variant="ghost" onPress={togglePrivacy}>
-          <IconSymbol
-            name={privacyModeEnabled ? "eye-off" : "eye"}
-            size={24}
-            color={
-              privacyModeEnabled ? theme.colors.customColors.semi : undefined
-            }
-          />
-        </Button>
+        <PrivacyEyeControl />
       </View>
 
       {/* Inline filter header: pill bar + expandable filter panels */}

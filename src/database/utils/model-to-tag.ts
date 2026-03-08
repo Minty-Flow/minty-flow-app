@@ -12,6 +12,7 @@ export const modelToTag = (model: TagModel): Tag => {
     type: model.type,
     icon: model.icon,
     colorSchemeName: model.colorSchemeName,
+    colorScheme: model.colorScheme,
     transactionCount: model.transactionCount,
     createdAt: model.createdAt,
     updatedAt: model.updatedAt,

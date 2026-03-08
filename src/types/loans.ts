@@ -18,25 +18,25 @@ export type LoanType = "borrowed" | "lent"
 export interface Loan {
   id: string
   name: string
-  description?: string
+  description: string | null
   principalAmount: number
   remainingAmount: number
-  interestRate?: number // As percentage
+  interestRate: number | null // As percentage
   currencyCode: string
   loanType: LoanType
-  contactName?: string
-  contactPhone?: string
-  dueDate?: Date
-  accountId?: string
+  contactName: string | null
+  contactPhone: string | null
+  dueDate: Date | null
+  accountId: string | null
   isPaid: boolean
-  isArchived?: boolean
+  isArchived: boolean
   createdAt: Date
   updatedAt: Date
   // Computed properties (from model getters)
-  paidAmount?: number
-  progressPercentage?: number
-  isOverdue?: boolean
-  totalAmountWithInterest?: number
+  paidAmount: number
+  progressPercentage: number
+  isOverdue: boolean
+  totalAmountWithInterest: number
 }
 
 export interface LoanFormData {

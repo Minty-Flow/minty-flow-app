@@ -5,7 +5,7 @@ import { getThemeStrict } from "~/styles/theme/registry"
 import type { Tag } from "~/types/tags"
 
 import { DynamicIcon } from "../dynamic-icon"
-import { IconSymbol } from "../ui/icon-symbol"
+import { ChevronIcon } from "../ui/chevron-icon"
 import { Pressable } from "../ui/pressable"
 import { Text } from "../ui/text"
 import { View } from "../ui/view"
@@ -49,7 +49,7 @@ export const TagCard = ({ tag }: TagCardProps) => {
         </Text>
       </View>
 
-      <IconSymbol name="chevron-right" size={20} style={styles.chevron} />
+      <ChevronIcon direction="trailing" size={20} style={styles.chevron} />
     </Pressable>
   )
 }

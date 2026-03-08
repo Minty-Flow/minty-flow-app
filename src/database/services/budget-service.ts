@@ -111,9 +111,9 @@ export const createBudgetModel = async (data: {
       budget.currencyCode = data.currencyCode
       budget.period = data.period
       budget.startDate = data.startDate
-      budget.endDate = data.endDate
-      budget.categoryId = data.categoryId
-      budget.alertThreshold = data.alertThreshold
+      budget.endDate = data.endDate ?? null
+      budget.categoryId = data.categoryId ?? null
+      budget.alertThreshold = data.alertThreshold ?? null
       budget.isActive = true
       budget.isArchived = false
       budget.createdAt = new Date()
@@ -133,8 +133,8 @@ export const updateBudgetModel = async (
     spentAmount: number
     period: "daily" | "weekly" | "monthly" | "yearly" | "custom"
     startDate: Date
-    endDate: Date | undefined
-    alertThreshold: number | undefined
+    endDate: Date | null | undefined
+    alertThreshold: number | null | undefined
     isActive: boolean
     isArchived: boolean
   }>,
@@ -146,9 +146,9 @@ export const updateBudgetModel = async (
       if (updates.spentAmount !== undefined) b.spentAmount = updates.spentAmount
       if (updates.period !== undefined) b.period = updates.period
       if (updates.startDate !== undefined) b.startDate = updates.startDate
-      if (updates.endDate !== undefined) b.endDate = updates.endDate
+      if (updates.endDate !== undefined) b.endDate = updates.endDate ?? null
       if (updates.alertThreshold !== undefined)
-        b.alertThreshold = updates.alertThreshold
+        b.alertThreshold = updates.alertThreshold ?? null
       if (updates.isActive !== undefined) b.isActive = updates.isActive
       if (updates.isArchived !== undefined) b.isArchived = updates.isArchived
       b.updatedAt = new Date()
@@ -167,8 +167,8 @@ export const updateBudgetModelById = async (
     spentAmount: number
     period: "daily" | "weekly" | "monthly" | "yearly" | "custom"
     startDate: Date
-    endDate: Date | undefined
-    alertThreshold: number | undefined
+    endDate: Date | null | undefined
+    alertThreshold: number | null | undefined
     isActive: boolean
     isArchived: boolean
   }>,

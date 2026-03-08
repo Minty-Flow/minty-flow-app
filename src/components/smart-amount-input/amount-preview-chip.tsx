@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next"
 
+import { ChevronIcon } from "../ui/chevron-icon"
 import { IconSymbol } from "../ui/icon-symbol"
 import { Pressable } from "../ui/pressable"
 import { Text } from "../ui/text"
@@ -55,8 +56,8 @@ export const AmountPreviewChips = ({
             {t("components.transactionForm.amountInput.resultLabel")}{" "}
           </Text>
           <Text style={smartInputStyles.previewValue}>{displayPreview}</Text>
-          <IconSymbol
-            name="chevron-right"
+          <ChevronIcon
+            direction="trailing"
             size={16}
             color={smartInputStyles.semiColor.color}
             style={smartInputStyles.previewIconRight}

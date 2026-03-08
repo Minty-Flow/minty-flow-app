@@ -5,6 +5,7 @@ import { ConfirmModal } from "~/components/confirm-modal"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { AttachmentPreviewModal } from "~/components/transaction/attachment-preview-modal"
 import { Button } from "~/components/ui/button"
+import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -172,8 +173,8 @@ export function FormAttachmentsSection({
               >
                 {t("components.transactionForm.addFiles.selectFromFiles")}
               </Text>
-              <IconSymbol
-                name="chevron-right"
+              <ChevronIcon
+                direction="trailing"
                 size={20}
                 style={transactionFormStyles.chevronIcon}
               />
@@ -194,8 +195,8 @@ export function FormAttachmentsSection({
               >
                 {t("components.transactionForm.addFiles.takeAPhoto")}
               </Text>
-              <IconSymbol
-                name="chevron-right"
+              <ChevronIcon
+                direction="trailing"
                 size={20}
                 style={transactionFormStyles.chevronIcon}
               />
@@ -216,8 +217,8 @@ export function FormAttachmentsSection({
               >
                 {t("components.transactionForm.addFiles.selectMultipleMedia")}
               </Text>
-              <IconSymbol
-                name="chevron-right"
+              <ChevronIcon
+                direction="trailing"
                 size={20}
                 style={transactionFormStyles.chevronIcon}
               />
@@ -241,8 +242,8 @@ export function FormAttachmentsSection({
               >
                 {t("components.transactionForm.addFiles.selectAPhoto")}
               </Text>
-              <IconSymbol
-                name="chevron-right"
+              <ChevronIcon
+                direction="trailing"
                 size={20}
                 style={transactionFormStyles.chevronIcon}
               />

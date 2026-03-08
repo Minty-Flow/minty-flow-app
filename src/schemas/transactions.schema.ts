@@ -10,15 +10,15 @@ export const transactionSchema = z.object({
   /** When type is transfer: destination account (required for transfer). */
   toAccountId: z.string().optional(),
   categoryId: z.string().nullable().optional(),
-  title: z.string().optional(),
-  description: z.string().optional(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
   isPending: z.boolean().default(false),
-  requiresManualConfirmation: z.boolean().optional(),
+  requiresManualConfirmation: z.boolean().nullable().optional(),
   tags: z.array(z.string()).default([]),
   recurringId: z.string().nullable().optional(),
-  location: z.string().optional(),
-  extra: z.record(z.string(), z.string()).optional(),
-  subtype: z.string().optional(),
+  location: z.string().nullable().optional(),
+  extra: z.record(z.string(), z.string()).nullable().optional(),
+  subtype: z.string().nullable().optional(),
 })
 
 export type TransactionFormValues = z.infer<typeof transactionSchema>
@@ -36,7 +36,7 @@ export const createTransferParamsSchema = z.object({
   /** When from/to accounts have different currencies: rate (toCurrency per 1 fromCurrency). Credit amount = amount * conversionRate. */
   conversionRate: z.number().gt(0).optional(),
   transactionDate: dateOrNumber.optional(),
-  title: z.string().optional(),
+  title: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
 })
 
@@ -47,7 +47,7 @@ export const editTransferFieldsSchema = z.object({
   /** When from/to have different currencies: rate (toCurrency per 1 fromCurrency). Credit amount = amount * conversionRate. */
   conversionRate: z.number().gt(0).optional(),
   transactionDate: dateOrNumber.optional(),
-  title: z.string().optional(),
+  title: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   fromAccountId: z.string().min(1).optional(),
   toAccountId: z.string().min(1).optional(),

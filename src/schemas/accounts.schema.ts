@@ -16,8 +16,8 @@ const addAccountsSchema = z
       .string()
       .min(3, "validation.account.currency.required")
       .max(3, "validation.account.currency.required"),
-    icon: z.string().optional(),
-    colorSchemeName: z.string().optional(),
+    icon: z.string().nullable().optional(),
+    colorSchemeName: z.string().nullable().optional(),
     isPrimary: z.boolean().default(false),
     excludeFromBalance: z.boolean().default(false),
     isArchived: z.boolean().default(false),

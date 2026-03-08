@@ -37,6 +37,8 @@ import { autoConfirmationService } from "~/services/auto-confirmation-service"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
+import { ChevronIcon } from "../ui/chevron-icon"
+
 type DeleteScope = "this" | "all" | "this_and_future"
 
 interface DeleteRecurringModalProps {
@@ -93,8 +95,8 @@ function OptionRow({
       {loading ? (
         <ActivityIndicatorMinty size="small" color={theme.colors.error} />
       ) : (
-        <IconSymbol
-          name="chevron-right"
+        <ChevronIcon
+          direction={"trailing"}
           size={20}
           color={chevronColor}
           style={styles.optionChevron}

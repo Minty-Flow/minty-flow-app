@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
-import { IconSymbol } from "~/components/ui/icon-symbol"
+import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { Pressable } from "~/components/ui/pressable"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
@@ -159,8 +159,8 @@ export function FormRecurringSection({
               >
                 {formatCreatedAt(startDate)}
               </Text>
-              <IconSymbol
-                name="chevron-right"
+              <ChevronIcon
+                direction="trailing"
                 size={20}
                 style={transactionFormStyles.chevronIcon}
               />
@@ -195,8 +195,8 @@ export function FormRecurringSection({
               >
                 {endsOnLabel}
               </Text>
-              <IconSymbol
-                name={endsOnPickerExpanded ? "chevron-up" : "chevron-right"}
+              <ChevronIcon
+                direction={endsOnPickerExpanded ? "up" : "trailing"}
                 size={20}
                 style={transactionFormStyles.chevronIcon}
               />
@@ -214,8 +214,8 @@ export function FormRecurringSection({
                   >
                     {t("components.transactionForm.recurring.never")}
                   </Text>
-                  <IconSymbol
-                    name="chevron-right"
+                  <ChevronIcon
+                    direction="trailing"
                     size={20}
                     style={transactionFormStyles.chevronIcon}
                   />
@@ -230,8 +230,8 @@ export function FormRecurringSection({
                   >
                     {t("components.transactionForm.recurring.onADate")}
                   </Text>
-                  <IconSymbol
-                    name="chevron-right"
+                  <ChevronIcon
+                    direction="trailing"
                     size={20}
                     style={transactionFormStyles.chevronIcon}
                   />
@@ -249,8 +249,8 @@ export function FormRecurringSection({
                   >
                     {t("components.transactionForm.recurring.occurrences")}
                   </Text>
-                  <IconSymbol
-                    name="chevron-right"
+                  <ChevronIcon
+                    direction="trailing"
                     size={20}
                     style={transactionFormStyles.chevronIcon}
                   />

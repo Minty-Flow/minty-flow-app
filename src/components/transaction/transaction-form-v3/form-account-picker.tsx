@@ -11,6 +11,7 @@ import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { Money } from "~/components/money"
+import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { IconSymbol } from "~/components/ui/icon-symbol"
 import { Input } from "~/components/ui/input"
 import { Pressable } from "~/components/ui/pressable"
@@ -139,8 +140,8 @@ export function FormAccountPicker({
                 style={transactionFormStyles.accountTriggerBalance}
               />
             </View>
-            <IconSymbol
-              name={accountPickerOpen ? "chevron-up" : "chevron-right"}
+            <ChevronIcon
+              direction={accountPickerOpen ? "up" : "trailing"}
               size={20}
               style={transactionFormStyles.chevronIcon}
             />

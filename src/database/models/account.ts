@@ -27,14 +27,14 @@ export default class AccountModel extends Model implements Account {
   @field("type") type!: AccountType
   @field("balance") balance!: number
   @field("currency_code") currencyCode!: string
-  @field("icon") icon?: string
-  @field("color_scheme_name") colorSchemeName?: string
+  @field("icon") icon!: string | null
+  @field("color_scheme_name") colorSchemeName!: string | null
   @field("is_archived") isArchived!: boolean
   @field("is_primary") isPrimary!: boolean
   @field("exclude_from_balance") excludeFromBalance!: boolean
   @date("created_at") createdAt!: Date
   @date("updated_at") updatedAt!: Date
-  @field("sort_order") sortOrder?: number
+  @field("sort_order") sortOrder!: number | null
 
   /**
    * Gets the color scheme object from the theme registry.
@@ -46,7 +46,7 @@ export default class AccountModel extends Model implements Account {
   /**
    * Sets the color scheme by name.
    */
-  setColorScheme(schemeName: string | undefined) {
+  setColorScheme(schemeName: string | null) {
     this.colorSchemeName = schemeName
   }
 }
