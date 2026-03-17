@@ -69,6 +69,30 @@ export const observeCategoriesByType = (
 }
 
 /**
+ * Observe all categories sorted by name ascending (no type filter)
+ * Used when the consumer needs to filter categories client-side (e.g. loan form
+ * where the required category type depends on a runtime form value).
+ */
+export const observeAllCategories = (): Observable<Category[]> => {
+  const categories = getCategoryCollection()
+  const query = categories.query(Q.sortBy("name", Q.asc))
+
+  return query
+    .observeWithColumns([
+      "name",
+      "icon",
+      "type",
+      "color_scheme_name",
+      "transaction_count",
+    ])
+    .pipe(
+      map((results) => {
+        return results.map(modelToCategory)
+      }),
+    )
+}
+
+/**
  * Observe a specific category by ID
  */
 export const observeCategoryById = (id: string): Observable<CategoryModel> => {

@@ -62,6 +62,9 @@ export default class TransactionModel extends Model implements Transaction {
   /** Optional link to a budget this transaction counts against. */
   @field("budget_id") budgetId!: string | null
 
+  /** Optional link to a loan this transaction is a payment for. */
+  @field("loan_id") loanId!: string | null
+
   @field("location") private locationJson!: string | null
 
   @date("created_at") createdAt!: Date

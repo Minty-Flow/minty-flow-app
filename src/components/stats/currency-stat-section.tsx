@@ -6,9 +6,14 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import type { CurrencyStats, StatsDateRange } from "~/types/stats"
+import type {
+  CurrencyStats,
+  StatsDateRange,
+  StatsSupplement,
+} from "~/types/stats"
 import { formatRangeLabel } from "~/utils/stats-date-range"
 
+import { BalanceTimelineChart } from "./balance-timeline-chart"
 import { CurrencyHeroRow } from "./currency-hero-row"
 import { DailyExpenseLineChart } from "./daily-expense-line-chart"
 import { StatsAveragesRow } from "./stats-averages-row"
@@ -21,12 +26,14 @@ interface CurrencyStatSectionProps {
   stats: CurrencyStats
   dateRange: StatsDateRange
   isFirst: boolean
+  supplement?: StatsSupplement
 }
 
 export function CurrencyStatSection({
   stats,
   dateRange,
   isFirst,
+  supplement,
 }: CurrencyStatSectionProps) {
   const { t } = useTranslation()
   const router = useRouter()
@@ -70,6 +77,17 @@ export function CurrencyStatSection({
 
           {/* Hero cards row: expense / income / net */}
           <CurrencyHeroRow stats={stats} forecast={stats.forecast} />
+
+          {/* Net balance over time */}
+          {supplement && (
+            <BalanceTimelineChart
+              timeline={stats.balanceTimeline}
+              openingBalance={stats.openingBalance}
+              closingBalance={stats.closingBalance}
+              currency={stats.currency}
+              accountBreakdown={supplement.accountBalanceSummary}
+            />
+          )}
 
           {/* Daily trend line chart */}
           <DailyExpenseLineChart

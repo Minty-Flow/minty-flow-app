@@ -6,7 +6,14 @@
  * The WatermelonDB model implements these types, not the other way around.
  */
 
-export type LoanType = "borrowed" | "lent"
+import type { MintyColorScheme } from "~/styles/theme/types"
+
+export const LoanTypeEnum = {
+  BORROWED: "borrowed",
+  LENT: "lent",
+} as const
+
+export type LoanType = (typeof LoanTypeEnum)[keyof typeof LoanTypeEnum]
 
 /**
  * Loan domain type for UI/API usage.
@@ -20,34 +27,14 @@ export interface Loan {
   name: string
   description: string | null
   principalAmount: number
-  remainingAmount: number
-  interestRate: number | null // As percentage
-  currencyCode: string
   loanType: LoanType
-  contactName: string | null
-  contactPhone: string | null
   dueDate: Date | null
-  accountId: string | null
-  isPaid: boolean
+  accountId: string
+  categoryId: string
+  icon: string | null
+  colorSchemeName: string | null
+  colorScheme: MintyColorScheme | null // Computed from colorSchemeName via registry
+  isOverdue: boolean // Computed: !isPaid && dueDate && now > dueDate
   createdAt: Date
   updatedAt: Date
-  // Computed properties (from model getters)
-  paidAmount: number
-  progressPercentage: number
-  isOverdue: boolean
-  totalAmountWithInterest: number
 }
-
-// TODO: Redo with zod
-// export interface LoanFormData {
-//   name: string
-//   description?: string
-//   principalAmount: number
-//   interestRate?: number
-//   currencyCode: string
-//   loanType: LoanType
-//   contactName?: string
-//   contactPhone?: string
-//   dueDate?: Date
-//   accountId?: string
-// }

@@ -408,46 +408,77 @@ function computeCategoryBreakdown(
 
 function computeBalanceTimeline(
   balanceRows: BalanceRawRow[],
+  accounts: AccountModel[],
   from: Date,
   to: Date,
 ): { timeline: BalanceTimelinePoint[]; opening: number; closing: number } {
-  if (balanceRows.length === 0) {
+  const buckets = generateDateBuckets(from, to, "day")
+
+  if (accounts.length === 0) {
     return { timeline: [], opening: 0, closing: 0 }
   }
 
-  // Sort by date ASC
-  const sorted = balanceRows
-    .slice()
-    .sort((a, b) => a.date.getTime() - b.date.getTime())
-
-  // Build one balance point per day using carry-forward
-  const buckets = generateDateBuckets(from, to, "day")
-  const dailyMap = new Map<string, number>()
-
-  // Find opening balance = first tx's accountBalanceBefore
-  const opening = sorted[0]?.accountBalanceBefore ?? 0
-
-  // For each transaction: balance AFTER = accountBalanceBefore + amount
-  // Group by dateKey, keep only the LAST known balance for that day
-  for (const row of sorted) {
-    const key = toDateKey(row.date)
-    dailyMap.set(key, row.accountBalanceBefore + row.amount)
+  // Group rows by accountId
+  const byAccount = new Map<string, BalanceRawRow[]>()
+  for (const row of balanceRows) {
+    const list = byAccount.get(row.accountId)
+    if (list) list.push(row)
+    else byAccount.set(row.accountId, [row])
   }
 
-  // Carry forward — fill each bucket with last known balance
-  const timeline: BalanceTimelinePoint[] = []
-  let lastBalance = opening
+  // For each account, build a per-day balance map using carry-forward.
+  // Accounts with no transactions in the period are constant at account.balance.
+  const accountDailyMaps: Map<string, number>[] = []
+  let openingSum = 0
 
+  for (const account of accounts) {
+    const rows = byAccount.get(account.id)
+    const dailyMap = new Map<string, number>()
+
+    if (!rows || rows.length === 0) {
+      // No transactions in period — balance is constant at the current stored value
+      openingSum += account.balance
+      for (const bucket of buckets) {
+        dailyMap.set(toDateKey(bucket), account.balance)
+      }
+    } else {
+      // Sort transactions by date ASC
+      const sorted = rows
+        .slice()
+        .sort((a, b) => a.date.getTime() - b.date.getTime())
+      const accountOpening = sorted[0]?.accountBalanceBefore ?? 0
+      openingSum += accountOpening
+
+      let lastBalance = accountOpening
+      for (const bucket of buckets) {
+        const key = toDateKey(bucket)
+        // Apply all transactions that fall on this day
+        for (const row of sorted) {
+          if (toDateKey(row.date) === key) {
+            lastBalance = row.accountBalanceBefore + row.amount
+          }
+        }
+        dailyMap.set(key, lastBalance)
+      }
+    }
+
+    accountDailyMaps.push(dailyMap)
+  }
+
+  // Sum all account balances per day
+  const timeline: BalanceTimelinePoint[] = []
   for (const bucket of buckets) {
     const key = toDateKey(bucket)
-    const known = dailyMap.get(key)
-    if (known !== undefined) lastBalance = known
-    timeline.push({ date: bucket, balance: lastBalance })
+    let total = 0
+    for (const dailyMap of accountDailyMaps) {
+      total += dailyMap.get(key) ?? 0
+    }
+    timeline.push({ date: bucket, balance: total })
   }
 
-  const closing = timeline.at(-1)?.balance ?? lastBalance
+  const closing = timeline.at(-1)?.balance ?? openingSum
 
-  return { timeline, opening, closing }
+  return { timeline, opening: openingSum, closing }
 }
 
 function computeSpendingByDayOfWeek(
@@ -712,8 +743,12 @@ export async function computeCurrencyStats(
       const topCategory =
         categoryBreakdown.length > 0 ? (categoryBreakdown[0] ?? null) : null
 
+      const currencyAccounts = accounts.filter(
+        (a) => a.currencyCode === currency && !a.excludeFromBalance,
+      )
       const { timeline, opening, closing } = computeBalanceTimeline(
         balRows,
+        currencyAccounts,
         range.from,
         range.to,
       )

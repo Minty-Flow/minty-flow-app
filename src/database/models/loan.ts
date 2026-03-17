@@ -1,11 +1,8 @@
 import { Model } from "@nozbe/watermelondb"
-import { date, field, relation } from "@nozbe/watermelondb/decorators"
+import { date, field } from "@nozbe/watermelondb/decorators"
 
-import type {
-  Loan as LoanType,
-  LoanType as LoanTypeEnum,
-} from "../../types/loans"
-import type AccountModel from "./account"
+import { getThemeStrict } from "~/styles/theme/registry"
+import type { Loan, LoanType } from "~/types/loans"
 
 /**
  * Loan model representing borrowed and lent money.
@@ -19,57 +16,34 @@ import type AccountModel from "./account"
  * - Date fields end with _at and use number type (Unix timestamps)
  * - Relations use _id suffix for foreign keys
  */
-export default class LoanModel extends Model implements LoanType {
+export default class LoanModel extends Model implements Loan {
   static table = "loans"
 
   @field("name") name!: string
   @field("description") description!: string | null
   @field("principal_amount") principalAmount!: number
-  @field("remaining_amount") remainingAmount!: number
-  @field("interest_rate") interestRate!: number | null
-  @field("currency_code") currencyCode!: string
-  @field("loan_type") loanType!: LoanTypeEnum
-  @field("contact_name") contactName!: string | null
-  @field("contact_phone") contactPhone!: string | null
+  @field("loan_type") loanType!: LoanType
   @date("due_date") dueDate!: Date | null
-  @field("account_id") accountId!: string | null
-  @relation("accounts", "account_id") account!: AccountModel | null
-  @field("is_paid") isPaid!: boolean
+  @field("account_id") accountId!: string
+  @field("category_id") categoryId!: string
+  @field("icon") icon!: string | null
+  @field("color_scheme_name") colorSchemeName!: string | null
   @date("created_at") createdAt!: Date
   @date("updated_at") updatedAt!: Date
 
   /**
-   * Gets the paid amount.
-   * This computed property satisfies the domain type's paidAmount requirement.
+   * Gets the color scheme object from the theme registry.
    */
-  get paidAmount(): number {
-    return this.principalAmount - this.remainingAmount
-  }
-
-  /**
-   * Gets the progress percentage (0-100).
-   * This computed property satisfies the domain type's progressPercentage requirement.
-   */
-  get progressPercentage(): number {
-    if (this.principalAmount === 0) return 0
-    return Math.min(100, (this.paidAmount / this.principalAmount) * 100)
+  get colorScheme() {
+    return getThemeStrict(this.colorSchemeName)
   }
 
   /**
    * Checks if the loan is overdue.
-   * This computed property satisfies the domain type's isOverdue requirement.
+   * True when a due date is set and today is past it.
    */
   get isOverdue(): boolean {
-    if (this.isPaid || !this.dueDate) return false
+    if (!this.dueDate) return false
     return new Date() > this.dueDate
-  }
-
-  /**
-   * Gets the total amount with interest.
-   * This computed property satisfies the domain type's totalAmountWithInterest requirement.
-   */
-  get totalAmountWithInterest(): number {
-    if (!this.interestRate) return this.principalAmount
-    return this.principalAmount * (1 + this.interestRate / 100)
   }
 }

@@ -1,8 +1,9 @@
 import { withObservables } from "@nozbe/watermelondb/react"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useLayoutEffect } from "react"
+import { useCallback, useLayoutEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList, View as RNView } from "react-native"
+import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 import { combineLatest, map, of, startWith, switchMap } from "rxjs"
 
@@ -23,8 +24,8 @@ import {
   observeBudgetSpent,
   observeBudgetTransactions,
   observeCategoryIdsForBudget,
-  observeCategoryNamesByIds,
 } from "~/database/services/budget-service"
+import { observeCategoryNamesByIds } from "~/database/services/category-service"
 import {
   observeTransactionModelsFull,
   type TransactionWithRelations,
@@ -59,6 +60,17 @@ function BudgetDetailInner({
   const router = useRouter()
   const navigation = useNavigation()
   const { theme } = useUnistyles()
+  const openSwipeableRef = useRef<SwipeableMethods | null>(null)
+
+  const handleTransactionPress = useCallback(
+    (id: string) => {
+      router.push({ pathname: "/transaction/[id]", params: { id } })
+    },
+    [router],
+  )
+  const handleDeleteDone = useCallback(() => {
+    openSwipeableRef.current?.close()
+  }, [])
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -214,7 +226,15 @@ function BudgetDetailInner({
         data={transactionsFull}
         keyExtractor={(item) => item.transaction.id}
         renderItem={({ item }) => (
-          <TransactionItem transactionWithRelations={item} />
+          <TransactionItem
+            transactionWithRelations={item}
+            onPress={() => handleTransactionPress(item.transaction.id)}
+            onDelete={handleDeleteDone}
+            onWillOpen={(methods) => {
+              openSwipeableRef.current?.close()
+              openSwipeableRef.current = methods
+            }}
+          />
         )}
         ListHeaderComponent={headerContent}
         ListEmptyComponent={

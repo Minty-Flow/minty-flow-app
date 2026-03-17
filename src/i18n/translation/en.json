@@ -296,6 +296,11 @@
       "calendarHeatmap": {
         "title": "Spending Heatmap"
       },
+      "balance": {
+        "title": "Net Balance",
+        "opening": "Opening",
+        "closing": "Closing"
+      },
       "delta": {
         "notAvailable": "N/A"
       },
@@ -631,7 +636,7 @@
           },
           "nameLabel": "Budget Name",
           "namePlaceholder": "e.g. Groceries",
-          "amountLabel": "Limit",
+          "amountLabel": "Amount",
           "periodLabel": "Period",
           "categoryLabel": "Categories",
           "categoryPlaceholder": "All Categories",
@@ -657,9 +662,51 @@
       },
       "loans": {
         "title": "Loans",
-        "description": "Track money lent and borrowed",
-        "body": "Track money you've lent to others or borrowed from them. Keep records of all your loan transactions in one place.",
-        "empty": "No loans tracked yet"
+        "description": "Track money you've lent or borrowed",
+        "body": "Manage your loans and track repayments",
+        "empty": "No loans yet",
+        "addNew": "Add Loan",
+        "type": {
+          "all": "All",
+          "lent": "Lent",
+          "borrowed": "Borrowed"
+        },
+        "card": {
+          "paid": "Paid",
+          "received": "Received",
+          "remaining": "Remaining",
+          "of": "of",
+          "overdue": "Overdue",
+          "dueDate": "Due {{date}}",
+          "noDueDate": "No due date",
+          "completed": "Completed"
+        },
+        "form": {
+          "loadingText": "Loading loan...",
+          "amountLabel": "Principal Amount"
+        },
+        "detail": {
+          "title": "Loan Details"
+        },
+        "actions": {
+          "collect": "Collect",
+          "settle": "Settle",
+          "collectAll": "Collect All",
+          "settleAll": "Settle All",
+          "collectAllTitle": "Collect Full Amount",
+          "settleAllTitle": "Settle Full Amount",
+          "collectAllDesc": "Record full repayment of remaining balance",
+          "settleAllDesc": "Record full payment of remaining balance",
+          "partialCollect": "Partially Collect",
+          "partialSettle": "Partially Settle",
+          "partialCollectDesc": "Record a partial repayment",
+          "partialSettleDesc": "Record a partial payment",
+          "collectSuccess": "Repayment recorded",
+          "settleSuccess": "Payment recorded"
+        },
+        "initialTransaction": {
+          "title": "Loan: {{name}}"
+        }
       },
       "tags": {
         "title": "Tags",
@@ -838,6 +885,7 @@
         "goal": "Goal",
         "noGoals": "No goals available",
         "budget": "Budget",
+        "loan": "Loan",
         "clear": "Clear",
         "addCategories": "categories",
         "now": "Now",
@@ -950,6 +998,7 @@
         "selectGoal": "Select {{name}} goal",
         "clearBudget": "Clear budget",
         "selectBudget": "Select {{name}} budget",
+        "clearLoan": "Clear loan",
         "clearAllTags": "Clear all tags",
         "addTag": "Add tag",
         "removeTag": "Remove {{name}} tag",
@@ -1294,11 +1343,18 @@
     },
     "loan": {
       "name": {
-        "required": "Loan name is required"
+        "required": "Name is required"
+      },
+      "account": {
+        "required": "Account is required"
+      },
+      "category": {
+        "required": "Category is required"
       },
       "amount": {
         "required": "Amount is required",
-        "invalid": "Enter a valid amount"
+        "invalid": "Enter a valid amount",
+        "positive": "Amount must be greater than 0"
       },
       "contact": {
         "invalidPhone": "Enter a valid phone number"

@@ -19,6 +19,7 @@ export default function StatsScreen() {
   const { t } = useTranslation()
   const {
     byCurrency,
+    supplementByCurrency,
     isLoading,
     dateRange,
     activeYear,
@@ -85,6 +86,9 @@ export default function StatsScreen() {
             stats={stats}
             dateRange={dateRange}
             isFirst={index === 0}
+            supplement={supplementByCurrency.find(
+              (s) => s.currency === stats.currency,
+            )}
           />
         ))}
 

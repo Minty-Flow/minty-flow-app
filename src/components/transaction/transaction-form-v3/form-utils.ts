@@ -45,10 +45,12 @@ export function getDefaultValues(
   accounts: Account[],
   transactionType: TransactionType,
   initialTagIds: string[] = [],
+  prefill?: Partial<TransactionFormValues>,
 ): TransactionFormValues {
   const defaultAccountId = accounts.find((a) => a.isPrimary)?.id ?? ""
 
   if (!transaction) {
+    // prefill values win over computed defaults (e.g. pre-selected account/category/loan)
     return {
       amount: 0,
       type: transactionType,
@@ -61,6 +63,7 @@ export function getDefaultValues(
       isPending: false,
       tags: [],
       location: undefined,
+      ...prefill,
     }
   }
   const isTransfer =
@@ -90,6 +93,9 @@ export function getDefaultValues(
     description: transaction.description ?? "",
     isPending: transaction.isPending,
     tags: initialTagIds,
+    goalId: transaction.goalId ?? null,
+    budgetId: transaction.budgetId ?? null,
+    loanId: transaction.loanId ?? null,
     location: transaction.location,
   }
 }

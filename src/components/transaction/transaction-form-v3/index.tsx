@@ -62,6 +62,7 @@ import { FormDateSection } from "./form-date-section"
 import { FormDeleteActions } from "./form-delete-actions"
 import { FormFooter } from "./form-footer"
 import { FormGoalPicker } from "./form-goal-picker"
+import { FormLoanPicker } from "./form-loan-picker"
 import { FormModals } from "./form-modals"
 import { FormNotesSection } from "./form-notes-section"
 import { FormRecurringSection } from "./form-recurring-section"
@@ -85,9 +86,11 @@ export function TransactionFormV3({
   tags,
   goals,
   budgets,
+  loans,
   transactionType,
   onTransactionTypeChange,
   initialTagIds = EMPTY_TAG_IDS,
+  prefill,
 }: TransactionFormV3Props) {
   const router = useRouter()
   const navigation = useNavigation()
@@ -115,8 +118,21 @@ export function TransactionFormV3({
 
   const defaultValues = useMemo(
     () =>
-      getDefaultValues(transaction, accounts, transactionType, initialTagIds),
-    [transaction?.id, transaction, accounts, transactionType, initialTagIds],
+      getDefaultValues(
+        transaction,
+        accounts,
+        transactionType,
+        initialTagIds,
+        prefill,
+      ),
+    [
+      transaction?.id,
+      transaction,
+      accounts,
+      transactionType,
+      initialTagIds,
+      prefill,
+    ],
   )
 
   const {
@@ -144,6 +160,7 @@ export function TransactionFormV3({
   const tagIds = watch("tags")
   const goalId = watch("goalId")
   const budgetId = watch("budgetId")
+  const loanId = watch("loanId")
   const locationString = watch("location")
   const location: TransactionLocation | null =
     locationString != null && locationString !== ""
@@ -165,6 +182,17 @@ export function TransactionFormV3({
     [goals, accountId],
   )
 
+  // Filter loans to only those matching both the selected account AND category
+  const accountLoans = useMemo(
+    () =>
+      accountId && categoryId
+        ? loans.filter(
+            (l) => l.accountId === accountId && l.categoryId === categoryId,
+          )
+        : [],
+    [loans, accountId, categoryId],
+  )
+
   // Filter budgets by selected account AND category
   const accountBudgets = useMemo(
     () =>
@@ -179,7 +207,7 @@ export function TransactionFormV3({
     [budgets, accountId, categoryId],
   )
 
-  // Clear goalId/budgetId when account changes and current selection is no longer valid
+  // Clear goalId/budgetId/loanId when account changes and current selection is no longer valid
   const handleAccountChange = useCallback(
     (newAccountId: string) => {
       if (goalId) {
@@ -198,8 +226,20 @@ export function TransactionFormV3({
           setValue("budgetId", null, { shouldDirty: false })
         }
       }
+      if (loanId) {
+        const newLoans =
+          newAccountId && categoryId
+            ? loans.filter(
+                (l) =>
+                  l.accountId === newAccountId && l.categoryId === categoryId,
+              )
+            : []
+        if (!newLoans.some((l) => l.id === loanId)) {
+          setValue("loanId", null, { shouldDirty: false })
+        }
+      }
     },
-    [goalId, goals, budgetId, budgets, setValue],
+    [goalId, goals, budgetId, budgets, loanId, loans, categoryId, setValue],
   )
   const selectedToAccount =
     transactionType === "transfer" && toAccountId
@@ -424,6 +464,7 @@ export function TransactionFormV3({
         tags: data.tags ?? [],
         goalId: data.goalId ?? null,
         budgetId: data.budgetId ?? null,
+        loanId: data.loanId ?? null,
         location: data.location,
         extra: Object.keys(builtExtra).length > 0 ? builtExtra : undefined,
         subtype: transaction?.subtype ?? undefined,
@@ -745,12 +786,30 @@ export function TransactionFormV3({
                     setValue("budgetId", null, { shouldDirty: false })
                   }
                 }
+                // Clear loan if it no longer matches the new category
+                if (loanId) {
+                  const validLoan = accountId
+                    ? loans.some(
+                        (l) =>
+                          l.id === loanId &&
+                          l.accountId === accountId &&
+                          l.categoryId === id,
+                      )
+                    : false
+                  if (!validLoan) {
+                    setValue("loanId", null, { shouldDirty: false })
+                  }
+                }
               }}
               onClear={() => {
                 setValue("categoryId", null, { shouldDirty: true })
                 // Clear budget since it was category-filtered
                 if (budgetId) {
                   setValue("budgetId", null, { shouldDirty: false })
+                }
+                // Clear loan since it is filtered by both account and category
+                if (loanId) {
+                  setValue("loanId", null, { shouldDirty: false })
                 }
               }}
             />
@@ -773,6 +832,16 @@ export function TransactionFormV3({
               budgetId={budgetId}
               onSelect={(id) => setValue("budgetId", id, { shouldDirty: true })}
               onClear={() => setValue("budgetId", null, { shouldDirty: true })}
+            />
+          )}
+
+          {/* Loan: hidden for transfers, filtered by selected account AND category */}
+          {transactionType !== "transfer" && (
+            <FormLoanPicker
+              loans={accountLoans}
+              loanId={loanId}
+              onSelect={(id) => setValue("loanId", id, { shouldDirty: true })}
+              onClear={() => setValue("loanId", null, { shouldDirty: true })}
             />
           )}
 

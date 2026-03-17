@@ -262,6 +262,11 @@
       "dayOfWeek": {
         "title": "الإنفاق حسب يوم الأسبوع"
       },
+      "balance": {
+        "title": "صافي الرصيد",
+        "opening": "الافتتاح",
+        "closing": "الإغلاق"
+      },
       "delta": {
         "notAvailable": "لا يوجد"
       },
@@ -631,7 +636,7 @@
           },
           "nameLabel": "اسم الميزانية",
           "namePlaceholder": "مثال: البقالة",
-          "amountLabel": "الحد",
+          "amountLabel": "كمية",
           "periodLabel": "الفترة",
           "categoryLabel": "فئات",
           "categoryPlaceholder": "جميع الفئات",
@@ -657,9 +662,51 @@
       },
       "loans": {
         "title": "القروض",
-        "description": "تتبع الأموال المُعارة والمُقترَضة",
-        "body": "تتبع الأموال التي أعرتها للآخرين أو اقترضتها منهم. احتفظ بسجل لجميع معاملات القروض في مكان واحد.",
-        "empty": "لا توجد قروض مسجّلة بعد"
+        "description": "تتبع الأموال المُقرَضة أو المُقترَضة",
+        "body": "إدارة قروضك وتتبع عمليات السداد",
+        "empty": "لا توجد قروض بعد",
+        "addNew": "إضافة قرض",
+        "type": {
+          "all": "الكل",
+          "lent": "مُقرَض",
+          "borrowed": "مُقترَض"
+        },
+        "card": {
+          "paid": "مدفوع",
+          "received": "مُستلَم",
+          "remaining": "متبقي",
+          "of": "من",
+          "overdue": "متأخر",
+          "dueDate": "يستحق {{date}}",
+          "noDueDate": "بلا تاريخ استحقاق",
+          "completed": "مكتمل"
+        },
+        "form": {
+          "loadingText": "جاري تحميل القرض...",
+          "amountLabel": "المبلغ الأصلي"
+        },
+        "detail": {
+          "title": "تفاصيل القرض"
+        },
+        "actions": {
+          "collect": "تحصيل",
+          "settle": "تسوية",
+          "collectAll": "تحصيل الكامل",
+          "settleAll": "تسوية الكامل",
+          "collectAllTitle": "تحصيل المبلغ الكامل",
+          "settleAllTitle": "تسوية المبلغ الكامل",
+          "collectAllDesc": "تسجيل سداد كامل للرصيد المتبقي",
+          "settleAllDesc": "تسجيل دفع كامل للرصيد المتبقي",
+          "partialCollect": "تحصيل جزئي",
+          "partialSettle": "تسوية جزئية",
+          "partialCollectDesc": "تسجيل سداد جزئي",
+          "partialSettleDesc": "تسجيل دفع جزئي",
+          "collectSuccess": "تم تسجيل الاسترداد",
+          "settleSuccess": "تم تسجيل الدفع"
+        },
+        "initialTransaction": {
+          "title": "قرض: {{name}}"
+        }
       },
       "tags": {
         "title": "الوسوم",
@@ -846,6 +893,7 @@
         "goal": "الهدف",
         "noGoals": "لا توجد أهداف متاحة",
         "budget": "الميزانية",
+        "loan": "القرض",
         "location": "موقع"
       },
       "recurring": {
@@ -950,6 +998,7 @@
         "selectGoal": "اختر هدف {{name}}",
         "clearBudget": "مسح الميزانية",
         "selectBudget": "اختر ميزانية {{name}}",
+        "clearLoan": "مسح القرض",
         "clearAllTags": "مسح جميع الوسوم",
         "addTag": "إضافة وسم",
         "removeTag": "إزالة وسم {{name}}",
@@ -1294,11 +1343,18 @@
     },
     "loan": {
       "name": {
-        "required": "اسم القرض مطلوب"
+        "required": "الاسم مطلوب"
+      },
+      "account": {
+        "required": "الحساب مطلوب"
+      },
+      "category": {
+        "required": "الفئة مطلوبة"
       },
       "amount": {
         "required": "المبلغ مطلوب",
-        "invalid": "أدخل مبلغاً صحيحاً"
+        "invalid": "أدخل مبلغاً صحيحاً",
+        "positive": "يجب أن يكون المبلغ أكبر من صفر"
       },
       "contact": {
         "invalidPhone": "أدخل رقماً هاتفياً صحيحاً"

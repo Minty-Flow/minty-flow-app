@@ -50,7 +50,7 @@
 | Averages row (daily avg vs prior month) | ✅      | `StatsAveragesRow` with delta badges                                           |
 | Pending + uncategorized alerts          | ✅      | `StatsPendingNotice` + `StatsUncategorizedAlert` with action links             |
 | Loading skeleton + empty states         | ✅      | `StatsSkeleton`, `StatsEmptyState` (no data / no transactions for range)       |
-| Net worth / balance over time           | ⬜      |                                                                                |
+| Net worth / balance over time           | ✅      | `BalanceTimelineChart` in each currency section — line chart + opening/closing row + per-account breakdown |
 
 
 ---
@@ -197,11 +197,15 @@
 ### Loans
 
 
-| Item                           | Status | Notes                                        |
-| ------------------------------ | ------ | -------------------------------------------- |
-| Loans list                     | ⬜      | Placeholder screen; DB model + service exist |
-| Create loan (lent / borrowed)  | ⬜      |                                              |
-| Record repayment / settle loan | ⬜      |                                              |
+| Item                           | Status | Notes                                                                                                   |
+| ------------------------------ | ------ | ------------------------------------------------------------------------------------------------------- |
+| Loans list                     | ✅      | Reactive list with LoanCard + filter chips (All / Lent / Borrowed) + FAB to add new                    |
+| Create / Edit loan form        | ✅      | Full form: type, name, description, icon, color, account, amount, category (filtered by type), due date |
+| Loan detail screen             | ✅      | Progress bar, type badge, overdue / completed badge, collect/settle button, transaction list             |
+| Record repayment / settle loan | ✅      | Collect/Settle modal (centered) with full amount and partial (prefills transaction form)                 |
+| Delete loan                    | ✅      | Delete button in edit form with confirm modal                                                           |
+| Correct progress tracking      | ✅      | Only repayment transactions counted; initial cash-flow tx naturally excluded by opposite type           |
+| Swipe-to-delete / tap-to-edit  | ✅      | Transaction list in loan detail supports swipe delete + tap to open transaction form                    |
 
 
 ### Bill Splitter
@@ -274,11 +278,10 @@
 | CurrencyAccountSelector — no-accounts CTA             | ✅      | When no accounts exist the inline panel shows a "Create an account" button navigating to account creation |
 | InlineCategoryPicker — no-categories CTA              | ✅      | When no categories exist the expanded panel shows a "Create a category" button navigating to category creation |
 | Budget form field order (alertThreshold before isActive) | ✅   | isActive toggle moved below alert threshold input; `amountSection` gets `paddingTop: 12` for spacing |
-| Android back-gesture guard (outside transaction form) | ⬜      |                                                         |
 | TypeScript zero errors (`pnpm types`)                 | ✅      | `tsc --noEmit` passes clean                             |
 | Lint zero warnings (`pnpm lint`)                      | ✅      | Biome passes clean                                      |
 
 
 ---
 
-*Last updated: 2026-03-17 — goals & budgets detail screens confirmed; isCompleted removed from Goals type/schema (now purely `progress >= 1`); pending notice added to goal detail; budget isActive toggle + disabled badge + inactive-sort + custom period date pickers + zod endDate validation + duplicate button all implemented; empty state fix (`buildTransactionSections` returns `[]` for empty list); CurrencyAccountSelector + InlineCategoryPicker no-data CTAs added; budget form isActive moved below alertThreshold*
+*Last updated: 2026-03-18 — loans feature fully implemented: list with All/Lent/Borrowed filter chips, create/edit form (category picker filtered by loan type, initial cash-flow tx on creation), loan detail with progress tracking (repayment-only), collect/settle centered modal (full + partial), swipe-to-delete + tap-to-edit in loan/goal/budget transaction lists; progress tracking fix excludes initial tx by type*

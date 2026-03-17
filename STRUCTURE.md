@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-03-17T02:54:57.980Z
+Generated on: 2026-03-17T23:05:18.080Z
 
 ```
 ./
@@ -411,6 +411,11 @@ Generated on: 2026-03-17T02:54:57.980Z
 │   │   │   │   │   └── modify.tsx
 │   │   │   │   ├── archived.tsx
 │   │   │   │   └── index.tsx
+│   │   │   ├── loans/
+│   │   │   │   ├── [loanId]/
+│   │   │   │   │   ├── index.tsx
+│   │   │   │   │   └── modify.tsx
+│   │   │   │   └── index.tsx
 │   │   │   ├── preferences/
 │   │   │   │   ├── button-placement.tsx
 │   │   │   │   ├── exchange-rates.tsx
@@ -434,7 +439,6 @@ Generated on: 2026-03-17T02:54:57.980Z
 │   │   │   ├── data-management.tsx
 │   │   │   ├── edit-profile.tsx
 │   │   │   ├── index.tsx
-│   │   │   ├── loans.tsx
 │   │   │   ├── pending-transactions.tsx
 │   │   │   └── trash.tsx
 │   │   ├── transaction/
@@ -6588,6 +6592,15 @@ Generated on: 2026-03-17T02:54:57.980Z
 │   │   │       └── ZzzOff.tsx
 │   │   ├── inline-category-picker/
 │   │   │   └── index.tsx
+│   │   ├── loans/
+│   │   │   ├── loan-modify/
+│   │   │   │   ├── loan-form-footer.tsx
+│   │   │   │   ├── loan-form-modals.tsx
+│   │   │   │   ├── loan-modify-content.tsx
+│   │   │   │   ├── loan-modify.styles.ts
+│   │   │   │   └── types.ts
+│   │   │   ├── loan-action-modal.tsx
+│   │   │   └── loan-card.tsx
 │   │   ├── location/
 │   │   │   └── form-location-picker.tsx
 │   │   ├── profile/
@@ -6605,6 +6618,7 @@ Generated on: 2026-03-17T02:54:57.980Z
 │   │   │   ├── math-utils.ts
 │   │   │   └── styles.ts
 │   │   ├── stats/
+│   │   │   ├── balance-timeline-chart.tsx
 │   │   │   ├── chart-container.tsx
 │   │   │   ├── chart-crosshair.tsx
 │   │   │   ├── currency-hero-row.tsx
@@ -6664,6 +6678,7 @@ Generated on: 2026-03-17T02:54:57.980Z
 │   │   │   │   ├── form-delete-actions.tsx
 │   │   │   │   ├── form-footer.tsx
 │   │   │   │   ├── form-goal-picker.tsx
+│   │   │   │   ├── form-loan-picker.tsx
 │   │   │   │   ├── form-modals.tsx
 │   │   │   │   ├── form-notes-section.tsx
 │   │   │   │   ├── form-recurring-section.tsx
@@ -6763,6 +6778,8 @@ Generated on: 2026-03-17T02:54:57.980Z
 │   │   │   ├── budget-service.ts
 │   │   │   ├── category-service.ts
 │   │   │   ├── goal-service.ts
+│   │   │   ├── index.ts
+│   │   │   ├── loan-service.ts
 │   │   │   ├── README.md
 │   │   │   ├── recurring-transaction-service.ts
 │   │   │   ├── stats-service.ts
@@ -6774,6 +6791,7 @@ Generated on: 2026-03-17T02:54:57.980Z
 │   │   │   ├── model-to-budget.ts
 │   │   │   ├── model-to-category.ts
 │   │   │   ├── model-to-goal.ts
+│   │   │   ├── model-to-loan.ts
 │   │   │   ├── model-to-tag.ts
 │   │   │   └── model-to-transfer.ts
 │   │   ├── index.ts
@@ -6804,6 +6822,7 @@ Generated on: 2026-03-17T02:54:57.980Z
 │   │   ├── budgets.schema.ts
 │   │   ├── categories.schema.ts
 │   │   ├── goals.schema.ts
+│   │   ├── loans.schema.ts
 │   │   ├── tags.schema.ts
 │   │   └── transactions.schema.ts
 │   ├── services/

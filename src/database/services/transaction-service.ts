@@ -239,6 +239,9 @@ const buildTransactionQuery = (filters?: TransactionListFilters) => {
   if (filters?.budgetId) {
     query = query.extend(Q.where("budget_id", filters.budgetId))
   }
+  if (filters?.loanId) {
+    query = query.extend(Q.where("loan_id", filters.loanId))
+  }
   if (filters?.attachmentFilter === "has") {
     query = query.extend(Q.where("has_attachments", true))
   } else if (filters?.attachmentFilter === "none") {
@@ -447,6 +450,7 @@ const TRANSACTION_OBSERVE_COLUMNS = [
   "related_account_id",
   "goal_id",
   "budget_id",
+  "loan_id",
 ] as const
 
 export const observeTransactionModels = (
@@ -546,6 +550,7 @@ export const createTransactionModel = async (
       t.location = data.location ?? null
       t.goalId = data.goalId ?? null
       t.budgetId = data.budgetId ?? null
+      t.loanId = data.loanId ?? null
       // Transfer link fields: single-row (income/expense or legacy transfer) have no pair
       t.isTransfer = data.type === TransactionTypeEnum.TRANSFER
       t.transferId = null
@@ -653,6 +658,9 @@ export const updateTransactionModel = async (
       }
       if (updates.budgetId !== undefined) {
         t.budgetId = updates.budgetId ?? null
+      }
+      if (updates.loanId !== undefined) {
+        t.loanId = updates.loanId ?? null
       }
     })
 

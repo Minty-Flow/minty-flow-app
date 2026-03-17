@@ -1,14 +1,14 @@
 import { withObservables } from "@nozbe/watermelondb/react"
-import { differenceInDays } from "date-fns"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useCallback, useLayoutEffect, useRef } from "react"
+import { useCallback, useLayoutEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList, View as RNView } from "react-native"
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
-import { combineLatest, map, of, startWith, switchMap } from "rxjs"
+import { map, of, startWith, switchMap } from "rxjs"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
+import { LoanActionModal } from "~/components/loans/loan-action-modal"
 import { Money } from "~/components/money"
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
@@ -16,45 +16,52 @@ import { EmptyState } from "~/components/ui/empty-state"
 import { IconSvg } from "~/components/ui/icon-svg"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import type GoalModel from "~/database/models/goal"
+import type AccountModel from "~/database/models/account"
+import type LoanModel from "~/database/models/loan"
 import type TransactionModel from "~/database/models/transaction"
-import { observeAccountNamesByIds } from "~/database/services/account-service"
+import { observeAccountById } from "~/database/services/account-service"
 import {
-  observeAccountIdsForGoal,
-  observeGoalById,
-  observeGoalTransactionProgress,
-  observeGoalTransactions,
-} from "~/database/services/goal-service"
+  observeLoanById,
+  observeLoanPaymentProgress,
+  observeLoanTransactions,
+} from "~/database/services/loan-service"
 import {
+  createTransactionModel,
   observeTransactionModelsFull,
   type TransactionWithRelations,
 } from "~/database/services/transaction-service"
-import { modelToGoal } from "~/database/utils/model-to-goal"
-import type { Goal } from "~/types/goals"
+import { modelToLoan } from "~/database/utils/model-to-loan"
+import type { Loan } from "~/types/loans"
+import { LoanTypeEnum } from "~/types/loans"
+import { TransactionTypeEnum } from "~/types/transactions"
+import { logger } from "~/utils/logger"
+import { Toast } from "~/utils/toast"
 
 /* ------------------------------------------------------------------ */
 /* Inner component (receives observed data)                           */
 /* ------------------------------------------------------------------ */
 
-interface GoalDetailInnerProps {
-  goalId: string
-  goal?: Goal
-  currentAmount?: number
-  accountNames?: string[]
+interface LoanDetailInnerProps {
+  loanId: string
+  loan?: Loan
+  paidAmount?: number
+  account?: AccountModel
   transactionsFull?: TransactionWithRelations[]
 }
 
-function GoalDetailInner({
-  goalId,
-  goal,
-  currentAmount = 0,
-  accountNames = [],
+function LoanDetailInner({
+  loanId,
+  loan,
+  paidAmount = 0,
+  account,
   transactionsFull = [],
-}: GoalDetailInnerProps) {
+}: LoanDetailInnerProps) {
   const { t } = useTranslation()
   const router = useRouter()
   const navigation = useNavigation()
   const { theme } = useUnistyles()
+  const [actionModalVisible, setActionModalVisible] = useState(false)
+  const [isCreatingTransaction, setIsCreatingTransaction] = useState(false)
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
 
   const handleTransactionPress = useCallback(
@@ -69,15 +76,15 @@ function GoalDetailInner({
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: goal?.name ?? t("screens.settings.goals.detail.title"),
+      title: loan?.name ?? t("screens.settings.loans.detail.title"),
       headerRight: () => (
         <Button
           variant="ghost"
           size="icon"
           onPress={() =>
             router.push({
-              pathname: "/settings/goals/[goalId]/modify",
-              params: { goalId },
+              pathname: "/settings/loans/[loanId]/modify",
+              params: { loanId },
             })
           }
         >
@@ -85,100 +92,145 @@ function GoalDetailInner({
         </Button>
       ),
     })
-  }, [navigation, router, goalId, goal?.name, t])
+  }, [navigation, router, loanId, loan?.name, t])
 
-  if (!goal) {
+  if (!loan) {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
           <Text variant="default">
-            {t("screens.settings.goals.form.loadingText")}
+            {t("screens.settings.loans.form.loadingText")}
           </Text>
         </View>
       </View>
     )
   }
 
-  const isExpenseGoal = goal.goalType === "expense"
-  const resolved = currentAmount ?? 0
-  const progress = goal.targetAmount > 0 ? resolved / goal.targetAmount : 0
+  const isLent = loan.loanType === LoanTypeEnum.LENT
+  const paid = paidAmount ?? 0
+  const principal = loan.principalAmount
+  const progress = principal > 0 ? paid / principal : 0
   const clampedProgress = Math.min(progress, 1)
-  const isCompleted = progress >= 1
-  const remaining = Math.max(goal.targetAmount - resolved, 0)
+  const isPaid = progress >= 1
+  const remaining = Math.max(principal - paid, 0)
 
-  const progressBarColor = isCompleted
+  const progressBarColor = isPaid
     ? theme.colors.customColors.income
     : theme.colors.primary
 
-  const targetDateLabel = (): string => {
-    if (!goal.targetDate) return t("screens.settings.goals.card.noDeadline")
-    const diff = differenceInDays(goal.targetDate, new Date())
-    if (diff === 0)
-      return t("screens.settings.goals.card.daysLeft", {
-        count: 0,
-      })
-    if (diff < 0)
-      return t("screens.settings.goals.card.overdue", {
-        count: Math.abs(diff),
-      })
-    return t("screens.settings.goals.card.daysLeft", {
-      count: diff,
+  const dueDateLabel = (): string | null => {
+    if (!loan.dueDate) return t("screens.settings.loans.card.noDueDate")
+    return t("screens.settings.loans.card.dueDate", {
+      date: loan.dueDate.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }),
     })
   }
 
-  const progressLabel = isExpenseGoal
-    ? t("screens.settings.goals.card.spent")
-    : t("screens.settings.goals.card.saved")
+  const currencyCode = account?.currencyCode ?? ""
+
+  const handleFullAction = async () => {
+    if (!loan || remaining <= 0) return
+    setIsCreatingTransaction(true)
+    try {
+      await createTransactionModel({
+        amount: remaining,
+        type: isLent ? TransactionTypeEnum.INCOME : TransactionTypeEnum.EXPENSE,
+        transactionDate: new Date(),
+        accountId: loan.accountId,
+        categoryId: loan.categoryId,
+        title: isLent
+          ? `${t("screens.settings.loans.actions.collect")}: ${loan.name}`
+          : `${t("screens.settings.loans.actions.settle")}: ${loan.name}`,
+        description: null,
+        isPending: false,
+        tags: [],
+        loanId: loan.id,
+      })
+      setActionModalVisible(false)
+      Toast.success({
+        title: isLent
+          ? t("screens.settings.loans.actions.collectSuccess")
+          : t("screens.settings.loans.actions.settleSuccess"),
+      })
+    } catch (error) {
+      logger.error("Error creating loan repayment transaction", { error })
+      Toast.error({ title: t("common.toast.error") })
+    } finally {
+      setIsCreatingTransaction(false)
+    }
+  }
+
+  const handlePartialAction = () => {
+    if (!loan) return
+    setActionModalVisible(false)
+    router.push({
+      pathname: "/transaction/[id]",
+      params: {
+        id: "new",
+        type: isLent ? "income" : "expense",
+        accountId: loan.accountId,
+        categoryId: loan.categoryId,
+        loanId: loan.id,
+      },
+    })
+  }
 
   const headerContent = (
     <View style={styles.headerCard}>
-      {/* Icon + name + type badge */}
+      {/* Icon + name + type badge + overdue badge */}
       <View style={styles.headerTopRow}>
         <DynamicIcon
-          icon={goal.icon || "target"}
+          icon={loan.icon ?? "hand-coins"}
           size={36}
-          colorScheme={goal.colorScheme}
+          colorScheme={loan.colorScheme}
           variant="badge"
         />
         <View style={styles.headerInfo}>
-          <Text style={styles.goalName}>{goal.name}</Text>
+          <Text style={styles.loanName}>{loan.name}</Text>
           <View style={styles.metaRow}>
             <View style={styles.typeBadge}>
               <Text style={styles.typeBadgeText}>
-                {isExpenseGoal
-                  ? t("screens.settings.goals.card.type.expense")
-                  : t("screens.settings.goals.card.type.savings")}
+                {isLent
+                  ? t("screens.settings.loans.type.lent")
+                  : t("screens.settings.loans.type.borrowed")}
               </Text>
             </View>
-            {isCompleted ? (
-              <View style={styles.completedBadge}>
+            {isPaid ? (
+              <View style={styles.paidBadge}>
                 <IconSvg
                   name="check"
                   size={14}
                   color={theme.colors.customColors.income}
                 />
-                <Text style={styles.completedText}>
-                  {t("screens.settings.goals.card.completed")}
+                <Text style={styles.paidBadgeText}>
+                  {t("screens.settings.loans.card.completed")}
+                </Text>
+              </View>
+            ) : loan.isOverdue ? (
+              <View style={styles.overdueBadge}>
+                <IconSvg
+                  name="alert-circle"
+                  size={14}
+                  color={theme.colors.customColors.expense}
+                />
+                <Text style={styles.overdueText}>
+                  {t("screens.settings.loans.card.overdue")}
                 </Text>
               </View>
             ) : (
-              <Text style={styles.dateText}>{targetDateLabel()}</Text>
+              <Text style={styles.dateText}>{dueDateLabel()}</Text>
             )}
           </View>
         </View>
       </View>
 
       {/* Description */}
-      {goal.description ? (
-        <Text style={styles.description}>{goal.description}</Text>
+      {loan.description ? (
+        <Text style={styles.description}>{loan.description}</Text>
       ) : null}
-
-      {/* Accounts */}
-      <Text style={styles.accountsText}>
-        {accountNames.length > 0
-          ? accountNames.join(", ")
-          : t("screens.settings.goals.card.allAccounts")}
-      </Text>
 
       {/* Progress bar */}
       <View style={styles.progressSection}>
@@ -187,7 +239,7 @@ function GoalDetailInner({
             style={[
               styles.progressFill,
               {
-                width: `${clampedProgress * 100}%`,
+                width: `${(clampedProgress * 100).toFixed(1)}%` as `${number}%`,
                 backgroundColor: progressBarColor,
               },
             ]}
@@ -195,50 +247,59 @@ function GoalDetailInner({
         </View>
         <View style={styles.amountRow}>
           <Text style={styles.amountText}>
-            {progressLabel}:{" "}
+            {isLent
+              ? t("screens.settings.loans.card.received")
+              : t("screens.settings.loans.card.paid")}
+            :{" "}
             <Money
-              value={resolved}
-              currency={goal.currencyCode}
+              value={paid}
+              currency={currencyCode}
               tone="transfer"
               hideSign
             />{" "}
-            {t("screens.settings.goals.card.of")}{" "}
+            {t("screens.settings.loans.card.of")}{" "}
             <Money
-              value={goal.targetAmount}
-              currency={goal.currencyCode}
+              value={principal}
+              currency={currencyCode}
               tone="transfer"
               hideSign
             />
           </Text>
           <Text style={styles.remainingText}>
-            {isCompleted ? (
-              t("screens.settings.goals.card.completed")
-            ) : (
+            {isPaid ? null : (
               <>
                 <Money
                   value={remaining}
-                  currency={goal.currencyCode}
+                  currency={currencyCode}
                   tone="transfer"
                   hideSign
                 />{" "}
-                {t("screens.settings.goals.card.remaining")}
+                {t("screens.settings.loans.card.remaining")}
               </>
             )}
           </Text>
         </View>
       </View>
 
-      {/* Pending transactions notice — always shown so users know pending txns are excluded */}
-      <View style={styles.pendingNoticeRow}>
-        <IconSvg
-          name="info-circle"
-          size={14}
-          color={theme.colors.onSecondary}
-        />
-        <Text style={styles.pendingNoticeText}>
-          {t("screens.settings.goals.detail.pendingNotice")}
-        </Text>
-      </View>
+      {/* Collect / Settle button */}
+      {!isPaid && (
+        <Button
+          variant="default"
+          onPress={() => setActionModalVisible(true)}
+          style={styles.collectSettleButton}
+        >
+          <IconSvg
+            name={isLent ? "arrow-down-circle" : "arrow-up-circle"}
+            size={18}
+            color={styles.collectSettleButtonIcon.color}
+          />
+          <Text variant="default" style={styles.collectSettleButtonText}>
+            {isLent
+              ? t("screens.settings.loans.actions.collect")
+              : t("screens.settings.loans.actions.settle")}
+          </Text>
+        </Button>
+      )}
 
       {/* Transactions section label */}
       <Text style={styles.transactionsLabel}>
@@ -274,6 +335,14 @@ function GoalDetailInner({
         }
         contentContainerStyle={styles.listContent}
       />
+      <LoanActionModal
+        visible={actionModalVisible}
+        loanType={loan.loanType}
+        isLoading={isCreatingTransaction}
+        onFullAction={handleFullAction}
+        onPartialAction={handlePartialAction}
+        onClose={() => setActionModalVisible(false)}
+      />
     </View>
   )
 }
@@ -282,58 +351,50 @@ function GoalDetailInner({
 /* withObservables enhancement                                        */
 /* ------------------------------------------------------------------ */
 
-const EnhancedGoalDetail = withObservables(
-  ["goalId"],
-  ({ goalId }: { goalId: string }) => {
-    const goalModel$ = observeGoalById(goalId)
-    const accountIds$ = observeAccountIdsForGoal(goalId)
+const EnhancedLoanDetail = withObservables(
+  ["loanId"],
+  ({ loanId }: { loanId: string }) => {
+    const loanModel$ = observeLoanById(loanId)
 
-    const goal$ = combineLatest([goalModel$, accountIds$]).pipe(
-      map(([model, accountIds]: [GoalModel, string[]]) =>
-        modelToGoal(model, accountIds),
+    const loan$ = loanModel$.pipe(map((model: LoanModel) => modelToLoan(model)))
+
+    const paidAmount$ = loanModel$.pipe(
+      switchMap((model: LoanModel) =>
+        observeLoanPaymentProgress(loanId, model.loanType),
       ),
     )
 
-    const currentAmount$ = goalModel$.pipe(
-      switchMap((model: GoalModel) =>
-        observeGoalTransactionProgress(
-          model.id,
-          (model.goalType as "savings" | "expense") || "savings",
-        ),
-      ),
+    const account$ = loanModel$.pipe(
+      switchMap((model: LoanModel) => observeAccountById(model.accountId)),
     )
 
-    const accountNames$ = accountIds$.pipe(
-      switchMap((ids: string[]) => observeAccountNamesByIds(ids)),
-    )
-
-    const transactionsFull$ = observeGoalTransactions(goalId).pipe(
+    const transactionsFull$ = observeLoanTransactions(loanId).pipe(
       startWith([] as TransactionModel[]),
       switchMap((txModels: TransactionModel[]) => {
         if (txModels.length === 0) return of([] as TransactionWithRelations[])
-        return observeTransactionModelsFull({ goalId })
+        return observeTransactionModelsFull({ loanId })
       }),
     )
 
     return {
-      goal: goal$,
-      currentAmount: currentAmount$.pipe(startWith(0)),
-      accountNames: accountNames$.pipe(startWith([] as string[])),
+      loan: loan$,
+      paidAmount: paidAmount$.pipe(startWith(0)),
+      account: account$,
       transactionsFull: transactionsFull$.pipe(
         startWith([] as TransactionWithRelations[]),
       ),
     }
   },
-)(GoalDetailInner)
+)(LoanDetailInner)
 
 /* ------------------------------------------------------------------ */
 /* Route component                                                    */
 /* ------------------------------------------------------------------ */
 
-export default function GoalDetailScreen() {
-  const { goalId } = useLocalSearchParams<{ goalId: string }>()
-  if (!goalId) return null
-  return <EnhancedGoalDetail goalId={goalId} />
+export default function LoanDetailScreen() {
+  const { loanId } = useLocalSearchParams<{ loanId: string }>()
+  if (!loanId) return null
+  return <EnhancedLoanDetail loanId={loanId} />
 }
 
 /* ------------------------------------------------------------------ */
@@ -368,7 +429,7 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
     gap: 4,
   },
-  goalName: {
+  loanName: {
     fontSize: 20,
     fontWeight: "700",
     color: theme.colors.onSurface,
@@ -389,7 +450,7 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "600",
     color: theme.colors.onSecondary,
   },
-  completedBadge: {
+  paidBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
@@ -398,10 +459,24 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: 3,
     borderRadius: theme.radius,
   },
-  completedText: {
+  paidBadgeText: {
     fontSize: 11,
     fontWeight: "600",
     color: theme.colors.customColors.income,
+  },
+  overdueBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: `${theme.colors.customColors.expense}20`,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: theme.radius,
+  },
+  overdueText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: theme.colors.customColors.expense,
   },
   dateText: {
     fontSize: 12,
@@ -411,10 +486,6 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: 14,
     color: theme.colors.onSecondary,
     lineHeight: 20,
-  },
-  accountsText: {
-    fontSize: 13,
-    color: theme.colors.onSecondary,
   },
 
   // Progress
@@ -448,18 +519,6 @@ const styles = StyleSheet.create((theme) => ({
     flexShrink: 0,
   },
 
-  // Pending notice
-  pendingNoticeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  pendingNoticeText: {
-    fontSize: 12,
-    color: theme.colors.onSecondary,
-    flex: 1,
-  },
-
   // Transactions
   transactionsLabel: {
     fontSize: 15,
@@ -470,5 +529,19 @@ const styles = StyleSheet.create((theme) => ({
   emptyContainer: {
     paddingHorizontal: 20,
     paddingVertical: 40,
+  },
+
+  // Collect / Settle button
+  collectSettleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  collectSettleButtonIcon: {
+    color: theme.colors.onPrimary,
+  },
+  collectSettleButtonText: {
+    // color: "white",
+    fontWeight: "600",
   },
 }))

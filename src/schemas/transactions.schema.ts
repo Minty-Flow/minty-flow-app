@@ -17,6 +17,7 @@ export const transactionSchema = z.object({
   tags: z.array(z.string()).default([]),
   goalId: z.string().nullable().optional(),
   budgetId: z.string().nullable().optional(),
+  loanId: z.string().nullable().optional(),
   recurringId: z.string().nullable().optional(),
   location: z.string().nullable().optional(),
   extra: z.record(z.string(), z.string()).nullable().optional(),

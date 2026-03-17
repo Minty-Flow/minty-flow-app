@@ -1,0 +1,226 @@
+import { Q } from "@nozbe/watermelondb"
+import type { Observable } from "@nozbe/watermelondb/utils/rx"
+import { map } from "rxjs/operators"
+
+import type { Loan, LoanType } from "~/types/loans"
+import { LoanTypeEnum } from "~/types/loans"
+
+import { database } from "../index"
+import type LoanModel from "../models/loan"
+import type TransactionModel from "../models/transaction"
+import { modelToLoan } from "../utils/model-to-loan"
+
+/**
+ * Loan Service
+ *
+ * Provides functions for managing loan data.
+ * Follows WatermelonDB CRUD pattern: https://watermelondb.dev/docs/CRUD
+ *
+ * Unlike goals/budgets, loans use direct foreign keys (account_id, category_id)
+ * rather than join tables — no join-table merging is required at mapping time.
+ */
+
+export interface LoanFormValues {
+  name: string
+  description: string | null
+  principalAmount: number
+  loanType: LoanType
+  /** Unix timestamp in milliseconds, or null if no due date */
+  dueDate: number | null
+  accountId: string
+  categoryId: string
+  icon: string | null
+  colorSchemeName: string | null
+}
+
+const getLoanCollection = () => database.get<LoanModel>("loans")
+
+const getTransactionCollection = () =>
+  database.get<TransactionModel>("transactions")
+
+const LOAN_OBSERVED_COLUMNS = [
+  "name",
+  "description",
+  "principal_amount",
+  "loan_type",
+  "due_date",
+  "account_id",
+  "category_id",
+  "icon",
+  "color_scheme_name",
+] as const
+
+/**
+ * Observe all loans, sorted by due_date ascending (nulls last), then name.
+ *
+ * WatermelonDB does not support NULLS LAST in Q.sortBy, so sorting is
+ * performed in JS after each emission. Due dates are stored as Date | null.
+ */
+export const observeLoans = (): Observable<Loan[]> =>
+  getLoanCollection()
+    .query()
+    .observeWithColumns([...LOAN_OBSERVED_COLUMNS])
+    .pipe(
+      map((models) => {
+        const loans = models.map(modelToLoan)
+        return loans.sort((a, b) => {
+          // Nulls last: if only one has a due date, the one without sorts last
+          if (a.dueDate == null && b.dueDate == null) {
+            return a.name.localeCompare(b.name)
+          }
+          if (a.dueDate == null) return 1
+          if (b.dueDate == null) return -1
+          const dateDiff = a.dueDate.getTime() - b.dueDate.getTime()
+          if (dateDiff !== 0) return dateDiff
+          return a.name.localeCompare(b.name)
+        })
+      }),
+    )
+
+/**
+ * Observe loans filtered by both account_id and category_id.
+ * Used for linking loans to specific account+category combinations.
+ */
+export const observeLoansByAccountAndCategory = (
+  accountId: string,
+  categoryId: string,
+): Observable<Loan[]> =>
+  getLoanCollection()
+    .query(Q.where("account_id", accountId), Q.where("category_id", categoryId))
+    .observeWithColumns([...LOAN_OBSERVED_COLUMNS])
+    .pipe(map((models) => models.map(modelToLoan)))
+
+/**
+ * Observe a single loan model by ID (raw model, for edit screens).
+ */
+export const observeLoanById = (id: string): Observable<LoanModel> =>
+  getLoanCollection().findAndObserve(id)
+
+/**
+ * Find a loan by ID. Returns null if not found.
+ */
+export const findLoan = async (id: string): Promise<LoanModel | null> => {
+  try {
+    return await getLoanCollection().find(id)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Observe transactions linked to a loan (for loan detail page).
+ * Sorted descending by transaction_date, excluding deleted transactions.
+ */
+export const observeLoanTransactions = (
+  loanId: string,
+): Observable<TransactionModel[]> =>
+  getTransactionCollection()
+    .query(
+      Q.where("loan_id", loanId),
+      Q.where("is_deleted", false),
+      Q.sortBy("transaction_date", Q.desc),
+    )
+    .observeWithColumns([
+      "title",
+      "transaction_date",
+      "amount",
+      "type",
+      "is_deleted",
+      "loan_id",
+    ])
+
+/**
+ * Observe the total repayment progress for a loan.
+ *
+ * Only counts repayment transactions — NOT the initial cash-flow transaction
+ * created when the loan was opened:
+ *   - LENT:     counts income transactions  (repayments received from borrower)
+ *   - BORROWED: counts expense transactions (repayments you made to lender)
+ *
+ * The initial transaction has the opposite type, so it is naturally excluded.
+ */
+export const observeLoanPaymentProgress = (
+  loanId: string,
+  loanType: LoanType,
+): Observable<number> => {
+  const repaymentType = loanType === LoanTypeEnum.LENT ? "income" : "expense"
+  return getTransactionCollection()
+    .query(
+      Q.where("loan_id", loanId),
+      Q.where("type", repaymentType),
+      Q.where("is_deleted", false),
+      Q.where("is_pending", false),
+    )
+    .observeWithColumns([
+      "amount",
+      "type",
+      "is_deleted",
+      "is_pending",
+      "loan_id",
+    ])
+    .pipe(map((txs) => txs.reduce((sum, tx) => sum + Math.abs(tx.amount), 0)))
+}
+
+/**
+ * Create a new loan record in a single write.
+ * Returns the mapped Loan domain object.
+ */
+export const createLoan = async (data: LoanFormValues): Promise<Loan> =>
+  database.write(async () => {
+    const model = await getLoanCollection().create((l) => {
+      l.name = data.name
+      l.description = data.description ?? null
+      l.principalAmount = data.principalAmount
+      l.loanType = data.loanType
+      // WatermelonDB @date fields accept Date objects; schema stores as Unix ms
+      l.dueDate = data.dueDate != null ? new Date(data.dueDate) : null
+      l.accountId = data.accountId
+      l.categoryId = data.categoryId
+      l.icon = data.icon ?? null
+      // setColorScheme is not available on LoanModel — assign field directly
+      l.colorSchemeName = data.colorSchemeName ?? null
+      l.createdAt = new Date()
+      l.updatedAt = new Date()
+    })
+    return modelToLoan(model)
+  })
+
+/**
+ * Update an existing loan's fields in a single write.
+ * Returns the mapped Loan domain object after update.
+ */
+export const updateLoan = async (
+  loan: LoanModel,
+  updates: Partial<LoanFormValues>,
+): Promise<Loan> =>
+  database.write(async () => {
+    const model = await loan.update((l) => {
+      if (updates.name !== undefined) l.name = updates.name
+      if (updates.description !== undefined)
+        l.description = updates.description ?? null
+      if (updates.principalAmount !== undefined)
+        l.principalAmount = updates.principalAmount
+      if (updates.loanType !== undefined) l.loanType = updates.loanType
+      if (updates.dueDate !== undefined)
+        l.dueDate = updates.dueDate != null ? new Date(updates.dueDate) : null
+      if (updates.accountId !== undefined) l.accountId = updates.accountId
+      if (updates.categoryId !== undefined) l.categoryId = updates.categoryId
+      if (updates.icon !== undefined) l.icon = updates.icon ?? null
+      if (updates.colorSchemeName !== undefined)
+        l.colorSchemeName = updates.colorSchemeName ?? null
+      l.updatedAt = new Date()
+    })
+    return modelToLoan(model)
+  })
+
+/**
+ * Permanently delete a loan record.
+ * Note: does not cascade-delete linked transactions — loan_id on those rows
+ * will remain set (orphaned reference). If transaction cleanup is needed,
+ * handle it at the call site before calling destroyLoan.
+ */
+export const destroyLoan = async (loan: LoanModel): Promise<void> => {
+  await database.write(async () => {
+    await loan.destroyPermanently()
+  })
+}

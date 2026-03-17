@@ -18,11 +18,13 @@ import { observeAccounts } from "~/database/services/account-service"
 import { observeBudgets } from "~/database/services/budget-service"
 import { observeCategoriesByType } from "~/database/services/category-service"
 import { observeGoalsByType } from "~/database/services/goal-service"
+import { observeLoans } from "~/database/services/loan-service"
 import { observeTags } from "~/database/services/tag-service"
 import {
   observeTransactionModelById,
   observeTransactionTagIds,
 } from "~/database/services/transaction-service"
+import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import { GoalTypeEnum } from "~/types/goals"
 import { NewEnum } from "~/types/new"
 import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
@@ -54,6 +56,7 @@ const EnhancedTransactionForm = withObservables(
     tags: observeTags(),
     goals: observeGoalsByType(transactionTypeToGoalType(transactionType)),
     budgets: observeBudgets(),
+    loans: observeLoans(),
   }),
 )(TransactionFormV3)
 
@@ -61,12 +64,14 @@ interface TransactionEditorProps {
   transaction: TransactionModel | null
   initialType?: TransactionType
   initialTagIds: string[]
+  prefill?: Partial<TransactionFormValues>
 }
 
 function TransactionEditor({
   transaction,
   initialType,
   initialTagIds,
+  prefill,
 }: TransactionEditorProps) {
   const [transactionType, setTransactionType] = useState<TransactionType>(
     transaction?.type ?? initialType ?? TransactionTypeEnum.EXPENSE,
@@ -78,6 +83,7 @@ function TransactionEditor({
       transactionType={transactionType}
       onTransactionTypeChange={setTransactionType}
       initialTagIds={initialTagIds}
+      prefill={prefill}
     />
   )
 }
@@ -125,12 +131,31 @@ const EnhancedEditTransactionScreen = withObservables(
 })
 
 export default function TransactionScreen() {
-  const { id, type: typeParam } = useLocalSearchParams<{
+  const {
+    id,
+    type: typeParam,
+    accountId: prefillAccountId,
+    categoryId: prefillCategoryId,
+    loanId: prefillLoanId,
+  } = useLocalSearchParams<{
     id: string
     type?: string
+    accountId?: string
+    categoryId?: string
+    loanId?: string
   }>()
   const isNew = id === NewEnum.NEW
   const initialType = parseTransactionType(typeParam)
+
+  // Build prefill only for new transactions when at least one param is present
+  const prefill: Partial<TransactionFormValues> | undefined =
+    isNew && (prefillAccountId || prefillCategoryId || prefillLoanId)
+      ? {
+          ...(prefillAccountId ? { accountId: prefillAccountId } : {}),
+          ...(prefillCategoryId ? { categoryId: prefillCategoryId } : {}),
+          ...(prefillLoanId ? { loanId: prefillLoanId } : {}),
+        }
+      : undefined
 
   if (isNew) {
     return (
@@ -138,6 +163,7 @@ export default function TransactionScreen() {
         transaction={null}
         initialType={initialType}
         initialTagIds={[]}
+        prefill={prefill}
       />
     )
   }

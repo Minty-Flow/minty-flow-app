@@ -97,8 +97,24 @@ export default function RootLayout() {
                 options={{ title: t("profile.edit.title") }}
               />
               <Stack.Screen
-                name="settings/loans"
+                name="settings/loans/index"
                 options={{ title: t("screens.settings.loans.title") }}
+              />
+              <Stack.Screen
+                name="settings/loans/[loanId]/index"
+                options={{ title: t("screens.settings.loans.detail.title") }}
+              />
+              <Stack.Screen
+                name="settings/loans/[loanId]/modify"
+                options={({ route }) => {
+                  const params = route.params as { loanId?: string } | undefined
+                  return {
+                    title:
+                      params?.loanId === NewEnum.NEW
+                        ? t("screens.settings.loans.addNew")
+                        : t("screens.settings.loans.title"),
+                  }
+                }}
               />
               <Stack.Screen
                 name="settings/all-accounts"

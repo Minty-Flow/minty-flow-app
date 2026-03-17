@@ -15,7 +15,6 @@ import { database } from "../index"
 import type BudgetModel from "../models/budget"
 import type BudgetAccountModel from "../models/budget-account"
 import type BudgetCategoryModel from "../models/budget-category"
-import type CategoryModel from "../models/category"
 import type TransactionModel from "../models/transaction"
 import { modelToBudget } from "../utils/model-to-budget"
 
@@ -473,19 +472,4 @@ export const observeBudgetTransactions = (
   return getTransactionCollection()
     .query(...conditions, Q.sortBy("transaction_date", Q.desc))
     .observe()
-}
-
-/**
- * Observe category names for a list of category IDs.
- */
-export const observeCategoryNamesByIds = (
-  categoryIds: string[],
-): Observable<string[]> => {
-  if (categoryIds.length === 0) return from([[]])
-
-  return database
-    .get<CategoryModel>("categories")
-    .query(Q.where("id", Q.oneOf(categoryIds)))
-    .observe()
-    .pipe(map((rows) => rows.map((r) => r.name)))
 }

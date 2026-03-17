@@ -79,6 +79,7 @@ export interface Transaction {
   accountId: string
   goalId: string | null
   budgetId: string | null
+  loanId: string | null
   location: string | null
   createdAt: Date
   updatedAt: Date
@@ -123,6 +124,8 @@ export interface TransactionListFilters {
   goalId?: string
   /** When set, filter to transactions linked to this budget. */
   budgetId?: string
+  /** When set, filter to transactions linked to this loan. */
+  loanId?: string
   /** Filter by attachment presence (DB column has_attachments). */
   attachmentFilter?: "all" | "has" | "none"
 }

@@ -110,6 +110,26 @@ Goals track savings progress toward a target amount. Each goal links to accounts
 - Screens: `src/app/settings/goals/index.tsx` (list) + `src/app/settings/goals/[goalId]/index.tsx` (detail: transactions, progress, type badge) + `src/app/settings/goals/[goalId]/modify.tsx` (create/edit) + `src/app/settings/goals/archived.tsx` (archived list)
 - Components: `src/components/goals/goal-card.tsx`, `src/components/goals/goal-modify/`
 
+### Loans
+
+Loans track money lent to others (LENT) or borrowed from others (BORROWED). Each loan links to a single account and category via direct foreign keys — no join tables.
+
+- Schema: `loans` table (`account_id`, `category_id` direct FK columns)
+- Model: `src/database/models/loan.ts`
+- Service: `src/database/services/loan-service.ts` — full CRUD + reactive queries
+  - `observeLoanPaymentProgress(loanId, loanType)` sums only **repayment** transactions — LENT counts income txs (money received back from borrower), BORROWED counts expense txs (repayments made to lender). The initial cash-flow transaction has the opposite type and is naturally excluded.
+  - `observeLoans()` JS-sorts by due_date ascending (nulls last), then by name
+  - `observeLoanTransactions(loanId)` for the detail page transaction list
+- Mapper: `src/database/utils/model-to-loan.ts`
+- Screens: `src/app/settings/loans/index.tsx` (list + All/Lent/Borrowed filter chips) + `src/app/settings/loans/[loanId]/index.tsx` (detail: progress bar, type/overdue/completed badges, collect/settle button, swipeable transaction list) + `src/app/settings/loans/[loanId]/modify.tsx` (create/edit)
+- Components: `src/components/loans/loan-card.tsx`, `src/components/loans/loan-action-modal.tsx`, `src/components/loans/loan-modify/`
+- **Loan creation** automatically creates an initial cash-flow transaction: expense for LENT (money leaving the account), income for BORROWED (money arriving)
+- **Collect/Settle button**: on detail page, opens `LoanActionModal` (centered fade modal) with:
+  - "Collect All" / "Settle All" — creates a repayment transaction directly for the full remaining amount
+  - "Partially Collect" / "Partially Settle" — navigates to the transaction form prefilled with `accountId`, `categoryId`, and `loanId`
+- **Category picker** in the loan form is filtered by loan type: LENT → expense categories (money going out); BORROWED → income categories (money coming in). Switching type resets the selected category.
+- `isOverdue` is computed in the mapper as `dueDate < today && progress < 1`
+
 ### Forms
 
 `react-hook-form` + `zod` v4 + `@hookform/resolvers`. Form schemas live in `src/schemas/`.
