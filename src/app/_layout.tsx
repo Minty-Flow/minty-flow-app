@@ -1,4 +1,4 @@
-import { Stack } from "expo-router"
+import { Stack, useRouter, useSegments } from "expo-router"
 import { useTranslation } from "react-i18next"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { KeyboardProvider } from "react-native-keyboard-controller"
@@ -21,6 +21,7 @@ import { useRetentionCleanup } from "~/hooks/use-retention-cleanup"
 import { DirectionEnum } from "~/i18n/language.constants"
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
+import { useOnboardingStore } from "~/stores/onboarding.store"
 import { NewEnum } from "~/types/new"
 
 export default function RootLayout() {
@@ -34,6 +35,15 @@ export default function RootLayout() {
   }
 
   const isRTL = useLanguageStore((s) => s.isRTL)
+  const isOnboardingCompleted = useOnboardingStore((s) => s.isCompleted)
+  const router = useRouter()
+  const segments = useSegments()
+
+  useEffect(() => {
+    if (!isOnboardingCompleted && segments[0] !== "onboarding") {
+      router.replace("/onboarding")
+    }
+  }, [isOnboardingCompleted, segments, router])
 
   // Ports to reality: retention cleanup and recurring sync (effects live in domain hooks)
   // Rehydrate shake listener on app start if mask-on-shake was enabled (store-owned subscription)
@@ -90,6 +100,10 @@ export default function RootLayout() {
               }}
             >
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="onboarding"
+                options={{ headerShown: false }}
+              />
 
               {/* settings screens */}
               <Stack.Screen

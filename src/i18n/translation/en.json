@@ -34,7 +34,10 @@
     "modals": {
       "unsavedDescription": "All changes will be lost.",
       "closeWithoutSaving": "Close without saving?",
-      "deletePermanently": "Delete permanently"
+      "deletePermanently": "Delete permanently",
+      "deleteNoteGoal": "Linked transactions will no longer be associated with this goal. The transactions will not be deleted.",
+      "deleteNoteBudget": "Linked transactions will no longer be associated with this budget. The transactions will not be deleted.",
+      "deleteNoteLoan": "Linked transactions will no longer be associated with this loan. They will lose their initial payment and repayment tags. The transactions will not be deleted."
     },
     "timePeriods": {
       "hour": "By hour",
@@ -1050,6 +1053,8 @@
       "presets": {
         "added": "Added",
         "addSelected": "Add {{count}} Selected",
+        "selectAll": "Select all",
+        "deselectAll": "Deselect all",
         "expense": {
           "groceries": "Groceries",
           "transportation": "Transportation",
@@ -1397,6 +1402,61 @@
       "endDate": {
         "requiredForCustom": "End date is required for custom period"
       }
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Flow",
+      "subtitle": "Your personal finance tracker"
+    },
+    "openSource": {
+      "title": "Free & open-source",
+      "description": "Absolutely free and source code is available publicly."
+    },
+    "privacy": {
+      "title": "You control your data",
+      "description": "All of your data is stored only on-device (or your private cloud provider), with full export options available."
+    },
+    "start": {
+      "title": "Let's start",
+      "import": {
+        "title": "Import from a backup",
+        "description": "Restore data from a previous Flow backup"
+      },
+      "fresh": {
+        "title": "Start fresh",
+        "description": "I'm using Flow for the first time"
+      }
+    },
+    "accounts": {
+      "title": "Setup accounts",
+      "hint": "Create new accounts, and/or add from the presets. You can change this later in the \"Accounts\" tab.",
+      "addNew": "Add new account",
+      "presets": {
+        "main": "Main",
+        "cash": "Cash",
+        "savings": "Savings"
+      }
+    },
+    "expenseCategories": {
+      "title": "Expense categories",
+      "subtitle": "Pick categories to track your spending"
+    },
+    "incomeCategories": {
+      "title": "Income categories",
+      "subtitle": "Pick categories to track your earnings"
+    },
+    "profile": {
+      "title": "Your profile",
+      "subtitle": "How should we call you?",
+      "setupButton": "Set up your profile",
+      "skipButton": "Skip for now"
+    },
+    "actions": {
+      "next": "Next",
+      "getStarted": "Get started",
+      "done": "Done",
+      "skip": "Skip"
     }
   },
   "dates": {

@@ -61,14 +61,16 @@ const TagsScreenInner = ({ tags }: TagsScreenInnerProps) => {
         </Pressable>
 
         {filteredModels.length === 0 ? (
-          <EmptyState
-            icon={searchQuery.trim() ? "search" : "tags"}
-            title={
-              searchQuery.trim()
-                ? t("screens.settings.tags.empty.noResults")
-                : t("screens.settings.tags.empty.noTags")
-            }
-          />
+          <View style={styles.emptyWrapper}>
+            <EmptyState
+              icon={searchQuery.trim() ? "search" : "tags"}
+              title={
+                searchQuery.trim()
+                  ? t("screens.settings.tags.empty.noResults")
+                  : t("screens.settings.tags.empty.noTags")
+              }
+            />
+          </View>
         ) : (
           <View style={styles.list}>
             {filteredModels.map((tag) => (
@@ -91,6 +93,9 @@ const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.surface,
+  },
+  emptyWrapper: {
+    marginHorizontal: 20,
   },
   searchContainer: {
     paddingHorizontal: 20,

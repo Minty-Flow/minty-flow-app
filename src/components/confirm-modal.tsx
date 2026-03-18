@@ -40,6 +40,8 @@ interface ConfirmModalProps {
   variant?: "destructive" | "default"
   /** Optional icon name shown above the title (e.g. "trash"). */
   icon?: IconSvgName
+  /** Optional note shown below the description in muted/small text. */
+  note?: string
 }
 
 export function ConfirmModal({
@@ -52,6 +54,7 @@ export function ConfirmModal({
   cancelLabel,
   variant = "default",
   icon,
+  note,
 }: ConfirmModalProps) {
   const { t } = useTranslation()
   const { width } = useWindowDimensions()
@@ -110,6 +113,12 @@ export function ConfirmModal({
             <Text variant="p" style={styles.description}>
               {description}
             </Text>
+
+            {note ? (
+              <Text variant="small" style={styles.note}>
+                {note}
+              </Text>
+            ) : null}
 
             <View style={styles.actions}>
               <Button
@@ -176,6 +185,11 @@ const styles = StyleSheet.create((theme) => ({
   description: {
     textAlign: "center",
     lineHeight: 22,
+  },
+  note: {
+    textAlign: "center",
+    color: theme.colors.onSecondary,
+    lineHeight: 20,
   },
   actions: {
     flexDirection: "row",

@@ -25,6 +25,7 @@ export function LoanFormModals({
           onConfirm={onConfirmDelete}
           title={t("common.modals.deletePermanently")}
           description={loan.name}
+          note={t("common.modals.deleteNoteLoan")}
           confirmLabel={t("common.actions.delete")}
           cancelLabel={t("common.actions.cancel")}
           variant="destructive"

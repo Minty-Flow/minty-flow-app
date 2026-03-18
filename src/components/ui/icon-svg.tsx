@@ -148,6 +148,7 @@ const ICON_MAP = {
   school: FilledIcons.School,
   car: FilledIcons.Car,
   map: OutlineIcons.Map,
+  "world-map": OutlineIcons.WorldMap,
 
   // Misc
   backspace: FilledIcons.Backspace,
@@ -370,6 +371,7 @@ const ICON_MAP = {
   "shield-check": FilledIcons.ShieldCheck,
   "shield-lock": FilledIcons.ShieldLock,
   shield: FilledIcons.Shield,
+  "shield-checkered": OutlineIcons.ShieldCheckered,
 
   // People & Family
   "baby-carriage": FilledIcons.BabyCarriage,

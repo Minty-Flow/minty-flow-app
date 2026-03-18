@@ -285,3 +285,7 @@
 ---
 
 *Last updated: 2026-03-18 — loans feature fully implemented: list with All/Lent/Borrowed filter chips, create/edit form (category picker filtered by loan type, initial cash-flow tx on creation), loan detail with progress tracking (repayment-only), collect/settle centered modal (full + partial), swipe-to-delete + tap-to-edit in loan/goal/budget transaction lists; progress tracking fix excludes initial tx by type*
+
+
+- delete loan or budget show a warning that the txn will not be deleted they will no longer have the relation
+- fix no empty state on pending page

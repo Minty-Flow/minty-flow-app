@@ -1,6 +1,6 @@
 import { Image } from "expo-image"
 import * as ImagePicker from "expo-image-picker"
-import { useRouter } from "expo-router"
+import { Stack, useLocalSearchParams, useRouter } from "expo-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
@@ -13,6 +13,7 @@ import { Input } from "~/components/ui/input"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { useOnboardingStore } from "~/stores/onboarding.store"
 import { useProfileStore } from "~/stores/profile.store"
 import { getInitials } from "~/utils/string-utils"
 import { Toast } from "~/utils/toast"
@@ -20,6 +21,9 @@ import { Toast } from "~/utils/toast"
 export default function EditProfileScreen() {
   const router = useRouter()
   const { t } = useTranslation()
+  const { fromOnboarding } = useLocalSearchParams<{ fromOnboarding?: string }>()
+  const isFromOnboarding = fromOnboarding === "true"
+  const { setCompleted } = useOnboardingStore()
   const { name, imageUri, setName, setImageUri } = useProfileStore()
 
   const [localName, setLocalName] = useState(() => name)
@@ -61,11 +65,19 @@ export default function EditProfileScreen() {
   const handleSave = () => {
     setName(localName)
     setImageUri(localImageUri)
-    router.back()
+    if (isFromOnboarding) {
+      setCompleted()
+      router.replace("/(tabs)")
+    } else {
+      router.back()
+    }
   }
 
   return (
     <View style={styles.container}>
+      {isFromOnboarding && (
+        <Stack.Screen options={{ title: t("onboarding.profile.title") }} />
+      )}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -114,7 +126,11 @@ export default function EditProfileScreen() {
       <KeyboardStickyViewMinty>
         <View style={styles.buttonContainer}>
           <Button onPress={handleSave} style={styles.saveButton}>
-            <Text>{t("common.actions.save")}</Text>
+            <Text>
+              {isFromOnboarding
+                ? t("onboarding.actions.done")
+                : t("common.actions.save")}
+            </Text>
           </Button>
         </View>
       </KeyboardStickyViewMinty>

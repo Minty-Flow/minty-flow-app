@@ -43,6 +43,7 @@ export function GoalFormModals({
           onConfirm={onConfirmDelete}
           title={t("common.modals.deletePermanently")}
           description={goal.name}
+          note={t("common.modals.deleteNoteGoal")}
           confirmLabel={t("common.actions.delete")}
           cancelLabel={t("common.actions.cancel")}
           variant="destructive"

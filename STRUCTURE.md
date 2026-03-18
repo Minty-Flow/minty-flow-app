@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-03-18T00:16:20.593Z
+Generated on: 2026-03-18T19:35:27.571Z
 
 ```
 ./
@@ -395,6 +395,13 @@ Generated on: 2026-03-18T00:16:20.593Z
 │   │   │   │   ├── index.tsx
 │   │   │   │   └── modify.tsx
 │   │   │   └── index.tsx
+│   │   ├── onboarding/
+│   │   │   ├── _layout.tsx
+│   │   │   ├── accounts.tsx
+│   │   │   ├── expense-categories.tsx
+│   │   │   ├── income-categories.tsx
+│   │   │   ├── index.tsx
+│   │   │   └── start.tsx
 │   │   ├── settings/
 │   │   │   ├── budgets/
 │   │   │   │   ├── [budgetId]/
@@ -867,6 +874,7 @@ Generated on: 2026-03-18T00:16:20.593Z
 │   │   │       ├── Restore.tsx
 │   │   │       ├── Scale.tsx
 │   │   │       ├── Search.tsx
+│   │   │       ├── ShieldCheckered.tsx
 │   │   │       ├── ShieldExclamation.tsx
 │   │   │       ├── SwitchHorizontal.tsx
 │   │   │       ├── TagPlus.tsx
@@ -876,6 +884,7 @@ Generated on: 2026-03-18T00:16:20.593Z
 │   │   │       ├── TrendingDown.tsx
 │   │   │       ├── TrendingUp.tsx
 │   │   │       ├── Wallet.tsx
+│   │   │       ├── WorldMap.tsx
 │   │   │       └── WorldPin.tsx
 │   │   ├── inline-category-picker/
 │   │   │   └── index.tsx
@@ -1038,6 +1047,7 @@ Generated on: 2026-03-18T00:16:20.593Z
 │   ├── constants/
 │   │   ├── fab-button.ts
 │   │   ├── minty-icons-selection.ts
+│   │   ├── pre-sets-accounts.ts
 │   │   ├── pre-sets-categories.ts
 │   │   └── site-data.ts
 │   ├── contexts/
@@ -1126,6 +1136,7 @@ Generated on: 2026-03-18T00:16:20.593Z
 │   │   ├── letter-emoji.store.ts
 │   │   ├── money-formatting.store.ts
 │   │   ├── notification.store.ts
+│   │   ├── onboarding.store.ts
 │   │   ├── pending-transactions.store.ts
 │   │   ├── profile.store.ts
 │   │   ├── theme.store.ts
@@ -6082,7 +6093,6 @@ Generated on: 2026-03-18T00:16:20.593Z
 │       ├── ShieldBolt.tsx
 │       ├── ShieldCancel.tsx
 │       ├── ShieldCheck.tsx
-│       ├── ShieldCheckered.tsx
 │       ├── ShieldChevron.tsx
 │       ├── ShieldCode.tsx
 │       ├── ShieldCog.tsx
@@ -6841,7 +6851,6 @@ Generated on: 2026-03-18T00:16:20.593Z
 │       ├── WorldHeart.tsx
 │       ├── WorldLatitude.tsx
 │       ├── WorldLongitude.tsx
-│       ├── WorldMap.tsx
 │       ├── WorldMinus.tsx
 │       ├── WorldOff.tsx
 │       ├── WorldPause.tsx

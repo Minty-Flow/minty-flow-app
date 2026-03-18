@@ -11,8 +11,8 @@ import { MonthYearPicker } from "~/components/month-year-picker"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
+import { EmptyState } from "~/components/ui/empty-state"
 import { IconSvg } from "~/components/ui/icon-svg"
-import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { getMonthRange } from "~/database/services/account-service"
 import { observeCategoriesByType } from "~/database/services/category-service"
@@ -158,10 +158,11 @@ function PendingScreenInner({
           transactionsFull.length === 0 && styles.contentEmpty,
         ]}
         ListEmptyComponent={
-          <View style={styles.placeholder}>
-            <Text variant="small" style={styles.placeholderText}>
-              {t("screens.settings.pending.empty")}
-            </Text>
+          <View style={styles.contentEmptyWrapper}>
+            <EmptyState
+              icon="clock"
+              title={t("screens.settings.pending.empty")}
+            />
           </View>
         }
         data={transactionsFull}
@@ -255,14 +256,7 @@ const styles = StyleSheet.create((theme) => ({
   contentEmpty: {
     flexGrow: 1,
   },
-  placeholder: {
-    paddingVertical: 48,
-    paddingHorizontal: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  placeholderText: {
-    color: theme.colors.onSecondary,
-    textAlign: "center",
+  contentEmptyWrapper: {
+    marginHorizontal: 20,
   },
 }))

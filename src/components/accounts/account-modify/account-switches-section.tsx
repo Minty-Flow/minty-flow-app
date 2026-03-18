@@ -97,10 +97,8 @@ export function AccountSwitchesSection({
               <Separator />
             </View>
           )}
-          <Separator />
         </View>
       )}
-      {!isAddMode && <Separator />}
     </View>
   )
 }
