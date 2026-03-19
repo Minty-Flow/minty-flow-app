@@ -9,11 +9,11 @@
     "owner": "adelefaells-organization",
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
-    "scheme": "mintyflownative",
+    "scheme": "mintyflow",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.mintyflownative",
+      "bundleIdentifier": "com.anonymous.mintyflow",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -32,7 +32,7 @@
         "monochromeImage": "./src/assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.mintyflownative"
+      "package": "com.anonymous.mintyflow"
     },
     "web": {
       "output": "static",

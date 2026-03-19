@@ -175,8 +175,7 @@ ${afterBrace}`
     "android",
     async (config) => {
       // Find MainApplication.kt (could be .kt or .java)
-      const packageName =
-        config.android?.package || "com.anonymous.mintyflownative"
+      const packageName = config.android?.package || "com.anonymous.mintyflow"
       const packagePath = packageName.replace(/\./g, path.sep)
       const mainAppKtPath = path.join(
         config.modRequest.platformProjectRoot,
