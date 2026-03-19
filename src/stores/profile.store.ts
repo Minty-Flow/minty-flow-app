@@ -61,7 +61,7 @@ export const useProfileStore = create<ProfileStore>()(
     persist(
       (set) => ({
         // State definitions
-        name: "Name",
+        name: "",
         imageUri: null,
 
         // Actions

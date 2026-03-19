@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-03-19T03:05:23.319Z
+Generated on: 2026-03-19T18:14:08.102Z
 
 ```
 ./
@@ -414,6 +414,9 @@ Generated on: 2026-03-19T03:05:23.319Z
 │   │   │   │   │   └── modify.tsx
 │   │   │   │   ├── index.tsx
 │   │   │   │   └── presets.tsx
+│   │   │   ├── data-management/
+│   │   │   │   ├── export-history.tsx
+│   │   │   │   └── index.tsx
 │   │   │   ├── goals/
 │   │   │   │   ├── [goalId]/
 │   │   │   │   │   ├── index.tsx
@@ -445,7 +448,6 @@ Generated on: 2026-03-19T03:05:23.319Z
 │   │   │   │   └── index.tsx
 │   │   │   ├── all-accounts.tsx
 │   │   │   ├── bill-splitter.tsx
-│   │   │   ├── data-management.tsx
 │   │   │   ├── edit-profile.tsx
 │   │   │   ├── index.tsx
 │   │   │   ├── pending-transactions.tsx
@@ -506,6 +508,8 @@ Generated on: 2026-03-19T03:05:23.319Z
 │   │   │   ├── currency-account-selector.styles.ts
 │   │   │   ├── index.tsx
 │   │   │   └── types.ts
+│   │   ├── data-management/
+│   │   │   └── import-confirm-modal.tsx
 │   │   ├── date-range-preset-modal/
 │   │   │   ├── date-range-preset-modal-content.tsx
 │   │   │   ├── date-range-preset-modal.styles.ts
@@ -838,12 +842,16 @@ Generated on: 2026-03-19T03:05:23.319Z
 │   │   │       ├── ColorSwatch.tsx
 │   │   │       ├── Currency.tsx
 │   │   │       ├── CurrencyDollar.tsx
+│   │   │       ├── Database.tsx
+│   │   │       ├── DatabaseExport.tsx
+│   │   │       ├── DatabaseImport.tsx
 │   │   │       ├── DeviceMobileOff.tsx
 │   │   │       ├── DeviceMobileVibration.tsx
 │   │   │       ├── Divide.tsx
 │   │   │       ├── Equal.tsx
 │   │   │       ├── Eraser.tsx
 │   │   │       ├── EyeOff.tsx
+│   │   │       ├── FileTypeCsv.tsx
 │   │   │       ├── FileTypeJpg.tsx
 │   │   │       ├── FileTypePdf.tsx
 │   │   │       ├── FileZip.tsx
@@ -1049,11 +1057,11 @@ Generated on: 2026-03-19T03:05:23.319Z
 │   │   ├── tabs-minty.tsx
 │   │   └── toggle-item.tsx
 │   ├── constants/
+│   │   ├── app-data.ts
 │   │   ├── fab-button.ts
 │   │   ├── minty-icons-selection.ts
 │   │   ├── pre-sets-accounts.ts
-│   │   ├── pre-sets-categories.ts
-│   │   └── site-data.ts
+│   │   └── pre-sets-categories.ts
 │   ├── contexts/
 │   │   └── scroll-into-view-context.tsx
 │   ├── database/
@@ -1078,6 +1086,7 @@ Generated on: 2026-03-19T03:05:23.319Z
 │   │   │   ├── balance-service.ts
 │   │   │   ├── budget-service.ts
 │   │   │   ├── category-service.ts
+│   │   │   ├── data-management-service.ts
 │   │   │   ├── goal-service.ts
 │   │   │   ├── loan-service.ts
 │   │   │   ├── README.md
@@ -1135,6 +1144,7 @@ Generated on: 2026-03-19T03:05:23.319Z
 │   │   ├── app-lock.store.ts
 │   │   ├── button-placement.store.ts
 │   │   ├── exchange-rates-preferences.store.ts
+│   │   ├── export-history.store.ts
 │   │   ├── language.store.ts
 │   │   ├── letter-emoji.store.ts
 │   │   ├── money-formatting.store.ts
@@ -3727,14 +3737,11 @@ Generated on: 2026-03-19T03:05:23.319Z
 │       ├── CylinderPlus.tsx
 │       ├── Dashboard.tsx
 │       ├── DashboardOff.tsx
-│       ├── Database.tsx
 │       ├── DatabaseCog.tsx
 │       ├── DatabaseDollar.tsx
 │       ├── DatabaseEdit.tsx
 │       ├── DatabaseExclamation.tsx
-│       ├── DatabaseExport.tsx
 │       ├── DatabaseHeart.tsx
-│       ├── DatabaseImport.tsx
 │       ├── DatabaseLeak.tsx
 │       ├── DatabaseMinus.tsx
 │       ├── DatabaseOff.tsx
@@ -4209,7 +4216,6 @@ Generated on: 2026-03-19T03:05:23.319Z
 │       ├── FileTime.tsx
 │       ├── FileTypeBmp.tsx
 │       ├── FileTypeCss.tsx
-│       ├── FileTypeCsv.tsx
 │       ├── FileTypeDoc.tsx
 │       ├── FileTypeDocx.tsx
 │       ├── FileTypeHtml.tsx

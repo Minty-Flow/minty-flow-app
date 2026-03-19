@@ -59,7 +59,6 @@
     "react-hook-form": "^7.68.0",
     "react-i18next": "^16.5.4",
     "react-native": "0.83.2",
-    "react-native-animated-rolling-numbers": "^2.0.0",
     "react-native-enriched": "^0.4.1",
     "react-native-gesture-handler": "~2.30.0",
     "react-native-keyboard-controller": "1.20.7",

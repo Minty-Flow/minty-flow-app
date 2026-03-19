@@ -77,6 +77,7 @@ const ICON_MAP = {
   "color-swatch": OutlineIcons.ColorSwatch,
   "file-zip": OutlineIcons.FileZip,
   "file-type-pdf": OutlineIcons.FileTypePdf,
+  "file-type-csv": OutlineIcons.FileTypeCsv,
 
   // Text & Editing
   clipboard: FilledIcons.Clipboard,
@@ -116,7 +117,9 @@ const ICON_MAP = {
   "building-bank": OutlineIcons.BuildingBank,
 
   // Devices & System
-  database: FilledIcons.Database,
+  database: OutlineIcons.Database,
+  "database-export": OutlineIcons.DatabaseExport,
+  "database-import": OutlineIcons.DatabaseImport,
   dialpad: FilledIcons.Dialpad,
   "device-desktop": FilledIcons.DeviceDesktop,
   settings: FilledIcons.Settings,

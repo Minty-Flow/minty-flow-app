@@ -1,7 +1,8 @@
 import { Image } from "expo-image"
-import { useRouter } from "expo-router"
-import { useRef, useState } from "react"
+import { useFocusEffect, useRouter } from "expo-router"
+import { useCallback, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { BackHandler } from "react-native"
 import PagerView from "react-native-pager-view"
 import { StyleSheet } from "react-native-unistyles"
 
@@ -9,7 +10,7 @@ import { Button } from "~/components/ui/button"
 import { IconSvg } from "~/components/ui/icon-svg"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { SiteData } from "~/constants/site-data"
+import { AppData } from "~/constants/app-data"
 
 const TOTAL_PAGES = 3
 
@@ -36,6 +37,17 @@ export default function OnboardingScreen() {
   const router = useRouter()
   const pagerRef = useRef<PagerView>(null)
   const [currentPage, setCurrentPage] = useState(0)
+
+  useFocusEffect(
+    useCallback(() => {
+      // Android hardware back button → close app
+      const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+        BackHandler.exitApp()
+        return true // consume the event
+      })
+      return () => sub.remove()
+    }, []),
+  )
 
   const goToPage = (page: number) => {
     pagerRef.current?.setPage(page)
@@ -73,7 +85,7 @@ export default function OnboardingScreen() {
                 contentFit="cover"
               />
             }
-            title={SiteData.name}
+            title={AppData.name}
             description={t("onboarding.welcome.subtitle")}
           />
         </View>

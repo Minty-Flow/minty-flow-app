@@ -67,6 +67,7 @@ export default function EditProfileScreen() {
     setImageUri(localImageUri)
     if (isFromOnboarding) {
       setCompleted()
+      router.dismissAll()
       router.replace("/(tabs)")
     } else {
       router.back()

@@ -4,12 +4,12 @@ import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
 import { createJSONStorage, devtools, persist } from "zustand/middleware"
 
-import { SiteData } from "~/constants/site-data"
+import { AppData } from "~/constants/app-data"
 
 const APP_LOCK_STORE_KEY = "app-lock-preferences"
 const APP_LOCK_MMKV_KEY = "app-lock-storage"
 
-const PROMPT_MESSAGE = `Unlock ${SiteData.name}.`
+const PROMPT_MESSAGE = `Unlock ${AppData.name}.`
 
 const appLockStorage = createMMKV({ id: APP_LOCK_MMKV_KEY })
 

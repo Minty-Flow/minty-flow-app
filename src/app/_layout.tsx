@@ -179,9 +179,15 @@ export default function RootLayout() {
                 options={{ title: t("screens.settings.preferences.title") }}
               />
               <Stack.Screen
-                name="settings/data-management"
+                name="settings/data-management/index"
                 options={{
                   title: t("screens.settings.dataManagement.title"),
+                }}
+              />
+              <Stack.Screen
+                name="settings/data-management/export-history"
+                options={{
+                  title: t("screens.settings.dataManagement.history.title"),
                 }}
               />
               <Stack.Screen

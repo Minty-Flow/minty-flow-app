@@ -62,6 +62,7 @@ const moneyManagementItems: SettingsItem[] = [
     titleKey: "screens.settings.billSplitter.title",
     route: "/settings/bill-splitter",
     icon: "page-break",
+    soon: true,
   },
 ]
 
@@ -75,7 +76,6 @@ const otherSettingsItems: SettingsItem[] = [
     titleKey: "screens.settings.dataManagement.title",
     route: "/settings/data-management",
     icon: "database",
-    soon: true,
   },
 ]
 
@@ -104,6 +104,7 @@ export default function SettingsScreen() {
               icon={item.icon}
               title={t(item.titleKey)}
               onPress={() => router.push(item.route)}
+              soon={item.soon}
             />
           ))}
         </View>

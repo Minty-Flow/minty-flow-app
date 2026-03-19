@@ -7,6 +7,7 @@ import { IconSvg } from "~/components/ui/icon-svg"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { AppData } from "~/constants/app-data"
 import { useOnboardingStore } from "~/stores/onboarding.store"
 
 export default function OnboardingStartScreen() {
@@ -41,7 +42,9 @@ export default function OnboardingStartScreen() {
             {t("onboarding.start.import.title")}
           </Text>
           <Text style={styles.cardDescription}>
-            {t("onboarding.start.import.description")}
+            {t("onboarding.start.import.description", {
+              name: AppData.name,
+            })}
           </Text>
         </Pressable>
 
@@ -53,7 +56,9 @@ export default function OnboardingStartScreen() {
             {t("onboarding.start.fresh.title")}
           </Text>
           <Text style={styles.cardDescription}>
-            {t("onboarding.start.fresh.description")}
+            {t("onboarding.start.fresh.description", {
+              name: AppData.name,
+            })}
           </Text>
         </Pressable>
       </View>

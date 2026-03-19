@@ -14,9 +14,7 @@ const addLoanSchema = z.object({
   colorSchemeName: z.string().nullable().optional(),
 })
 
-const updateLoanSchema = addLoanSchema
-
 export { addLoanSchema }
 export type LoanFormValues = z.infer<typeof addLoanSchema>
 export type AddLoanFormSchema = z.infer<typeof addLoanSchema>
-export type UpdateLoanFormSchema = z.infer<typeof updateLoanSchema>
+export type UpdateLoanFormSchema = z.infer<typeof addLoanSchema>

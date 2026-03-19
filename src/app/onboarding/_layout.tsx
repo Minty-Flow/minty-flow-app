@@ -18,7 +18,10 @@ export default function OnboardingLayout() {
 
   return (
     <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="index"
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
       <Stack.Screen
         name="start"
         options={{ ...headerStyles, title: t("onboarding.start.title") }}

@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
+import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
 import { Pressable } from "~/components/ui/pressable"
@@ -13,6 +14,7 @@ interface ActionItemProps {
   description?: string
   onPress: () => void
   soon?: boolean
+  loading?: boolean
 }
 
 export function ActionItem({
@@ -21,6 +23,7 @@ export function ActionItem({
   description,
   onPress,
   soon,
+  loading,
 }: ActionItemProps) {
   const { t } = useTranslation()
 
@@ -32,6 +35,7 @@ export function ActionItem({
         soon && { opacity: 0.5 },
       ]}
       onPress={onPress}
+      disabled={loading}
     >
       <View style={styles.actionItemLeft}>
         <View style={styles.iconContainer}>
@@ -55,7 +59,11 @@ export function ActionItem({
           )}
         </View>
       </View>
-      <ChevronIcon direction="trailing" size={18} />
+      {loading ? (
+        <ActivityIndicatorMinty size="small" />
+      ) : (
+        <ChevronIcon direction="trailing" size={18} />
+      )}
     </Pressable>
   )
 }

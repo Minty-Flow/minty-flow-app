@@ -87,59 +87,73 @@ function AccountsScreenInner({ accounts }: AccountsScreenInnerProps) {
 
   return (
     <View style={styles.container}>
-      {/* <View style={styles.header}>
-        <Text style={styles.title}>{t("onboarding.accounts.title")}</Text>
-      </View> */}
+      <ScrollView
+        style={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <Text style={styles.subtitle}>{t("onboarding.accounts.hint")}</Text>
 
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-        <View style={styles.hintRow}>
-          <IconSvg name="info-circle" size={16} />
-          <Text style={styles.hint}>{t("onboarding.accounts.hint")}</Text>
-        </View>
+        <Text style={styles.sectionLabel}>
+          {t("onboarding.accounts.suggested")}
+        </Text>
+
+        {AccountPresets.map((preset) => {
+          const key = `${preset.icon}:${preset.type}`
+          const isExisting = existingKeys.has(key)
+          const isSelected = selectedKeys.has(key) || isExisting
+          return (
+            <Pressable
+              key={key}
+              style={[
+                styles.presetItem,
+                isSelected && styles.presetItemSelected,
+              ]}
+              onPress={() => togglePreset(key)}
+              disabled={isExisting}
+            >
+              <View
+                style={[
+                  styles.iconCircle,
+                  isSelected && styles.iconCircleSelected,
+                ]}
+              >
+                <DynamicIcon icon={preset.icon} size={26} />
+              </View>
+              <Text style={styles.presetName}>
+                {t(preset.name as TranslationKey)}
+              </Text>
+              <View
+                style={[
+                  styles.indicator,
+                  isSelected && styles.indicatorSelected,
+                ]}
+              >
+                {isSelected ? (
+                  <IconSvg
+                    name="check"
+                    size={14}
+                    color={styles.checkIconColor.color}
+                  />
+                ) : (
+                  <IconSvg name="plus" size={16} />
+                )}
+              </View>
+            </Pressable>
+          )
+        })}
 
         <Pressable
           style={styles.addNewButton}
           onPress={() => router.push(`/accounts/${NewEnum.NEW}/modify`)}
         >
-          <IconSvg name="plus" size={24} />
+          <View style={styles.addNewIconCircle}>
+            <IconSvg name="plus" size={20} />
+          </View>
           <Text style={styles.addNewText}>
             {t("onboarding.accounts.addNew")}
           </Text>
         </Pressable>
-
-        {AccountPresets.map((preset) => {
-          const key = `${preset.icon}:${preset.type}`
-          const isExisting = existingKeys.has(key)
-          const isSelected = selectedKeys.has(key)
-          return (
-            <Pressable
-              key={key}
-              style={styles.presetItem}
-              onPress={() => togglePreset(key)}
-              disabled={isExisting}
-            >
-              <DynamicIcon icon={preset.icon} size={28} />
-              <View style={styles.presetText}>
-                <Text style={styles.presetName}>
-                  {t(preset.name as TranslationKey)}
-                </Text>
-              </View>
-              {isExisting || isSelected ? (
-                <View style={styles.checkmark}>
-                  <IconSvg
-                    name="check"
-                    size={16}
-                    color={styles.checkmarkIconColor.color}
-                  />
-                </View>
-              ) : (
-                <View style={styles.plusCircle}>
-                  <IconSvg name="plus" size={20} />
-                </View>
-              )}
-            </Pressable>
-          )
-        })}
       </ScrollView>
 
       <View style={styles.buttonRow}>
@@ -170,86 +184,99 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.surface,
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: theme.colors.onSurface,
-  },
   scroll: {
     flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 24,
   },
-  hintRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-    marginBottom: 16,
-    paddingHorizontal: 4,
-  },
-  hint: {
-    flex: 1,
-    fontSize: 13,
+  subtitle: {
+    fontSize: 14,
     color: theme.colors.onSecondary,
-    lineHeight: 18,
+    lineHeight: 20,
+    marginBottom: 24,
   },
-  addNewButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: theme.colors.secondary,
-    borderRadius: theme.radius,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    marginBottom: 8,
-  },
-  addNewText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: theme.colors.onSurface,
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    color: theme.colors.onSecondary,
+    marginBottom: 10,
   },
   presetItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    gap: 14,
     backgroundColor: theme.colors.secondary,
     borderRadius: theme.radius,
+    padding: 16,
     marginBottom: 8,
+    borderWidth: 2,
+    borderColor: "transparent",
   },
-  presetText: {
-    flex: 1,
+  presetItemSelected: {
+    borderColor: theme.colors.primary,
+  },
+  iconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconCircleSelected: {
+    backgroundColor: `${theme.colors.primary}20`,
   },
   presetName: {
+    flex: 1,
     fontSize: 16,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
-  checkmark: {
+  indicator: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: theme.colors.primary,
+    borderWidth: 2,
+    borderColor: theme.colors.onSecondary,
     alignItems: "center",
     justifyContent: "center",
   },
-  checkmarkIconColor: {
+  indicatorSelected: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  checkIconColor: {
     color: theme.colors.onPrimary,
   },
-  plusCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: theme.colors.surface,
+  addNewButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    borderRadius: theme.radius,
+    padding: 16,
+    marginTop: 8,
+    borderWidth: 1.5,
+    borderColor: `${theme.colors.onSecondary}50`,
+    borderStyle: "dashed",
+  },
+  addNewIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.colors.secondary,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: theme.colors.onSecondary,
+  },
+  addNewText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "500",
+    color: theme.colors.onSurface,
   },
   buttonRow: {
     paddingHorizontal: 20,
