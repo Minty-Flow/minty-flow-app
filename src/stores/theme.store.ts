@@ -1,12 +1,12 @@
 import { createMMKV } from "react-native-mmkv"
 import { UnistylesRuntime } from "react-native-unistyles"
 import { create } from "zustand"
-import { createJSONStorage, devtools, persist } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
 
 import type { ThemeKey } from "~/styles/unistyles"
 
 export const DEFAULT_THEME = "coastalTrim"
-export const THEME_PERSIST_STORE_KEY = "theme-preferences"
+export const THEME_PERSIST_STORE_KEY = "theme-preferences-store"
 const THEME_PERSIST_MMKV_KEY = "theme-preferences-storage"
 
 /**
@@ -62,37 +62,32 @@ interface ThemeStore {
  * @see https://github.com/pmndrs/zustand
  */
 export const useThemeStore = create<ThemeStore>()(
-  devtools(
-    persist(
-      (set) => ({
-        // Default to first dark theme (electricLavender)
-        themeMode: DEFAULT_THEME,
+  persist(
+    (set) => ({
+      // Default to first dark theme (electricLavender)
+      themeMode: DEFAULT_THEME,
 
-        // Actions
-        setThemeMode: (mode) => {
-          set({ themeMode: mode })
+      // Actions
+      setThemeMode: (mode) => {
+        set({ themeMode: mode })
 
-          // Update UnistylesRuntime and native chrome when theme mode changes
-          UnistylesRuntime.setTheme(mode)
-        },
-      }),
-      {
-        name: THEME_PERSIST_STORE_KEY,
-        storage: createJSONStorage(() => ({
-          getItem: (name) => themeStorage.getString(name) ?? null,
-          setItem: (name, value) => themeStorage.set(name, value),
-          removeItem: (name) => themeStorage.remove(name),
-        })),
-        onRehydrateStorage: () => (state) => {
-          // Sync UnistylesRuntime and native chrome when store hydrates on app start
-          if (state?.themeMode) {
-            UnistylesRuntime.setTheme(state.themeMode)
-          }
-        },
+        // Update UnistylesRuntime and native chrome when theme mode changes
+        UnistylesRuntime.setTheme(mode)
       },
-    ),
+    }),
     {
-      name: "theme-preferences-store-dev",
+      name: THEME_PERSIST_STORE_KEY,
+      storage: createJSONStorage(() => ({
+        getItem: (name) => themeStorage.getString(name) ?? null,
+        setItem: (name, value) => themeStorage.set(name, value),
+        removeItem: (name) => themeStorage.remove(name),
+      })),
+      onRehydrateStorage: () => (state) => {
+        // Sync UnistylesRuntime and native chrome when store hydrates on app start
+        if (state?.themeMode) {
+          UnistylesRuntime.setTheme(state.themeMode)
+        }
+      },
     },
   ),
 )

@@ -39,7 +39,7 @@ export interface MintyFlowBackup {
   }
 }
 
-export type ImportResult =
+type ImportResult =
   | { success: true; counts: Record<string, number> }
   | { success: false; error: string }
 
@@ -386,16 +386,156 @@ export function countBackupRecords(backup: MintyFlowBackup): {
 
 // ─── Import ───────────────────────────────────────────────────────────────────
 
+/**
+ * Per-table column allowlists derived from schema.ts.
+ * Only these keys are written to _raw during backup import — unknown keys are silently dropped.
+ */
+const ALLOWED_COLUMNS: Record<string, string[]> = {
+  categories: [
+    "id",
+    "name",
+    "type",
+    "icon",
+    "color_scheme_name",
+    "transaction_count",
+    "created_at",
+    "updated_at",
+  ],
+  accounts: [
+    "id",
+    "name",
+    "type",
+    "balance",
+    "currency_code",
+    "icon",
+    "color_scheme_name",
+    "is_primary",
+    "exclude_from_balance",
+    "is_archived",
+    "created_at",
+    "updated_at",
+    "sort_order",
+  ],
+  transactions: [
+    "id",
+    "transaction_date",
+    "is_deleted",
+    "deleted_at",
+    "title",
+    "description",
+    "amount",
+    "is_pending",
+    "requires_manual_confirmation",
+    "type",
+    "is_transfer",
+    "transfer_id",
+    "related_account_id",
+    "account_balance_before",
+    "subtype",
+    "extra",
+    "has_attachments",
+    "category_id",
+    "account_id",
+    "recurring_id",
+    "location",
+    "goal_id",
+    "budget_id",
+    "loan_id",
+    "created_at",
+    "updated_at",
+  ],
+  tags: [
+    "id",
+    "name",
+    "type",
+    "color_scheme_name",
+    "icon",
+    "transaction_count",
+    "created_at",
+    "updated_at",
+  ],
+  transaction_tags: ["id", "transaction_id", "tag_id"],
+  transfers: [
+    "id",
+    "from_transaction_id",
+    "to_transaction_id",
+    "from_account_id",
+    "to_account_id",
+    "conversion_rate",
+    "created_at",
+    "updated_at",
+  ],
+  goals: [
+    "id",
+    "name",
+    "description",
+    "target_amount",
+    "currency_code",
+    "target_date",
+    "icon",
+    "color_scheme_name",
+    "goal_type",
+    "is_archived",
+    "created_at",
+    "updated_at",
+  ],
+  loans: [
+    "id",
+    "name",
+    "description",
+    "principal_amount",
+    "loan_type",
+    "due_date",
+    "account_id",
+    "category_id",
+    "icon",
+    "color_scheme_name",
+    "created_at",
+    "updated_at",
+  ],
+  recurring_transactions: [
+    "id",
+    "json_transaction_template",
+    "transfer_to_account_id",
+    "range",
+    "rules",
+    "created_at",
+    "last_generated_transaction_date",
+    "disabled",
+  ],
+  budgets: [
+    "id",
+    "name",
+    "amount",
+    "currency_code",
+    "period",
+    "start_date",
+    "end_date",
+    "alert_threshold",
+    "is_active",
+    "icon",
+    "color_scheme_name",
+    "created_at",
+    "updated_at",
+  ],
+  budget_accounts: ["id", "budget_id", "account_id", "created_at"],
+  budget_categories: ["id", "budget_id", "category_id", "created_at"],
+  goal_accounts: ["id", "goal_id", "account_id", "created_at"],
+}
+
 /** Batch-insert raw rows into a collection, preserving IDs. */
 async function insertRows(tableName: string, rows: RawRow[]): Promise<void> {
   if (rows.length === 0) return
   const collection = database.get(tableName)
+  const allowed = ALLOWED_COLUMNS[tableName] ?? []
   const CHUNK = 200
   for (let i = 0; i < rows.length; i += CHUNK) {
     const chunk = rows.slice(i, i + CHUNK)
     const ops = chunk.map((row) =>
       collection.prepareCreate((record) => {
-        Object.assign(record._raw, row)
+        for (const key of allowed) {
+          if (key in row) (record._raw as RawRow)[key] = row[key]
+        }
       }),
     )
     await database.batch(...ops)

@@ -27,5 +27,9 @@ export async function getBalanceAtTransaction(
     )
     .fetch()
 
-  return txs.reduce((sum, tx) => sum + tx.amount, 0)
+  return txs.reduce((sum, tx) => {
+    if (tx.type === "income") return sum + tx.amount
+    if (tx.type === "expense") return sum - tx.amount
+    return sum + tx.amount // transfer rows carry signed amounts
+  }, 0)
 }

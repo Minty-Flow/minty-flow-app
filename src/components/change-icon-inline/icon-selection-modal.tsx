@@ -93,6 +93,53 @@ const SearchHeader = memo(
 )
 
 /**
+ * Fuzzy search: scores icons by name / keyword match, returns top 100.
+ * Extracted to module level as it is a pure function.
+ */
+const searchIcons = (
+  icons: MintyIconData[],
+  query: string,
+): MintyIconData[] => {
+  if (!query.trim()) {
+    return icons
+  }
+
+  const lowerQuery = query.toLowerCase().trim()
+
+  const scoredIcons = icons.map((icon) => {
+    let score = 0
+    const iconNameLower = icon.name.toLowerCase()
+
+    if (iconNameLower === lowerQuery) {
+      score += 100
+    } else if (iconNameLower.startsWith(lowerQuery)) {
+      score += 50
+    } else if (iconNameLower.includes(lowerQuery)) {
+      score += 25
+    }
+
+    for (const keyword of icon.keywords) {
+      const keywordLower = keyword.toLowerCase()
+      if (keywordLower === lowerQuery) {
+        score += 80
+      } else if (keywordLower.startsWith(lowerQuery)) {
+        score += 40
+      } else if (keywordLower.includes(lowerQuery)) {
+        score += 20
+      }
+    }
+
+    return { icon, score }
+  })
+
+  return scoredIcons
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 100)
+    .map(({ icon }) => icon)
+}
+
+/**
  * IconSelectionModal – full-screen modal icon picker with fuzzy search.
  *
  * Controlled by the `visible` prop; call `onClose` to dismiss.
@@ -117,55 +164,9 @@ export const IconSelectionModal = ({
     setSearchQuery("")
   }, [initialIcon])
 
-  /**
-   * Fuzzy search: scores icons by name / keyword match, returns top 100.
-   */
-  const searchIcons = useCallback(
-    (icons: MintyIconData[], query: string): MintyIconData[] => {
-      if (!query.trim()) {
-        return icons
-      }
-
-      const lowerQuery = query.toLowerCase().trim()
-
-      const scoredIcons = icons.map((icon) => {
-        let score = 0
-        const iconNameLower = icon.name.toLowerCase()
-
-        if (iconNameLower === lowerQuery) {
-          score += 100
-        } else if (iconNameLower.startsWith(lowerQuery)) {
-          score += 50
-        } else if (iconNameLower.includes(lowerQuery)) {
-          score += 25
-        }
-
-        for (const keyword of icon.keywords) {
-          const keywordLower = keyword.toLowerCase()
-          if (keywordLower === lowerQuery) {
-            score += 80
-          } else if (keywordLower.startsWith(lowerQuery)) {
-            score += 40
-          } else if (keywordLower.includes(lowerQuery)) {
-            score += 20
-          }
-        }
-
-        return { icon, score }
-      })
-
-      return scoredIcons
-        .filter(({ score }) => score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 100)
-        .map(({ icon }) => icon)
-    },
-    [],
-  )
-
   const availableIcons = useMemo(
     () => searchIcons(MINTY_SVGS, searchQuery),
-    [searchQuery, searchIcons],
+    [searchQuery],
   )
 
   const handleIconSelect = useCallback((iconName: string) => {

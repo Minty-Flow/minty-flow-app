@@ -33,7 +33,7 @@ import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import type { TranslationKey } from "~/i18n/config"
 import { type AddLoanFormSchema, addLoanSchema } from "~/schemas/loans.schema"
 import { getThemeStrict } from "~/styles/theme/registry"
-import { LoanTypeEnum } from "~/types/loans"
+import { type LoanType, LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
 import { TransactionTypeEnum } from "~/types/transactions"
 import { logger } from "~/utils/logger"
@@ -288,7 +288,7 @@ export function LoanModifyContent({
       >
         <View style={loanModifyStyles.form} key={loan?.id ?? NewEnum.NEW}>
           {/* Loan type selector: Lent / Borrowed */}
-          <TabsMinty
+          <TabsMinty<LoanType>
             items={[
               {
                 value: LoanTypeEnum.LENT,
@@ -414,7 +414,6 @@ export function LoanModifyContent({
                   formDueDate ? new Date(formDueDate) : new Date(),
                 )
               }
-              accessibilityRole="button"
             >
               <View style={loanModifyStyles.dueDateLeft}>
                 <IconSvg name="calendar" size={24} />
@@ -434,7 +433,6 @@ export function LoanModifyContent({
                     <Pressable
                       onPress={handleClearDate}
                       hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                      accessibilityRole="button"
                       accessibilityLabel={t("common.actions.clear")}
                     >
                       <IconSvg

@@ -72,7 +72,8 @@
       "warning": "تحذير",
       "info": "معلومات",
       "deleted": "تم الحذف"
-    }
+    },
+    "failedToOpenLink": "فشل في فتح المتصفح"
   },
   "navigation": {
     "tabs": {
@@ -148,6 +149,8 @@
       "totalBalance": "الرصيد الإجمالي",
       "countLabel": "الحسابات",
       "archivedSection": "مؤرشف",
+      "archiveSuccess": "تمت أرشفة الحساب",
+      "unarchiveSuccess": "تمت استعادة الحساب",
       "card": {
         "primary": "أساسي",
         "thisMonth": "هذا الشهر",
@@ -156,7 +159,8 @@
         "net": "الصافي",
         "currentBalance": "الرصيد الحالي",
         "netThisMonth": "صافي هذا الشهر",
-        "moreOptions": "المزيد من الخيارات"
+        "moreOptions": "المزيد من الخيارات",
+        "archived": "مؤرشف"
       },
       "form": {
         "title": {
@@ -171,11 +175,20 @@
         "primaryAccountHint": "سيُستخدم هذا الحساب كحساب افتراضي للمعاملات الجديدة والإجراءات الأخرى.",
         "archiveLabel": "أرشفة الحساب",
         "isArchivedLabel": "أرشفة الحساب",
+        "archiveButton": "أرشفة الحساب",
+        "unarchiveButton": "استعادة الحساب",
         "archiveBannerText": "أرشفة الحساب تُخفيه من كل مكان باستثناء التقارير. يمكنك حذف الحساب مع معاملاته نهائياً بعد أرشفته.",
+        "archivedBannerText": "هذا الحساب مؤرشف. استعده لإجراء التعديلات.",
         "deleteLabel": "حذف الحساب نهائياً",
         "archiveWarning": "يمكنك حذف الحساب مع معاملاته نهائياً بعد أرشفته كإجراء أمان.",
         "typeLabel": "نوع الحساب",
         "loadingText": "جارٍ تحميل الحساب...",
+        "archiveModal": {
+          "archiveTitle": "أرشفة هذا الحساب؟",
+          "archiveConfirm": "أرشفة",
+          "unarchiveTitle": "استعادة هذا الحساب؟",
+          "unarchiveConfirm": "استعادة"
+        },
         "deleteModal": {
           "title": "حذف {{name}} نهائياً؟",
           "descriptionWithCount_one": "يحتوي هذا الحساب على {{count}} معاملة. سيؤدي الحذف النهائي إلى حذفها أيضاً. لا يمكن التراجع عن هذا الإجراء.",
@@ -560,6 +573,7 @@
           "overdue": "متأخر بـ {{count}} أيام",
           "noDeadline": "بلا موعد",
           "allAccounts": "جميع الحسابات",
+          "archived": "مؤرشف",
           "type": {
             "savings": "ادخار",
             "expense": "إنفاق"
@@ -1103,7 +1117,9 @@
         "noTagsFound": "لم يتم العثور على وسوم",
         "allTagsSelected": "تم تحديد جميع الوسوم",
         "amountInput": "إدخال المبلغ"
-      }
+      },
+      "loadingTransaction": "جارٍ تحميل المعاملة...",
+      "notFoundTransaction": "لم يتم العثور على المعاملة."
     },
     "recurring": {
       "frequency": {

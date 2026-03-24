@@ -1,6 +1,6 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, devtools, persist } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
 
 export type FabButtonType = "income" | "expense" | "transfer"
 
@@ -27,21 +27,18 @@ interface ButtonPlacementStore {
 }
 
 export const useButtonPlacementStore = create<ButtonPlacementStore>()(
-  devtools(
-    persist(
-      (set) => ({
-        order: DEFAULT_BUTTON_ORDER,
-        setOrder: (order) => set({ order }),
-      }),
-      {
-        name: "button-placement-store",
-        storage: createJSONStorage(() => ({
-          getItem: (name) => buttonPlacementStorage.getString(name) ?? null,
-          setItem: (name, value) => buttonPlacementStorage.set(name, value),
-          removeItem: (name) => buttonPlacementStorage.remove(name),
-        })),
-      },
-    ),
-    { name: "button-placement-store-dev" },
+  persist(
+    (set) => ({
+      order: DEFAULT_BUTTON_ORDER,
+      setOrder: (order) => set({ order }),
+    }),
+    {
+      name: "button-placement-store",
+      storage: createJSONStorage(() => ({
+        getItem: (name) => buttonPlacementStorage.getString(name) ?? null,
+        setItem: (name, value) => buttonPlacementStorage.set(name, value),
+        removeItem: (name) => buttonPlacementStorage.remove(name),
+      })),
+    },
   ),
 )

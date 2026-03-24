@@ -36,30 +36,29 @@ export default function ExportHistoryScreen() {
     type: "remove",
   })
 
-  async function handleSaveAs(record: ExportRecord) {
+  function handleSaveAs(record: ExportRecord) {
     setSavingId(record.id)
-    try {
-      const ext = record.type === "json" ? "json" : "csv"
-      const saved = await saveExistingFileToDevice(
-        record.uri,
-        record.fileName,
-        ext,
-      )
-      if (saved) {
-        Toast.success({
-          title: t("screens.settings.dataManagement.history.reSaved"),
-        })
-      }
-    } catch (e) {
-      const isNotFound = e instanceof Error && e.message === "file_not_found"
-      Toast.error({
-        title: isNotFound
-          ? t("screens.settings.dataManagement.exportFileNotFound")
-          : t("screens.settings.dataManagement.exportError"),
+    const ext = record.type === "json" ? "json" : "csv"
+
+    Promise.resolve(saveExistingFileToDevice(record.uri, record.fileName, ext))
+      .then((saved) => {
+        if (saved) {
+          Toast.success({
+            title: t("screens.settings.dataManagement.history.reSaved"),
+          })
+        }
       })
-    } finally {
-      setSavingId(null)
-    }
+      .catch((e) => {
+        const isNotFound = e instanceof Error && e.message === "file_not_found"
+        Toast.error({
+          title: isNotFound
+            ? t("screens.settings.dataManagement.exportFileNotFound")
+            : t("screens.settings.dataManagement.exportError"),
+        })
+      })
+      .finally(() => {
+        setSavingId(null)
+      })
   }
 
   function confirmRemove(id: string) {
@@ -149,7 +148,6 @@ export default function ExportHistoryScreen() {
             ]}
             onPress={() => confirmRemove(item.id)}
             disabled={savingId !== null}
-            accessibilityRole="button"
           >
             <IconSvg
               name="trash"
@@ -179,7 +177,6 @@ export default function ExportHistoryScreen() {
             ]}
             onPress={() => handleSaveAs(item)}
             disabled={isSaving || savingId !== null}
-            accessibilityRole="button"
           >
             {isSaving ? (
               <ActivityIndicatorMinty size="small" />
@@ -216,7 +213,6 @@ export default function ExportHistoryScreen() {
               { opacity: pressed ? 0.7 : 1 },
             ]}
             onPress={confirmClearAll}
-            accessibilityRole="button"
           >
             <IconSvg
               name="trash"

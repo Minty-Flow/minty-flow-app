@@ -5,28 +5,36 @@ import type { Account } from "~/types/accounts"
 
 interface AccountFormModalsProps {
   deleteModalVisible: boolean
+  archiveModalVisible: boolean
   unsavedModalVisible: boolean
   isAddMode: boolean
   account: Account | undefined
   transactionCount: number
   onCloseDeleteModal: () => void
+  onCloseArchiveModal: () => void
   onCloseUnsavedModal: () => void
   onConfirmDelete: () => void
+  onConfirmArchive: () => void
   onDiscardAndNavigate: () => void
 }
 
 export function AccountFormModals({
   deleteModalVisible,
+  archiveModalVisible,
   unsavedModalVisible,
   isAddMode,
   account,
   transactionCount,
   onCloseDeleteModal,
+  onCloseArchiveModal,
   onCloseUnsavedModal,
   onConfirmDelete,
+  onConfirmArchive,
   onDiscardAndNavigate,
 }: AccountFormModalsProps) {
   const { t } = useTranslation()
+
+  const isArchived = account?.isArchived ?? false
 
   return (
     <>
@@ -49,6 +57,28 @@ export function AccountFormModals({
           cancelLabel={t("common.actions.cancel")}
           variant="destructive"
           icon="trash"
+        />
+      )}
+
+      {!isAddMode && account && (
+        <ConfirmModal
+          visible={archiveModalVisible}
+          onRequestClose={onCloseArchiveModal}
+          onConfirm={onConfirmArchive}
+          title={
+            isArchived
+              ? t("screens.accounts.form.archiveModal.unarchiveTitle")
+              : t("screens.accounts.form.archiveModal.archiveTitle")
+          }
+          description={account.name}
+          confirmLabel={
+            isArchived
+              ? t("screens.accounts.form.archiveModal.unarchiveConfirm")
+              : t("screens.accounts.form.archiveModal.archiveConfirm")
+          }
+          cancelLabel={t("common.actions.cancel")}
+          variant="default"
+          icon={isArchived ? "archive-off" : "archive"}
         />
       )}
 

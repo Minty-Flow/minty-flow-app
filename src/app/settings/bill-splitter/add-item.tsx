@@ -243,7 +243,6 @@ export default function AddItemScreen() {
         <Pressable
           style={styles.multiplierTrigger}
           onPress={() => setMultiplierExpanded((v) => !v)}
-          accessibilityRole="button"
         >
           <View style={styles.switchLeft}>
             <IconSvg
@@ -319,7 +318,7 @@ export default function AddItemScreen() {
             const amountPreview = price * quantityNum * (split.percentage / 100)
             const amountFormatted =
               split.selected && split.percentage > 0
-                ? amountPreview.toFixed(2)
+                ? amountPreview.toFixed(1)
                 : null
 
             return (
@@ -403,7 +402,6 @@ export default function AddItemScreen() {
           <Pressable
             style={styles.addParticipantButton}
             onPress={() => setAddNameVisible(true)}
-            accessibilityRole="button"
           >
             <IconSvg name="plus" size={20} color={theme.colors.onSecondary} />
           </Pressable>

@@ -32,7 +32,6 @@ export default function NamesScreen() {
           onPress={() => removeParticipant(item.id)}
           style={styles.deleteButton}
           accessibilityLabel={t("common.actions.delete")}
-          accessibilityRole="button"
         >
           <IconSvg name="trash" size={20} color={theme.colors.onSecondary} />
         </Pressable>
@@ -70,7 +69,6 @@ export default function NamesScreen() {
         onPress={() => setAddModalVisible(true)}
         style={styles.fab}
         accessibilityLabel={t("screens.settings.billSplitter.names.addName")}
-        accessibilityRole="button"
       >
         <IconSvg name="plus" size={24} color={theme.colors.onPrimary} />
       </Pressable>

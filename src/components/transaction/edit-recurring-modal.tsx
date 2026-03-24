@@ -191,7 +191,6 @@ export function EditRecurringModal({
         style={[styles.backdrop, { width }]}
         onPress={onRequestClose}
         accessibilityLabel={t("common.actions.close")}
-        accessibilityRole="button"
       >
         <TouchableWithoutFeedback onPress={() => {}}>
           <View

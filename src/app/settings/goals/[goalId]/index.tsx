@@ -1,13 +1,14 @@
 import { withObservables } from "@nozbe/watermelondb/react"
 import { differenceInDays } from "date-fns"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useCallback, useLayoutEffect, useRef } from "react"
+import { useCallback, useLayoutEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList, View as RNView } from "react-native"
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 import { combineLatest, map, of, startWith, switchMap } from "rxjs"
 
+import { ConfirmModal } from "~/components/confirm-modal"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { Money } from "~/components/money"
 import { TransactionItem } from "~/components/transaction/transaction-item"
@@ -24,6 +25,7 @@ import {
   observeGoalById,
   observeGoalTransactionProgress,
   observeGoalTransactions,
+  unarchiveGoal,
 } from "~/database/services/goal-service"
 import {
   observeTransactionModelsFull,
@@ -31,6 +33,8 @@ import {
 } from "~/database/services/transaction-service"
 import { modelToGoal } from "~/database/utils/model-to-goal"
 import type { Goal } from "~/types/goals"
+import { logger } from "~/utils/logger"
+import { Toast } from "~/utils/toast"
 
 /* ------------------------------------------------------------------ */
 /* Inner component (receives observed data)                           */
@@ -41,6 +45,7 @@ const EMPTY_TRANSACTIONS: TransactionWithRelations[] = []
 
 interface GoalDetailInnerProps {
   goalId: string
+  goalModel?: GoalModel
   goal?: Goal
   currentAmount?: number
   accountNames?: string[]
@@ -49,6 +54,7 @@ interface GoalDetailInnerProps {
 
 function GoalDetailInner({
   goalId,
+  goalModel,
   goal,
   currentAmount = 0,
   accountNames = EMPTY_STRINGS,
@@ -59,6 +65,7 @@ function GoalDetailInner({
   const navigation = useNavigation()
   const { theme } = useUnistyles()
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
+  const [unarchiveModalVisible, setUnarchiveModalVisible] = useState(false)
 
   const handleTransactionPress = useCallback(
     (id: string) => {
@@ -75,6 +82,17 @@ function GoalDetailInner({
     openSwipeableRef.current = methods
   }, [])
 
+  const handleUnarchive = useCallback(async () => {
+    if (!goalModel) return
+    try {
+      await unarchiveGoal(goalModel)
+      Toast.success({ title: t("screens.settings.goals.unarchiveSuccess") })
+    } catch (error) {
+      logger.error("Error unarchiving goal", { error })
+      Toast.error({ title: t("common.toast.error") })
+    }
+  }, [goalModel, t])
+
   const renderTransactionItem = useCallback(
     ({ item }: { item: TransactionWithRelations }) => (
       <TransactionItem
@@ -87,25 +105,36 @@ function GoalDetailInner({
     [handleTransactionPress, handleDeleteDone, handleWillOpen],
   )
 
+  const isArchived = goal?.isArchived ?? false
+
   useLayoutEffect(() => {
     navigation.setOptions({
       title: goal?.name ?? t("screens.settings.goals.detail.title"),
-      headerRight: () => (
-        <Button
-          variant="ghost"
-          size="icon"
-          onPress={() =>
-            router.push({
-              pathname: "/settings/goals/[goalId]/modify",
-              params: { goalId },
-            })
-          }
-        >
-          <IconSvg name="pencil" size={20} />
-        </Button>
-      ),
+      headerRight: () =>
+        isArchived ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            onPress={() => setUnarchiveModalVisible(true)}
+          >
+            <IconSvg name="archive-off" size={20} />
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            onPress={() =>
+              router.push({
+                pathname: "/settings/goals/[goalId]/modify",
+                params: { goalId },
+              })
+            }
+          >
+            <IconSvg name="pencil" size={20} />
+          </Button>
+        ),
     })
-  }, [navigation, router, goalId, goal?.name, t])
+  }, [navigation, router, goalId, goal?.name, isArchived, t])
 
   if (!goal) {
     return (
@@ -170,7 +199,15 @@ function GoalDetailInner({
                   : t("screens.settings.goals.card.type.savings")}
               </Text>
             </View>
-            {isCompleted ? (
+            {isArchived ? (
+              <View style={styles.archivedContainer}>
+                <IconSvg name="archive" size={14} />
+
+                <Text style={styles.archivedText}>
+                  {t("screens.settings.goals.card.archived")}
+                </Text>
+              </View>
+            ) : isCompleted ? (
               <View style={styles.completedBadge}>
                 <IconSvg
                   name="check"
@@ -284,6 +321,20 @@ function GoalDetailInner({
         }
         contentContainerStyle={styles.listContent}
       />
+
+      <ConfirmModal
+        visible={unarchiveModalVisible}
+        onRequestClose={() => setUnarchiveModalVisible(false)}
+        onConfirm={handleUnarchive}
+        title={t("screens.settings.goals.form.archiveModal.unarchiveTitle")}
+        description={goal.name}
+        confirmLabel={t(
+          "screens.settings.goals.form.archiveModal.unarchiveConfirm",
+        )}
+        cancelLabel={t("common.actions.cancel")}
+        variant="default"
+        icon="archive-off"
+      />
     </View>
   )
 }
@@ -326,6 +377,7 @@ const EnhancedGoalDetail = withObservables(
     )
 
     return {
+      goalModel: goalModel$,
       goal: goal$,
       currentAmount: currentAmount$.pipe(startWith(0)),
       accountNames: accountNames$.pipe(startWith([] as string[])),
@@ -398,6 +450,16 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: 11,
     fontWeight: "600",
     color: theme.colors.onSecondary,
+  },
+  archivedContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  archivedText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: theme.colors.primary,
   },
   completedBadge: {
     flexDirection: "row",

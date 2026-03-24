@@ -89,7 +89,6 @@ function BillSplitterContent({ accounts }: BillSplitterContentProps) {
             <Pressable
               onPress={() => setClearVisible(true)}
               style={styles.headerButton}
-              accessibilityRole="button"
               accessibilityLabel={t(
                 "screens.settings.billSplitter.actions.clearBill",
               )}
@@ -100,7 +99,6 @@ function BillSplitterContent({ accounts }: BillSplitterContentProps) {
           <Pressable
             onPress={() => setInfoVisible(true)}
             style={styles.headerButton}
-            accessibilityRole="button"
             accessibilityLabel={t("screens.settings.billSplitter.info.title")}
           >
             <IconSvg
@@ -155,7 +153,6 @@ function BillSplitterContent({ accounts }: BillSplitterContentProps) {
                   selectedAccount && styles.accountTriggerSelected,
                 ]}
                 onPress={handleToggleAccountPicker}
-                accessibilityRole="button"
                 accessibilityLabel={
                   accountPickerOpen
                     ? t("common.actions.cancel")
@@ -297,7 +294,6 @@ function BillSplitterContent({ accounts }: BillSplitterContentProps) {
               <Pressable
                 style={styles.participantsChip}
                 onPress={() => router.push("/settings/bill-splitter/names")}
-                accessibilityRole="button"
                 accessibilityLabel={t(
                   "screens.settings.billSplitter.names.title",
                 )}
@@ -333,7 +329,6 @@ function BillSplitterContent({ accounts }: BillSplitterContentProps) {
           <Button
             style={styles.summaryButton}
             onPress={() => router.push("/settings/bill-splitter/summary")}
-            accessibilityRole="button"
           >
             <Text style={styles.summaryButtonText}>
               {t("screens.settings.billSplitter.actions.summary")}
@@ -347,7 +342,6 @@ function BillSplitterContent({ accounts }: BillSplitterContentProps) {
         onPress={() => router.push("/settings/bill-splitter/add-item")}
         style={[styles.fab, hasItems && styles.fabAboveSummary]}
         accessibilityLabel={t("screens.settings.billSplitter.actions.addItem")}
-        accessibilityRole="button"
       >
         <IconSvg name="plus" size={24} color={theme.colors.onPrimary} />
       </Pressable>
@@ -403,7 +397,6 @@ const styles = StyleSheet.create((theme) => ({
 
   // Account picker block (trigger + inline list)
   accountPickerBlock: {
-    marginHorizontal: 20,
     marginTop: 16,
   },
   accountTrigger: {

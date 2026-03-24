@@ -88,7 +88,6 @@ export default function SummaryScreen() {
           style={[styles.summaryCard, isPayer && styles.summaryCardPayer]}
           onPress={() => !isPayer && handleGenerateLoan(item)}
           disabled={isPayer}
-          accessibilityRole="button"
         >
           <Text style={styles.nameText} numberOfLines={1}>
             {item.name}

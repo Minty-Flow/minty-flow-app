@@ -43,7 +43,7 @@ const EMPTY_CATEGORIES: Category[] = []
 const EMPTY_TAGS: Tag[] = []
 
 interface CategoryDetailsProps {
-  category: Category
+  category: Category | undefined
   transactionsFull: TransactionWithRelations[]
   categoriesExpense: Category[]
   categoriesIncome: Category[]
@@ -79,7 +79,7 @@ const CategoryDetailsScreenInner = ({
 
   const [showFilters, setShowFilters] = useState(false)
 
-  const colorScheme = getThemeStrict(category.colorSchemeName)
+  const colorScheme = getThemeStrict(category?.colorSchemeName ?? null)
 
   const categoriesByType = useMemo(
     () => ({
@@ -127,7 +127,7 @@ const CategoryDetailsScreenInner = ({
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: category.name,
+      title: category?.name ?? "",
       headerRight: () => (
         <View style={{ flexDirection: "row", gap: 4, alignItems: "center" }}>
           <Button
@@ -143,7 +143,7 @@ const CategoryDetailsScreenInner = ({
             onPress={() =>
               router.push({
                 pathname: "/settings/categories/[categoryId]/modify",
-                params: { categoryId: category.id },
+                params: { categoryId: category?.id ?? "" },
               })
             }
           >
@@ -152,7 +152,7 @@ const CategoryDetailsScreenInner = ({
         </View>
       ),
     })
-  }, [navigation, router, category.id, category.name, showFilters])
+  }, [navigation, router, category?.id, category?.name, showFilters])
 
   if (!category) {
     return (
@@ -334,7 +334,9 @@ const EnhancedCategoryDetailsScreen = withObservables(
       searchIncludeNotes: searchState.includeNotes,
     })
     return {
-      category: observeCategoryDetailsById(categoryId),
+      category: observeCategoryDetailsById(categoryId).pipe(
+        startWith(undefined),
+      ),
       transactionsFull: observeTransactionModelsFull({
         ...queryFilters,
         categoryId,

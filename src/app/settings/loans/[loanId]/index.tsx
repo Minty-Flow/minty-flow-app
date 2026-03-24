@@ -1,12 +1,6 @@
 import { withObservables } from "@nozbe/watermelondb/react"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import {
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  useState,
-  useTransition,
-} from "react"
+import { useCallback, useLayoutEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList, View as RNView } from "react-native"
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
@@ -69,7 +63,7 @@ function LoanDetailInner({
   const navigation = useNavigation()
   const { theme } = useUnistyles()
   const [actionModalVisible, setActionModalVisible] = useState(false)
-  const [isCreatingTransaction, startTransition] = useTransition()
+  const [isCreatingTransaction, setIsCreatingTransaction] = useState(false)
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
 
   const handleTransactionPress = useCallback(
@@ -158,36 +152,46 @@ function LoanDetailInner({
 
   const handleFullAction = () => {
     if (!loan || remaining <= 0) return
+
     const transactionType = isLent
       ? TransactionTypeEnum.INCOME
       : TransactionTypeEnum.EXPENSE
+
     const transactionTitle = isLent
       ? `${t("screens.settings.loans.actions.collect")}: ${loan.name}`
       : `${t("screens.settings.loans.actions.settle")}: ${loan.name}`
+
     const successTitle = isLent
       ? t("screens.settings.loans.actions.collectSuccess")
       : t("screens.settings.loans.actions.settleSuccess")
-    startTransition(async () => {
-      try {
-        await createTransactionModel({
-          amount: remaining,
-          type: transactionType,
-          transactionDate: new Date(),
-          accountId: loan.accountId,
-          categoryId: loan.categoryId,
-          title: transactionTitle,
-          description: null,
-          isPending: false,
-          tags: [],
-          loanId: loan.id,
-        })
+
+    setIsCreatingTransaction(true)
+
+    Promise.resolve(
+      createTransactionModel({
+        amount: remaining,
+        type: transactionType,
+        transactionDate: new Date(),
+        accountId: loan.accountId,
+        categoryId: loan.categoryId,
+        title: transactionTitle,
+        description: null,
+        isPending: false,
+        tags: [],
+        loanId: loan.id,
+      }),
+    )
+      .then(() => {
         setActionModalVisible(false)
         Toast.success({ title: successTitle })
-      } catch (error) {
+      })
+      .catch((error) => {
         logger.error("Error creating loan repayment transaction", { error })
         Toast.error({ title: t("common.toast.error") })
-      }
-    })
+      })
+      .finally(() => {
+        setIsCreatingTransaction(false)
+      })
   }
 
   const handlePartialAction = () => {

@@ -48,6 +48,11 @@ function parseWebViewMessage(raw: string): WebViewMapMessage | null {
  * The user pans the map under the pin — much more precise for thumb-driven navigation.
  */
 function buildMaplibreHtml(lat: number, lng: number): string {
+  const safeLat = Number(lat)
+  const safeLng = Number(lng)
+  if (!Number.isFinite(safeLat) || !Number.isFinite(safeLng)) {
+    throw new Error(`Invalid coordinates: ${lat}, ${lng}`)
+  }
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -98,7 +103,7 @@ function buildMaplibreHtml(lat: number, lng: number): string {
     const map = new maplibregl.Map({
       container: 'map',
       style: 'https://tiles.openfreemap.org/styles/liberty',
-      center: [${lng}, ${lat}],
+      center: [${safeLng}, ${safeLat}],
       zoom: 15
     });
 
@@ -289,7 +294,11 @@ function LocationPickerContent({
             onMessage={handleMessage}
             javaScriptEnabled
             domStorageEnabled
-            originWhitelist={["*"]}
+            originWhitelist={[
+              "https://unpkg.com",
+              "https://tiles.openfreemap.org",
+              "about:blank",
+            ]}
           />
 
           <Pressable

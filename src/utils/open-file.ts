@@ -14,6 +14,10 @@ export async function openFileInExternalApp(
   uri: string,
   ext: string,
 ): Promise<void> {
+  const ALLOWED_SCHEMES = ["file://", "content://"]
+  if (!ALLOWED_SCHEMES.some((s) => uri.startsWith(s))) {
+    throw new Error(`Blocked unsafe URI scheme: ${uri.split(":")[0]}`)
+  }
   if (Platform.OS === "android") {
     const contentUri = await FileSystem.getContentUriAsync(uri)
     const mimeType = getMimeTypeForExtension(ext)

@@ -1,4 +1,6 @@
+import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
+import { createJSONStorage, persist } from "zustand/middleware"
 
 import type {
   BillItem,
@@ -6,6 +8,19 @@ import type {
   ItemSplit,
   Participant,
 } from "~/types/bill-splitter"
+
+/**
+ * MMKV storage instance for bill splitter data.
+ *
+ * This instance stores the bill splitter state including participants, items,
+ * and payer information. MMKV is ~30x faster than AsyncStorage and provides
+ * synchronous operations for fast persistence.
+ *
+ * @see https://github.com/mrousavy/react-native-mmkv
+ */
+const billSplitterStorage = createMMKV({
+  id: "bill-splitter-storage",
+})
 
 interface BillSplitterState {
   participants: Participant[]
@@ -23,65 +38,80 @@ interface BillSplitterState {
   clearBill: () => void
 }
 
+/**
+ * we can use crypto cuz this is a native app and crypto exist only in the web
+ */
 const generateId = () =>
   Math.random().toString(36).substring(2) + Date.now().toString(36)
 
-export const useBillSplitterStore = create<BillSplitterState>((set) => ({
-  participants: [],
-  items: [],
-  payerId: null,
-  accountId: null,
-
-  addParticipant: (name) =>
-    set((state) => ({
-      participants: [...state.participants, { id: generateId(), name }],
-    })),
-
-  removeParticipant: (id) =>
-    set((state) => ({
-      participants: state.participants.filter((p) => p.id !== id),
-      items: state.items.map((item) => {
-        const newSplits = item.splits.filter((s) => s.participantId !== id)
-        if (item.splitEvenly) {
-          return {
-            ...item,
-            splits: redistributeEvenly(newSplits),
-          }
-        }
-        return { ...item, splits: newSplits }
-      }),
-      payerId: state.payerId === id ? null : state.payerId,
-    })),
-
-  addItem: (item) =>
-    set((state) => ({
-      items: [...state.items, { ...item, id: generateId() }],
-    })),
-
-  updateItem: (id, item) =>
-    set((state) => ({
-      items: state.items.map((existing) =>
-        existing.id === id ? { ...item, id } : existing,
-      ),
-    })),
-
-  removeItem: (id) =>
-    set((state) => ({
-      items: state.items.filter((item) => item.id !== id),
-    })),
-
-  setPayerId: (id) => set({ payerId: id }),
-
-  setAccountId: (id) => set({ accountId: id }),
-
-  clearBill: () =>
-    set({
+export const useBillSplitterStore = create<BillSplitterState>()(
+  persist(
+    (set) => ({
       participants: [],
       items: [],
       payerId: null,
       accountId: null,
+
+      addParticipant: (name) =>
+        set((state) => ({
+          participants: [...state.participants, { id: generateId(), name }],
+        })),
+
+      removeParticipant: (id) =>
+        set((state) => ({
+          participants: state.participants.filter((p) => p.id !== id),
+          items: state.items.map((item) => {
+            const newSplits = item.splits.filter((s) => s.participantId !== id)
+            if (item.splitEvenly) {
+              return {
+                ...item,
+                splits: redistributeEvenly(newSplits),
+              }
+            }
+            return { ...item, splits: newSplits }
+          }),
+          payerId: state.payerId === id ? null : state.payerId,
+        })),
+
+      addItem: (item) =>
+        set((state) => ({
+          items: [...state.items, { ...item, id: generateId() }],
+        })),
+
+      updateItem: (id, item) =>
+        set((state) => ({
+          items: state.items.map((existing) =>
+            existing.id === id ? { ...item, id } : existing,
+          ),
+        })),
+
+      removeItem: (id) =>
+        set((state) => ({
+          items: state.items.filter((item) => item.id !== id),
+        })),
+
+      setPayerId: (id) => set({ payerId: id }),
+
+      setAccountId: (id) => set({ accountId: id }),
+
+      clearBill: () =>
+        set({
+          participants: [],
+          items: [],
+          payerId: null,
+          accountId: null,
+        }),
     }),
-}))
+    {
+      name: "bill-splitter-store",
+      storage: createJSONStorage(() => ({
+        getItem: (name) => billSplitterStorage.getString(name) ?? null,
+        setItem: (name, value) => billSplitterStorage.set(name, value),
+        removeItem: (name) => billSplitterStorage.remove(name),
+      })),
+    },
+  ),
+)
 
 function redistributeEvenly(splits: ItemSplit[]): ItemSplit[] {
   const selected = splits.filter((s) => s.selected)

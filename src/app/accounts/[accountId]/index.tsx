@@ -1,10 +1,11 @@
 import { withObservables } from "@nozbe/watermelondb/react"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useLayoutEffect, useMemo, useState } from "react"
+import { useCallback, useLayoutEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 import { startWith } from "rxjs"
 
+import { ConfirmModal } from "~/components/confirm-modal"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { Money } from "~/components/money"
 import { MonthYearPicker } from "~/components/month-year-picker"
@@ -14,11 +15,14 @@ import { Button } from "~/components/ui/button"
 import { IconSvg } from "~/components/ui/icon-svg"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import type AccountModel from "~/database/models/account"
 import {
   type AccountWithMonthTotals,
   getMonthRange,
+  observeAccountById,
   observeAccountModels,
   observeAccountWithMonthTotalsByIdAndRange,
+  unarchiveAccount,
 } from "~/database/services/account-service"
 import { observeCategoriesByType } from "~/database/services/category-service"
 import { observeTags } from "~/database/services/tag-service"
@@ -36,6 +40,8 @@ import {
   DEFAULT_TRANSACTION_LIST_FILTER_STATE,
 } from "~/types/transaction-filters"
 import { TransactionTypeEnum } from "~/types/transactions"
+import { logger } from "~/utils/logger"
+import { Toast } from "~/utils/toast"
 import { buildTransactionListFilters } from "~/utils/transaction-list-utils"
 
 const EMPTY_TRANSACTIONS: TransactionWithRelations[] = []
@@ -43,7 +49,8 @@ const EMPTY_CATEGORIES: Category[] = []
 const EMPTY_TAGS: Tag[] = []
 
 interface AccountDetailsProps {
-  account: AccountWithMonthTotals
+  account: AccountWithMonthTotals | undefined
+  accountModel: AccountModel | undefined
   transactionsFull: TransactionWithRelations[]
   categoriesExpense: Category[]
   categoriesIncome: Category[]
@@ -60,6 +67,7 @@ interface AccountDetailsProps {
 
 const AccountDetailsScreenInner = ({
   account,
+  accountModel,
   transactionsFull = EMPTY_TRANSACTIONS,
   categoriesExpense = EMPTY_CATEGORIES,
   categoriesIncome = EMPTY_CATEGORIES,
@@ -79,6 +87,18 @@ const AccountDetailsScreenInner = ({
   const { theme } = useUnistyles()
 
   const [showFilters, setShowFilters] = useState(false)
+  const [unarchiveModalVisible, setUnarchiveModalVisible] = useState(false)
+
+  const handleUnarchive = useCallback(async () => {
+    if (!accountModel) return
+    try {
+      await unarchiveAccount(accountModel)
+      Toast.success({ title: t("screens.accounts.unarchiveSuccess") })
+    } catch (error) {
+      logger.error("Error unarchiving account", { error })
+      Toast.error({ title: t("common.toast.error") })
+    }
+  }, [accountModel, t])
 
   const categoriesByType = useMemo(
     () => ({
@@ -89,9 +109,11 @@ const AccountDetailsScreenInner = ({
     [categoriesExpense, categoriesIncome, categoriesTransfer],
   )
 
+  const isArchived = account?.isArchived ?? false
+
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: account.name,
+      title: account?.name ?? "",
       headerRight: () => (
         <View style={{ flexDirection: "row", gap: 4, alignItems: "center" }}>
           <Button
@@ -101,22 +123,32 @@ const AccountDetailsScreenInner = ({
           >
             <IconSvg name={showFilters ? "filter-off" : "filter"} size={20} />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onPress={() =>
-              router.push({
-                pathname: "/accounts/[accountId]/modify",
-                params: { accountId: account.id },
-              })
-            }
-          >
-            <IconSvg name="pencil" size={20} />
-          </Button>
+          {isArchived ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              onPress={() => setUnarchiveModalVisible(true)}
+            >
+              <IconSvg name="archive-off" size={20} />
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              onPress={() =>
+                router.push({
+                  pathname: "/accounts/[accountId]/modify",
+                  params: { accountId: account?.id ?? "" },
+                })
+              }
+            >
+              <IconSvg name="pencil" size={20} />
+            </Button>
+          )}
         </View>
       ),
     })
-  }, [navigation, router, account.id, account.name, showFilters])
+  }, [navigation, router, account?.id, account?.name, showFilters, isArchived])
 
   if (!account) {
     return (
@@ -160,6 +192,17 @@ const AccountDetailsScreenInner = ({
                   <Text style={styles.primaryText}>
                     {t("screens.accounts.card.primary")}
                   </Text>
+                </>
+              )}
+              {isArchived && (
+                <>
+                  <Text style={styles.metaSeparator}>/</Text>
+                  <View style={styles.archivedContainer}>
+                    <IconSvg name="archive" size={14} />
+                    <Text style={styles.archivedText}>
+                      {t("screens.accounts.card.archived")}
+                    </Text>
+                  </View>
                 </>
               )}
             </View>
@@ -249,6 +292,18 @@ const AccountDetailsScreenInner = ({
         showUpcoming
         ListHeaderComponent={headerContent}
       />
+
+      <ConfirmModal
+        visible={unarchiveModalVisible}
+        onRequestClose={() => setUnarchiveModalVisible(false)}
+        onConfirm={handleUnarchive}
+        title={t("screens.accounts.form.archiveModal.unarchiveTitle")}
+        description={account.name}
+        confirmLabel={t("screens.accounts.form.archiveModal.unarchiveConfirm")}
+        cancelLabel={t("common.actions.cancel")}
+        variant="default"
+        icon="archive-off"
+      />
     </View>
   )
 }
@@ -292,7 +347,6 @@ const styles = StyleSheet.create((theme) => ({
   metaRow: {
     flexDirection: "row",
     backgroundColor: theme.colors.secondary,
-
     alignItems: "center",
     gap: 6,
   },
@@ -310,6 +364,16 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: 13,
     fontWeight: "600",
     color: theme.colors.customColors.warning,
+  },
+  archivedContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  archivedText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: theme.colors.primary,
   },
   balanceSection: {
     gap: 4,
@@ -423,7 +487,8 @@ const EnhancedAccountDetailsScreen = withObservables(
         fromDate,
         toDate,
         excludeFromTotals,
-      ),
+      ).pipe(startWith(undefined)),
+      accountModel: observeAccountById(accountId).pipe(startWith(undefined)),
       transactionsFull: observeTransactionModelsFull(queryFilters, [
         observeAccountModels(),
         observeCategoriesByType(TransactionTypeEnum.EXPENSE),

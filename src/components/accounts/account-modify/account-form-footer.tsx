@@ -11,6 +11,7 @@ interface AccountFormFooterProps {
   isAddMode: boolean
   isDirty: boolean
   isSubmitting: boolean
+  isArchived?: boolean
   onCancel: () => void
   onSave: () => void
 }
@@ -20,6 +21,7 @@ export function AccountFormFooter({
   isAddMode,
   isDirty,
   isSubmitting,
+  isArchived = false,
   onCancel,
   onSave,
 }: AccountFormFooterProps) {
@@ -36,20 +38,24 @@ export function AccountFormFooter({
           {t("common.actions.cancel")}
         </Text>
       </Button>
-      <Button
-        variant="default"
-        onPress={onSave}
-        style={accountModifyStyles.button}
-        disabled={!formName.trim() || (!isAddMode && !isDirty) || isSubmitting}
-      >
-        <Text variant="default" style={accountModifyStyles.saveText}>
-          {isSubmitting
-            ? t("common.actions.saving")
-            : isAddMode
-              ? t("common.actions.create")
-              : t("common.actions.saveChanges")}
-        </Text>
-      </Button>
+      {!isArchived && (
+        <Button
+          variant="default"
+          onPress={onSave}
+          style={accountModifyStyles.button}
+          disabled={
+            !formName.trim() || (!isAddMode && !isDirty) || isSubmitting
+          }
+        >
+          <Text variant="default" style={accountModifyStyles.saveText}>
+            {isSubmitting
+              ? t("common.actions.saving")
+              : isAddMode
+                ? t("common.actions.create")
+                : t("common.actions.saveChanges")}
+          </Text>
+        </Button>
+      )}
     </View>
   )
 }

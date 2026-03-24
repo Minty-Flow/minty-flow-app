@@ -47,7 +47,6 @@ export function ImportConfirmModal({
         style={[styles.backdrop, { width }]}
         onPress={isLoading ? undefined : onCancel}
         accessibilityLabel={t("common.actions.close")}
-        accessibilityRole="button"
       >
         <TouchableWithoutFeedback onPress={() => {}}>
           <View
@@ -117,7 +116,6 @@ export function ImportConfirmModal({
                 ]}
                 onPress={onCancel}
                 disabled={isLoading}
-                accessibilityRole="button"
               >
                 <Text
                   style={[styles.buttonText, { color: theme.colors.onSurface }]}
@@ -138,7 +136,6 @@ export function ImportConfirmModal({
                 ]}
                 onPress={onConfirm}
                 disabled={isLoading}
-                accessibilityRole="button"
               >
                 {isLoading ? (
                   <ActivityIndicatorMinty size="small" color="#fff" />

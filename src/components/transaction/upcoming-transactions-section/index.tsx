@@ -65,20 +65,20 @@ export function UpcomingTransactionsSection({
     [upcoming, transferLayout],
   )
 
-  const { recurring, pending } = useMemo(() => {
+  const { recurring, pending, toAutoConfirm } = useMemo(() => {
     void autoConfirmVersion
     void foregroundVersion
 
     const recurringList: TransactionWithRelations[] = []
     const pendingList: TransactionWithRelations[] = []
-    const toAutoConfirm: string[] = []
+    const toAutoConfirmList: string[] = []
 
     for (const row of upcomingForDisplay) {
       const canConfirm = confirmable(row.transaction, nowMs)
       const preapproved = isPreapproved(row, requireConfirmation)
 
       if (preapproved && canConfirm) {
-        toAutoConfirm.push(row.transaction.id)
+        toAutoConfirmList.push(row.transaction.id)
       } else {
         if (row.transaction.recurringId) {
           recurringList.push(row)
@@ -88,23 +88,26 @@ export function UpcomingTransactionsSection({
       }
     }
 
-    if (toAutoConfirm.length > 0) {
-      for (const txId of toAutoConfirm) {
-        void confirmTransactionSync(txId, {
-          updateTransactionDate: updateDateUponConfirmation,
-        })
-      }
+    return {
+      recurring: recurringList,
+      pending: pendingList,
+      toAutoConfirm: toAutoConfirmList,
     }
-
-    return { recurring: recurringList, pending: pendingList }
   }, [
     upcomingForDisplay,
     nowMs,
     requireConfirmation,
-    updateDateUponConfirmation,
     autoConfirmVersion,
     foregroundVersion,
   ])
+
+  useEffect(() => {
+    for (const txId of toAutoConfirm) {
+      void confirmTransactionSync(txId, {
+        updateTransactionDate: updateDateUponConfirmation,
+      })
+    }
+  }, [toAutoConfirm, updateDateUponConfirmation])
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional extra deps
   useEffect(() => {
@@ -347,7 +350,6 @@ export function UpcomingTransactionsSection({
                     accessibilityLabel={t(
                       "screens.home.upcoming.a11y.confirmAll",
                     )}
-                    accessibilityRole="button"
                   >
                     <IconSvg
                       name="checks"

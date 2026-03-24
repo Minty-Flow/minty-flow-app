@@ -153,6 +153,7 @@ interface ReorderableListV2Props<T>
   onReorder: (newData: T[]) => void
   renderItem: ListRenderItem<T>
   showButtons?: boolean
+  keyExtractor?: (item: T, index: number) => string
 }
 
 export function ReorderableListV2<T>({
@@ -160,6 +161,7 @@ export function ReorderableListV2<T>({
   onReorder,
   renderItem,
   showButtons = true,
+  keyExtractor,
   ...flatListProps
 }: ReorderableListV2Props<T>) {
   const move = useCallback(
@@ -190,7 +192,7 @@ export function ReorderableListV2<T>({
     <FlatList
       {...flatListProps}
       data={data}
-      keyExtractor={(_, i) => i.toString()}
+      keyExtractor={keyExtractor ?? ((_, i) => i.toString())}
       renderItem={renderReorderableItem}
     />
   )

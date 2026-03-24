@@ -45,13 +45,6 @@ export interface MintyColorScheme extends MintyThemeColors {
 }
 
 /**
- * Derived color tokens computed by ThemeFactory.
- */
-export interface MintyDerivedColors {
-  textSelection: string // = primary 37.5% (dark) | secondary 62.5% (light)
-}
-
-/**
  * Theme group structure for organizing related themes
  */
 export interface ThemeGroup {
@@ -62,7 +55,7 @@ export interface ThemeGroup {
 
 /**
  * Unistyles theme structure.
- * - colors: only color tokens (MintyThemeColors + MintyDerivedColors)
+ * - colors: only color tokens (MintyThemeColors)
  * - non-color metadata (name, iconName, radius) lives at the top level alongside isDark
  */
 export interface UnistylesTheme {

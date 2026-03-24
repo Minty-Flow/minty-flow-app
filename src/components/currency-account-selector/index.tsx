@@ -271,7 +271,6 @@ export function CurrencyAccountSelector({
         <Pressable
           style={triggerStyles.triggerRow}
           onPress={handleToggleCurrencyPanel}
-          accessibilityRole="button"
           accessibilityState={{ expanded: currencyPanelOpen }}
         >
           <View style={triggerStyles.triggerLeft}>
@@ -352,7 +351,6 @@ export function CurrencyAccountSelector({
             <Pressable
               style={triggerStyles.triggerRow}
               onPress={handleToggleAccountPanel}
-              accessibilityRole="button"
               accessibilityState={{ expanded: accountPanelOpen }}
             >
               <View style={triggerStyles.triggerLeft}>

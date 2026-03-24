@@ -254,7 +254,7 @@ export function DailyExpenseLineChart({
                         text={
                           averageExpense >= 1000
                             ? `$${(averageExpense / 1000).toFixed(1)}k`
-                            : `$${averageExpense.toFixed(2)}`
+                            : `$${averageExpense.toFixed(1)}`
                         }
                         font={font}
                         color={theme.colors.primary}

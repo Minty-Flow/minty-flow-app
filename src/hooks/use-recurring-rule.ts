@@ -17,9 +17,17 @@ export function useRecurringRule(
       setRule(null)
       return
     }
+    let cancelled = false
     findRecurringById(ruleId)
-      .then(setRule)
-      .catch(() => setRule(null))
+      .then((r) => {
+        if (!cancelled) setRule(r)
+      })
+      .catch(() => {
+        if (!cancelled) setRule(null)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [ruleId])
 
   return rule

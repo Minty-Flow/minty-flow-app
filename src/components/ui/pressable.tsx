@@ -15,6 +15,7 @@ export const Pressable = ({
   native,
   style,
   disableRipple,
+  accessibilityRole = "button",
   ...props
 }: PressableProps) => {
   const disableSound = useAndroidSoundStore((s) => s.disableSound)
@@ -32,6 +33,7 @@ export const Pressable = ({
         style={style}
         android_disableSound={disableSound}
         android_ripple={sharedRipple}
+        accessibilityRole={accessibilityRole}
         {...props}
       />
     )
@@ -45,6 +47,7 @@ export const Pressable = ({
       }
       android_ripple={sharedRipple}
       android_disableSound={disableSound}
+      accessibilityRole={accessibilityRole}
       {...props}
     />
   )

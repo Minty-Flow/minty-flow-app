@@ -6,6 +6,8 @@ import { ChangeIconInline } from "~/components/change-icon-inline"
 import { ColorVariantInline } from "~/components/color-variant-inline"
 import { CurrencySelectorModal } from "~/components/selector-modals/currency-selector-modal"
 import { SmartAmountInput } from "~/components/smart-amount-input"
+import { Button } from "~/components/ui/button"
+import { IconSvg } from "~/components/ui/icon-svg"
 import { InfoBanner } from "~/components/ui/info-banner"
 import { Input } from "~/components/ui/input"
 import { Text } from "~/components/ui/text"
@@ -44,11 +46,13 @@ export function AccountModifyContent({
     currentColorScheme,
     unsavedModalVisible,
     deleteModalVisible,
+    archiveModalVisible,
     confirmNavigation,
     handleGoBack,
     setValue,
     handleSubmit,
     handleDelete,
+    handleArchive,
     handleIconSelected,
     handleColorSelected,
     handleColorCleared,
@@ -56,6 +60,8 @@ export function AccountModifyContent({
     openDeleteModal,
     closeDeleteModal,
     closeUnsavedModal,
+    openArchiveModal,
+    closeArchiveModal,
   } = useAccountForm({ accountId, accountModel, account })
 
   if (!isAddMode && !account) {
@@ -69,6 +75,8 @@ export function AccountModifyContent({
       </View>
     )
   }
+
+  const isArchived = account?.isArchived ?? false
 
   return (
     <View style={accountModifyStyles.container}>
@@ -155,16 +163,38 @@ export function AccountModifyContent({
             formIsPrimary={formIsPrimary}
           />
 
-          {!isAddMode && !account?.isArchived && (
+          {!isAddMode && isArchived && (
+            <InfoBanner text={t("screens.accounts.form.archivedBannerText")} />
+          )}
+          {!isAddMode && !isArchived && (
             <InfoBanner text={t("screens.accounts.form.archiveBannerText")} />
           )}
         </View>
 
         {!isAddMode && (
-          <AccountDeleteSection
-            account={account}
-            onDeletePress={openDeleteModal}
-          />
+          <View style={accountModifyStyles.deleteSection}>
+            <Button
+              variant="ghost"
+              onPress={openArchiveModal}
+              style={accountModifyStyles.actionButton}
+            >
+              <IconSvg
+                name={isArchived ? "archive-off" : "archive"}
+                size={20}
+                color={accountModifyStyles.archiveIcon.color}
+              />
+              <Text variant="default" style={accountModifyStyles.archiveText}>
+                {isArchived
+                  ? t("screens.accounts.form.unarchiveButton")
+                  : t("screens.accounts.form.archiveButton")}
+              </Text>
+            </Button>
+
+            <AccountDeleteSection
+              account={account}
+              onDeletePress={openDeleteModal}
+            />
+          </View>
         )}
       </ScrollIntoViewProvider>
 
@@ -173,19 +203,23 @@ export function AccountModifyContent({
         isAddMode={isAddMode}
         isDirty={isDirty}
         isSubmitting={isSubmitting}
+        isArchived={isArchived}
         onCancel={handleGoBack}
         onSave={handleSubmit}
       />
 
       <AccountFormModals
         deleteModalVisible={deleteModalVisible}
+        archiveModalVisible={archiveModalVisible}
         unsavedModalVisible={unsavedModalVisible}
         isAddMode={isAddMode}
         account={account}
         transactionCount={transactionCount}
         onCloseDeleteModal={closeDeleteModal}
+        onCloseArchiveModal={closeArchiveModal}
         onCloseUnsavedModal={closeUnsavedModal}
         onConfirmDelete={handleDelete}
+        onConfirmArchive={handleArchive}
         onDiscardAndNavigate={() => {
           closeUnsavedModal()
           confirmNavigation()

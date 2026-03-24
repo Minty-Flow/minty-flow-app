@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { database } from "~/database"
 import type AccountModel from "~/database/models/account"
 import { fetchAllStatsData } from "~/database/services/stats-service"
 import type {
@@ -93,9 +94,7 @@ export function useStats(): UseStatsReturn {
 
   // Reactively observe accounts so color/icon changes propagate immediately
   useEffect(() => {
-    const db = require("~/database")
-      .database as typeof import("~/database/index").database
-    const subscription = db
+    const subscription = database
       .get<AccountModel>("accounts")
       .query()
       .observe()
@@ -108,10 +107,7 @@ export function useStats(): UseStatsReturn {
   useEffect(() => {
     mountedRef.current = true
 
-    const subscription = (
-      require("~/database")
-        .database as typeof import("~/database/index").database
-    )
+    const subscription = database
       .withChangesForTables(["transactions", "accounts", "transaction_tags"])
       .subscribe(() => {
         debouncedFetch(dateRange)

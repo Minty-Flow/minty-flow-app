@@ -235,7 +235,14 @@ class ExchangeRatesService {
           ? apiResponse.date
           : (new Date().toISOString().split("T")[0] ?? ""),
       baseCurrency: normalizedCurrency,
-      rates: ratesData as Record<string, number>,
+      rates: Object.fromEntries(
+        Object.entries(ratesData as Record<string, unknown>).filter(
+          ([, v]) =>
+            typeof v === "number" &&
+            Number.isFinite(v as number) &&
+            (v as number) > 0,
+        ),
+      ) as Record<string, number>,
     }
 
     logger.debug("Normalized rates", {

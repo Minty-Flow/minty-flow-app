@@ -20,6 +20,15 @@ const CARD_HEIGHT = 200
 
 /** Static, non-interactive Leaflet map for the inline preview card. */
 function buildPreviewHtml(lat: number, lng: number, pinColor: string): string {
+  const safeLat = Number(lat)
+  const safeLng = Number(lng)
+  if (!Number.isFinite(safeLat) || !Number.isFinite(safeLng)) {
+    throw new Error(`Invalid coordinates: ${lat}, ${lng}`)
+  }
+  // Only allow CSS color values — hex or rgb/rgba. Fall back to a safe default.
+  const safeColor = /^#[0-9a-fA-F]{3,8}$|^rgba?\(/.test(pinColor)
+    ? pinColor
+    : "#3b82f6"
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -38,17 +47,17 @@ function buildPreviewHtml(lat: number, lng: number, pinColor: string): string {
     const map = L.map('map',{
       zoomControl:false,dragging:false,touchZoom:false,
       doubleClickZoom:false,scrollWheelZoom:false,keyboard:false,
-    }).setView([${lat},${lng}],15);
+    }).setView([${safeLat},${safeLng}],15);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
 
     const icon = L.divIcon({
-      html:'<div style="width:20px;height:20px;border-radius:50% 50% 50% 0;background:${pinColor};border:3px solid white;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(0,0,0,0.45)"></div>',
+      html:'<div style="width:20px;height:20px;border-radius:50% 50% 50% 0;background:${safeColor};border:3px solid white;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(0,0,0,0.45)"></div>',
       iconSize:[20,20],
       iconAnchor:[10,20],
       className:'',
     });
-    L.marker([${lat},${lng}],{icon}).addTo(map);
+    L.marker([${safeLat},${safeLng}],{icon}).addTo(map);
   </script>
 </body>
 </html>`
@@ -93,7 +102,11 @@ export function FormLocationPicker({
               scrollEnabled={false}
               javaScriptEnabled
               domStorageEnabled
-              originWhitelist={["*"]}
+              originWhitelist={[
+                "https://unpkg.com",
+                "https://*.tile.openstreetmap.org",
+                "about:blank",
+              ]}
             />
           </View>
         </Pressable>
@@ -112,7 +125,6 @@ export function FormLocationPicker({
             onPress={onClear}
             style={styles.clearBtn}
             hitSlop={8}
-            accessibilityRole="button"
             accessibilityLabel={t("components.locationPicker.removeLocation")}
           >
             <IconSvg name="x" size={14} color={styles.clearIcon.color} />

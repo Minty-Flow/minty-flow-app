@@ -20,6 +20,10 @@ function subscribeAppState(callback: () => void): () => void {
   appStateListeners.add(callback)
   return () => {
     appStateListeners.delete(callback)
+    if (appStateListeners.size === 0 && appStateSubscriptionRef) {
+      appStateSubscriptionRef.remove()
+      appStateSubscriptionRef = null
+    }
   }
 }
 

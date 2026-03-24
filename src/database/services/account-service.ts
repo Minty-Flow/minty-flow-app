@@ -344,7 +344,6 @@ const applyAccountUpdates = (
   if (updates.isPrimary !== undefined) a.isPrimary = updates.isPrimary
   if (updates.excludeFromBalance !== undefined)
     a.excludeFromBalance = updates.excludeFromBalance
-  if (updates.isArchived !== undefined) a.isArchived = updates.isArchived
   a.updatedAt = new Date()
 }
 
@@ -384,39 +383,42 @@ export const updateAccount = async (
   updates: Partial<UpdateAccountsFormSchema>,
 ): Promise<AccountModel> => {
   const oldBalance = account.balance
+  const newBalance = updates.balance
   const updatesWithoutBalance = {
     ...updates,
     balance: undefined,
   } as Partial<UpdateAccountsFormSchema>
 
-  const updated = await database.write(async () => {
+  // Single write keeps field updates and balance-adjustment transaction atomic.
+  // applyBalanceAdjustment calls createTransactionModel which calls database.write —
+  // nested writes run within this outer write context in WatermelonDB.
+  return await database.write(async () => {
     if (updatesWithoutBalance.isPrimary === true) {
       await ensureSinglePrimary(account.id)
     }
-    return await account.update((a) =>
+    const updated = await account.update((a) =>
       applyAccountUpdates(a, updatesWithoutBalance),
     )
+
+    if (
+      newBalance !== undefined &&
+      typeof newBalance === "number" &&
+      newBalance !== oldBalance
+    ) {
+      const refreshed = await applyBalanceAdjustment(
+        account,
+        oldBalance,
+        newBalance,
+      )
+      return refreshed ?? updated
+    }
+
+    return updated
   })
-
-  const newBalance = updates.balance
-  if (
-    newBalance !== undefined &&
-    typeof newBalance === "number" &&
-    newBalance !== oldBalance
-  ) {
-    const refreshed = await applyBalanceAdjustment(
-      account,
-      oldBalance,
-      newBalance,
-    )
-    return refreshed ?? updated
-  }
-
-  return updated
 }
 
 /**
- * Archive an account (hides it from regular views, keeps data intact).
+ * Archive an account (hide from active lists).
  */
 export const archiveAccount = async (account: AccountModel): Promise<void> => {
   await database.write(async () => {
@@ -428,7 +430,7 @@ export const archiveAccount = async (account: AccountModel): Promise<void> => {
 }
 
 /**
- * Unarchive an account (restores it to regular views).
+ * Unarchive an account (restore to active lists).
  */
 export const unarchiveAccount = async (
   account: AccountModel,

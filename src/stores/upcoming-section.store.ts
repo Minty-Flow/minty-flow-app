@@ -1,6 +1,6 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, devtools, persist } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
 
 const UPCOMING_SECTION_STORE_KEY = "upcoming-section-store"
 const UPCOMING_SECTION_MMKV_KEY = "upcoming-section-storage"
@@ -15,26 +15,23 @@ interface UpcomingSectionStore {
 }
 
 export const useUpcomingSectionStore = create<UpcomingSectionStore>()(
-  devtools(
-    persist(
-      (set) => ({
-        collapsed: false,
-        setCollapsed: (value) => {
-          set((state) => ({
-            collapsed:
-              typeof value === "function" ? value(state.collapsed) : value,
-          }))
-        },
-      }),
-      {
-        name: UPCOMING_SECTION_STORE_KEY,
-        storage: createJSONStorage(() => ({
-          getItem: (name) => upcomingSectionStorage.getString(name) ?? null,
-          setItem: (name, value) => upcomingSectionStorage.set(name, value),
-          removeItem: (name) => upcomingSectionStorage.remove(name),
-        })),
+  persist(
+    (set) => ({
+      collapsed: false,
+      setCollapsed: (value) => {
+        set((state) => ({
+          collapsed:
+            typeof value === "function" ? value(state.collapsed) : value,
+        }))
       },
-    ),
-    { name: "upcoming-section-store-dev" },
+    }),
+    {
+      name: UPCOMING_SECTION_STORE_KEY,
+      storage: createJSONStorage(() => ({
+        getItem: (name) => upcomingSectionStorage.getString(name) ?? null,
+        setItem: (name, value) => upcomingSectionStorage.set(name, value),
+        removeItem: (name) => upcomingSectionStorage.remove(name),
+      })),
+    },
   ),
 )

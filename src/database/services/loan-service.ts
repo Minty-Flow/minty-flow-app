@@ -2,6 +2,7 @@ import { Q } from "@nozbe/watermelondb"
 import type { Observable } from "@nozbe/watermelondb/utils/rx"
 import { map } from "rxjs/operators"
 
+import type { LoanFormValues } from "~/schemas/loans.schema"
 import type { Loan, LoanType } from "~/types/loans"
 import { LoanTypeEnum } from "~/types/loans"
 
@@ -19,19 +20,6 @@ import { modelToLoan } from "../utils/model-to-loan"
  * Unlike goals/budgets, loans use direct foreign keys (account_id, category_id)
  * rather than join tables — no join-table merging is required at mapping time.
  */
-
-export interface LoanFormValues {
-  name: string
-  description: string | null
-  principalAmount: number
-  loanType: LoanType
-  /** Unix timestamp in milliseconds, or null if no due date */
-  dueDate: number | null
-  accountId: string
-  categoryId: string
-  icon: string | null
-  colorSchemeName: string | null
-}
 
 const getLoanCollection = () => database.get<LoanModel>("loans")
 
@@ -197,6 +185,15 @@ export const updateLoan = async (
  */
 export const destroyLoan = async (loan: LoanModel): Promise<void> => {
   await database.write(async () => {
+    const linkedTxs = await database
+      .get<TransactionModel>("transactions")
+      .query(Q.where("loan_id", loan.id))
+      .fetch()
+    for (const tx of linkedTxs) {
+      await tx.update((t) => {
+        t.loanId = null
+      })
+    }
     await loan.destroyPermanently()
   })
 }

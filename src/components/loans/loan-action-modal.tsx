@@ -135,7 +135,6 @@ export function LoanActionModal({
         style={[styles.backdrop, { width }]}
         onPress={onClose}
         accessibilityLabel={t("common.actions.close")}
-        accessibilityRole="button"
       >
         <TouchableWithoutFeedback onPress={() => {}}>
           <View
@@ -189,7 +188,6 @@ export function LoanActionModal({
               ]}
               onPress={onClose}
               disabled={isLoading}
-              accessibilityRole="button"
             >
               <Text style={styles.cancelText}>
                 {t("common.actions.cancel")}

@@ -36,7 +36,6 @@ export function BillItemCard({
       <Pressable
         onPress={onEdit}
         style={styles.card}
-        accessibilityRole="button"
         accessibilityLabel={
           item.name || t("screens.settings.billSplitter.item.name")
         }
@@ -92,7 +91,6 @@ export function BillItemCard({
         onPress={onDelete}
         style={styles.deleteButton}
         accessibilityLabel={t("common.actions.delete")}
-        accessibilityRole="button"
         // Larger hit slop so the touch target doesn't overlap card content
         hitSlop={{ top: 4, right: 4, bottom: 4, left: 4 }}
       >

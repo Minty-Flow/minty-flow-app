@@ -36,6 +36,7 @@ import {
   DEFAULT_TRANSACTION_LIST_FILTER_STATE,
 } from "~/types/transaction-filters"
 import { TransactionTypeEnum } from "~/types/transactions"
+import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 import { buildTransactionListFilters } from "~/utils/transaction-list-utils"
 
@@ -139,11 +140,11 @@ function TrashScreenInner({
           ),
         })
       } catch (e) {
+        logger.error("Failed to restore transaction", { error: String(e) })
         Toast.error({
           title: t("common.toast.error"),
           description: t("components.transactionForm.toast.restoreFailed"),
         })
-        throw e
       }
     },
     [t],
@@ -160,11 +161,11 @@ function TrashScreenInner({
         description: t("components.transactionForm.toast.deletedDescription"),
       })
     } catch (e) {
+      logger.error("Failed to destroy transaction", { error: String(e) })
       Toast.error({
         title: t("common.toast.error"),
         description: t("components.transactionForm.toast.deleteFailed"),
       })
-      throw e
     }
   }, [pendingDestroyItem, t])
 

@@ -61,15 +61,19 @@ export function ConfirmModal({
   const maxCardWidth = Math.min(width - 48, 400)
   const [loading, setLoading] = useState(false)
 
-  const handleConfirm = useCallback(async () => {
+  const handleConfirm = useCallback(() => {
     setLoading(true)
-    try {
-      await Promise.resolve(onConfirm())
-      onRequestClose()
-    } catch (e) {
-      logger.error("Error confirming modal", { error: e })
-    }
-    setLoading(false)
+
+    Promise.resolve(onConfirm())
+      .then(() => {
+        onRequestClose()
+      })
+      .catch((e) => {
+        logger.error("Error confirming modal", { error: e })
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }, [onConfirm, onRequestClose])
 
   return (
@@ -85,14 +89,12 @@ export function ConfirmModal({
         style={[styles.backdrop, { width }]}
         onPress={onRequestClose}
         accessibilityLabel={t("common.actions.close")}
-        accessibilityRole="button"
         native
         disableRipple
       >
         <TouchableWithoutFeedback onPress={() => {}}>
           <View
             style={[styles.card, { maxWidth: maxCardWidth }]}
-            accessible
             accessibilityLabel={title}
             accessibilityRole="alert"
           >
@@ -137,6 +139,7 @@ export function ConfirmModal({
                 onPress={handleConfirm}
                 style={styles.actionButton}
                 disabled={loading}
+                accessibilityState={{ busy: loading }}
               >
                 {loading ? (
                   <ActivityIndicatorMinty />

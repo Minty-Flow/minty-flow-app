@@ -70,7 +70,11 @@ function BudgetCardInner({
       : t(`screens.settings.budgets.periods.${budget.period}` as TranslationKey)
 
   return (
-    <Pressable style={styles.card} onPress={onPress} accessibilityRole="button">
+    <Pressable
+      style={styles.card}
+      onPress={onPress}
+      accessibilityLabel={budget.name}
+    >
       {/* Row 1: icon + name + category chip / period chip */}
       <View style={styles.row1}>
         <View style={styles.row1Left}>

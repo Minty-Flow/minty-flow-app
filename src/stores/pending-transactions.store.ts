@@ -1,13 +1,13 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, devtools, persist } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
 
 /**
  * MMKV storage for pending transaction preferences.
  * Namespace: flow.pendingTransactions (via store name).
  */
 const pendingTransactionsStorage = createMMKV({
-  id: "flow-pending-transactions-storage",
+  id: "pending-transactions-storage",
 })
 
 interface PendingTransactionsPreferences {
@@ -41,30 +41,27 @@ interface PendingTransactionsStore extends PendingTransactionsPreferences {
 }
 
 export const usePendingTransactionsStore = create<PendingTransactionsStore>()(
-  devtools(
-    persist(
-      (set, get) => ({
-        ...DEFAULTS,
+  persist(
+    (set, get) => ({
+      ...DEFAULTS,
 
-        setRequireConfirmation: (value) => set({ requireConfirmation: value }),
-        setHomeTimeframe: (value) => set({ homeTimeframe: value }),
-        setUpdateDateUponConfirmation: (value) =>
-          set({ updateDateUponConfirmation: value }),
-        setNotify: (value) => set({ notify: value }),
-        setEarlyReminderInSeconds: (value) =>
-          set({ earlyReminderInSeconds: value }),
+      setRequireConfirmation: (value) => set({ requireConfirmation: value }),
+      setHomeTimeframe: (value) => set({ homeTimeframe: value }),
+      setUpdateDateUponConfirmation: (value) =>
+        set({ updateDateUponConfirmation: value }),
+      setNotify: (value) => set({ notify: value }),
+      setEarlyReminderInSeconds: (value) =>
+        set({ earlyReminderInSeconds: value }),
 
-        getUpdateDateUponConfirmation: () => get().updateDateUponConfirmation,
-      }),
-      {
-        name: "flow.pendingTransactions",
-        storage: createJSONStorage(() => ({
-          getItem: (name) => pendingTransactionsStorage.getString(name) ?? null,
-          setItem: (name, value) => pendingTransactionsStorage.set(name, value),
-          removeItem: (name) => pendingTransactionsStorage.remove(name),
-        })),
-      },
-    ),
-    { name: "pending-transactions-store" },
+      getUpdateDateUponConfirmation: () => get().updateDateUponConfirmation,
+    }),
+    {
+      name: "pending-transactions-store",
+      storage: createJSONStorage(() => ({
+        getItem: (name) => pendingTransactionsStorage.getString(name) ?? null,
+        setItem: (name, value) => pendingTransactionsStorage.set(name, value),
+        removeItem: (name) => pendingTransactionsStorage.remove(name),
+      })),
+    },
   ),
 )

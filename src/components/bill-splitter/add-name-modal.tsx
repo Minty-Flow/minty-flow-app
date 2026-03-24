@@ -54,7 +54,6 @@ export function AddNameModal({ visible, onAdd, onClose }: AddNameModalProps) {
         style={[styles.backdrop, { width }]}
         onPress={handleClose}
         accessibilityLabel={t("common.actions.close")}
-        accessibilityRole="button"
       >
         <TouchableWithoutFeedback onPress={() => {}}>
           <View
@@ -91,7 +90,6 @@ export function AddNameModal({ visible, onAdd, onClose }: AddNameModalProps) {
               onChangeText={setName}
               maxLength={50}
               placeholder={t("screens.settings.billSplitter.names.placeholder")}
-              autoFocus
               autoCapitalize="words"
               onSubmitEditing={handleAdd}
               returnKeyType="done"

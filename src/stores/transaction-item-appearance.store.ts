@@ -1,9 +1,9 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, devtools, persist } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
 
 const transactionItemAppearanceStorage = createMMKV({
-  id: "flow-transaction-item-appearance-storage",
+  id: "transaction-item-appearance-storage",
 })
 
 type TransactionItemVariant = "compact" | "elevated"
@@ -23,37 +23,34 @@ interface TransactionItemAppearanceStore {
 
 export const useTransactionItemAppearanceStore =
   create<TransactionItemAppearanceStore>()(
-    devtools(
-      persist(
-        (set) => ({
-          variant: "compact",
-          showCategory: false,
-          showCategoryForUntitled: false,
-          leadingIcon: "category",
-          setVariant: (value: TransactionItemVariant) => {
-            set({ variant: value })
-          },
-          setShowCategory: (value: boolean) => {
-            set({ showCategory: value })
-          },
-          setShowCategoryForUntitled: (value: boolean) => {
-            set({ showCategoryForUntitled: value })
-          },
-          setLeadingIcon: (value: LeadingIcon) => {
-            set({ leadingIcon: value })
-          },
-        }),
-        {
-          name: "flow.transactionItemAppearance",
-          storage: createJSONStorage(() => ({
-            getItem: (name) =>
-              transactionItemAppearanceStorage.getString(name) ?? null,
-            setItem: (name, value) =>
-              transactionItemAppearanceStorage.set(name, value),
-            removeItem: (name) => transactionItemAppearanceStorage.remove(name),
-          })),
+    persist(
+      (set) => ({
+        variant: "compact",
+        showCategory: false,
+        showCategoryForUntitled: false,
+        leadingIcon: "category",
+        setVariant: (value: TransactionItemVariant) => {
+          set({ variant: value })
         },
-      ),
-      { name: "transaction-item-appearance-store-dev" },
+        setShowCategory: (value: boolean) => {
+          set({ showCategory: value })
+        },
+        setShowCategoryForUntitled: (value: boolean) => {
+          set({ showCategoryForUntitled: value })
+        },
+        setLeadingIcon: (value: LeadingIcon) => {
+          set({ leadingIcon: value })
+        },
+      }),
+      {
+        name: "transaction-item-appearance-store",
+        storage: createJSONStorage(() => ({
+          getItem: (name) =>
+            transactionItemAppearanceStorage.getString(name) ?? null,
+          setItem: (name, value) =>
+            transactionItemAppearanceStorage.set(name, value),
+          removeItem: (name) => transactionItemAppearanceStorage.remove(name),
+        })),
+      },
     ),
   )

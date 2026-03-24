@@ -73,8 +73,6 @@ export function FormCategoryPicker({
             <Pressable
               style={transactionFormStyles.categoryCell}
               onPress={() => router.push("/settings/categories")}
-              accessible
-              accessibilityRole="button"
               accessibilityLabel={t(
                 "components.transactionForm.a11y.addCategories",
               )}
@@ -118,8 +116,6 @@ export function FormCategoryPicker({
                     isSelected && transactionFormStyles.categoryCellSelected,
                   ]}
                   onPress={() => onSelect(category.id)}
-                  accessible
-                  accessibilityRole="button"
                   accessibilityLabel={t(
                     "components.transactionForm.a11y.selectCategory",
                     { name: category.name },

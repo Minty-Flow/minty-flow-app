@@ -7,22 +7,26 @@
  * @example
  * ```ts
  * isImageUrl("https://example.com/image.jpg") // Returns true
- * isImageUrl("file:///path/to/image.png") // Returns true
+ * isImageUrl("file:///path/to/image.png") // Returns false (file:// not allowed from clipboard)
  * isImageUrl("https://imgur.com/abc123") // Returns true (imgur hostname)
  * isImageUrl("https://example.com/page") // Returns false (no image extension)
+ * isImageUrl("http://example.com/image.jpg") // Returns false (http:// not allowed)
  * ```
  */
 export const isImageUrl = (url: string): boolean => {
   if (!url) return false
 
-  // Check if it's a local file URI
+  // Reject file:// URIs — local gallery images arrive via ImagePicker (not clipboard paste).
+  // Allowing file:// from clipboard would expose arbitrary local file paths.
   if (url.startsWith("file://")) {
-    return true
+    return false
   }
 
-  // Check if it's a valid image URL by extension or known image hostnames
+  // Only accept https:// for remote URLs (never plain http://).
   try {
     const urlObj = new URL(url)
+    if (urlObj.protocol !== "https:") return false
+
     const pathname = urlObj.pathname.toLowerCase()
     const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"]
 
@@ -39,8 +43,6 @@ export const isImageUrl = (url: string): boolean => {
 
     return hasImageExtension || isKnownImageHost
   } catch {
-    // If it's not a valid URL, check if it looks like a local file path with image extension
-    const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"]
-    return imageExtensions.some((ext) => url.toLowerCase().endsWith(ext))
+    return false
   }
 }

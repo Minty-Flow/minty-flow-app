@@ -1,7 +1,7 @@
 import { Accelerometer } from "expo-sensors"
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, devtools, persist } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
 
 // was 100 and 150
 const SHAKE_UPDATE_INTERVAL_MS = 500
@@ -54,107 +54,109 @@ interface MoneyFormattingStore {
 }
 
 export const useMoneyFormattingStore = create<MoneyFormattingStore>()(
-  devtools(
-    persist(
-      (set, get) => ({
-        preferredCurrency: "USD",
-        currencyLook: MoneyFormatEnum.SYMBOL,
+  persist(
+    (set, get) => ({
+      preferredCurrency: "USD",
+      currencyLook: MoneyFormatEnum.SYMBOL,
 
-        // Default UI state
-        privacyMode: false,
+      // Default UI state
+      privacyMode: false,
 
-        // Default Startup preference
-        hideOnStartup: false,
+      // Default Startup preference
+      hideOnStartup: false,
 
-        maskOnShake: false,
+      maskOnShake: false,
 
-        _shakeSubscription: null,
+      _shakeSubscription: null,
 
-        setCurrency: (currency) => set({ preferredCurrency: currency }),
-        setCurrencyLook: (currencyLook) => set({ currencyLook }),
+      setCurrency: (currency) => set({ preferredCurrency: currency }),
+      setCurrencyLook: (currencyLook) => set({ currencyLook }),
 
-        // The "Eye" toggle action: Just flips the UI state
-        togglePrivacyMode: () =>
-          set((state) => ({ privacyMode: !state.privacyMode })),
+      // The "Eye" toggle action: Just flips the UI state
+      togglePrivacyMode: () =>
+        set((state) => ({ privacyMode: !state.privacyMode })),
 
-        // Set masked state directly (e.g. shake → mask)
-        setPrivacyMode: (value) => set({ privacyMode: value }),
+      // Set masked state directly (e.g. shake → mask)
+      setPrivacyMode: (value) => set({ privacyMode: value }),
 
-        // The "Settings" toggle action: Flips the preference
-        setHideOnStartup: (value) => set({ hideOnStartup: value }),
+      // The "Settings" toggle action: Flips the preference
+      setHideOnStartup: (value) => set({ hideOnStartup: value }),
 
-        setMaskOnShake: (value) => {
-          set({ maskOnShake: value })
-          if (value) {
-            get()._startShakeListener()
-          } else {
-            get()._stopShakeListener()
-          }
-        },
-
-        _startShakeListener: () => {
+      setMaskOnShake: (value) => {
+        set({ maskOnShake: value })
+        if (value) {
+          get()._startShakeListener()
+        } else {
           get()._stopShakeListener()
-          Accelerometer.setUpdateInterval(SHAKE_UPDATE_INTERVAL_MS)
-
-          let lastX = 0
-          let lastY = 0
-          let lastZ = 0
-          let lastUpdate = 0
-
-          const sub = Accelerometer.addListener(({ x, y, z }) => {
-            const now = Date.now()
-            const timeDelta = now - lastUpdate
-
-            if (timeDelta > SHAKE_UPDATE_INTERVAL_MS) {
-              const speed =
-                (Math.abs(x + y + z - lastX - lastY - lastZ) / timeDelta) *
-                10000
-              if (speed > SHAKE_THRESHOLD) {
-                get().setPrivacyMode(true)
-              }
-              lastUpdate = now
-              lastX = x
-              lastY = y
-              lastZ = z
-            }
-          })
-
-          set({ _shakeSubscription: sub })
-        },
-
-        _stopShakeListener: () => {
-          get()._shakeSubscription?.remove()
-          set({ _shakeSubscription: null })
-        },
-      }),
-      {
-        name: "money-formatting-store",
-        storage: createJSONStorage(() => ({
-          getItem: (name) => moneyFormattingStorage.getString(name) ?? null,
-          setItem: (name, value) => moneyFormattingStorage.set(name, value),
-          removeItem: (name) => moneyFormattingStorage.remove(name),
-        })),
-
-        /* THE MAGIC PART: 
-           As soon as the store rehydrates (synchronously with MMKV), 
-           we force 'privacyMode' to match 'hideOnStartup'.
-        */
-        onRehydrateStorage: () => (state) => {
-          if (state) {
-            state.privacyMode = state.hideOnStartup
-          }
-        },
-
-        // Optimization: We don't need to save 'privacyMode' to MMKV
-        // since it's just a session-based UI toggle.
-        partialize: (state) => ({
-          preferredCurrency: state.preferredCurrency,
-          currencyLook: state.currencyLook,
-          hideOnStartup: state.hideOnStartup,
-          maskOnShake: state.maskOnShake,
-        }),
+        }
       },
-    ),
-    { name: "money-formatting-store-dev" },
+
+      _startShakeListener: () => {
+        get()._stopShakeListener()
+        Accelerometer.setUpdateInterval(SHAKE_UPDATE_INTERVAL_MS)
+
+        let lastX = 0
+        let lastY = 0
+        let lastZ = 0
+        let lastUpdate = 0
+
+        const sub = Accelerometer.addListener(({ x, y, z }) => {
+          const now = Date.now()
+          const timeDelta = now - lastUpdate
+
+          if (timeDelta > SHAKE_UPDATE_INTERVAL_MS) {
+            const speed =
+              (Math.abs(x + y + z - lastX - lastY - lastZ) / timeDelta) * 10000
+            if (speed > SHAKE_THRESHOLD) {
+              get().setPrivacyMode(true)
+            }
+            lastUpdate = now
+            lastX = x
+            lastY = y
+            lastZ = z
+          }
+        })
+
+        set({ _shakeSubscription: sub })
+      },
+
+      _stopShakeListener: () => {
+        get()._shakeSubscription?.remove()
+        set({ _shakeSubscription: null })
+      },
+    }),
+    {
+      name: "money-formatting-store",
+      storage: createJSONStorage(() => ({
+        getItem: (name) => moneyFormattingStorage.getString(name) ?? null,
+        setItem: (name, value) => moneyFormattingStorage.set(name, value),
+        removeItem: (name) => moneyFormattingStorage.remove(name),
+      })),
+
+      /* THE MAGIC PART: 
+            As soon as the store rehydrates (synchronously with MMKV), 
+            we force 'privacyMode' to match 'hideOnStartup'.
+        */
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.privacyMode = state.hideOnStartup
+          if (state.maskOnShake) {
+            setTimeout(
+              () => useMoneyFormattingStore.getState()._startShakeListener(),
+              0,
+            )
+          }
+        }
+      },
+
+      // Optimization: We don't need to save 'privacyMode' to MMKV
+      // since it's just a session-based UI toggle.
+      partialize: (state) => ({
+        preferredCurrency: state.preferredCurrency,
+        currencyLook: state.currencyLook,
+        hideOnStartup: state.hideOnStartup,
+        maskOnShake: state.maskOnShake,
+      }),
+    },
   ),
 )

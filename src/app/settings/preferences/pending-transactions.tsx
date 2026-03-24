@@ -53,7 +53,6 @@ function PermissionWarnings() {
       accessibilityLabel={t(
         "screens.settings.reminders.a11y.grantNotifications",
       )}
-      accessibilityRole="button"
       showBanner={showNotificationsRow}
     />
   )

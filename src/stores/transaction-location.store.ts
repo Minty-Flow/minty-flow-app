@@ -1,6 +1,6 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, devtools, persist } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
 
 /**
  * MMKV storage instance for transaction location preferences.
@@ -23,24 +23,21 @@ interface TransactionLocationStore {
  * Zustand store for transaction location settings.
  */
 export const useTransactionLocationStore = create<TransactionLocationStore>()(
-  devtools(
-    persist(
-      (set) => ({
-        isEnabled: false,
-        autoAttach: false,
+  persist(
+    (set) => ({
+      isEnabled: false,
+      autoAttach: false,
 
-        setIsEnabled: (enabled) => set({ isEnabled: enabled }),
-        setAutoAttach: (enabled) => set({ autoAttach: enabled }),
-      }),
-      {
-        name: "transaction-location-preferences",
-        storage: createJSONStorage(() => ({
-          getItem: (name) => transactionLocationStorage.getString(name) ?? null,
-          setItem: (name, value) => transactionLocationStorage.set(name, value),
-          removeItem: (name) => transactionLocationStorage.remove(name),
-        })),
-      },
-    ),
-    { name: "transaction-location-store-dev" },
+      setIsEnabled: (enabled) => set({ isEnabled: enabled }),
+      setAutoAttach: (enabled) => set({ autoAttach: enabled }),
+    }),
+    {
+      name: "transaction-location-preferences-store",
+      storage: createJSONStorage(() => ({
+        getItem: (name) => transactionLocationStorage.getString(name) ?? null,
+        setItem: (name, value) => transactionLocationStorage.set(name, value),
+        removeItem: (name) => transactionLocationStorage.remove(name),
+      })),
+    },
   ),
 )

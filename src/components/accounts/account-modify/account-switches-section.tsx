@@ -53,8 +53,6 @@ export function AccountSwitchesSection({
         )}
       />
 
-      {!isAddMode && <Separator />}
-
       {!isAddMode && (
         <View style={accountModifyStyles.primaryAccountBlock}>
           <Controller
@@ -98,42 +96,8 @@ export function AccountSwitchesSection({
               </Text>
             </View>
           )}
+          {!isAddMode && <Separator />}
         </View>
-      )}
-
-      {!isAddMode && <Separator />}
-
-      {!isAddMode && (
-        <>
-          <Controller
-            control={control}
-            name="isArchived"
-            render={({ field: { value, onChange } }) => (
-              <Pressable
-                style={accountModifyStyles.switchRow}
-                onPress={() => onChange(!value)}
-                accessibilityRole="switch"
-                accessibilityState={{ checked: value }}
-              >
-                <View style={accountModifyStyles.switchLeft}>
-                  <IconSvg name="archive" size={24} />
-                  <Text
-                    variant="default"
-                    style={accountModifyStyles.switchLabel}
-                  >
-                    {t("screens.accounts.form.isArchivedLabel")}
-                  </Text>
-                </View>
-
-                <View pointerEvents="none">
-                  <Switch value={value} />
-                </View>
-              </Pressable>
-            )}
-          />
-
-          <Separator />
-        </>
       )}
     </View>
   )

@@ -1,6 +1,6 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, devtools, persist } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
 
 /**
  * MMKV storage instance for trash bin.
@@ -37,24 +37,21 @@ interface trashBinStore {
  * Zustand store for trash bin.
  */
 export const useTrashBinStore = create<trashBinStore>()(
-  devtools(
-    persist(
-      (set) => ({
-        /* ───────── State ───────── */
-        retentionPeriod: RetentionPeriodEnum.SEVEN_DAYS,
+  persist(
+    (set) => ({
+      /* ───────── State ───────── */
+      retentionPeriod: RetentionPeriodEnum.SEVEN_DAYS,
 
-        /* ───────── Actions ───────── */
-        setRetentionPeriod: (value) => set({ retentionPeriod: value }),
-      }),
-      {
-        name: "trash-bin",
-        storage: createJSONStorage(() => ({
-          getItem: (name) => trashBinStorage.getString(name) ?? null,
-          setItem: (name, value) => trashBinStorage.set(name, value),
-          removeItem: (name) => trashBinStorage.remove(name),
-        })),
-      },
-    ),
-    { name: "trash-bin-store-dev" },
+      /* ───────── Actions ───────── */
+      setRetentionPeriod: (value) => set({ retentionPeriod: value }),
+    }),
+    {
+      name: "trash-bin-store",
+      storage: createJSONStorage(() => ({
+        getItem: (name) => trashBinStorage.getString(name) ?? null,
+        setItem: (name, value) => trashBinStorage.set(name, value),
+        removeItem: (name) => trashBinStorage.remove(name),
+      })),
+    },
   ),
 )

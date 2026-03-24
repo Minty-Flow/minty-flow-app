@@ -1,7 +1,7 @@
 import { withObservables } from "@nozbe/watermelondb/react"
 import { differenceInDays } from "date-fns"
 import { useTranslation } from "react-i18next"
-import { View as RNView } from "react-native"
+import { type DimensionValue, View as RNView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
@@ -53,8 +53,17 @@ function GoalCardInner({ goal, onPress, currentAmount }: GoalCardProps) {
     ? theme.colors.customColors.income
     : theme.colors.primary
 
+  const progressPercent = Number((clampedProgress * 100).toFixed(1))
+
   return (
-    <Pressable style={styles.card} onPress={onPress} accessibilityRole="button">
+    <Pressable
+      style={[
+        styles.card,
+        { borderStyle: goal.isArchived ? "dashed" : "solid" },
+      ]}
+      onPress={onPress}
+      accessibilityLabel={goal.name}
+    >
       {/* Row 1: Icon + name + badge/date chip */}
       <View style={styles.row1}>
         <View style={styles.row1Left}>
@@ -103,7 +112,7 @@ function GoalCardInner({ goal, onPress, currentAmount }: GoalCardProps) {
           style={[
             styles.progressFill,
             {
-              width: `${clampedProgress * 100}%`,
+              width: `${progressPercent}%` as DimensionValue,
               backgroundColor: progressBarColor,
             },
           ]}

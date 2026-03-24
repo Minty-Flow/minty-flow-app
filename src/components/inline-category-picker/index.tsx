@@ -78,7 +78,6 @@ export function InlineCategoryPicker({
       <Pressable
         style={styles.triggerRow}
         onPress={() => setOpen((v) => !v)}
-        accessibilityRole="button"
         accessibilityState={{ expanded: open }}
       >
         <View style={styles.triggerLeft}>
@@ -136,7 +135,6 @@ export function InlineCategoryPicker({
               variant="ghost"
               style={styles.selectAllRow}
               onPress={handleSelectAll}
-              accessibilityRole="button"
             >
               <IconSvg name={allSelected ? "checks" : "check"} size={18} />
               <Text style={styles.selectAllText}>
@@ -153,7 +151,6 @@ export function InlineCategoryPicker({
                     key={category.id}
                     style={[styles.cell, isSelected && styles.cellSelected]}
                     onPress={() => toggleItem(category.id)}
-                    accessibilityRole="button"
                     accessibilityState={{ selected: isSelected }}
                   >
                     <DynamicIcon

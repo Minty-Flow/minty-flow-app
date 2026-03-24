@@ -5,8 +5,10 @@ import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
 import {
+  archiveAccount,
   createAccount,
   destroyAccount,
+  unarchiveAccount,
   updateAccount,
 } from "~/database/services/account-service"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
@@ -57,7 +59,6 @@ export function useAccountForm({
       colorSchemeName: account?.colorSchemeName || undefined,
       isPrimary: account?.isPrimary || false,
       excludeFromBalance: account?.excludeFromBalance || false,
-      isArchived: account?.isArchived || false,
     },
   })
 
@@ -78,6 +79,7 @@ export function useAccountForm({
   })
 
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  const [archiveModalVisible, setArchiveModalVisible] = useState(false)
 
   const onSubmit = async (data: AddAccountsFormSchema) => {
     try {
@@ -91,7 +93,6 @@ export function useAccountForm({
           colorSchemeName: data.colorSchemeName,
           isPrimary: false,
           excludeFromBalance: data.excludeFromBalance,
-          isArchived: false,
         })
 
         allowNavigation()
@@ -114,7 +115,6 @@ export function useAccountForm({
           colorSchemeName: data.colorSchemeName,
           isPrimary: data.isPrimary,
           excludeFromBalance: data.excludeFromBalance,
-          isArchived: data.isArchived,
         })
 
         allowNavigation()
@@ -132,6 +132,24 @@ export function useAccountForm({
   }
 
   const handleSubmit = handleFormSubmit(onSubmit)
+
+  const handleArchive = async () => {
+    try {
+      if (!accountModel || !account) return
+      if (account.isArchived) {
+        await unarchiveAccount(accountModel)
+        Toast.success({ title: t("screens.accounts.unarchiveSuccess") })
+      } else {
+        await archiveAccount(accountModel)
+        Toast.success({ title: t("screens.accounts.archiveSuccess") })
+      }
+      allowNavigation()
+      router.back()
+    } catch (error) {
+      logger.error("Error archiving account", { error })
+      Toast.error({ title: t("common.toast.error") })
+    }
+  }
 
   const handleDelete = async () => {
     try {
@@ -195,5 +213,9 @@ export function useAccountForm({
     openDeleteModal: () => setDeleteModalVisible(true),
     closeDeleteModal: () => setDeleteModalVisible(false),
     closeUnsavedModal: () => setUnsavedModalVisible(false),
+    archiveModalVisible,
+    handleArchive,
+    openArchiveModal: () => setArchiveModalVisible(true),
+    closeArchiveModal: () => setArchiveModalVisible(false),
   }
 }

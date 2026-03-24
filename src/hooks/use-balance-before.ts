@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 
 import type TransactionModel from "~/database/models/transaction"
 import { getBalanceAtTransaction } from "~/database/services/balance-service"
+import { logger } from "~/utils/logger"
 
 /**
  * Returns the account's running balance at the moment this transaction settled.
@@ -12,17 +13,22 @@ export function useBalanceAtTransaction(
 ): number | null {
   const [balance, setBalance] = useState<number | null>(null)
 
+  const accountId = transaction?.accountId ?? null
+  const transactionDate = transaction?.transactionDate ?? null
+
   useEffect(() => {
-    if (!transaction) {
+    if (!accountId || transactionDate === null) {
       setBalance(null)
       return
     }
     const ts =
-      transaction.transactionDate instanceof Date
-        ? transaction.transactionDate.getTime()
-        : transaction.transactionDate
-    getBalanceAtTransaction(transaction.accountId, ts).then(setBalance)
-  }, [transaction])
+      transactionDate instanceof Date
+        ? transactionDate.getTime()
+        : transactionDate
+    getBalanceAtTransaction(accountId, ts)
+      .then(setBalance)
+      .catch((e) => logger.error("Balance fetch failed", { error: String(e) }))
+  }, [accountId, transactionDate])
 
   return balance
 }

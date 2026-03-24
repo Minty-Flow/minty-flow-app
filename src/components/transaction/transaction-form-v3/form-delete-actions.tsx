@@ -33,7 +33,6 @@ export function FormDeleteActions({
           onPress={onRestore}
           disabled={isSaving}
           accessibilityLabel={t("screens.settings.trash.a11y.restore")}
-          accessibilityRole="button"
         >
           <IconSvg name="trash-off" size={20} />
           <Text variant="default">
@@ -47,7 +46,6 @@ export function FormDeleteActions({
           accessibilityLabel={t(
             "screens.settings.trash.a11y.destroyPermanently",
           )}
-          accessibilityRole="button"
         >
           <IconSvg
             name="trash"
@@ -73,7 +71,6 @@ export function FormDeleteActions({
         onPress={onDelete}
         disabled={isSaving}
         accessibilityLabel={t("screens.settings.trash.a11y.moveToTrash")}
-        accessibilityRole="button"
       >
         <IconSvg
           name="trash"

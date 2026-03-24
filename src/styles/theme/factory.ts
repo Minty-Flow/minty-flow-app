@@ -31,12 +31,8 @@ export class ThemeFactory {
    */
   get colors(): UnistylesTheme["colors"] {
     const s = this.mintyColorScheme
-    // const isDark = s.isDark
 
     const rippleColor = hexWithAlpha(s.onSurface, 0x16) // 8.6%
-    // const textSelection = isDark
-    //   ? hexWithAlpha(s.primary, 0x60) // 37.5%
-    //   : hexWithAlpha(s.secondary, 0xa0) // 62.5%
 
     return {
       // MintyThemeColors
@@ -52,8 +48,6 @@ export class ThemeFactory {
       rippleColor,
       shadow: s.shadow,
       boxShadow: s.boxShadow,
-      // MintyDerivedColors
-      // textSelection,
     }
   }
 

@@ -74,7 +74,6 @@ function GoalsListContent({ goals }: GoalsListContentProps) {
         onPress={handleAddGoal}
         style={styles.fab}
         accessibilityLabel={t("screens.settings.goals.addNew")}
-        accessibilityRole="button"
       >
         <IconSvg name="plus" size={24} color={theme.colors.onPrimary} />
       </Pressable>

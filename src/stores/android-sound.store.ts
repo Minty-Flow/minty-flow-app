@@ -1,6 +1,6 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, devtools, persist } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
 
 /**
  * MMKV storage instance for android sound data.
@@ -22,34 +22,31 @@ interface AndroidSoundStore {
 }
 
 export const useAndroidSoundStore = create<AndroidSoundStore>()(
-  devtools(
-    persist(
-      (set) => ({
-        // Initial state - sound is enabled by default
-        disableSound: false,
+  persist(
+    (set) => ({
+      // Initial state - sound is enabled by default
+      disableSound: false,
 
-        // Toggle sound on/off
-        toggleSound: () =>
-          set((state) => ({
-            disableSound: !state.disableSound,
-          })),
-
-        // Set sound to a specific state
-        setSoundEnabled: (enabled: boolean) =>
-          set({
-            disableSound: !enabled,
-          }),
-      }),
-      {
-        name: "android-sound-store", // Name for the store (MMKV key)
-        // Use the custom MMKV instance for storage
-        storage: createJSONStorage(() => ({
-          getItem: (name) => androidSoundStorage.getString(name) ?? null,
-          setItem: (name, value) => androidSoundStorage.set(name, value),
-          removeItem: (name) => androidSoundStorage.remove(name),
+      // Toggle sound on/off
+      toggleSound: () =>
+        set((state) => ({
+          disableSound: !state.disableSound,
         })),
-      },
-    ),
-    { name: "android-sound-store-dev" },
+
+      // Set sound to a specific state
+      setSoundEnabled: (enabled: boolean) =>
+        set({
+          disableSound: !enabled,
+        }),
+    }),
+    {
+      name: "android-sound-store",
+      // Use the custom MMKV instance for storage
+      storage: createJSONStorage(() => ({
+        getItem: (name) => androidSoundStorage.getString(name) ?? null,
+        setItem: (name, value) => androidSoundStorage.set(name, value),
+        removeItem: (name) => androidSoundStorage.remove(name),
+      })),
+    },
   ),
 )

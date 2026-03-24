@@ -44,110 +44,125 @@ export default function DataManagementScreen() {
     tableCount: 0,
   })
 
-  async function handleExportJson() {
+  function handleExportJson() {
     setIsSavingJson(true)
-    try {
-      const { uri, fileName, savedToDevice } = await saveJsonToDevice()
 
-      addExport({
-        uri,
-        fileName,
-        type: "json",
-        exportedAt: new Date().toISOString(),
+    Promise.resolve(saveJsonToDevice())
+      .then(({ uri, fileName, savedToDevice }) => {
+        addExport({
+          uri,
+          fileName,
+          type: "json",
+          exportedAt: new Date().toISOString(),
+        })
+
+        if (savedToDevice) {
+          Toast.success({
+            title: t("screens.settings.dataManagement.exportSaved"),
+          })
+        } else {
+          Toast.success({
+            title: t("screens.settings.dataManagement.exportSavedLocally"),
+          })
+        }
       })
-
-      if (savedToDevice) {
-        Toast.success({
-          title: t("screens.settings.dataManagement.exportSaved"),
-        })
-      } else {
-        Toast.success({
-          title: t("screens.settings.dataManagement.exportSavedLocally"),
-        })
-      }
-    } catch {
-      Toast.error({ title: t("screens.settings.dataManagement.exportError") })
-    } finally {
-      setIsSavingJson(false)
-    }
+      .catch(() => {
+        Toast.error({ title: t("screens.settings.dataManagement.exportError") })
+      })
+      .finally(() => {
+        setIsSavingJson(false)
+      })
   }
 
-  async function handleExportCsv() {
+  function handleExportCsv() {
     setIsSavingCsv(true)
-    try {
-      const { uri, fileName, savedToDevice } = await saveCsvToDevice()
 
-      addExport({
-        uri,
-        fileName,
-        type: "csv",
-        exportedAt: new Date().toISOString(),
+    Promise.resolve(saveCsvToDevice())
+      .then(({ uri, fileName, savedToDevice }) => {
+        addExport({
+          uri,
+          fileName,
+          type: "csv",
+          exportedAt: new Date().toISOString(),
+        })
+
+        if (savedToDevice) {
+          Toast.success({
+            title: t("screens.settings.dataManagement.exportSaved"),
+          })
+        } else {
+          Toast.success({
+            title: t("screens.settings.dataManagement.exportSavedLocally"),
+          })
+        }
       })
-
-      if (savedToDevice) {
-        Toast.success({
-          title: t("screens.settings.dataManagement.exportSaved"),
-        })
-      } else {
-        Toast.success({
-          title: t("screens.settings.dataManagement.exportSavedLocally"),
-        })
-      }
-    } catch {
-      Toast.error({ title: t("screens.settings.dataManagement.exportError") })
-    } finally {
-      setIsSavingCsv(false)
-    }
+      .catch(() => {
+        Toast.error({ title: t("screens.settings.dataManagement.exportError") })
+      })
+      .finally(() => {
+        setIsSavingCsv(false)
+      })
   }
 
-  async function handleImportJson() {
+  function handleImportJson() {
     setIsPickingFile(true)
-    try {
-      const file = await pickBackupFile()
-      if (!file) return
 
-      const json = await FileSystem.readAsStringAsync(file.uri, {
-        encoding: FileSystem.EncodingType.UTF8,
-      })
+    Promise.resolve(pickBackupFile())
+      .then((file) => {
+        if (!file) return
 
-      const backup = validateBackup(json)
-      if (!backup) {
-        Toast.error({
-          title: t("screens.settings.dataManagement.importValidationError"),
+        return FileSystem.readAsStringAsync(file.uri, {
+          encoding: FileSystem.EncodingType.UTF8,
+        }).then((json) => {
+          const backup = validateBackup(json)
+          if (!backup) {
+            Toast.error({
+              title: t("screens.settings.dataManagement.importValidationError"),
+            })
+            return
+          }
+
+          const { total, tableCount } = countBackupRecords(backup)
+          setImportModal({
+            visible: true,
+            backup,
+            recordCount: total,
+            tableCount,
+          })
         })
-        return
-      }
-
-      const { total, tableCount } = countBackupRecords(backup)
-      setImportModal({ visible: true, backup, recordCount: total, tableCount })
-    } catch {
-      Toast.error({ title: t("screens.settings.dataManagement.importError") })
-    } finally {
-      setIsPickingFile(false)
-    }
+      })
+      .catch(() => {
+        Toast.error({ title: t("screens.settings.dataManagement.importError") })
+      })
+      .finally(() => {
+        setIsPickingFile(false)
+      })
   }
 
-  async function handleConfirmImport() {
+  function handleConfirmImport() {
     if (!importModal.backup) return
     setIsImporting(true)
-    try {
-      const result = await importBackup(importModal.backup)
-      setImportModal((s) => ({ ...s, visible: false, backup: null }))
-      if (result.success) {
-        Toast.success({
-          title: t("screens.settings.dataManagement.importSuccess"),
-        })
-      } else {
-        Toast.error({
-          title: t("screens.settings.dataManagement.importError"),
-          description: result.error,
-        })
-      }
-    } catch {
-      Toast.error({ title: t("screens.settings.dataManagement.importError") })
-    } finally {
-      setIsImporting(false)
-    }
+
+    Promise.resolve(importBackup(importModal.backup))
+      .then((result) => {
+        setImportModal((s) => ({ ...s, visible: false, backup: null }))
+        if (result.success) {
+          Toast.success({
+            title: t("screens.settings.dataManagement.importSuccess"),
+          })
+        } else {
+          Toast.error({
+            title: t("screens.settings.dataManagement.importError"),
+            description: result.error,
+          })
+        }
+      })
+      .catch(() => {
+        Toast.error({ title: t("screens.settings.dataManagement.importError") })
+      })
+      .finally(() => {
+        setIsImporting(false)
+      })
   }
 
   function handleCancelImport() {

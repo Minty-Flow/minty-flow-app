@@ -1,6 +1,8 @@
 import { Database } from "@nozbe/watermelondb"
 import SQLiteAdapter from "@nozbe/watermelondb/adapters/sqlite"
 
+import { logger } from "~/utils/logger"
+
 import migrations from "./migrations"
 import AccountModel from "./models/account"
 import BudgetModel from "./models/budget"
@@ -28,10 +30,11 @@ const adapter = new SQLiteAdapter({
   migrations,
   dbName: "minty_flow_db",
   jsi: true, // Use JSI for better performance (React Native only)
-  // onSetUpError: (error) => {
-  //   // Handle database setup errors
-  //   console.error("Database setup error:", error)
-  // },
+  onSetUpError: (error) => {
+    logger.error("Database setup error — app data may be unavailable", {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  },
 })
 
 /**

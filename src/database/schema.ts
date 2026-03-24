@@ -7,7 +7,7 @@ import { appSchema, tableSchema } from "@nozbe/watermelondb"
  * Each table represents a collection of models that can be queried and manipulated.
  */
 export const schema = appSchema({
-  version: 2,
+  version: 1,
   tables: [
     // Categories table - stores transaction categories
     tableSchema({

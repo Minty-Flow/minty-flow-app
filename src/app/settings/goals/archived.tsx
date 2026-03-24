@@ -21,7 +21,7 @@ function ArchivedGoalsContent({ goals }: ArchivedGoalsContentProps) {
 
   const handleGoalPress = useCallback(
     (goalId: string) => {
-      router.push(`/settings/goals/${goalId}/modify`)
+      router.push(`/settings/goals/${goalId}`)
     },
     [router],
   )

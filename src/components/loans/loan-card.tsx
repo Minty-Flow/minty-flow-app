@@ -51,7 +51,11 @@ function LoanCardInner({ loan, onPress, paidAmount, account }: LoanCardProps) {
     : theme.colors.primary
 
   return (
-    <Pressable style={styles.card} onPress={onPress} accessibilityRole="button">
+    <Pressable
+      style={styles.card}
+      onPress={onPress}
+      accessibilityLabel={loan.name}
+    >
       {/* Row 1: icon + name + type badge + overdue badge */}
       <View style={styles.row1}>
         <View style={styles.row1Left}>

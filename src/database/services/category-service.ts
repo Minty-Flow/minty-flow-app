@@ -170,12 +170,14 @@ export const destroyCategory = async (
   category: CategoryModel,
   targetCategoryId: string | null = null,
 ): Promise<void> => {
-  const transactions = await getTransactionModels({
-    categoryId: category.id,
-    includeDeleted: false,
-  })
-
+  // Fetch inside the write so the transaction list can't go stale between
+  // the read and the update (TOCTOU window).
   await database.write(async () => {
+    const transactions = await getTransactionModels({
+      categoryId: category.id,
+      includeDeleted: false,
+    })
+
     for (const transaction of transactions) {
       await transaction.update((t) => {
         t.categoryId = targetCategoryId

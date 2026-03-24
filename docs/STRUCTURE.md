@@ -1,9 +1,11 @@
 # Project Structure
 
-Generated on: 2026-03-23T19:20:26.690Z
+Generated on: 2026-03-24T17:52:00.570Z
 
 ```
 ./
+├── .claude/
+│   └── settings.local.json
 ├── .github/
 │   └── CODEOWNERS
 ├── .husky/
@@ -29,7 +31,7 @@ Generated on: 2026-03-23T19:20:26.690Z
 ├── .vscode/
 │   └── settings.json
 ├── docs/
-│   ├── alpha-todo.md
+│   ├── issues-todo.md
 │   └── STRUCTURE.md
 ├── plugins/
 │   ├── index.js
@@ -817,7 +819,6 @@ Generated on: 2026-03-23T19:20:26.690Z
 │   │   ├── exchange-rates-preferences.store.ts
 │   │   ├── export-history.store.ts
 │   │   ├── language.store.ts
-│   │   ├── letter-emoji.store.ts
 │   │   ├── money-formatting.store.ts
 │   │   ├── notification.store.ts
 │   │   ├── onboarding.store.ts

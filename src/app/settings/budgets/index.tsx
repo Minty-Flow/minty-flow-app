@@ -64,7 +64,6 @@ function BudgetListContentInner({ budgets }: BudgetListContentInnerProps) {
         onPress={handleAddBudget}
         style={styles.fab}
         accessibilityLabel={t("screens.settings.budgets.addNew")}
-        accessibilityRole="button"
       >
         <IconSvg name="plus" size={24} color={theme.colors.onPrimary} />
       </Pressable>

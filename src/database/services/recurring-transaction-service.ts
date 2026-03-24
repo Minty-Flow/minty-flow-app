@@ -1,7 +1,6 @@
 import { Q } from "@nozbe/watermelondb"
 
 import type { TransactionFormValues } from "~/schemas/transactions.schema"
-import { TransactionTypeEnum } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { nextAbsoluteOccurrence } from "~/utils/recurrence"
 
@@ -10,6 +9,7 @@ import type RecurringTransactionModel from "../models/recurring-transaction"
 import type { RecurringTransactionTemplate } from "../models/recurring-transaction"
 import type TransactionModel from "../models/transaction"
 import { createTransactionModel } from "./transaction-service"
+import { createTransfer } from "./transfer-service"
 
 /**
  * Scope for recurring edit/delete, matching flow project's RecurringUpdateMode.
@@ -79,7 +79,17 @@ async function getRelatedTransactionsByRecurringId(
 async function synchronizeRecurringTransaction(
   recurring: RecurringTransactionModel,
   anchor: Date = new Date(),
+  depth = 0,
 ): Promise<void> {
+  if (depth > 500) {
+    logger.error(
+      "[RecurringSync] depth limit reached — possible infinite loop",
+      {
+        recurringId: recurring.id,
+      },
+    )
+    return
+  }
   if (recurring.disabled) return
 
   // Flutter wraps the entire sync body in try-catch so one failure doesn't
@@ -147,7 +157,7 @@ async function synchronizeRecurringTransaction(
         })
       })
       if (nextOccurrence.getTime() < anchor.getTime()) {
-        await synchronizeRecurringTransaction(recurring, anchor)
+        await synchronizeRecurringTransaction(recurring, anchor, depth + 1)
       }
       return
     }
@@ -186,46 +196,22 @@ async function synchronizeRecurringTransaction(
       const toAccountId = recurring.transferToAccountId
       if (!toAccountId)
         throw new Error("Recurring transfer missing transferToAccountId")
-      const amount = template.amount
-      const outData: TransactionFormValues = {
-        amount,
-        type: TransactionTypeEnum.TRANSFER,
-        transactionDate: nextOccurrence,
-        accountId: fromAccountId,
-        categoryId: null,
-        title: template.title,
-        description: template.description,
-        subtype: template.subtype,
-        tags: template.tags ?? [],
-        recurringId: recurring.id,
-        extra,
-        isPending,
-      }
-      const inData: TransactionFormValues = {
-        amount,
-        type: TransactionTypeEnum.TRANSFER,
-        transactionDate: nextOccurrence,
-        accountId: toAccountId,
-        categoryId: null,
-        title: template.title,
-        description: template.description,
-        subtype: template.subtype,
-        tags: template.tags ?? [],
-        recurringId: recurring.id,
-        extra: { ...extra },
-        isPending,
-      }
-      const outModel = await createTransactionModel(outData)
-      const inModel = await createTransactionModel(inData)
-      // Link transfer pair via extra.transferPairId so getPairedTransaction fallback works
-      await database.write(async () => {
-        await outModel.update((t) => {
-          t.extra = { ...(t.extra ?? {}), transferPairId: inModel.id }
-        })
-        await inModel.update((t) => {
-          t.extra = { ...(t.extra ?? {}), transferPairId: outModel.id }
-        })
-      })
+      await createTransfer(
+        {
+          fromAccountId,
+          toAccountId,
+          amount: template.amount,
+          transactionDate: nextOccurrence,
+          title: template.title ?? undefined,
+          notes: template.description ?? undefined,
+        },
+        {
+          recurringId: recurring.id,
+          isPending,
+          subtype: template.subtype ?? null,
+          extra,
+        },
+      )
     }
 
     // ── Update lastGeneratedTransactionDate ──────────────────────────
@@ -239,7 +225,7 @@ async function synchronizeRecurringTransaction(
     //    recurse to fill in the next one.  The ONE-AHEAD guard at the
     //    top will stop us once we've generated one at-or-past anchor. ──
     if (nextOccurrence.getTime() < anchor.getTime()) {
-      await synchronizeRecurringTransaction(recurring, anchor)
+      await synchronizeRecurringTransaction(recurring, anchor, depth + 1)
     }
   } catch (e) {
     // Match Flutter: log and continue — don't break the sync loop.

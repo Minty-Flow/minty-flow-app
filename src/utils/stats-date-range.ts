@@ -117,6 +117,11 @@ export function buildStatsDateRange(
         interval,
       }
     }
+
+    default: {
+      const _exhaustive: never = preset
+      throw new Error(`buildStatsDateRange: unhandled preset "${_exhaustive}"`)
+    }
   }
 }
 

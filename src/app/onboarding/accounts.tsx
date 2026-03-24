@@ -69,7 +69,6 @@ function AccountsScreenInner({ accounts }: AccountsScreenInnerProps) {
                 colorSchemeName: "",
                 isPrimary: false,
                 excludeFromBalance: false,
-                isArchived: false,
               }),
             ),
           )

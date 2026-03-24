@@ -1,12 +1,14 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, devtools, persist } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
+
+const PERSIST_NAME = "transfers-preferences-store"
 
 /**
  * MMKV storage for transfer display preferences.
  */
 const transfersPreferencesStorage = createMMKV({
-  id: "flow-transfers-preferences-storage",
+  id: "transfers-preferences-storage",
 })
 
 export const TransferLayoutEnum = {
@@ -34,27 +36,20 @@ interface TransfersPreferencesStore extends TransfersPreferences {
   setExcludeFromTotals: (value: boolean) => void
 }
 
-const PERSIST_NAME = "flow.transfersPreferences"
-
 export const useTransfersPreferencesStore = create<TransfersPreferencesStore>()(
-  devtools(
-    persist(
-      (set) => ({
-        ...DEFAULTS,
-        setLayout: (value) => set({ layout: value }),
-        setExcludeFromTotals: (value) => set({ excludeFromTotals: value }),
-      }),
-      {
-        name: PERSIST_NAME,
-        storage: createJSONStorage(() => ({
-          getItem: (name) =>
-            transfersPreferencesStorage.getString(name) ?? null,
-          setItem: (name, value) =>
-            transfersPreferencesStorage.set(name, value),
-          removeItem: (name) => transfersPreferencesStorage.remove(name),
-        })),
-      },
-    ),
-    { name: "transfers-preferences-store" },
+  persist(
+    (set) => ({
+      ...DEFAULTS,
+      setLayout: (value) => set({ layout: value }),
+      setExcludeFromTotals: (value) => set({ excludeFromTotals: value }),
+    }),
+    {
+      name: PERSIST_NAME,
+      storage: createJSONStorage(() => ({
+        getItem: (name) => transfersPreferencesStorage.getString(name) ?? null,
+        setItem: (name, value) => transfersPreferencesStorage.set(name, value),
+        removeItem: (name) => transfersPreferencesStorage.remove(name),
+      })),
+    },
   ),
 )

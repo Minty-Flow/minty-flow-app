@@ -89,15 +89,25 @@ export async function getConversionRateForTransaction(
  * Always creates exactly TWO transaction rows linked by shared transfer_id (debit row's id).
  * Uses prepareCreate + batch for one atomic write. Only creates Transfer record when cross-currency.
  */
-export async function createTransfer({
-  fromAccountId,
-  toAccountId,
-  amount,
-  conversionRate,
-  transactionDate = Date.now(),
-  title = "Transfer",
-  notes = null,
-}: CreateTransferParams): Promise<void> {
+interface RecurringTransferOptions {
+  recurringId: string
+  isPending: boolean
+  subtype?: string | null
+  extra?: Record<string, string> | null
+}
+
+export async function createTransfer(
+  {
+    fromAccountId,
+    toAccountId,
+    amount,
+    conversionRate,
+    transactionDate = Date.now(),
+    title = "Transfer",
+    notes = null,
+  }: CreateTransferParams,
+  recurringOptions?: RecurringTransferOptions,
+): Promise<void> {
   if (fromAccountId === toAccountId) {
     throw new Error("Cannot transfer to the same account.")
   }
@@ -138,16 +148,16 @@ export async function createTransfer({
     r.accountId = fromAccountId
     r.relatedAccountId = toAccountId
     r.accountBalanceBefore = debitBalanceBefore
-    r.isPending = false
+    r.isPending = recurringOptions?.isPending ?? false
     r.isDeleted = false
     r.description = notes ?? null
     r.categoryId = null
     r.createdAt = now
     r.updatedAt = now
-    r.extra = null
-    r.recurringId = null
+    r.extra = recurringOptions?.extra ?? null
+    r.recurringId = recurringOptions?.recurringId ?? null
     r.hasAttachments = false
-    r.subtype = null
+    r.subtype = recurringOptions?.subtype ?? null
     r.location = null
   })
 
@@ -161,16 +171,16 @@ export async function createTransfer({
     r.accountId = toAccountId
     r.relatedAccountId = fromAccountId
     r.accountBalanceBefore = creditBalanceBefore
-    r.isPending = false
+    r.isPending = recurringOptions?.isPending ?? false
     r.isDeleted = false
     r.description = notes ?? null
     r.categoryId = null
     r.createdAt = now
     r.updatedAt = now
-    r.extra = null
-    r.recurringId = null
+    r.extra = recurringOptions?.extra ?? null
+    r.recurringId = recurringOptions?.recurringId ?? null
     r.hasAttachments = false
-    r.subtype = null
+    r.subtype = recurringOptions?.subtype ?? null
     r.location = null
   })
 

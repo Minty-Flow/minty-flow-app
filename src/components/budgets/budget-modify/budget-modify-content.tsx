@@ -375,7 +375,6 @@ export function BudgetModifyContent({
                   onPress={() =>
                     startDatePicker.open(new Date(watchedStartDate))
                   }
-                  accessibilityRole="button"
                 >
                   <View style={budgetModifyStyles.switchLeft}>
                     <IconSvg name="calendar" size={24} />
@@ -402,7 +401,6 @@ export function BudgetModifyContent({
                       watchedEndDate ? new Date(watchedEndDate) : new Date(),
                     )
                   }
-                  accessibilityRole="button"
                 >
                   <View style={budgetModifyStyles.switchLeft}>
                     <IconSvg name="calendar" size={24} />

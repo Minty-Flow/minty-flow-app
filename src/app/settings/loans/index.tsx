@@ -46,7 +46,6 @@ function LoansListContent({ loans }: LoansListContentProps) {
             styles.headerFilterButton,
             isFiltered && { backgroundColor: `${theme.colors.primary}20` },
           ]}
-          accessibilityRole="button"
           accessibilityLabel={t("components.filters.clearAll")}
         >
           <IconSvg
@@ -130,7 +129,6 @@ function LoansListContent({ loans }: LoansListContentProps) {
         onPress={handleAddLoan}
         style={styles.fab}
         accessibilityLabel={t("screens.settings.loans.addNew")}
-        accessibilityRole="button"
       >
         <IconSvg name="plus" size={24} color={theme.colors.onPrimary} />
       </Pressable>

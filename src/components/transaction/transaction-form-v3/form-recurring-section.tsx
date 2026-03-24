@@ -112,7 +112,6 @@ export function FormRecurringSection({
                         transactionFormStyles.recurringToggleButtonSelected,
                     ]}
                     onPress={() => onFrequencyChange(option.id)}
-                    accessibilityRole="button"
                     accessibilityState={{ selected: isSelected }}
                     accessibilityLabel={`${displayLabel}${isSelected ? t("components.transactionForm.a11y.selectedSuffix") : ""}`}
                   >

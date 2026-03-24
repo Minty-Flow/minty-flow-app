@@ -262,10 +262,16 @@ export const updateBudget = async (
  */
 export const destroyBudget = async (budget: BudgetModel): Promise<void> => {
   await database.write(async () => {
-    const joinRows = await getBudgetAccountCollection()
+    const accountJoinRows = await getBudgetAccountCollection()
       .query(Q.where("budget_id", budget.id))
       .fetch()
-    for (const row of joinRows) {
+    for (const row of accountJoinRows) {
+      await row.destroyPermanently()
+    }
+    const categoryJoinRows = await getBudgetCategoryCollection()
+      .query(Q.where("budget_id", budget.id))
+      .fetch()
+    for (const row of categoryJoinRows) {
       await row.destroyPermanently()
     }
     await budget.destroyPermanently()

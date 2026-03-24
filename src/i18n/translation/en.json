@@ -1,5 +1,6 @@
 {
   "common": {
+    "failedToOpenLink": "Failed to open browser",
     "actions": {
       "save": "Save",
       "cancel": "Cancel",
@@ -148,6 +149,8 @@
       "totalBalance": "Total Balance",
       "countLabel": "Accounts",
       "archivedSection": "Archived",
+      "archiveSuccess": "Account archived",
+      "unarchiveSuccess": "Account restored",
       "card": {
         "primary": "Primary",
         "thisMonth": "This Month",
@@ -156,7 +159,8 @@
         "net": "NET",
         "currentBalance": "Current Balance",
         "netThisMonth": "Net this month",
-        "moreOptions": "More options"
+        "moreOptions": "More options",
+        "archived": "Archived"
       },
       "form": {
         "title": {
@@ -171,11 +175,20 @@
         "primaryAccountHint": "This account will be used as the default account for new transactions and other actions.",
         "archiveLabel": "Archive account",
         "isArchivedLabel": "Archive account",
+        "archiveButton": "Archive Account",
+        "unarchiveButton": "Restore Account",
         "archiveBannerText": "Archiving an account hides it from everywhere except in reports. You can permanently delete the account with its associated transactions after archiving it.",
+        "archivedBannerText": "This account is archived. Restore it to make changes.",
         "deleteLabel": "Permanently delete account",
         "archiveWarning": "You can permanently delete the account with its transactions after you archive the account for safety measures.",
         "typeLabel": "Account type",
         "loadingText": "Loading account...",
+        "archiveModal": {
+          "archiveTitle": "Archive this account?",
+          "archiveConfirm": "Archive",
+          "unarchiveTitle": "Restore this account?",
+          "unarchiveConfirm": "Restore"
+        },
         "deleteModal": {
           "title": "Permanently delete {{name}}?",
           "descriptionWithCount_one": "This account has {{count}} transaction. Permanently deleting the account will also delete it. This action cannot be undone.",
@@ -560,6 +573,7 @@
           "overdue": "Overdue by {{count}} days",
           "noDeadline": "No deadline",
           "allAccounts": "All Accounts",
+          "archived": "Archived",
           "type": {
             "savings": "Savings",
             "expense": "Expense"
@@ -965,6 +979,8 @@
         "create": "Create Transaction",
         "edit": "Edit Transaction"
       },
+      "loadingTransaction": "Loading transaction...",
+      "notFoundTransaction": "Transaction not found.",
       "fields": {
         "transferTitle": "Transfer",
         "transferTitleFull": "From {{from}} to {{to}}",

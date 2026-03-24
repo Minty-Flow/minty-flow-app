@@ -11,7 +11,7 @@ import { observeLoanById } from "~/database/services/loan-service"
 import { modelToLoan } from "~/database/utils/model-to-loan"
 import type { Account } from "~/types/accounts"
 import type { Category } from "~/types/categories"
-import type { Loan, LoanType } from "~/types/loans"
+import { type Loan, type LoanType, LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
 
 // --- Edit mode: observes the loan model, accounts, and categories ---
@@ -112,7 +112,11 @@ export default function LoanModifyScreen() {
       principalAmount: params.prefillAmount
         ? Number.parseFloat(params.prefillAmount)
         : undefined,
-      loanType: params.prefillLoanType as LoanType | undefined,
+      loanType: (Object.values(LoanTypeEnum) as string[]).includes(
+        params.prefillLoanType ?? "",
+      )
+        ? (params.prefillLoanType as LoanType)
+        : undefined,
     }
   }, [
     params.prefillName,

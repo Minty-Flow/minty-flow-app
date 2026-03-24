@@ -33,7 +33,7 @@ import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import type { TranslationKey } from "~/i18n/config"
 import { type AddGoalFormSchema, addGoalSchema } from "~/schemas/goals.schema"
 import { getThemeStrict } from "~/styles/theme/registry"
-import { GoalTypeEnum } from "~/types/goals"
+import { type GoalType, GoalTypeEnum } from "~/types/goals"
 import { NewEnum } from "~/types/new"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
@@ -210,6 +210,11 @@ export function GoalModifyContent({
     setValue("targetDate", null, { shouldDirty: true })
   }
 
+  const handleGoalTypeChange = useCallback(
+    (v: GoalType) => setValue("goalType", v, { shouldDirty: true }),
+    [setValue],
+  )
+
   const currentColorScheme = getThemeStrict(formColorSchemeName)
 
   const formattedTargetDate = formTargetDate
@@ -240,7 +245,7 @@ export function GoalModifyContent({
       >
         <View style={goalModifyStyles.form} key={goal?.id ?? NewEnum.NEW}>
           {/* Goal type selector */}
-          <TabsMinty
+          <TabsMinty<GoalType>
             items={[
               {
                 value: GoalTypeEnum.SAVINGS,
@@ -254,9 +259,7 @@ export function GoalModifyContent({
               },
             ]}
             activeValue={formGoalType}
-            onValueChange={(v) =>
-              setValue("goalType", v, { shouldDirty: true })
-            }
+            onValueChange={handleGoalTypeChange}
             variant="segmented"
           />
 
@@ -359,7 +362,6 @@ export function GoalModifyContent({
                 formTargetDate ? new Date(formTargetDate) : new Date(),
               )
             }
-            accessibilityRole="button"
           >
             <View style={goalModifyStyles.targetDateLeft}>
               <IconSvg name="calendar" size={24} />
@@ -379,7 +381,6 @@ export function GoalModifyContent({
                   <Pressable
                     onPress={handleClearDate}
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                    accessibilityRole="button"
                     accessibilityLabel={t("common.actions.clear")}
                   >
                     <IconSvg

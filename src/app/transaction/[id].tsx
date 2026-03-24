@@ -8,7 +8,9 @@
 import { withObservables } from "@nozbe/watermelondb/react"
 import { useLocalSearchParams } from "expo-router"
 import { useState } from "react"
-import { StyleSheet, useUnistyles } from "react-native-unistyles"
+import { useTranslation } from "react-i18next"
+import { StyleSheet } from "react-native-unistyles"
+import { startWith } from "rxjs"
 
 import { TransactionFormV3 } from "~/components/transaction/transaction-form-v3"
 import { Text } from "~/components/ui/text"
@@ -90,32 +92,42 @@ function TransactionEditor({
 
 interface EditTransactionScreenProps {
   transactionId: string
-  transaction?: TransactionModel
+  transaction?: TransactionModel | null
   initialTagIds?: string[]
 }
 
 const EnhancedEditTransactionScreen = withObservables(
   ["transactionId"],
   ({ transactionId }: { transactionId: string }) => ({
-    transaction: observeTransactionModelById(transactionId),
+    transaction: observeTransactionModelById(transactionId).pipe(
+      startWith(undefined),
+    ),
     initialTagIds: observeTransactionTagIds(transactionId),
   }),
 )(function EditTransactionScreenInner({
   transaction,
   initialTagIds = [],
 }: EditTransactionScreenProps) {
-  const { theme } = useUnistyles()
-
-  if (!transaction) {
+  const { t } = useTranslation()
+  if (transaction === undefined) {
     return (
-      <View
-        style={[
-          styles.container,
-          { flex: 1, backgroundColor: theme.colors.surface },
-        ]}
-      >
+      <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <Text variant="default">Loading transaction...</Text>
+          <Text variant="default">
+            {t("components.transactionForm.loadingTransaction")}
+          </Text>
+        </View>
+      </View>
+    )
+  }
+
+  if (transaction === null) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text variant="default">
+            {t("components.transactionForm.notFoundTransaction")}
+          </Text>
         </View>
       </View>
     )

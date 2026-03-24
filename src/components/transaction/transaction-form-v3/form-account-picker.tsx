@@ -242,8 +242,6 @@ export function FormAccountPicker({
                   })
                   setAccountPickerOpen(false)
                 }}
-                accessible
-                accessibilityRole="button"
                 accessibilityLabel={t("screens.accounts.a11y.add")}
               >
                 <DynamicIcon

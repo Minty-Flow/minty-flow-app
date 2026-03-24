@@ -140,6 +140,14 @@ export const accountModifyStyles = StyleSheet.create((theme) => ({
     fontWeight: "600",
     color: theme.colors.error,
   },
+  archiveIcon: {
+    color: theme.colors.onSurface,
+  },
+  archiveText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: theme.colors.onSurface,
+  },
   actions: {
     flexDirection: "row",
     gap: 12,

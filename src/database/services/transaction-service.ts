@@ -463,8 +463,11 @@ export const observeTransactionModels = (
 
 export const observeTransactionModelById = (
   id: string,
-): Observable<TransactionModel> => {
-  return transactionsCollection().findAndObserve(id)
+): Observable<TransactionModel | null> => {
+  return transactionsCollection()
+    .query(Q.where("id", id))
+    .observe()
+    .pipe(map((results) => results[0] ?? null))
 }
 
 /* ------------------------------------------------------------------ */
@@ -813,9 +816,13 @@ export const deleteAllRecurringInstances = async (
   const instances = await transactionsCollection()
     .query(Q.where("recurring_id", ruleId), Q.where("is_deleted", false))
     .fetch()
-  for (const tx of instances) {
-    await deleteTransactionModel(tx)
-  }
+  // Single write makes all soft-deletes + balance reversals atomic.
+  // WatermelonDB supports nested write calls — inner writes run within the outer write context.
+  await database.write(async () => {
+    for (const tx of instances) {
+      await deleteTransactionModel(tx)
+    }
+  })
 }
 
 /** Soft-delete instances from the given date onward (inclusive). */
@@ -831,9 +838,11 @@ export const deleteFutureRecurringInstances = async (
       Q.where("is_deleted", false),
     )
     .fetch()
-  for (const tx of instances) {
-    await deleteTransactionModel(tx)
-  }
+  await database.write(async () => {
+    for (const tx of instances) {
+      await deleteTransactionModel(tx)
+    }
+  })
 }
 
 /** Detach this transaction from its recurring rule (sets recurringId = null). */
@@ -967,32 +976,12 @@ export const destroyTransactionModel = async (
 }
 
 export const destroyAllDeletedTransactionMode = async (): Promise<void> => {
-  const categories = database.get<CategoryModel>("categories")
-
   const transactions = await getTransactionModels({
     deletedOnly: true,
   })
 
   return database.write(async () => {
     for (const transaction of transactions) {
-      if (!transaction.isDeleted) {
-        if (transaction.categoryId) {
-          const category = await categories.find(transaction.categoryId)
-          await category.update((c) => {
-            c.transactionCount = Math.max(0, c.transactionCount - 1)
-          })
-        }
-
-        const reverseDelta = -getBalanceDelta(
-          transaction.amount,
-          transaction.type,
-        )
-        const account = await accountsCollection().find(transaction.accountId)
-        await account.update((a) => {
-          a.balance += reverseDelta
-        })
-      }
-
       await transaction.destroyPermanently()
     }
   })

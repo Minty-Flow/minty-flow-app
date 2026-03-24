@@ -270,7 +270,6 @@ export const TransactionItem = ({
           ]}
           onPress={onConfirm}
           accessibilityLabel={t("screens.home.upcoming.a11y.confirm")}
-          accessibilityRole="button"
         >
           <IconSvg name="check" size={18} color={theme.colors.onError} />
         </Pressable>

@@ -108,8 +108,6 @@ export function FormTagsPicker({
             tagPickerOpen && transactionFormStyles.tagChipCancel,
           ]}
           onPress={handleToggle}
-          accessible
-          accessibilityRole="button"
           accessibilityLabel={
             tagPickerOpen
               ? t("common.actions.cancel")

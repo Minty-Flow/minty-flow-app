@@ -20,7 +20,6 @@ const addAccountsSchema = z
     colorSchemeName: z.string().nullable().optional(),
     isPrimary: z.boolean().default(false),
     excludeFromBalance: z.boolean().default(false),
-    isArchived: z.boolean().default(false),
   })
   .refine((data) => data.balance >= 0, {
     message: "validation.account.initialBalance.negative",

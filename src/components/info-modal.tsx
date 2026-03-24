@@ -59,14 +59,12 @@ export function InfoModal({
         style={[styles.backdrop, { width }]}
         onPress={onRequestClose}
         accessibilityLabel={t("common.actions.close")}
-        accessibilityRole="button"
         native
         disableRipple
       >
         <TouchableWithoutFeedback onPress={() => {}}>
           <View
             style={[styles.card, { maxWidth: maxCardWidth }]}
-            accessible
             accessibilityLabel={title}
             accessibilityRole="alert"
           >
