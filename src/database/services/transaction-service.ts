@@ -9,6 +9,7 @@ import {
   type TransactionType,
   TransactionTypeEnum,
 } from "~/types/transactions"
+import { logger } from "~/utils/logger"
 import { startOfNextMinute } from "~/utils/pending-transactions"
 
 import { database } from "../index"
@@ -61,8 +62,16 @@ export interface TransactionWithRelations {
 /* Base collections */
 /* ------------------------------------------------------------------ */
 
-const transactionsCollection = () =>
-  database.get<TransactionModel>("transactions")
+const transactionsCollection = () => {
+  try {
+    return database.get<TransactionModel>("transactions")
+  } catch (e) {
+    logger.error("Failed to access transactions collection", {
+      error: String(e),
+    })
+    throw e
+  }
+}
 
 const accountsCollection = () => database.get<AccountModel>("accounts")
 
@@ -974,13 +983,19 @@ export const destroyAllDeletedTransactionMode = async (): Promise<void> => {
   }
 }
 
+function parseDaysToKeep(retentionValue: string): number | null {
+  if (retentionValue === "forever") return null
+  if (retentionValue.endsWith("days")) {
+    const n = parseInt(retentionValue, 10)
+    return Number.isFinite(n) && n > 0 ? n : null
+  }
+  return null
+}
+
 export const autoPurgeTrash = async (retentionValue: string) => {
-  if (retentionValue === "forever") return
+  const daysToKeep = parseDaysToKeep(retentionValue)
 
-  const match = /^(\d+)/.exec(retentionValue)
-  const daysToKeep = match ? parseInt(match[1], 10) : Number.NaN
-
-  if (Number.isNaN(daysToKeep)) {
+  if (daysToKeep === null) {
     return
   }
 

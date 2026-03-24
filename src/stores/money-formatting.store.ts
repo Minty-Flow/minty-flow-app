@@ -106,6 +106,9 @@ export const useMoneyFormattingStore = create<MoneyFormattingStore>()(
             const speed =
               (Math.abs(x + y + z - lastX - lastY - lastZ) / timeDelta) * 10000
             if (speed > SHAKE_THRESHOLD) {
+              // Intentional: shake only *activates* privacy mode. Deactivation
+              // is always manual (user taps the eye icon) — values are never
+              // auto-revealed by a subsequent shake.
               get().setPrivacyMode(true)
             }
             lastUpdate = now

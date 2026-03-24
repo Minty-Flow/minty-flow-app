@@ -30,17 +30,9 @@ export default class TagModel extends Model implements Tag {
   /**
    * Gets the color scheme object from the theme registry.
    * This is computed at runtime, not stored in the database.
-   * Similar to Flutter's @Transient() getter.
+   * To change the scheme, assign `colorSchemeName` directly inside a `model.update()` callback.
    */
   get colorScheme() {
     return getThemeStrict(this.colorSchemeName)
-  }
-
-  /**
-   * Sets the color scheme by name.
-   * Only the name is stored in the database.
-   */
-  setColorScheme(schemeName: string | null) {
-    this.colorSchemeName = schemeName
   }
 }

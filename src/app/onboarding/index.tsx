@@ -52,7 +52,8 @@ export default function OnboardingScreen() {
 
   const goToPage = (page: number) => {
     pagerRef.current?.setPage(page)
-    setCurrentPage(page)
+    // State is updated via onPageSelected — not set here to avoid drift if the
+    // PagerView scroll is rejected or interrupted mid-animation.
   }
 
   const goNext = () => {

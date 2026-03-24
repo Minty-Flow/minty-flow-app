@@ -37,12 +37,11 @@ interface PendingTransactionsStore extends PendingTransactionsPreferences {
   setUpdateDateUponConfirmation: (value: boolean) => void
   setNotify: (value: boolean) => void
   setEarlyReminderInSeconds: (value: number) => void
-  getUpdateDateUponConfirmation: () => boolean
 }
 
 export const usePendingTransactionsStore = create<PendingTransactionsStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       ...DEFAULTS,
 
       setRequireConfirmation: (value) => set({ requireConfirmation: value }),
@@ -52,8 +51,6 @@ export const usePendingTransactionsStore = create<PendingTransactionsStore>()(
       setNotify: (value) => set({ notify: value }),
       setEarlyReminderInSeconds: (value) =>
         set({ earlyReminderInSeconds: value }),
-
-      getUpdateDateUponConfirmation: () => get().updateDateUponConfirmation,
     }),
     {
       name: "pending-transactions-store",
