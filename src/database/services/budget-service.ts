@@ -154,7 +154,7 @@ export const createBudget = async (
       b.alertThreshold = data.alertThreshold ?? null
       b.isActive = data.isActive ?? true
       b.icon = data.icon ?? null
-      b.setColorScheme(data.colorSchemeName ?? null)
+      b.colorSchemeName = data.colorSchemeName ?? null
       b.createdAt = new Date()
       b.updatedAt = new Date()
     })
@@ -203,7 +203,7 @@ export const updateBudget = async (
       if (updates.isActive !== undefined) b.isActive = updates.isActive
       if (updates.icon !== undefined) b.icon = updates.icon ?? null
       if (updates.colorSchemeName !== undefined)
-        b.setColorScheme(updates.colorSchemeName ?? null)
+        b.colorSchemeName = updates.colorSchemeName ?? null
       b.updatedAt = new Date()
     })
 
@@ -285,7 +285,7 @@ export const duplicateBudget = async (budget: Budget): Promise<void> => {
       // Duplicates are always active so they appear at the top of the list
       b.isActive = true
       b.icon = budget.icon
-      b.setColorScheme(budget.colorSchemeName)
+      b.colorSchemeName = budget.colorSchemeName
       b.createdAt = new Date()
       b.updatedAt = new Date()
     })

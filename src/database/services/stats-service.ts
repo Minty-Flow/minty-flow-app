@@ -28,6 +28,10 @@ import {
 } from "~/utils/stats-date-range"
 import { formatDateKey, formatMonthKey } from "~/utils/time-utils"
 
+// database is expected to be fully initialized by the time any stats function
+// runs (WatermelonDB adapter is set up at app boot before any screen renders).
+// If database.get() ever throws here it is a fatal initialization failure and
+// should propagate uncaught so the global error boundary can catch it.
 import { database } from "../index"
 import type AccountModel from "../models/account"
 import type CategoryModel from "../models/category"
@@ -67,13 +71,24 @@ async function fetchStatsTransactions(
 
   if (transactions.length === 0) return []
 
-  const accounts = await database.get<AccountModel>("accounts").query().fetch()
+  const accountIds = [...new Set(transactions.map((t) => t.accountId))]
+  const categoryIds = [
+    ...new Set(transactions.map((t) => t.categoryId).filter(Boolean)),
+  ] as string[]
+
+  const accounts = await database
+    .get<AccountModel>("accounts")
+    .query(Q.where("id", Q.oneOf(accountIds)))
+    .fetch()
   const accountMap = new Map(accounts.map((a) => [a.id, a]))
 
-  const categories = await database
-    .get<CategoryModel>("categories")
-    .query()
-    .fetch()
+  const categories =
+    categoryIds.length > 0
+      ? await database
+          .get<CategoryModel>("categories")
+          .query(Q.where("id", Q.oneOf(categoryIds)))
+          .fetch()
+      : []
   const categoryMap = new Map(categories.map((c) => [c.id, c]))
 
   return transactions.map((tx) => {
@@ -117,7 +132,11 @@ async function fetchBalanceTimeline(
 
   if (transactions.length === 0) return []
 
-  const accounts = await database.get<AccountModel>("accounts").query().fetch()
+  const accountIds = [...new Set(transactions.map((t) => t.accountId))]
+  const accounts = await database
+    .get<AccountModel>("accounts")
+    .query(Q.where("id", Q.oneOf(accountIds)))
+    .fetch()
   const accountMap = new Map(accounts.map((a) => [a.id, a]))
 
   return transactions.map((tx) => {

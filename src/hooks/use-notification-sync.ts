@@ -23,13 +23,11 @@ export function useNotificationSync(): void {
       if (state === "active") run()
     })
 
-    let prevNotify = usePendingTransactionsStore.getState().notify
-    let prevEarly =
-      usePendingTransactionsStore.getState().earlyReminderInSeconds
-    const storeSub = usePendingTransactionsStore.subscribe((s) => {
-      if (s.notify !== prevNotify || s.earlyReminderInSeconds !== prevEarly) {
-        prevNotify = s.notify
-        prevEarly = s.earlyReminderInSeconds
+    const storeSub = usePendingTransactionsStore.subscribe((s, prev) => {
+      if (
+        s.notify !== prev.notify ||
+        s.earlyReminderInSeconds !== prev.earlyReminderInSeconds
+      ) {
         run()
       }
     })

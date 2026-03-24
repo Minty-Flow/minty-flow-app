@@ -138,7 +138,7 @@ export const createCategory = async (
       category.transactionCount = 0
       category.createdAt = new Date()
       category.updatedAt = new Date()
-      category.setColorScheme(data.colorSchemeName ?? null)
+      category.colorSchemeName = data.colorSchemeName ?? null
     })
   })
 }
@@ -155,7 +155,7 @@ export const updateCategory = async (
       if (updates.name !== undefined) c.name = updates.name
       if (updates.icon !== undefined) c.icon = updates.icon ?? null
       if (updates.colorSchemeName !== undefined)
-        c.setColorScheme(updates.colorSchemeName ?? null)
+        c.colorSchemeName = updates.colorSchemeName ?? null
       c.updatedAt = new Date()
     })
   })

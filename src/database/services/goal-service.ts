@@ -128,7 +128,7 @@ export const createGoal = async (
       // WatermelonDB @date fields accept Date objects; schema stores as Unix ms
       g.targetDate = data.targetDate != null ? new Date(data.targetDate) : null
       g.icon = data.icon ?? null
-      g.setColorScheme(data.colorSchemeName ?? null)
+      g.colorSchemeName = data.colorSchemeName ?? null
       g.isArchived = false
       g.createdAt = new Date()
       g.updatedAt = new Date()
@@ -169,7 +169,7 @@ export const updateGoal = async (
           updates.targetDate != null ? new Date(updates.targetDate) : null
       if (updates.icon !== undefined) g.icon = updates.icon ?? null
       if (updates.colorSchemeName !== undefined)
-        g.setColorScheme(updates.colorSchemeName ?? null)
+        g.colorSchemeName = updates.colorSchemeName ?? null
       g.updatedAt = new Date()
     })
 

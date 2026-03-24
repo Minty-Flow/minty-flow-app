@@ -53,15 +53,9 @@ export default class BudgetModel extends Model implements Budget {
 
   /**
    * Gets the color scheme object from the theme registry.
+   * To change the scheme, assign `colorSchemeName` directly inside a `model.update()` callback.
    */
   get colorScheme() {
     return getThemeStrict(this.colorSchemeName)
-  }
-
-  /**
-   * Sets the color scheme by name.
-   */
-  setColorScheme(schemeName: string | null) {
-    this.colorSchemeName = schemeName
   }
 }
