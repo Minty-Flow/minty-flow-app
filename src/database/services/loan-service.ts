@@ -2,7 +2,7 @@ import { Q } from "@nozbe/watermelondb"
 import type { Observable } from "@nozbe/watermelondb/utils/rx"
 import { map } from "rxjs/operators"
 
-import type { LoanFormValues } from "~/schemas/loans.schema"
+import type { AddLoanFormSchema } from "~/schemas/loans.schema"
 import type { Loan, LoanType } from "~/types/loans"
 import { LoanTypeEnum } from "~/types/loans"
 
@@ -36,6 +36,16 @@ const LOAN_OBSERVED_COLUMNS = [
   "category_id",
   "icon",
   "color_scheme_name",
+] as const
+
+const TRANSACTION_OBSERVED_COLUMNS = [
+  "title",
+  "transaction_date",
+  "amount",
+  "type",
+  "is_deleted",
+  "is_pending",
+  "loan_id",
 ] as const
 
 /**
@@ -84,14 +94,7 @@ export const observeLoanTransactions = (
       Q.where("is_deleted", false),
       Q.sortBy("transaction_date", Q.desc),
     )
-    .observeWithColumns([
-      "title",
-      "transaction_date",
-      "amount",
-      "type",
-      "is_deleted",
-      "loan_id",
-    ])
+    .observeWithColumns([...TRANSACTION_OBSERVED_COLUMNS])
 
 /**
  * Observe the total repayment progress for a loan.
@@ -115,13 +118,7 @@ export const observeLoanPaymentProgress = (
       Q.where("is_deleted", false),
       Q.where("is_pending", false),
     )
-    .observeWithColumns([
-      "amount",
-      "type",
-      "is_deleted",
-      "is_pending",
-      "loan_id",
-    ])
+    .observeWithColumns([...TRANSACTION_OBSERVED_COLUMNS])
     .pipe(map((txs) => txs.reduce((sum, tx) => sum + Math.abs(tx.amount), 0)))
 }
 
@@ -129,7 +126,7 @@ export const observeLoanPaymentProgress = (
  * Create a new loan record in a single write.
  * Returns the mapped Loan domain object.
  */
-export const createLoan = async (data: LoanFormValues): Promise<Loan> =>
+export const createLoan = async (data: AddLoanFormSchema): Promise<Loan> =>
   database.write(async () => {
     const model = await getLoanCollection().create((l) => {
       l.name = data.name
@@ -143,8 +140,6 @@ export const createLoan = async (data: LoanFormValues): Promise<Loan> =>
       l.icon = data.icon ?? null
       // setColorScheme is not available on LoanModel — assign field directly
       l.colorSchemeName = data.colorSchemeName ?? null
-      l.createdAt = new Date()
-      l.updatedAt = new Date()
     })
     return modelToLoan(model)
   })
@@ -155,7 +150,7 @@ export const createLoan = async (data: LoanFormValues): Promise<Loan> =>
  */
 export const updateLoan = async (
   loan: LoanModel,
-  updates: Partial<LoanFormValues>,
+  updates: Partial<AddLoanFormSchema>,
 ): Promise<Loan> =>
   database.write(async () => {
     const model = await loan.update((l) => {
@@ -172,16 +167,14 @@ export const updateLoan = async (
       if (updates.icon !== undefined) l.icon = updates.icon ?? null
       if (updates.colorSchemeName !== undefined)
         l.colorSchemeName = updates.colorSchemeName ?? null
-      l.updatedAt = new Date()
     })
     return modelToLoan(model)
   })
 
 /**
  * Permanently delete a loan record.
- * Note: does not cascade-delete linked transactions — loan_id on those rows
- * will remain set (orphaned reference). If transaction cleanup is needed,
- * handle it at the call site before calling destroyLoan.
+ * Linked transactions have their loan_id nullified within the same write,
+ * preventing orphaned references.
  */
 export const destroyLoan = async (loan: LoanModel): Promise<void> => {
   await database.write(async () => {

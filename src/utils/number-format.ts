@@ -120,11 +120,25 @@ const getCachedFormatted = (
 ): string => {
   const key = `${locale}|${value}|${options.currency ?? ""}|${options.currencyDisplay ?? "symbol"}|${options.minimumFractionDigits}|${options.maximumFractionDigits}|${options.signDisplay}|${options.notation ?? "standard"}|${options.showCurrency ?? true}`
 
+  // Check cache
   const cached = cache.get(key)
-  if (cached) return cached
+  if (cached) {
+    // Move to end to mark as recently used (true LRU)
+    cache.delete(key)
+    cache.set(key, cached)
+    return cached
+  }
 
+  // Compute formatted value
   const formatted = numberFormatter(value, options, locale)
-  if (cache.size >= CACHE_MAX_SIZE) cache.clear()
+
+  // Evict oldest if over limit
+  if (cache.size >= CACHE_MAX_SIZE) {
+    const firstKey = cache.keys().next().value
+    if (firstKey !== undefined) cache.delete(firstKey)
+  }
+
+  // Store new value
   cache.set(key, formatted)
   return formatted
 }

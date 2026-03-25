@@ -1,5 +1,5 @@
 import { Model } from "@nozbe/watermelondb"
-import { date, field } from "@nozbe/watermelondb/decorators"
+import { date, field, readonly } from "@nozbe/watermelondb/decorators"
 
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Loan, LoanType } from "~/types/loans"
@@ -28,8 +28,8 @@ export default class LoanModel extends Model implements Loan {
   @field("category_id") categoryId!: string
   @field("icon") icon!: string | null
   @field("color_scheme_name") colorSchemeName!: string | null
-  @date("created_at") createdAt!: Date
-  @date("updated_at") updatedAt!: Date
+  @readonly @date("created_at") createdAt!: Date
+  @readonly @date("updated_at") updatedAt!: Date
 
   /**
    * Gets the color scheme object from the theme registry.
@@ -39,8 +39,11 @@ export default class LoanModel extends Model implements Loan {
   }
 
   /**
-   * Checks if the loan is overdue.
+   * Checks if the loan is past its due date.
    * True when a due date is set and today is past it.
+   *
+   * NOTE: This does not factor in payment progress. Always pair with an
+   * `!isPaid` guard in the UI to avoid marking completed loans as overdue.
    */
   get isOverdue(): boolean {
     if (!this.dueDate) return false

@@ -340,9 +340,32 @@ export function validateBackup(json: string): MintyFlowBackup | null {
       return null
     }
     const data = p.data as Record<string, unknown> | undefined
-    if (!data || !Array.isArray(data.transactions)) {
+    if (!data) {
       return null
     }
+
+    // Validate all required tables are present and are arrays
+    const requiredTables = [
+      "categories",
+      "accounts",
+      "tags",
+      "transactions",
+      "recurring_transactions",
+      "budgets",
+      "goals",
+      "loans",
+      "transfers",
+      "transaction_tags",
+      "budget_accounts",
+      "budget_categories",
+      "goal_accounts",
+    ]
+    for (const table of requiredTables) {
+      if (!Array.isArray((data as Record<string, unknown>)[table])) {
+        return null
+      }
+    }
+
     return parsed as MintyFlowBackup
   } catch {
     return null
@@ -360,13 +383,24 @@ export async function pickBackupFile(): Promise<{
   name: string
 } | null> {
   const result = await DocumentPicker.getDocumentAsync({
-    type: "*/*",
+    type: "*/*", // keep flexible for Android compatibility
     copyToCacheDirectory: true,
   })
-  if (result.canceled || !result.assets?.[0]) return null
-  return { uri: result.assets[0].uri, name: result.assets[0].name ?? "backup" }
-}
 
+  if (result.canceled || !result.assets?.[0]) return null
+
+  const file = result.assets[0]
+
+  // Basic validation (UX-level)
+  if (!file.name?.toLowerCase().endsWith(".json")) {
+    return null
+  }
+
+  return {
+    uri: file.uri,
+    name: file.name ?? "backup",
+  }
+}
 // ─── Count records ────────────────────────────────────────────────────────────
 
 export function countBackupRecords(backup: MintyFlowBackup): {
@@ -545,6 +579,7 @@ async function insertRows(tableName: string, rows: RawRow[]): Promise<void> {
 /**
  * Wipe the database and restore from the given backup.
  * Import order respects foreign-key dependency tiers.
+ * Validates referential integrity before inserting foreign-key-dependent rows.
  */
 export async function importBackup(
   backup: MintyFlowBackup,
@@ -563,6 +598,57 @@ export async function importBackup(
       await insertRows("tags", data.tags)
       await insertRows("accounts", data.accounts)
     })
+
+    // Build valid ID sets for referential integrity checks
+    const validAccountIds = new Set(data.accounts.map((a: RawRow) => a.id))
+    const validCategoryIds = new Set(data.categories.map((c: RawRow) => c.id))
+    const validRecurringIds = new Set(
+      data.recurring_transactions.map((r: RawRow) => r.id),
+    )
+    const validBudgetIds = new Set(data.budgets.map((b: RawRow) => b.id))
+    const validGoalIds = new Set(data.goals.map((g: RawRow) => g.id))
+    const validLoanIds = new Set(data.loans.map((l: RawRow) => l.id))
+
+    // Validate Tier 2 & 3 rows before insert
+    for (const tx of data.transactions) {
+      const txRow = tx as RawRow
+      if (!validAccountIds.has(txRow.account_id as string)) {
+        throw new Error(
+          `Transaction ${txRow.id} references invalid account_id ${txRow.account_id}`,
+        )
+      }
+      if (
+        txRow.category_id &&
+        !validCategoryIds.has(txRow.category_id as string)
+      ) {
+        throw new Error(
+          `Transaction ${txRow.id} references invalid category_id ${txRow.category_id}`,
+        )
+      }
+      if (
+        txRow.recurring_id &&
+        !validRecurringIds.has(txRow.recurring_id as string)
+      ) {
+        throw new Error(
+          `Transaction ${txRow.id} references invalid recurring_id ${txRow.recurring_id}`,
+        )
+      }
+      if (txRow.goal_id && !validGoalIds.has(txRow.goal_id as string)) {
+        throw new Error(
+          `Transaction ${txRow.id} references invalid goal_id ${txRow.goal_id}`,
+        )
+      }
+      if (txRow.budget_id && !validBudgetIds.has(txRow.budget_id as string)) {
+        throw new Error(
+          `Transaction ${txRow.id} references invalid budget_id ${txRow.budget_id}`,
+        )
+      }
+      if (txRow.loan_id && !validLoanIds.has(txRow.loan_id as string)) {
+        throw new Error(
+          `Transaction ${txRow.id} references invalid loan_id ${txRow.loan_id}`,
+        )
+      }
+    }
 
     // Tier 2: depend on Tier 1
     await database.write(async () => {

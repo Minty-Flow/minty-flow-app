@@ -1,5 +1,5 @@
 import { Model } from "@nozbe/watermelondb"
-import { date, field } from "@nozbe/watermelondb/decorators"
+import { date, field, readonly } from "@nozbe/watermelondb/decorators"
 
 /**
  * Join table model linking budgets to categories.
@@ -10,5 +10,5 @@ export default class BudgetCategoryModel extends Model {
 
   @field("budget_id") budgetId!: string
   @field("category_id") categoryId!: string
-  @date("created_at") createdAt!: Date
+  @readonly @date("created_at") createdAt!: Date
 }

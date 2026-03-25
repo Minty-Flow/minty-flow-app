@@ -79,17 +79,7 @@ export const useToastStore = create<ToastStore>((set) => ({
 
     options.onShow?.()
 
-    // Note: Auto-hide is handled by the ToastItem component
-    // to ensure proper exit animations. The component will call hide(id)
-    // after the animation completes.
-    // if (toast.autoHide) {
-    //   setTimeout(() => {
-    //     set((state) => ({
-    //       toasts: state.toasts.filter((t) => t.id !== id),
-    //     }))
-    //     options.onHide?.()
-    //   }, toast.visibilityTime)
-    // }
+    // Auto-hide is driven by the ToastItem component's exit animation.
 
     return id
   },

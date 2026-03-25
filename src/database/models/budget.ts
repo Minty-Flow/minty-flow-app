@@ -1,5 +1,5 @@
 import { Model } from "@nozbe/watermelondb"
-import { date, field } from "@nozbe/watermelondb/decorators"
+import { date, field, readonly } from "@nozbe/watermelondb/decorators"
 
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Budget, BudgetPeriod } from "~/types/budgets"
@@ -36,8 +36,8 @@ export default class BudgetModel extends Model implements Budget {
   @field("is_active") isActive!: boolean
   @field("icon") icon!: string | null
   @field("color_scheme_name") colorSchemeName!: string | null
-  @date("created_at") createdAt!: Date
-  @date("updated_at") updatedAt!: Date
+  @readonly @date("created_at") createdAt!: Date
+  @readonly @date("updated_at") updatedAt!: Date
 
   /**
    * Satisfies the Budget interface contract.

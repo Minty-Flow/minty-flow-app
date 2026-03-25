@@ -2,7 +2,7 @@ import { Q } from "@nozbe/watermelondb"
 import type { Observable } from "@nozbe/watermelondb/utils/rx"
 import { startOfDay, startOfMonth, startOfWeek, startOfYear } from "date-fns"
 import { combineLatest, of } from "rxjs"
-import { map, switchMap } from "rxjs/operators"
+import { map } from "rxjs/operators"
 
 import type {
   AddBudgetFormSchema,
@@ -74,60 +74,53 @@ export const observeBudgets = (): Observable<Budget[]> => {
   const accountJoinRows$ = getBudgetAccountCollection().query().observe()
   const categoryJoinRows$ = getBudgetCategoryCollection().query().observe()
 
-  return query
-    .observeWithColumns([
+  return combineLatest([
+    query.observeWithColumns([
       "name",
       "amount",
       "currency_code",
       "period",
       "start_date",
       "end_date",
-      "category_id",
       "alert_threshold",
       "is_active",
       "icon",
       "color_scheme_name",
-    ])
-    .pipe(
-      switchMap((budgetModels) =>
-        combineLatest([
-          of(budgetModels),
-          accountJoinRows$,
-          categoryJoinRows$,
-        ]).pipe(
-          map(([models, accountRows, categoryRows]) => {
-            if (models.length === 0) return []
+    ]),
+    accountJoinRows$,
+    categoryJoinRows$,
+  ]).pipe(
+    map(([models, accountRows, categoryRows]) => {
+      if (models.length === 0) return []
 
-            const accountIdsByBudget = new Map<string, string[]>()
-            for (const row of accountRows) {
-              const existing = accountIdsByBudget.get(row.budgetId) ?? []
-              existing.push(row.accountId)
-              accountIdsByBudget.set(row.budgetId, existing)
-            }
+      const accountIdsByBudget = new Map<string, string[]>()
+      for (const row of accountRows) {
+        const existing = accountIdsByBudget.get(row.budgetId) ?? []
+        existing.push(row.accountId)
+        accountIdsByBudget.set(row.budgetId, existing)
+      }
 
-            const categoriesByBudget = new Map<string, string[]>()
-            for (const row of categoryRows) {
-              const arr = categoriesByBudget.get(row.budgetId) ?? []
-              arr.push(row.categoryId)
-              categoriesByBudget.set(row.budgetId, arr)
-            }
+      const categoriesByBudget = new Map<string, string[]>()
+      for (const row of categoryRows) {
+        const arr = categoriesByBudget.get(row.budgetId) ?? []
+        arr.push(row.categoryId)
+        categoriesByBudget.set(row.budgetId, arr)
+      }
 
-            const budgets = models.map((m) =>
-              modelToBudget(
-                m,
-                accountIdsByBudget.get(m.id) ?? [],
-                categoriesByBudget.get(m.id) ?? [],
-              ),
-            )
-
-            return budgets.sort((a, b) => {
-              if (a.isActive !== b.isActive) return a.isActive ? -1 : 1
-              return a.name.localeCompare(b.name)
-            })
-          }),
+      const budgets = models.map((m) =>
+        modelToBudget(
+          m,
+          accountIdsByBudget.get(m.id) ?? [],
+          categoriesByBudget.get(m.id) ?? [],
         ),
-      ),
-    )
+      )
+
+      return budgets.sort((a, b) => {
+        if (a.isActive !== b.isActive) return a.isActive ? -1 : 1
+        return a.name.localeCompare(b.name)
+      })
+    }),
+  )
 }
 
 /**
@@ -155,8 +148,6 @@ export const createBudget = async (
       b.isActive = data.isActive ?? true
       b.icon = data.icon ?? null
       b.colorSchemeName = data.colorSchemeName ?? null
-      b.createdAt = new Date()
-      b.updatedAt = new Date()
     })
 
     // Create one budget_account row per linked account
@@ -164,7 +155,6 @@ export const createBudget = async (
       await getBudgetAccountCollection().create((ba) => {
         ba.budgetId = budget.id
         ba.accountId = accountId
-        ba.createdAt = new Date()
       })
     }
 
@@ -172,7 +162,6 @@ export const createBudget = async (
       await getBudgetCategoryCollection().create((bc) => {
         bc.budgetId = budget.id
         bc.categoryId = categoryId
-        bc.createdAt = new Date()
       })
     }
 
@@ -204,7 +193,6 @@ export const updateBudget = async (
       if (updates.icon !== undefined) b.icon = updates.icon ?? null
       if (updates.colorSchemeName !== undefined)
         b.colorSchemeName = updates.colorSchemeName ?? null
-      b.updatedAt = new Date()
     })
 
     if (updates.accountIds !== undefined) {
@@ -219,7 +207,6 @@ export const updateBudget = async (
         await getBudgetAccountCollection().create((ba) => {
           ba.budgetId = budget.id
           ba.accountId = accountId
-          ba.createdAt = new Date()
         })
       }
     }
@@ -235,7 +222,6 @@ export const updateBudget = async (
         await getBudgetCategoryCollection().create((bc) => {
           bc.budgetId = budget.id
           bc.categoryId = categoryId
-          bc.createdAt = new Date()
         })
       }
     }
@@ -286,15 +272,12 @@ export const duplicateBudget = async (budget: Budget): Promise<void> => {
       b.isActive = true
       b.icon = budget.icon
       b.colorSchemeName = budget.colorSchemeName
-      b.createdAt = new Date()
-      b.updatedAt = new Date()
     })
 
     for (const accountId of budget.accountIds) {
       await getBudgetAccountCollection().create((ba) => {
         ba.budgetId = newBudget.id
         ba.accountId = accountId
-        ba.createdAt = new Date()
       })
     }
 
@@ -302,7 +285,6 @@ export const duplicateBudget = async (budget: Budget): Promise<void> => {
       await getBudgetCategoryCollection().create((bc) => {
         bc.budgetId = newBudget.id
         bc.categoryId = categoryId
-        bc.createdAt = new Date()
       })
     }
   })

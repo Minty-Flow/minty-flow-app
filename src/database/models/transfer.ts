@@ -1,5 +1,5 @@
 import { Model } from "@nozbe/watermelondb"
-import { date, field, relation } from "@nozbe/watermelondb/decorators"
+import { date, field, readonly, relation } from "@nozbe/watermelondb/decorators"
 
 import type { Transfer } from "~/types/transfers"
 
@@ -19,8 +19,8 @@ export default class TransferModel extends Model implements Transfer {
   @field("from_account_id") fromAccountId!: string
   @field("to_account_id") toAccountId!: string
   @field("conversion_rate") conversionRate!: number
-  @date("created_at") createdAt!: Date
-  @date("updated_at") updatedAt!: Date
+  @readonly @date("created_at") createdAt!: Date
+  @readonly @date("updated_at") updatedAt!: Date
 
   @relation("transactions", "from_transaction_id")
   fromTransaction!: TransactionModel

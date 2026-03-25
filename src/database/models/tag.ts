@@ -1,5 +1,5 @@
 import { Model } from "@nozbe/watermelondb"
-import { date, field } from "@nozbe/watermelondb/decorators"
+import { date, field, readonly } from "@nozbe/watermelondb/decorators"
 
 import { getThemeStrict } from "~/styles/theme/registry"
 
@@ -24,8 +24,8 @@ export default class TagModel extends Model implements Tag {
   @field("color_scheme_name") colorSchemeName!: string | null
   @field("icon") icon!: string | null
   @field("transaction_count") transactionCount!: number
-  @date("created_at") createdAt!: Date
-  @date("updated_at") updatedAt!: Date
+  @readonly @date("created_at") createdAt!: Date
+  @readonly @date("updated_at") updatedAt!: Date
 
   /**
    * Gets the color scheme object from the theme registry.

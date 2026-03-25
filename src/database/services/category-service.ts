@@ -136,8 +136,6 @@ export const createCategory = async (
       category.type = data.type
       category.icon = data.icon ?? null
       category.transactionCount = 0
-      category.createdAt = new Date()
-      category.updatedAt = new Date()
       category.colorSchemeName = data.colorSchemeName ?? null
     })
   })
@@ -156,7 +154,6 @@ export const updateCategory = async (
       if (updates.icon !== undefined) c.icon = updates.icon ?? null
       if (updates.colorSchemeName !== undefined)
         c.colorSchemeName = updates.colorSchemeName ?? null
-      c.updatedAt = new Date()
     })
   })
 }
@@ -181,7 +178,6 @@ export const destroyCategory = async (
     for (const transaction of transactions) {
       await transaction.update((t) => {
         t.categoryId = targetCategoryId
-        t.updatedAt = new Date()
       })
     }
     await category.destroyPermanently()
@@ -210,7 +206,6 @@ const recalculateCategoryTransactionCount = async (
     await database.write(async () => {
       await category.update((c) => {
         c.transactionCount = count
-        c.updatedAt = new Date()
       })
     })
   }

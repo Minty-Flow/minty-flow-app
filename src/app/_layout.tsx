@@ -18,9 +18,9 @@ import { Platform } from "react-native"
 import { useNotificationSync } from "~/hooks/use-notification-sync"
 import { useRecurringTransactionSync } from "~/hooks/use-recurring-transaction-sync"
 import { useRetentionCleanup } from "~/hooks/use-retention-cleanup"
+import { useShakeListener } from "~/hooks/use-shake-listener"
 import { DirectionEnum } from "~/i18n/language.constants"
 import { useLanguageStore } from "~/stores/language.store"
-import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { useOnboardingStore } from "~/stores/onboarding.store"
 import { NewEnum } from "~/types/new"
 
@@ -49,10 +49,6 @@ export default function RootLayout() {
   // Ports to reality: retention cleanup and recurring sync (effects live in domain hooks)
   // Rehydrate shake listener on app start if mask-on-shake was enabled (store-owned subscription)
   useEffect(() => {
-    const { maskOnShake, _startShakeListener } =
-      useMoneyFormattingStore.getState()
-    if (maskOnShake) _startShakeListener()
-
     if (Platform.OS === "android") {
       Notifications.setNotificationChannelAsync("transaction-reminders", {
         name: "Transaction Reminders",
@@ -61,6 +57,7 @@ export default function RootLayout() {
     }
   }, [])
 
+  useShakeListener()
   useRetentionCleanup()
   useRecurringTransactionSync()
   useNotificationSync()

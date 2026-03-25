@@ -322,7 +322,6 @@ const ensureSinglePrimary = async (primaryAccountId: string): Promise<void> => {
   for (const other of others) {
     await other.update((a) => {
       a.isPrimary = false
-      a.updatedAt = new Date()
     })
   }
 }
@@ -344,7 +343,6 @@ const applyAccountUpdates = (
   if (updates.isPrimary !== undefined) a.isPrimary = updates.isPrimary
   if (updates.excludeFromBalance !== undefined)
     a.excludeFromBalance = updates.excludeFromBalance
-  a.updatedAt = new Date()
 }
 
 /**
@@ -424,7 +422,6 @@ export const archiveAccount = async (account: AccountModel): Promise<void> => {
   await database.write(async () => {
     await account.update((a) => {
       a.isArchived = true
-      a.updatedAt = new Date()
     })
   })
 }
@@ -438,7 +435,6 @@ export const unarchiveAccount = async (
   await database.write(async () => {
     await account.update((a) => {
       a.isArchived = false
-      a.updatedAt = new Date()
     })
   })
 }
@@ -452,10 +448,10 @@ export const destroyAccount = async (account: AccountModel): Promise<void> => {
     accountId: account.id,
     includeDeleted: true,
   })
-  for (const t of transactions) {
-    await destroyTransactionModel(t)
-  }
   await database.write(async () => {
+    for (const t of transactions) {
+      await destroyTransactionModel(t)
+    }
     await account.destroyPermanently()
   })
 }

@@ -1,5 +1,5 @@
 import { Model } from "@nozbe/watermelondb"
-import { date, field } from "@nozbe/watermelondb/decorators"
+import { date, field, readonly } from "@nozbe/watermelondb/decorators"
 
 import { getThemeStrict } from "~/styles/theme/registry"
 
@@ -32,8 +32,8 @@ export default class AccountModel extends Model implements Account {
   @field("is_primary") isPrimary!: boolean
   @field("exclude_from_balance") excludeFromBalance!: boolean
   @field("is_archived") isArchived!: boolean
-  @date("created_at") createdAt!: Date
-  @date("updated_at") updatedAt!: Date
+  @readonly @date("created_at") createdAt!: Date
+  @readonly @date("updated_at") updatedAt!: Date
   @field("sort_order") sortOrder!: number | null
 
   /**

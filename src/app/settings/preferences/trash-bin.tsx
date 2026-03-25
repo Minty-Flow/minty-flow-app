@@ -11,7 +11,7 @@ import { IconSvg } from "~/components/ui/icon-svg"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { destroyAllDeletedTransactionMode } from "~/database/services/transaction-service"
+import { destroyAllDeletedTransactionModels } from "~/database/services/transaction-service"
 import { useTrashBinStore } from "~/stores/trash-bin.store"
 import { Toast } from "~/utils/toast"
 
@@ -63,7 +63,7 @@ export default function TrashBinScreen() {
   }, [router])
 
   const handleEmptyConfirmed = useCallback(() => {
-    destroyAllDeletedTransactionMode()
+    destroyAllDeletedTransactionModels()
       .then(() => {
         Toast.success({
           title: t("screens.settings.trash.empty.toast.successTitle"),

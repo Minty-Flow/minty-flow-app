@@ -1,5 +1,5 @@
 import { Model } from "@nozbe/watermelondb"
-import { date, field } from "@nozbe/watermelondb/decorators"
+import { date, field, readonly } from "@nozbe/watermelondb/decorators"
 
 export const RECURRING_EXTENSION_KEY = "@mintyflow/default-recurring"
 
@@ -27,7 +27,7 @@ export default class RecurringTransactionModel extends Model {
   @field("transfer_to_account_id") transferToAccountId!: string | null
   @field("range") rangeEncoded!: string
   @field("rules") rulesEncoded!: string
-  @date("created_at") createdAt!: Date
+  @readonly @date("created_at") createdAt!: Date
   @date("last_generated_transaction_date")
   lastGeneratedTransactionDate!: Date | null
   @field("disabled") disabled!: boolean

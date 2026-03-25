@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-03-24T22:52:28.362Z
+Generated on: 2026-03-25T21:41:39.375Z
 
 ```
 ./
@@ -789,6 +789,7 @@ Generated on: 2026-03-24T22:52:28.362Z
 │   │   ├── use-recurring-transaction-sync.ts
 │   │   ├── use-retention-cleanup.ts
 │   │   ├── use-scroll-into-view.ts
+│   │   ├── use-shake-listener.ts
 │   │   ├── use-stats.ts
 │   │   └── use-time-reactivity.ts
 │   ├── i18n/

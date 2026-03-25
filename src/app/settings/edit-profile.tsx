@@ -1,3 +1,4 @@
+import { File, Paths } from "expo-file-system"
 import { Image } from "expo-image"
 import * as ImagePicker from "expo-image-picker"
 import { Stack, useLocalSearchParams, useRouter } from "expo-router"
@@ -15,6 +16,7 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useOnboardingStore } from "~/stores/onboarding.store"
 import { useProfileStore } from "~/stores/profile.store"
+import { logger } from "~/utils/logger"
 import { getInitials } from "~/utils/string-utils"
 import { Toast } from "~/utils/toast"
 
@@ -35,30 +37,61 @@ export default function EditProfileScreen() {
   const initials = getInitials(displayName)
 
   const handlePickImage = async () => {
-    // Request permissions
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
-    if (status !== "granted") {
-      Toast.warn({
-        title: t("profile.edit.permission.title"),
-        description: t("profile.edit.permission.description"),
+    try {
+      // 1. Request permission
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+
+      if (status !== "granted") {
+        Toast.warn({
+          title: t("profile.edit.permission.title"),
+          description: t("profile.edit.permission.description"),
+        })
+        return
+      }
+
+      // 2. Pick image
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
       })
-      return
-    }
 
-    // Launch image picker
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    })
+      if (result.canceled || !result.assets?.[0]?.uri) return
 
-    if (!result.canceled && result.assets[0]) {
-      setLocalImageUri(result.assets[0].uri)
+      const pickedUri = result.assets[0].uri
+
+      // 3. Create unique file name (prevents overwrite issues)
+      const filename = `minty_profile_${Date.now()}.jpg`
+
+      // 4. Create File instances
+      const sourceFile = new File(pickedUri)
+      const destinationFile = new File(Paths.document, filename)
+
+      // 5. Copy to app storage (permanent)
+      await sourceFile.copy(destinationFile)
+
+      // 6. Save URI (this is your "permanentUri")
+      setLocalImageUri(destinationFile.uri)
+    } catch (e) {
+      logger.error("Failed to pick/save image:", { e })
+
+      Toast.error({
+        title: t("common.toast.error"),
+        description: t("profile.edit.toast.failed"),
+      })
     }
   }
 
-  const handleRemoveImage = () => {
+  const handleRemoveImage = async () => {
+    if (localImageUri) {
+      try {
+        const file = new File(localImageUri)
+        await file.delete()
+      } catch (e) {
+        logger.error("File already gone or deletion failed", { e })
+      }
+    }
     setLocalImageUri(null)
   }
 

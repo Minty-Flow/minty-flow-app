@@ -1,13 +1,6 @@
-import { Accelerometer } from "expo-sensors"
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
-
-// was 100 and 150
-const SHAKE_UPDATE_INTERVAL_MS = 500
-const SHAKE_THRESHOLD = 550
-
-let shakeSubscription: { remove: () => void } | null = null
 
 const moneyFormattingStorage = createMMKV({
   id: "money-formatting-storage",
@@ -48,14 +41,11 @@ interface MoneyFormattingStore {
   setHideOnStartup: (value: boolean) => void
 
   setMaskOnShake: (value: boolean) => void
-
-  _startShakeListener: () => void
-  _stopShakeListener: () => void
 }
 
 export const useMoneyFormattingStore = create<MoneyFormattingStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       preferredCurrency: "USD",
       currencyLook: MoneyFormatEnum.SYMBOL,
 
@@ -80,49 +70,7 @@ export const useMoneyFormattingStore = create<MoneyFormattingStore>()(
       // The "Settings" toggle action: Flips the preference
       setHideOnStartup: (value) => set({ hideOnStartup: value }),
 
-      setMaskOnShake: (value) => {
-        set({ maskOnShake: value })
-        if (value) {
-          get()._startShakeListener()
-        } else {
-          get()._stopShakeListener()
-        }
-      },
-
-      _startShakeListener: () => {
-        get()._stopShakeListener()
-        Accelerometer.setUpdateInterval(SHAKE_UPDATE_INTERVAL_MS)
-
-        let lastX = 0
-        let lastY = 0
-        let lastZ = 0
-        let lastUpdate = 0
-
-        shakeSubscription = Accelerometer.addListener(({ x, y, z }) => {
-          const now = Date.now()
-          const timeDelta = now - lastUpdate
-
-          if (timeDelta > SHAKE_UPDATE_INTERVAL_MS) {
-            const speed =
-              (Math.abs(x + y + z - lastX - lastY - lastZ) / timeDelta) * 10000
-            if (speed > SHAKE_THRESHOLD) {
-              // Intentional: shake only *activates* privacy mode. Deactivation
-              // is always manual (user taps the eye icon) — values are never
-              // auto-revealed by a subsequent shake.
-              get().setPrivacyMode(true)
-            }
-            lastUpdate = now
-            lastX = x
-            lastY = y
-            lastZ = z
-          }
-        })
-      },
-
-      _stopShakeListener: () => {
-        shakeSubscription?.remove()
-        shakeSubscription = null
-      },
+      setMaskOnShake: (value) => set({ maskOnShake: value }),
     }),
     {
       name: "money-formatting-store",
@@ -139,12 +87,6 @@ export const useMoneyFormattingStore = create<MoneyFormattingStore>()(
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.privacyMode = state.hideOnStartup
-          if (state.maskOnShake) {
-            setTimeout(
-              () => useMoneyFormattingStore.getState()._startShakeListener(),
-              0,
-            )
-          }
         }
       },
 

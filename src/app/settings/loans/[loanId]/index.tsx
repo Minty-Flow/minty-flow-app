@@ -334,7 +334,7 @@ function LoanDetailInner({
 
       {/* Transactions section label */}
       <Text style={styles.transactionsLabel}>
-        {t("screens.settings.goals.detail.transactions")}
+        {t("screens.settings.loans.detail.transactions")}
       </Text>
     </View>
   )
@@ -350,7 +350,7 @@ function LoanDetailInner({
           <View style={styles.emptyContainer}>
             <EmptyState
               icon="receipt"
-              title={t("screens.settings.goals.detail.noTransactions")}
+              title={t("screens.settings.loans.detail.noTransactions")}
             />
           </View>
         }
@@ -562,7 +562,6 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onPrimary,
   },
   collectSettleButtonText: {
-    // color: "white",
     fontWeight: "600",
   },
 }))

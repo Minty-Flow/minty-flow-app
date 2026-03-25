@@ -129,15 +129,6 @@ export const schema = appSchema({
       ],
     }),
 
-    // Join table for Transactions and Attachments
-    tableSchema({
-      name: "transaction_attachments",
-      columns: [
-        { name: "transaction_id", type: "string", isIndexed: true },
-        { name: "attachment_id", type: "string", isIndexed: true },
-      ],
-    }),
-
     // Transfers table — first-class transfer metadata (replaces conversionRate in transaction.extra)
     tableSchema({
       name: "transfers",

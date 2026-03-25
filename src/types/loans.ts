@@ -34,7 +34,7 @@ export interface Loan {
   icon: string | null
   colorSchemeName: string | null
   colorScheme: MintyColorScheme | null // Computed from colorSchemeName via registry
-  isOverdue: boolean // Computed: !isPaid && dueDate && now > dueDate
+  isOverdue: boolean // Computed: dueDate != null && now > dueDate; always pair with !isPaid guard in UI
   createdAt: Date
   updatedAt: Date
 }

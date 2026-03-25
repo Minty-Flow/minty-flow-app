@@ -66,8 +66,6 @@ export const createTag = async (data: {
       tag.colorSchemeName = data.colorSchemeName ?? null
       tag.icon = data.icon ?? null
       tag.transactionCount = 0
-      tag.createdAt = new Date()
-      tag.updatedAt = new Date()
     })
   })
 }
@@ -94,7 +92,6 @@ export const updateTag = async (
       if (updates.icon !== undefined) t.icon = updates.icon ?? null
       if (updates.transactionCount !== undefined)
         t.transactionCount = updates.transactionCount
-      t.updatedAt = new Date()
     })
   })
 }

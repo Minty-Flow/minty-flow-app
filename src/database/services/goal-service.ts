@@ -130,8 +130,6 @@ export const createGoal = async (
       g.icon = data.icon ?? null
       g.colorSchemeName = data.colorSchemeName ?? null
       g.isArchived = false
-      g.createdAt = new Date()
-      g.updatedAt = new Date()
     })
 
     // Create one goal_account row per linked account
@@ -139,7 +137,6 @@ export const createGoal = async (
       await getGoalAccountCollection().create((ga) => {
         ga.goalId = goal.id
         ga.accountId = accountId
-        ga.createdAt = new Date()
       })
     }
 
@@ -170,7 +167,6 @@ export const updateGoal = async (
       if (updates.icon !== undefined) g.icon = updates.icon ?? null
       if (updates.colorSchemeName !== undefined)
         g.colorSchemeName = updates.colorSchemeName ?? null
-      g.updatedAt = new Date()
     })
 
     if (updates.accountIds !== undefined) {
@@ -185,7 +181,6 @@ export const updateGoal = async (
         await getGoalAccountCollection().create((ga) => {
           ga.goalId = goal.id
           ga.accountId = accountId
-          ga.createdAt = new Date()
         })
       }
     }
@@ -201,7 +196,6 @@ export const archiveGoal = async (goal: GoalModel): Promise<void> => {
   await database.write(async () => {
     await goal.update((g) => {
       g.isArchived = true
-      g.updatedAt = new Date()
     })
   })
 }
@@ -213,7 +207,6 @@ export const unarchiveGoal = async (goal: GoalModel): Promise<void> => {
   await database.write(async () => {
     await goal.update((g) => {
       g.isArchived = false
-      g.updatedAt = new Date()
     })
   })
 }

@@ -108,6 +108,7 @@ async function fetchStatsTransactions(
       accountId: tx.accountId,
       accountBalanceBefore: tx.accountBalanceBefore,
       subtype: tx.subtype,
+      title: tx.title,
     }
   })
 }
@@ -159,7 +160,8 @@ async function fetchPendingSummary(
   fromDate: Date,
   toDate: Date,
 ): Promise<Map<string, PendingSummary>> {
-  const transactions = await database
+  // 1️⃣ Fetch all pending, non-deleted, non-transfer transactions in date range
+  const pending = await database
     .get<TransactionModel>("transactions")
     .query(
       Q.where("is_deleted", false),
@@ -170,23 +172,34 @@ async function fetchPendingSummary(
     )
     .fetch()
 
-  if (transactions.length === 0) return new Map()
+  if (pending.length === 0) return new Map()
 
-  const accounts = await database.get<AccountModel>("accounts").query().fetch()
-  const accountMap = new Map(accounts.map((a) => [a.id, a]))
+  // 2️⃣ Only load accounts referenced by pending transactions
+  const pendingAccountIds = new Set(pending.map((t) => t.accountId))
+  const pendingAccounts = await database
+    .get<AccountModel>("accounts")
+    .query(Q.where("id", Q.oneOf([...pendingAccountIds])))
+    .fetch()
 
+  const accountMap = new Map(pendingAccounts.map((a) => [a.id, a]))
+
+  // 3️⃣ Build the summary
   const result = new Map<string, PendingSummary>()
 
-  for (const tx of transactions) {
+  for (const tx of pending) {
     const currency = accountMap.get(tx.accountId)?.currencyCode ?? "USD"
     const existing = result.get(currency) ?? {
       count: 0,
       totalExpense: 0,
       totalIncome: 0,
     }
-    const abs = Math.abs(tx.amount)
-    if (tx.type === TransactionTypeEnum.EXPENSE) existing.totalExpense += abs
-    else if (tx.type === TransactionTypeEnum.INCOME) existing.totalIncome += abs
+
+    const absAmount = Math.abs(tx.amount)
+    if (tx.type === TransactionTypeEnum.EXPENSE)
+      existing.totalExpense += absAmount
+    else if (tx.type === TransactionTypeEnum.INCOME)
+      existing.totalIncome += absAmount
+
     existing.count++
     result.set(currency, existing)
   }
@@ -216,7 +229,11 @@ async function fetchUncategorizedSummary(
 
   if (transactions.length === 0) return new Map()
 
-  const accounts = await database.get<AccountModel>("accounts").query().fetch()
+  const accountIds = [...new Set(transactions.map((tx) => tx.accountId))]
+  const accounts = await database
+    .get<AccountModel>("accounts")
+    .query(Q.where("id", Q.oneOf(accountIds)))
+    .fetch()
   const accountMap = new Map(accounts.map((a) => [a.id, a]))
 
   const result = new Map<string, UncategorizedSummary>()
@@ -680,7 +697,7 @@ function computeTopTransactions(rows: StatsRawRow[]): TopTransactionItem[] {
     .slice(0, 5)
     .map((r) => ({
       transactionId: r.transactionId,
-      title: null,
+      title: r.title || null,
       amount: Math.abs(r.amount),
       date: r.date,
       categoryName: r.categoryName,

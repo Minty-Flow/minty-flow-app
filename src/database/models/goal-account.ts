@@ -1,5 +1,5 @@
 import { Model } from "@nozbe/watermelondb"
-import { date, field } from "@nozbe/watermelondb/decorators"
+import { date, field, readonly } from "@nozbe/watermelondb/decorators"
 
 /**
  * Join table model linking goals to accounts.
@@ -12,5 +12,5 @@ export default class GoalAccountModel extends Model {
 
   @field("goal_id") goalId!: string
   @field("account_id") accountId!: string
-  @date("created_at") createdAt!: Date
+  @readonly @date("created_at") createdAt!: Date
 }

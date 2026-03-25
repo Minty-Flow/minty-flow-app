@@ -109,26 +109,33 @@ export default function DataManagementScreen() {
 
     Promise.resolve(pickBackupFile())
       .then((file) => {
-        if (!file) return
-
+        if (!file) {
+          Toast.error({
+            title: t("screens.settings.dataManagement.importInvalidFile"),
+          })
+          return null
+        }
         return FileSystem.readAsStringAsync(file.uri, {
           encoding: FileSystem.EncodingType.UTF8,
-        }).then((json) => {
-          const backup = validateBackup(json)
-          if (!backup) {
-            Toast.error({
-              title: t("screens.settings.dataManagement.importValidationError"),
-            })
-            return
-          }
+        })
+      })
+      .then((json) => {
+        if (!json) return
 
-          const { total, tableCount } = countBackupRecords(backup)
-          setImportModal({
-            visible: true,
-            backup,
-            recordCount: total,
-            tableCount,
+        const backup = validateBackup(json)
+        if (!backup) {
+          Toast.error({
+            title: t("screens.settings.dataManagement.importValidationError"),
           })
+          return
+        }
+
+        const { total, tableCount } = countBackupRecords(backup)
+        setImportModal({
+          visible: true,
+          backup,
+          recordCount: total,
+          tableCount,
         })
       })
       .catch(() => {

@@ -30,17 +30,14 @@ import {
 
 interface CountableModel {
   transactionCount: number
-  updatedAt: Date
 }
 
 function incrementCount(model: CountableModel) {
   model.transactionCount += 1
-  model.updatedAt = new Date()
 }
 
 function decrementCount(model: CountableModel) {
   model.transactionCount = Math.max(0, model.transactionCount - 1)
-  model.updatedAt = new Date()
 }
 
 /* ------------------------------------------------------------------ */
@@ -571,8 +568,6 @@ export const createTransactionModel = async (
       if (data.requiresManualConfirmation !== undefined)
         t.requiresManualConfirmation = data.requiresManualConfirmation ?? null
       t.isDeleted = false
-      t.createdAt = new Date()
-      t.updatedAt = new Date()
       t.extra = data.extra ?? null
       t.recurringId = data.recurringId ?? null
       // Cached derivative: set in same write so has_attachments never drifts from extra.attachments
@@ -595,7 +590,6 @@ export const createTransactionModel = async (
       const balanceDelta = getBalanceDelta(data.amount, data.type)
       await account.update((a) => {
         a.balance = a.balance + balanceDelta
-        a.updatedAt = new Date()
       })
     }
 
@@ -663,7 +657,6 @@ export const updateTransactionModel = async (
         t.accountId = updates.accountId
       }
 
-      t.updatedAt = new Date()
       if (updates.extra !== undefined) {
         t.extra = updates.extra ?? null
         // Cached derivative: always update both in same write (atomic, no drift)
@@ -750,18 +743,15 @@ export const updateTransactionModel = async (
       const account = await accounts.find(oldAccountId)
       await account.update((a) => {
         a.balance = a.balance + reverseOldDelta + forwardNewDelta
-        a.updatedAt = new Date()
       })
     } else {
       const oldAccount = await accounts.find(oldAccountId)
       const newAccount = await accounts.find(newAccountId)
       await oldAccount.update((a) => {
         a.balance = a.balance + reverseOldDelta
-        a.updatedAt = new Date()
       })
       await newAccount.update((a) => {
         a.balance = a.balance + forwardNewDelta
-        a.updatedAt = new Date()
       })
     }
 
@@ -797,7 +787,6 @@ export const deleteTransactionModel = async (
       const account = await accountsCollection().find(transaction.accountId)
       await account.update((a) => {
         a.balance = a.balance + reverseDelta
-        a.updatedAt = new Date()
       })
     }
 
@@ -823,13 +812,9 @@ export const deleteAllRecurringInstances = async (
   const instances = await transactionsCollection()
     .query(Q.where("recurring_id", ruleId), Q.where("is_deleted", false))
     .fetch()
-  // Single write makes all soft-deletes + balance reversals atomic.
-  // WatermelonDB supports nested write calls — inner writes run within the outer write context.
-  await database.write(async () => {
-    for (const tx of instances) {
-      await deleteTransactionModel(tx)
-    }
-  })
+  for (const tx of instances) {
+    await deleteTransactionModel(tx)
+  }
 }
 
 /** Soft-delete instances from the given date onward (inclusive). */
@@ -845,11 +830,9 @@ export const deleteFutureRecurringInstances = async (
       Q.where("is_deleted", false),
     )
     .fetch()
-  await database.write(async () => {
-    for (const tx of instances) {
-      await deleteTransactionModel(tx)
-    }
-  })
+  for (const tx of instances) {
+    await deleteTransactionModel(tx)
+  }
 }
 
 /** Detach this transaction from its recurring rule (sets recurringId = null). */
@@ -859,7 +842,6 @@ export const detachTransactionFromRule = async (
   await database.write(async () => {
     await transaction.update((t) => {
       t.recurringId = null
-      t.updatedAt = new Date()
     })
   })
 }
@@ -930,7 +912,6 @@ export const restoreTransactionModel = async (
     await transaction.update((t) => {
       t.isDeleted = false
       t.deletedAt = null
-      t.updatedAt = new Date()
     })
 
     if (!transaction.isPending) {
@@ -938,7 +919,6 @@ export const restoreTransactionModel = async (
       const account = await accountsCollection().find(transaction.accountId)
       await account.update((a) => {
         a.balance = a.balance + balanceDelta
-        a.updatedAt = new Date()
       })
     }
 
@@ -968,7 +948,6 @@ export const destroyTransactionModel = async (
       const account = await accountsCollection().find(transaction.accountId)
       await account.update((a) => {
         a.balance = a.balance + reverseDelta
-        a.updatedAt = new Date()
       })
     }
 
@@ -976,7 +955,7 @@ export const destroyTransactionModel = async (
   })
 }
 
-export const destroyAllDeletedTransactionMode = async (): Promise<void> => {
+export const destroyAllDeletedTransactionModels = async (): Promise<void> => {
   const transactions = await getTransactionModels({ deletedOnly: true })
   for (const transaction of transactions) {
     await destroyTransactionModel(transaction)

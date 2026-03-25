@@ -192,6 +192,7 @@ const AccountsScreenInner = ({
 
       <ReorderableListV2
         data={displayModels}
+        keyExtractor={(item) => item.id}
         onReorder={handleReorder}
         showButtons={isReorderMode}
         renderItem={({ item }) => {

@@ -213,6 +213,8 @@ export interface StatsRawRow {
   accountBalanceBefore: number
   /** Transaction subtype: 'recurring' | 'one-time' | null */
   subtype: string | null
+  /** Transaction title/description */
+  title: string | null | undefined
 }
 
 /** Raw row for balance timeline (includes transfers) */

@@ -1,5 +1,5 @@
 import { Model } from "@nozbe/watermelondb"
-import { date, field } from "@nozbe/watermelondb/decorators"
+import { date, field, readonly } from "@nozbe/watermelondb/decorators"
 
 import type { TransactionType } from "~/types/transactions"
 
@@ -32,8 +32,8 @@ export default class CategoryModel extends Model implements Category {
   @field("icon") icon!: string | null
   @field("color_scheme_name") colorSchemeName!: string | null
   @field("transaction_count") transactionCount!: number
-  @date("created_at") createdAt!: Date
-  @date("updated_at") updatedAt!: Date
+  @readonly @date("created_at") createdAt!: Date
+  @readonly @date("updated_at") updatedAt!: Date
 
   /**
    * Gets the color scheme object from the theme registry.

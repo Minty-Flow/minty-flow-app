@@ -304,7 +304,6 @@ export async function createRecurringRule(
       r.transferToAccountId = null
       r.rangeEncoded = rangeEncoded
       r.rulesEncoded = rulesEncoded
-      r.createdAt = new Date()
       r.lastGeneratedTransactionDate = null
       r.disabled = false
     })

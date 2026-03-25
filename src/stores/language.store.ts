@@ -92,6 +92,16 @@ export const useLanguageStore = create<LanguageStore>()(
       })),
       onRehydrateStorage: () => (state) => {
         if (state?.languageCode) {
+          // Validate that the rehydrated language code is actually supported
+          const validCodes = Object.values(LangCodeEnum)
+          if (!validCodes.includes(state.languageCode)) {
+            // Reset to default if corrupted MMKV data
+            state.languageCode = LangCodeEnum.EN
+            state.direction = DirectionEnum.LTR
+            state.isRTL = false
+            state.isLTR = true
+          }
+
           i18n.changeLanguage(state.languageCode)
 
           const isRTL = state.direction === DirectionEnum.RTL

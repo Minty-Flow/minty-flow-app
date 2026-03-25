@@ -1,5 +1,11 @@
 import { Model } from "@nozbe/watermelondb"
-import { children, date, field, relation } from "@nozbe/watermelondb/decorators"
+import {
+  children,
+  date,
+  field,
+  readonly,
+  relation,
+} from "@nozbe/watermelondb/decorators"
 
 import type {
   Transaction,
@@ -67,8 +73,8 @@ export default class TransactionModel extends Model implements Transaction {
 
   @field("location") private locationJson!: string | null
 
-  @date("created_at") createdAt!: Date
-  @date("updated_at") updatedAt!: Date
+  @readonly @date("created_at") createdAt!: Date
+  @readonly @date("updated_at") updatedAt!: Date
 
   @children("transaction_tags") transactionTags!: TransactionTagModel[]
 

@@ -99,6 +99,9 @@
       "permission": {
         "title": "Permission Required",
         "description": "We need access to your photos to set a profile picture."
+      },
+      "toast": {
+        "failed": "Failed to save image"
       }
     }
   },
@@ -708,7 +711,9 @@
           "amountLabel": "Principal Amount"
         },
         "detail": {
-          "title": "Loan Details"
+          "title": "Loan Details",
+          "transactions": "Transactions",
+          "noTransactions": "No transactions linked to this loan yet"
         },
         "actions": {
           "collect": "Collect",
@@ -886,7 +891,8 @@
         "importJsonDesc": "Replace all data from a JSON backup file",
         "importSuccess": "Data restored successfully",
         "importError": "Restore failed",
-        "importValidationError": "Invalid or unsupported backup file",
+        "importInvalidFile": "Please select a JSON backup file",
+        "importValidationError": "Invalid JSON backup file",
         "importConfirm": {
           "title": "Restore from Backup?",
           "warning": "This will permanently erase all current data and replace it with the selected backup.",
