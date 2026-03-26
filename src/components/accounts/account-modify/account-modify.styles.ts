@@ -1,3 +1,5 @@
+// account-modify.styles.ts
+
 import { StyleSheet } from "react-native-unistyles"
 
 export const accountModifyStyles = StyleSheet.create((theme) => ({
@@ -32,71 +34,8 @@ export const accountModifyStyles = StyleSheet.create((theme) => ({
   balanceSection: {
     marginHorizontal: 20,
   },
-  balanceContainer: {
-    paddingVertical: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: theme.radius,
-    backgroundColor: theme.colors.secondary,
-  },
-  balanceValue: {
-    fontSize: 32,
-    fontWeight: "600",
-    color: theme.colors.onSurface,
-    lineHeight: 60,
-    padding: 0,
-    includeFontPadding: false,
-    textAlignVertical: "center",
-  },
-  updateBalanceLabel: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: theme.colors.onSecondary,
-    opacity: 0.7,
-  },
   settingsList: {
     gap: 0,
-  },
-  settingsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-  },
-  settingsLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  settingsLabel: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: theme.colors.onSurface,
-  },
-  settingsRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  settingsValue: {
-    fontSize: 16,
-    color: theme.colors.onSecondary,
-    opacity: 0.7,
-  },
-  chevronIcon: {
-    color: theme.colors.onSecondary,
-    opacity: 0.4,
-  },
-  colorPreview: {
-    width: 24,
-    height: 24,
-    borderRadius: 16,
-  },
-  defaultColorText: {
-    fontSize: 16,
-    color: theme.colors.onSecondary,
-    opacity: 0.6,
   },
   switchesSection: {
     gap: 0,
@@ -183,18 +122,6 @@ export const accountModifyStyles = StyleSheet.create((theme) => ({
   },
   primaryAccountHint: {
     flex: 1,
-    fontSize: 12,
-    color: theme.colors.customColors.semi,
-  },
-  archiveContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-  archiveWarningIcon: {
-    color: theme.colors.customColors.semi,
-  },
-  archiveWarning: {
     fontSize: 12,
     color: theme.colors.customColors.semi,
   },

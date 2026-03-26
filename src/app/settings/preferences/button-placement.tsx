@@ -246,17 +246,6 @@ const styles = StyleSheet.create((theme) => ({
     gap: 28,
   },
 
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    alignSelf: "flex-start",
-  },
-  infoText: {
-    fontSize: 14,
-    color: theme.colors.customColors.semi,
-  },
-
   dragArea: {
     position: "relative",
   },
@@ -273,18 +262,5 @@ const styles = StyleSheet.create((theme) => ({
   button: {
     ...FAB_BUTTON_STYLE,
     shadowColor: theme.colors.shadow,
-  },
-
-  footerRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-    alignSelf: "flex-start",
-  },
-  footerText: {
-    flex: 1,
-    fontSize: 13,
-    color: theme.colors.customColors.semi,
-    lineHeight: 18,
   },
 }))

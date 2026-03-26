@@ -163,33 +163,6 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.surface,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: theme.colors.onSurface,
-    marginBottom: 4,
-  },
-  description: {
-    fontSize: 14,
-    color: theme.colors.onSecondary,
-    marginBottom: 16,
-    lineHeight: 20,
-  },
-  placeholder: {
-    padding: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.secondary,
-    borderRadius: theme.radius,
-  },
-  placeholderText: {
-    fontSize: 14,
-    color: theme.colors.onSecondary,
-  },
-
-  actionSection: {
-    marginTop: 24,
-  },
   actionItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -202,10 +175,6 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     flex: 1,
     gap: 15,
-  },
-  iconContainer: {
-    alignItems: "center",
-    justifyContent: "center",
   },
   actionItemContent: {
     flex: 1,
@@ -230,89 +199,5 @@ const styles = StyleSheet.create((theme) => ({
   },
   actionTrashItemIcon: {
     color: theme.colors.error,
-  },
-  actionItemDescription: {
-    fontSize: 13,
-    color: theme.colors.onSecondary,
-  },
-  badge: {
-    backgroundColor: theme.colors.secondary,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: theme.radius,
-  },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: theme.colors.onSecondary,
-  },
-
-  sectionHeader: {
-    marginTop: 12,
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  sectionTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  sectionTitle: {
-    fontWeight: "bold",
-    fontSize: 18,
-    letterSpacing: -0.3,
-  },
-  sectionDivider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: theme.colors.secondary,
-    opacity: 0.5,
-  },
-  sectionTotalsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 4,
-    marginTop: 4,
-  },
-  totalsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    flexWrap: "wrap",
-    gap: 8,
-    marginTop: 4,
-  },
-  sectionTotal: {
-    fontWeight: "700",
-    color: theme.colors.onSecondary,
-    fontSize: 12,
-  },
-
-  summaryContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
-  },
-  emptyState: {
-    paddingVertical: 48,
-    paddingHorizontal: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyIcon: {
-    opacity: 0.5,
-    marginBottom: 16,
-  },
-  emptyTitle: {
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    color: theme.colors.onSecondary,
-    textAlign: "center",
-  },
-  listContent: {
-    paddingBottom: 120,
-    flexGrow: 1,
   },
 }))

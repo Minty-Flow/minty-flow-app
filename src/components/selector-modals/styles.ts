@@ -109,7 +109,4 @@ export const modalStyles = StyleSheet.create((theme) => ({
     alignItems: "center",
     gap: 8,
   },
-  itemCheck: {
-    color: theme.colors.primary,
-  },
 }))
