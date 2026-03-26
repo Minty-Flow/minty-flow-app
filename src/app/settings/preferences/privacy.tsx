@@ -163,7 +163,4 @@ const styles = StyleSheet.create((theme) => ({
   settingRowDisabled: {
     opacity: 0.5,
   },
-  settingLabelDisabled: {
-    color: theme.colors.customColors.semi,
-  },
 }))

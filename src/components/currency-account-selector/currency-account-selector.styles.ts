@@ -17,37 +17,11 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
     paddingBottom: 4,
     opacity: 0.6,
   },
-  // Currency trigger row
-  currencyRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-  },
-  currencyLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  currencyRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
+
   currencyCode: {
     fontSize: 16,
     fontWeight: "500",
     color: t.colors.onSurface,
-  },
-  currencyPlaceholder: {
-    fontSize: 16,
-    color: t.colors.onSecondary,
-    opacity: 0.6,
-  },
-  chevron: {
-    color: t.colors.onSecondary,
-    opacity: 0.4,
   },
   // Account rows
   accountRow: {
@@ -63,12 +37,6 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
     gap: 12,
     flex: 1,
   },
-  accountIcon: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   accountName: {
     fontSize: 16,
     fontWeight: "500",
@@ -80,9 +48,6 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
     color: t.colors.onSecondary,
     opacity: 0.7,
     marginTop: 2,
-  },
-  checkIcon: {
-    color: t.colors.primary,
   },
   // Select all row (inside panel)
   selectAllRow: {

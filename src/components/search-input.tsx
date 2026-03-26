@@ -85,7 +85,4 @@ const styles = StyleSheet.create((theme) => ({
     width: 28,
     height: 28,
   },
-  clearIcon: {
-    color: theme.colors.onSecondary,
-  },
 }))

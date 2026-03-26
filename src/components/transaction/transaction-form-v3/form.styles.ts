@@ -1,4 +1,3 @@
-import { Platform } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 export const H_PAD = 20
@@ -36,45 +35,6 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   },
   balanceSection: {
     paddingHorizontal: H_PAD,
-  },
-  balanceContainer: {
-    paddingVertical: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: theme.radius ?? 16,
-    backgroundColor: theme.colors.secondary,
-  },
-  balanceValue: {
-    fontSize: 32,
-    fontWeight: "600",
-    lineHeight: 48,
-    padding: 0,
-    textAlign: "center",
-    textAlignVertical: "center",
-    ...(Platform.OS === "android" && { includeFontPadding: false }),
-  },
-  updateBalanceLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: theme.colors.customColors.semi,
-    marginTop: SMALL_GAP,
-  },
-  currencyConversionPlaceholder: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: theme.colors.secondary,
-    backgroundColor: theme.colors.secondary,
-  },
-  currencyConversionIcon: {
-    marginRight: 10,
-    opacity: 0.7,
-  },
-  currencyConversionText: {
-    flex: 1,
-    color: theme.colors.customColors.semi,
   },
   fieldError: {
     fontSize: 13,
@@ -208,10 +168,6 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     fontSize: 15,
     fontWeight: "500",
     color: theme.colors.customColors?.semi ?? theme.colors.onSecondary,
-  },
-  conversionEqualsRight: {
-    minWidth: 0,
-    flex: 1,
   },
   conversionInputRow: {
     marginTop: SECTION_GAP + 4,
@@ -431,10 +387,6 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     flex: 1,
     minWidth: 0,
   },
-  inlineTimeText: {
-    fontSize: 14,
-    color: theme.colors.customColors.semi,
-  },
   switchRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -453,35 +405,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     fontWeight: "500",
     color: theme.colors.onSurface,
   },
-  comingSoonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: ROW_PADDING_V,
-    paddingHorizontal: H_PAD,
-  },
-  comingSoonBadge: {
-    backgroundColor: theme.colors.secondary,
-    paddingHorizontal: ROW_PADDING_V,
-    paddingVertical: SMALL_GAP,
-    borderRadius: theme.radius,
-  },
-  comingSoonBadgeText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: theme.colors.onSecondary,
-  },
-  locationClearBtn: {
-    marginRight: -8,
-  },
-  recurringRightWithBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: ROW_GAP,
-  },
-  recurringDisabledOverlay: {
-    opacity: 0.7,
-  },
+
   recurringSwitchRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -674,16 +598,6 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   },
   attachmentRemoveBtn: {
     marginRight: H_PAD,
-  },
-  notesTextArea: {
-    marginHorizontal: H_PAD,
-    marginTop: SMALL_GAP,
-    padding: CARD_PAD,
-    borderRadius: theme.radius,
-    borderWidth: 1,
-    minHeight: 96,
-    textAlignVertical: "top",
-    fontSize: 16,
   },
   footer: {
     flexDirection: "row",

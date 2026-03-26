@@ -37,18 +37,6 @@ export const goalModifyStyles = StyleSheet.create((theme) => ({
     gap: 10,
     paddingHorizontal: 20,
   },
-  targetDateSection: {
-    paddingHorizontal: 20,
-  },
-  targetDateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderRadius: theme.radius,
-    backgroundColor: theme.colors.secondary,
-  },
   targetDateText: {
     fontSize: 16,
     fontWeight: "500",
@@ -60,19 +48,6 @@ export const goalModifyStyles = StyleSheet.create((theme) => ({
     opacity: 0.6,
   },
   settingsList: {},
-  switchesSection: {},
-  switchRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-  },
-  switchLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-  },
   switchLabel: {
     fontSize: 16,
     fontWeight: "500",

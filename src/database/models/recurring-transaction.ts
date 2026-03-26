@@ -1,7 +1,7 @@
 import { Model } from "@nozbe/watermelondb"
 import { date, field, readonly } from "@nozbe/watermelondb/decorators"
 
-export const RECURRING_EXTENSION_KEY = "@mintyflow/default-recurring"
+const RECURRING_EXTENSION_KEY = "@mintyflow/default-recurring"
 
 interface RecurringTimeRange {
   from: number // Unix ms

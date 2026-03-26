@@ -148,19 +148,6 @@ const styles = StyleSheet.create((theme) => ({
     paddingBottom: 48,
   },
 
-  previewSection: {
-    alignItems: "center",
-    paddingVertical: 28,
-    paddingHorizontal: 20,
-    gap: 8,
-  },
-  previewLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 1,
-    opacity: 0.5,
-  },
-
   sectionLabel: {
     paddingHorizontal: 20,
     marginBottom: 8,
@@ -192,10 +179,6 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: 16,
     fontWeight: "500",
     color: theme.colors.onSurface,
-  },
-  rowDescription: {
-    fontSize: 13,
-    color: theme.colors.customColors.semi,
   },
   divider: {
     height: 0.5,

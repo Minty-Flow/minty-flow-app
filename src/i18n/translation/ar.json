@@ -354,7 +354,9 @@
               "light": "فاتح",
               "dark": "داكن",
               "system": "النظام"
-            }
+            },
+            "other_themes": "مواضيع أخرى",
+            "current_theme": "الموضوع الحالي"
           },
           "moneyFormatting": {
             "title": "تنسيق الأموال",
