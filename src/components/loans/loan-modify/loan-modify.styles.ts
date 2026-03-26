@@ -39,18 +39,6 @@ export const loanModifyStyles = StyleSheet.create((theme) => ({
     paddingTop: 12,
   },
   settingsList: {},
-  switchRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-  },
-  switchLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-  },
   switchLabel: {
     fontSize: 16,
     fontWeight: "500",

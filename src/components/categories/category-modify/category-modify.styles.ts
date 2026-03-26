@@ -29,23 +29,6 @@ export const categoryModifyStyles = StyleSheet.create((theme) => ({
     gap: 10,
     paddingHorizontal: 20,
   },
-  switchRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-  },
-  switchLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-  },
-  switchLabel: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: theme.colors.onSurface,
-  },
   errorText: {
     fontSize: 12,
     color: theme.colors.error,

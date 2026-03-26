@@ -49,11 +49,7 @@ export const budgetModifyStyles = StyleSheet.create((theme) => ({
     flexWrap: "wrap",
     gap: 8,
   },
-  categorySection: {
-    gap: 8,
-  },
   settingsList: {},
-  switchesSection: {},
   switchRow: {
     flexDirection: "row",
     justifyContent: "space-between",

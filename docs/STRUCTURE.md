@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-03-25T21:41:39.375Z
+Generated on: 2026-03-26T14:41:22.333Z
 
 ```
 ./
@@ -594,6 +594,7 @@ Generated on: 2026-03-25T21:41:39.375Z
 │   │   │   ├── math-utils.ts
 │   │   │   └── styles.ts
 │   │   ├── stats/
+│   │   │   ├── stats-category-pie/
 │   │   │   ├── balance-timeline-chart.tsx
 │   │   │   ├── chart-container.tsx
 │   │   │   ├── chart-crosshair.tsx

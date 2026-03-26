@@ -6,7 +6,7 @@ import { createJSONStorage, persist } from "zustand/middleware"
 import type { ThemeKey } from "~/styles/unistyles"
 
 export const DEFAULT_THEME = "coastalTrim"
-export const THEME_PERSIST_STORE_KEY = "theme-preferences-store"
+const THEME_PERSIST_STORE_KEY = "theme-preferences-store"
 const THEME_PERSIST_MMKV_KEY = "theme-preferences-storage"
 
 /**
@@ -17,7 +17,7 @@ const THEME_PERSIST_MMKV_KEY = "theme-preferences-storage"
  *
  * @see https://github.com/mrousavy/react-native-mmkv
  */
-export const themeStorage = createMMKV({
+const themeStorage = createMMKV({
   id: THEME_PERSIST_MMKV_KEY,
 })
 

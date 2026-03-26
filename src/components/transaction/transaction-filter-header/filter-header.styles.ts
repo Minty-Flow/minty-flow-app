@@ -11,19 +11,6 @@ export const filterHeaderStyles = StyleSheet.create((theme) => ({
     gap: 8,
     paddingVertical: 4,
   },
-  pill: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: theme.radius ?? 12,
-    borderWidth: 1,
-    gap: 6,
-  },
-  pillLabel: {
-    fontSize: 13,
-    // maxWidth: 100,
-  },
   clearAllPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -91,17 +78,6 @@ export const filterHeaderStyles = StyleSheet.create((theme) => ({
     fontSize: 13,
     fontWeight: "400",
     color: theme.colors.customColors.semi,
-  },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: theme.radius,
-    gap: 6,
-  },
-  chipLabel: {
-    fontSize: 14,
   },
   searchMatchScroll: {
     marginBottom: 10,

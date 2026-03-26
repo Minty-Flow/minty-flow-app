@@ -354,7 +354,9 @@
               "light": "Light",
               "dark": "Dark",
               "system": "System"
-            }
+            },
+            "other_themes": "Other Themes",
+            "current_theme": "Current Theme"
           },
           "moneyFormatting": {
             "title": "Money Formatting",
