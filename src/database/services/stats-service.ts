@@ -253,6 +253,15 @@ async function fetchUncategorizedSummary(
 /* Computation helpers                                                 */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Aggregates total income, expense, net, and average daily figures for a set of
+ * raw transaction rows within the given date range.
+ *
+ * @param rows - Pre-filtered transaction rows for a single currency.
+ * @param from - Start of the period (inclusive), used to compute the day span.
+ * @param to - End of the period (inclusive).
+ * @returns A {@link CurrencyPeriodStats} object with totals and daily averages.
+ */
 function computePeriodStats(
   rows: StatsRawRow[],
   from: Date,
@@ -286,6 +295,15 @@ function computePeriodStats(
   }
 }
 
+/**
+ * Builds a complete day-by-day series of income, expense, and net values over
+ * the given date range, filling in zero for days with no transactions.
+ *
+ * @param rows - Pre-filtered transaction rows for a single currency.
+ * @param from - First day of the series.
+ * @param to - Last day of the series.
+ * @returns An ordered array of {@link DailyDataPoint} entries, one per calendar day.
+ */
 function computeDailyData(
   rows: StatsRawRow[],
   from: Date,
@@ -316,6 +334,13 @@ function computeDailyData(
   return Array.from(map.values())
 }
 
+/**
+ * Returns a stable string key for the time bucket that contains `date` at the
+ * requested granularity (day, ISO week start on Monday, or month start).
+ *
+ * @param date - The date to bucket.
+ * @param interval - Granularity of the bucket.
+ */
 function getBucketKey(date: Date, interval: "day" | "week" | "month"): string {
   switch (interval) {
     case "day":
@@ -327,6 +352,15 @@ function getBucketKey(date: Date, interval: "day" | "week" | "month"): string {
   }
 }
 
+/**
+ * Builds a bucketed time series (day / week / month) for the current period,
+ * paired with the equivalent prior-period values for comparison charts.
+ *
+ * @param currentRows - Transaction rows for the active date range.
+ * @param previousRows - Transaction rows for the preceding comparison range.
+ * @param range - Full stats date range including interval and both period boundaries.
+ * @returns An array of {@link IntervalDataPoint} entries aligned with the current-period buckets.
+ */
 function computeIntervalData(
   currentRows: StatsRawRow[],
   previousRows: StatsRawRow[],
@@ -385,6 +419,14 @@ function computeIntervalData(
   })
 }
 
+/**
+ * Groups transactions by category and computes per-category totals, share of
+ * total expense, and delta versus the previous period.
+ *
+ * @param rows - Current-period transaction rows.
+ * @param previousRows - Prior-period transaction rows used to compute expense deltas.
+ * @returns Categories sorted by total expense descending, each with {@link CategoryBreakdownItem} fields.
+ */
 function computeCategoryBreakdown(
   rows: StatsRawRow[],
   previousRows: StatsRawRow[],
@@ -442,6 +484,17 @@ function computeCategoryBreakdown(
   return items.sort((a, b) => b.totalExpense - a.totalExpense)
 }
 
+/**
+ * Reconstructs the day-by-day combined balance across all provided accounts for
+ * the given period, using stored `accountBalanceBefore` snapshots and carry-forward
+ * for days without transactions.
+ *
+ * @param balanceRows - Raw balance rows including transfers for the period.
+ * @param accounts - Account models whose balances are summed (typically filtered to one currency).
+ * @param from - First day of the timeline.
+ * @param to - Last day of the timeline.
+ * @returns The daily timeline plus scalar opening and closing balances.
+ */
 function computeBalanceTimeline(
   balanceRows: BalanceRawRow[],
   accounts: AccountModel[],
@@ -517,6 +570,15 @@ function computeBalanceTimeline(
   return { timeline, opening: openingSum, closing }
 }
 
+/**
+ * Calculates total and average expense for each day of the week (Mon–Sun)
+ * over the given period, normalising by how many times each weekday appears.
+ *
+ * @param rows - Expense and income rows for the period (non-expense rows are ignored).
+ * @param from - Start of the period, used to count weekday occurrences.
+ * @param to - End of the period.
+ * @returns Seven {@link DayOfWeekPoint} entries ordered Monday through Sunday.
+ */
 function computeSpendingByDayOfWeek(
   rows: StatsRawRow[],
   from: Date,
@@ -551,6 +613,15 @@ function computeSpendingByDayOfWeek(
   })
 }
 
+/**
+ * Projects full-period income and expense totals by extrapolating the daily
+ * run-rate observed so far. Returns `null` when the range has already ended
+ * (no future to forecast).
+ *
+ * @param rows - Transaction rows accumulated from range start to today.
+ * @param range - The stats date range; `range.to` must be in the future for a result.
+ * @returns A {@link ForecastSummary} with projected totals, or `null` if the period is complete.
+ */
 function computeForecast(
   rows: StatsRawRow[],
   range: StatsDateRange,
@@ -585,6 +656,13 @@ function computeForecast(
   }
 }
 
+/**
+ * Totals expense amounts broken down by transaction subtype
+ * (`recurring`, `one-time`, and unclassified).
+ *
+ * @param rows - Transaction rows for the period; non-expense rows are skipped.
+ * @returns An {@link ExpenseBySubtype} object with a total for each subtype bucket.
+ */
 function computeExpenseBySubtype(rows: StatsRawRow[]): ExpenseBySubtype {
   const result: ExpenseBySubtype = { recurring: 0, oneTime: 0, unclassified: 0 }
 
@@ -599,6 +677,13 @@ function computeExpenseBySubtype(rows: StatsRawRow[]): ExpenseBySubtype {
   return result
 }
 
+/**
+ * Resolves the top 5 tags by total expense amount across the given expense rows,
+ * joining through `transaction_tags` to hydrate tag names and icons.
+ *
+ * @param rows - Transaction rows for the period; only expense rows are considered.
+ * @returns Up to 5 {@link TopTagItem} entries sorted by total expense descending.
+ */
 async function computeTopTags(rows: StatsRawRow[]): Promise<TopTagItem[]> {
   const expenseRows = rows.filter((r) => r.type === TransactionTypeEnum.EXPENSE)
   if (expenseRows.length === 0) return []
@@ -655,6 +740,14 @@ async function computeTopTags(rows: StatsRawRow[]): Promise<TopTagItem[]> {
     }))
 }
 
+/**
+ * Groups transactions by account and computes per-account income, expense, and
+ * transaction count, sorted by total expense descending.
+ *
+ * @param rows - Transaction rows for the period.
+ * @param accountMap - Pre-fetched account models keyed by account ID.
+ * @returns An array of {@link AccountBreakdownItem} sorted by total expense descending.
+ */
 function computeByAccount(
   rows: StatsRawRow[],
   accountMap: Map<string, AccountModel>,
@@ -690,6 +783,12 @@ function computeByAccount(
   )
 }
 
+/**
+ * Returns the 5 largest expense transactions by absolute amount.
+ *
+ * @param rows - Transaction rows for the period; only expense rows are considered.
+ * @returns Up to 5 {@link TopTransactionItem} entries sorted by amount descending.
+ */
 function computeTopTransactions(rows: StatsRawRow[]): TopTransactionItem[] {
   return rows
     .filter((r) => r.type === TransactionTypeEnum.EXPENSE)
@@ -707,6 +806,12 @@ function computeTopTransactions(rows: StatsRawRow[]): TopTransactionItem[] {
     }))
 }
 
+/**
+ * Partitions a flat array of stats rows into a map keyed by currency code.
+ *
+ * @param rows - Raw stats rows from any number of currencies.
+ * @returns A `Map` where each entry holds only rows for that currency.
+ */
 function groupByCurrency(rows: StatsRawRow[]): Map<string, StatsRawRow[]> {
   const map = new Map<string, StatsRawRow[]>()
   for (const row of rows) {
@@ -717,6 +822,12 @@ function groupByCurrency(rows: StatsRawRow[]): Map<string, StatsRawRow[]> {
   return map
 }
 
+/**
+ * Partitions a flat array of balance rows into a map keyed by currency code.
+ *
+ * @param rows - Raw balance rows from any number of currencies.
+ * @returns A `Map` where each entry holds only rows for that currency.
+ */
 function groupBalanceByCurrency(
   rows: BalanceRawRow[],
 ): Map<string, BalanceRawRow[]> {
@@ -833,7 +944,13 @@ async function computeCurrencyStats(
 }
 
 /**
- * Fetch all stats data needed for a date range in parallel.
+ * Fetches all raw transaction data for both the current and previous periods in
+ * parallel, then computes and returns one {@link CurrencyStats} per currency found
+ * in the results.
+ *
+ * @param range - The active stats date range, including prior-period boundaries and
+ *   the chart interval granularity.
+ * @returns An array of {@link CurrencyStats} objects sorted by transaction count descending.
  */
 export async function fetchAllStatsData(range: StatsDateRange) {
   const [currentRows, previousRows, balanceRows, pendingMap, uncategorizedMap] =

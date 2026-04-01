@@ -8,8 +8,8 @@ import { database } from "../index"
 import type RecurringTransactionModel from "../models/recurring-transaction"
 import type { RecurringTransactionTemplate } from "../models/recurring-transaction"
 import type TransactionModel from "../models/transaction"
-import { createTransactionModel } from "./transaction-service"
-import { createTransfer } from "./transfer-service"
+import { createTransactionWriter } from "./transaction-service"
+import { createTransferWriter } from "./transfer-service"
 
 /**
  * Scope for recurring edit/delete, matching flow project's RecurringUpdateMode.
@@ -68,15 +68,15 @@ async function getRelatedTransactionsByRecurringId(
 }
 
 /**
- * Generate the next occurrence for a recurring template and save it.
+ * Generates the next due transaction instance for a single recurring rule and
+ * recursively catches up any missed occurrences up to `anchor` (one-ahead policy).
+ * Skips disabled rules and guards against infinite loops with a max recursion depth of 500.
  *
- * Port of Flutter's RecurringTransactionsService._synchronize():
- * - ONE-AHEAD POLICY: if lastGenerated >= anchor → stop (already have a future occurrence).
- * - NO-DUPLICATE: if nextOccurrence <= lastGenerated → stop.
- * - EFFECTIVE-LAST: double-check against related transactions (tag-based).
- * - CATCH-UP: if the generated occurrence is still in the past, recurse.
+ * @param recurring - The recurring template whose next instance should be generated.
+ * @param anchor - "Now" reference date; defaults to the current wall-clock time.
+ * @param depth - Internal recursion counter used for the depth limit — callers should omit this.
  */
-async function synchronizeRecurringTransaction(
+export async function synchronizeRecurringTransaction(
   recurring: RecurringTransactionModel,
   anchor: Date = new Date(),
   depth = 0,
@@ -92,55 +92,36 @@ async function synchronizeRecurringTransaction(
   }
   if (recurring.disabled) return
 
-  // Flutter wraps the entire sync body in try-catch so one failure doesn't
-  // break the entire sync loop.  Match that here.
   try {
     const range = recurring.timeRange
     const rules = recurring.recurrenceRules
     const lastGenerated = recurring.lastGeneratedTransactionDate
     const fromDate = new Date(range.from)
 
-    // ── Flutter guard 1: ONE-AHEAD POLICY ────────────────────────────
-    // If we already generated an occurrence at or past the anchor, we
-    // have one future occurrence — stop.  This is the critical guard
-    // that prevents generating 5-6 transactions when sync runs multiple
-    // times.
-    if (lastGenerated && lastGenerated.getTime() >= anchor.getTime()) {
-      return
-    }
+    // ── ONE-AHEAD POLICY
+    if (lastGenerated && lastGenerated.getTime() >= anchor.getTime()) return
 
-    // ── Compute next-occurrence anchor (matches Flutter logic) ───────
-    let nextAnchor: Date
-    if (lastGenerated) {
-      nextAnchor = lastGenerated
-    } else {
-      // No lastGenerated → first sync.  Use the earlier of (anchor,
-      // range.from) so we can catch up missed past occurrences, matching
-      // Flutter's min(anchor.date, range.from.date)
-      const earlier = Math.min(anchor.getTime(), fromDate.getTime())
-      nextAnchor = new Date(earlier)
-    }
+    // ── Compute next-occurrence anchor
+    const nextAnchor = lastGenerated
+      ? lastGenerated
+      : new Date(Math.min(anchor.getTime(), fromDate.getTime()))
 
     const nextOccurrence = nextAbsoluteOccurrence(rules, range, nextAnchor)
     if (!nextOccurrence) return
 
-    // ── Flutter guard 2: NO-DUPLICATE ────────────────────────────────
-    // nextOccurrence must be strictly after lastGenerated.
-    if (lastGenerated && nextOccurrence.getTime() <= lastGenerated.getTime()) {
+    // ── NO-DUPLICATE guard
+    if (lastGenerated && nextOccurrence.getTime() <= lastGenerated.getTime())
       return
-    }
 
-    // ── Effective-last from related transactions ──────────────────────
+    // ── Effective-last from related transactions
     const related = await getRelatedTransactionsByRecurringId(recurring.id)
     const effectiveLast = related.length
       ? new Date(Math.max(...related.map(getInitialDateMs)))
       : null
-
     if (effectiveLast && nextOccurrence.getTime() <= effectiveLast.getTime())
       return
 
-    // ── Idempotency (Bug #1): duplicate guard by (ruleId + date) ───────
-    // Don't generate if a transaction already exists for this rule and date.
+    // ── Idempotency: check existing transactions
     const nextTs = nextOccurrence.getTime()
     const alreadyExists =
       (await database
@@ -164,9 +145,6 @@ async function synchronizeRecurringTransaction(
 
     const template = recurring.template
     const isTransfer = Boolean(recurring.transferToAccountId)
-
-    // Future occurrences are always pending; past (backfill) are confirmed.
-    // requireConfirmation only controls auto-confirm when time comes (auto-confirmation-service).
     const isPending = nextOccurrence.getTime() > anchor.getTime()
 
     const extra: Record<string, string> = {
@@ -175,60 +153,59 @@ async function synchronizeRecurringTransaction(
       recurringInitialDate: String(nextTs),
     }
 
-    if (!isTransfer) {
-      const data: TransactionFormValues = {
-        amount: template.amount,
-        type: template.type as "expense" | "income" | "transfer",
-        transactionDate: nextOccurrence,
-        accountId: template.accountId,
-        categoryId: template.categoryId ?? undefined,
-        title: template.title,
-        description: template.description,
-        subtype: template.subtype,
-        tags: template.tags ?? [],
-        recurringId: recurring.id,
-        extra,
-        isPending,
-      }
-      await createTransactionModel(data)
-    } else {
-      const fromAccountId = template.accountId
-      const toAccountId = recurring.transferToAccountId
-      if (!toAccountId)
-        throw new Error("Recurring transfer missing transferToAccountId")
-      await createTransfer(
-        {
-          fromAccountId,
-          toAccountId,
-          amount: template.amount,
-          transactionDate: nextOccurrence,
-          title: template.title ?? undefined,
-          notes: template.description ?? undefined,
-        },
-        {
-          recurringId: recurring.id,
-          isPending,
-          subtype: template.subtype ?? null,
-          extra,
-        },
-      )
+    const transactionData: TransactionFormValues = {
+      amount: template.amount,
+      type: template.type as "expense" | "income" | "transfer",
+      transactionDate: nextOccurrence,
+      accountId: template.accountId,
+      categoryId: template.categoryId ?? undefined,
+      title: template.title,
+      description: template.description,
+      subtype: template.subtype,
+      tags: template.tags ?? [],
+      recurringId: recurring.id,
+      extra,
+      isPending,
     }
 
-    // ── Update lastGeneratedTransactionDate ──────────────────────────
+    // ── SINGLE WRITE: create transaction/transfer + update lastGeneratedTransactionDate
     await database.write(async () => {
+      if (!isTransfer) {
+        await createTransactionWriter(transactionData)
+      } else {
+        const fromAccountId = template.accountId
+        const toAccountId = recurring.transferToAccountId
+        if (!toAccountId)
+          throw new Error("Recurring transfer missing transferToAccountId")
+
+        await createTransferWriter(
+          {
+            fromAccountId,
+            toAccountId,
+            amount: template.amount,
+            transactionDate: nextOccurrence,
+            title: template.title ?? undefined,
+            notes: template.description ?? undefined,
+          },
+          {
+            recurringId: recurring.id,
+            isPending,
+            subtype: template.subtype ?? null,
+            extra,
+          },
+        )
+      }
+
       await recurring.update((r) => {
         r.lastGeneratedTransactionDate = nextOccurrence
       })
     })
 
-    // ── CATCH-UP: if the generated occurrence is still in the past,
-    //    recurse to fill in the next one.  The ONE-AHEAD guard at the
-    //    top will stop us once we've generated one at-or-past anchor. ──
+    // ── CATCH-UP recursion
     if (nextOccurrence.getTime() < anchor.getTime()) {
       await synchronizeRecurringTransaction(recurring, anchor, depth + 1)
     }
   } catch (e) {
-    // Match Flutter: log and continue — don't break the sync loop.
     logger.error("Failed to synchronize recurring transaction", {
       recurringId: recurring.id,
       error: e instanceof Error ? e.message : String(e),
@@ -244,6 +221,13 @@ async function synchronizeRecurringTransaction(
 
 let _syncRunning = false
 
+/**
+ * Runs {@link synchronizeRecurringTransaction} for every active (non-disabled) rule.
+ * Protected by a module-level lock so concurrent calls from app foreground events
+ * are safely no-oped rather than creating duplicate transactions.
+ *
+ * @param anchor - "Now" reference date passed through to each rule's sync call; defaults to the current wall-clock time.
+ */
 export async function synchronizeAllRecurringTransactions(
   anchor: Date = new Date(),
 ): Promise<void> {

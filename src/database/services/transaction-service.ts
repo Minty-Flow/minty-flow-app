@@ -19,7 +19,7 @@ import type TagModel from "../models/tag"
 import type TransactionModel from "../models/transaction"
 import type TransactionTagModel from "../models/transaction-tag"
 import {
-  deleteTransfer,
+  deleteTransferWriter,
   getConversionRateForTransaction,
   getPairedTransaction,
 } from "./transfer-service"
@@ -277,9 +277,12 @@ const buildTransactionQuery = (filters?: TransactionListFilters) => {
 }
 
 /**
- * Pending transactions: future-dated OR explicitly pending (isPending === true).
- * Excludes deleted. Order: transaction_date ascending (closest upcoming first).
- * Optional range: fromDate/toDate (Unix ms) to limit results (e.g. home timeframe).
+ * Fetches future-dated and explicitly-pending (isPending === true) transactions,
+ * deduplicated and sorted by transaction_date ascending (closest upcoming first).
+ * Excludes soft-deleted rows. Optionally constrained to a fromDate/toDate range (Unix ms).
+ *
+ * @param options - Optional date range to narrow results.
+ * @returns Deduplicated, sorted array of pending transaction models.
  */
 export const getPendingTransactionModels = async (options?: {
   fromDate?: number
@@ -326,7 +329,13 @@ export const getPendingTransactionModels = async (options?: {
   return merged
 }
 
-/** Pending transactions with account, category, and tags hydrated. */
+/**
+ * Same as {@link getPendingTransactionModels} but returns each row fully hydrated
+ * with its account, category, and tags resolved into a {@link TransactionWithRelations} object.
+ *
+ * @param options - Optional date range to narrow results.
+ * @returns Hydrated pending transactions sorted by date ascending.
+ */
 export const getPendingTransactionModelsFull = async (options?: {
   fromDate?: number
   toDate?: number
@@ -419,33 +428,47 @@ export const confirmTransactionSync = async (
 /* READ – raw models (for edit screen, etc.) */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Fetches transactions matching the supplied filters (non-reactive, one-shot read).
+ * Excludes soft-deleted rows by default unless `filters.deletedOnly` or `filters.includeDeleted` is set.
+ *
+ * @param filters - Optional query filters (accounts, categories, date range, search, etc.).
+ * @returns Array of matching transaction models.
+ */
 export const getTransactionModels = async (
   filters?: TransactionListFilters,
 ): Promise<TransactionModel[]> => {
   return buildTransactionQuery(filters).fetch()
 }
 
-/** Observable count of transactions for an account (non-deleted). */
+/**
+ * Returns a reactive count of non-deleted transactions belonging to the given account.
+ * Emits a new value whenever the underlying transaction list changes.
+ *
+ * @param accountId - The account whose transactions are counted.
+ * @returns Observable that emits the current transaction count.
+ */
 export const observeTransactionCountByAccountId = (
   accountId: string,
 ): Observable<number> =>
   observeTransactionModels({ accountId }).pipe(map((rows) => rows.length))
 
 /**
- * Unlink a tag from all transactions (removes all transaction_tags for this tag).
- * Call before deleting/destroying a tag.
+ * Writer body — must be called within a `database.write()` context.
+ * Permanently destroys every `transaction_tags` row linked to the given tag,
+ * effectively unlinking the tag from all transactions. Call before deleting or destroying a tag.
+ *
+ * @param tagId - The tag whose join rows should be removed.
  */
-export const unlinkTagFromAllTransactions = async (
+export async function unlinkTagFromAllTransactionsWriter(
   tagId: string,
-): Promise<void> => {
+): Promise<void> {
   const rows = await transactionTagsCollection()
     .query(Q.where("tag_id", tagId))
     .fetch()
-  await database.write(async () => {
-    for (const row of rows) {
-      await row.destroyPermanently()
-    }
-  })
+  for (const row of rows) {
+    await row.destroyPermanently()
+  }
 }
 
 const findTransactionModel = async (
@@ -478,6 +501,13 @@ const TRANSACTION_OBSERVE_COLUMNS = [
   "loan_id",
 ] as const
 
+/**
+ * Returns a reactive list of transactions matching the supplied filters.
+ * Re-emits whenever any of the tracked columns (title, amount, date, etc.) change.
+ *
+ * @param filters - Optional query filters applied to the transaction collection.
+ * @returns Observable that emits the current matching transaction models.
+ */
 export const observeTransactionModels = (
   filters?: TransactionListFilters,
 ): Observable<TransactionModel[]> => {
@@ -486,6 +516,13 @@ export const observeTransactionModels = (
   ])
 }
 
+/**
+ * Returns a reactive observable for a single transaction by its ID.
+ * Emits `null` if no matching row is found.
+ *
+ * @param id - The transaction row ID to observe.
+ * @returns Observable that emits the transaction model or `null`.
+ */
 export const observeTransactionModelById = (
   id: string,
 ): Observable<TransactionModel | null> => {
@@ -532,6 +569,13 @@ export const observeTransactionModelsFull = (
 /* Tag helpers (for edit screen) */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Returns a reactive list of tag IDs linked to the given transaction.
+ * Emits a new array whenever the set of transaction_tag join rows changes.
+ *
+ * @param transactionId - The transaction whose linked tag IDs are observed.
+ * @returns Observable that emits an array of tag ID strings.
+ */
 export const observeTransactionTagIds = (
   transactionId: string,
 ): Observable<string[]> => {
@@ -545,279 +589,344 @@ export const observeTransactionTagIds = (
 /* WRITE */
 /* ------------------------------------------------------------------ */
 
-export const createTransactionModel = async (
+/**
+ * Writer body — must be called within a `database.write()` context.
+ * Creates a new transaction row, updates the owning account's balance (unless pending),
+ * increments the category transaction count, and links any provided tag IDs.
+ *
+ * @param data - Validated transaction form values from the create form.
+ * @returns The newly created transaction model.
+ */
+export async function createTransactionWriter(
   data: TransactionFormValues,
-): Promise<TransactionModel> => {
+): Promise<TransactionModel> {
   const transactions = transactionsCollection()
   const categories = database.get<CategoryModel>("categories")
 
-  return database.write(async () => {
-    const category = data.categoryId
-      ? await categories.find(data.categoryId)
-      : null
+  const category = data.categoryId
+    ? await categories.find(data.categoryId)
+    : null
 
-    const transaction = await transactions.create((t) => {
-      t.amount = data.amount
-      t.type = data.type
-      t.transactionDate = data.transactionDate
-      t.accountId = data.accountId
-      t.categoryId = data.categoryId ?? null
-      t.title = data.title ?? null
-      t.description = data.description ?? null
-      t.isPending = data.isPending ?? false
-      if (data.requiresManualConfirmation !== undefined)
-        t.requiresManualConfirmation = data.requiresManualConfirmation ?? null
-      t.isDeleted = false
-      t.extra = data.extra ?? null
-      t.recurringId = data.recurringId ?? null
-      // Cached derivative: set in same write so has_attachments never drifts from extra.attachments
-      t.hasAttachments = hasAttachmentsFromExtra(data.extra ?? null)
-      t.subtype = data.subtype ?? null
-      t.location = data.location ?? null
-      t.goalId = data.goalId ?? null
-      t.budgetId = data.budgetId ?? null
-      t.loanId = data.loanId ?? null
-      // Transfer link fields: single-row (income/expense or legacy transfer) have no pair
-      t.isTransfer = data.type === TransactionTypeEnum.TRANSFER
-      t.transferId = null
-      t.relatedAccountId = null
-      // Balance before is computed at read time (source-verified: Flow does not store it)
-      t.accountBalanceBefore = 0
-    })
-
-    const account = await accountsCollection().find(data.accountId)
-    if (!data.isPending) {
-      const balanceDelta = getBalanceDelta(data.amount, data.type)
-      await account.update((a) => {
-        a.balance = a.balance + balanceDelta
-      })
-    }
-
-    if (category) {
-      await category.update(incrementCount)
-    }
-
-    if (data.tags?.length) {
-      const tt = transactionTagsCollection()
-      const tags = tagsCollection()
-
-      for (const tagId of data.tags) {
-        const tag = await tags.find(tagId)
-
-        await tt.create((r) => {
-          r.transactionId = transaction.id
-          r.tagId = tagId
-        })
-
-        await tag.update(incrementCount)
-      }
-    }
-
-    return transaction
+  const transaction = await transactions.create((t) => {
+    t.amount = data.amount
+    t.type = data.type
+    t.transactionDate = data.transactionDate
+    t.accountId = data.accountId
+    t.categoryId = data.categoryId ?? null
+    t.title = data.title ?? null
+    t.description = data.description ?? null
+    t.isPending = data.isPending ?? false
+    if (data.requiresManualConfirmation !== undefined)
+      t.requiresManualConfirmation = data.requiresManualConfirmation ?? null
+    t.isDeleted = false
+    t.extra = data.extra ?? null
+    t.recurringId = data.recurringId ?? null
+    // Cached derivative: set in same write so has_attachments never drifts from extra.attachments
+    t.hasAttachments = hasAttachmentsFromExtra(data.extra ?? null)
+    t.subtype = data.subtype ?? null
+    t.location = data.location ?? null
+    t.goalId = data.goalId ?? null
+    t.budgetId = data.budgetId ?? null
+    t.loanId = data.loanId ?? null
+    // Transfer link fields: single-row (income/expense or legacy transfer) have no pair
+    t.isTransfer = data.type === TransactionTypeEnum.TRANSFER
+    t.transferId = null
+    t.relatedAccountId = null
+    // Balance before is computed at read time (source-verified: Flow does not store it)
+    t.accountBalanceBefore = 0
   })
+
+  const account = await accountsCollection().find(data.accountId)
+  if (!data.isPending) {
+    const balanceDelta = getBalanceDelta(data.amount, data.type)
+    await account.update((a) => {
+      a.balance = a.balance + balanceDelta
+    })
+  }
+
+  if (category) {
+    await category.update(incrementCount)
+  }
+
+  if (data.tags?.length) {
+    const tt = transactionTagsCollection()
+    const tags = tagsCollection()
+
+    for (const tagId of data.tags) {
+      const tag = await tags.find(tagId)
+
+      await tt.create((r) => {
+        r.transactionId = transaction.id
+        r.tagId = tagId
+      })
+
+      await tag.update(incrementCount)
+    }
+  }
+
+  return transaction
 }
 
-export const updateTransactionModel = async (
+/**
+ * Public wrapper for {@link createTransactionWriter}.
+ * Executes the creation inside a `database.write()` context and returns the new model.
+ *
+ * @param data - Validated transaction form values.
+ * @returns The newly created transaction model.
+ */
+export const createTransactionModel = async (
+  data: TransactionFormValues,
+): Promise<TransactionModel> => {
+  return database.write(() => createTransactionWriter(data))
+}
+
+/**
+ * Writer body — must be called within a `database.write()` context.
+ * Updates the given transaction with the supplied partial values, reconciles the account
+ * balance for amount/type/account changes, adjusts category transaction counts, and
+ * syncs the tag join rows (adds new, removes removed).
+ *
+ * @param transaction - The existing transaction model to update.
+ * @param updates - Partial set of form values to apply.
+ * @returns The updated transaction model.
+ */
+export async function updateTransactionWriter(
   transaction: TransactionModel,
   updates: Partial<TransactionFormValues>,
-): Promise<TransactionModel> => {
+): Promise<TransactionModel> {
   const categories = database.get<CategoryModel>("categories")
   const oldAmount = transaction.amount
   const oldType = transaction.type
   const oldAccountId = transaction.accountId
 
-  return database.write(async () => {
-    const oldCategoryId = transaction.categoryId
-    let oldCategory: CategoryModel | null = null
-    if (oldCategoryId) {
-      try {
-        oldCategory = await categories.find(oldCategoryId)
-      } catch {
-        // ignore
-      }
+  const oldCategoryId = transaction.categoryId
+  let oldCategory: CategoryModel | null = null
+  if (oldCategoryId) {
+    try {
+      oldCategory = await categories.find(oldCategoryId)
+    } catch {
+      // ignore
+    }
+  }
+
+  const updatedTransaction = await transaction.update((t) => {
+    if (updates.amount !== undefined) t.amount = updates.amount
+    if (updates.type !== undefined) t.type = updates.type
+    if (updates.transactionDate !== undefined)
+      t.transactionDate = updates.transactionDate
+    if (updates.title !== undefined) t.title = updates.title ?? null
+    if (updates.description !== undefined)
+      t.description = updates.description ?? null
+    if (updates.isPending !== undefined) t.isPending = updates.isPending
+    if (updates.requiresManualConfirmation !== undefined)
+      t.requiresManualConfirmation = updates.requiresManualConfirmation ?? null
+
+    if (updates.categoryId !== undefined) {
+      t.categoryId = updates.categoryId ?? null
+    }
+    if (updates.accountId) {
+      t.accountId = updates.accountId
     }
 
-    const updatedTransaction = await transaction.update((t) => {
-      if (updates.amount !== undefined) t.amount = updates.amount
-      if (updates.type !== undefined) t.type = updates.type
-      if (updates.transactionDate !== undefined)
-        t.transactionDate = updates.transactionDate
-      if (updates.title !== undefined) t.title = updates.title ?? null
-      if (updates.description !== undefined)
-        t.description = updates.description ?? null
-      if (updates.isPending !== undefined) t.isPending = updates.isPending
-      if (updates.requiresManualConfirmation !== undefined)
-        t.requiresManualConfirmation =
-          updates.requiresManualConfirmation ?? null
-
-      if (updates.categoryId !== undefined) {
-        t.categoryId = updates.categoryId ?? null
-      }
-      if (updates.accountId) {
-        t.accountId = updates.accountId
-      }
-
-      if (updates.extra !== undefined) {
-        t.extra = updates.extra ?? null
-        // Cached derivative: always update both in same write (atomic, no drift)
-        t.hasAttachments = hasAttachmentsFromExtra(updates.extra ?? null)
-      }
-      if (updates.subtype !== undefined) {
-        t.subtype = updates.subtype ?? null
-      }
-      if (updates.location !== undefined) {
-        t.location = updates.location ?? null
-      }
-      if (updates.recurringId !== undefined) {
-        t.recurringId = updates.recurringId ?? null
-      }
-      if (updates.goalId !== undefined) {
-        t.goalId = updates.goalId ?? null
-      }
-      if (updates.budgetId !== undefined) {
-        t.budgetId = updates.budgetId ?? null
-      }
-      if (updates.loanId !== undefined) {
-        t.loanId = updates.loanId ?? null
-      }
-    })
-
-    if (
-      updates.categoryId !== undefined &&
-      oldCategoryId !== updates.categoryId
-    ) {
-      if (oldCategory && !transaction.isDeleted) {
-        await oldCategory.update(decrementCount)
-      }
-      if (updates.categoryId && !transaction.isDeleted) {
-        const newCategory = await categories.find(updates.categoryId)
-        if (newCategory) {
-          await newCategory.update(incrementCount)
-        }
-      }
+    if (updates.extra !== undefined) {
+      t.extra = updates.extra ?? null
+      // Cached derivative: always update both in same write (atomic, no drift)
+      t.hasAttachments = hasAttachmentsFromExtra(updates.extra ?? null)
     }
-
-    if (updates.tags !== undefined) {
-      const transactionTags = transactionTagsCollection()
-      const tagsCollectionRef = tagsCollection()
-      const existing = await transactionTags
-        .query(Q.where("transaction_id", transaction.id))
-        .fetch()
-      const existingTagIds = new Set(existing.map((tt) => tt.tagId))
-      const newTagIds = new Set(updates.tags)
-
-      for (const tt of existing) {
-        if (!newTagIds.has(tt.tagId)) {
-          const tag = await tagsCollectionRef.find(tt.tagId)
-          await tag.update(decrementCount)
-          await tt.destroyPermanently()
-        }
-      }
-      for (const tagId of newTagIds) {
-        if (!existingTagIds.has(tagId)) {
-          const tag = await tagsCollectionRef.find(tagId)
-          await transactionTags.create((ttRecord) => {
-            ttRecord.transactionId = transaction.id
-            ttRecord.tagId = tagId
-          })
-          await tag.update(incrementCount)
-        }
-      }
+    if (updates.subtype !== undefined) {
+      t.subtype = updates.subtype ?? null
     }
-
-    const newAmount = updatedTransaction.amount
-    const newType = updatedTransaction.type
-    const newAccountId = updatedTransaction.accountId
-    const oldPending = transaction.isPending
-    const newPending = updatedTransaction.isPending
-
-    const reverseOldDelta = !oldPending
-      ? -getBalanceDelta(oldAmount, oldType)
-      : 0
-    const forwardNewDelta = !newPending
-      ? getBalanceDelta(newAmount, newType)
-      : 0
-
-    const accounts = accountsCollection()
-    if (newAccountId === oldAccountId) {
-      const account = await accounts.find(oldAccountId)
-      await account.update((a) => {
-        a.balance = a.balance + reverseOldDelta + forwardNewDelta
-      })
-    } else {
-      const oldAccount = await accounts.find(oldAccountId)
-      const newAccount = await accounts.find(newAccountId)
-      await oldAccount.update((a) => {
-        a.balance = a.balance + reverseOldDelta
-      })
-      await newAccount.update((a) => {
-        a.balance = a.balance + forwardNewDelta
-      })
+    if (updates.location !== undefined) {
+      t.location = updates.location ?? null
     }
-
-    return updatedTransaction
+    if (updates.recurringId !== undefined) {
+      t.recurringId = updates.recurringId ?? null
+    }
+    if (updates.goalId !== undefined) {
+      t.goalId = updates.goalId ?? null
+    }
+    if (updates.budgetId !== undefined) {
+      t.budgetId = updates.budgetId ?? null
+    }
+    if (updates.loanId !== undefined) {
+      t.loanId = updates.loanId ?? null
+    }
   })
+
+  if (
+    updates.categoryId !== undefined &&
+    oldCategoryId !== updates.categoryId
+  ) {
+    if (oldCategory && !transaction.isDeleted) {
+      await oldCategory.update(decrementCount)
+    }
+    if (updates.categoryId && !transaction.isDeleted) {
+      const newCategory = await categories.find(updates.categoryId)
+      if (newCategory) {
+        await newCategory.update(incrementCount)
+      }
+    }
+  }
+
+  if (updates.tags !== undefined) {
+    const transactionTags = transactionTagsCollection()
+    const tagsCollectionRef = tagsCollection()
+    const existing = await transactionTags
+      .query(Q.where("transaction_id", transaction.id))
+      .fetch()
+    const existingTagIds = new Set(existing.map((tt) => tt.tagId))
+    const newTagIds = new Set(updates.tags)
+
+    for (const tt of existing) {
+      if (!newTagIds.has(tt.tagId)) {
+        const tag = await tagsCollectionRef.find(tt.tagId)
+        await tag.update(decrementCount)
+        await tt.destroyPermanently()
+      }
+    }
+    for (const tagId of newTagIds) {
+      if (!existingTagIds.has(tagId)) {
+        const tag = await tagsCollectionRef.find(tagId)
+        await transactionTags.create((ttRecord) => {
+          ttRecord.transactionId = transaction.id
+          ttRecord.tagId = tagId
+        })
+        await tag.update(incrementCount)
+      }
+    }
+  }
+
+  const newAmount = updatedTransaction.amount
+  const newType = updatedTransaction.type
+  const newAccountId = updatedTransaction.accountId
+  const oldPending = transaction.isPending
+  const newPending = updatedTransaction.isPending
+
+  const reverseOldDelta = !oldPending ? -getBalanceDelta(oldAmount, oldType) : 0
+  const forwardNewDelta = !newPending ? getBalanceDelta(newAmount, newType) : 0
+
+  const accounts = accountsCollection()
+  if (newAccountId === oldAccountId) {
+    const account = await accounts.find(oldAccountId)
+    await account.update((a) => {
+      a.balance = a.balance + reverseOldDelta + forwardNewDelta
+    })
+  } else {
+    const oldAccount = await accounts.find(oldAccountId)
+    const newAccount = await accounts.find(newAccountId)
+    await oldAccount.update((a) => {
+      a.balance = a.balance + reverseOldDelta
+    })
+    await newAccount.update((a) => {
+      a.balance = a.balance + forwardNewDelta
+    })
+  }
+
+  return updatedTransaction
+}
+
+/**
+ * Public wrapper for {@link updateTransactionWriter}.
+ * Executes the update inside a `database.write()` context and returns the updated model.
+ *
+ * @param transaction - The existing transaction model to update.
+ * @param updates - Partial set of form values to apply.
+ * @returns The updated transaction model.
+ */
+export const updateTransactionModel = async (
+  transaction: TransactionModel,
+  updates: Partial<TransactionFormValues>,
+): Promise<TransactionModel> => {
+  return database.write(() => updateTransactionWriter(transaction, updates))
 }
 
 /* ------------------------------------------------------------------ */
 /* DELETE */
 /* ------------------------------------------------------------------ */
 
-export const deleteTransactionModel = async (
+/**
+ * Writer body — must be called within a `database.write()` context.
+ * Soft-deletes the transaction by setting `is_deleted = true`, reverses the account
+ * balance delta, and decrements the category transaction count. For transfer rows,
+ * delegates to {@link deleteTransferWriter} to soft-delete both legs atomically.
+ *
+ * @param transaction - The transaction model to soft-delete.
+ */
+export async function deleteTransactionWriter(
   transaction: TransactionModel,
-): Promise<void> => {
+): Promise<void> {
   // Transfers: soft-delete both legs and restore both account balances (matches Flow moveToBinSync).
   if (transaction.isTransfer && transaction.transferId) {
-    return deleteTransfer(transaction)
+    return deleteTransferWriter(transaction)
   }
 
   const categories = database.get<CategoryModel>("categories")
 
-  return database.write(async () => {
-    if (!transaction.isDeleted && transaction.categoryId) {
-      const category = await categories.find(transaction.categoryId)
-      await category.update(decrementCount)
-    }
+  if (!transaction.isDeleted && transaction.categoryId) {
+    const category = await categories.find(transaction.categoryId)
+    await category.update(decrementCount)
+  }
 
-    if (!transaction.isDeleted && !transaction.isPending) {
-      const reverseDelta = -getBalanceDelta(
-        transaction.amount,
-        transaction.type,
-      )
-      const account = await accountsCollection().find(transaction.accountId)
-      await account.update((a) => {
-        a.balance = a.balance + reverseDelta
-      })
-    }
-
-    // Use our is_deleted column so the record still appears in trash queries.
-    // WatermelonDB's markAsDeleted() sets _status = 'deleted' and hides the record from all queries.
-    const now = new Date()
-    await transaction.update((t) => {
-      t.isDeleted = true
-      t.deletedAt = now
-      t.updatedAt = now
+  if (!transaction.isDeleted && !transaction.isPending) {
+    const reverseDelta = -getBalanceDelta(transaction.amount, transaction.type)
+    const account = await accountsCollection().find(transaction.accountId)
+    await account.update((a) => {
+      a.balance = a.balance + reverseDelta
     })
+  }
+
+  // Use our is_deleted column so the record still appears in trash queries.
+  // WatermelonDB's markAsDeleted() sets _status = 'deleted' and hides the record from all queries.
+  const now = new Date()
+  await transaction.update((t) => {
+    t.isDeleted = true
+    t.deletedAt = now
+    t.updatedAt = now
   })
+}
+
+/**
+ * Public wrapper for {@link deleteTransactionWriter}.
+ * Soft-deletes the transaction (moves it to trash) inside a `database.write()` context.
+ *
+ * @param transaction - The transaction model to soft-delete.
+ */
+export const deleteTransactionModel = async (
+  transaction: TransactionModel,
+): Promise<void> => {
+  return database.write(() => deleteTransactionWriter(transaction))
 }
 
 /* ------------------------------------------------------------------ */
 /* RECURRING SCOPE HELPERS (for DeleteRecurringModal / EditRecurringModal) */
 /* ------------------------------------------------------------------ */
 
-/** Soft-delete every transaction linked to this recurring rule. */
+/**
+ * Soft-deletes every non-deleted transaction instance linked to the given recurring rule.
+ * All instances are processed within a single `database.write()` call.
+ *
+ * @param ruleId - The ID of the recurring rule whose instances should be deleted.
+ */
 export const deleteAllRecurringInstances = async (
   ruleId: string,
 ): Promise<void> => {
   const instances = await transactionsCollection()
     .query(Q.where("recurring_id", ruleId), Q.where("is_deleted", false))
     .fetch()
-  for (const tx of instances) {
-    await deleteTransactionModel(tx)
-  }
+  await database.write(async () => {
+    for (const tx of instances) {
+      await deleteTransactionWriter(tx)
+    }
+  })
 }
 
-/** Soft-delete instances from the given date onward (inclusive). */
+/**
+ * Soft-deletes non-deleted recurring instances whose transaction_date is on or after
+ * `fromDate`, processed in a single `database.write()` call.
+ *
+ * @param ruleId - The ID of the recurring rule.
+ * @param fromDate - Instances on or after this date are deleted (inclusive).
+ */
 export const deleteFutureRecurringInstances = async (
   ruleId: string,
   fromDate: Date,
@@ -830,12 +939,19 @@ export const deleteFutureRecurringInstances = async (
       Q.where("is_deleted", false),
     )
     .fetch()
-  for (const tx of instances) {
-    await deleteTransactionModel(tx)
-  }
+  await database.write(async () => {
+    for (const tx of instances) {
+      await deleteTransactionWriter(tx)
+    }
+  })
 }
 
-/** Detach this transaction from its recurring rule (sets recurringId = null). */
+/**
+ * Detaches a single transaction from its recurring rule by setting `recurringId = null`.
+ * The transaction itself is not modified in any other way.
+ *
+ * @param transaction - The transaction to detach from its rule.
+ */
 export const detachTransactionFromRule = async (
   transaction: TransactionModel,
 ): Promise<void> => {
@@ -847,6 +963,7 @@ export const detachTransactionFromRule = async (
 }
 
 /** Payload shape for editing recurring instances (matches form + updateTransactionModel). */
+// TODO: try to use zod exported infer-ed type
 export interface RecurringEditPayload {
   amount: number
   type: TransactionType
@@ -862,7 +979,14 @@ export interface RecurringEditPayload {
   subtype?: string
 }
 
-/** Update all pending/future instances of a rule from the given date onward. */
+/**
+ * Updates all pending instances of a recurring rule whose transaction_date is on or
+ * after `fromDate`, applying the given payload to each, within a single `database.write()` call.
+ *
+ * @param ruleId - The ID of the recurring rule.
+ * @param fromDate - Only instances on or after this date are updated (inclusive).
+ * @param payload - The field values to apply to each matching instance.
+ */
 export const updateFutureRecurringInstances = async (
   ruleId: string,
   fromDate: Date,
@@ -893,73 +1017,111 @@ export const updateFutureRecurringInstances = async (
     subtype: payload.subtype,
   }
 
-  for (const tx of instances) {
-    await updateTransactionModel(tx, updates)
+  await database.write(async () => {
+    for (const tx of instances) {
+      await updateTransactionWriter(tx, updates)
+    }
+  })
+}
+
+/**
+ * Writer body — must be called within a `database.write()` context.
+ * Restores a soft-deleted transaction by clearing `is_deleted`, re-applies the balance
+ * delta to the account (unless pending), and re-increments the category transaction count.
+ *
+ * @param transaction - The soft-deleted transaction model to restore.
+ */
+export async function restoreTransactionWriter(
+  transaction: TransactionModel,
+): Promise<void> {
+  if (!transaction.isDeleted) return
+  const categories = database.get<CategoryModel>("categories")
+
+  await transaction.update((t) => {
+    t.isDeleted = false
+    t.deletedAt = null
+  })
+
+  if (!transaction.isPending) {
+    const balanceDelta = getBalanceDelta(transaction.amount, transaction.type)
+    const account = await accountsCollection().find(transaction.accountId)
+    await account.update((a) => {
+      a.balance = a.balance + balanceDelta
+    })
+  }
+
+  if (transaction.categoryId) {
+    const category = await categories.find(transaction.categoryId)
+    await category.update(incrementCount)
   }
 }
 
 /**
- * Restore a soft-deleted transaction: set is_deleted = false, re-add balance to
- * account, and re-increment category transaction count.
+ * Public wrapper for {@link restoreTransactionWriter}.
+ * Restores a soft-deleted transaction inside a `database.write()` context,
+ * re-applying its balance delta and category count.
+ *
+ * @param transaction - The soft-deleted transaction to restore.
  */
 export const restoreTransactionModel = async (
   transaction: TransactionModel,
 ): Promise<void> => {
-  if (!transaction.isDeleted) return
-  const categories = database.get<CategoryModel>("categories")
-
-  return database.write(async () => {
-    await transaction.update((t) => {
-      t.isDeleted = false
-      t.deletedAt = null
-    })
-
-    if (!transaction.isPending) {
-      const balanceDelta = getBalanceDelta(transaction.amount, transaction.type)
-      const account = await accountsCollection().find(transaction.accountId)
-      await account.update((a) => {
-        a.balance = a.balance + balanceDelta
-      })
-    }
-
-    if (transaction.categoryId) {
-      const category = await categories.find(transaction.categoryId)
-      await category.update(incrementCount)
-    }
-  })
+  return database.write(() => restoreTransactionWriter(transaction))
 }
 
+/**
+ * Writer body — must be called within a `database.write()` context.
+ * Permanently destroys a transaction row via WatermelonDB's `destroyPermanently()`.
+ * Reverses the account balance and decrements the category count only if the row
+ * was not already soft-deleted (to avoid double-reversal).
+ *
+ * @param transaction - The transaction model to permanently destroy.
+ */
+export async function destroyTransactionWriter(
+  transaction: TransactionModel,
+): Promise<void> {
+  const categories = database.get<CategoryModel>("categories")
+
+  if (!transaction.isDeleted && transaction.categoryId) {
+    const category = await categories.find(transaction.categoryId)
+    await category.update(decrementCount)
+  }
+
+  if (!transaction.isDeleted && !transaction.isPending) {
+    const reverseDelta = -getBalanceDelta(transaction.amount, transaction.type)
+    const account = await accountsCollection().find(transaction.accountId)
+    await account.update((a) => {
+      a.balance = a.balance + reverseDelta
+    })
+  }
+
+  await transaction.destroyPermanently()
+}
+
+/**
+ * Public wrapper for {@link destroyTransactionWriter}.
+ * Permanently destroys a transaction inside a `database.write()` context,
+ * reversing its balance contribution and category count if not already soft-deleted.
+ *
+ * @param transaction - The transaction model to permanently destroy.
+ */
 export const destroyTransactionModel = async (
   transaction: TransactionModel,
 ): Promise<void> => {
-  const categories = database.get<CategoryModel>("categories")
-
-  return database.write(async () => {
-    if (!transaction.isDeleted && transaction.categoryId) {
-      const category = await categories.find(transaction.categoryId)
-      await category.update(decrementCount)
-    }
-
-    if (!transaction.isDeleted && !transaction.isPending) {
-      const reverseDelta = -getBalanceDelta(
-        transaction.amount,
-        transaction.type,
-      )
-      const account = await accountsCollection().find(transaction.accountId)
-      await account.update((a) => {
-        a.balance = a.balance + reverseDelta
-      })
-    }
-
-    await transaction.destroyPermanently()
-  })
+  return database.write(() => destroyTransactionWriter(transaction))
 }
 
+/**
+ * Permanently destroys all soft-deleted transaction rows in a single `database.write()` call.
+ * This is the "empty trash" operation — rows cannot be recovered after this call.
+ */
 export const destroyAllDeletedTransactionModels = async (): Promise<void> => {
   const transactions = await getTransactionModels({ deletedOnly: true })
-  for (const transaction of transactions) {
-    await destroyTransactionModel(transaction)
-  }
+  await database.write(async () => {
+    for (const transaction of transactions) {
+      await destroyTransactionWriter(transaction)
+    }
+  })
 }
 
 function parseDaysToKeep(retentionValue: string): number | null {
@@ -971,6 +1133,13 @@ function parseDaysToKeep(retentionValue: string): number | null {
   return null
 }
 
+/**
+ * Permanently deletes soft-deleted transactions older than the specified retention window.
+ * Accepts `"forever"` (no purge) or a string like `"30days"` (purge rows whose `deleted_at`
+ * is before today minus N days). Called on app foreground to enforce the user's trash retention setting.
+ *
+ * @param retentionValue - Retention policy: `"forever"` to skip, or `"{N}days"` to purge.
+ */
 export const autoPurgeTrash = async (retentionValue: string) => {
   const daysToKeep = parseDaysToKeep(retentionValue)
 

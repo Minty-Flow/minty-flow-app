@@ -6,7 +6,7 @@ import type { Tag, TagKindType } from "../../types/tags"
 import { database } from "../index"
 import type TagModel from "../models/tag"
 import { modelToTag } from "../utils/model-to-tag"
-import { unlinkTagFromAllTransactions } from "./transaction-service"
+import { unlinkTagFromAllTransactionsWriter } from "./transaction-service"
 
 /**
  * Tag Service
@@ -23,7 +23,10 @@ const getTagCollection = () => {
 }
 
 /**
- * Observe all tags reactively
+ * Observes all tags reactively, sorted by name ascending.
+ * Emits a new array of plain `Tag` domain objects whenever any observed column changes.
+ *
+ * @returns An observable that emits the full list of tags on every relevant change.
  */
 export const observeTags = (): Observable<Tag[]> => {
   const tags = getTagCollection()
@@ -44,14 +47,20 @@ export const observeTags = (): Observable<Tag[]> => {
 }
 
 /**
- * Observe a specific tag by ID
+ * Observes a single tag model by ID, emitting whenever the record changes.
+ *
+ * @param id - The tag ID to observe.
+ * @returns An observable that emits the raw `TagModel` on every change.
  */
 export const observeTagById = (id: string): Observable<TagModel> => {
   return getTagCollection().findAndObserve(id)
 }
 
 /**
- * Create a new tag
+ * Creates a new tag row in the database with an initial `transactionCount` of zero.
+ *
+ * @param data - Name, kind, optional color scheme, and optional icon for the new tag.
+ * @returns The newly created `TagModel` instance.
  */
 export const createTag = async (data: {
   name: string
@@ -71,7 +80,12 @@ export const createTag = async (data: {
 }
 
 /**
- * Update tag
+ * Updates the editable fields of an existing tag.
+ * Only the fields present in `updates` are changed; omitted keys are left untouched.
+ *
+ * @param tag - The existing tag model to update.
+ * @param updates - Partial set of fields to change (name, type, color scheme, icon, transaction count).
+ * @returns The updated `TagModel` instance.
  */
 export const updateTag = async (
   tag: TagModel,
@@ -101,9 +115,8 @@ export const updateTag = async (
  * Unlinks this tag from all transactions first, then permanently destroys the tag.
  */
 export const deleteTag = async (tag: TagModel): Promise<void> => {
-  await unlinkTagFromAllTransactions(tag.id).then(() => {
-    return database.write(async () => {
-      await tag.destroyPermanently()
-    })
+  await database.write(async () => {
+    await unlinkTagFromAllTransactionsWriter(tag.id)
+    await tag.destroyPermanently()
   })
 }

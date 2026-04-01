@@ -14,6 +14,10 @@ import type TransferModel from "../models/transfer"
 /* UUID */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Coerces a number, Date, or undefined value to a Unix millisecond timestamp.
+ * Returns `fallback` when `v` is undefined.
+ */
 function toDateMs(v: number | Date | undefined, fallback: number): number {
   if (v === undefined) return fallback
   return typeof v === "number" ? v : v.getTime()
@@ -96,7 +100,16 @@ interface RecurringTransferOptions {
   extra?: Record<string, string> | null
 }
 
-export async function createTransfer(
+/**
+ * Writer body — must be called within a `database.write()` context.
+ * Creates exactly two linked transaction rows (debit and credit) sharing a `transfer_id`,
+ * updates both account balances, and—for cross-currency transfers—creates a `transfers`
+ * record storing the conversion rate. All operations are submitted as a single atomic batch.
+ *
+ * @param params - Transfer creation parameters (accounts, amount, date, title, notes, rate).
+ * @param recurringOptions - Optional recurring context (recurringId, isPending, subtype, extra).
+ */
+export async function createTransferWriter(
   {
     fromAccountId,
     toAccountId,
@@ -218,9 +231,21 @@ export async function createTransfer(
     batchOps.push(transferRecord)
   }
 
-  await database.write(async () => {
-    await database.batch(...batchOps)
-  })
+  await database.batch(...batchOps)
+}
+
+/**
+ * Public wrapper for {@link createTransferWriter}.
+ * Creates a transfer between two accounts inside a `database.write()` context.
+ *
+ * @param params - Transfer creation parameters.
+ * @param recurringOptions - Optional recurring context for recurring transfer instances.
+ */
+export async function createTransfer(
+  params: CreateTransferParams,
+  recurringOptions?: RecurringTransferOptions,
+): Promise<void> {
+  return database.write(() => createTransferWriter(params, recurringOptions))
 }
 
 /* ------------------------------------------------------------------ */
@@ -228,11 +253,16 @@ export async function createTransfer(
 /* ------------------------------------------------------------------ */
 
 /**
- * Edit both halves of a transfer atomically.
- * Pass either half of the transfer; the pair is resolved internally.
- * Fetches accounts once before the write; reverses balance using accountBalanceBefore.
+ * Writer body — must be called within a `database.write()` context.
+ * Updates both legs of a transfer atomically. Accepts either the debit or credit row;
+ * the paired row is resolved internally. Reverses the old account balances using the
+ * stored `accountBalanceBefore` values before applying the new amounts, and updates
+ * the `transfers` record if one exists (cross-currency).
+ *
+ * @param transaction - Either leg of the existing transfer.
+ * @param fields - The fields to update on both legs (amount, accounts, date, title, notes, rate).
  */
-export async function editTransfer(
+export async function editTransferWriter(
   transaction: TransactionModel,
   fields: EditTransferFields,
 ): Promise<void> {
@@ -269,78 +299,90 @@ export async function editTransfer(
       ? oldToAccount
       : await accounts.find(newToAccountId)
 
-  await database.write(async () => {
-    const transfers = transfersCollection()
+  const transfers = transfersCollection()
 
-    if (!debitRow.isPending) {
-      await oldFromAccount.update((a) => {
-        a.balance = debitRow.accountBalanceBefore
-        a.updatedAt = now
-      })
-    }
-    if (!creditRow.isPending) {
-      await oldToAccount.update((a) => {
-        a.balance = creditRow.accountBalanceBefore
-        a.updatedAt = now
-      })
-    }
-
-    const fromBalanceBeforeApply = newFromAccount.balance
-    const toBalanceBeforeApply = newToAccount.balance
-
-    await debitRow.update((r) => {
-      r.amount = -newDebitAmount
-      r.transactionDate = newDate
-      r.accountId = newFromAccountId
-      r.relatedAccountId = newToAccountId
-      r.accountBalanceBefore = fromBalanceBeforeApply
-      if (fields.title !== undefined) r.title = fields.title ?? null
-      if (fields.notes !== undefined) r.description = fields.notes ?? null
-      r.extra = null
-      r.updatedAt = now
+  if (!debitRow.isPending) {
+    await oldFromAccount.update((a) => {
+      a.balance = debitRow.accountBalanceBefore
+      a.updatedAt = now
     })
-
-    await creditRow.update((r) => {
-      r.amount = newCreditAmount
-      r.transactionDate = newDate
-      r.accountId = newToAccountId
-      r.relatedAccountId = newFromAccountId
-      r.accountBalanceBefore = toBalanceBeforeApply
-      if (fields.title !== undefined) r.title = fields.title ?? null
-      if (fields.notes !== undefined) r.description = fields.notes ?? null
-      r.extra = null
-      r.updatedAt = now
+  }
+  if (!creditRow.isPending) {
+    await oldToAccount.update((a) => {
+      a.balance = creditRow.accountBalanceBefore
+      a.updatedAt = now
     })
+  }
 
-    const transferRows = await transfers
-      .query(Q.where("from_transaction_id", debitRow.id))
-      .fetch()
-    const transferRow = transferRows[0]
-    if (transferRow) {
-      await transferRow.update((t) => {
-        t.conversionRate =
-          newConversionRate != null && newConversionRate > 0
-            ? newConversionRate
-            : 1
-        t.fromAccountId = newFromAccountId
-        t.toAccountId = newToAccountId
-        t.updatedAt = now
-      })
-    }
+  const fromBalanceBeforeApply = newFromAccount.balance
+  const toBalanceBeforeApply = newToAccount.balance
 
-    if (!debitRow.isPending) {
-      await newFromAccount.update((a) => {
-        a.balance = a.balance - newDebitAmount
-        a.updatedAt = now
-      })
-    }
-    if (!creditRow.isPending) {
-      await newToAccount.update((a) => {
-        a.balance = a.balance + newCreditAmount
-        a.updatedAt = now
-      })
-    }
+  await debitRow.update((r) => {
+    r.amount = -newDebitAmount
+    r.transactionDate = newDate
+    r.accountId = newFromAccountId
+    r.relatedAccountId = newToAccountId
+    r.accountBalanceBefore = fromBalanceBeforeApply
+    if (fields.title !== undefined) r.title = fields.title ?? null
+    if (fields.notes !== undefined) r.description = fields.notes ?? null
+    r.extra = null
+    r.updatedAt = now
   })
+
+  await creditRow.update((r) => {
+    r.amount = newCreditAmount
+    r.transactionDate = newDate
+    r.accountId = newToAccountId
+    r.relatedAccountId = newFromAccountId
+    r.accountBalanceBefore = toBalanceBeforeApply
+    if (fields.title !== undefined) r.title = fields.title ?? null
+    if (fields.notes !== undefined) r.description = fields.notes ?? null
+    r.extra = null
+    r.updatedAt = now
+  })
+
+  const transferRows = await transfers
+    .query(Q.where("from_transaction_id", debitRow.id))
+    .fetch()
+  const transferRow = transferRows[0]
+  if (transferRow) {
+    await transferRow.update((t) => {
+      t.conversionRate =
+        newConversionRate != null && newConversionRate > 0
+          ? newConversionRate
+          : 1
+      t.fromAccountId = newFromAccountId
+      t.toAccountId = newToAccountId
+      t.updatedAt = now
+    })
+  }
+
+  if (!debitRow.isPending) {
+    await newFromAccount.update((a) => {
+      a.balance = a.balance - newDebitAmount
+      a.updatedAt = now
+    })
+  }
+  if (!creditRow.isPending) {
+    await newToAccount.update((a) => {
+      a.balance = a.balance + newCreditAmount
+      a.updatedAt = now
+    })
+  }
+}
+
+/**
+ * Public wrapper for {@link editTransferWriter}.
+ * Updates both legs of a transfer inside a `database.write()` context.
+ *
+ * @param transaction - Either leg of the existing transfer.
+ * @param fields - The fields to update on both legs.
+ */
+export async function editTransfer(
+  transaction: TransactionModel,
+  fields: EditTransferFields,
+): Promise<void> {
+  return database.write(() => editTransferWriter(transaction, fields))
 }
 
 /* ------------------------------------------------------------------ */
@@ -348,11 +390,14 @@ export async function editTransfer(
 /* ------------------------------------------------------------------ */
 
 /**
- * Delete both halves of a transfer atomically (soft-delete).
- * Safe to call with either the debit or credit row.
- * Restores account balance using stored accountBalanceBefore so deleting a stale tx doesn't corrupt balance.
+ * Writer body — must be called within a `database.write()` context.
+ * Soft-deletes both legs of a transfer atomically by setting `is_deleted = true`.
+ * Restores each account's balance to `accountBalanceBefore` so that deleting a stale
+ * transaction never corrupts the running balance. Safe to call with either the debit or credit row.
+ *
+ * @param transaction - Either leg of the transfer to soft-delete.
  */
-export async function deleteTransfer(
+export async function deleteTransferWriter(
   transaction: TransactionModel,
 ): Promise<void> {
   const paired = await getPairedTransaction(transaction)
@@ -367,22 +412,32 @@ export async function deleteTransfer(
 
   const now = new Date()
 
-  await database.write(async () => {
-    for (const t of toDelete) {
-      if (!t.isDeleted && !t.isPending) {
-        const account = accountMap.get(t.accountId)
-        if (account) {
-          await account.update((a) => {
-            a.balance = t.accountBalanceBefore
-            a.updatedAt = now
-          })
-        }
+  for (const t of toDelete) {
+    if (!t.isDeleted && !t.isPending) {
+      const account = accountMap.get(t.accountId)
+      if (account) {
+        await account.update((a) => {
+          a.balance = t.accountBalanceBefore
+          a.updatedAt = now
+        })
       }
-      await t.update((r) => {
-        r.isDeleted = true
-        r.deletedAt = now
-        r.updatedAt = now
-      })
     }
-  })
+    await t.update((r) => {
+      r.isDeleted = true
+      r.deletedAt = now
+      r.updatedAt = now
+    })
+  }
+}
+
+/**
+ * Public wrapper for {@link deleteTransferWriter}.
+ * Soft-deletes both legs of a transfer inside a `database.write()` context.
+ *
+ * @param transaction - Either leg of the transfer to soft-delete.
+ */
+export async function deleteTransfer(
+  transaction: TransactionModel,
+): Promise<void> {
+  return database.write(() => deleteTransferWriter(transaction))
 }

@@ -403,6 +403,13 @@ export async function pickBackupFile(): Promise<{
 }
 // ─── Count records ────────────────────────────────────────────────────────────
 
+/**
+ * Returns summary counts for a parsed backup object: total row count across all
+ * tables and the number of non-empty tables.
+ *
+ * @param backup - A validated {@link MintyFlowBackup} returned by {@link validateBackup}.
+ * @returns An object with `total` (sum of all rows) and `tableCount` (tables with at least one row).
+ */
 export function countBackupRecords(backup: MintyFlowBackup): {
   total: number
   tableCount: number
@@ -585,21 +592,14 @@ export async function importBackup(
   backup: MintyFlowBackup,
 ): Promise<ImportResult> {
   try {
-    // Full wipe — canonical WatermelonDB reset for local-only apps
+    const { data } = backup
+
+    // 1️⃣ Full wipe — canonical WatermelonDB reset
     await database.write(async () => {
       await database.unsafeResetDatabase()
     })
 
-    const { data } = backup
-
-    // Tier 1: no foreign-key dependencies
-    await database.write(async () => {
-      await insertRows("categories", data.categories)
-      await insertRows("tags", data.tags)
-      await insertRows("accounts", data.accounts)
-    })
-
-    // Build valid ID sets for referential integrity checks
+    // 2️⃣ Build valid ID sets for FK validation
     const validAccountIds = new Set(data.accounts.map((a: RawRow) => a.id))
     const validCategoryIds = new Set(data.categories.map((c: RawRow) => c.id))
     const validRecurringIds = new Set(
@@ -609,7 +609,7 @@ export async function importBackup(
     const validGoalIds = new Set(data.goals.map((g: RawRow) => g.id))
     const validLoanIds = new Set(data.loans.map((l: RawRow) => l.id))
 
-    // Validate Tier 2 & 3 rows before insert
+    // 3️⃣ Validate transactions before writing
     for (const tx of data.transactions) {
       const txRow = tx as RawRow
       if (!validAccountIds.has(txRow.account_id as string)) {
@@ -650,32 +650,33 @@ export async function importBackup(
       }
     }
 
-    // Tier 2: depend on Tier 1
+    // 4️⃣ Single write for all tiers
     await database.write(async () => {
+      // Tier 1: no FK dependencies
+      await insertRows("categories", data.categories)
+      await insertRows("tags", data.tags)
+      await insertRows("accounts", data.accounts)
+
+      // Tier 2: depend on Tier 1
       await insertRows("recurring_transactions", data.recurring_transactions)
       await insertRows("budgets", data.budgets)
       await insertRows("goals", data.goals)
       await insertRows("loans", data.loans)
-    })
 
-    // Tier 3: transactions (depend on accounts, categories, recurring, goals, budgets, loans)
-    await database.write(async () => {
+      // Tier 3: transactions
       await insertRows("transactions", data.transactions)
-    })
 
-    // Tier 4: transfers (depend on transactions and accounts)
-    await database.write(async () => {
+      // Tier 4: transfers
       await insertRows("transfers", data.transfers)
-    })
 
-    // Tier 5: join tables
-    await database.write(async () => {
+      // Tier 5: join tables
       await insertRows("transaction_tags", data.transaction_tags)
       await insertRows("budget_accounts", data.budget_accounts)
       await insertRows("budget_categories", data.budget_categories)
       await insertRows("goal_accounts", data.goal_accounts)
     })
 
+    // 5️⃣ Count imported rows
     const counts: Record<string, number> = {}
     for (const [table, rows] of Object.entries(data)) {
       counts[table] = rows.length

@@ -93,15 +93,21 @@ export const observeAllCategories = (): Observable<Category[]> => {
 }
 
 /**
- * Observe a specific category by ID
+ * Observes a single category model by ID, emitting whenever the record changes.
+ *
+ * @param id - The category ID to observe.
+ * @returns An observable that emits the raw `CategoryModel` on every change.
  */
 export const observeCategoryById = (id: string): Observable<CategoryModel> => {
   return getCategoryCollection().findAndObserve(id)
 }
 
 /**
- * Observe a specific category by ID
- * Observes specific columns to ensure reactivity to field changes
+ * Observes a single category by ID, emitting a mapped plain `Category` domain object.
+ * Uses `observeWithColumns` to react to individual field changes, not just record-level events.
+ *
+ * @param id - The category ID to observe.
+ * @returns An observable that emits a `Category` domain object on every relevant column change.
  */
 export const observeCategoryDetailsById = (
   id: string,
@@ -125,7 +131,10 @@ export const observeCategoryDetailsById = (
 }
 
 /**
- * Create a new category
+ * Creates a new category row in the database with an initial `transactionCount` of zero.
+ *
+ * @param data - Validated form data for the new category.
+ * @returns The newly created `CategoryModel` instance.
  */
 export const createCategory = async (
   data: AddCategoriesFormSchema,
@@ -142,7 +151,12 @@ export const createCategory = async (
 }
 
 /**
- * Update category
+ * Updates the editable fields of an existing category (name, icon, color scheme).
+ * Only the fields present in `updates` are changed; omitted keys are left untouched.
+ *
+ * @param category - The existing category model to update.
+ * @param updates - Partial set of fields to change.
+ * @returns The updated `CategoryModel` instance.
  */
 export const updateCategory = async (
   category: CategoryModel,
@@ -160,16 +174,16 @@ export const updateCategory = async (
 
 /**
  * Delete category completely. All transactions that belonged to this category
- * are updated to the target category (or uncategorized). The category is then
- * permanently removed.
+ * are reassigned to `targetCategoryId` (or uncategorized when null). The target
+ * category's transaction count is recalculated atomically in the same write.
+ * The category is then permanently removed.
  */
 export const destroyCategory = async (
   category: CategoryModel,
   targetCategoryId: string | null = null,
 ): Promise<void> => {
-  // Fetch inside the write so the transaction list can't go stale between
-  // the read and the update (TOCTOU window).
   await database.write(async () => {
+    // Fetch inside the write to avoid TOCTOU race between read and update.
     const transactions = await getTransactionModels({
       categoryId: category.id,
       includeDeleted: false,
@@ -180,41 +194,31 @@ export const destroyCategory = async (
         t.categoryId = targetCategoryId
       })
     }
+
+    if (targetCategoryId) {
+      // Fetch AFTER reassigning so the count already includes the moved rows.
+      const updatedTargetTransactions = await getTransactionModels({
+        categoryId: targetCategoryId,
+        includeDeleted: false,
+      })
+      const targetCategory = await findCategory(targetCategoryId)
+      if (targetCategory) {
+        await targetCategory.update((c) => {
+          c.transactionCount = updatedTargetTransactions.length
+        })
+      }
+    }
+
     await category.destroyPermanently()
   })
-
-  if (targetCategoryId) {
-    await recalculateCategoryTransactionCount(targetCategoryId)
-  }
 }
 
 /**
- * Recalculate transaction count for a category based on actual transactions
- */
-const recalculateCategoryTransactionCount = async (
-  categoryId: string,
-): Promise<number> => {
-  const transactions = await getTransactionModels({
-    categoryId,
-    includeDeleted: false,
-  })
-
-  const count = transactions.length
-
-  const category = await findCategory(categoryId)
-  if (category) {
-    await database.write(async () => {
-      await category.update((c) => {
-        c.transactionCount = count
-      })
-    })
-  }
-
-  return count
-}
-
-/**
- * Observe names for a list of category IDs.
+ * Observes the display names of categories matching the given IDs.
+ * Returns an observable of an empty array immediately when `ids` is empty.
+ *
+ * @param ids - The category IDs whose names should be observed.
+ * @returns An observable that emits an array of category names in DB order.
  */
 export const observeCategoryNamesByIds = (
   ids: string[],

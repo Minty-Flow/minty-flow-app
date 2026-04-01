@@ -15,8 +15,8 @@ import { database } from "../index"
 import type AccountModel from "../models/account"
 import { modelToAccount } from "../utils/model-to-account"
 import {
-  createTransactionModel,
-  destroyTransactionModel,
+  createTransactionWriter,
+  destroyTransactionWriter,
   getTransactionModels,
   observeTransactionModels,
 } from "./transaction-service"
@@ -73,7 +73,10 @@ export const observeAccountModels = (): Observable<AccountModel[]> => {
 }
 
 /**
- * Observe all active (non-archived) accounts reactively
+ * Observes all active (non-archived) accounts reactively, sorted by sort order ascending.
+ * Emits a new array of plain `Account` domain objects whenever any observed column changes.
+ *
+ * @returns An observable that emits the current list of active accounts on every relevant change.
  */
 export const observeAccounts = (): Observable<Account[]> => {
   const accounts = getAccountCollection()
@@ -88,7 +91,10 @@ export const observeAccounts = (): Observable<Account[]> => {
 }
 
 /**
- * Observe all archived accounts reactively
+ * Observes all archived accounts reactively, sorted by sort order ascending.
+ * Emits a new array of plain `Account` domain objects whenever any observed column changes.
+ *
+ * @returns An observable that emits the current list of archived accounts on every relevant change.
  */
 export const observeArchivedAccounts = (): Observable<Account[]> => {
   const accounts = getAccountCollection()
@@ -102,6 +108,13 @@ export const observeArchivedAccounts = (): Observable<Account[]> => {
     .pipe(map((accounts) => accounts.map((account) => modelToAccount(account))))
 }
 
+/**
+ * Observes the display names of accounts matching the given IDs.
+ * Returns an observable of an empty array immediately when `ids` is empty.
+ *
+ * @param ids - The account IDs whose names should be observed.
+ * @returns An observable that emits an array of account names in DB order.
+ */
 export const observeAccountNamesByIds = (
   ids: string[],
 ): Observable<string[]> => {
@@ -114,7 +127,10 @@ export const observeAccountNamesByIds = (
 }
 
 /**
- * Observe a specific account by ID
+ * Observes a single account model by ID, emitting whenever the record changes.
+ *
+ * @param id - The account ID to observe.
+ * @returns An observable that emits the raw `AccountModel` on every change.
  */
 export const observeAccountById = (id: string): Observable<AccountModel> => {
   return getAccountCollection().findAndObserve(id)
@@ -149,7 +165,14 @@ const getCurrentMonthRange = (): {
   }
 }
 
-/** Month range for a given year and month (month 0–11). */
+/**
+ * Computes the start and end Unix timestamps (ms) for a given calendar month.
+ * `fromDate` is midnight on the first day; `toDate` is 23:59:59.999 on the last day.
+ *
+ * @param year - The full calendar year (e.g. 2025).
+ * @param month - The zero-based month index (0 = January, 11 = December).
+ * @returns An object with `fromDate` and `toDate` timestamps in milliseconds.
+ */
 export const getMonthRange = (
   year: number,
   month: number,
@@ -281,7 +304,12 @@ export const observeAccountsWithMonthTotals = (
 }
 
 /**
- * Create a new account
+ * Creates a new account row in the database.
+ * Automatically appends the account at the end of the sort order by reading the
+ * current highest `sort_order` value and incrementing it.
+ *
+ * @param data - Validated form data for the new account.
+ * @returns The newly created `AccountModel` instance.
  */
 export const createAccount = async (
   data: AddAccountsFormSchema,
@@ -358,7 +386,7 @@ const applyBalanceAdjustment = async (
   const amount = Math.abs(delta)
   if (amount <= 0) return null
 
-  await createTransactionModel({
+  await createTransactionWriter({
     amount,
     type: delta > 0 ? TransactionTypeEnum.INCOME : TransactionTypeEnum.EXPENSE,
     transactionDate: new Date(),
@@ -373,8 +401,14 @@ const applyBalanceAdjustment = async (
 }
 
 /**
- * Update account.
- * Enforces system invariants: balance from transactions, exactly one primary.
+ * Updates account fields and enforces system invariants in a single atomic write.
+ * If `updates.balance` differs from the current balance, a compensating
+ * income or expense "Balance adjustment" transaction is created in the same write.
+ * If `updates.isPrimary` is `true`, all other accounts have `isPrimary` unset.
+ *
+ * @param account - The existing account model to update.
+ * @param updates - Partial set of fields to change; `balance` triggers an adjustment transaction.
+ * @returns The refreshed `AccountModel` after all writes complete.
  */
 export const updateAccount = async (
   account: AccountModel,
@@ -387,9 +421,9 @@ export const updateAccount = async (
     balance: undefined,
   } as Partial<UpdateAccountsFormSchema>
 
-  // Single write keeps field updates and balance-adjustment transaction atomic.
-  // applyBalanceAdjustment calls createTransactionModel which calls database.write —
-  // nested writes run within this outer write context in WatermelonDB.
+  // Single write keeps field updates and the balance-adjustment transaction atomic.
+  // applyBalanceAdjustment calls createTransactionWriter (a writer body) directly,
+  // so it runs inside this outer write context without queuing a nested write.
   return await database.write(async () => {
     if (updatesWithoutBalance.isPrimary === true) {
       await ensureSinglePrimary(account.id)
@@ -416,7 +450,11 @@ export const updateAccount = async (
 }
 
 /**
- * Archive an account (hide from active lists).
+ * Archives an account, hiding it from all active account lists.
+ * Sets `isArchived` to `true`; the account remains in the database and its
+ * transactions are preserved.
+ *
+ * @param account - The account model to archive.
  */
 export const archiveAccount = async (account: AccountModel): Promise<void> => {
   await database.write(async () => {
@@ -427,7 +465,10 @@ export const archiveAccount = async (account: AccountModel): Promise<void> => {
 }
 
 /**
- * Unarchive an account (restore to active lists).
+ * Restores an archived account, making it visible in active account lists again.
+ * Sets `isArchived` to `false`.
+ *
+ * @param account - The account model to unarchive.
  */
 export const unarchiveAccount = async (
   account: AccountModel,
@@ -440,8 +481,11 @@ export const unarchiveAccount = async (
 }
 
 /**
- * Permanently destroy account.
- * Also permanently destroys all transactions belonging to this account.
+ * Permanently destroys an account and all of its transactions in a single atomic write.
+ * This operation is irreversible — both the account row and every transaction
+ * linked to it (including soft-deleted ones) are removed from the database.
+ *
+ * @param account - The account model to permanently delete.
  */
 export const destroyAccount = async (account: AccountModel): Promise<void> => {
   const transactions = await getTransactionModels({
@@ -450,7 +494,7 @@ export const destroyAccount = async (account: AccountModel): Promise<void> => {
   })
   await database.write(async () => {
     for (const t of transactions) {
-      await destroyTransactionModel(t)
+      await destroyTransactionWriter(t)
     }
     await account.destroyPermanently()
   })
