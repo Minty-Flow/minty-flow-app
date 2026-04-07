@@ -13,22 +13,15 @@ export function useBalanceAtTransaction(
 ): number | null {
   const [balance, setBalance] = useState<number | null>(null)
 
-  const accountId = transaction?.accountId ?? null
-  const transactionDate = transaction?.transactionDate ?? null
-
   useEffect(() => {
-    if (!accountId || transactionDate === null) {
+    if (!transaction) {
       setBalance(null)
       return
     }
-    const ts =
-      transactionDate instanceof Date
-        ? transactionDate.getTime()
-        : transactionDate
-    getBalanceAtTransaction(accountId, ts)
+    getBalanceAtTransaction(transaction)
       .then(setBalance)
       .catch((e) => logger.error("Balance fetch failed", { error: String(e) }))
-  }, [accountId, transactionDate])
+  }, [transaction])
 
   return balance
 }

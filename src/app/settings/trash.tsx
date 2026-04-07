@@ -226,7 +226,7 @@ function TrashScreenInner({
         ListEmptyComponent={
           <View style={styles.emptyStateWrapper}>
             <EmptyState
-              icon="trash-off"
+              icon="trash"
               title={t("screens.settings.trash.empty.noTransactions")}
             />
           </View>

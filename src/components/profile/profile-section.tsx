@@ -1,6 +1,6 @@
 import { Image } from "expo-image"
 import { useRouter } from "expo-router"
-import { StyleSheet } from "react-native-unistyles"
+import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -12,6 +12,8 @@ export const ProfileSection = () => {
   const router = useRouter()
   const { name, imageUri } = useProfileStore()
 
+  const { theme } = useUnistyles()
+
   const displayName = name || "?"
   const initials = getInitials(displayName)
 
@@ -22,7 +24,9 @@ export const ProfileSection = () => {
   return (
     <View style={styles.profileSection}>
       <Pressable style={styles.profileInfo} onPress={handlePress}>
-        <View style={styles.avatar}>
+        <View
+          style={[styles.avatar, { backgroundColor: theme.colors.primary }]}
+        >
           {imageUri ? (
             <Image
               source={{ uri: imageUri }}
@@ -57,7 +61,6 @@ const styles = StyleSheet.create((theme) => ({
     width: 128,
     height: 128,
     borderRadius: theme.radius,
-    backgroundColor: theme.colors.primary,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,

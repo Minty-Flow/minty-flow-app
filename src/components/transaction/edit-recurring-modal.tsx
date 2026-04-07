@@ -28,18 +28,16 @@ import { IconSvg } from "~/components/ui/icon-svg"
 import type RecurringTransactionModel from "~/database/models/recurring-transaction"
 import type TransactionModel from "~/database/models/transaction"
 import { updateRecurringRuleTemplate } from "~/database/services/recurring-transaction-service"
-import type { RecurringEditPayload } from "~/database/services/transaction-service"
 import {
   detachTransactionFromRule,
   updateFutureRecurringInstances,
   updateTransactionModel,
 } from "~/database/services/transaction-service"
+import type { RecurringEditPayload } from "~/schemas/transactions.schema"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
 import { ChevronIcon } from "../ui/chevron-icon"
-
-export type { RecurringEditPayload }
 
 type EditScope = "this" | "this_and_future"
 

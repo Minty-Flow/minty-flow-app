@@ -71,7 +71,16 @@ export default function EditProfileScreen() {
       // 5. Copy to app storage (permanent)
       await sourceFile.copy(destinationFile)
 
-      // 6. Save URI (this is your "permanentUri")
+      // 6. Delete the previous local copy before swapping the URI so stale files don't accumulate.
+      if (localImageUri) {
+        try {
+          new File(localImageUri).delete()
+        } catch {
+          // file may already be gone — ignore
+        }
+      }
+
+      // 7. Save URI (this is your "permanentUri")
       setLocalImageUri(destinationFile.uri)
     } catch (e) {
       logger.error("Failed to pick/save image:", { e })
@@ -96,6 +105,14 @@ export default function EditProfileScreen() {
   }
 
   const handleSave = () => {
+    // If the user picked a new image, delete the previously persisted file.
+    if (localImageUri !== imageUri && imageUri) {
+      try {
+        new File(imageUri).delete()
+      } catch {
+        // file may already be gone — ignore
+      }
+    }
     setName(localName)
     setImageUri(localImageUri)
     if (isFromOnboarding) {
