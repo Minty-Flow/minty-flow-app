@@ -245,10 +245,17 @@ export async function createTransfer(
 
 /**
  * Writer body — must be called within a `database.write()` context.
- * Updates both legs of a transfer atomically. Accepts either the debit or credit row;
- * the paired row is resolved internally. Reverses the old account balances using the
- * stored `accountBalanceBefore` values before applying the new amounts, and updates
- * the `transfers` record if one exists (cross-currency).
+ * Updates both legs of a transfer atomically using a single `database.batch()` call.
+ * Accepts either the debit or credit row; the paired row is resolved internally.
+ *
+ * Balance adjustment uses a **delta-based** approach (not revert-and-reapply):
+ *   - FROM account: balance += (oldDebitAmount - newDebitAmount)
+ *   - TO account:   balance += (newCreditAmount - oldCreditAmount)
+ * This avoids reading stale model state from multiple sequential update calls and
+ * correctly preserves the effect of any other transactions on the same accounts.
+ *
+ * When from/to accounts change, the old accounts are undone and the new accounts
+ * are adjusted — all in the same atomic batch.
  *
  * @param transaction - Either leg of the existing transfer.
  * @param fields - The fields to update on both legs (amount, accounts, date, title, notes, rate).
@@ -269,89 +276,117 @@ export async function editTransferWriter(
     fields.transactionDate as number | Date | undefined,
     debitRow.transactionDate.getTime(),
   )
-  const newDebitAmount = fields.amount ?? Math.abs(debitRow.amount)
-  const newConversionRate = fields.conversionRate
+
+  const oldDebitAmount = Math.abs(debitRow.amount)
+  const oldCreditAmount = creditRow.amount
+  const newDebitAmount = fields.amount ?? oldDebitAmount
+
+  // Fallback: derive existing rate from transaction amounts rather than defaulting to 1:1
+  const oldImpliedRate =
+    oldDebitAmount > 0 ? oldCreditAmount / oldDebitAmount : 1
+  const newConversionRate = fields.conversionRate ?? oldImpliedRate
   const newCreditAmount =
-    newConversionRate != null && newConversionRate > 0
-      ? newDebitAmount * newConversionRate
-      : newDebitAmount
+    newConversionRate > 0 ? newDebitAmount * newConversionRate : newDebitAmount
   const newDate = new Date(newDateMs)
 
   const accounts = accountsCollection()
   const oldFromAccount = await accounts.find(debitRow.accountId)
   const oldToAccount = await accounts.find(creditRow.accountId)
-  const newFromAccount =
-    newFromAccountId === debitRow.accountId
-      ? oldFromAccount
-      : await accounts.find(newFromAccountId)
-  const newToAccount =
-    newToAccountId === creditRow.accountId
-      ? oldToAccount
-      : await accounts.find(newToAccountId)
+  const fromAccountChanged = newFromAccountId !== debitRow.accountId
+  const toAccountChanged = newToAccountId !== creditRow.accountId
+  const newFromAccount = fromAccountChanged
+    ? await accounts.find(newFromAccountId)
+    : oldFromAccount
+  const newToAccount = toAccountChanged
+    ? await accounts.find(newToAccountId)
+    : oldToAccount
+
+  // Compute accountBalanceBefore for the updated transaction rows.
+  // "Before" = the account balance just before this transfer's effect, relative to current state.
+  const fromBalanceBefore = fromAccountChanged
+    ? newFromAccount.balance
+    : newFromAccount.balance + oldDebitAmount
+  const toBalanceBefore = toAccountChanged
+    ? newToAccount.balance
+    : newToAccount.balance - oldCreditAmount
+
+  const batchOps: Parameters<typeof database.batch>[0] = [
+    debitRow.prepareUpdate((r) => {
+      r.amount = -newDebitAmount
+      r.transactionDate = newDate
+      r.accountId = newFromAccountId
+      r.relatedAccountId = newToAccountId
+      r.accountBalanceBefore = fromBalanceBefore
+      if (fields.title !== undefined) r.title = fields.title ?? null
+      if (fields.notes !== undefined) r.description = fields.notes ?? null
+      r.extra = null
+    }),
+    creditRow.prepareUpdate((r) => {
+      r.amount = newCreditAmount
+      r.transactionDate = newDate
+      r.accountId = newToAccountId
+      r.relatedAccountId = newFromAccountId
+      r.accountBalanceBefore = toBalanceBefore
+      if (fields.title !== undefined) r.title = fields.title ?? null
+      if (fields.notes !== undefined) r.description = fields.notes ?? null
+      r.extra = null
+    }),
+  ]
 
   const transfers = transfersCollection()
-
-  if (!debitRow.isPending) {
-    await oldFromAccount.update((a) => {
-      a.balance = debitRow.accountBalanceBefore
-    })
-  }
-  if (!creditRow.isPending) {
-    await oldToAccount.update((a) => {
-      a.balance = creditRow.accountBalanceBefore
-    })
-  }
-
-  const fromBalanceBeforeApply = newFromAccount.balance
-  const toBalanceBeforeApply = newToAccount.balance
-
-  await debitRow.update((r) => {
-    r.amount = -newDebitAmount
-    r.transactionDate = newDate
-    r.accountId = newFromAccountId
-    r.relatedAccountId = newToAccountId
-    r.accountBalanceBefore = fromBalanceBeforeApply
-    if (fields.title !== undefined) r.title = fields.title ?? null
-    if (fields.notes !== undefined) r.description = fields.notes ?? null
-    r.extra = null
-  })
-
-  await creditRow.update((r) => {
-    r.amount = newCreditAmount
-    r.transactionDate = newDate
-    r.accountId = newToAccountId
-    r.relatedAccountId = newFromAccountId
-    r.accountBalanceBefore = toBalanceBeforeApply
-    if (fields.title !== undefined) r.title = fields.title ?? null
-    if (fields.notes !== undefined) r.description = fields.notes ?? null
-    r.extra = null
-  })
-
   const transferRows = await transfers
     .query(Q.where("from_transaction_id", debitRow.id))
     .fetch()
   const transferRow = transferRows[0]
   if (transferRow) {
-    await transferRow.update((t) => {
-      t.conversionRate =
-        newConversionRate != null && newConversionRate > 0
-          ? newConversionRate
-          : 1
-      t.fromAccountId = newFromAccountId
-      t.toAccountId = newToAccountId
-    })
+    batchOps.push(
+      transferRow.prepareUpdate((t) => {
+        t.conversionRate = newConversionRate > 0 ? newConversionRate : 1
+        t.fromAccountId = newFromAccountId
+        t.toAccountId = newToAccountId
+      }),
+    )
   }
 
   if (!debitRow.isPending) {
-    await newFromAccount.update((a) => {
-      a.balance = a.balance - newDebitAmount
-    })
+    if (fromAccountChanged) {
+      batchOps.push(
+        oldFromAccount.prepareUpdate((a) => {
+          a.balance = a.balance + oldDebitAmount
+        }),
+        newFromAccount.prepareUpdate((a) => {
+          a.balance = a.balance - newDebitAmount
+        }),
+      )
+    } else {
+      batchOps.push(
+        newFromAccount.prepareUpdate((a) => {
+          a.balance = a.balance + (oldDebitAmount - newDebitAmount)
+        }),
+      )
+    }
   }
+
   if (!creditRow.isPending) {
-    await newToAccount.update((a) => {
-      a.balance = a.balance + newCreditAmount
-    })
+    if (toAccountChanged) {
+      batchOps.push(
+        oldToAccount.prepareUpdate((a) => {
+          a.balance = a.balance - oldCreditAmount
+        }),
+        newToAccount.prepareUpdate((a) => {
+          a.balance = a.balance + newCreditAmount
+        }),
+      )
+    } else {
+      batchOps.push(
+        newToAccount.prepareUpdate((a) => {
+          a.balance = a.balance + (newCreditAmount - oldCreditAmount)
+        }),
+      )
+    }
   }
+
+  await database.batch(...batchOps)
 }
 
 /**
@@ -374,9 +409,11 @@ export async function editTransfer(
 
 /**
  * Writer body — must be called within a `database.write()` context.
- * Soft-deletes both legs of a transfer atomically by setting `is_deleted = true`.
- * Restores each account's balance to `accountBalanceBefore` so that deleting a stale
- * transaction never corrupts the running balance. Safe to call with either the debit or credit row.
+ * Soft-deletes both legs of a transfer atomically using a single `database.batch()` call.
+ * Reverses each account's balance using the transaction's amount (delta-based), not the
+ * stored `accountBalanceBefore` snapshot, so that deleting the transfer never overwrites
+ * the effect of other transactions on the same accounts.
+ * Safe to call with either the debit or credit row.
  *
  * @param transaction - Either leg of the transfer to soft-delete.
  */
@@ -394,21 +431,31 @@ export async function deleteTransferWriter(
   }
 
   const now = new Date()
+  const batchOps: Parameters<typeof database.batch>[0] = []
 
   for (const t of toDelete) {
     if (!t.isDeleted && !t.isPending) {
       const account = accountMap.get(t.accountId)
       if (account) {
-        await account.update((a) => {
-          a.balance = t.accountBalanceBefore
-        })
+        // Undo this transaction's effect: reverse its amount from the current balance.
+        // Debit rows have negative amounts (money left account) → add back to restore.
+        // Credit rows have positive amounts (money entered account) → subtract to restore.
+        batchOps.push(
+          account.prepareUpdate((a) => {
+            a.balance = a.balance - t.amount
+          }),
+        )
       }
     }
-    await t.update((r) => {
-      r.isDeleted = true
-      r.deletedAt = now
-    })
+    batchOps.push(
+      t.prepareUpdate((r) => {
+        r.isDeleted = true
+        r.deletedAt = now
+      }),
+    )
   }
+
+  await database.batch(...batchOps)
 }
 
 /**

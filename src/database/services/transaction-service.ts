@@ -3,7 +3,10 @@ import { startOfDay, subDays } from "date-fns"
 import type { Observable } from "rxjs"
 import { combineLatest, from, map, of, startWith, switchMap } from "rxjs"
 
-import type { TransactionFormValues } from "~/schemas/transactions.schema"
+import type {
+  RecurringEditPayload,
+  TransactionFormValues,
+} from "~/schemas/transactions.schema"
 import {
   type TransactionListFilters,
   type TransactionType,
@@ -18,6 +21,7 @@ import type CategoryModel from "../models/category"
 import type TagModel from "../models/tag"
 import type TransactionModel from "../models/transaction"
 import type TransactionTagModel from "../models/transaction-tag"
+import type TransferModel from "../models/transfer"
 import {
   deleteTransferWriter,
   getConversionRateForTransaction,
@@ -81,38 +85,104 @@ const tagsCollection = () => database.get<TagModel>("tags")
 /* Hydration helpers */
 /* ------------------------------------------------------------------ */
 
-const hydrateTransaction = async (
-  transaction: TransactionModel,
-): Promise<TransactionWithRelations> => {
+/**
+ * Hydrates an array of transactions in a fixed number of batch DB queries
+ * regardless of list size — O(queries) = 4 regardless of N:
+ *   1. accounts (primary + related, one Q.oneOf)
+ *   2. categories (one Q.oneOf)
+ *   3. transaction_tags join rows (one Q.oneOf on transaction ids)
+ *   4. tags (one Q.oneOf on tag ids from join rows)
+ *   + one query per transfer transaction for conversion rate (small subset)
+ *
+ * Transactions whose primary account is not found (orphaned after account
+ * deletion) are silently dropped — they never reach consumers.
+ */
+const hydrateTransactionsBatch = async (
+  transactions: TransactionModel[],
+): Promise<TransactionWithRelations[]> => {
+  if (transactions.length === 0) return []
+
   const accounts = database.get<AccountModel>("accounts")
   const categories = database.get<CategoryModel>("categories")
-  const [account, category, tags, relatedAccount, conversionRate] =
-    await Promise.all([
-      accounts.find(transaction.accountId),
-      transaction.categoryId
-        ? categories.find(transaction.categoryId)
-        : Promise.resolve(null),
-      loadTransactionTags(transaction.id),
-      transaction.relatedAccountId
-        ? accounts
-            .find(transaction.relatedAccountId)
-            .catch(() => null as AccountModel | null)
-        : Promise.resolve(null),
-      transaction.isTransfer
-        ? getConversionRateForTransaction(transaction)
-        : Promise.resolve(null),
-    ])
+  const tt = transactionTagsCollection()
 
-  return {
-    transaction,
-    account,
-    category,
-    tags,
-    ...(transaction.relatedAccountId ? { relatedAccount } : {}),
-    ...(transaction.isTransfer && conversionRate != null
-      ? { conversionRate }
-      : {}),
+  // 1. Collect IDs for batch fetches
+  const accountIdSet = new Set<string>()
+  const categoryIdSet = new Set<string>()
+  const txIds: string[] = []
+  for (const t of transactions) {
+    accountIdSet.add(t.accountId)
+    if (t.relatedAccountId) accountIdSet.add(t.relatedAccountId)
+    if (t.categoryId) categoryIdSet.add(t.categoryId)
+    txIds.push(t.id)
   }
+  const accountIds = [...accountIdSet]
+  const categoryIds = [...categoryIdSet]
+
+  // 2. Parallel batch fetches: accounts, categories, tag join rows
+  const [accountRows, categoryRows, ttRows] = await Promise.all([
+    accounts.query(Q.where("id", Q.oneOf(accountIds))).fetch(),
+    categoryIds.length
+      ? categories.query(Q.where("id", Q.oneOf(categoryIds))).fetch()
+      : Promise.resolve([] as CategoryModel[]),
+    tt.query(Q.where("transaction_id", Q.oneOf(txIds))).fetch(),
+  ])
+
+  // 3. Batch-fetch tags referenced by join rows
+  const tagIdSet = new Set(ttRows.map((r) => r.tagId))
+  const tagRows = tagIdSet.size
+    ? await tagsCollection()
+        .query(Q.where("id", Q.oneOf([...tagIdSet])))
+        .fetch()
+    : ([] as TagModel[])
+
+  // 4. Build lookup Maps
+  const accountMap = new Map(accountRows.map((a) => [a.id, a]))
+  const categoryMap = new Map(categoryRows.map((c) => [c.id, c]))
+  const tagMap = new Map(tagRows.map((t) => [t.id, t]))
+
+  const tagsByTxId = new Map<string, TagModel[]>()
+  for (const row of ttRows) {
+    const tag = tagMap.get(row.tagId)
+    if (!tag) continue
+    const arr = tagsByTxId.get(row.transactionId) ?? []
+    arr.push(tag)
+    tagsByTxId.set(row.transactionId, arr)
+  }
+
+  // 5. Resolve conversion rates for transfer transactions (small subset)
+  const rateMap = new Map<string, number | null>()
+  const transferTxs = transactions.filter((t) => t.isTransfer)
+  if (transferTxs.length) {
+    await Promise.all(
+      transferTxs.map(async (t) => {
+        rateMap.set(t.id, await getConversionRateForTransaction(t))
+      }),
+    )
+  }
+
+  // 6. Assemble — drop orphaned transactions (account deleted after creation)
+  const results: TransactionWithRelations[] = []
+  for (const t of transactions) {
+    const account = accountMap.get(t.accountId)
+    if (!account) continue // orphaned: primary account not found
+
+    const result: TransactionWithRelations = {
+      transaction: t,
+      account,
+      category: t.categoryId ? (categoryMap.get(t.categoryId) ?? null) : null,
+      tags: tagsByTxId.get(t.id) ?? [],
+    }
+    if (t.relatedAccountId) {
+      result.relatedAccount = accountMap.get(t.relatedAccountId) ?? null
+    }
+    const rate = rateMap.get(t.id)
+    if (t.isTransfer && rate != null) {
+      result.conversionRate = rate
+    }
+    results.push(result)
+  }
+  return results
 }
 
 /**
@@ -128,22 +198,6 @@ const getBalanceDelta = (amount: number, type: TransactionType): number => {
   if (type === TransactionTypeEnum.INCOME) return amount
   if (type === TransactionTypeEnum.TRANSFER) return amount // signed amount on row
   return -amount // expense (money out of account)
-}
-
-const loadTransactionTags = async (
-  transactionId: string,
-): Promise<TagModel[]> => {
-  const tts = await transactionTagsCollection()
-    .query(Q.where("transaction_id", transactionId))
-    .fetch()
-
-  if (tts.length === 0) return []
-
-  const tagIds = tts.map((t) => t.tagId)
-
-  return tagsCollection()
-    .query(Q.where("id", Q.oneOf(tagIds)))
-    .fetch()
 }
 
 /**
@@ -341,7 +395,7 @@ export const getPendingTransactionModelsFull = async (options?: {
   toDate?: number
 }): Promise<TransactionWithRelations[]> => {
   const rows = await getPendingTransactionModels(options)
-  return Promise.all(rows.map(hydrateTransaction))
+  return hydrateTransactionsBatch(rows)
 }
 
 /* ------------------------------------------------------------------ */
@@ -556,9 +610,7 @@ export const observeTransactionModelsFull = (
 
   return source$.pipe(
     switchMap((rows) =>
-      rows.length === 0
-        ? of([])
-        : combineLatest(rows.map((t) => from(hydrateTransaction(t)))),
+      rows.length === 0 ? of([]) : from(hydrateTransactionsBatch(rows)),
     ),
   )
 }
@@ -601,11 +653,17 @@ export async function createTransactionWriter(
   const transactions = transactionsCollection()
   const categories = database.get<CategoryModel>("categories")
 
-  const category = data.categoryId
-    ? await categories.find(data.categoryId)
-    : null
+  // Pre-fetch all related rows before building the batch so we have their
+  // current state (account balance, category/tag counts) before any write.
+  const [account, category, tagModels] = await Promise.all([
+    accountsCollection().find(data.accountId),
+    data.categoryId ? categories.find(data.categoryId) : Promise.resolve(null),
+    data.tags?.length
+      ? Promise.all(data.tags.map((id) => tagsCollection().find(id)))
+      : Promise.resolve([] as TagModel[]),
+  ])
 
-  const transaction = await transactions.create((t) => {
+  const preparedTransaction = transactions.prepareCreate((t) => {
     t.amount = data.amount
     t.type = data.type
     t.transactionDate = data.transactionDate
@@ -630,39 +688,44 @@ export async function createTransactionWriter(
     t.isTransfer = data.type === TransactionTypeEnum.TRANSFER
     t.transferId = null
     t.relatedAccountId = null
-    // Balance before is computed at read time (source-verified: Flow does not store it)
-    t.accountBalanceBefore = 0
+    // Snapshot: capture the account balance before this transaction is applied.
+    // Used by getBalanceAtTransaction for O(1) detail-screen balance display.
+    // Pending transactions keep 0 — they have no balance effect until confirmed.
+    t.accountBalanceBefore = data.isPending ? 0 : account.balance
   })
 
-  const account = await accountsCollection().find(data.accountId)
+  const batchOps: Parameters<typeof database.batch>[0] = [preparedTransaction]
+
   if (!data.isPending) {
     const balanceDelta = getBalanceDelta(data.amount, data.type)
-    await account.update((a) => {
-      a.balance = a.balance + balanceDelta
-    })
+    batchOps.push(
+      account.prepareUpdate((a) => {
+        a.balance = a.balance + balanceDelta
+      }),
+    )
   }
 
   if (category) {
-    await category.update(incrementCount)
+    batchOps.push(category.prepareUpdate(incrementCount))
   }
 
   if (data.tags?.length) {
     const tt = transactionTagsCollection()
-    const tags = tagsCollection()
-
-    for (const tagId of data.tags) {
-      const tag = await tags.find(tagId)
-
-      await tt.create((r) => {
-        r.transactionId = transaction.id
-        r.tagId = tagId
-      })
-
-      await tag.update(incrementCount)
+    for (let i = 0; i < data.tags.length; i++) {
+      const tagId = data.tags[i]
+      const tag = tagModels[i]
+      batchOps.push(
+        tt.prepareCreate((r) => {
+          r.transactionId = preparedTransaction.id
+          r.tagId = tagId
+        }),
+        tag.prepareUpdate(incrementCount),
+      )
     }
   }
 
-  return transaction
+  await database.batch(...batchOps)
+  return preparedTransaction
 }
 
 /**
@@ -722,7 +785,7 @@ export async function updateTransactionWriter(
     if (updates.categoryId !== undefined) {
       t.categoryId = updates.categoryId ?? null
     }
-    if (updates.accountId) {
+    if (updates.accountId !== undefined) {
       t.accountId = updates.accountId
     }
 
@@ -959,23 +1022,6 @@ export const detachTransactionFromRule = async (
   })
 }
 
-/** Payload shape for editing recurring instances (matches form + updateTransactionModel). */
-// TODO: try to use zod exported infer-ed type
-export interface RecurringEditPayload {
-  amount: number
-  type: TransactionType
-  transactionDate: Date
-  categoryId: string | null
-  accountId: string
-  title: string | null
-  description?: string
-  isPending: boolean
-  requiresManualConfirmation?: boolean
-  tags: string[]
-  extra?: Record<string, string>
-  subtype?: string
-}
-
 /**
  * Updates all pending instances of a recurring rule whose transaction_date is on or
  * after `fromDate`, applying the given payload to each, within a single `database.write()` call.
@@ -1092,6 +1138,22 @@ export async function destroyTransactionWriter(
     })
   }
 
+  // Clean up the transfers join row so it doesn't become an orphan after destroy.
+  if (transaction.isTransfer) {
+    const transfers = database.get<TransferModel>("transfers")
+    const rows = await transfers
+      .query(
+        Q.or(
+          Q.where("from_transaction_id", transaction.id),
+          Q.where("to_transaction_id", transaction.id),
+        ),
+      )
+      .fetch()
+    for (const row of rows) {
+      await row.destroyPermanently()
+    }
+  }
+
   await transaction.destroyPermanently()
 }
 
@@ -1153,7 +1215,7 @@ export const autoPurgeTrash = async (retentionValue: string) => {
   if (transactionsToPurge.length > 0) {
     await database.write(async () => {
       for (const transaction of transactionsToPurge) {
-        await transaction.destroyPermanently()
+        await destroyTransactionWriter(transaction)
       }
     })
   }

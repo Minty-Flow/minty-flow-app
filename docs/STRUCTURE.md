@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-04-03T17:08:54.166Z
+Generated on: 2026-04-07T21:09:17.982Z
 
 ```
 ./
@@ -31,6 +31,7 @@ Generated on: 2026-04-03T17:08:54.166Z
 ├── .vscode/
 │   └── settings.json
 ├── docs/
+│   ├── code-review-plan.md
 │   └── STRUCTURE.md
 ├── plugins/
 │   ├── index.js
@@ -41,7 +42,6 @@ Generated on: 2026-04-03T17:08:54.166Z
 │   ├── check-missing-i18n-keys.mts
 │   ├── find-unused-styles.mts
 │   ├── generate-structure.mts
-│   ├── run-android-usb.mts
 │   └── trim-icons.py
 ├── src/
 │   ├── app/

@@ -1,6 +1,8 @@
-import type { RecurringEditPayload } from "~/components/transaction/edit-recurring-modal"
 import type TransactionModel from "~/database/models/transaction"
-import type { TransactionFormValues } from "~/schemas/transactions.schema"
+import type {
+  RecurringEditPayload,
+  TransactionFormValues,
+} from "~/schemas/transactions.schema"
 import type { Account } from "~/types/accounts"
 import type { Budget } from "~/types/budgets"
 import type { Category } from "~/types/categories"

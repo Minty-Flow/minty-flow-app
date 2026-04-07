@@ -25,6 +25,7 @@ export const transactionSchema = z.object({
 })
 
 export type TransactionFormValues = z.infer<typeof transactionSchema>
+export type RecurringEditPayload = z.infer<typeof transactionSchema>
 
 /* ------------------------------------------------------------------ */
 /* Transfer (create / edit) — single source of truth for form & service */

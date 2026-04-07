@@ -7,6 +7,7 @@ import { Platform, Share } from "react-native"
 import { getMimeTypeForExtension } from "~/utils/file-icon"
 
 import { database } from "../index"
+import { schema } from "../schema"
 
 // ─── Backup types ────────────────────────────────────────────────────────────
 
@@ -45,7 +46,23 @@ type ImportResult =
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const SCHEMA_VERSION = 2
+/**
+ * The current WatermelonDB schema version of the app.
+ *
+ * **Why**: Backups exported from one version of the app may contain columns that
+ * do not exist in an older version of the schema. Importing such a backup into an
+ * older app build would silently drop those columns (WatermelonDB ignores unknown
+ * columns during `prepareCreate`), causing data loss on the next sync.
+ *
+ * **How**: This value is embedded in every backup's `meta.schemaVersion` field
+ * during export and checked during `validateBackup`. A mismatch between the backup's
+ * `schemaVersion` and this constant causes validation to fail, preventing the import
+ * from proceeding.
+ *
+ * Sourced directly from `schema.version` so it stays in sync automatically — no
+ * manual bump needed when migrations are added.
+ */
+const SCHEMA_VERSION = schema.version
 const INTERNAL_FIELDS = new Set(["_status", "_changed"])
 
 /**
@@ -336,7 +353,12 @@ export function validateBackup(json: string): MintyFlowBackup | null {
     }
     const p = parsed as Record<string, unknown>
     const meta = p.meta as Record<string, unknown> | undefined
-    if (!meta || meta.version !== 1 || meta.appId !== "minty-flow") {
+    if (
+      !meta ||
+      meta.version !== 1 ||
+      meta.appId !== "minty-flow" ||
+      meta.schemaVersion !== SCHEMA_VERSION
+    ) {
       return null
     }
     const data = p.data as Record<string, unknown> | undefined

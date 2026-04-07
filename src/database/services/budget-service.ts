@@ -68,6 +68,13 @@ export const observeCategoryIdsForBudget = (
  * record additions/deletions. Because accountIds live in a separate join
  * table, each emission fetches budget_account rows and groups them by
  * budget_id before mapping to plain Budget objects.
+ *
+ * Join-row observation note: budget_accounts and budget_categories are
+ * observed globally (not per-budget), so any join-row change re-maps all
+ * budgets. This is intentional: at personal-finance scale (< 20 budgets,
+ * < 100 total join rows) the single-pass Map grouping is negligible. If
+ * budget counts grow to hundreds, scope the join observables per-budget
+ * using withObservables from @nozbe/with-observables.
  */
 export const observeBudgets = (): Observable<Budget[]> => {
   const query = getBudgetCollection().query(Q.sortBy("name", Q.asc))

@@ -34,7 +34,11 @@ export function AppLockGate() {
   if (!lockAppEnabled) return null
 
   return (
-    <Animated.View style={[styles.overlay, animatedStyle]}>
+    <Animated.View
+      style={[styles.overlay, animatedStyle]}
+      importantForAccessibility={isLocked ? "yes" : "no-hide-descendants"}
+      accessibilityElementsHidden={!isLocked}
+    >
       <BlurView intensity={80} tint="regular" style={styles.fill}>
         <Pressable
           onPress={attemptUnlock}

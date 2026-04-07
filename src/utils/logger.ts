@@ -8,28 +8,28 @@ const ICONS: Record<LogLevel, string> = {
 }
 
 /**
- * Simplified logger that outputs JSON in production 
+ * Simplified logger that outputs JSON in production
  * and readable, unformatted logs in development.
  */
 const base = (level: LogLevel, msg: string, meta?: Record<string, unknown>) => {
-  const timestamp = new Date().toISOString();
+  const timestamp = new Date().toISOString()
 
   if (process.env.NODE_ENV === "production") {
-    // Stringify everything for production to avoid the TS error
-    console[level === "debug" ? "log" : level](JSON.stringify({ level, msg, meta, timestamp }));
-    return;
+    // Strip meta from production logs — meta can contain financial data (account IDs, amounts)
+    // that may be captured by crash-reporting SDKs hooked into console.error.
+    console[level === "debug" ? "log" : level](JSON.stringify({ level, msg, timestamp }))
+    return
   }
 
   // Development: Use a comma, not a plus (+) sign.
-  const label = `${ICONS[level]} [${level.toUpperCase()}] ${msg}`;
+  const label = `${ICONS[level]} [${level.toUpperCase()}] ${msg}`
 
   if (meta) {
-    // Pass them as separate arguments
-    console[level === "debug" ? "log" : level](label, meta);
+    console[level === "debug" ? "log" : level](label, meta)
   } else {
-    console[level === "debug" ? "log" : level](label);
+    console[level === "debug" ? "log" : level](label)
   }
-};
+}
 
 export const logger = {
   debug: (msg: string, meta?: Record<string, unknown>) => base("debug", msg, meta),

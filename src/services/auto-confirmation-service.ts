@@ -82,6 +82,9 @@ class AutoConfirmationService {
    *   - Future   → schedule a timeout for the exact millisecond.
    */
   scheduleTransactions(transactions: TransactionWithRelations[]) {
+    // Safe: MMKV-backed Zustand store hydrates synchronously at app start
+    // (zustand/persist with synchronous storage runs getItem during create(),
+    // completing before any component mounts or setTimeout fires).
     const { updateDateUponConfirmation } =
       usePendingTransactionsStore.getState()
 
