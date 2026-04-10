@@ -2,7 +2,7 @@
   "expo": {
     "version": "1.0.6",
     "name": "Minty Flow",
-    "slug": "mint-flow",
+    "slug": "mint-flow-app",
     "extra": {
       "supportsRTL": true
     },

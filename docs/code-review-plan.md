@@ -1,6 +1,6 @@
 # Code Review Plan — minty-flow-native
 
-**Reviewed**: 2026-04-07
+**Reviewed**: 2026-04-10
 **Recommendation**: REQUEST CHANGES
 
 ---
@@ -9,149 +9,400 @@
 
 | Severity | Count | Status |
 |---|---|---|
-| CRITICAL | 2 | 1 ✅ Fixed, 1 Deferred |
-| HIGH | 7 | ✅ All Fixed |
-| MEDIUM | 6 | ✅ All Fixed |
-| LOW | 5 | ✅ All Fixed |
+| CRITICAL | 2 | ⚠️ 1 Deferred, 1 New |
+| HIGH | 6 | ⚠️ New findings |
+| MEDIUM | 8 | ⚠️ New findings |
+| LOW | 4 | ⚠️ Suggestions |
 
 ---
 
 ## CRITICAL (Must Fix)
 
 ### 1. Schema version mismatch — upgrade path is broken
-**Status**: Deferred (no need to fix this the app is still in pre-production ignore this)
+**Status**: Deferred (no need to fix for pre-production)
 
-`src/database/schema.ts` declares `version: 1` but CLAUDE.md, the backup service (`SCHEMA_VERSION = 2`), and the `goals.is_archived` column all imply version 2. The migrations array is `migrations: []`.
+**Location**: `src/database/schema.ts:10`, `src/database/migrations/index.ts`
 
-**Risk**: Any existing user who upgrades will never have `is_archived` added to their `goals` table → crash on read/write.
+The schema file declares `version: 1`, but CLAUDE.md states version 2 and the backup service uses `SCHEMA_VERSION = 2`. The `goals` table has an `is_archived` column (added in v2) but no migration step exists to add it. The migrations array is empty: `migrations: []`.
+
+**Risk**: Any user upgrading from an earlier version will never have `is_archived` added to `goals` → crash on read/write.
 
 **Fix (when ready to ship)**:
-- Bump `schema.ts` to `version: 2`
-- Add a migration step in `src/database/migrations/index.ts`:
 ```ts
-addColumns({ table: "goals", columns: [{ name: "is_archived", type: "boolean" }] })
+// src/database/schema.ts
+- version: 1,
++ version: 2,
+
+// src/database/migrations/index.ts
+- export default schemaMigrations({ migrations: [] })
++ export default schemaMigrations({
++   migrations: [
++     {
++       toVersion: 2,
++       steps: [
++         addColumns({
++           table: "goals",
++           columns: [{ name: "is_archived", type: "boolean" }],
++         }),
++       ],
++     },
++   ],
++ })
 ```
 
 ---
 
-### 2. `editTransferWriter` is non-atomic — balance corruption window
-**Status**: ✅ Fixed 
+### 2. `confirmTransactionSync` applies balance delta without atomicity — non-atomic sequential updates
+**Status**: 🔴 NEW — Must Fix
 
-`src/database/services/transfer-service.ts` — Both `editTransferWriter` and `deleteTransferWriter` already use `prepareUpdate`/`prepareCreate` with a single `database.batch()` call. No sequential `await account.update()` calls remain.
+**Location**: `src/database/services/transaction-service.ts:459-474`
+
+The function calls `t.update(...)` to flip `isPending`, then reads `t.amount` and `t.type` and applies a balance delta. Multiple sequential `await` calls inside `database.write()` without batching. An unhandled error mid-loop leaves some transactions confirmed and some accounts inconsistent.
+
+**Risk**: Data corruption. Accounts and transactions fall out of sync — account balances are updated without their transactions being marked confirmed, or vice versa.
+
+**Fix**:
+Use `prepareUpdate` + a single `database.batch()` for all operations:
+```ts
+export const confirmTransactionSync = async (
+  transactions: TransactionModel[],
+  shouldConfirm: boolean,
+): Promise<void> => {
+  await database.write(async () => {
+    const ops = []
+    for (const t of transactions) {
+      // Prepare transaction update
+      ops.push(t.prepareUpdate(tx => { tx.isPending = false }))
+      
+      // Prepare account balance update
+      if (shouldConfirm && t.isPending) {
+        const delta = getBalanceDelta(t.amount, t.type)
+        const account = await t.account.fetch()
+        ops.push(account.prepareUpdate(a => { a.balance += delta }))
+      }
+    }
+    await database.batch(...ops)
+  })
+}
+```
 
 ---
 
 ## HIGH (Should Fix)
 
-### 3. Logger leaks financial metadata in production
-**Status**: ✅ Fixed
+### 3. `destroyLoan` performs sequential awaits inside a write without batching
+**Status**: 🔴 NEW — Should Fix
 
-`src/utils/logger.ts` — Stripped `meta` from the production JSON log. Production now emits only `{ level, msg, timestamp }`; `meta` (account IDs, amounts, stack traces) is only present in development logs.
+**Location**: `src/database/services/loan-service.ts:179-192`
 
----
+The function loops over linked transactions and calls `await tx.update(...)` individually inside `database.write()`. Each `await` is a separate operation. If one throws, previous updates may be partially applied.
 
-### 4. `validateBackup` does not check `schemaVersion`
-**Status**: ✅ Fixed
+**Risk**: Loan deletion partially applied — some linked transactions nullified, others not.
 
-`src/database/services/data-management-service.ts` — Added `meta.schemaVersion !== SCHEMA_VERSION` to the validation guard. A backup from a mismatched schema version now fails validation instead of silently losing column data.
-
----
-
-### 5. `autoPurgeTrash` bypasses `destroyTransactionWriter`
-**Status**: ✅ Fixed
-
-`src/database/services/transaction-service.ts` — `autoPurgeTrash` now routes through `destroyTransactionWriter`. Additionally, `destroyTransactionWriter` itself was updated to clean up the `transfers` join row when destroying a transfer transaction, preventing orphaned rows regardless of call site.
-
----
-
-### 6. `createTransactionWriter` is non-atomic
-**Status**: ✅ Fixed
-
-`src/database/services/transaction-service.ts` — Refactored to `prepareCreate`/`prepareUpdate` + a single `database.batch()` call. All related rows (transaction, account balance, category count, tag join rows, tag counts) are now written atomically.
+**Fix**:
+```ts
+const ops = linkedTxs.map(tx =>
+  tx.prepareUpdate(t => { t.loanId = null })
+)
+await database.batch(...ops)
+await loan.destroyPermanently()
+```
 
 ---
 
-### 7. App lock overlay does not block accessibility focus
-**Status**: ✅ Fixed
+### 4. `updateTransactionWriter` non-atomic tag and balance updates
+**Status**: 🔴 NEW — Should Fix
 
-`src/components/app-lock-gate.tsx` — Added `importantForAccessibility` (Android) and `accessibilityElementsHidden` (iOS) to the overlay `Animated.View`. When locked: `importantForAccessibility="yes"` + `accessibilityElementsHidden={false}`; when unlocked: `importantForAccessibility="no-hide-descendants"` + `accessibilityElementsHidden={true}`, preventing screen readers from reaching content behind the overlay.
+**Location**: `src/database/services/transaction-service.ts:832-884`
+
+The tag sync loop calls `await tt.destroyPermanently()` and `await tag.update(decrementCount)` sequentially. Subsequent balance adjustments issue multiple sequential `await account.update(...)` calls. None batched.
+
+**Risk**: Partial transaction updates. Tags unlinked but balance not adjusted (or vice versa), causing inconsistent state.
+
+**Fix**: Accumulate all `prepareUpdate`, `prepareCreate`, `prepareDestroyPermanently` operations and issue a single `database.batch()` at the end.
 
 ---
 
-### 8. `editTransferWriter` silently resets `conversionRate` to `1` on edit
-**Status**: ✅ Fixed
+### 5. `destroyAccount` TOCTOU — new transactions created between fetch and delete
+**Status**: 🔴 NEW — Should Fix
 
-`src/database/services/transfer-service.ts` — `newConversionRate` already falls back to `oldImpliedRate` (derived from existing transaction amounts: `oldCreditAmount / oldDebitAmount`) rather than defaulting to `1`. The rate is always preserved when not explicitly changed.
+**Location**: `src/database/services/account-service.ts:490-501`
+
+`getTransactionModels()` is called outside `database.write()`, then transactions are destroyed inside the write. Between the fetch and the write, recurring sync or auto-confirm could create new transactions that are missed and become orphaned.
+
+**Risk**: Orphaned transactions referencing a non-existent account → crash on fetch.
+
+**Fix**:
+Move the `getTransactionModels` fetch inside the `database.write()` callback:
+```ts
+await database.write(async () => {
+  const transactions = await getTransactionModels(account.id)
+  for (const tx of transactions) {
+    await tx.destroyPermanently()
+  }
+  await account.destroyPermanently()
+})
+```
 
 ---
 
-### 9. Profile image picker leaks old files in app storage
-**Status**: ✅ Fixed
+### 6. `balanceService` O(N) fallback includes no guard against thousands of rows
+**Status**: 🔴 NEW — Should Fix
 
-`src/app/settings/edit-profile.tsx` — `handlePickImage` now deletes the previous `localImageUri` file before updating to the new one. `handleSave` deletes the previously persisted `imageUri` when the URI has changed. Both deletions swallow errors (file already gone is safe to ignore).
+**Location**: `src/database/services/balance-service.ts:39-52`
+
+Any transaction with `accountBalanceBefore = 0` triggers a full table scan of that account's transactions. For accounts with thousands of transactions, this is expensive every time that specific transaction is viewed.
+
+**Risk**: Performance degradation for transactions at zero-balance checkpoints.
+
+**Fix**: Add a row-count guard or compute from the most recent non-zero snapshot instead of scanning from the beginning.
+
+---
+
+### 7. Recurring transaction idempotency bug — soft-deleted instances permanently suppressed
+**Status**: 🔴 NEW — Should Fix
+
+**Location**: `src/database/services/recurring-transaction-service.ts:127-132`
+
+The idempotency check for duplicate generation does not filter `is_deleted = false`:
+```ts
+const alreadyExists = await database
+  .get<TransactionModel>("transactions")
+  .query(
+    Q.where("recurring_id", recurring.id),
+    Q.where("transaction_date", nextTs),
+    // Missing: Q.where("is_deleted", false)
+  )
+  .fetchCount() > 0
+```
+
+**Risk**: A user deletes a pending recurring instance. The next sync finds the soft-deleted row, skips generation, and updates `lastGeneratedTransactionDate` — permanently suppressing that occurrence from ever being regenerated.
+
+**Fix**:
+```ts
+Q.where("is_deleted", false),
+```
+
+---
+
+### 8. Backup import partial writes — not transactional on failure
+**Status**: 🔴 NEW — Should Fix
+
+**Location**: `src/database/services/data-management-service.ts:676-699`
+
+`importBackup` calls `insertRows()` sequentially inside `database.write()`. If any chunk fails mid-import (e.g., at `transactions` after `accounts` are written), WatermelonDB's write context does not guarantee rollback. The database is wiped at line 620 before any writes, so partial imports are possible but there's no transaction boundary.
+
+**Risk**: A partially imported backup leaves the database with orphaned records (accounts exist but transactions missing).
+
+**Fix**: Consider `database.unsafeResetDatabase()` on import failure, or document that import is not fully transactional.
+
+---
+
+### 9. `updateTransactionWriter` calls `transaction.update()` before batching — non-atomic with balance
+**Status**: 🔴 NEW — Should Fix
+
+**Location**: `src/database/services/transaction-service.ts:773-886`
+
+Line 773 calls `await transaction.update(...)` immediately, writing to the database. Category and balance adjustments follow as separate awaits. This is not atomic.
+
+**Risk**: Process killed or error thrown between `transaction.update()` and balance adjustment leaves transaction updated but account balance unchanged → balance/category count drift.
+
+**Fix**: Use `transaction.prepareUpdate(...)` and accumulate all operations in a single `database.batch()`.
 
 ---
 
 ## MEDIUM (Consider Fixing)
 
-### 10. `observeTransactionModelsFull` spawns N parallel DB lookups per emission
-**Status**: ✅ Fixed
+### 10. `confirmTransactionSync` reads stale model state after sequential update
+**Status**: ⚠️ Fragile Assumption
 
-`src/database/services/transaction-service.ts` — Replaced per-transaction `hydrateTransaction` fan-out with `hydrateTransactionsBatch`. Now uses 4 batch queries regardless of list size: one `Q.oneOf` for accounts (primary + related), one for categories, one for transaction_tag join rows, one for tags. Conversion rates are still resolved per-transfer (small subset). `loadTransactionTags` removed. Both `observeTransactionModelsFull` and `getPendingTransactionModelsFull` updated.
+**Location**: `src/database/services/transaction-service.ts:460-474`
 
-### 11. `observeBudgets` re-fetches all join rows on any single budget change
-**Status**: ✅ Annotated (deferred)
+After `await t.update(...)`, the code reads `t.amount` and `t.type` on the same model. These fields are not changed in the updater, so this works, but it's a fragile assumption. If the updater ever also sets `amount` or `type`, the balance delta would compute from post-update values instead of pre-update values.
 
-`src/database/services/budget-service.ts` — Added JSDoc comment explaining the trade-off: global join-row observation is intentional at personal-finance scale (< 20 budgets, < 100 join rows). Noted the `withObservables` per-budget approach as a future path if scale grows.
+**Suggestion**: Add a comment documenting that `amount` and `type` are intentionally read from the pre-update model snapshot. Or refactor to pass these values explicitly:
+```ts
+const { amount, type } = t
+ops.push(t.prepareUpdate(tx => { tx.isPending = false }))
+const delta = getBalanceDelta(amount, type)
+```
 
-### 12. `hydrateTransaction` unguarded primary account lookup
-**Status**: ✅ Fixed
+---
 
-`src/database/services/transaction-service.ts` — Resolved as part of #10. `hydrateTransactionsBatch` silently drops transactions whose primary account is not found in the batch results. The type contract `account: AccountModel` remains non-null for all consumers — orphaned transactions are filtered upstream.
+### 11. `validateBackup` lacks row-level type checking
+**Status**: ⚠️ Correctness Risk
 
-### 13. `updateTransactionWriter` truthy check for `accountId`
-**Status**: ✅ Fixed
+**Location**: `src/database/services/data-management-service.ts:343-395`
 
-`src/database/services/transaction-service.ts` — Changed `if (updates.accountId)` to `if (updates.accountId !== undefined)` for consistency with all other field checks in the same block.
+Validates that tables are present and are arrays, but does not validate individual row shapes. A corrupted backup with `amount: "DROP TABLE"` or `transaction_date: null` would pass validation and be written into `_raw` without type coercion.
 
-### 14. `autoConfirmationService` implicit MMKV hydration ordering assumption
-**Status**: ✅ Annotated
+**Risk**: Type errors at read time when imported data is consumed. Malicious backup data bypasses validation.
 
-`src/services/auto-confirmation-service.ts` — Added an inline comment above `usePendingTransactionsStore.getState()` documenting why the call is safe: MMKV-backed Zustand stores hydrate synchronously during `create()`, before any component mounts or `setTimeout` fires.
+**Suggestion**: Add per-row type validation for critical fields:
+```ts
+for (const row of rows) {
+  if (typeof row.id !== 'string' || !row.id) throw new Error('Invalid row: id')
+  if (typeof row.amount !== 'number') throw new Error('Invalid row: amount')
+  if (!isValidDate(row.transaction_date)) throw new Error('Invalid row: transaction_date')
+}
+```
 
-### 15. `getBalanceAtTransaction` is O(N) — ignores `account_balance_before` snapshot
-**Status**: ✅ Fixed
+---
 
-- `src/database/services/transaction-service.ts` (`createTransactionWriter`) — `accountBalanceBefore` now stores `account.balance` at write time for confirmed transactions (pending keeps `0`). The `account` model is already pre-fetched before the batch.
-- `src/database/services/balance-service.ts` — Signature changed to accept `TransactionModel` directly. O(1) fast path: `accountBalanceBefore + delta` when snapshot is non-zero. O(N) fallback retained for legacy rows.
-- `src/hooks/use-balance-before.ts` — Simplified to pass `transaction` directly instead of extracting `accountId` + `transactionDate`.
+### 12. `observeLoans` JS-sorts on every emission
+**Status**: ⚠️ Performance
+
+**Location**: `src/database/services/loan-service.ts:57-76`
+
+The entire loan list is re-sorted in JavaScript on every reactive emission, including field changes that don't affect sort order. The sort runs even when the `due_date` or `name` haven't changed.
+
+**Suggestion**: Apply `distinctUntilChanged` with a custom comparator checking loan IDs and due dates, or memoize at component level.
+
+---
+
+### 13. `isImageUrl` allows overly broad hostname matches
+**Status**: ⚠️ Security (Low Risk)
+
+**Location**: `src/utils/is-image-url.ts:39-43`
+
+The check `urlObj.hostname.includes("imgur")` would also match `evil-imgur.com` or `imgur.com.attacker.net`. While HTTPS-only requirement mitigates most SSRF, the hostname check is overly permissive.
+
+**Suggestion**:
+```ts
+const TRUSTED_HOSTS = ["imgur.com", "i.imgur.com", "unsplash.com", "images.unsplash.com", "www.pexels.com"]
+const isKnownImageHost = TRUSTED_HOSTS.some(
+  (host) => urlObj.hostname === host || urlObj.hostname.endsWith(`.${host}`)
+)
+```
+
+---
+
+### 14. Budget period "daily" and "weekly" ignore user locale for week start
+**Status**: ⚠️ Localization
+
+**Location**: `src/database/services/budget-service.ts:317-321`
+
+`startOfWeek(now)` uses the default Sunday week start. Users in locales where weeks start on Monday (Europe, Middle East) see budgets reset on Sunday instead of Monday.
+
+**Risk**: Incorrect budget period calculations for non-Sunday-week-start locales. The app supports Arabic/RTL, so this is real user impact.
+
+**Suggestion**:
+```ts
+const weekStartsOn = getLocales()[0]?.regionCode === "US" ? 0 : 1
+periodStart = startOfWeek(now, { weekStartsOn })
+```
+
+---
+
+### 15. `edit-profile.tsx` deletes file without await
+**Status**: ⚠️ Correctness
+
+**Location**: `src/app/settings/edit-profile.tsx:109-115`
+
+`new File(imageUri).delete()` inside `handleSave` is not awaited. The async error will never be caught by the `try/catch`.
+
+**Risk**: Silent file deletion failures → leftover image files consuming storage.
+
+**Suggestion**:
+```ts
+const handleSave = async () => {
+  if (localImageUri !== imageUri && imageUri) {
+    try {
+      await new File(imageUri).delete()
+    } catch {
+      // file may already be gone — ignore
+    }
+  }
+  // ...
+}
+```
+
+---
+
+### 16. Backup export includes soft-deleted (trashed) transactions
+**Status**: ⚠️ Data Semantics
+
+**Location**: `src/database/services/data-management-service.ts:162-168`
+
+`generateJsonBackup()` fetches all transactions including `is_deleted = true`. Trashed transactions are included in the backup. This is correct for full-fidelity backup, but users may be surprised to find deleted transactions restored upon import (inconsistent with CSV export behavior which filters them).
+
+**Suggestion**: Document this explicitly in the UI ("Backup includes deleted transactions in trash"), or offer an option to exclude them for consistency.
+
+---
+
+### 17. Schema version mismatch detection is bidirectional
+**Status**: ⚠️ Design
+
+**Location**: `src/database/services/data-management-service.ts:358-362`
+
+The check `meta.schemaVersion !== SCHEMA_VERSION` rejects backups from older OR newer versions. A backup from schema v1 imported into schema v2 would be rejected, even though v1 data is a valid subset.
+
+**Suggestion**: Use `meta.schemaVersion > SCHEMA_VERSION` to only block forward-incompatible imports, allowing older backups with the understanding that new columns get defaults.
+
+---
+
+### 18. Recurring sync calls `.getState()` on Zustand store outside React
+**Status**: ⚠️ Implicit Dependency
+
+**Location**: `src/services/auto-confirmation-service.ts:88-89`
+
+`usePendingTransactionsStore.getState()` from a class method is correct in Zustand, but the comment acknowledges this only works because MMKV-backed stores hydrate synchronously. Changing storage to AsyncStorage would break this.
+
+**Suggestion**: The pattern is correct; add a note that synchronous MMKV-backed storage is required.
+
+---
+
+### 19. Transfer balance fallback assumes current two-row convention
+**Status**: ⚠️ Legacy Data
+
+**Location**: `src/database/services/balance-service.ts:47-52`
+
+The O(N) fallback treats `tx.type === "transfer"` as `sum + tx.amount` (signed). This assumes the current two-row convention (debit negative, credit positive). Legacy data from Flutter imports may not match.
+
+**Suggestion**: Add a comment that this fallback assumes the current two-row signed-amount transfer convention and may be inaccurate for pre-migration data.
 
 ---
 
 ## LOW (Suggestions)
 
-### 16. ✅ `RecurringEditPayload` duplicate interface — resolved via `Pick<TransactionFormValues>`
-**Fixed**: Replaced the manual `interface RecurringEditPayload` (which duplicated `transactionSchema` fields) with a `Pick` of the Zod-inferred `TransactionFormValues`. Removed the TODO comment.
+### 20. Module-level `_syncRunning` lock not resilient to Fast Refresh
+**Status**: 🟢 Development Only
 
-### 17. ✅ `logger.ts` trailing semicolons — Biome `asNeeded` violation
-**Fixed**: Removed trailing semicolons from `logger.ts` to comply with Biome's `semicolons: "asNeeded"` rule.
+**Location**: `src/database/services/recurring-transaction-service.ts:222`
 
-### 18. `use-recurring-transaction-sync.ts` dev double-fire
-`src/hooks/use-recurring-transaction-sync.ts:35` — During Fast Refresh in development, the effect can fire twice in quick succession. The `_syncRunning` module-level lock in the recurring service prevents actual duplicate transaction generation. **No production impact; no fix needed.**
+Module hot-reloading in React Native development can reinitialize `_syncRunning` to `false` while `synchronizeAllRecurringTransactions` is executing, removing the concurrency guard. Production is safe due to the idempotency check.
 
-### 19. ✅ `ensureEntry` non-null assertion in `editTransferWriter` — resolved via early return
-**Fixed**: Replaced `Map.get()` followed by `!` assertion with an early-return pattern that returns the newly created entry directly, eliminating the `undefined` union and satisfying Biome's `noNonNullAssertion` rule.
+**Suggestion**: No fix needed. Documented for awareness; production behavior is correct.
 
 ---
 
 ## Positive Observations
 
-- App lock store defaults `isLocked: true` and correctly excludes it from persistence via `partialize` — secure by default.
-- `_syncRunning` concurrency lock in the recurring transaction service prevents duplicate transaction generation from AppState events.
-- Transfer **creation** uses `prepareCreate + database.batch()` atomically — only the edit path (#2) is broken.
-- `validateBackup` has FK pre-validation before the import write — good defense in depth.
-- `isImageUrl` blocks `file://` URIs from clipboard to prevent local path traversal.
-- `withObservables` is used consistently to keep reactive data out of component state.
-- No raw `console.log` calls found in application code.
-- `ALLOWED_COLUMNS` allowlist in `importBackup` prevents column injection during restore.
-- `partialize` in all Zustand persist configs correctly excludes volatile UI state from storage.
+- **Security**: Logger correctly strips `meta` in production (line 19-21), preventing financial data in crash reports.
+- **Math Input Security**: `parse-math-expression.ts` implements a full recursive descent parser without `eval` or `new Function` — excellent security hygiene.
+- **URI Validation**: `open-file.ts` validates URI scheme before opening (lines 17-19), blocking unexpected schemes.
+- **Query Optimization**: `hydrateTransactionsBatch` uses O(4) batch queries regardless of list size — well-designed N+1 solution.
+- **Transfer Atomicity**: `createTransferWriter` and `deleteTransferWriter` correctly use `prepareCreate`/`prepareUpdate` + `database.batch()`.
+- **Secure Defaults**: `AppLock` store defaults `isLocked: true` before rehydration — secure by default.
+- **Backup Validation**: `validateBackup` checks both `appId` and `schemaVersion`, providing meaningful rejection reasons.
+- **Logging Discipline**: No `console.log/warn/error` found anywhere except in `logger.ts` — fully enforced.
+- **SQL Safety**: `escapeLike` function properly escapes `%`, `_`, and `\` in LIKE patterns — prevents LIKE injection.
+- **Image Loading**: `isImageUrl` enforces HTTPS-only — no `http://` loading.
+- **Backup Column Firewall**: `ALLOWED_COLUMNS` allowlist prevents unknown columns in backup imports.
+
+---
+
+## Next Steps
+
+**Priority 1** (Data Safety): Fix issues #1, #2, #7
+- Schema migration setup
+- `confirmTransactionSync` atomicity
+- Recurring transaction idempotency
+
+**Priority 2** (Correctness): Fix issues #3, #4, #5, #6, #9
+- Batch all database operations inside `database.write()`
+- Eliminate sequential awaits
+- Fix TOCTOU in `destroyAccount`
+
+**Priority 3** (Quality): Issues #10–19
+- Performance, localization, type safety improvements
