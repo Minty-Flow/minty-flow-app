@@ -53,38 +53,65 @@ The schema file declares `version: 1`, but CLAUDE.md states version 2 and the ba
 ---
 
 ### 2. `confirmTransactionSync` applies balance delta without atomicity — non-atomic sequential updates
-**Status**: 🔴 NEW — Must Fix
+**Status**: ✅ FIXED
 
-**Location**: `src/database/services/transaction-service.ts:459-474`
+**Location**: `src/database/services/transaction-service.ts:451-491`
 
-The function calls `t.update(...)` to flip `isPending`, then reads `t.amount` and `t.type` and applies a balance delta. Multiple sequential `await` calls inside `database.write()` without batching. An unhandled error mid-loop leaves some transactions confirmed and some accounts inconsistent.
+**Problem (Pre-Fix)**: The function called `t.update(...)` to flip `isPending`, then read `t.amount` and `t.type` and applied a balance delta. Multiple sequential `await` calls inside `database.write()` without batching. An unhandled error mid-loop would leave some transactions confirmed and some accounts inconsistent.
 
-**Risk**: Data corruption. Accounts and transactions fall out of sync — account balances are updated without their transactions being marked confirmed, or vice versa.
+**Risk**: Data corruption. Accounts and transactions would fall out of sync — account balances updated without their transactions being marked confirmed, or vice versa.
 
-**Fix**:
-Use `prepareUpdate` + a single `database.batch()` for all operations:
+**Solution Applied** (2026-04-10):
+Refactored to the atomic pattern used in `createTransferWriter` and `editTransferWriter`:
+
+1. All reads (transaction lookups, account fetches) now happen BEFORE entering `database.write()`
+2. Inside the write, a `batchOps` array is built using `prepareUpdate` for each model
+3. All operations submitted atomically with a single `await database.batch(...batchOps)` call
+
+**Implementation**:
 ```ts
-export const confirmTransactionSync = async (
-  transactions: TransactionModel[],
-  shouldConfirm: boolean,
-): Promise<void> => {
-  await database.write(async () => {
-    const ops = []
-    for (const t of transactions) {
-      // Prepare transaction update
-      ops.push(t.prepareUpdate(tx => { tx.isPending = false }))
-      
-      // Prepare account balance update
-      if (shouldConfirm && t.isPending) {
-        const delta = getBalanceDelta(t.amount, t.type)
-        const account = await t.account.fetch()
-        ops.push(account.prepareUpdate(a => { a.balance += delta }))
-      }
+// Fetch all accounts before write (deduplicated by accountId)
+const accountIds = [...new Set(toUpdate.map((t) => t.accountId))]
+const accounts = await Promise.all(accountIds.map((id) => accountsCollection().find(id)))
+const accountMap = new Map(accounts.map((a) => [a.id, a]))
+
+const now = new Date()
+
+return database.write(async () => {
+  const batchOps: Parameters<typeof database.batch>[0] = []
+
+  for (const t of toUpdate) {
+    // Capture amount and type before prepareUpdate
+    const { amount, type } = t
+
+    batchOps.push(
+      t.prepareUpdate((x) => {
+        x.isPending = !shouldConfirm
+        if (shouldConfirm && options.updateTransactionDate) {
+          x.transactionDate = now
+        }
+      }),
+    )
+
+    // Balance delta applied atomically with transaction update
+    const account = accountMap.get(t.accountId)
+    if (account) {
+      const balanceDelta = getBalanceDelta(amount, type)
+      batchOps.push(
+        account.prepareUpdate((a) => {
+          a.balance = shouldConfirm
+            ? a.balance + balanceDelta
+            : a.balance - balanceDelta
+        }),
+      )
     }
-    await database.batch(...ops)
-  })
-}
+  }
+
+  await database.batch(...batchOps)
+})
 ```
+
+**Status**: Verified with `pnpm types` ✅ and `pnpm lint:fix` ✅
 
 ---
 
@@ -392,12 +419,20 @@ Module hot-reloading in React Native development can reinitialize `_syncRunning`
 
 ---
 
+## Fixed Issues Summary
+
+✅ **Issue #2**: `confirmTransactionSync` — Fixed 2026-04-10
+- Refactored to use `prepareUpdate` + `database.batch()` for atomic updates
+- All reads moved outside `database.write()`
+- Accounts deduplicated in Map for efficient batch operations
+- Verified with type check and linting
+
 ## Next Steps
 
-**Priority 1** (Data Safety): Fix issues #1, #2, #7
-- Schema migration setup
-- `confirmTransactionSync` atomicity
-- Recurring transaction idempotency
+**Priority 1** (Data Safety): Remaining issues
+- Issue #1: Schema migration setup (deferred for pre-production)
+- Issue #7: Recurring transaction idempotency — add `is_deleted` filter
+- High priority atomicity issues (#3, #4, #6, #9)
 
 **Priority 2** (Correctness): Fix issues #3, #4, #5, #6, #9
 - Batch all database operations inside `database.write()`
@@ -406,3 +441,100 @@ Module hot-reloading in React Native development can reinitialize `_syncRunning`
 
 **Priority 3** (Quality): Issues #10–19
 - Performance, localization, type safety improvements
+
+---
+
+## Mobile Testing Checklist (for confirmTransactionSync fix)
+
+### Setup
+- Run: `pnpm prebuild` (to sync native modules)
+- Run: `pnpm android` (or `pnpm ios` on Mac)
+- Have at least 3 test accounts with different currencies (if multi-currency support exists)
+
+### Test 1: Pending Expense → Confirm
+- [ ] Create a pending expense transaction in Account A
+- [ ] Verify transaction shows "Pending" badge
+- [ ] Verify Account A balance does NOT yet reflect the expense
+- [ ] Confirm the transaction from the transaction detail screen
+- [ ] ✅ Verify transaction is no longer pending
+- [ ] ✅ Verify Account A balance correctly decreased by expense amount
+- [ ] ✅ Verify transaction date is updated to "now" (if using updateTransactionDate)
+
+### Test 2: Pending Income → Confirm
+- [ ] Create a pending income transaction in Account A
+- [ ] Verify Account A balance does NOT yet reflect the income
+- [ ] Confirm the transaction
+- [ ] ✅ Verify Account A balance correctly increased by income amount
+- [ ] ✅ Verify no console errors or balance mismatches
+
+### Test 3: Pending Transfer → Confirm
+- [ ] Create a pending transfer: 100 from Account A → Account B
+- [ ] Verify both accounts show pending state
+- [ ] Verify neither account balance reflects the transfer yet
+- [ ] Confirm the transfer
+- [ ] ✅ Verify Account A balance decreased by 100 (at the exchange rate or as-is)
+- [ ] ✅ Verify Account B balance increased by 100 (or equivalent if multi-currency)
+- [ ] ✅ Verify BOTH transactions in the transfer pair are confirmed atomically
+- [ ] ✅ Verify no orphaned "pending transfer" in either account
+
+### Test 4: Hold (Re-pend) a Confirmed Transaction
+- [ ] Create and confirm an expense in Account A
+- [ ] Verify Account A balance reflects the expense (decreased)
+- [ ] Hold the transaction to re-pend it
+- [ ] ✅ Verify transaction is back to pending state
+- [ ] ✅ Verify Account A balance is restored (reversed the expense)
+- [ ] ✅ Verify re-confirming works correctly
+
+### Test 5: Atomicity Under Load
+- [ ] Create 10 pending transactions across multiple accounts
+- [ ] Confirm them all in rapid succession (tap confirm on each, back, next)
+- [ ] ✅ Verify all balances are correct after all confirmations
+- [ ] ✅ Verify no balance drift or orphaned transactions
+- [ ] ✅ Verify no crashes or console errors
+
+### Test 6: Auto-Confirmation (Recurring)
+- [ ] Set up a recurring transaction with auto-confirmation enabled
+- [ ] Force app foreground or wait for next sync cycle
+- [ ] ✅ Verify pending instances auto-confirm
+- [ ] ✅ Verify account balances update correctly
+- [ ] ✅ Verify no duplicate transactions created
+
+### Test 7: Category Count Updates (if applicable)
+- [ ] Create a pending expense in a specific category
+- [ ] Verify category shows correct count in budget view (pending count, if tracked)
+- [ ] Confirm the expense
+- [ ] ✅ Verify category count is updated atomically with the transaction
+- [ ] ✅ Verify no category count drift
+
+### Test 8: List and Detail Screen Consistency
+- [ ] Create a pending transaction
+- [ ] View it in the transaction list (should show pending badge)
+- [ ] Open the detail screen (should show pending state)
+- [ ] Confirm from the detail screen
+- [ ] ✅ Go back to the list — verify list immediately reflects confirmed state
+- [ ] ✅ Reopen detail screen — verify it's confirmed
+- [ ] ✅ No stale data or UI flicker
+
+### Test 9: Performance with Large Account
+- [ ] In an account with 100+ transactions, create a new pending transaction
+- [ ] Confirm it
+- [ ] ✅ Confirm completes within 1 second
+- [ ] ✅ No lag or jank on the UI
+- [ ] ✅ Balance updates smoothly
+
+### Test 10: iOS Simulator (if Mac available)
+- [ ] Run all tests 1–9 on iOS simulator
+- [ ] ✅ Verify no iOS-specific issues (especially with async/await or database writes)
+- [ ] ✅ Verify gesture/animation consistency
+
+### Regression Testing
+- [ ] Verify existing confirmed transactions still display correctly (no data corruption)
+- [ ] Test undo/redo if implemented (should be independent of this fix)
+- [ ] Test backup/restore with mixed pending/confirmed transactions
+- [ ] ✅ Verify all balances are restored correctly
+
+### Sign-Off
+- [ ] All tests pass on Android
+- [ ] All tests pass on iOS (if available)
+- [ ] No console.log, errors, or warnings in the app log
+- [ ] Database consistency verified (no orphaned rows)

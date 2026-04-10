@@ -448,31 +448,53 @@ export const confirmTransactionSync = async (
     pair = await findTransactionModel(transferPairId)
   }
 
+  // Build the list of transactions to update before entering the write.
+  const toUpdate: TransactionModel[] = [transaction]
+  if (pair) {
+    if (shouldConfirm && pair.isPending) toUpdate.push(pair)
+    if (!shouldConfirm && !pair.isPending) toUpdate.push(pair)
+  }
+
+  // Fetch all accounts before the write (deduplicated by accountId).
+  const accountIds = [...new Set(toUpdate.map((t) => t.accountId))]
+  const accounts = await Promise.all(
+    accountIds.map((id) => accountsCollection().find(id)),
+  )
+  const accountMap = new Map(accounts.map((a) => [a.id, a]))
+
+  const now = new Date()
+
   return database.write(async () => {
-    const toUpdate: TransactionModel[] = [transaction]
-    if (pair) {
-      if (shouldConfirm && pair.isPending) toUpdate.push(pair)
-      if (!shouldConfirm && !pair.isPending) toUpdate.push(pair)
-    }
+    const batchOps: Parameters<typeof database.batch>[0] = []
 
-    const now = new Date()
     for (const t of toUpdate) {
-      await t.update((x) => {
-        x.isPending = !shouldConfirm
-        if (shouldConfirm && options.updateTransactionDate) {
-          x.transactionDate = now
-        }
-      })
+      // Capture amount and type before prepareUpdate mutates the model in-place.
+      const { amount, type } = t
 
-      // Balance: confirming adds delta; holding reverses delta
-      const balanceDelta = getBalanceDelta(t.amount, t.type)
-      const account = await accountsCollection().find(t.accountId)
-      await account.update((a) => {
-        a.balance = shouldConfirm
-          ? a.balance + balanceDelta
-          : a.balance - balanceDelta
-      })
+      batchOps.push(
+        t.prepareUpdate((x) => {
+          x.isPending = !shouldConfirm
+          if (shouldConfirm && options.updateTransactionDate) {
+            x.transactionDate = now
+          }
+        }),
+      )
+
+      // Balance: confirming adds delta; holding reverses delta.
+      const account = accountMap.get(t.accountId)
+      if (account) {
+        const balanceDelta = getBalanceDelta(amount, type)
+        batchOps.push(
+          account.prepareUpdate((a) => {
+            a.balance = shouldConfirm
+              ? a.balance + balanceDelta
+              : a.balance - balanceDelta
+          }),
+        )
+      }
     }
+
+    await database.batch(...batchOps)
   })
 }
 
