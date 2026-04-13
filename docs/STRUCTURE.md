@@ -1,11 +1,248 @@
 # Project Structure
 
-Generated on: 2026-04-07T21:09:17.982Z
+Generated on: 2026-04-13T19:15:00.377Z
 
 ```
 ./
 ├── .claude/
-│   └── settings.local.json
+│   ├── context/
+│   │   ├── core/
+│   │   │   ├── config/
+│   │   │   │   ├── navigation.md
+│   │   │   │   └── paths.json
+│   │   │   ├── context-system/
+│   │   │   │   ├── examples/
+│   │   │   │   │   ├── navigation-examples.md
+│   │   │   │   │   └── navigation.md
+│   │   │   │   ├── guides/
+│   │   │   │   │   ├── compact.md
+│   │   │   │   │   ├── creation.md
+│   │   │   │   │   ├── navigation-design-basics.md
+│   │   │   │   │   ├── navigation-templates.md
+│   │   │   │   │   ├── navigation.md
+│   │   │   │   │   ├── organizing-context.md
+│   │   │   │   │   └── workflows.md
+│   │   │   │   ├── operations/
+│   │   │   │   │   ├── error.md
+│   │   │   │   │   ├── extract.md
+│   │   │   │   │   ├── harvest.md
+│   │   │   │   │   ├── migrate.md
+│   │   │   │   │   ├── navigation.md
+│   │   │   │   │   ├── organize.md
+│   │   │   │   │   └── update.md
+│   │   │   │   ├── standards/
+│   │   │   │   │   ├── codebase-references.md
+│   │   │   │   │   ├── frontmatter.md
+│   │   │   │   │   ├── mvi.md
+│   │   │   │   │   ├── navigation.md
+│   │   │   │   │   ├── structure.md
+│   │   │   │   │   ├── templates.md
+│   │   │   │   │   └── typescript-coding.md
+│   │   │   │   ├── CHANGELOG.md
+│   │   │   │   └── navigation.md
+│   │   │   ├── guides/
+│   │   │   │   ├── navigation.md
+│   │   │   │   └── resuming-sessions.md
+│   │   │   ├── standards/
+│   │   │   │   ├── code-analysis.md
+│   │   │   │   ├── code-quality.md
+│   │   │   │   ├── code.md
+│   │   │   │   ├── csharp-project-structure.md
+│   │   │   │   ├── csharp.md
+│   │   │   │   ├── docs.md
+│   │   │   │   ├── documentation.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── project-intelligence-management.md
+│   │   │   │   ├── project-intelligence.md
+│   │   │   │   ├── security-patterns.md
+│   │   │   │   ├── test-coverage.md
+│   │   │   │   ├── tests.md
+│   │   │   │   └── typescript.md
+│   │   │   ├── system/
+│   │   │   │   ├── context-guide.md
+│   │   │   │   ├── context-paths.md
+│   │   │   │   └── navigation.md
+│   │   │   ├── task-management/
+│   │   │   │   ├── guides/
+│   │   │   │   │   ├── managing-tasks.md
+│   │   │   │   │   ├── navigation.md
+│   │   │   │   │   └── splitting-tasks.md
+│   │   │   │   ├── lookup/
+│   │   │   │   │   ├── navigation.md
+│   │   │   │   │   └── task-commands.md
+│   │   │   │   ├── standards/
+│   │   │   │   │   ├── enhanced-task-schema.md
+│   │   │   │   │   ├── navigation.md
+│   │   │   │   │   └── task-schema.md
+│   │   │   │   └── navigation.md
+│   │   │   ├── workflows/
+│   │   │   │   ├── code-review.md
+│   │   │   │   ├── component-planning.md
+│   │   │   │   ├── delegation.md
+│   │   │   │   ├── design-iteration-best-practices.md
+│   │   │   │   ├── design-iteration-overview.md
+│   │   │   │   ├── design-iteration-plan-file.md
+│   │   │   │   ├── design-iteration-plan-iterations.md
+│   │   │   │   ├── design-iteration-stage-animation.md
+│   │   │   │   ├── design-iteration-stage-implementation.md
+│   │   │   │   ├── design-iteration-stage-layout.md
+│   │   │   │   ├── design-iteration-stage-theme.md
+│   │   │   │   ├── design-iteration-visual-content.md
+│   │   │   │   ├── external-context-integration.md
+│   │   │   │   ├── external-context-management.md
+│   │   │   │   ├── external-libraries-faq.md
+│   │   │   │   ├── external-libraries-scenarios.md
+│   │   │   │   ├── external-libraries-workflow.md
+│   │   │   │   ├── feature-breakdown.md
+│   │   │   │   ├── lightweight-context-handoff-example.md
+│   │   │   │   ├── lightweight-context-handoff.md
+│   │   │   │   ├── multi-stage-orchestration.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── review.md
+│   │   │   │   ├── session-context-pattern.md
+│   │   │   │   ├── session-management.md
+│   │   │   │   ├── task-delegation-basics.md
+│   │   │   │   ├── task-delegation-caching.md
+│   │   │   │   ├── task-delegation-specialists.md
+│   │   │   │   └── task-delegation.md
+│   │   │   ├── context-system.md
+│   │   │   ├── essential-patterns.md
+│   │   │   ├── navigation.md
+│   │   │   └── visual-development.md
+│   │   ├── openagents-repo/
+│   │   │   ├── blueprints/
+│   │   │   │   ├── context-bundle-template.md
+│   │   │   │   └── navigation.md
+│   │   │   ├── concepts/
+│   │   │   │   ├── agent-skills.md
+│   │   │   │   ├── compatibility-layer.md
+│   │   │   │   ├── hooks-system.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── subagent-testing-modes.md
+│   │   │   │   └── subagents-system.md
+│   │   │   ├── core-concepts/
+│   │   │   │   ├── agent-metadata.md
+│   │   │   │   ├── agents.md
+│   │   │   │   ├── categories.md
+│   │   │   │   ├── evals.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   └── registry.md
+│   │   │   ├── errors/
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── skills-errors.md
+│   │   │   │   └── tool-permission-errors.md
+│   │   │   ├── examples/
+│   │   │   │   ├── hooks/
+│   │   │   │   │   ├── formatting-hook.md
+│   │   │   │   │   ├── markdown-formatter.md
+│   │   │   │   │   ├── navigation.md
+│   │   │   │   │   └── protection-hook.md
+│   │   │   │   ├── skills/
+│   │   │   │   │   ├── multi-file-skill.md
+│   │   │   │   │   └── navigation.md
+│   │   │   │   ├── subagents/
+│   │   │   │   │   ├── code-reviewer.md
+│   │   │   │   │   ├── db-validator.md
+│   │   │   │   │   ├── debugger.md
+│   │   │   │   │   └── navigation.md
+│   │   │   │   ├── baseadapter-implementation.md
+│   │   │   │   ├── baseadapter-pattern.md
+│   │   │   │   ├── context-bundle-example.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── subagent-prompt-structure.md
+│   │   │   │   └── zod-schema-migration.md
+│   │   │   ├── features/
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── oac-package-refactor.md
+│   │   │   │   ├── oac-refactor-feedback.md
+│   │   │   │   └── oac-refactor-quickstart.md
+│   │   │   ├── guides/
+│   │   │   │   ├── adding-agent-basics.md
+│   │   │   │   ├── adding-agent-testing.md
+│   │   │   │   ├── adding-skill-basics.md
+│   │   │   │   ├── adding-skill-example.md
+│   │   │   │   ├── adding-skill-implementation.md
+│   │   │   │   ├── building-cli-compact.md
+│   │   │   │   ├── compatibility-layer-development.md
+│   │   │   │   ├── compatibility-layer-workflow.md
+│   │   │   │   ├── creating-release.md
+│   │   │   │   ├── creating-skills.md
+│   │   │   │   ├── creating-subagents.md
+│   │   │   │   ├── debugging.md
+│   │   │   │   ├── external-libraries-workflow.md
+│   │   │   │   ├── github-issues-workflow.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── npm-publishing.md
+│   │   │   │   ├── profile-validation.md
+│   │   │   │   ├── resolving-installer-wildcard-failures.md
+│   │   │   │   ├── subagent-invocation.md
+│   │   │   │   ├── testing-agent.md
+│   │   │   │   ├── testing-subagents-approval.md
+│   │   │   │   ├── testing-subagents.md
+│   │   │   │   └── updating-registry.md
+│   │   │   ├── lookup/
+│   │   │   │   ├── builtin-subagents.md
+│   │   │   │   ├── commands.md
+│   │   │   │   ├── compatibility-layer-adapters.md
+│   │   │   │   ├── compatibility-layer-progress.md
+│   │   │   │   ├── compatibility-layer-structure.md
+│   │   │   │   ├── compatibility-layer-summary.md
+│   │   │   │   ├── compatibility-learnings.md
+│   │   │   │   ├── file-locations.md
+│   │   │   │   ├── hook-events.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── skill-metadata.md
+│   │   │   │   ├── skills-comparison.md
+│   │   │   │   ├── subagent-framework-maps.md
+│   │   │   │   ├── subagent-frontmatter.md
+│   │   │   │   ├── subagent-test-commands.md
+│   │   │   │   └── tool-feature-parity.md
+│   │   │   ├── plugins/
+│   │   │   │   ├── context/
+│   │   │   │   │   ├── architecture/
+│   │   │   │   │   │   ├── lifecycle.md
+│   │   │   │   │   │   ├── navigation.md
+│   │   │   │   │   │   └── overview.md
+│   │   │   │   │   ├── capabilities/
+│   │   │   │   │   │   ├── agents.md
+│   │   │   │   │   │   ├── events_skills.md
+│   │   │   │   │   │   ├── events.md
+│   │   │   │   │   │   ├── navigation.md
+│   │   │   │   │   │   └── tools.md
+│   │   │   │   │   ├── concepts/
+│   │   │   │   │   │   ├── navigation.md
+│   │   │   │   │   │   └── plugin-architecture.md
+│   │   │   │   │   ├── guides/
+│   │   │   │   │   │   ├── creating-plugins.md
+│   │   │   │   │   │   ├── migrating-to-plugins.md
+│   │   │   │   │   │   └── navigation.md
+│   │   │   │   │   ├── lookup/
+│   │   │   │   │   │   ├── navigation.md
+│   │   │   │   │   │   └── plugin-structure.md
+│   │   │   │   │   ├── reference/
+│   │   │   │   │   │   ├── best-practices.md
+│   │   │   │   │   │   └── navigation.md
+│   │   │   │   │   ├── context-overview.md
+│   │   │   │   │   └── navigation.md
+│   │   │   │   └── navigation.md
+│   │   │   ├── quality/
+│   │   │   │   ├── navigation.md
+│   │   │   │   └── registry-dependencies.md
+│   │   │   ├── standards/
+│   │   │   │   ├── agent-frontmatter.md
+│   │   │   │   ├── navigation.md
+│   │   │   │   ├── opencode-typescript.md
+│   │   │   │   ├── permission-patterns.md
+│   │   │   │   └── subagent-structure.md
+│   │   │   ├── templates/
+│   │   │   │   ├── context-bundle-template.md
+│   │   │   │   └── navigation.md
+│   │   │   ├── navigation.md
+│   │   │   └── quick-start.md
+│   │   ├── CODEBASE_STANDARDS.md
+│   │   ├── index.md
+│   │   └── navigation.md
+│   └── .context-manifest.json
 ├── .github/
 │   └── CODEOWNERS
 ├── .husky/
@@ -28,10 +265,10 @@ Generated on: 2026-04-07T21:09:17.982Z
 │   │   ├── pre-rebase
 │   │   └── prepare-commit-msg
 │   └── pre-commit
+├── .tmp/
 ├── .vscode/
 │   └── settings.json
 ├── docs/
-│   ├── code-review-plan.md
 │   └── STRUCTURE.md
 ├── plugins/
 │   ├── index.js
@@ -769,6 +1006,7 @@ Generated on: 2026-04-07T21:09:17.982Z
 │   │   │   ├── transaction-service.ts
 │   │   │   └── transfer-service.ts
 │   │   ├── utils/
+│   │   │   ├── get-balance-delta.ts
 │   │   │   ├── model-to-account.ts
 │   │   │   ├── model-to-budget.ts
 │   │   │   ├── model-to-category.ts
@@ -868,6 +1106,7 @@ Generated on: 2026-04-07T21:09:17.982Z
 │       ├── account-types-list.ts
 │       ├── file-icon.ts
 │       ├── format-file-size.ts
+│       ├── get-week-start-on.ts
 │       ├── is-image-url.ts
 │       ├── is-single-emoji-or-letter.ts
 │       ├── logger.ts
@@ -6595,6 +6834,7 @@ Generated on: 2026-04-07T21:09:17.982Z
 │       ├── Zzz.tsx
 │       └── ZzzOff.tsx
 ├── .gitignore
+├── .oac.json
 ├── .svgrrc
 ├── app.json
 ├── babel.config.js

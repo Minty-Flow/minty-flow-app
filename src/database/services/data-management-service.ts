@@ -15,7 +15,7 @@ export interface BackupMeta {
   version: 1
   schemaVersion: number
   exportedAt: string
-  appId: "minty-flow"
+  appId: "minty-flow-app"
 }
 
 /** Raw row from a WatermelonDB collection — all column values as stored in SQLite. */
@@ -43,6 +43,21 @@ export interface MintyFlowBackup {
 type ImportResult =
   | { success: true; counts: Record<string, number> }
   | { success: false; error: string }
+
+/**
+ * Discriminated result from {@link validateBackup}.
+ *
+ * - `parse_error`: The file content is not valid JSON.
+ * - `validation_error`: The JSON parsed correctly but does not conform to the
+ *   expected Minty Flow backup structure (wrong version, missing tables, etc.).
+ */
+export type ValidateBackupResult =
+  | { success: true; backup: MintyFlowBackup }
+  | {
+      success: false
+      reason: "parse_error" | "validation_error"
+      message: string
+    }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -131,7 +146,12 @@ async function saveToDevice(
 
 // ─── Export ──────────────────────────────────────────────────────────────────
 
-/** Build the full JSON backup and write it to the exports dir. Returns { uri, fileName }. */
+/**
+ * Build the full JSON backup and write it to the exports dir. Returns { uri, fileName }.
+ *
+ * Note: Backup includes soft-deleted (trashed) transactions. This is intentional—users
+ * may want to recover deleted transactions from an older backup. Imports must handle this.
+ */
 async function generateJsonBackup(): Promise<{
   uri: string
   fileName: string
@@ -173,7 +193,7 @@ async function generateJsonBackup(): Promise<{
       version: 1,
       schemaVersion: SCHEMA_VERSION,
       exportedAt: new Date().toISOString(),
-      appId: "minty-flow",
+      appId: "minty-flow-app",
     },
     data: {
       categories: categories.map(toRawRow),
@@ -338,32 +358,79 @@ export async function deleteExportFile(uri: string): Promise<void> {
 
 /**
  * Parse and validate a JSON string as a Minty Flow backup.
- * Returns the typed backup or null if invalid.
+ *
+ * Returns a {@link ValidateBackupResult} discriminated union so callers can
+ * surface specific error messages to the user:
+ * - `parse_error` — the file is not valid JSON at all.
+ * - `validation_error` — the JSON parsed but the structure is wrong (bad
+ *   version, missing tables, corrupt row fields, etc.).
  */
-export function validateBackup(json: string): MintyFlowBackup | null {
+export function validateBackup(json: string): ValidateBackupResult {
+  // ── Phase 1: JSON parsing ──────────────────────────────────────────────────
+  // Isolate JSON.parse so that SyntaxErrors are reported as `parse_error`,
+  // distinct from structural validation failures below.
+  let parsed: unknown
   try {
-    const parsed = JSON.parse(json) as unknown
+    parsed = JSON.parse(json)
+  } catch (e) {
+    return {
+      success: false,
+      reason: "parse_error",
+      message: e instanceof Error ? e.message : "Invalid JSON",
+    }
+  }
+
+  // ── Phase 2: Structure validation ─────────────────────────────────────────
+  // From here, any failure is a `validation_error` (the file is valid JSON
+  // but not a Minty Flow backup).
+  try {
     if (
       typeof parsed !== "object" ||
       parsed === null ||
       !("meta" in parsed) ||
       !("data" in parsed)
     ) {
-      return null
+      return {
+        success: false,
+        reason: "validation_error",
+        message: "Missing required fields: meta, data",
+      }
     }
     const p = parsed as Record<string, unknown>
     const meta = p.meta as Record<string, unknown> | undefined
+    if (!meta || meta.appId !== "minty-flow-app") {
+      return {
+        success: false,
+        reason: "validation_error",
+        message: "Not a Minty Flow backup file",
+      }
+    }
+    if (meta.version !== 1) {
+      return {
+        success: false,
+        reason: "validation_error",
+        message: `Unsupported backup version: ${meta.version}`,
+      }
+    }
+    // Allow older backup schema versions (backward compatibility); WatermelonDB
+    // handles default values for new columns. Only reject newer schema versions.
     if (
-      !meta ||
-      meta.version !== 1 ||
-      meta.appId !== "minty-flow" ||
-      meta.schemaVersion !== SCHEMA_VERSION
+      typeof meta.schemaVersion !== "number" ||
+      meta.schemaVersion > SCHEMA_VERSION
     ) {
-      return null
+      return {
+        success: false,
+        reason: "validation_error",
+        message: `Backup schema version ${meta.schemaVersion} is newer than app schema version ${SCHEMA_VERSION}`,
+      }
     }
     const data = p.data as Record<string, unknown> | undefined
     if (!data) {
-      return null
+      return {
+        success: false,
+        reason: "validation_error",
+        message: "Missing data section",
+      }
     }
 
     // Validate all required tables are present and are arrays
@@ -384,13 +451,62 @@ export function validateBackup(json: string): MintyFlowBackup | null {
     ]
     for (const table of requiredTables) {
       if (!Array.isArray((data as Record<string, unknown>)[table])) {
-        return null
+        return {
+          success: false,
+          reason: "validation_error",
+          message: `Missing or invalid table: ${table}`,
+        }
       }
     }
 
-    return parsed as MintyFlowBackup
-  } catch {
-    return null
+    // Validate critical fields in transaction rows
+    const transactions = (data as Record<string, unknown>)
+      .transactions as unknown[]
+    if (Array.isArray(transactions)) {
+      for (let i = 0; i < transactions.length; i++) {
+        const row = transactions[i] as Record<string, unknown> | undefined
+        if (!row) continue
+
+        // Validate id: must be non-empty string
+        if (typeof row.id !== "string" || !row.id.trim()) {
+          return {
+            success: false,
+            reason: "validation_error",
+            message: `Invalid row: id (row ${i})`,
+          }
+        }
+
+        // Validate amount: must be number
+        if (typeof row.amount !== "number") {
+          return {
+            success: false,
+            reason: "validation_error",
+            message: `Invalid row: amount (row ${i})`,
+          }
+        }
+
+        // Validate transaction_date: must be a Unix timestamp in milliseconds (number).
+        // WatermelonDB stores dates as number, not ISO strings.
+        const txDate = row.transaction_date
+        if (typeof txDate !== "number" || !Number.isFinite(txDate)) {
+          return {
+            success: false,
+            reason: "validation_error",
+            message: `Invalid row: transaction_date must be a number (Unix ms, row ${i})`,
+          }
+        }
+      }
+    }
+
+    return { success: true, backup: parsed as MintyFlowBackup }
+  } catch (e) {
+    // Catch any unexpected errors during structural checks and report them as
+    // validation errors rather than crashing the import flow.
+    return {
+      success: false,
+      reason: "validation_error",
+      message: e instanceof Error ? e.message : "Validation failed",
+    }
   }
 }
 
@@ -586,7 +702,16 @@ const ALLOWED_COLUMNS: Record<string, string[]> = {
   goal_accounts: ["id", "goal_id", "account_id", "created_at"],
 }
 
-/** Batch-insert raw rows into a collection, preserving IDs. */
+/**
+ * Batch-insert raw rows into a collection, preserving original IDs.
+ *
+ * ID preservation: WatermelonDB's `prepareCreate` generates a UUID before calling the
+ * creator callback, but the record is stored using `record._raw` as the raw SQLite row.
+ * Overriding `record._raw.id` inside the callback replaces the generated ID with the
+ * backup's original ID, which WatermelonDB then writes verbatim. This means all FK
+ * references in the imported backup survive intact. The `id` key must be present in
+ * the ALLOWED_COLUMNS allowlist for the relevant table.
+ */
 async function insertRows(tableName: string, rows: RawRow[]): Promise<void> {
   if (rows.length === 0) return
   const collection = database.get(tableName)
@@ -616,12 +741,7 @@ export async function importBackup(
   try {
     const { data } = backup
 
-    // 1️⃣ Full wipe — canonical WatermelonDB reset
-    await database.write(async () => {
-      await database.unsafeResetDatabase()
-    })
-
-    // 2️⃣ Build valid ID sets for FK validation
+    // 1️⃣ Build valid ID sets for FK validation (before any DB writes).
     const validAccountIds = new Set(data.accounts.map((a: RawRow) => a.id))
     const validCategoryIds = new Set(data.categories.map((c: RawRow) => c.id))
     const validRecurringIds = new Set(
@@ -631,7 +751,8 @@ export async function importBackup(
     const validGoalIds = new Set(data.goals.map((g: RawRow) => g.id))
     const validLoanIds = new Set(data.loans.map((l: RawRow) => l.id))
 
-    // 3️⃣ Validate transactions before writing
+    // 2️⃣ Validate transactions before writing to DB.
+    // This guards against data loss: if validation fails, no DB mutation happens.
     for (const tx of data.transactions) {
       const txRow = tx as RawRow
       if (!validAccountIds.has(txRow.account_id as string)) {
@@ -672,8 +793,17 @@ export async function importBackup(
       }
     }
 
-    // 4️⃣ Single write for all tiers
+    // 3️⃣ Reset DB then insert all tiers.
+    // **Note on atomicity**: `unsafeResetDatabase` operates at the SQLite level and
+    // issues its own DDL outside the WatermelonDB write transaction. The `database.write()`
+    // wrapper serializes concurrent writes but does NOT roll back the reset if a crash
+    // or OOM occurs between the reset and the first insertRows call — the database would
+    // be left empty with no recovery path. FK validation in step 2 prevents inserting
+    // broken data, but cannot guard against process-kill mid-import.
     await database.write(async () => {
+      // Reset the entire database before inserting.
+      await database.unsafeResetDatabase()
+
       // Tier 1: no FK dependencies
       await insertRows("categories", data.categories)
       await insertRows("tags", data.tags)

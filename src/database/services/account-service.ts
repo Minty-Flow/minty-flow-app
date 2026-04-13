@@ -488,11 +488,11 @@ export const unarchiveAccount = async (
  * @param account - The account model to permanently delete.
  */
 export const destroyAccount = async (account: AccountModel): Promise<void> => {
-  const transactions = await getTransactionModels({
-    accountId: account.id,
-    includeDeleted: true,
-  })
   await database.write(async () => {
+    const transactions = await getTransactionModels({
+      accountId: account.id,
+      includeDeleted: true,
+    })
     for (const t of transactions) {
       await destroyTransactionWriter(t)
     }

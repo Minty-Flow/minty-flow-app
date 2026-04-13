@@ -10,7 +10,7 @@ import {
   subDays,
 } from "date-fns"
 
-import { WEEK_STARTS_ON } from "~/utils/time-utils"
+import { getWeekStartsOn } from "~/utils/get-week-start-on"
 
 import type { PresetOption } from "./types"
 
@@ -28,10 +28,13 @@ function getPresetOptions(): PresetOption[] {
     {
       id: "thisWeek",
       label: "This week",
-      getRange: () => ({
-        start: startOfWeek(now, { weekStartsOn: WEEK_STARTS_ON }),
-        end: endOfWeek(now, { weekStartsOn: WEEK_STARTS_ON }),
-      }),
+      getRange: () => {
+        const weekStartsOn = getWeekStartsOn()
+        return {
+          start: startOfWeek(now, { weekStartsOn }),
+          end: endOfWeek(now, { weekStartsOn }),
+        }
+      },
     },
     {
       id: "thisMonth",

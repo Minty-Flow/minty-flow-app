@@ -893,6 +893,9 @@
         "importJsonDesc": "استبدال جميع البيانات من ملف نسخة احتياطية JSON",
         "importSuccess": "تمت استعادة البيانات بنجاح",
         "importError": "فشلت الاستعادة",
+        "importInvalidFile": "الرجاء تحديد ملف النسخ الاحتياطي JSON",
+        "importParseError": "الملف المحدد ليس JSON صالحاً",
+        "importValidationError": "ملف النسخ الاحتياطي JSON غير صالح",
         "importConfirm": {
           "title": "استعادة من نسخة احتياطية؟",
           "warning": "سيؤدي هذا إلى مسح جميع البيانات الحالية نهائياً واستبدالها بالنسخة الاحتياطية المحددة.",
@@ -915,9 +918,7 @@
           "removeConfirmTitle": "إزالة التصدير؟",
           "removeConfirmMessage": "سيتم حذف سجل التصدير هذا وملفه نهائياً.",
           "reSaved": "تم حفظ الملف على الجهاز"
-        },
-        "importInvalidFile": "الرجاء تحديد ملف النسخ الاحتياطي JSON",
-        "importValidationError": "ملف النسخ الاحتياطي JSON غير صالح"
+        }
       },
       "privacy": {
         "title": "الخصوصية",

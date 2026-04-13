@@ -2,52 +2,77 @@ import { Q } from "@nozbe/watermelondb"
 
 import { database } from "../index"
 import type TransactionModel from "../models/transaction"
+import { getBalanceDelta } from "../utils/get-balance-delta"
 
 /**
- * Compute the account's running balance at the moment a transaction settled.
- * This is the value shown next to the account name on the transaction detail screen.
- * Result = balance AFTER this transaction was applied.
+ * Compute the account's running balance AFTER a given transaction.
  *
- * Fast path (O(1)): when `accountBalanceBefore` is non-zero (stored by
- * `createTransactionWriter` for confirmed transactions since the snapshot was
- * introduced), returns `accountBalanceBefore + delta` directly.
+ * Optimizations:
+ * - O(1): if transaction has a snapshot (`accountBalanceBefore`)
+ * - O(k): find nearest previous snapshot and sum only the gap
  *
- * Fallback (O(N) query): used for legacy rows where `accountBalanceBefore === 0`
- * (transactions created before the snapshot was stored, or transactions on
- * accounts that genuinely had a zero balance before them — rare but valid).
- *
- * @param transaction - The transaction model whose post-settlement balance is needed.
+ * Assumptions:
+ * - `accountBalanceBefore` is `number | null` (null = no snapshot)
+ * - All transaction amounts are normalized (income +, expense -, transfer signed)
  */
 export async function getBalanceAtTransaction(
   transaction: TransactionModel,
 ): Promise<number> {
-  // O(1) fast path: snapshot was stored at creation time.
-  // Zero-balance guard: if accountBalanceBefore is 0, fall through to the full
-  // query rather than risk returning a wrong value for legacy rows.
-  if (transaction.accountBalanceBefore !== 0) {
-    const delta =
-      transaction.type === "income"
-        ? transaction.amount
-        : transaction.type === "expense"
-          ? -transaction.amount
-          : transaction.amount // transfer: amount is already signed
-    return transaction.accountBalanceBefore + delta
+  const txCollection = database.get<TransactionModel>("transactions")
+
+  // --- 1. Fast path: snapshot exists ---
+  if (transaction.accountBalanceBefore != null) {
+    return (
+      transaction.accountBalanceBefore +
+      getBalanceDelta(transaction.amount, transaction.type)
+    )
   }
 
-  // O(N) fallback for legacy rows or genuine zero-balance-before transactions.
-  const txs = await database
-    .get<TransactionModel>("transactions")
+  // --- 2. Find nearest previous snapshot ---
+  const [snapshotTx] = await txCollection
     .query(
       Q.where("account_id", transaction.accountId),
       Q.where("is_pending", false),
       Q.where("is_deleted", false),
       Q.where("transaction_date", Q.lte(transaction.transactionDate.getTime())),
+      Q.where("account_balance_before", Q.notEq(null)),
+      Q.sortBy("transaction_date", Q.desc),
+      Q.take(1),
     )
     .fetch()
 
-  return txs.reduce((sum, tx) => {
-    if (tx.type === "income") return sum + tx.amount
-    if (tx.type === "expense") return sum - tx.amount
-    return sum + tx.amount // transfer rows carry signed amounts
-  }, 0)
+  let baseBalance = 0
+  let startDate = 0
+
+  if (snapshotTx) {
+    baseBalance =
+      snapshotTx.accountBalanceBefore +
+      getBalanceDelta(snapshotTx.amount, snapshotTx.type)
+    startDate = snapshotTx.transactionDate.getTime()
+  }
+
+  // --- 3. Fetch only transactions AFTER snapshot up to current ---
+  const txs = await txCollection
+    .query(
+      Q.where("account_id", transaction.accountId),
+      Q.where("is_pending", false),
+      Q.where("is_deleted", false),
+      Q.where(
+        "transaction_date",
+        Q.between(startDate, transaction.transactionDate.getTime()),
+      ),
+      Q.sortBy("transaction_date", Q.asc),
+    )
+    .fetch()
+
+  // --- 4. Accumulate balance ---
+  let balance = baseBalance
+
+  for (const tx of txs) {
+    // Skip snapshotTx itself if included
+    if (snapshotTx && tx.id === snapshotTx.id) continue
+    balance += getBalanceDelta(tx.amount, tx.type)
+  }
+
+  return balance
 }
