@@ -72,9 +72,11 @@ export default function EditProfileScreen() {
       await sourceFile.copy(destinationFile)
 
       // 6. Delete the previous local copy before swapping the URI so stale files don't accumulate.
+      // Awaited to prevent a race condition where rapid successive picks could interleave
+      // the deletion of the previous file with the copy of the new one.
       if (localImageUri) {
         try {
-          new File(localImageUri).delete()
+          await new File(localImageUri).delete()
         } catch {
           // file may already be gone — ignore
         }
@@ -104,11 +106,11 @@ export default function EditProfileScreen() {
     setLocalImageUri(null)
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // If the user picked a new image, delete the previously persisted file.
     if (localImageUri !== imageUri && imageUri) {
       try {
-        new File(imageUri).delete()
+        await new File(imageUri).delete()
       } catch {
         // file may already be gone — ignore
       }

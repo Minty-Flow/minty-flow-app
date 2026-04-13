@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
@@ -38,6 +39,7 @@ export function UpcomingTransactionsSection({
 }: UpcomingTransactionsSectionProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
+  const isHydrated = usePendingTransactionsStore((s) => s.isHydrated)
   const requireConfirmation = usePendingTransactionsStore(
     (s) => s.requireConfirmation,
   )
@@ -111,10 +113,24 @@ export function UpcomingTransactionsSection({
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional extra deps
   useEffect(() => {
+    if (!isHydrated) return
+
+    // Configure service with current store state (only after hydration)
+    autoConfirmationService.configure({
+      requireConfirmation,
+      updateDateUponConfirmation,
+    })
     autoConfirmationService.start()
     autoConfirmationService.scheduleTransactions(upcoming)
-  }, [upcoming, requireConfirmation, autoConfirmVersion])
+  }, [
+    upcoming,
+    requireConfirmation,
+    updateDateUponConfirmation,
+    autoConfirmVersion,
+    isHydrated,
+  ])
 
+  const router = useRouter()
   const { collapsed, setCollapsed } = useUpcomingSectionStore()
   const [confirmAllModalVisible, setConfirmAllModalVisible] = useState(false)
   const [recurringToDelete, setRecurringToDelete] =
@@ -242,7 +258,7 @@ export function UpcomingTransactionsSection({
             <Button
               variant="link"
               size="sm"
-              onPress={() => setCollapsed(false)}
+              onPress={() => router.push("/settings/pending-transactions")}
               style={sectionStyles.seeAllButton}
             >
               <Text style={sectionStyles.seeAllText}>

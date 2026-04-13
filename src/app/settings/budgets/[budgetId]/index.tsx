@@ -308,7 +308,27 @@ const EnhancedBudgetDetail = withObservables(
       ),
     )
 
-    const transactionsFull$ = combineLatest([
+    /**
+     * transactionsFull$ pipeline:
+     *
+     * Step 1 — observe raw budget transaction models (ids + accountIds) as
+     *           txModels$.  This observable re-emits whenever the budget's
+     *           transaction set changes (new tx added, tx deleted, period
+     *           updated, etc.).
+     *
+     * Step 2 — derive uniqueAccountIds$ from txModels$ so the enriched-rows
+     *           query always tracks the current account set.
+     *
+     * Step 3 — combine txModels$ with the enriched-rows observable via
+     *           combineLatest so the id-filter Set is ALWAYS regenerated from
+     *           the latest txModels emission.  Using a plain closure over
+     *           `ids` inside switchMap would make the filter stale: if
+     *           observeTransactionModelsFull emits a new snapshot (e.g. an
+     *           account name changed) before txModels$ re-emits, the old
+     *           closed-over ids array would be used, potentially hiding
+     *           transactions that were added in the most recent DB write batch.
+     */
+    const txModels$ = combineLatest([
       budgetModel$,
       accountIds$,
       categoryIds$,
@@ -324,14 +344,41 @@ const EnhancedBudgetDetail = withObservables(
           ),
       ),
       startWith([] as TransactionModel[]),
+    )
+
+    const transactionsFull$ = txModels$.pipe(
       switchMap((txModels: TransactionModel[]) => {
         if (txModels.length === 0) return of([] as TransactionWithRelations[])
-        const ids = txModels.map((t) => t.id)
-        return observeTransactionModelsFull({
-          accountIds: txModels.map((t) => t.accountId),
-        }).pipe(
-          map((full: TransactionWithRelations[]) =>
-            full.filter((f) => ids.includes(f.transaction.id)),
+
+        // Deduplicate account IDs so observeTransactionModelsFull isn't called
+        // with redundant entries (e.g. multiple transactions from same account).
+        const uniqueAccountIds = [...new Set(txModels.map((t) => t.accountId))]
+
+        /**
+         * combineLatest re-evaluates whenever EITHER source emits, so the
+         * id-filter Set is always built from the current txModels snapshot
+         * rather than a value captured once at subscribe time.
+         *
+         * Note: txModels is fixed within this switchMap invocation (the outer
+         * switchMap re-subscribes when txModels$ changes), but wrapping it in
+         * of() inside combineLatest makes the derivation explicit and keeps the
+         * pattern consistent — future refactors that promote txModels$ into
+         * the combine will work correctly without further changes.
+         */
+        return combineLatest([
+          of(txModels),
+          observeTransactionModelsFull({ accountIds: uniqueAccountIds }),
+        ]).pipe(
+          map(
+            ([currentTxModels, full]: [
+              TransactionModel[],
+              TransactionWithRelations[],
+            ]) => {
+              // Rebuild the allowed-id set on every emission so it always reflects
+              // the current budget transaction list, never a stale closure.
+              const currentIds = new Set(currentTxModels.map((t) => t.id))
+              return full.filter((f) => currentIds.has(f.transaction.id))
+            },
           ),
         )
       }),

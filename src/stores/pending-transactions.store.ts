@@ -17,9 +17,12 @@ interface PendingTransactionsPreferences {
   homeTimeframe: number
   /** When user confirms, set transactionDate to current time; if false, keep original date. */
   updateDateUponConfirmation: boolean
-  /** Schedule local notifications at planned time (and optionally early). */
+  /** Schedule local notifications at planned time (and optionally early).
+   * Consumed by `synchronizePlannedTransactionNotifications` (pending-transaction-notifications.ts)
+   * via `useNotificationSync`. */
   notify: boolean
-  /** Seconds before transactionDate to fire an "early" reminder (default 86400 = 1 day). */
+  /** Seconds before transactionDate to fire an early reminder (default 86400 = 1 day).
+   * Consumed alongside `notify` by `synchronizePlannedTransactionNotifications`. */
   earlyReminderInSeconds: number
 }
 
@@ -32,6 +35,7 @@ const DEFAULTS: PendingTransactionsPreferences = {
 }
 
 interface PendingTransactionsStore extends PendingTransactionsPreferences {
+  isHydrated: boolean
   setRequireConfirmation: (value: boolean) => void
   setHomeTimeframe: (value: number) => void
   setUpdateDateUponConfirmation: (value: boolean) => void
@@ -43,6 +47,7 @@ export const usePendingTransactionsStore = create<PendingTransactionsStore>()(
   persist(
     (set) => ({
       ...DEFAULTS,
+      isHydrated: false,
 
       setRequireConfirmation: (value) => set({ requireConfirmation: value }),
       setHomeTimeframe: (value) => set({ homeTimeframe: value }),
@@ -59,6 +64,15 @@ export const usePendingTransactionsStore = create<PendingTransactionsStore>()(
         setItem: (name, value) => pendingTransactionsStorage.set(name, value),
         removeItem: (name) => pendingTransactionsStorage.remove(name),
       })),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // Direct mutation is intentional: MMKV storage is synchronous, so hydration
+          // completes during create() before any React render. The state object here is
+          // the same reference held by the store, so the mutation is visible immediately
+          // without needing a set() call.
+          state.isHydrated = true
+        }
+      },
     },
   ),
 )

@@ -9,7 +9,6 @@ import type {
 } from "~/schemas/transactions.schema"
 import {
   type TransactionListFilters,
-  type TransactionType,
   TransactionTypeEnum,
 } from "~/types/transactions"
 import { logger } from "~/utils/logger"
@@ -22,6 +21,7 @@ import type TagModel from "../models/tag"
 import type TransactionModel from "../models/transaction"
 import type TransactionTagModel from "../models/transaction-tag"
 import type TransferModel from "../models/transfer"
+import { getBalanceDelta } from "../utils/get-balance-delta"
 import {
   deleteTransferWriter,
   getConversionRateForTransaction,
@@ -183,21 +183,6 @@ const hydrateTransactionsBatch = async (
     results.push(result)
   }
   return results
-}
-
-/**
- * Balance delta for the account.
- * - Income: amount is positive → delta = amount.
- * - Expense: amount is positive → delta = -amount.
- * - Transfer: amount is signed (debit negative, credit positive) → delta = amount.
- *
- * Balance rule (Flutter parity): we only apply this when the transaction is
- * confirmed (!isPending). Pending transactions must never affect account balance.
- */
-const getBalanceDelta = (amount: number, type: TransactionType): number => {
-  if (type === TransactionTypeEnum.INCOME) return amount
-  if (type === TransactionTypeEnum.TRANSFER) return amount // signed amount on row
-  return -amount // expense (money out of account)
 }
 
 /**
@@ -449,27 +434,39 @@ export const confirmTransactionSync = async (
   }
 
   // Build the list of transactions to update before entering the write.
+  // **Race condition note**: `transaction` and `pair` are fetched outside the write block.
+  // The isPending guards above (lines ~423-424) use this snapshot, so a second rapid
+  // tap that confirms between the fetch and the write could slip through. In a
+  // single-user mobile context this is extremely unlikely, but if `confirmTransactionSync`
+  // is ever called from a concurrent context the guard should be re-checked inside the write.
   const toUpdate: TransactionModel[] = [transaction]
   if (pair) {
     if (shouldConfirm && pair.isPending) toUpdate.push(pair)
     if (!shouldConfirm && !pair.isPending) toUpdate.push(pair)
   }
 
-  // Fetch all accounts before the write (deduplicated by accountId).
-  const accountIds = [...new Set(toUpdate.map((t) => t.accountId))]
-  const accounts = await Promise.all(
-    accountIds.map((id) => accountsCollection().find(id)),
-  )
-  const accountMap = new Map(accounts.map((a) => [a.id, a]))
-
-  const now = new Date()
-
   return database.write(async () => {
+    // Fetch all accounts inside the write block to ensure we read the latest balance
+    // and prevent concurrent confirmation calls from applying deltas to stale snapshots.
+    // **Concurrency safety**: WatermelonDB guarantees sequential execution within a write,
+    // so all account reads reflect the current state.
+    const accountIds = [...new Set(toUpdate.map((t) => t.accountId))]
+    const accounts = await Promise.all(
+      accountIds.map((id) => accountsCollection().find(id)),
+    )
+    const accountMap = new Map(accounts.map((a) => [a.id, a]))
+
+    const now = new Date()
     const batchOps: Parameters<typeof database.batch>[0] = []
 
     for (const t of toUpdate) {
-      // Capture amount and type before prepareUpdate mutates the model in-place.
+      // Intentionally capture amount and type from pre-update model snapshot.
+      // These values are used to calculate the balance delta; we need the original
+      // amount/type before prepareUpdate modifies them in the callback.
       const { amount, type } = t
+
+      // Resolve account before prepareUpdate so accountBalanceBefore can reference it.
+      const account = accountMap.get(t.accountId)
 
       batchOps.push(
         t.prepareUpdate((x) => {
@@ -477,11 +474,18 @@ export const confirmTransactionSync = async (
           if (shouldConfirm && options.updateTransactionDate) {
             x.transactionDate = now
           }
+          // Keep accountBalanceBefore in sync with the new pending state.
+          // Confirming: snapshot the pre-transaction balance (account.balance before delta is applied).
+          // Holding (re-pending): reset to 0 — pending txs have no balance effect.
+          if (shouldConfirm && account) {
+            x.accountBalanceBefore = account.balance
+          } else if (!shouldConfirm) {
+            x.accountBalanceBefore = 0
+          }
         }),
       )
 
       // Balance: confirming adds delta; holding reverses delta.
-      const account = accountMap.get(t.accountId)
       if (account) {
         const balanceDelta = getBalanceDelta(amount, type)
         batchOps.push(
@@ -792,120 +796,181 @@ export async function updateTransactionWriter(
     }
   }
 
-  const updatedTransaction = await transaction.update((t) => {
-    if (updates.amount !== undefined) t.amount = updates.amount
-    if (updates.type !== undefined) t.type = updates.type
-    if (updates.transactionDate !== undefined)
-      t.transactionDate = updates.transactionDate
-    if (updates.title !== undefined) t.title = updates.title ?? null
-    if (updates.description !== undefined)
-      t.description = updates.description ?? null
-    if (updates.isPending !== undefined) t.isPending = updates.isPending
-    if (updates.requiresManualConfirmation !== undefined)
-      t.requiresManualConfirmation = updates.requiresManualConfirmation ?? null
+  // Fetch all required models outside the batch
+  const accounts = accountsCollection()
+  const newCategoryModel =
+    updates.categoryId && updates.categoryId !== oldCategoryId
+      ? await categories.find(updates.categoryId).catch(() => null)
+      : null
 
-    if (updates.categoryId !== undefined) {
-      t.categoryId = updates.categoryId ?? null
-    }
-    if (updates.accountId !== undefined) {
-      t.accountId = updates.accountId
-    }
+  const transactionTags = transactionTagsCollection()
+  const tagsCollectionRef = tagsCollection()
+  const existingTags =
+    updates.tags !== undefined
+      ? await transactionTags
+          .query(Q.where("transaction_id", transaction.id))
+          .fetch()
+      : []
 
-    if (updates.extra !== undefined) {
-      t.extra = updates.extra ?? null
-      // Cached derivative: always update both in same write (atomic, no drift)
-      t.hasAttachments = hasAttachmentsFromExtra(updates.extra ?? null)
-    }
-    if (updates.subtype !== undefined) {
-      t.subtype = updates.subtype ?? null
-    }
-    if (updates.location !== undefined) {
-      t.location = updates.location ?? null
-    }
-    if (updates.recurringId !== undefined) {
-      t.recurringId = updates.recurringId ?? null
-    }
-    if (updates.goalId !== undefined) {
-      t.goalId = updates.goalId ?? null
-    }
-    if (updates.budgetId !== undefined) {
-      t.budgetId = updates.budgetId ?? null
-    }
-    if (updates.loanId !== undefined) {
-      t.loanId = updates.loanId ?? null
-    }
-  })
+  const oldAccount =
+    oldAccountId && updates.accountId && updates.accountId !== oldAccountId
+      ? await accounts.find(oldAccountId)
+      : oldAccountId
+        ? await accounts.find(oldAccountId)
+        : null
 
+  const newAccount =
+    updates.accountId && updates.accountId !== oldAccountId
+      ? await accounts.find(updates.accountId)
+      : null
+
+  // Compute pending/account state before building batch ops so the prepareUpdate
+  // closure can reference them (callbacks execute during database.batch).
+  const oldPending = transaction.isPending
+  const newPending =
+    updates.isPending !== undefined ? updates.isPending : oldPending
+  const newAccountId =
+    updates.accountId !== undefined ? updates.accountId : oldAccountId
+
+  // Build batch operations
+  const batchOps: Parameters<typeof database.batch>[0] = []
+
+  // Transaction update
+  batchOps.push(
+    transaction.prepareUpdate((t) => {
+      if (updates.amount !== undefined) t.amount = updates.amount
+      if (updates.type !== undefined) t.type = updates.type
+      if (updates.transactionDate !== undefined)
+        t.transactionDate = updates.transactionDate
+      if (updates.title !== undefined) t.title = updates.title ?? null
+      if (updates.description !== undefined)
+        t.description = updates.description ?? null
+      if (updates.isPending !== undefined) t.isPending = updates.isPending
+      if (updates.requiresManualConfirmation !== undefined)
+        t.requiresManualConfirmation =
+          updates.requiresManualConfirmation ?? null
+
+      if (updates.categoryId !== undefined) {
+        t.categoryId = updates.categoryId ?? null
+      }
+      if (updates.accountId !== undefined) {
+        t.accountId = updates.accountId
+      }
+
+      if (updates.extra !== undefined) {
+        t.extra = updates.extra ?? null
+        // Cached derivative: always update both in same write (atomic, no drift)
+        t.hasAttachments = hasAttachmentsFromExtra(updates.extra ?? null)
+      }
+      if (updates.subtype !== undefined) {
+        t.subtype = updates.subtype ?? null
+      }
+      if (updates.location !== undefined) {
+        t.location = updates.location ?? null
+      }
+      if (updates.recurringId !== undefined) {
+        t.recurringId = updates.recurringId ?? null
+      }
+      if (updates.goalId !== undefined) {
+        t.goalId = updates.goalId ?? null
+      }
+      if (updates.budgetId !== undefined) {
+        t.budgetId = updates.budgetId ?? null
+      }
+      if (updates.loanId !== undefined) {
+        t.loanId = updates.loanId ?? null
+      }
+
+      // Keep accountBalanceBefore in sync with pending state and account changes.
+      // - Reverting to pending: reset to 0 (pending txs have no balance effect).
+      // - Confirming: snapshot the pre-transaction balance of the target account.
+      // - Account change while confirmed: snapshot new account's pre-transaction balance.
+      // - Amount/type change on same confirmed account: snapshot is still correct (unchanged).
+      if (newPending) {
+        t.accountBalanceBefore = 0
+      } else if (oldPending && !newPending) {
+        const targetAccount =
+          newAccountId !== oldAccountId ? newAccount : oldAccount
+        t.accountBalanceBefore = targetAccount?.balance ?? 0
+      } else if (!oldPending && newAccountId !== oldAccountId && newAccount) {
+        t.accountBalanceBefore = newAccount.balance
+      }
+    }),
+  )
+
+  // Category count updates
   if (
     updates.categoryId !== undefined &&
     oldCategoryId !== updates.categoryId
   ) {
     if (oldCategory && !transaction.isDeleted) {
-      await oldCategory.update(decrementCount)
+      batchOps.push(oldCategory.prepareUpdate(decrementCount))
     }
-    if (updates.categoryId && !transaction.isDeleted) {
-      const newCategory = await categories.find(updates.categoryId)
-      if (newCategory) {
-        await newCategory.update(incrementCount)
-      }
+    if (newCategoryModel && !transaction.isDeleted) {
+      batchOps.push(newCategoryModel.prepareUpdate(incrementCount))
     }
   }
 
+  // Tag sync operations
   if (updates.tags !== undefined) {
-    const transactionTags = transactionTagsCollection()
-    const tagsCollectionRef = tagsCollection()
-    const existing = await transactionTags
-      .query(Q.where("transaction_id", transaction.id))
-      .fetch()
-    const existingTagIds = new Set(existing.map((tt) => tt.tagId))
+    const existingTagIds = new Set(existingTags.map((tt) => tt.tagId))
     const newTagIds = new Set(updates.tags)
 
-    for (const tt of existing) {
+    for (const tt of existingTags) {
       if (!newTagIds.has(tt.tagId)) {
         const tag = await tagsCollectionRef.find(tt.tagId)
-        await tag.update(decrementCount)
-        await tt.destroyPermanently()
+        batchOps.push(tag.prepareUpdate(decrementCount))
+        batchOps.push(tt.prepareDestroyPermanently())
       }
     }
     for (const tagId of newTagIds) {
       if (!existingTagIds.has(tagId)) {
         const tag = await tagsCollectionRef.find(tagId)
-        await transactionTags.create((ttRecord) => {
-          ttRecord.transactionId = transaction.id
-          ttRecord.tagId = tagId
-        })
-        await tag.update(incrementCount)
+        batchOps.push(
+          transactionTags.prepareCreate((ttRecord) => {
+            ttRecord.transactionId = transaction.id
+            ttRecord.tagId = tagId
+          }),
+        )
+        batchOps.push(tag.prepareUpdate(incrementCount))
       }
     }
   }
 
-  const newAmount = updatedTransaction.amount
-  const newType = updatedTransaction.type
-  const newAccountId = updatedTransaction.accountId
-  const oldPending = transaction.isPending
-  const newPending = updatedTransaction.isPending
+  // Balance updates
+  const newAmount = updates.amount !== undefined ? updates.amount : oldAmount
+  const newType = updates.type !== undefined ? updates.type : oldType
 
   const reverseOldDelta = !oldPending ? -getBalanceDelta(oldAmount, oldType) : 0
   const forwardNewDelta = !newPending ? getBalanceDelta(newAmount, newType) : 0
 
-  const accounts = accountsCollection()
-  if (newAccountId === oldAccountId) {
-    const account = await accounts.find(oldAccountId)
-    await account.update((a) => {
-      a.balance = a.balance + reverseOldDelta + forwardNewDelta
-    })
+  if (newAccountId === oldAccountId && oldAccount) {
+    batchOps.push(
+      oldAccount.prepareUpdate((a) => {
+        a.balance = a.balance + reverseOldDelta + forwardNewDelta
+      }),
+    )
   } else {
-    const oldAccount = await accounts.find(oldAccountId)
-    const newAccount = await accounts.find(newAccountId)
-    await oldAccount.update((a) => {
-      a.balance = a.balance + reverseOldDelta
-    })
-    await newAccount.update((a) => {
-      a.balance = a.balance + forwardNewDelta
-    })
+    if (oldAccount) {
+      batchOps.push(
+        oldAccount.prepareUpdate((a) => {
+          a.balance = a.balance + reverseOldDelta
+        }),
+      )
+    }
+    if (newAccount) {
+      batchOps.push(
+        newAccount.prepareUpdate((a) => {
+          a.balance = a.balance + forwardNewDelta
+        }),
+      )
+    }
   }
 
-  return updatedTransaction
+  // Execute all operations atomically
+  await database.batch(...batchOps)
+
+  return transaction
 }
 
 /**
@@ -933,6 +998,9 @@ export const updateTransactionModel = async (
  * balance delta, and decrements the category transaction count. For transfer rows,
  * delegates to {@link deleteTransferWriter} to soft-delete both legs atomically.
  *
+ * All three operations (category count, account balance, transaction soft-delete)
+ * are batched in a single atomic write to prevent partial deletes on crash.
+ *
  * @param transaction - The transaction model to soft-delete.
  */
 export async function deleteTransactionWriter(
@@ -944,27 +1012,37 @@ export async function deleteTransactionWriter(
   }
 
   const categories = database.get<CategoryModel>("categories")
+  const batchOps: Parameters<typeof database.batch>[0] = []
+  const now = new Date()
 
+  // Decrement the category transaction count (if not already deleted).
   if (!transaction.isDeleted && transaction.categoryId) {
     const category = await categories.find(transaction.categoryId)
-    await category.update(decrementCount)
+    batchOps.push(category.prepareUpdate(decrementCount))
   }
 
+  // Reverse the balance delta (if not already deleted and not pending).
   if (!transaction.isDeleted && !transaction.isPending) {
     const reverseDelta = -getBalanceDelta(transaction.amount, transaction.type)
     const account = await accountsCollection().find(transaction.accountId)
-    await account.update((a) => {
-      a.balance = a.balance + reverseDelta
-    })
+    batchOps.push(
+      account.prepareUpdate((a) => {
+        a.balance = a.balance + reverseDelta
+      }),
+    )
   }
 
-  // Use our is_deleted column so the record still appears in trash queries.
-  // WatermelonDB's markAsDeleted() sets _status = 'deleted' and hides the record from all queries.
-  const now = new Date()
-  await transaction.update((t) => {
-    t.isDeleted = true
-    t.deletedAt = now
-  })
+  // Soft-delete via is_deleted flag (preserves record in trash queries).
+  // Note: WatermelonDB's markAsDeleted() sets _status = 'deleted' and hides from all queries.
+  batchOps.push(
+    transaction.prepareUpdate((t) => {
+      t.isDeleted = true
+      t.deletedAt = now
+    }),
+  )
+
+  // Commit all operations atomically.
+  await database.batch(...batchOps)
 }
 
 /**

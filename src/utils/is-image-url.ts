@@ -8,7 +8,7 @@
  * ```ts
  * isImageUrl("https://example.com/image.jpg") // Returns true
  * isImageUrl("file:///path/to/image.png") // Returns false (file:// not allowed from clipboard)
- * isImageUrl("https://imgur.com/abc123") // Returns true (imgur hostname)
+ * isImageUrl("https://i.imgur.com/abc123") // Returns true (exact imgur CDN subdomain)
  * isImageUrl("https://example.com/page") // Returns false (no image extension)
  * isImageUrl("http://example.com/image.jpg") // Returns false (http:// not allowed)
  * ```
@@ -35,11 +35,14 @@ export const isImageUrl = (url: string): boolean => {
       pathname.endsWith(ext),
     )
 
-    // Check if it's from known image hosting services
+    // Exact hostname allowlist — no wildcard subdomain matching to prevent SSRF.
+    // imgur: only the CDN subdomain i.imgur.com (api.imgur.com, evil.imgur.com are excluded).
+    // unsplash: only images.unsplash.com (the CDN origin; unsplash.com web pages are excluded).
+    // pexels: only images.pexels.com (the CDN origin; www.pexels.com/photo/... are web pages).
     const isKnownImageHost =
-      urlObj.hostname.includes("imgur") ||
-      urlObj.hostname.includes("unsplash") ||
-      urlObj.hostname.includes("pexels")
+      urlObj.hostname === "i.imgur.com" ||
+      urlObj.hostname === "images.unsplash.com" ||
+      urlObj.hostname === "images.pexels.com"
 
     return hasImageExtension || isKnownImageHost
   } catch {

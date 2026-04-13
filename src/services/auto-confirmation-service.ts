@@ -6,7 +6,7 @@ import {
   confirmTransactionSync,
   getPendingTransactionModelsFull,
 } from "~/database/services/transaction-service"
-import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
+import { logger } from "~/utils/logger"
 
 /**
  * Auto-Confirmation Service
@@ -21,9 +21,19 @@ import { usePendingTransactionsStore } from "~/stores/pending-transactions.store
  * - Exposes a `version` counter so React can subscribe via
  *   useSyncExternalStore (no useEffect needed in consumers).
  * - On app foreground, sweeps for any past-due transactions.
+ *
+ * Hydration-aware:
+ * - Requires explicit configure() call with store config after hydration.
+ * - Prevents silent failures if storage switches from sync to async.
+ * - Call configure() + start() only AFTER hydration is confirmed.
  */
 
 type ConfirmCallback = (transactionId: string) => void
+
+interface AutoConfirmConfig {
+  requireConfirmation: boolean
+  updateDateUponConfirmation: boolean
+}
 
 class AutoConfirmationService {
   /* ---- internal state ---- */
@@ -31,6 +41,7 @@ class AutoConfirmationService {
   private appStateSubscription: { remove: () => void } | null = null
   private onConfirmedCallbacks = new Set<ConfirmCallback>()
   private isActive = false
+  private config: AutoConfirmConfig | null = null
 
   /* ---- reactive version (for useSyncExternalStore) ---- */
   private version = 0
@@ -50,8 +61,22 @@ class AutoConfirmationService {
 
   /* ---- lifecycle ---- */
 
+  /**
+   * Configure the service with store config.
+   * Must be called once after hydration, before start().
+   * This removes the implicit store dependency and makes it explicit.
+   */
+  configure(config: AutoConfirmConfig) {
+    this.config = config
+  }
+
   start() {
     if (this.isActive) return
+    if (!this.config) {
+      throw new Error(
+        "AutoConfirmationService must be configured before starting",
+      )
+    }
     this.isActive = true
     this.appStateSubscription = AppState.addEventListener(
       "change",
@@ -82,11 +107,11 @@ class AutoConfirmationService {
    *   - Future   → schedule a timeout for the exact millisecond.
    */
   scheduleTransactions(transactions: TransactionWithRelations[]) {
-    // Safe: MMKV-backed Zustand store hydrates synchronously at app start
-    // (zustand/persist with synchronous storage runs getItem during create(),
-    // completing before any component mounts or setTimeout fires).
-    const { updateDateUponConfirmation } =
-      usePendingTransactionsStore.getState()
+    if (!this.config) {
+      return
+    }
+
+    const { updateDateUponConfirmation } = this.config
 
     const now = Date.now()
     const scheduled = new Set<string>()
@@ -122,6 +147,10 @@ class AutoConfirmationService {
    * Matches migration guide: "Call autoConfirmDueTransactions on app startup".
    */
   async runAutoConfirmDueOnStartup(): Promise<void> {
+    if (!this.config) {
+      return
+    }
+
     const rows = await getPendingTransactionModelsFull()
     await this.confirmPastDue(rows)
   }
@@ -133,8 +162,11 @@ class AutoConfirmationService {
    * in Upcoming until user taps Confirm. Called on startup and foreground.
    */
   async confirmPastDue(transactions: TransactionWithRelations[]) {
-    const { updateDateUponConfirmation } =
-      usePendingTransactionsStore.getState()
+    if (!this.config) {
+      return
+    }
+
+    const { updateDateUponConfirmation } = this.config
 
     const now = Date.now()
     for (const row of transactions) {
@@ -163,11 +195,14 @@ class AutoConfirmationService {
 
   /** Determine if a transaction qualifies for auto-confirmation. */
   private shouldAutoConfirm(row: TransactionWithRelations): boolean {
+    if (!this.config) {
+      return false
+    }
+
     const { transaction } = row
-    const globalRequireConfirmation =
-      usePendingTransactionsStore.getState().requireConfirmation
+    const { requireConfirmation } = this.config
     const needsManualConfirm =
-      transaction.requiresManualConfirmation ?? globalRequireConfirmation
+      transaction.requiresManualConfirmation ?? requireConfirmation
 
     if (needsManualConfirm) return false
     if (!transaction.isPending) return false
@@ -201,8 +236,11 @@ class AutoConfirmationService {
         callback(transactionId)
       }
       this.bump()
-    } catch {
-      // Silent fail; the DB observable will retry on next cycle
+    } catch (e) {
+      logger.error("[AutoConfirm] confirmTransaction failed", {
+        transactionId,
+        error: e instanceof Error ? e.message : String(e),
+      })
     }
   }
 

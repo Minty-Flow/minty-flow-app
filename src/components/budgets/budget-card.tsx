@@ -1,7 +1,9 @@
 import { withObservables } from "@nozbe/watermelondb/react"
+import { format } from "date-fns"
 import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { View as RNView } from "react-native"
+import { createMMKV } from "react-native-mmkv"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
@@ -16,9 +18,53 @@ import type { Budget } from "~/types/budgets"
 import { formatCustomPeriodRange } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
-// Tracks which budget IDs have already fired an alert this app session.
-// Module-level so it survives component unmount/remount caused by navigation.
-const alertedBudgetIds = new Set<string>()
+/**
+ * Persisted alert deduplication: fires once per budget per period.
+ * Keys are stored as "${budgetId}:${periodKey}" (e.g. "abc123:2026-04").
+ * Backed by MMKV so alerts survive app restarts but reset each new period.
+ */
+const budgetAlertStorage = createMMKV({ id: "budget-alert-storage" })
+const ALERTED_STORAGE_KEY = "alertedBudgetKeys"
+
+function loadAlertedKeys(): Set<string> {
+  const raw = budgetAlertStorage.getString(ALERTED_STORAGE_KEY)
+  if (!raw) return new Set()
+  try {
+    return new Set(JSON.parse(raw) as string[])
+  } catch {
+    return new Set()
+  }
+}
+
+function getBudgetPeriodKey(budget: Budget): string {
+  const now = new Date()
+  switch (budget.period) {
+    case "daily":
+      return format(now, "yyyy-MM-dd")
+    case "weekly":
+      return format(now, "RRRR-'W'II")
+    case "monthly":
+      return format(now, "yyyy-MM")
+    case "yearly":
+      return format(now, "yyyy")
+    case "custom":
+      // Custom budgets have a fixed range — key on startDate so each unique
+      // custom period gets its own alert slot.
+      return budget.startDate.toISOString().slice(0, 10)
+  }
+}
+
+const alertedKeys = loadAlertedKeys()
+
+function hasAlertedInPeriod(budget: Budget): boolean {
+  return alertedKeys.has(`${budget.id}:${getBudgetPeriodKey(budget)}`)
+}
+
+function markAlerted(budget: Budget): void {
+  const key = `${budget.id}:${getBudgetPeriodKey(budget)}`
+  alertedKeys.add(key)
+  budgetAlertStorage.set(ALERTED_STORAGE_KEY, JSON.stringify([...alertedKeys]))
+}
 
 interface BudgetCardInnerProps {
   budget: Budget
@@ -44,17 +90,17 @@ function BudgetCardInner({
   const limit = budget.amount
 
   useEffect(() => {
-    if (!budget.alertThreshold || alertedBudgetIds.has(budget.id) || limit <= 0)
+    if (!budget.alertThreshold || hasAlertedInPeriod(budget) || limit <= 0)
       return
     if (spent / limit >= budget.alertThreshold / 100) {
-      alertedBudgetIds.add(budget.id)
+      markAlerted(budget)
       Toast.show({
         type: "info",
         title: budget.name,
         description: t("screens.settings.budgets.card.alertThresholdReached"),
       })
     }
-  }, [spent, limit, budget.id, budget.alertThreshold, budget.name, t])
+  }, [spent, limit, budget, t])
 
   const ratio = limit > 0 ? Math.min(spent / limit, 1) : 0
   const isOverBudget = spent > limit
@@ -197,6 +243,18 @@ export const BudgetCard = withObservables(
     categoryNames: observeCategoryNamesByIds(budget.categoryIds),
   }),
 )(BudgetCardInner)
+
+/**
+ * Thin wrapper kept for call-site compatibility.
+ * Week-start is now resolved from the device locale inside the service,
+ * so no language prop threading is required.
+ */
+export function BudgetCardWithLanguage(props: {
+  budget: Budget
+  onPress: () => void
+}) {
+  return <BudgetCard {...props} />
+}
 
 const styles = StyleSheet.create((t) => ({
   card: {

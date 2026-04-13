@@ -894,6 +894,7 @@
         "importSuccess": "Data restored successfully",
         "importError": "Restore failed",
         "importInvalidFile": "Please select a JSON backup file",
+        "importParseError": "The selected file is not valid JSON",
         "importValidationError": "Invalid JSON backup file",
         "importConfirm": {
           "title": "Restore from Backup?",

@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-04-10T19:14:57.682Z
+Generated on: 2026-04-13T19:15:00.377Z
 
 ```
 ./
@@ -265,10 +265,10 @@ Generated on: 2026-04-10T19:14:57.682Z
 │   │   ├── pre-rebase
 │   │   └── prepare-commit-msg
 │   └── pre-commit
+├── .tmp/
 ├── .vscode/
 │   └── settings.json
 ├── docs/
-│   ├── code-review-plan.md
 │   └── STRUCTURE.md
 ├── plugins/
 │   ├── index.js
@@ -1006,6 +1006,7 @@ Generated on: 2026-04-10T19:14:57.682Z
 │   │   │   ├── transaction-service.ts
 │   │   │   └── transfer-service.ts
 │   │   ├── utils/
+│   │   │   ├── get-balance-delta.ts
 │   │   │   ├── model-to-account.ts
 │   │   │   ├── model-to-budget.ts
 │   │   │   ├── model-to-category.ts
@@ -1105,6 +1106,7 @@ Generated on: 2026-04-10T19:14:57.682Z
 │       ├── account-types-list.ts
 │       ├── file-icon.ts
 │       ├── format-file-size.ts
+│       ├── get-week-start-on.ts
 │       ├── is-image-url.ts
 │       ├── is-single-emoji-or-letter.ts
 │       ├── logger.ts
