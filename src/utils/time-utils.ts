@@ -18,14 +18,14 @@ import { ar, enUS } from "date-fns/locale"
 import i18n from "~/i18n/config"
 import { LangCodeEnum, type LangCodeType } from "~/i18n/language.constants"
 
+import { getWeekStartsOn } from "./get-week-start-on"
+
 const { t } = i18n
 
 const DATE_FNS_LOCALES = {
   [LangCodeEnum.EN]: enUS,
   [LangCodeEnum.AR]: ar,
 } as const
-
-export const WEEK_STARTS_ON = 1 // Monday
 
 export type DateRangePresetId =
   | "last30"
@@ -124,7 +124,7 @@ export function formatFriendlyDate(date: DateInput): string {
   if (isTomorrow(dateObj)) return t("dates.tomorrow")
 
   const now = new Date()
-  const options = { weekStartsOn: WEEK_STARTS_ON as Day }
+  const options = { weekStartsOn: getWeekStartsOn() as Day }
 
   if (isThisWeek(dateObj, options)) {
     return t("dates.thisDay", {

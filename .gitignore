@@ -44,3 +44,6 @@ app-example
 /memory
 
 tabler-icons
+.tmp
+.claude
+.oac.json

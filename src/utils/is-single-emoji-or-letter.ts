@@ -1,3 +1,5 @@
+import { LangCodeEnum } from "~/i18n/language.constants"
+
 /**
  * Checks if a string is a single visible grapheme cluster (handles emojis, flags, etc.) and not an Iconify name.
  *
@@ -42,8 +44,11 @@ export const isSingleEmojiOrLetter = (str: string): boolean => {
       ).Segmenter
       if (typeof Segmenter === "function") {
         return (
-          [...new Segmenter("en", { granularity: "grapheme" }).segment(trimmed)]
-            .length === 1
+          [
+            ...new Segmenter(LangCodeEnum.EN, {
+              granularity: "grapheme",
+            }).segment(trimmed),
+          ].length === 1
         )
       }
     } catch {
@@ -57,28 +62,6 @@ export const isSingleEmojiOrLetter = (str: string): boolean => {
 }
 
 /**
- * Returns the first grapheme cluster from a string (for single-char/emoji inputs).
- * Uses Intl.Segmenter when available, otherwise falls back to first code point.
- */
-// export function getFirstGrapheme(str: string): string {
-//   if (!str || typeof str !== "string") return ""
-//   const trimmed = str.trim()
-//   if (!trimmed) return ""
-//   try {
-//     const Segmenter = (Intl as unknown as { Segmenter?: typeof Intl.Segmenter })
-//       .Segmenter
-//     if (typeof Segmenter === "function") {
-//       const segmenter = new Segmenter("en", { granularity: "grapheme" })
-//       const segments = [...segmenter.segment(trimmed)]
-//       return segments[0]?.segment ?? trimmed.slice(0, 1)
-//     }
-//   } catch {
-//     // ignore
-//   }
-//   return Array.from(trimmed)[0] ?? ""
-// }
-
-/**
  * Returns the last grapheme cluster from a string.
  * Use for "replace on each key press" UX: new input replaces previous.
  */
@@ -90,7 +73,9 @@ export function getLastGrapheme(str: string): string {
     const Segmenter = (Intl as unknown as { Segmenter?: typeof Intl.Segmenter })
       .Segmenter
     if (typeof Segmenter === "function") {
-      const segmenter = new Segmenter("en", { granularity: "grapheme" })
+      const segmenter = new Segmenter(LangCodeEnum.EN, {
+        granularity: "grapheme",
+      })
       const segments = [...segmenter.segment(trimmed)]
       return segments[segments.length - 1]?.segment ?? trimmed.slice(-1)
     }

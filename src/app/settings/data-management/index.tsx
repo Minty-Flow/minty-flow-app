@@ -122,18 +122,22 @@ export default function DataManagementScreen() {
       .then((json) => {
         if (!json) return
 
-        const backup = validateBackup(json)
-        if (!backup) {
-          Toast.error({
-            title: t("screens.settings.dataManagement.importValidationError"),
-          })
+        const result = validateBackup(json)
+        if (!result.success) {
+          // Surface a specific title depending on whether the file failed to
+          // parse as JSON or failed structural validation.
+          const title =
+            result.reason === "parse_error"
+              ? t("screens.settings.dataManagement.importParseError")
+              : t("screens.settings.dataManagement.importValidationError")
+          Toast.error({ title, description: result.message })
           return
         }
 
-        const { total, tableCount } = countBackupRecords(backup)
+        const { total, tableCount } = countBackupRecords(result.backup)
         setImportModal({
           visible: true,
-          backup,
+          backup: result.backup,
           recordCount: total,
           tableCount,
         })

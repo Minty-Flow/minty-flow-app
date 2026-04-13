@@ -1,6 +1,6 @@
 import { Q } from "@nozbe/watermelondb"
 import type { Observable } from "@nozbe/watermelondb/utils/rx"
-import { map } from "rxjs/operators"
+import { distinctUntilChanged, map } from "rxjs/operators"
 
 import type { AddLoanFormSchema } from "~/schemas/loans.schema"
 import type { Loan, LoanType } from "~/types/loans"
@@ -71,6 +71,21 @@ export const observeLoans = (): Observable<Loan[]> =>
           const dateDiff = a.dueDate.getTime() - b.dueDate.getTime()
           if (dateDiff !== 0) return dateDiff
           return a.name.localeCompare(b.name)
+        })
+      }),
+      // Prevent re-sort when only non-sort-relevant fields change (e.g., balance, category).
+      // Custom comparator checks loan IDs, due dates, and names—if these are unchanged,
+      // skip emission. This prevents unnecessary re-sorts on every field change.
+      distinctUntilChanged((prev, curr) => {
+        if (prev.length !== curr.length) return false
+        return prev.every((loan, i) => {
+          const other = curr[i]
+          const sameDueDate =
+            (loan.dueDate == null && other.dueDate == null) ||
+            (loan.dueDate != null &&
+              other.dueDate != null &&
+              loan.dueDate.getTime() === other.dueDate.getTime())
+          return loan.id === other.id && loan.name === other.name && sameDueDate
         })
       }),
     )
@@ -173,8 +188,24 @@ export const updateLoan = async (
 
 /**
  * Permanently delete a loan record.
- * Linked transactions have their loan_id nullified within the same write,
- * preventing orphaned references.
+ *
+ * Soft-delete filtering behavior:
+ * The linked-transaction query intentionally does NOT filter by `is_deleted`.
+ * Both active and soft-deleted transactions have their `loan_id` nullified in
+ * the same write as the loan destruction. This is correct because:
+ *
+ *   1. `observeLoanTransactions` and `observeLoanPaymentProgress` already
+ *      exclude soft-deleted rows with `Q.where("is_deleted", false)`, so they
+ *      never surface in the UI regardless.
+ *   2. If a soft-deleted transaction were later restored (un-deleted), it must
+ *      not hold a dangling reference to a loan that no longer exists. Nullifying
+ *      `loan_id` proactively prevents that orphan scenario.
+ *
+ * Restoration implications:
+ * A restored transaction will lose its loan association. This is an acceptable
+ * trade-off: the loan itself is permanently destroyed and cannot be re-linked.
+ * If restoring transactions while keeping the loan alive is ever needed, the
+ * destroy flow would need to be revisited (e.g., soft-delete the loan instead).
  */
 export const destroyLoan = async (loan: LoanModel): Promise<void> => {
   await database.write(async () => {
@@ -182,11 +213,12 @@ export const destroyLoan = async (loan: LoanModel): Promise<void> => {
       .get<TransactionModel>("transactions")
       .query(Q.where("loan_id", loan.id))
       .fetch()
-    for (const tx of linkedTxs) {
-      await tx.update((t) => {
+    const ops = linkedTxs.map((tx) =>
+      tx.prepareUpdate((t) => {
         t.loanId = null
-      })
-    }
+      }),
+    )
+    await database.batch(...ops)
     await loan.destroyPermanently()
   })
 }

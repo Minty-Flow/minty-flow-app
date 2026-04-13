@@ -129,6 +129,7 @@ export async function synchronizeRecurringTransaction(
         .query(
           Q.where("recurring_id", recurring.id),
           Q.where("transaction_date", nextTs),
+          Q.where("is_deleted", false),
         )
         .fetchCount()) > 0
     if (alreadyExists) {
@@ -216,17 +217,47 @@ export async function synchronizeRecurringTransaction(
 /* ------------------------------------------------------------------ */
 /* Concurrency lock – prevents parallel sync runs from creating dupes  */
 /* ------------------------------------------------------------------ */
-/* Bug #2: Generator must only run from ONE place (e.g. root layout useEffect).
- * This lock guards against concurrent calls from AppState + any double-wiring. */
+/*
+ * Why this lock exists:
+ *   The sync can be triggered from multiple sources simultaneously — e.g. the
+ *   root layout `useEffect` on mount AND an `AppState` "active" foreground event
+ *   firing in quick succession. Without a guard, two concurrent sync passes would
+ *   race through the same recurring rules and create duplicate transaction rows.
+ *
+ * How it works:
+ *   `_syncRunning` is set to `true` at the start of a sync pass and reset to
+ *   `false` in the `finally` block. Any call that arrives while the flag is `true`
+ *   returns immediately (no-op). The flag is module-level, so it is shared across
+ *   all callers within the same JS runtime.
+ *
+ * UX impact:
+ *   Because `createRecurringRule` calls `synchronizeAllRecurringTransactions`
+ *   immediately after persisting the new rule, a race is possible: if another sync
+ *   is already in-flight when the user saves a new recurring rule, that call will
+ *   no-op and the first instance of the new rule will **not** appear until the next
+ *   time the app comes to the foreground and triggers a fresh sync. This is
+ *   intentional — a missed instance on first-save is far less harmful than
+ *   duplicate transactions caused by concurrent writes.
+ */
 
 let _syncRunning = false
 
 /**
  * Runs {@link synchronizeRecurringTransaction} for every active (non-disabled) rule.
- * Protected by a module-level lock so concurrent calls from app foreground events
- * are safely no-oped rather than creating duplicate transactions.
  *
- * @param anchor - "Now" reference date passed through to each rule's sync call; defaults to the current wall-clock time.
+ * **Concurrency lock**: a module-level `_syncRunning` flag prevents concurrent
+ * sync passes. If this function is called while a previous invocation has not yet
+ * finished, the new call **no-ops immediately** and returns `undefined`. The lock
+ * is released in a `finally` block so it is always cleared even if an individual
+ * rule sync throws.
+ *
+ * **UX note**: because `createRecurringRule` triggers this function right after
+ * persisting the new rule, the first instance of a newly created rule may not be
+ * visible until the next app foreground event if the lock happens to be held at
+ * save time. This is a deliberate trade-off to prevent duplicate transactions.
+ *
+ * @param anchor - "Now" reference date passed through to each rule's sync call;
+ *   defaults to the current wall-clock time.
  */
 export async function synchronizeAllRecurringTransactions(
   anchor: Date = new Date(),

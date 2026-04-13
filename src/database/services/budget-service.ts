@@ -10,6 +10,7 @@ import type {
 } from "~/schemas/budgets.schema"
 import type { Budget, BudgetPeriod } from "~/types/budgets"
 import { BudgetPeriodEnum } from "~/types/budgets"
+import { getWeekStartsOn } from "~/utils/get-week-start-on"
 
 import { database } from "../index"
 import type BudgetModel from "../models/budget"
@@ -309,12 +310,15 @@ const getBudgetPeriodRange = (
   let periodStart: Date
   let periodEnd: Date = now
 
+  // Determine week start from device region/calendar, not from app language code
+  const weekStartsOn = getWeekStartsOn()
+
   switch (period) {
     case BudgetPeriodEnum.DAILY:
       periodStart = startOfDay(now)
       break
     case BudgetPeriodEnum.WEEKLY:
-      periodStart = startOfWeek(now)
+      periodStart = startOfWeek(now, { weekStartsOn })
       break
     case BudgetPeriodEnum.MONTHLY:
       periodStart = startOfMonth(now)
@@ -364,6 +368,11 @@ const buildBudgetTransactionConditions = (
 
 /**
  * Observe the total amount spent against a budget for the relevant period.
+ *
+ * **Period range is computed once at subscribe time.** For rolling periods
+ * (daily/weekly/monthly/yearly), the window does not update when the clock rolls
+ * over midnight. Callers must unsubscribe and resubscribe (e.g. on component remount
+ * or app foreground) to pick up a new period window.
  */
 export const observeBudgetSpent = (
   accountIds: string[],
@@ -396,6 +405,8 @@ export const observeBudgetSpent = (
 /**
  * Observe the transactions that count against a budget for the relevant period.
  * Returns TransactionModel[] sorted by date desc.
+ *
+ * **Period range is computed once at subscribe time** — see `observeBudgetSpent` for details.
  */
 export const observeBudgetTransactions = (
   accountIds: string[],
