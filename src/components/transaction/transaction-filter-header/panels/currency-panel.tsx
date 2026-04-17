@@ -69,7 +69,7 @@ export function CurrencyPanel({
               leading={
                 <Text
                   style={{
-                    fontSize: 14,
+                    fontSize: theme.typography.labelLarge.fontSize,
                     fontWeight: "600",
                     lineHeight: 18,
                     color: theme.colors.primary,

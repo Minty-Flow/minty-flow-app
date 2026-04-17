@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native-unistyles"
+
 export const themeScreenStyles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
@@ -8,19 +9,20 @@ export const themeScreenStyles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
     paddingTop: 20,
     gap: 24,
+    paddingBottom: 16,
   },
   header: {
     alignItems: "center",
     paddingVertical: 8,
   },
   headerLabel: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.onSurface,
     opacity: 0.6,
     marginBottom: 4,
   },
   headerTheme: {
-    fontSize: 20,
+    fontSize: theme.typography.titleMedium.fontSize,
     fontWeight: "700",
     color: theme.colors.onSurface,
   },
@@ -40,7 +42,7 @@ export const themeScreenStyles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.primary,
   },
   segmentText: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
     opacity: 0.6,
@@ -64,7 +66,7 @@ export const themeScreenStyles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.primary,
   },
   pillText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
     opacity: 0.7,
@@ -108,7 +110,7 @@ export const themeScreenStyles = StyleSheet.create((theme) => ({
     gap: 12,
   },
   sectionTitle: {
-    fontSize: 15,
+    ...theme.typography.bodyLarge,
     fontWeight: "600",
     color: theme.colors.onSurface,
     opacity: 0.7,

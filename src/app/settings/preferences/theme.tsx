@@ -128,7 +128,7 @@ const ThemeSettingsScreen = () => {
   return (
     <ScrollView
       style={themeScreenStyles.container}
-      contentContainerStyle={[themeScreenStyles.content, { paddingBottom: 16 }]}
+      contentContainerStyle={themeScreenStyles.content}
       showsVerticalScrollIndicator={false}
     >
       <ThemeHeader currentThemeDisplayName={currentThemeDisplayName} />

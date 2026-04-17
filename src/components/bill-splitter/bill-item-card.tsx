@@ -142,7 +142,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 6,
   },
   itemName: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "700",
     color: theme.colors.onSurface,
     letterSpacing: -0.2,
@@ -155,12 +155,12 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: 2,
   },
   quantityText: {
-    fontSize: 12,
+    ...theme.typography.labelMedium,
     fontWeight: "600",
     color: theme.colors.secondary,
   },
   totalAmount: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "700",
     color: theme.colors.onSurface,
   },
@@ -171,13 +171,13 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
   },
   personName: {
-    fontSize: 14,
+    ...theme.typography.labelLarge,
     fontWeight: "500",
     color: theme.colors.onSecondary,
     flex: 1,
   },
   personAmount: {
-    fontSize: 14,
+    ...theme.typography.labelLarge,
     fontWeight: "500",
     color: theme.colors.onSurface,
   },

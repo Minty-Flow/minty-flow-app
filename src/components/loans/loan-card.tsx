@@ -191,7 +191,7 @@ const styles = StyleSheet.create((t) => ({
     marginRight: 8,
   },
   name: {
-    fontSize: 15,
+    ...t.typography.bodyLarge,
     fontWeight: "600",
     color: t.colors.onSurface,
     flex: 1,
@@ -209,7 +209,7 @@ const styles = StyleSheet.create((t) => ({
     borderRadius: t.radius,
   },
   typeBadgeText: {
-    fontSize: 10,
+    fontSize: t.typography.labelSmall.fontSize,
     fontWeight: "600",
     color: t.colors.onSecondary,
   },
@@ -223,7 +223,7 @@ const styles = StyleSheet.create((t) => ({
     borderRadius: t.radius,
   },
   overdueText: {
-    fontSize: 10,
+    fontSize: t.typography.labelSmall.fontSize,
     fontWeight: "600",
     color: t.colors.customColors.expense,
   },
@@ -243,13 +243,13 @@ const styles = StyleSheet.create((t) => ({
     alignItems: "center",
   },
   paidLabel: {
-    fontSize: 12,
+    fontSize: t.typography.labelMedium.fontSize,
     color: t.colors.onSecondary,
     flex: 1,
     marginRight: 8,
   },
   remainingLabel: {
-    fontSize: 12,
+    fontSize: t.typography.labelMedium.fontSize,
     color: t.colors.onSecondary,
     flexShrink: 0,
   },
@@ -259,7 +259,7 @@ const styles = StyleSheet.create((t) => ({
     gap: 4,
   },
   dueDateText: {
-    fontSize: 11,
+    fontSize: t.typography.labelXSmall.fontSize,
     color: t.colors.onSecondary,
     opacity: 0.7,
   },

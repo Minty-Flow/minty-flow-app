@@ -148,8 +148,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 10,
   },
   triggerLabel: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
   },
   triggerRight: {
@@ -158,7 +157,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 10,
   },
   triggerValue: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSecondary,
     opacity: 0.7,
   },
@@ -190,7 +189,7 @@ const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.primary,
   },
   optionText: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSurface,
   },
   optionTextActive: {

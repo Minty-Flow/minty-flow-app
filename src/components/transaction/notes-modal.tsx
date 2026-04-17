@@ -240,7 +240,7 @@ const styles = UnistylesSheet.create((theme) => ({
     borderBottomColor: theme.colors.customColors.semi,
   },
   title: {
-    fontSize: 17,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
@@ -253,11 +253,11 @@ const styles = UnistylesSheet.create((theme) => ({
     alignItems: "flex-end",
   },
   cancelText: {
-    fontSize: 17,
+    fontSize: theme.typography.titleSmall.fontSize,
     color: theme.colors.onSurface,
   },
   doneText: {
-    fontSize: 17,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
   },
   toolbar: {
@@ -274,7 +274,7 @@ const styles = UnistylesSheet.create((theme) => ({
     borderRadius: 8,
   },
   toolbarLabel: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
   },
   content: {
@@ -285,7 +285,7 @@ const styles = UnistylesSheet.create((theme) => ({
   },
   editor: {
     flex: 1,
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,

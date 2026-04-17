@@ -146,7 +146,7 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 4,
   },
   title: {
-    fontSize: 18,
+    ...theme.typography.headlineSmall,
     fontWeight: "700",
     textAlign: "center",
     letterSpacing: -0.3,

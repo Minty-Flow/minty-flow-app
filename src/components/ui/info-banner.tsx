@@ -31,7 +31,7 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.customColors.semi,
   },
   text: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.customColors.semi,
     lineHeight: 18,
     flex: 1,

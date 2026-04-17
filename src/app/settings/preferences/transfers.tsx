@@ -190,7 +190,7 @@ const styles = StyleSheet.create((theme) => ({
     marginTop: 8,
   },
   sectionLabelText: {
-    fontSize: 11,
+    fontSize: theme.typography.labelXSmall.fontSize,
     fontWeight: "600",
     letterSpacing: 0.8,
     opacity: 0.5,
@@ -212,12 +212,12 @@ const styles = StyleSheet.create((theme) => ({
     gap: 2,
   },
   rowLabel: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "500",
     color: theme.colors.onSurface,
   },
   rowDescription: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.customColors?.semi,
   },
   divider: {
@@ -242,12 +242,12 @@ const styles = StyleSheet.create((theme) => ({
     gap: 2,
   },
   toggleLabel: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "500",
     color: theme.colors.onSurface,
   },
   toggleDescription: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.customColors.semi,
   },
 

@@ -98,12 +98,12 @@ const styles = StyleSheet.create((theme) => ({
     gap: 10,
   },
   actionItemTitle: {
-    fontSize: 15,
+    ...theme.typography.bodyLarge,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
   actionItemDescription: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.onSecondary,
   },
   badge: {
@@ -113,7 +113,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
   },
   badgeText: {
-    fontSize: 10,
+    fontSize: theme.typography.labelSmall.fontSize,
     fontWeight: "600",
     color: theme.colors.onSecondary,
   },

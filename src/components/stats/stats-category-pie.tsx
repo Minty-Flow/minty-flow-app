@@ -475,10 +475,10 @@ const styles = StyleSheet.create((theme) => ({
   },
   centerAmount: {
     fontWeight: "700",
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
   },
   centerCurrency: {
-    fontSize: 10,
+    fontSize: theme.typography.labelSmall.fontSize,
   },
   legendList: {
     gap: 8,
@@ -509,7 +509,7 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   legendPercent: {
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     color: theme.colors.customColors.semi,
     minWidth: 40,
     textAlign: "right",

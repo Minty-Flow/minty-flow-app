@@ -228,7 +228,7 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 4,
   },
   title: {
-    fontSize: 18,
+    ...theme.typography.headlineSmall,
     fontWeight: "700",
     textAlign: "center",
     letterSpacing: -0.3,
@@ -256,13 +256,13 @@ const styles = StyleSheet.create((theme) => ({
   optionRowDisabled: { opacity: 0.5 },
   optionRowContent: { flex: 1, gap: 2 },
   optionLabel: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     letterSpacing: -0.2,
     color: theme.colors.onSurface,
   },
   optionSublabel: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "400",
     color: theme.colors.onSecondary,
   },
@@ -277,7 +277,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   cancelButtonPressed: { opacity: 0.7 },
   cancelText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },

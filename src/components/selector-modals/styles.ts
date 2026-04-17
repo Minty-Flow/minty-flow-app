@@ -23,8 +23,7 @@ export const triggerStyles = StyleSheet.create((theme) => ({
     gap: 10,
   },
   triggerLabel: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
   },
   triggerRight: {
@@ -33,7 +32,7 @@ export const triggerStyles = StyleSheet.create((theme) => ({
     gap: 10,
   },
   triggerValue: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSecondary,
     opacity: 0.7,
   },
@@ -59,7 +58,7 @@ export const modalStyles = StyleSheet.create((theme) => ({
     borderBottomColor: theme.colors.customColors.semi,
   },
   headerTitle: {
-    fontSize: 18,
+    ...theme.typography.headlineSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },

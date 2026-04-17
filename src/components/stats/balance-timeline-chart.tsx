@@ -203,7 +203,7 @@ const styles = StyleSheet.create((theme) => ({
     height: CHART_HEIGHT,
   },
   headerBalance: {
-    fontSize: 14,
+    ...theme.typography.labelLarge,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
@@ -217,11 +217,11 @@ const styles = StyleSheet.create((theme) => ({
     gap: 1,
   },
   summaryLabel: {
-    fontSize: 11,
+    fontSize: theme.typography.labelXSmall.fontSize,
     color: theme.colors.customColors.semi,
   },
   summaryValue: {
-    fontSize: 13,
+    ...theme.typography.bodyMedium,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
@@ -242,7 +242,7 @@ const styles = StyleSheet.create((theme) => ({
     marginRight: 8,
   },
   accountBalance: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "500",
     color: theme.colors.onSurface,
   },

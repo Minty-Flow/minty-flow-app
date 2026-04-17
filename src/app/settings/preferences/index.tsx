@@ -173,7 +173,7 @@ const styles = StyleSheet.create((theme) => ({
     marginVertical: 10,
   },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: theme.typography.labelXSmall.fontSize,
     fontWeight: "600",
     letterSpacing: 0.8,
     textTransform: "uppercase",

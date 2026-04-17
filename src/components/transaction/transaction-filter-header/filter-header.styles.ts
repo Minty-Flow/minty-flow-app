@@ -21,7 +21,7 @@ export const filterHeaderStyles = StyleSheet.create((theme) => ({
     gap: 6,
   },
   clearAllLabel: {
-    fontSize: 13,
+    ...theme.typography.bodyMedium,
     fontWeight: "500",
   },
   panel: {
@@ -43,7 +43,7 @@ export const filterHeaderStyles = StyleSheet.create((theme) => ({
     marginLeft: "auto",
   },
   clearText: {
-    fontSize: 13,
+    ...theme.typography.bodyMedium,
     fontWeight: "500",
     color: theme.colors.primary,
   },
@@ -51,7 +51,7 @@ export const filterHeaderStyles = StyleSheet.create((theme) => ({
     padding: 4,
   },
   doneText: {
-    fontSize: 13,
+    ...theme.typography.bodyMedium,
     fontWeight: "500",
     color: theme.colors.primary,
   },
@@ -75,8 +75,7 @@ export const filterHeaderStyles = StyleSheet.create((theme) => ({
   },
   categoryEmptyHint: {
     marginTop: 14,
-    fontSize: 13,
-    fontWeight: "400",
+    ...theme.typography.bodyMedium,
     color: theme.colors.customColors.semi,
   },
   searchMatchScroll: {
@@ -98,7 +97,7 @@ export const filterHeaderStyles = StyleSheet.create((theme) => ({
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
     paddingVertical: 0,
   },
   includeNotesRow: {
@@ -110,6 +109,6 @@ export const filterHeaderStyles = StyleSheet.create((theme) => ({
     paddingHorizontal: 4,
   },
   includeNotesLabel: {
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
   },
 }))

@@ -57,7 +57,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   text: {
     flex: 1,
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "600",
     color: theme.colors.error,
     lineHeight: 18,

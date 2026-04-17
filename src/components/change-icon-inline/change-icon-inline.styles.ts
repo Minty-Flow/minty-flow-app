@@ -41,8 +41,8 @@ export const changeIconInlineStyles = StyleSheet.create((theme) => ({
     gap: 12,
   },
   itemTitle: {
+    ...theme.typography.headlineSmall,
     fontWeight: "500",
-    fontSize: 18,
     color: theme.colors.onSurface,
   },
   itemChevron: {
@@ -164,7 +164,6 @@ export const changeIconInlineStyles = StyleSheet.create((theme) => ({
   },
   optionText: {
     color: theme.colors.primary,
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
   },
 }))

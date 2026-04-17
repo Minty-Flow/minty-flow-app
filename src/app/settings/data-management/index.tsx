@@ -250,7 +250,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingBottom: 60,
   },
   sectionHeader: {
-    fontSize: 11,
+    fontSize: theme.typography.labelXSmall.fontSize,
     fontWeight: "600",
     letterSpacing: 0.8,
     textTransform: "uppercase",

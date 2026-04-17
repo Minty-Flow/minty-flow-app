@@ -1,3 +1,4 @@
+// TODO: DEAD CODE — Unused
 import type { NativeStackHeaderProps } from "@react-navigation/native-stack"
 import { StyleSheet } from "react-native-unistyles"
 
@@ -64,6 +65,7 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
+  // TODO: DEAD CODE — backButton style never applied (style prop commented out on Button above)
   // backButton: {
   //   width: 40,
   //   height: 40,

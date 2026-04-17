@@ -218,7 +218,7 @@ const styles = StyleSheet.create((theme) => {
     },
 
     monthHeaderButtonText: {
-      fontSize: 16,
+      ...theme.typography.titleSmall,
       fontWeight: "600",
       color: theme.colors.onSecondary,
     },
@@ -245,7 +245,7 @@ const styles = StyleSheet.create((theme) => {
     },
 
     yearInput: {
-      fontSize: 18,
+      ...theme.typography.headlineSmall,
       fontWeight: "600",
       minWidth: 72,
       borderRadius: theme.radius,

@@ -18,7 +18,7 @@ export const upcomingSectionStyles = StyleSheet.create((theme) => ({
   },
   headerTitle: {
     fontWeight: "700",
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSurface,
   },
   countBadge: {
@@ -27,7 +27,7 @@ export const upcomingSectionStyles = StyleSheet.create((theme) => ({
     borderRadius: 10,
   },
   countBadgeText: {
-    fontSize: 12,
+    ...theme.typography.labelMedium,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
@@ -45,7 +45,7 @@ export const upcomingSectionStyles = StyleSheet.create((theme) => ({
     alignSelf: "flex-end",
   },
   seeAllText: {
-    fontSize: 14,
+    ...theme.typography.labelLarge,
     fontWeight: "600",
     color: theme.colors.customColors.semi,
   },
@@ -65,7 +65,7 @@ export const upcomingSectionStyles = StyleSheet.create((theme) => ({
     borderRadius: 14,
   },
   pillText: {
-    fontSize: 12,
+    ...theme.typography.labelMedium,
     fontWeight: "600",
   },
   listContainer: {
@@ -79,7 +79,7 @@ export const upcomingSectionStyles = StyleSheet.create((theme) => ({
     paddingVertical: 8,
   },
   subHeaderText: {
-    fontSize: 11,
+    ...theme.typography.labelXSmall,
     fontWeight: "600",
     color: theme.colors.customColors.semi,
     letterSpacing: 0.5,
@@ -90,7 +90,7 @@ export const upcomingSectionStyles = StyleSheet.create((theme) => ({
     gap: 4,
   },
   confirmAllText: {
-    fontSize: 12,
+    ...theme.typography.labelMedium,
     fontWeight: "600",
   },
 }))

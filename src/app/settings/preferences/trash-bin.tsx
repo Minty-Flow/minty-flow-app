@@ -185,12 +185,12 @@ const styles = StyleSheet.create((theme) => ({
     gap: 10,
   },
   actionItemTitle: {
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
   actionTrashItemTitle: {
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.error,
   },

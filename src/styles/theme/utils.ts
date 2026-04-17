@@ -4,6 +4,7 @@
 
 import type { MintyColorScheme } from "./types"
 
+// TODO: DEAD CODE
 /** for future usgae
  * Lighten a hex color by a percentage
  * Used for generating dark theme primary colors
@@ -20,6 +21,7 @@ import type { MintyColorScheme } from "./types"
 //     .toUpperCase()}`
 // }
 
+// TODO: DEAD CODE
 /** for future usgae
  * Darken a hex color by a percentage
  */

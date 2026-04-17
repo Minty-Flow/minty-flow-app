@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-04-17T00:17:16.699Z
+Generated on: 2026-04-17T20:07:24.697Z
 
 ```
 ./
@@ -266,10 +266,18 @@ Generated on: 2026-04-17T00:17:16.699Z
 │   │   └── prepare-commit-msg
 │   └── pre-commit
 ├── .tmp/
+│   └── tasks/
+│       └── code-cleanup/
+│           ├── subtask_01.json
+│           ├── subtask_02.json
+│           ├── subtask_03.json
+│           ├── subtask_04.json
+│           └── task.json
 ├── .vscode/
 │   └── settings.json
 ├── docs/
-│   └── STRUCTURE.md
+│   ├── STRUCTURE.md
+│   └── typography-migration.md
 ├── plugins/
 │   ├── index.js
 │   ├── README.md
@@ -1012,8 +1020,7 @@ Generated on: 2026-04-17T00:17:16.699Z
 │   │   │   ├── model-to-category.ts
 │   │   │   ├── model-to-goal.ts
 │   │   │   ├── model-to-loan.ts
-│   │   │   ├── model-to-tag.ts
-│   │   │   └── model-to-transfer.ts
+│   │   │   └── model-to-tag.ts
 │   │   ├── index.ts
 │   │   └── schema.ts
 │   ├── hooks/

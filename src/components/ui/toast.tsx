@@ -379,12 +379,12 @@ const toastStyles = StyleSheet.create((theme) => ({
     gap: 4,
   },
   text1: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
   text2: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.onSecondary,
   },
   closeButton: {

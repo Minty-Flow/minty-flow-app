@@ -111,23 +111,16 @@ export function UpcomingTransactionsSection({
     }
   }, [toAutoConfirm, updateDateUponConfirmation])
 
-  // Start the service once after hydration — separated from scheduleTransactions
-  // so start() is not called on every upcoming change (it is a no-op when already
-  // active, but the repeated call is misleading).
-  useEffect(() => {
-    if (!isHydrated) return
-    autoConfirmationService.start()
-  }, [isHydrated])
-
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional extra deps
   useEffect(() => {
     if (!isHydrated) return
 
-    // Configure service with current store state (only after hydration)
+    // Configure must run before start (start throws if config is null)
     autoConfirmationService.configure({
       requireConfirmation,
       updateDateUponConfirmation,
     })
+    autoConfirmationService.start()
     autoConfirmationService.scheduleTransactions(upcoming)
   }, [
     upcoming,

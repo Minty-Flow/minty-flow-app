@@ -157,7 +157,7 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   settingLabel: {
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
   },
   settingRowDisabled: {

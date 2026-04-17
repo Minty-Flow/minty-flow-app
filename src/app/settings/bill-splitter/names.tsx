@@ -83,7 +83,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.surface,
   },
   title: {
-    fontSize: 24,
+    fontSize: theme.typography.displaySmall.fontSize,
     fontWeight: "700",
     color: theme.colors.onSurface,
     marginBottom: 16,
@@ -108,7 +108,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   nameText: {
     flex: 1,
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },

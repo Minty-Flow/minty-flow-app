@@ -37,7 +37,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     paddingHorizontal: H_PAD,
   },
   fieldError: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.error,
     marginTop: SMALL_GAP,
     paddingHorizontal: H_PAD,
@@ -46,7 +46,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     marginBottom: FORM_GAP,
   },
   sectionLabel: {
-    fontSize: 12,
+    ...theme.typography.labelMedium,
     fontWeight: "600",
     color: theme.colors.customColors.semi,
     textTransform: "capitalize",
@@ -62,7 +62,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     marginBottom: SECTION_GAP,
   },
   sectionLabelInRow: {
-    fontSize: 12,
+    ...theme.typography.labelMedium,
     fontWeight: "600",
     color: theme.colors.customColors.semi,
     textTransform: "capitalize",
@@ -77,7 +77,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     opacity: 0.4,
   },
   clearButtonText: {
-    fontSize: 12,
+    ...theme.typography.labelMedium,
     fontWeight: "600",
     color: theme.colors.primary,
     textTransform: "capitalize",
@@ -126,7 +126,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     paddingHorizontal: H_PAD,
   },
   conversionRateSummaryLabel: {
-    fontSize: 13,
+    ...theme.typography.bodyMedium,
     fontWeight: "600",
     color: theme.colors.customColors?.semi ?? theme.colors.onSecondary,
     letterSpacing: 0.5,
@@ -137,13 +137,12 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     gap: ELEMENT_GAP,
   },
   conversionRateAmount: {
-    fontSize: 16,
-
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
   conversionRateEquals: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSurface,
   },
   conversionOutcomeRow: {
@@ -160,13 +159,12 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     minWidth: 0,
   },
   conversionOutcomeAmount: {
-    fontSize: 15,
+    ...theme.typography.bodyLarge,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
   conversionOutcomeRate: {
-    fontSize: 15,
-    fontWeight: "500",
+    ...theme.typography.bodyLarge,
     color: theme.colors.customColors?.semi ?? theme.colors.onSecondary,
   },
   conversionInputRow: {
@@ -186,19 +184,19 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     gap: SECTION_GAP,
   },
   accountTriggerName: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
     flex: 1,
     minWidth: 0,
   },
   accountTriggerBalance: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.customColors.semi,
   },
   accountTriggerPlaceholder: {
     flex: 1,
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.customColors.semi,
   },
   inlineAccountPicker: {
@@ -234,8 +232,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.secondary,
   },
   accountPickerRowAddLabel: {
-    fontSize: 15,
-    fontWeight: "500",
+    ...theme.typography.bodyLarge,
     flex: 1,
     minWidth: 0,
     color: theme.colors.primary,
@@ -249,13 +246,12 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     gap: SECTION_GAP,
   },
   accountPickerRowName: {
-    fontSize: 15,
-    fontWeight: "500",
+    ...theme.typography.bodyLarge,
     flex: 1,
     minWidth: 0,
   },
   accountPickerRowBalance: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
   },
   pickerSearchInput: {
     marginBottom: SECTION_GAP,
@@ -293,7 +289,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.primary,
   },
   categoryCellLabel: {
-    fontSize: 11,
+    fontSize: theme.typography.labelXSmall.fontSize,
     color: theme.colors.onSurface,
     marginTop: SMALL_GAP,
     textAlign: "center",
@@ -327,7 +323,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     backgroundColor: "transparent",
   },
   tagChipAddText: {
-    fontSize: 14,
+    ...theme.typography.labelLarge,
     fontWeight: "500",
     color: theme.colors.primary,
   },
@@ -347,7 +343,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     gap: SECTION_GAP,
   },
   tagPickerEmptyText: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.customColors.semi,
     paddingVertical: SECTION_GAP,
   },
@@ -361,8 +357,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
   },
   createTagRowText: {
-    fontSize: 15,
-    fontWeight: "500",
+    ...theme.typography.bodyLarge,
     color: theme.colors.primary,
   },
   inlineDateRow: {
@@ -381,8 +376,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     paddingHorizontal: H_PAD,
   },
   inlineDateText: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
     flex: 1,
     minWidth: 0,
@@ -401,8 +395,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     gap: ROW_GAP,
   },
   switchLabel: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
   },
 
@@ -418,10 +411,9 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   },
   recurringSubLabel: {
     marginHorizontal: H_PAD,
-    fontSize: 12,
+    ...theme.typography.labelMedium,
     fontWeight: "600",
     color: theme.colors.customColors.semi,
-
     letterSpacing: 0.5,
     marginBottom: SECTION_GAP,
   },
@@ -444,8 +436,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.primary,
   },
   recurringToggleLabel: {
-    fontSize: 15,
-    fontWeight: "500",
+    ...theme.typography.bodyLarge,
     color: theme.colors.onSurface,
   },
   recurringToggleLabelSelected: {
@@ -471,8 +462,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     borderBottomWidth: 0,
   },
   endsOnOptionLabel: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
   },
   occurrencePresetsRow: {
@@ -491,14 +481,13 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     borderColor: "transparent",
   },
   fieldValue: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
     flex: 1,
     minWidth: 0,
   },
   fieldPlaceholder: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.customColors.semi,
     flex: 1,
     minWidth: 0,
@@ -534,8 +523,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   },
   addFilesLabel: {
     flex: 1,
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.customColors.semi,
   },
   addFilesOptionsContainer: {
@@ -559,8 +547,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   },
   addFilesOptionLabel: {
     flex: 1,
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
   },
   attachmentsList: {
@@ -587,12 +574,11 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     // backgroundColor: theme.colors.secondary,
   },
   attachmentName: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.onSecondary,
   },
   attachmentMeta: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     marginTop: MICRO_GAP,
     color: theme.colors.customColors.semi,
   },
@@ -627,12 +613,12 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   },
 
   cancelText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
   saveText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onPrimary,
   },

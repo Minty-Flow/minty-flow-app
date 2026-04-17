@@ -303,7 +303,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: `${theme.colors.customColors.expense}14`,
   },
   clearAllText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "600",
   },
   listContent: {
@@ -348,17 +348,17 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: 4,
   },
   typeBadgeText: {
-    fontSize: 10,
+    fontSize: theme.typography.labelSmall.fontSize,
     fontWeight: "700",
     letterSpacing: 0.3,
     textTransform: "uppercase",
   },
   rowDate: {
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     color: theme.colors.onSecondary,
   },
   rowFileName: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
     lineHeight: 20,
@@ -377,7 +377,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 8,
   },
   actionBtnText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "600",
   },
   saveAsBtn: {
@@ -397,13 +397,13 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 40,
   },
   emptyTitle: {
-    fontSize: 17,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
     textAlign: "center",
   },
   emptyDesc: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.onSecondary,
     textAlign: "center",
     lineHeight: 20,

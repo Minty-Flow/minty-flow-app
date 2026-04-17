@@ -383,7 +383,7 @@ const styles = UnistylesSheet.create((t) => ({
     backgroundColor: t.colors.surface,
   },
   title: {
-    fontSize: 17,
+    ...t.typography.titleSmall,
     fontWeight: "600",
     color: t.colors.onSurface,
   },
@@ -401,7 +401,7 @@ const styles = UnistylesSheet.create((t) => ({
     backgroundColor: t.colors.surface,
   },
   loadingText: {
-    fontSize: 15,
+    fontSize: t.typography.bodyLarge.fontSize,
     color: t.colors.customColors.semi,
   },
   fabMyLocation: {
@@ -429,7 +429,7 @@ const styles = UnistylesSheet.create((t) => ({
     backgroundColor: t.colors.surface,
   },
   addressText: {
-    fontSize: 13,
+    fontSize: t.typography.bodyMedium.fontSize,
     textAlign: "center",
     color: t.colors.customColors.semi,
   },

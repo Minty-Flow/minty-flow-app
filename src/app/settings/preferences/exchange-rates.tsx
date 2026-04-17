@@ -380,13 +380,13 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.secondary,
   },
   apiTitle: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "700",
     color: theme.colors.onSurface,
     marginBottom: 4,
   },
   apiUrl: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.customColors.semi,
   },
   searchRow: {
@@ -394,15 +394,14 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 12,
   },
   instruction: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.customColors.semi,
     marginHorizontal: 20,
     marginBottom: 16,
     lineHeight: 18,
   },
   baseHeading: {
-    fontSize: 22,
-    fontWeight: "700",
+    ...theme.typography.headlineMedium,
     color: theme.colors.onSurface,
     marginHorizontal: 20,
     marginBottom: 8,
@@ -420,17 +419,17 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.secondary,
   },
   entryEquals: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSurface,
     marginRight: 8,
   },
   entryAmount: {
     flex: 1,
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSurface,
   },
   entryCode: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "700",
     color: theme.colors.onSurface,
   },
@@ -454,11 +453,11 @@ const styles = StyleSheet.create((theme) => ({
   },
   loadingText: {
     marginTop: 12,
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.customColors.semi,
   },
   errorText: {
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.error,
     textAlign: "center",
   },
@@ -470,7 +469,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 12,
   },
   retryButtonText: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onPrimary,
   },

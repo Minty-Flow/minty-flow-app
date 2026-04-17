@@ -134,7 +134,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingBottom: 12,
   },
   currencyTitle: {
-    fontSize: 20,
+    fontSize: theme.typography.titleMedium.fontSize,
   },
   sections: {
     gap: 16,
