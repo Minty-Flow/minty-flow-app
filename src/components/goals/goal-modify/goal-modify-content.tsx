@@ -319,7 +319,7 @@ export function GoalModifyContent({
           </View>
 
           {/* Currency and account selector */}
-          <View style={goalModifyStyles.settingsList}>
+          <View>
             <CurrencyAccountSelector
               accounts={accounts}
               selectedCurrency={formCurrencyCode || null}

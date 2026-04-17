@@ -59,12 +59,12 @@ const styles = StyleSheet.create((theme) => ({
     gap: 2,
   },
   toggleItemTitle: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
   toggleItemDescription: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.customColors.semi,
     lineHeight: 18,
   },

@@ -180,7 +180,7 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 4,
   },
   title: {
-    fontSize: 18,
+    ...theme.typography.headlineSmall,
     fontWeight: "700",
     textAlign: "center",
     letterSpacing: -0.3,
@@ -193,13 +193,13 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
   },
   summaryText: {
-    fontSize: 14,
+    ...theme.typography.labelLarge,
     fontWeight: "600",
     color: theme.colors.onSurface,
     textAlign: "center",
   },
   warning: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.onSecondary,
     textAlign: "center",
     lineHeight: 19,
@@ -223,7 +223,7 @@ const styles = StyleSheet.create((theme) => ({
   buttonPressed: { opacity: 0.7 },
   buttonDisabled: { opacity: 0.5 },
   buttonText: {
-    fontSize: 15,
+    ...theme.typography.bodyLarge,
     fontWeight: "600",
   },
   confirmButtonText: {

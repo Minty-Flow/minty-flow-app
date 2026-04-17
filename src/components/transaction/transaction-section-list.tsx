@@ -249,6 +249,6 @@ const styles = StyleSheet.create((theme) => ({
   sectionTotal: {
     fontWeight: "700",
     color: theme.colors.onSecondary,
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
   },
 }))

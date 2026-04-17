@@ -464,7 +464,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   // Section header label — 12px, 600 weight, letter-spacing 0.5 (matches budget-modify)
   sectionLabel: {
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
     letterSpacing: 0.5,
@@ -480,7 +480,7 @@ const styles = StyleSheet.create((theme) => ({
     overflow: "hidden",
   },
   nameInput: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
   },
   // Multiplier trigger — collapsible row
   multiplierTrigger: {
@@ -495,17 +495,17 @@ const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.customColors.semi,
   },
   multiplierLabel: {
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "500",
     color: theme.colors.onSurface,
   },
   multiplierHint: {
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     color: theme.colors.onSecondary,
     marginTop: 2,
   },
   multiplierBadge: {
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "700",
     color: theme.colors.primary,
     backgroundColor: `${theme.colors.primary}15`,
@@ -539,7 +539,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 16,
   },
   switchLabel: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "500",
     color: theme.colors.onSurface,
   },
@@ -566,25 +566,25 @@ const styles = StyleSheet.create((theme) => ({
   },
   participantName: {
     flex: 1,
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "500",
     color: theme.colors.onSurface,
   },
   // Inline dollar amount preview — secondary label style
   amountPreview: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "400",
     color: theme.colors.onSecondary,
   },
   percentageText: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
     minWidth: 52,
     textAlign: "right",
   },
   percentageInput: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     minWidth: 52,
     textAlign: "right",
@@ -614,13 +614,13 @@ const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.customColors.semi,
   },
   percentageTotalLabel: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "600",
     color: theme.colors.onSecondary,
     letterSpacing: 0.3,
   },
   percentageTotalValue: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "700",
   },
   // Footer — Cancel + Save side by side (matches budget-modify actions pattern)
@@ -635,12 +635,12 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   cancelText: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
   saveText: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onPrimary,
   },

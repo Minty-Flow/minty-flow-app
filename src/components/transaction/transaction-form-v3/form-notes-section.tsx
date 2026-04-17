@@ -82,7 +82,7 @@ export function FormNotesSection({
               style={{
                 color: theme.colors.onSurface,
                 backgroundColor: "transparent",
-                fontSize: 14,
+                fontSize: theme.typography.labelLarge.fontSize,
               }}
               htmlStyle={{
                 ul: { bulletColor: theme.colors.onSurface },

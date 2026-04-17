@@ -219,12 +219,12 @@ const styles = StyleSheet.create((theme) => ({
     gap: 4,
   },
   title: {
-    fontSize: 24,
+    fontSize: theme.typography.displaySmall.fontSize,
     fontWeight: "700",
     color: theme.colors.onSurface,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.onSecondary,
     lineHeight: 20,
   },
@@ -239,7 +239,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   selectAllText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.primary,
   },
@@ -258,7 +258,7 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   presetName: {
-    fontSize: 16,
+    fontSize: theme.typography.titleSmall.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
@@ -290,7 +290,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.primary,
   },
   addedText: {
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     fontWeight: "600",
     color: theme.colors.onPrimary,
   },
@@ -303,7 +303,7 @@ const styles = StyleSheet.create((theme) => ({
     width: "100%",
   },
   nextButtonText: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onPrimary,
   },

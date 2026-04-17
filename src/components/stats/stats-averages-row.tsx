@@ -96,6 +96,6 @@ const styles = StyleSheet.create((theme) => ({
     borderCurve: "continuous",
   },
   label: {
-    fontSize: 11,
+    fontSize: theme.typography.labelXSmall.fontSize,
   },
 }))

@@ -196,12 +196,11 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: "flex-end",
   },
   label: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
   },
   value: {
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSecondary,
     maxWidth: 200,
     textAlign: "right",
@@ -241,7 +240,7 @@ const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.primary,
   },
   cellLabel: {
-    fontSize: 11,
+    fontSize: theme.typography.labelXSmall.fontSize,
     color: theme.colors.onSurface,
     marginTop: SMALL_GAP,
     textAlign: "center",
@@ -255,7 +254,7 @@ const styles = StyleSheet.create((theme) => ({
     alignSelf: "flex-end",
   },
   selectAllText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "600",
     color: theme.colors.primary,
   },
@@ -268,7 +267,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 12,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.onSecondary,
     opacity: 0.6,
     textAlign: "center",
@@ -286,7 +285,7 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.primary,
   },
   createButtonText: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.primary,
   },

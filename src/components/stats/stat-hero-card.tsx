@@ -84,7 +84,7 @@ const styles = StyleSheet.create((theme) => ({
     flexShrink: 1,
   },
   subline: {
-    fontSize: 11,
+    fontSize: theme.typography.labelXSmall.fontSize,
     color: theme.colors.customColors.semi,
     marginTop: -4,
   },

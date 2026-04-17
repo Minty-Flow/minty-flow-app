@@ -41,7 +41,7 @@ export const transactionItemStyles = StyleSheet.create((theme) => ({
   },
   subtitle: {
     color: theme.colors.onSecondary,
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
   },
   rightSection: {
     alignItems: "flex-end",
@@ -52,7 +52,7 @@ export const transactionItemStyles = StyleSheet.create((theme) => ({
   },
   amount: {},
   secondaryAmount: {
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     color: theme.colors.customColors?.semi,
   },
   statusBadge: {
@@ -61,7 +61,7 @@ export const transactionItemStyles = StyleSheet.create((theme) => ({
     gap: 3,
   },
   statusBadgeText: {
-    fontSize: 10,
+    fontSize: theme.typography.labelSmall.fontSize,
     fontWeight: "600",
   },
   confirmButton: {

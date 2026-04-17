@@ -35,14 +35,14 @@ export const datePickerModalStyles = StyleSheet.create((theme) => ({
     alignItems: "center",
   },
   cancelText: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
   },
   doneText: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
   },
   titleText: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
   },
   body: {

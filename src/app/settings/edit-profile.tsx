@@ -230,7 +230,7 @@ const styles = StyleSheet.create((theme) => ({
     height: "100%",
   },
   avatarText: {
-    fontSize: 48,
+    ...theme.typography.displayLarge,
     fontWeight: "600",
     color: theme.colors.surface,
     lineHeight: 56,
@@ -253,7 +253,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 16,
   },
   removeButtonText: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.error,
     fontWeight: "600",
   },
@@ -262,7 +262,7 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 24,
   },
   label: {
-    fontSize: 12,
+    ...theme.typography.labelMedium,
     fontWeight: "600",
     color: theme.colors.onSecondary,
     marginBottom: 8,

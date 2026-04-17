@@ -92,7 +92,6 @@ export default function RootLayout() {
                   backgroundColor: theme.colors.surface, // Ensure background matches
                 },
                 // animation: "fade",
-
                 // if you decided to use this some screens wont have the edit pen in them so be careful
                 // header: (props) =>   <ScreenSharedHeader props={props} />,
               }}

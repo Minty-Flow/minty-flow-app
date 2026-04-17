@@ -74,7 +74,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: "transparent",
     borderColor: "transparent",
     borderWidth: 0,
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     shadowColor: "transparent",
     elevation: 0,
     paddingHorizontal: 0,

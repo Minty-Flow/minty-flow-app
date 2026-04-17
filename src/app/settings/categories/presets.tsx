@@ -226,7 +226,7 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   presetName: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
@@ -256,7 +256,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.primary,
   },
   addedText: {
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     fontWeight: "600",
     color: theme.colors.onPrimary,
   },
@@ -270,7 +270,7 @@ const styles = StyleSheet.create((theme) => ({
   },
 
   addButtonText: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onPrimary,
   },

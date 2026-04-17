@@ -196,13 +196,11 @@ const styles = StyleSheet.create((theme) => ({
   },
   archivedName: {
     flex: 1,
-    fontSize: 15,
-    fontWeight: "500",
+    ...theme.typography.bodyLarge,
     color: theme.colors.customColors.semi,
   },
   archivedBalance: {
-    fontSize: 15,
-    fontWeight: "500",
+    ...theme.typography.bodyLarge,
     color: theme.colors.customColors.semi,
   },
   cardHeader: {
@@ -220,7 +218,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 8,
   },
   accountName: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSecondary,
   },
@@ -230,7 +228,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 6,
   },
   accountType: {
-    fontSize: 11,
+    ...theme.typography.labelXSmall,
     fontWeight: "500",
     color: theme.colors.customColors.semi,
 
@@ -246,14 +244,13 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius / 2,
   },
   primaryBadgeText: {
-    fontSize: 9,
-    fontWeight: "600",
+    ...theme.typography.labelXSmall,
     color: theme.colors.onSurface,
 
     letterSpacing: 0.2,
   },
   balance: {
-    fontSize: 20,
+    ...theme.typography.titleMedium,
     fontWeight: "600",
     color: theme.colors.onSecondary,
   },
@@ -264,7 +261,7 @@ const styles = StyleSheet.create((theme) => ({
     borderTopColor: theme.colors.customColors.semi,
   },
   summaryLabel: {
-    fontSize: 10,
+    fontSize: theme.typography.labelSmall.fontSize,
     fontWeight: "600",
     color: theme.colors.customColors.semi,
 
@@ -284,14 +281,14 @@ const styles = StyleSheet.create((theme) => ({
     gap: 4,
   },
   summaryItemLabel: {
-    fontSize: 11,
+    ...theme.typography.labelXSmall,
     fontWeight: "500",
     color: theme.colors.customColors.semi,
 
     letterSpacing: 0.5,
   },
   summaryAmount: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSecondary,
   },

@@ -33,7 +33,7 @@ export type RecurringEditPayload = z.infer<typeof transactionSchema>
 
 const dateOrNumber = z.union([z.number(), z.date()])
 
-export const createTransferParamsSchema = z.object({
+const createTransferParamsSchema = z.object({
   fromAccountId: z.string().min(1),
   toAccountId: z.string().min(1),
   amount: z.number().gt(0),
@@ -46,7 +46,7 @@ export const createTransferParamsSchema = z.object({
 
 export type CreateTransferParams = z.infer<typeof createTransferParamsSchema>
 
-export const editTransferFieldsSchema = z.object({
+const editTransferFieldsSchema = z.object({
   amount: z.number().gt(0).optional(),
   /** When from/to have different currencies: rate (toCurrency per 1 fromCurrency). Credit amount = amount * conversionRate. */
   conversionRate: z.number().gt(0).optional(),

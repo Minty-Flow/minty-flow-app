@@ -194,7 +194,7 @@ const styles = StyleSheet.create((t) => ({
     marginRight: 8,
   },
   name: {
-    fontSize: 15,
+    ...t.typography.bodyLarge,
     fontWeight: "600",
     color: t.colors.onSurface,
     flex: 1,
@@ -212,7 +212,7 @@ const styles = StyleSheet.create((t) => ({
     borderRadius: t.radius,
   },
   typeBadgeText: {
-    fontSize: 10,
+    fontSize: t.typography.labelSmall.fontSize,
     fontWeight: "600",
     color: t.colors.onSecondary,
   },
@@ -226,7 +226,7 @@ const styles = StyleSheet.create((t) => ({
     borderRadius: t.radius,
   },
   completedText: {
-    fontSize: 11,
+    ...t.typography.labelXSmall,
     fontWeight: "600",
     color: t.colors.customColors.income,
   },
@@ -237,7 +237,7 @@ const styles = StyleSheet.create((t) => ({
     borderRadius: t.radius,
   },
   dateChipText: {
-    fontSize: 11,
+    ...t.typography.labelXSmall,
     fontWeight: "500",
     color: t.colors.onSecondary,
   },
@@ -257,13 +257,13 @@ const styles = StyleSheet.create((t) => ({
     alignItems: "center",
   },
   savedText: {
-    fontSize: 12,
+    fontSize: t.typography.labelMedium.fontSize,
     color: t.colors.onSecondary,
     flex: 1,
     marginRight: 8,
   },
   remainingText: {
-    fontSize: 12,
+    fontSize: t.typography.labelMedium.fontSize,
     color: t.colors.onSecondary,
     flexShrink: 0,
   },

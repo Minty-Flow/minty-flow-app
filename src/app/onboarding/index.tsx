@@ -183,13 +183,13 @@ const styles = StyleSheet.create((theme) => ({
     gap: 16,
   },
   infoTitle: {
-    fontSize: 36,
+    fontSize: theme.typography.displayMedium.fontSize,
     fontWeight: "700",
     color: theme.colors.primary,
     lineHeight: 44,
   },
   infoDescription: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSurface,
     lineHeight: 24,
   },

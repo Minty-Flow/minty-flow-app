@@ -86,7 +86,7 @@ const textStyles = StyleSheet.create((theme) => ({
   default: {
     color: theme.colors.onSurface,
     backgroundColor: "transparent",
-    fontSize: 16,
+    ...theme.typography.bodyLarge,
     lineHeight: 24,
     _web: {
       userSelect: "text",
@@ -94,18 +94,16 @@ const textStyles = StyleSheet.create((theme) => ({
   },
   h1: {
     color: theme.colors.onSurface,
-    fontSize: 36,
+    ...theme.typography.displayMedium,
     lineHeight: 44,
-    fontWeight: "600",
     letterSpacing: -0.5,
     fontFamily: Fonts.sans,
   },
   h2: {
     color: theme.colors.onSurface,
     paddingBottom: 8,
-    fontSize: 30,
+    ...theme.typography.headlineLarge,
     lineHeight: 38,
-    fontWeight: "600",
     letterSpacing: -0.5,
     fontFamily: Fonts.sans,
     _web: {
@@ -114,9 +112,8 @@ const textStyles = StyleSheet.create((theme) => ({
   },
   h3: {
     color: theme.colors.onSurface,
-    fontSize: 24,
+    ...theme.typography.displaySmall,
     lineHeight: 32,
-    fontWeight: "600",
     letterSpacing: -0.5,
     fontFamily: Fonts.sans,
     _web: {
@@ -125,9 +122,8 @@ const textStyles = StyleSheet.create((theme) => ({
   },
   h4: {
     color: theme.colors.onSurface,
-    fontSize: 20,
+    ...theme.typography.titleMedium,
     lineHeight: 28,
-    fontWeight: "600",
     letterSpacing: -0.5,
     fontFamily: Fonts.sans,
     _web: {
@@ -137,7 +133,7 @@ const textStyles = StyleSheet.create((theme) => ({
   p: {
     fontFamily: Fonts.sans,
     color: theme.colors.onSurface,
-    fontSize: 16,
+    ...theme.typography.bodyLarge,
     lineHeight: 28,
     marginVertical: 6,
   },
@@ -157,40 +153,38 @@ const textStyles = StyleSheet.create((theme) => ({
     paddingHorizontal: 6,
     paddingVertical: 3,
     fontFamily: Fonts.mono,
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     lineHeight: 20,
     fontWeight: "600",
   },
   lead: {
     color: theme.colors.onSecondary,
     fontFamily: Fonts.sans,
-    fontSize: 20,
+    ...theme.typography.titleMedium,
     lineHeight: 28,
   },
   large: {
     color: theme.colors.onSurface,
     fontFamily: Fonts.sans,
-    fontSize: 18,
+    ...theme.typography.headlineSmall,
     lineHeight: 28,
-    fontWeight: "600",
   },
   small: {
     color: theme.colors.onSurface,
     fontFamily: Fonts.sans,
-    fontSize: 14,
+    ...theme.typography.labelLarge,
     lineHeight: 20,
-    fontWeight: "500",
   },
   muted: {
     color: theme.colors.onSecondary,
     fontFamily: Fonts.sans,
-    fontSize: 14,
+    ...theme.typography.labelLarge,
     lineHeight: 20,
   },
   link: {
     color: theme.colors.primary,
     fontFamily: Fonts.sans,
-    fontSize: 16,
+    ...theme.typography.bodyLarge,
     lineHeight: 24,
     _web: {
       textDecorationLine: "underline",

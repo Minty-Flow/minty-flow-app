@@ -255,8 +255,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 10,
   },
   triggerLabel: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
   },
   triggerRight: {
@@ -270,7 +269,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 12,
   },
   defaultColorText: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSecondary,
     opacity: 0.6,
   },
@@ -297,13 +296,13 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: 8,
   },
   headerLabel: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.onSurface,
     opacity: 0.6,
     marginBottom: 4,
   },
   headerTheme: {
-    fontSize: 20,
+    ...theme.typography.titleMedium,
     fontWeight: "700",
     color: theme.colors.onSurface,
   },
@@ -330,7 +329,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: primary,
   }),
   variantLabel: {
-    fontSize: 10,
+    fontSize: theme.typography.labelSmall.fontSize,
     color: theme.colors.onSurface,
     opacity: 0.6,
     marginTop: 4,
@@ -356,7 +355,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: 32,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.onSurface,
     opacity: 0.5,
     textAlign: "center",

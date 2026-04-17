@@ -451,7 +451,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 4,
   },
   loanName: {
-    fontSize: 20,
+    fontSize: theme.typography.titleMedium.fontSize,
     fontWeight: "700",
     color: theme.colors.onSurface,
   },
@@ -467,7 +467,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
   },
   typeBadgeText: {
-    fontSize: 11,
+    fontSize: theme.typography.labelXSmall.fontSize,
     fontWeight: "600",
     color: theme.colors.onSecondary,
   },
@@ -481,7 +481,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
   },
   paidBadgeText: {
-    fontSize: 11,
+    fontSize: theme.typography.labelXSmall.fontSize,
     fontWeight: "600",
     color: theme.colors.customColors.income,
   },
@@ -495,16 +495,16 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
   },
   overdueText: {
-    fontSize: 11,
+    fontSize: theme.typography.labelXSmall.fontSize,
     fontWeight: "600",
     color: theme.colors.customColors.expense,
   },
   dateText: {
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     color: theme.colors.onSecondary,
   },
   description: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.onSecondary,
     lineHeight: 20,
   },
@@ -529,20 +529,20 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
   },
   amountText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.onSecondary,
     flex: 1,
     marginRight: 8,
   },
   remainingText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.onSecondary,
     flexShrink: 0,
   },
 
   // Transactions
   transactionsLabel: {
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
     marginTop: 6,

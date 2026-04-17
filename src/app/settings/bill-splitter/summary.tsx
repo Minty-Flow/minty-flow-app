@@ -229,7 +229,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.surface,
   },
   title: {
-    fontSize: 24,
+    fontSize: theme.typography.displaySmall.fontSize,
     fontWeight: "700",
     color: theme.colors.onSurface,
     marginBottom: 16,
@@ -249,7 +249,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 8,
   },
   payerLabel: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "600",
     color: theme.colors.onSecondary,
     textTransform: "uppercase",
@@ -273,7 +273,7 @@ const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.primary,
   },
   chipText: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     fontWeight: "500",
     color: theme.colors.onSurface,
   },
@@ -297,12 +297,12 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
   },
   totalsLabel: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     fontWeight: "500",
     color: theme.colors.onSecondary,
   },
   totalsAmount: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
@@ -324,7 +324,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   nameText: {
     flex: 1,
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
@@ -334,7 +334,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 6,
   },
   amountText: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },

@@ -176,7 +176,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 30,
   },
   label: {
-    fontSize: 12,
+    ...theme.typography.labelMedium,
     fontWeight: "600",
     color: theme.colors.onSurface,
     letterSpacing: 0.5,
@@ -186,7 +186,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
   },
   errorText: {
-    fontSize: 12,
+    ...theme.typography.labelMedium,
     color: theme.colors.error,
     marginTop: 4,
     textAlign: "center",

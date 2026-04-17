@@ -22,7 +22,7 @@ export const accountModifyStyles = StyleSheet.create((theme) => ({
     gap: 10,
   },
   label: {
-    fontSize: 12,
+    ...theme.typography.labelMedium,
     fontWeight: "600",
     color: theme.colors.onSurface,
     letterSpacing: 0.5,
@@ -53,12 +53,11 @@ export const accountModifyStyles = StyleSheet.create((theme) => ({
     gap: 10,
   },
   switchLabel: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
   },
   errorText: {
-    fontSize: 12,
+    ...theme.typography.labelMedium,
     color: theme.colors.error,
     marginTop: 4,
     textAlign: "center",
@@ -75,7 +74,7 @@ export const accountModifyStyles = StyleSheet.create((theme) => ({
     color: theme.colors.error,
   },
   deleteText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.error,
   },
@@ -83,7 +82,7 @@ export const accountModifyStyles = StyleSheet.create((theme) => ({
     color: theme.colors.onSurface,
   },
   archiveText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
@@ -98,12 +97,12 @@ export const accountModifyStyles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   cancelText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
   saveText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onPrimary,
   },
@@ -122,7 +121,7 @@ export const accountModifyStyles = StyleSheet.create((theme) => ({
   },
   primaryAccountHint: {
     flex: 1,
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     color: theme.colors.customColors.semi,
   },
 }))

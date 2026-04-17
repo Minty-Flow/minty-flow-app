@@ -211,7 +211,7 @@ const styles = StyleSheet.create((theme) => ({
     width: "100%",
   },
   headerButtonText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
   },
   emptyWrapper: {
@@ -229,14 +229,14 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 20,
   },
   emptyTitle: {
-    fontSize: 20,
+    ...theme.typography.titleMedium,
     fontWeight: "600",
     color: theme.colors.onSurface,
     marginBottom: 10,
     textAlign: "center",
   },
   emptyDescription: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.onSecondary,
     textAlign: "center",
     marginBottom: 20,

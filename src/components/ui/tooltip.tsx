@@ -177,7 +177,7 @@ export const TooltipProvider = ({ children }: { children: ReactNode }) => {
     },
     tooltipText: {
       color: t.colors.onSecondary,
-      fontSize: 12,
+      fontSize: t.typography.labelMedium.fontSize,
       textAlign: "center",
     },
   }))

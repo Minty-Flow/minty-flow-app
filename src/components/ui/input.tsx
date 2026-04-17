@@ -80,7 +80,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.surface,
     paddingHorizontal: 12,
     paddingVertical: 4,
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSurface,
     shadowColor: theme.colors.shadow,
     shadowOffset: { width: 0, height: 1 },
@@ -91,7 +91,7 @@ const styles = StyleSheet.create((theme) => ({
       outlineStyle: "none",
       transitionProperty: "border-color, box-shadow",
       transitionDuration: "200ms",
-      fontSize: 14,
+      fontSize: theme.typography.labelLarge.fontSize,
     },
     _android: {
       paddingTop: 8,

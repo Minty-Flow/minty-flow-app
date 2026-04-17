@@ -44,6 +44,6 @@ const styles = StyleSheet.create((theme) => ({
   message: {
     flex: 1,
     color: theme.colors.primary,
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
   },
 }))

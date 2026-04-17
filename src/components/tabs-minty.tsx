@@ -121,8 +121,7 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onPrimary,
   },
   label: {
-    fontSize: 14,
-    fontWeight: "500",
+    ...theme.typography.labelLarge,
     color: theme.colors.onSurface,
   },
   labelActive: {

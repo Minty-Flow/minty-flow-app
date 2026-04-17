@@ -86,11 +86,11 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.customColors.expense,
   },
   textSm: {
-    fontSize: 11,
+    ...theme.typography.labelXSmall,
     fontWeight: "600",
   },
   textMd: {
-    fontSize: 13,
+    ...theme.typography.bodyMedium,
     fontWeight: "600",
   },
 }))
