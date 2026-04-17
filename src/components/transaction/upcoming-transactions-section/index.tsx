@@ -111,6 +111,14 @@ export function UpcomingTransactionsSection({
     }
   }, [toAutoConfirm, updateDateUponConfirmation])
 
+  // Start the service once after hydration — separated from scheduleTransactions
+  // so start() is not called on every upcoming change (it is a no-op when already
+  // active, but the repeated call is misleading).
+  useEffect(() => {
+    if (!isHydrated) return
+    autoConfirmationService.start()
+  }, [isHydrated])
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional extra deps
   useEffect(() => {
     if (!isHydrated) return
@@ -120,7 +128,6 @@ export function UpcomingTransactionsSection({
       requireConfirmation,
       updateDateUponConfirmation,
     })
-    autoConfirmationService.start()
     autoConfirmationService.scheduleTransactions(upcoming)
   }, [
     upcoming,
@@ -154,8 +161,10 @@ export function UpcomingTransactionsSection({
   )
 
   const handleConfirmAll = useCallback(async () => {
-    const now = Date.now()
-    const toConfirm = pending.filter((r) => confirmable(r.transaction, now))
+    // Use minute-aligned nowMs (same clock as the UI) so "Confirm All" only
+    // confirms transactions that are already shown as confirmable — not ones
+    // up to 59 seconds early via a raw Date.now() read.
+    const toConfirm = pending.filter((r) => confirmable(r.transaction, nowMs))
     if (toConfirm.length === 0) return
     const ids = toConfirm.map((r) => r.transaction.id)
     const opts = { updateTransactionDate: updateDateUponConfirmation }
@@ -166,7 +175,7 @@ export function UpcomingTransactionsSection({
         title: t("components.transactionForm.toast.upcomingConfirmAllFailed"),
       })
     }
-  }, [pending, updateDateUponConfirmation, t])
+  }, [pending, updateDateUponConfirmation, t, nowMs])
 
   const openConfirmAllModal = useCallback(
     () => setConfirmAllModalVisible(true),

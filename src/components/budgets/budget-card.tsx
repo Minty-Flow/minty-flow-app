@@ -36,7 +36,9 @@ function loadAlertedKeys(): Set<string> {
   }
 }
 
-function getBudgetPeriodKey(budget: Budget): string {
+type BudgetAlertCtx = Pick<Budget, "id" | "period" | "startDate">
+
+function getBudgetPeriodKey(budget: BudgetAlertCtx): string {
   const now = new Date()
   switch (budget.period) {
     case "daily":
@@ -54,13 +56,17 @@ function getBudgetPeriodKey(budget: Budget): string {
   }
 }
 
+// Module-level singleton — correct in production (shared across all BudgetCard
+// instances). In development, fast-refresh re-initializes this in-memory Set
+// while MMKV retains the persisted keys, so alerts may appear "stuck" after a
+// hot reload. Reload the full app (not just the module) to clear dev state.
 const alertedKeys = loadAlertedKeys()
 
-function hasAlertedInPeriod(budget: Budget): boolean {
+function hasAlertedInPeriod(budget: BudgetAlertCtx): boolean {
   return alertedKeys.has(`${budget.id}:${getBudgetPeriodKey(budget)}`)
 }
 
-function markAlerted(budget: Budget): void {
+function markAlerted(budget: BudgetAlertCtx): void {
   const key = `${budget.id}:${getBudgetPeriodKey(budget)}`
   alertedKeys.add(key)
   budgetAlertStorage.set(ALERTED_STORAGE_KEY, JSON.stringify([...alertedKeys]))
@@ -89,18 +95,40 @@ function BudgetCardInner({
   const spent = spentAmount
   const limit = budget.amount
 
+  // Destructure to stable primitives so the effect only re-runs when alert-relevant
+  // fields change, not on every budget field mutation (budget is a new ref each emission).
+  const budgetId = budget.id
+  const budgetName = budget.name
+  const alertThreshold = budget.alertThreshold
+  const budgetPeriod = budget.period
+  const budgetStartDateMs = budget.startDate.getTime()
+
   useEffect(() => {
-    if (!budget.alertThreshold || hasAlertedInPeriod(budget) || limit <= 0)
-      return
-    if (spent / limit >= budget.alertThreshold / 100) {
-      markAlerted(budget)
+    if (!alertThreshold || limit <= 0) return
+    const ctx: BudgetAlertCtx = {
+      id: budgetId,
+      period: budgetPeriod,
+      startDate: new Date(budgetStartDateMs),
+    }
+    if (hasAlertedInPeriod(ctx)) return
+    if (spent / limit >= alertThreshold / 100) {
+      markAlerted(ctx)
       Toast.show({
         type: "info",
-        title: budget.name,
+        title: budgetName,
         description: t("screens.settings.budgets.card.alertThresholdReached"),
       })
     }
-  }, [spent, limit, budget, t])
+  }, [
+    spent,
+    limit,
+    budgetId,
+    alertThreshold,
+    budgetPeriod,
+    budgetStartDateMs,
+    budgetName,
+    t,
+  ])
 
   const ratio = limit > 0 ? Math.min(spent / limit, 1) : 0
   const isOverBudget = spent > limit

@@ -94,7 +94,7 @@ Budgets track spending against a limit for a given period. Each budget links to 
 - Mapper: `src/database/utils/model-to-budget.ts` — takes `accountIds[]` and `categoryIds[]` as args (fetched from join tables by the service)
 - Screens: `src/app/settings/budgets/index.tsx` (list) + `src/app/settings/budgets/[budgetId]/index.tsx` (detail: transactions, progress, period) + `src/app/settings/budgets/[budgetId]/modify.tsx` (create/edit)
 - Components: `src/components/budgets/budget-card.tsx`, `src/components/budgets/budget-modify/`
-- **Known gaps**: none currently
+- **Known gaps**: Rolling period windows (`daily`/`weekly`/`monthly`/`yearly`) are computed once at subscribe time. If the app is left open past midnight, the window is stale until the component remounts or the app returns to foreground.
 
 ### Goals
 
