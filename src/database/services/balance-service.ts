@@ -69,7 +69,10 @@ export async function getBalanceAtTransaction(
   let balance = baseBalance
 
   for (const tx of txs) {
-    // Skip snapshotTx itself if included
+    // Skip snapshotTx itself — Q.between is inclusive on both ends, so the
+    // snapshot transaction is included in the result set. Only one ID is
+    // skipped; if multiple transactions share the exact same millisecond as
+    // snapshotTx, they are counted normally (risk is minimal in practice).
     if (snapshotTx && tx.id === snapshotTx.id) continue
     balance += getBalanceDelta(tx.amount, tx.type)
   }

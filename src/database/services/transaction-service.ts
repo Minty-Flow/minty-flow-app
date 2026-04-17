@@ -419,7 +419,9 @@ export const confirmTransactionSync = async (
     throw new Error(`Transaction with id ${identifier} not found`)
   }
 
-  // If confirming but already confirmed, or holding but already pending – no-op.
+  // Fast-path: skip pair-lookup and write entirely for the common case.
+  // The write block re-checks isPending on a fresh fetch to guard against races
+  // (e.g. concurrent calls via Promise.all in handleConfirmAll).
   if (shouldConfirm && !transaction.isPending) return
   if (!shouldConfirm && transaction.isPending) return
 
@@ -433,19 +435,25 @@ export const confirmTransactionSync = async (
     pair = await findTransactionModel(transferPairId)
   }
 
-  // Build the list of transactions to update before entering the write.
-  // **Race condition note**: `transaction` and `pair` are fetched outside the write block.
-  // The isPending guards above (lines ~423-424) use this snapshot, so a second rapid
-  // tap that confirms between the fetch and the write could slip through. In a
-  // single-user mobile context this is extremely unlikely, but if `confirmTransactionSync`
-  // is ever called from a concurrent context the guard should be re-checked inside the write.
-  const toUpdate: TransactionModel[] = [transaction]
-  if (pair) {
-    if (shouldConfirm && pair.isPending) toUpdate.push(pair)
-    if (!shouldConfirm && !pair.isPending) toUpdate.push(pair)
-  }
-
   return database.write(async () => {
+    // Re-fetch inside the write to guard against the race where a concurrent call
+    // (e.g. Promise.all in handleConfirmAll) slips past the pre-write isPending guards.
+    // WatermelonDB serializes writes, so this fetch reflects the latest committed state.
+    const freshTx = await transactionsCollection().find(transaction.id)
+    if (shouldConfirm && !freshTx.isPending) return
+    if (!shouldConfirm && freshTx.isPending) return
+
+    let freshPair: TransactionModel | null = null
+    if (pair) {
+      freshPair = await transactionsCollection().find(pair.id)
+    }
+
+    const toUpdate: TransactionModel[] = [freshTx]
+    if (freshPair) {
+      if (shouldConfirm && freshPair.isPending) toUpdate.push(freshPair)
+      if (!shouldConfirm && !freshPair.isPending) toUpdate.push(freshPair)
+    }
+
     // Fetch all accounts inside the write block to ensure we read the latest balance
     // and prevent concurrent confirmation calls from applying deltas to stale snapshots.
     // **Concurrency safety**: WatermelonDB guarantees sequential execution within a write,

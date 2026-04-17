@@ -152,12 +152,8 @@ async function saveToDevice(
  * Note: Backup includes soft-deleted (trashed) transactions. This is intentional—users
  * may want to recover deleted transactions from an older backup. Imports must handle this.
  */
-async function generateJsonBackup(): Promise<{
-  uri: string
-  fileName: string
-}> {
-  const dir = await prepareExportDir()
-
+/** Fetch all tables and return a MintyFlowBackup object without writing to disk. */
+async function buildBackupInMemory(): Promise<MintyFlowBackup> {
   const [
     categories,
     tags,
@@ -188,7 +184,7 @@ async function generateJsonBackup(): Promise<{
     database.get("goal_accounts").query().fetch(),
   ])
 
-  const backup: MintyFlowBackup = {
+  return {
     meta: {
       version: 1,
       schemaVersion: SCHEMA_VERSION,
@@ -211,7 +207,14 @@ async function generateJsonBackup(): Promise<{
       goal_accounts: goalAccounts.map(toRawRow),
     },
   }
+}
 
+async function generateJsonBackup(): Promise<{
+  uri: string
+  fileName: string
+}> {
+  const dir = await prepareExportDir()
+  const backup = await buildBackupInMemory()
   const fileName = `minty-flow-backup-${Date.now()}.json`
   const uri = `${dir}${fileName}`
   await FileSystem.writeAsStringAsync(uri, JSON.stringify(backup, null, 2), {
@@ -268,12 +271,18 @@ async function generateCsvExport(): Promise<{ uri: string; fileName: string }> {
   function escapeCsvField(value: unknown): string {
     if (value === null || value === undefined) return ""
     const str = String(value)
-    if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+
+    if (
+      str.includes(",") ||
+      str.includes('"') ||
+      str.includes("\n") ||
+      str.includes("\r")
+    ) {
       return `"${str.replace(/"/g, '""')}"`
     }
+
     return str
   }
-
   const rows = transactions.map((model) => {
     const r = model._raw as Record<string, unknown>
     const dateMs = r.transaction_date as number | null
@@ -301,7 +310,7 @@ async function generateCsvExport(): Promise<{ uri: string; fileName: string }> {
     ].join(",")
   })
 
-  const csv = [headers.join(","), ...rows].join("\n")
+  const csv = [headers.join(","), ...rows].join("\r\n")
   const fileName = `minty-flow-transactions-${Date.now()}.csv`
   const uri = `${dir}${fileName}`
   await FileSystem.writeAsStringAsync(uri, csv, {
@@ -493,6 +502,52 @@ export function validateBackup(json: string): ValidateBackupResult {
             success: false,
             reason: "validation_error",
             message: `Invalid row: transaction_date must be a number (Unix ms, row ${i})`,
+          }
+        }
+      }
+    }
+
+    // Validate critical fields in account rows
+    const accounts = (data as Record<string, unknown>).accounts as unknown[]
+    if (Array.isArray(accounts)) {
+      for (let i = 0; i < accounts.length; i++) {
+        const row = accounts[i] as Record<string, unknown> | undefined
+        if (!row) continue
+        if (typeof row.id !== "string" || !row.id.trim()) {
+          return {
+            success: false,
+            reason: "validation_error",
+            message: `Invalid account row: id (row ${i})`,
+          }
+        }
+        if (typeof row.name !== "string" || !row.name.trim()) {
+          return {
+            success: false,
+            reason: "validation_error",
+            message: `Invalid account row: name (row ${i})`,
+          }
+        }
+      }
+    }
+
+    // Validate critical fields in category rows
+    const categories = (data as Record<string, unknown>).categories as unknown[]
+    if (Array.isArray(categories)) {
+      for (let i = 0; i < categories.length; i++) {
+        const row = categories[i] as Record<string, unknown> | undefined
+        if (!row) continue
+        if (typeof row.id !== "string" || !row.id.trim()) {
+          return {
+            success: false,
+            reason: "validation_error",
+            message: `Invalid category row: id (row ${i})`,
+          }
+        }
+        if (typeof row.name !== "string" || !row.name.trim()) {
+          return {
+            success: false,
+            reason: "validation_error",
+            message: `Invalid category row: name (row ${i})`,
           }
         }
       }
@@ -744,12 +799,16 @@ export async function importBackup(
     // 1️⃣ Build valid ID sets for FK validation (before any DB writes).
     const validAccountIds = new Set(data.accounts.map((a: RawRow) => a.id))
     const validCategoryIds = new Set(data.categories.map((c: RawRow) => c.id))
+    const validTagIds = new Set(data.tags.map((t: RawRow) => t.id))
     const validRecurringIds = new Set(
       data.recurring_transactions.map((r: RawRow) => r.id),
     )
     const validBudgetIds = new Set(data.budgets.map((b: RawRow) => b.id))
     const validGoalIds = new Set(data.goals.map((g: RawRow) => g.id))
     const validLoanIds = new Set(data.loans.map((l: RawRow) => l.id))
+    const validTransactionIds = new Set(
+      data.transactions.map((t: RawRow) => t.id),
+    )
 
     // 2️⃣ Validate transactions before writing to DB.
     // This guards against data loss: if validation fails, no DB mutation happens.
@@ -793,40 +852,127 @@ export async function importBackup(
       }
     }
 
-    // 3️⃣ Reset DB then insert all tiers.
-    // **Note on atomicity**: `unsafeResetDatabase` operates at the SQLite level and
-    // issues its own DDL outside the WatermelonDB write transaction. The `database.write()`
-    // wrapper serializes concurrent writes but does NOT roll back the reset if a crash
-    // or OOM occurs between the reset and the first insertRows call — the database would
-    // be left empty with no recovery path. FK validation in step 2 prevents inserting
-    // broken data, but cannot guard against process-kill mid-import.
-    await database.write(async () => {
-      // Reset the entire database before inserting.
-      await database.unsafeResetDatabase()
+    //  2️⃣.b️ Validate join table rows for dangling FKs before any DB write.
+    for (const row of data.transaction_tags) {
+      const r = row as RawRow
+      if (!validTransactionIds.has(r.transaction_id as string)) {
+        throw new Error(
+          `transaction_tags row ${r.id} references invalid transaction_id ${r.transaction_id}`,
+        )
+      }
+      if (!validTagIds.has(r.tag_id as string)) {
+        throw new Error(
+          `transaction_tags row ${r.id} references invalid tag_id ${r.tag_id}`,
+        )
+      }
+    }
+    for (const row of data.budget_accounts) {
+      const r = row as RawRow
+      if (!validBudgetIds.has(r.budget_id as string)) {
+        throw new Error(
+          `budget_accounts row ${r.id} references invalid budget_id ${r.budget_id}`,
+        )
+      }
+      if (!validAccountIds.has(r.account_id as string)) {
+        throw new Error(
+          `budget_accounts row ${r.id} references invalid account_id ${r.account_id}`,
+        )
+      }
+    }
+    for (const row of data.budget_categories) {
+      const r = row as RawRow
+      if (!validBudgetIds.has(r.budget_id as string)) {
+        throw new Error(
+          `budget_categories row ${r.id} references invalid budget_id ${r.budget_id}`,
+        )
+      }
+      if (!validCategoryIds.has(r.category_id as string)) {
+        throw new Error(
+          `budget_categories row ${r.id} references invalid category_id ${r.category_id}`,
+        )
+      }
+    }
+    for (const row of data.goal_accounts) {
+      const r = row as RawRow
+      if (!validGoalIds.has(r.goal_id as string)) {
+        throw new Error(
+          `goal_accounts row ${r.id} references invalid goal_id ${r.goal_id}`,
+        )
+      }
+      if (!validAccountIds.has(r.account_id as string)) {
+        throw new Error(
+          `goal_accounts row ${r.id} references invalid account_id ${r.account_id}`,
+        )
+      }
+    }
 
-      // Tier 1: no FK dependencies
-      await insertRows("categories", data.categories)
-      await insertRows("tags", data.tags)
-      await insertRows("accounts", data.accounts)
+    // 3️⃣ Snapshot current data so we can restore if the import fails.
+    // This does not protect against process-kill mid-unsafeResetDatabase (a WatermelonDB
+    // architectural limitation), but it does guard against any JS-layer error during
+    // the tiered inserts — the most common failure mode.
+    const snapshot = await buildBackupInMemory()
 
-      // Tier 2: depend on Tier 1
-      await insertRows("recurring_transactions", data.recurring_transactions)
-      await insertRows("budgets", data.budgets)
-      await insertRows("goals", data.goals)
-      await insertRows("loans", data.loans)
+    // 4️⃣ Reset DB then insert all tiers.
+    // **Note on atomicity**: `unsafeResetDatabase` issues DDL outside the WatermelonDB
+    // write transaction. A process-kill between the reset and the first insertRows call
+    // leaves the DB empty with no recovery path. The snapshot above mitigates JS-layer
+    // failures but cannot recover from a mid-DDL process kill.
+    try {
+      await database.write(async () => {
+        await database.unsafeResetDatabase()
 
-      // Tier 3: transactions
-      await insertRows("transactions", data.transactions)
+        // Tier 1: no FK dependencies
+        await insertRows("categories", data.categories)
+        await insertRows("tags", data.tags)
+        await insertRows("accounts", data.accounts)
 
-      // Tier 4: transfers
-      await insertRows("transfers", data.transfers)
+        // Tier 2: depend on Tier 1
+        await insertRows("recurring_transactions", data.recurring_transactions)
+        await insertRows("budgets", data.budgets)
+        await insertRows("goals", data.goals)
+        await insertRows("loans", data.loans)
 
-      // Tier 5: join tables
-      await insertRows("transaction_tags", data.transaction_tags)
-      await insertRows("budget_accounts", data.budget_accounts)
-      await insertRows("budget_categories", data.budget_categories)
-      await insertRows("goal_accounts", data.goal_accounts)
-    })
+        // Tier 3: transactions
+        await insertRows("transactions", data.transactions)
+
+        // Tier 4: transfers
+        await insertRows("transfers", data.transfers)
+
+        // Tier 5: join tables
+        await insertRows("transaction_tags", data.transaction_tags)
+        await insertRows("budget_accounts", data.budget_accounts)
+        await insertRows("budget_categories", data.budget_categories)
+        await insertRows("goal_accounts", data.goal_accounts)
+      })
+    } catch (importError) {
+      // Import failed after the DB was wiped — attempt to restore the pre-import snapshot.
+      try {
+        await database.write(async () => {
+          await database.unsafeResetDatabase()
+          const s = snapshot.data
+          await insertRows("categories", s.categories)
+          await insertRows("tags", s.tags)
+          await insertRows("accounts", s.accounts)
+          await insertRows("recurring_transactions", s.recurring_transactions)
+          await insertRows("budgets", s.budgets)
+          await insertRows("goals", s.goals)
+          await insertRows("loans", s.loans)
+          await insertRows("transactions", s.transactions)
+          await insertRows("transfers", s.transfers)
+          await insertRows("transaction_tags", s.transaction_tags)
+          await insertRows("budget_accounts", s.budget_accounts)
+          await insertRows("budget_categories", s.budget_categories)
+          await insertRows("goal_accounts", s.goal_accounts)
+        })
+      } catch {
+        // Restore also failed — surface a descriptive error so the caller can prompt
+        // the user to manually re-import from their last exported backup file.
+        throw new Error(
+          `Import failed and automatic restore failed: ${importError instanceof Error ? importError.message : String(importError)}. Please re-import from your last exported backup file.`,
+        )
+      }
+      throw importError
+    }
 
     // 5️⃣ Count imported rows
     const counts: Record<string, number> = {}
