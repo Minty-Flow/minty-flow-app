@@ -42,7 +42,7 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.error,
   },
   deleteText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.error,
   },

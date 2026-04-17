@@ -16,8 +16,8 @@ export const smartInputStyles = StyleSheet.create((t) => ({
   },
   label: {
     color: t.colors.customColors.semi,
-    fontSize: 12,
-    fontWeight: "bold",
+    ...t.typography.labelMedium,
+    fontWeight: "600",
     letterSpacing: 1,
   },
   inputContainer: {
@@ -33,7 +33,7 @@ export const smartInputStyles = StyleSheet.create((t) => ({
     paddingHorizontal: 20,
   },
   currencySymbol: (type?: TransactionType) => ({
-    fontSize: 30,
+    fontSize: t.typography.displaySmall.fontSize,
     lineHeight: 44,
     color:
       type === TransactionTypeEnum.EXPENSE
@@ -41,13 +41,13 @@ export const smartInputStyles = StyleSheet.create((t) => ({
         : type === TransactionTypeEnum.INCOME
           ? t.colors.customColors.income
           : t.colors.onSurface,
-    fontWeight: "500",
+    fontWeight: t.typography.displaySmall.fontWeight,
   }),
   mainInput: {
     flex: 1,
-    fontSize: 30,
+    fontSize: t.typography.displaySmall.fontSize,
     color: t.colors.onSurface,
-    fontWeight: "bold",
+    fontWeight: t.typography.displaySmall.fontWeight,
     height: "100%",
     padding: 0,
     includeFontPadding: false,
@@ -81,7 +81,7 @@ export const smartInputStyles = StyleSheet.create((t) => ({
   },
   mathBtnText: {
     color: t.colors.onSurface,
-    fontSize: 22,
+    ...t.typography.headlineMedium,
     fontWeight: "600",
   },
   okBtn: {
@@ -91,7 +91,7 @@ export const smartInputStyles = StyleSheet.create((t) => ({
   okBtnText: {
     color: t.colors.onPrimary,
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: t.typography.bodyLarge.fontSize,
   },
   formattedChip: {
     marginTop: 12,
@@ -105,11 +105,11 @@ export const smartInputStyles = StyleSheet.create((t) => ({
   },
   formattedChipLabel: {
     color: t.colors.customColors.semi,
-    fontSize: 13,
+    fontSize: t.typography.bodyMedium.fontSize,
   },
   formattedChipValue: {
     color: t.colors.onSurface,
-    fontSize: 15,
+    ...t.typography.bodyLarge,
     fontWeight: "600",
   },
   previewContainer: {
@@ -133,21 +133,21 @@ export const smartInputStyles = StyleSheet.create((t) => ({
   },
   previewLabel: {
     color: t.colors.customColors.semi,
-    fontSize: 14,
+    fontSize: t.typography.labelLarge.fontSize,
   },
   previewValue: {
     color: t.colors.onSurface,
-    fontSize: 16,
+    fontSize: t.typography.bodyLarge.fontSize,
     fontWeight: "bold",
   },
   previewError: {
     color: t.colors.error,
-    fontSize: 14,
+    fontSize: t.typography.labelLarge.fontSize,
     fontWeight: "500",
   },
   fieldError: {
     color: t.colors.error,
-    fontSize: 12,
+    fontSize: t.typography.labelMedium.fontSize,
     marginTop: 6,
   },
   semiColor: {

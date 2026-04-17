@@ -144,7 +144,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   sectionTitle: {
     paddingHorizontal: 20,
-    fontSize: 11,
+    ...theme.typography.labelXSmall,
     fontWeight: "600",
     letterSpacing: 0.8,
     textTransform: "uppercase",

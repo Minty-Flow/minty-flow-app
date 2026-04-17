@@ -185,11 +185,10 @@ const contactItemStyles = StyleSheet.create((theme) => ({
     gap: 2,
   },
   contactName: {
-    fontWeight: "500",
-    fontSize: 18,
+    ...theme.typography.headlineSmall,
   },
   phoneNumber: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     opacity: 0.7,
   },
   avatar: {
@@ -202,8 +201,7 @@ const contactItemStyles = StyleSheet.create((theme) => ({
   },
   avatarText: {
     color: theme.colors.onSecondary,
-    fontWeight: "600",
-    fontSize: 16,
+    ...theme.typography.titleSmall,
   },
 }))
 

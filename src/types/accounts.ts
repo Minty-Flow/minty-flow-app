@@ -47,21 +47,3 @@ export interface Account {
   updatedAt: Date
   sortOrder: number | null
 }
-
-/**
- * Account summary type for list views and cards.
- * Includes calculated fields like monthly stats.
- */
-// export interface AccountSummary {
-//   id: string
-//   name: string
-//   type: string
-//   icon: IconSvgName
-//   iconColor: string
-//   balance: number
-//   currency: string
-//   currencySymbol: string
-//   monthlyIn: number
-//   monthlyOut: number
-//   monthlyNet: number
-// }

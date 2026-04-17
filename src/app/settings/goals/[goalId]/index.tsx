@@ -431,7 +431,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 4,
   },
   goalName: {
-    fontSize: 20,
+    ...theme.typography.titleMedium,
     fontWeight: "700",
     color: theme.colors.onSurface,
   },
@@ -447,7 +447,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
   },
   typeBadgeText: {
-    fontSize: 11,
+    ...theme.typography.labelXSmall,
     fontWeight: "600",
     color: theme.colors.onSecondary,
   },
@@ -457,7 +457,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 6,
   },
   archivedText: {
-    fontSize: 11,
+    ...theme.typography.labelXSmall,
     fontWeight: "600",
     color: theme.colors.primary,
   },
@@ -471,21 +471,21 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
   },
   completedText: {
-    fontSize: 11,
+    ...theme.typography.labelXSmall,
     fontWeight: "600",
     color: theme.colors.customColors.income,
   },
   dateText: {
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     color: theme.colors.onSecondary,
   },
   description: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.onSecondary,
     lineHeight: 20,
   },
   accountsText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.onSecondary,
   },
 
@@ -509,13 +509,13 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
   },
   amountText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.onSecondary,
     flex: 1,
     marginRight: 8,
   },
   remainingText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.onSecondary,
     flexShrink: 0,
   },
@@ -527,14 +527,14 @@ const styles = StyleSheet.create((theme) => ({
     gap: 6,
   },
   pendingNoticeText: {
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     color: theme.colors.onSecondary,
     flex: 1,
   },
 
   // Transactions
   transactionsLabel: {
-    fontSize: 15,
+    ...theme.typography.bodyLarge,
     fontWeight: "600",
     color: theme.colors.onSurface,
     marginTop: 6,

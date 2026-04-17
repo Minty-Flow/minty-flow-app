@@ -20,7 +20,7 @@ export const categoryModifyStyles = StyleSheet.create((theme) => ({
     gap: 10,
   },
   label: {
-    fontSize: 12,
+    ...theme.typography.labelMedium,
     fontWeight: "600",
     color: theme.colors.onSurface,
     letterSpacing: 0.5,
@@ -30,7 +30,7 @@ export const categoryModifyStyles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
   },
   errorText: {
-    fontSize: 12,
+    ...theme.typography.labelMedium,
     color: theme.colors.error,
     marginTop: 4,
     textAlign: "center",
@@ -47,7 +47,7 @@ export const categoryModifyStyles = StyleSheet.create((theme) => ({
     color: theme.colors.error,
   },
   deleteText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.error,
   },
@@ -62,12 +62,12 @@ export const categoryModifyStyles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   cancelText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
   saveText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onPrimary,
   },

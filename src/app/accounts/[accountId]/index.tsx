@@ -379,7 +379,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.secondary,
   },
   accountName: {
-    fontSize: 18,
+    ...theme.typography.headlineSmall,
     fontWeight: "700",
     color: theme.colors.onSecondary,
   },
@@ -390,17 +390,17 @@ const styles = StyleSheet.create((theme) => ({
     gap: 6,
   },
   metaText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "500",
     color: theme.colors.customColors.semi,
   },
   metaSeparator: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.customColors.semi,
     marginHorizontal: 2,
   },
   primaryText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "600",
     color: theme.colors.customColors.warning,
   },
@@ -410,7 +410,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 6,
   },
   archivedText: {
-    fontSize: 11,
+    ...theme.typography.labelXSmall,
     fontWeight: "600",
     color: theme.colors.primary,
   },
@@ -420,7 +420,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.secondary,
   },
   balanceLabel: {
-    fontSize: 11,
+    ...theme.typography.labelXSmall,
     fontWeight: "600",
     color: theme.colors.customColors.semi,
     letterSpacing: 1,
@@ -433,14 +433,13 @@ const styles = StyleSheet.create((theme) => ({
     gap: 8,
   },
   balanceAmount: {
-    fontSize: 32,
-    fontWeight: "800",
+    fontSize: theme.typography.displayMedium.fontSize,
+    fontWeight: "700",
     color: theme.colors.onSecondary,
     letterSpacing: -0.5,
   },
   currencyCode: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.customColors.semi,
   },
 
@@ -461,7 +460,7 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
   },
   summaryPillAmount: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "700",
   },
   summaryNetCard: {
@@ -477,12 +476,11 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
   },
   summaryNetLabel: {
-    fontSize: 14,
-    fontWeight: "500",
+    ...theme.typography.labelLarge,
     color: theme.colors.onSecondary,
   },
   summaryNetAmount: {
-    fontSize: 15,
+    ...theme.typography.bodyLarge,
     fontWeight: "700",
   },
 }))

@@ -71,7 +71,7 @@ const styles = StyleSheet.create((theme) => ({
     height: "100%",
   },
   avatarText: {
-    fontSize: 48,
+    ...theme.typography.displayLarge,
     fontWeight: "600",
     color: theme.colors.surface,
     lineHeight: 56,
@@ -79,7 +79,7 @@ const styles = StyleSheet.create((theme) => ({
     includeFontPadding: false,
   },
   profileName: {
-    fontSize: 20,
+    ...theme.typography.titleMedium,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },

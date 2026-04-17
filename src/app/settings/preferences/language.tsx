@@ -1,4 +1,3 @@
-// import * as Updates from "expo-updates"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
@@ -63,9 +62,6 @@ export default function LanguageOptionsScreen() {
       setLanguageCode(pendingLang)
 
       try {
-        // use in production
-        // await Updates.reloadAsync()
-
         RNRestart.restart()
       } catch {
         logger.warn("this wont work in development")
@@ -154,7 +150,7 @@ const styles = StyleSheet.create((theme) => ({
     marginTop: 8,
   },
   sectionLabelText: {
-    fontSize: 11,
+    ...theme.typography.labelXSmall,
     fontWeight: "600",
     letterSpacing: 0.8,
     color: theme.colors.customColors?.semi,
@@ -176,8 +172,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 2,
   },
   rowLabel: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
   },
   divider: {

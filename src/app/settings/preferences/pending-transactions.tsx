@@ -265,7 +265,7 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: "space-between",
   },
   toggleTitle: {
-    fontSize: 18,
+    fontSize: theme.typography.headlineSmall.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
     flex: 1,
@@ -285,7 +285,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.primary,
   },
   togglePillText: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSecondary,
   },
@@ -293,7 +293,7 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onPrimary,
   },
   toggleDescription: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.customColors.semi,
     lineHeight: 20,
     marginTop: 6,

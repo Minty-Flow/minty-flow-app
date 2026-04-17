@@ -127,10 +127,10 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: 4,
   },
   rangeLabel: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
   },
   moreOptionsText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.primary,
     fontWeight: "600",
   },

@@ -20,7 +20,7 @@ export const goalModifyStyles = StyleSheet.create((theme) => ({
     gap: 10,
   },
   label: {
-    fontSize: 12,
+    ...theme.typography.labelMedium,
     fontWeight: "600",
     color: theme.colors.onSurface,
     letterSpacing: 0.5,
@@ -38,23 +38,20 @@ export const goalModifyStyles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
   },
   targetDateText: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
   },
   targetDatePlaceholder: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSecondary,
     opacity: 0.6,
   },
-  settingsList: {},
   switchLabel: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
   },
   errorText: {
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     color: theme.colors.error,
     marginTop: 4,
     textAlign: "center",
@@ -71,7 +68,7 @@ export const goalModifyStyles = StyleSheet.create((theme) => ({
     color: theme.colors.error,
   },
   deleteText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.error,
   },
@@ -79,7 +76,7 @@ export const goalModifyStyles = StyleSheet.create((theme) => ({
     color: theme.colors.onSecondary,
   },
   archiveText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSecondary,
   },
@@ -94,12 +91,12 @@ export const goalModifyStyles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   cancelText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
   saveText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onPrimary,
   },

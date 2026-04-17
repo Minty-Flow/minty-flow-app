@@ -80,12 +80,12 @@ const styles = StyleSheet.create((theme) => ({
     gap: 2,
   },
   name: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
   type: {
-    fontSize: 10,
+    fontSize: theme.typography.labelSmall.fontSize,
     color: theme.colors.customColors.semi,
     letterSpacing: 0.5,
   },

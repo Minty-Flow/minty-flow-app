@@ -105,7 +105,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingTop: 20,
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.onSecondary,
     letterSpacing: 0.5,
   },

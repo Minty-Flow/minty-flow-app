@@ -107,11 +107,11 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   settingLabel: {
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
   },
   settingLabelDescription: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "400",
     color: theme.colors.customColors.semi,
   },

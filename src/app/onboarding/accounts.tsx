@@ -193,13 +193,13 @@ const styles = StyleSheet.create((theme) => ({
     paddingBottom: 24,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.onSecondary,
     lineHeight: 20,
     marginBottom: 24,
   },
   sectionLabel: {
-    fontSize: 11,
+    fontSize: theme.typography.labelXSmall.fontSize,
     fontWeight: "700",
     letterSpacing: 1,
     textTransform: "uppercase",
@@ -233,7 +233,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   presetName: {
     flex: 1,
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
@@ -274,7 +274,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   addNewText: {
     flex: 1,
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "500",
     color: theme.colors.onSurface,
   },
@@ -287,7 +287,7 @@ const styles = StyleSheet.create((theme) => ({
     width: "100%",
   },
   nextButtonText: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onPrimary,
   },

@@ -274,7 +274,7 @@ const styles = StyleSheet.create((theme) => ({
   header: {},
   balanceContainer: { gap: 5 },
   sectionLabel: {
-    fontSize: 10,
+    fontSize: theme.typography.labelSmall.fontSize,
     fontWeight: "600",
     color: theme.colors.customColors.semi,
     letterSpacing: 0.8,
@@ -284,10 +284,10 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: "space-between",
   },
   currencyLabel: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
   },
   balanceAmount: {
-    fontSize: 24,
+    ...theme.typography.displaySmall,
     fontWeight: "600",
   },
   accountsCountContainer: {
@@ -296,7 +296,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingBlock: 10,
   },
   accountsCount: {
-    fontSize: 14,
+    ...theme.typography.labelLarge,
     fontWeight: "600",
     color: theme.colors.customColors.semi,
   },

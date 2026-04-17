@@ -191,7 +191,7 @@ const styles = UnistylesSheet.create((theme) => ({
     opacity: 0.85,
   },
   hintText: {
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     fontWeight: "500",
     color: "white",
   },
@@ -234,7 +234,7 @@ const styles = UnistylesSheet.create((theme) => ({
     elevation: 4,
   },
   addBtnText: {
-    fontSize: 15,
+    ...theme.typography.bodyLarge,
     fontWeight: "600",
   },
 }))

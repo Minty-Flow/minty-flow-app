@@ -278,7 +278,7 @@ const styles = StyleSheet.create((theme) => ({
     marginTop: 8,
   },
   sectionLabelText: {
-    fontSize: 11,
+    fontSize: theme.typography.labelXSmall.fontSize,
     fontWeight: "600",
     letterSpacing: 0.8,
     color: theme.colors.customColors?.semi,
@@ -300,12 +300,12 @@ const styles = StyleSheet.create((theme) => ({
     gap: 2,
   },
   rowLabel: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "500",
     color: theme.colors.onSurface,
   },
   rowDescription: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.customColors?.semi,
   },
   divider: {
@@ -330,17 +330,17 @@ const styles = StyleSheet.create((theme) => ({
     gap: 2,
   },
   toggleLabel: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "500",
     color: theme.colors.onSurface,
   },
   toggleDescription: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.customColors.semi,
   },
 
   previewDescription: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.customColors?.semi,
   },
   previewButtons: {
@@ -352,14 +352,14 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   previewBtnPrimaryText: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     fontWeight: "600",
   },
   previewBtnOutline: {
     flex: 1,
   },
   previewBtnOutlineText: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     fontWeight: "600",
   },
 
@@ -372,7 +372,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: 2,
   },
   resetButtonText: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     fontWeight: "600",
   },
 }))

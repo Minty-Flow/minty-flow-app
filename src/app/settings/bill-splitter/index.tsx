@@ -423,19 +423,19 @@ const styles = StyleSheet.create((theme) => ({
     gap: 8,
   },
   accountTriggerName: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
     flex: 1,
     minWidth: 0,
   },
   accountTriggerBalance: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.customColors.semi,
   },
   accountTriggerPlaceholder: {
     flex: 1,
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.customColors.semi,
   },
   chevron: {
@@ -476,13 +476,13 @@ const styles = StyleSheet.create((theme) => ({
     gap: 8,
   },
   accountPickerRowName: {
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "500",
     flex: 1,
     minWidth: 0,
   },
   accountPickerRowBalance: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
   },
 
   // Hero total display
@@ -493,16 +493,15 @@ const styles = StyleSheet.create((theme) => ({
     gap: 4,
   },
   heroAmount: {
-    fontSize: 28,
-    fontWeight: "700",
+    ...theme.typography.headlineLarge,
     color: theme.colors.onSurface,
   },
   heroOf: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSecondary,
   },
   heroTotal: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSecondary,
   },
 
@@ -536,7 +535,7 @@ const styles = StyleSheet.create((theme) => ({
     alignSelf: "center",
   },
   participantsChipText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "500",
     color: theme.colors.onSecondary,
   },
@@ -574,7 +573,7 @@ const styles = StyleSheet.create((theme) => ({
     height: 48,
   },
   summaryButtonText: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onPrimary,
   },

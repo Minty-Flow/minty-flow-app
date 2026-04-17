@@ -232,7 +232,7 @@ const styles = StyleSheet.create((theme) => ({
   label: {
     color: theme.colors.onSecondary,
     fontWeight: "700",
-    fontSize: 11,
+    fontSize: theme.typography.labelXSmall.fontSize,
     letterSpacing: 0.5,
     opacity: 0.8,
   },
@@ -247,7 +247,7 @@ const styles = StyleSheet.create((theme) => ({
   currencyCode: {
     color: theme.colors.onSecondary,
     fontWeight: "600",
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     opacity: 0.6,
   },
   incomeText: {

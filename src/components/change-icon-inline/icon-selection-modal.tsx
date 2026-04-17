@@ -307,7 +307,7 @@ const styles = StyleSheet.create((theme) => ({
     borderBottomColor: theme.colors.customColors.semi,
   },
   headerTitle: {
-    fontSize: 18,
+    ...theme.typography.headlineSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
@@ -329,7 +329,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSurface,
     padding: 0,
     minHeight: 24,
@@ -351,12 +351,11 @@ const styles = StyleSheet.create((theme) => ({
   },
   emptyStateText: {
     color: theme.colors.onSecondary,
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
   },
   emptyStateSubtext: {
     color: theme.colors.onSecondary,
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     opacity: 0.7,
   },
   iconItem: {
@@ -393,7 +392,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: 8,
   },
   selectedIconName: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.onSurface,
     fontWeight: "500",
     flex: 1,

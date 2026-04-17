@@ -78,6 +78,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   hint: {
     textAlign: "center",
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
   },
 }))

@@ -70,16 +70,14 @@ const CurrencyRow = memo(function CurrencyRow({
 
 const currencyItemStyles = StyleSheet.create((theme) => ({
   currencyName: {
-    fontWeight: "500",
-    fontSize: 18,
+    ...theme.typography.headlineSmall,
   },
   countryName: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     opacity: 0.7,
   },
   currencyCode: {
-    fontWeight: "500",
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
   },
 }))

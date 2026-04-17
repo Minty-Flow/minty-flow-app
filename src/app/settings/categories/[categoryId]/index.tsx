@@ -277,12 +277,12 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.secondary,
   },
   categoryName: {
-    fontSize: 18,
+    fontSize: theme.typography.headlineSmall.fontSize,
     fontWeight: "700",
     color: theme.colors.onSecondary,
   },
   categoryType: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "500",
     color: theme.colors.customColors.semi,
   },
@@ -305,7 +305,7 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
   },
   summaryPillAmount: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "700",
   },
 }))

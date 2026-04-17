@@ -1,7 +1,6 @@
 // ============================================================================
 // Minty Theming System - Typography Tokens
-// Poppins, scale + weights
-// TODO: use this file later in the project so the font family and sizes are consistent across the app
+// Material Design 3 scale — injected into UnistylesTheme as `theme.typography`
 // ============================================================================
 
 /**
@@ -36,6 +35,7 @@ export interface MintyTypographyTokens {
   labelLarge: MintyTextStyle
   labelMedium: MintyTextStyle
   labelSmall: MintyTextStyle
+  labelXSmall: MintyTextStyle
 }
 
 export const typography: MintyTypographyTokens = {
@@ -43,19 +43,29 @@ export const typography: MintyTypographyTokens = {
   fontFamilyFallback: ["SF Pro Display", "Helvetica", "Roboto", "sans-serif"],
   fontFamilyMono: "monospace",
 
-  displayLarge: { fontSize: 48, fontWeight: "500" },
-  displayMedium: { fontSize: 36, fontWeight: "500" },
-  displaySmall: { fontSize: 24, fontWeight: "500" },
-  headlineLarge: { fontSize: 26, fontWeight: "700" },
-  headlineMedium: { fontSize: 22, fontWeight: "700" },
-  headlineSmall: { fontSize: 18, fontWeight: "700" },
-  titleLarge: { fontSize: 24, fontWeight: "500" },
-  titleMedium: { fontSize: 20, fontWeight: "500" },
-  titleSmall: { fontSize: 16, fontWeight: "500" },
+  // Display (hero / big numbers)
+  displayLarge: { fontSize: 48, fontWeight: "600" },
+  displayMedium: { fontSize: 40, fontWeight: "600" },
+  displaySmall: { fontSize: 32, fontWeight: "600" },
+
+  // Headlines (section titles)
+  headlineLarge: { fontSize: 28, fontWeight: "700" },
+  headlineMedium: { fontSize: 24, fontWeight: "700" },
+  headlineSmall: { fontSize: 20, fontWeight: "700" },
+
+  // Titles (cards, dialogs)
+  titleLarge: { fontSize: 20, fontWeight: "600" },
+  titleMedium: { fontSize: 18, fontWeight: "600" },
+  titleSmall: { fontSize: 16, fontWeight: "600" },
+
+  // Body (main readable text)
   bodyLarge: { fontSize: 16, fontWeight: "400" },
-  bodyMedium: { fontSize: 13, fontWeight: "400" },
-  bodySmall: { fontSize: 10, fontWeight: "400" },
-  labelLarge: { fontSize: 14, fontWeight: "400" },
-  labelMedium: { fontSize: 12, fontWeight: "400" },
-  labelSmall: { fontSize: 10, fontWeight: "400" },
+  bodyMedium: { fontSize: 14, fontWeight: "400" },
+  bodySmall: { fontSize: 12, fontWeight: "400" },
+
+  // Labels (UI, buttons, metadata)
+  labelLarge: { fontSize: 14, fontWeight: "500" },
+  labelMedium: { fontSize: 12, fontWeight: "500" },
+  labelSmall: { fontSize: 11, fontWeight: "500" },
+  labelXSmall: { fontSize: 10, fontWeight: "500" },
 }

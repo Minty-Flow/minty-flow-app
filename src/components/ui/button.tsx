@@ -183,8 +183,7 @@ const sizeStyles = StyleSheet.create((theme) => ({
 // Text styles for button variants
 export const buttonTextStyles = StyleSheet.create((theme) => ({
   base: {
-    fontSize: 14,
-    fontWeight: "500",
+    ...theme.typography.labelLarge,
     color: theme.colors.onSurface,
     _web: {
       pointerEvents: "none",
@@ -222,17 +221,17 @@ export const buttonTextStyles = StyleSheet.create((theme) => ({
 }))
 
 // Size-specific text styles
-export const buttonTextSizeStyles = StyleSheet.create(() => ({
+export const buttonTextSizeStyles = StyleSheet.create((theme) => ({
   default: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
   },
   sm: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
   },
   lg: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
   },
   icon: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
   },
 }))

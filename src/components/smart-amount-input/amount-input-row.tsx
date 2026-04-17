@@ -1,8 +1,5 @@
-import { useTranslation } from "react-i18next"
-
-// import { TextInput } from "react-native"
-
 import type { RefObject } from "react"
+import { useTranslation } from "react-i18next"
 import { TextInput } from "react-native"
 
 import type { TransactionType } from "~/types/transactions"

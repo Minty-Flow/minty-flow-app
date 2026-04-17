@@ -108,12 +108,12 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
   },
   newAccountText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSecondary,
   },
   archivedSectionLabel: {
-    fontSize: 11,
+    ...theme.typography.labelXSmall,
     fontWeight: "600",
     color: theme.colors.customColors.semi,
     letterSpacing: 0.8,

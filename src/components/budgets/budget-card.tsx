@@ -314,11 +314,11 @@ const styles = StyleSheet.create((t) => ({
   name: {
     fontWeight: "600",
     color: t.colors.onSurface,
-    fontSize: 15,
+    fontSize: t.typography.bodyLarge.fontSize,
   },
   categoryLabel: {
     color: t.colors.onSecondary,
-    fontSize: 12,
+    fontSize: t.typography.labelMedium.fontSize,
     opacity: 0.7,
   },
   row1Right: {
@@ -334,7 +334,7 @@ const styles = StyleSheet.create((t) => ({
     paddingVertical: 3,
   },
   periodText: {
-    fontSize: 10,
+    fontSize: t.typography.labelSmall.fontSize,
     color: t.colors.onSecondary,
     fontWeight: "600",
   },
@@ -345,7 +345,7 @@ const styles = StyleSheet.create((t) => ({
     paddingVertical: 3,
   },
   disabledText: {
-    fontSize: 10,
+    fontSize: t.typography.labelSmall.fontSize,
     color: t.colors.onSecondary,
     fontWeight: "600",
   },
@@ -367,12 +367,12 @@ const styles = StyleSheet.create((t) => ({
   },
   spentLabel: {
     color: t.colors.onSecondary,
-    fontSize: 12,
+    fontSize: t.typography.labelMedium.fontSize,
     flex: 1,
   },
   remainingLabel: {
     color: t.colors.onSecondary,
-    fontSize: 12,
+    fontSize: t.typography.labelMedium.fontSize,
     flexShrink: 0,
   },
 }))

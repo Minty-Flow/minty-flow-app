@@ -2,6 +2,8 @@
 // Minty Theming System - Type Definitions
 // ============================================================================
 
+import type { MintyTypographyTokens } from "./typography"
+
 /**
  * Custom colors (income, expense, semi + success/warning/info for compatibility)
  */
@@ -64,4 +66,5 @@ export interface UnistylesTheme {
   name: string
   iconName?: string
   radius: number
+  typography: MintyTypographyTokens
 }

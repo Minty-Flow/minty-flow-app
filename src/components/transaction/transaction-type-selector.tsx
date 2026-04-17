@@ -91,7 +91,7 @@ const styles = StyleSheet.create((theme) => ({
   },
 
   segmentLabel: {
-    fontSize: 15,
+    ...theme.typography.bodyLarge,
     fontWeight: "600",
     color: theme.colors.onSecondary,
   },

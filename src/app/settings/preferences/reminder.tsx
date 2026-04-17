@@ -200,16 +200,16 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   settingLabel: {
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
   },
   settingLabelDescription: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "400",
     color: theme.colors.customColors.semi,
   },
   headerLabel: {
-    fontSize: 18,
+    fontSize: theme.typography.headlineSmall.fontSize,
     fontWeight: "bold",
     marginBottom: 6,
   },
@@ -222,7 +222,7 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 6,
   },
   timeText: {
-    fontSize: 48,
+    fontSize: theme.typography.displayLarge.fontSize,
     fontWeight: "500",
     height: 64,
     textAlignVertical: "center",

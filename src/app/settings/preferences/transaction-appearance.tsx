@@ -320,7 +320,7 @@ const styles = StyleSheet.create((theme) => ({
     marginTop: 8,
   },
   sectionLabelText: {
-    fontSize: 11,
+    fontSize: theme.typography.labelXSmall.fontSize,
     fontWeight: "600",
     letterSpacing: 0.8,
     color: theme.colors.customColors.semi,
@@ -353,12 +353,12 @@ const styles = StyleSheet.create((theme) => ({
     paddingRight: 12,
   },
   toggleLabel: {
-    fontSize: 15,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "500",
     color: theme.colors.onSurface,
   },
   toggleDescription: {
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     color: theme.colors.customColors.semi,
     lineHeight: 16,
   },
@@ -383,7 +383,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 12,
   },
   leadingOptionLabel: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "500",
   },
 
@@ -397,7 +397,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   infoText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     color: theme.colors.customColors.semi,
     lineHeight: 18,
   },

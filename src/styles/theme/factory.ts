@@ -4,6 +4,7 @@
 // ============================================================================
 
 import type { MintyColorScheme, UnistylesTheme } from "./types"
+import { typography } from "./typography"
 
 /**
  * Append hex alpha to 6-char hex (0-255 scale, e.g. 0x16 = 8.6%)
@@ -74,6 +75,7 @@ export class ThemeFactory {
       name: this.name,
       iconName: this.iconName,
       radius: this.mintyColorScheme.radius,
+      typography,
     }
   }
 }

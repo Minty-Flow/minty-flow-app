@@ -12,4 +12,3 @@ const addTagsSchema = z.object({
 
 export { addTagsSchema }
 export type AddTagsFormSchema = z.infer<typeof addTagsSchema>
-// export type UpdateTagsFormSchema = z.infer<typeof addTagsSchema>

@@ -8,7 +8,7 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
     width: "100%",
   },
   sectionLabel: {
-    fontSize: 12,
+    ...t.typography.labelMedium,
     fontWeight: "600",
     color: t.colors.onSurface,
     letterSpacing: 0.5,
@@ -19,8 +19,7 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
   },
 
   currencyCode: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...t.typography.titleSmall,
     color: t.colors.onSurface,
   },
   // Account rows
@@ -38,13 +37,12 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
     flex: 1,
   },
   accountName: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...t.typography.titleSmall,
     color: t.colors.onSurface,
     flex: 1,
   },
   accountCurrency: {
-    fontSize: 13,
+    fontSize: t.typography.bodyMedium.fontSize,
     color: t.colors.onSecondary,
     opacity: 0.7,
     marginTop: 2,
@@ -55,13 +53,12 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
     borderBottomColor: `${t.colors.onSurface}10`,
   },
   selectAllText: {
-    fontSize: 15,
-    fontWeight: "500",
+    ...t.typography.bodyLarge,
     color: t.colors.primary,
   },
   // Empty state
   emptyText: {
-    fontSize: 14,
+    fontSize: t.typography.labelLarge.fontSize,
     color: t.colors.onSecondary,
     opacity: 0.6,
     textAlign: "center",
@@ -76,8 +73,7 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
   // },
   // Account trigger value — selected names, truncated
   accountTriggerValue: {
-    fontSize: 15,
-    fontWeight: "500",
+    ...t.typography.bodyLarge,
     color: t.colors.onSurface,
   },
   // Inline currency panel (replaces modal)
@@ -110,7 +106,7 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
     color: t.colors.primary,
   },
   createButtonText: {
-    fontSize: 14,
+    ...t.typography.labelLarge,
     fontWeight: "600",
     color: t.colors.primary,
   },

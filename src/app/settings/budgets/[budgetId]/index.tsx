@@ -439,7 +439,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 4,
   },
   budgetName: {
-    fontSize: 20,
+    ...theme.typography.titleMedium,
     fontWeight: "700",
     color: theme.colors.onSurface,
   },
@@ -455,7 +455,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
   },
   periodBadgeText: {
-    fontSize: 11,
+    ...theme.typography.labelXSmall,
     fontWeight: "600",
     color: theme.colors.onSecondary,
   },
@@ -469,16 +469,16 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
   },
   overBudgetText: {
-    fontSize: 11,
+    ...theme.typography.labelXSmall,
     fontWeight: "600",
     color: theme.colors.error,
   },
   categoryText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.onSecondary,
   },
   accountsText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.onSecondary,
   },
 
@@ -502,20 +502,20 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
   },
   amountText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.onSecondary,
     flex: 1,
     marginRight: 8,
   },
   remainingText: {
-    fontSize: 13,
+    fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.onSecondary,
     flexShrink: 0,
   },
 
   // Transactions
   transactionsLabel: {
-    fontSize: 15,
+    ...theme.typography.bodyLarge,
     fontWeight: "600",
     color: theme.colors.onSurface,
     marginTop: 6,

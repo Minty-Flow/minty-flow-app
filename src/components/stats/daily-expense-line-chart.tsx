@@ -324,7 +324,7 @@ const styles = StyleSheet.create((theme) => ({
     opacity: 0.5,
   },
   legendLabel: {
-    fontSize: 11,
+    fontSize: theme.typography.labelXSmall.fontSize,
     marginRight: 6,
   },
 

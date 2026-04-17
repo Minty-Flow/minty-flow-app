@@ -110,7 +110,7 @@ const chipStyles = StyleSheet.create((theme) => ({
     gap: 6,
   },
   chipLabel: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
   },
 }))
 
@@ -170,13 +170,13 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 24,
   },
   titleText: {
-    fontSize: 18,
+    ...theme.typography.headlineSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
     marginBottom: 4,
   },
   descriptionText: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.onSecondary,
     lineHeight: 20,
   },

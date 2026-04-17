@@ -87,12 +87,12 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 4,
   },
   cardTitle: {
-    fontSize: 20,
+    fontSize: theme.typography.titleMedium.fontSize,
     fontWeight: "700",
     color: theme.colors.onSurface,
   },
   cardDescription: {
-    fontSize: 14,
+    fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.onSecondary,
     lineHeight: 20,
   },

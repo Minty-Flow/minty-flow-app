@@ -61,12 +61,12 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   cancelText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
   saveText: {
-    fontSize: 16,
+    ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onPrimary,
   },

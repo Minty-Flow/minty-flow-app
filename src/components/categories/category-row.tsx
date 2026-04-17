@@ -82,12 +82,11 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   name: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
   },
   count: {
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     color: theme.colors.onSecondary,
   },
   chevron: {

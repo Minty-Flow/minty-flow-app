@@ -145,22 +145,3 @@ export function useIsConfirmable(transaction: ConfirmableTransaction): boolean {
     return transaction.isPending && hasPassed
   }, [transaction.isPending, transaction.isDeleted, hasPassed])
 }
-
-/* ------------------------------------------------------------------ */
-/* Debug Helper                                                        */
-/* ------------------------------------------------------------------ */
-
-/**
- * Returns current timestamp that updates every second.
- * **Only for debugging** - use `useMinuteTick` or `useHasPassed` in production.
- */
-// export function useNowDebug(): number {
-//   return useSyncExternalStore(
-//     (callback) => {
-//       const interval = setInterval(callback, 1000)
-//       return () => clearInterval(interval)
-//     },
-//     () => Date.now(),
-//     () => Date.now(),
-//   )
-// }

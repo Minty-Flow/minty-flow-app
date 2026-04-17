@@ -63,19 +63,19 @@ const styles = StyleSheet.create((theme) => ({
     gap: 2,
   },
   title: {
-    fontSize: 13,
+    ...theme.typography.bodyMedium,
     fontWeight: "600",
     color: theme.colors.customColors.expense,
   },
   description: {
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
   },
   ctaRow: {
     alignSelf: "flex-end",
     marginTop: 4,
   },
   ctaText: {
-    fontSize: 12,
+    fontSize: theme.typography.labelMedium.fontSize,
     color: theme.colors.primary,
     fontWeight: "600",
   },

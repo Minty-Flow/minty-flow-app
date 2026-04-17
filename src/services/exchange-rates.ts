@@ -410,6 +410,3 @@ class ExchangeRatesService {
 
 // Export singleton instance
 export const exchangeRatesService = ExchangeRatesService.getInstance()
-
-// Export for testing or advanced usage
-// export { ExchangeRatesService }

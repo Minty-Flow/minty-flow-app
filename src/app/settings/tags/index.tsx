@@ -119,7 +119,7 @@ const styles = StyleSheet.create((theme) => ({
     marginVertical: 15,
   },
   newTagText: {
-    fontSize: 16,
+    fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "500",
     color: theme.colors.onSurface,
   },

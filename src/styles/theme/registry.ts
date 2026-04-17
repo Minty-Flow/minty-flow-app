@@ -104,6 +104,7 @@ export const getThemeStrict = (
   return ALL_THEMES[themeName] ?? null
 }
 
+// TODO: DEAD CODE
 /**
  * Get the group containing a specific theme
  */
@@ -118,6 +119,7 @@ export const getThemeStrict = (
 //   return null
 // }
 
+// TODO: DEAD CODE
 /**
  * Get all theme names
  */
@@ -125,9 +127,10 @@ export const getThemeStrict = (
 //   return Object.keys(ALL_THEMES)
 // }
 
-// /**
-//  * Get themes by brightness
-//  */
+// TODO: DEAD CODE
+/**
+ * Get themes by brightness
+ */
 // export const getThemesByBrightness = (isDark: boolean): MintyColorScheme[] => {
 //   return Object.values(ALL_THEMES).filter((theme) => theme.isDark === isDark)
 // }
