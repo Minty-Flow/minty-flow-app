@@ -64,24 +64,26 @@ const AccountsScreenInner = ({
     )
   })
 
-  // Balance calculation (domain only)
-  const balancesByCurrency = displayAccounts.reduce(
-    (acc, account) => {
-      const existing = acc.find(
-        (item) => item.currency === account.currencyCode,
-      )
-      if (existing) {
-        existing.balance += account.balance
-      } else {
-        acc.push({
-          currency: account.currencyCode,
-          balance: account.balance,
-        })
-      }
-      return acc
-    },
-    [] as { currency: string; balance: number }[],
-  )
+  // Balance calculation — excludeFromBalance accounts are hidden from total
+  const balancesByCurrency = displayAccounts
+    .filter((account) => !account.excludeFromBalance)
+    .reduce(
+      (acc, account) => {
+        const existing = acc.find(
+          (item) => item.currency === account.currencyCode,
+        )
+        if (existing) {
+          existing.balance += account.balance
+        } else {
+          acc.push({
+            currency: account.currencyCode,
+            balance: account.balance,
+          })
+        }
+        return acc
+      },
+      [] as { currency: string; balance: number }[],
+    )
 
   const handleToggleReorder = () => {
     // Clear search first

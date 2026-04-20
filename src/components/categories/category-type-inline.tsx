@@ -181,8 +181,6 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 16,
     borderRadius: theme.radius,
     backgroundColor: `${theme.colors.onSurface}10`,
-    borderWidth: 1,
-    borderColor: "transparent",
   },
   optionActive: {
     backgroundColor: `${theme.colors.primary}20`,

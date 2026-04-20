@@ -75,6 +75,7 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "device-mobile", keywords: ["phone", "mobile", "cell"] },
   { name: "database", keywords: ["storage", "data", "server"] },
   { name: "settings", keywords: ["config", "gear", "preferences"] },
+  { name: "plug", keywords: ["power", "electricity", "utilities"] },
   { name: "refresh", keywords: ["reload", "sync", "update"] },
 
   // Security
@@ -156,6 +157,9 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "brand-apple", keywords: ["apple", "ios", "tech"] },
 
   // Food & Drink
+  { name: "coffee", keywords: ["coffee", "cafe", "drink"] },
+  { name: "flask", keywords: ["science", "lab", "research", "chemistry"] },
+  { name: "droplet", keywords: ["water", "liquid", "hydration", "utilities"] },
   { name: "beer", keywords: ["beer", "alcohol", "bar"] },
   { name: "bowl", keywords: ["food", "meal", "dining"] },
   { name: "bowl-spoon", keywords: ["soup", "cereal", "breakfast"] },
@@ -221,6 +225,12 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "speedboat", keywords: ["boat", "water", "leisure"] },
 
   // Entertainment & Leisure
+  {
+    name: "binoculars",
+    keywords: ["travel", "exploration", "sightseeing", "tourism"],
+  },
+  { name: "dice", keywords: ["gaming", "board games", "chance", "fun"] },
+  { name: "wand", keywords: ["magic", "creative", "special", "entertainment"] },
   { name: "headset", keywords: ["gaming", "audio", "entertainment"] },
   { name: "ticket", keywords: ["event", "cinema", "entertainment"] },
   { name: "trophy", keywords: ["achievement", "winner", "prize"] },
@@ -256,6 +266,7 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "coin-yen", keywords: ["yen", "jpy", "currency"] },
   { name: "coin-yuan", keywords: ["yuan", "cny", "currency"] },
   { name: "coin", keywords: ["money", "coin", "cash"] },
+  { name: "coins", keywords: ["money", "coins", "cashback", "allowance"] },
   { name: "file-invoice", keywords: ["invoice", "bill", "document"] },
   { name: "file-dollar", keywords: ["finance", "document", "money"] },
   { name: "exchange", keywords: ["swap", "transfer", "convert"] },
@@ -285,6 +296,7 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "library", keywords: ["books", "education", "knowledge"] },
 
   // Clothing & Fashion
+  { name: "paint", keywords: ["art", "creativity", "hobbies", "design"] },
   { name: "shirt", keywords: ["clothing", "fashion", "apparel"] },
   { name: "hanger-2", keywords: ["clothing", "wardrobe", "fashion"] },
   { name: "sunglasses", keywords: ["fashion", "summer", "style"] },
@@ -292,6 +304,8 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "diamond", keywords: ["luxury", "jewelry", "premium"] },
 
   // Nature & Weather
+  { name: "snowflake", keywords: ["winter", "cold", "snow", "weather"] },
+  { name: "plant", keywords: ["garden", "home", "eco", "green"] },
   { name: "sun", keywords: ["sunny", "weather", "day"] },
   { name: "moon", keywords: ["night", "sleep", "weather"] },
   { name: "mountain", keywords: ["hiking", "outdoors", "nature"] },
@@ -310,10 +324,15 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "shield", keywords: ["protection", "security", "defense"] },
 
   // People & Family
+  {
+    name: "mood-happy",
+    keywords: ["wellness", "happiness", "mental health", "mood"],
+  },
   { name: "baby-carriage", keywords: ["baby", "family", "infant"] },
   { name: "man", keywords: ["person", "male", "profile"] },
   { name: "woman", keywords: ["person", "female", "profile"] },
   { name: "paw", keywords: ["pet", "animal", "dog"] },
+  { name: "paw-print", keywords: ["pet", "animal", "cat", "dog"] },
   { name: "lifebuoy", keywords: ["help", "support", "rescue"] },
   { name: "thumb-up", keywords: ["like", "approve", "positive"] },
   { name: "thumb-down", keywords: ["dislike", "negative", "reject"] },
@@ -346,6 +365,10 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "bell-ringing", keywords: ["notification", "alert", "ringing"] },
 
   // Shopping & Celebration
+  {
+    name: "christmas-tree",
+    keywords: ["holiday", "christmas", "gifts", "seasonal"],
+  },
   { name: "trolley", keywords: ["shopping", "cart", "supermarket"] },
   { name: "gift-card", keywords: ["voucher", "gift", "card"] },
   { name: "rosette", keywords: ["badge", "achievement", "award"] },

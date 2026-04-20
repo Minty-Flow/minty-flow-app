@@ -214,8 +214,6 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
     padding: 16,
     marginBottom: 8,
-    borderWidth: 2,
-    borderColor: "transparent",
   },
   presetItemSelected: {
     borderColor: theme.colors.primary,

@@ -70,7 +70,6 @@ export function AccountFormModals({
               ? t("screens.accounts.form.archiveModal.unarchiveTitle")
               : t("screens.accounts.form.archiveModal.archiveTitle")
           }
-          description={account.name}
           confirmLabel={
             isArchived
               ? t("screens.accounts.form.archiveModal.unarchiveConfirm")

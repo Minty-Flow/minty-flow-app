@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList, Modal, Pressable, TextInput, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -83,7 +83,11 @@ const SearchHeader = memo(
           autoCapitalize="none"
         />
         {searchQuery.length > 0 && (
-          <Pressable onPress={onClear}>
+          <Pressable
+            onPress={onClear}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            style={styles.clearButton}
+          >
             <IconSvg name="x" size={20} color={placeholderTextColor} />
           </Pressable>
         )}
@@ -154,19 +158,26 @@ export const IconSelectionModal = ({
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const [searchQuery, setSearchQuery] = useState("")
+  const [debouncedQuery, setDebouncedQuery] = useState("")
   const [selectedIcon, setSelectedIcon] = useState<string | null>(
     initialIcon || null,
   )
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 200)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   // Reset state when modal opens
   const handleShow = useCallback(() => {
     setSelectedIcon(initialIcon || null)
     setSearchQuery("")
+    setDebouncedQuery("")
   }, [initialIcon])
 
   const availableIcons = useMemo(
-    () => searchIcons(MINTY_SVGS, searchQuery),
-    [searchQuery],
+    () => searchIcons(MINTY_SVGS, debouncedQuery),
+    [debouncedQuery],
   )
 
   const handleIconSelect = useCallback((iconName: string) => {
@@ -396,5 +407,8 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSurface,
     fontWeight: "500",
     flex: 1,
+  },
+  clearButton: {
+    padding: 4,
   },
 }))

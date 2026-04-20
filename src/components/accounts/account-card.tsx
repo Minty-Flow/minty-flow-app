@@ -177,7 +177,6 @@ const styles = StyleSheet.create((theme) => ({
   card: {
     backgroundColor: theme.colors.secondary,
     borderRadius: theme.radius,
-    borderWidth: 1,
     borderColor: theme.colors.secondary,
     padding: 16,
     gap: 12,
@@ -187,7 +186,7 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     gap: 12,
     borderRadius: theme.radius,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: `${theme.colors.customColors.semi}50`,
     borderStyle: "dashed",
     paddingHorizontal: 12,

@@ -42,7 +42,6 @@ export function GoalFormModals({
           onRequestClose={onCloseDeleteModal}
           onConfirm={onConfirmDelete}
           title={t("common.modals.deletePermanently")}
-          description={goal.name}
           note={t("common.modals.deleteNoteGoal")}
           confirmLabel={t("common.actions.delete")}
           cancelLabel={t("common.actions.cancel")}
@@ -61,7 +60,6 @@ export function GoalFormModals({
               ? t("screens.settings.goals.form.archiveModal.unarchiveTitle")
               : t("screens.settings.goals.form.archiveModal.archiveTitle")
           }
-          description={goal.name}
           confirmLabel={
             isArchived
               ? t("screens.settings.goals.form.archiveModal.unarchiveConfirm")

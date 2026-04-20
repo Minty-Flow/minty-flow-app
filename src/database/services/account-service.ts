@@ -314,12 +314,12 @@ export const observeAccountsWithMonthTotals = (
 export const createAccount = async (
   data: AddAccountsFormSchema,
 ): Promise<AccountModel> => {
-  // Get the last account's sort order to append the new one at the end
-  const lastAccount = await getAccountCollection()
-    .query(Q.sortBy("sort_order", Q.desc), Q.take(1))
+  // New accounts go to the top — get the current lowest sort_order and subtract 1
+  const firstAccount = await getAccountCollection()
+    .query(Q.sortBy("sort_order", Q.asc), Q.take(1))
     .fetch()
   const nextSortOrder =
-    lastAccount.length > 0 ? (lastAccount[0].sortOrder || 0) + 1 : 0
+    firstAccount.length > 0 ? (firstAccount[0].sortOrder || 0) - 1 : 0
 
   return await database.write(async () => {
     return await getAccountCollection().create((account) => {

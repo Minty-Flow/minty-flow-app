@@ -34,7 +34,6 @@ export function BudgetFormModals({
           onRequestClose={onCloseDeleteModal}
           onConfirm={onConfirmDelete}
           title={t("common.modals.deletePermanently")}
-          description={budget.name}
           note={t("common.modals.deleteNoteBudget")}
           confirmLabel={t("common.actions.delete")}
           cancelLabel={t("common.actions.cancel")}

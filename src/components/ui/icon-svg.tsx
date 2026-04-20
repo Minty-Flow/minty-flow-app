@@ -61,6 +61,9 @@ const ICON_MAP = {
   // Food & Drink
   pizza: FilledIcons.Pizza,
   headphones: FilledIcons.Headphones,
+  coffee: OutlineIcons.Coffee,
+  flask: FilledIcons.Flask,
+  droplet: FilledIcons.Droplet,
 
   // Media & Visual
   camera: FilledIcons.Camera,
@@ -120,6 +123,7 @@ const ICON_MAP = {
   "building-bank": OutlineIcons.BuildingBank,
 
   // Devices & System
+  plug: OutlineIcons.Plug,
   database: OutlineIcons.Database,
   "database-export": OutlineIcons.DatabaseExport,
   "database-import": OutlineIcons.DatabaseImport,
@@ -287,6 +291,9 @@ const ICON_MAP = {
   speedboat: FilledIcons.Speedboat,
 
   // Entertainment & Leisure
+  binoculars: FilledIcons.Binoculars,
+  dice: OutlineIcons.Dice,
+  wand: OutlineIcons.Wand,
   headset: FilledIcons.Headset,
   ticket: FilledIcons.Ticket,
   trophy: FilledIcons.Trophy,
@@ -322,6 +329,7 @@ const ICON_MAP = {
   "coin-yen": FilledIcons.CoinYen,
   "coin-yuan": FilledIcons.CoinYuan,
   coin: FilledIcons.Coin,
+  coins: OutlineIcons.Coins,
   "file-invoice": FilledIcons.FileInvoice,
   "file-dollar": FilledIcons.FileDollar,
   exchange: FilledIcons.Exchange,
@@ -356,6 +364,7 @@ const ICON_MAP = {
   "library-plus": FilledIcons.LibraryPlus,
 
   // Clothing & Fashion
+  paint: FilledIcons.Paint,
   shirt: FilledIcons.Shirt,
   "hanger-2": FilledIcons.Hanger2,
   sunglasses: FilledIcons.Sunglasses,
@@ -363,6 +372,8 @@ const ICON_MAP = {
   diamond: FilledIcons.Diamond,
 
   // Nature & Weather
+  snowflake: OutlineIcons.Snowflake,
+  plant: OutlineIcons.Plant,
   sun: FilledIcons.Sun,
   moon: FilledIcons.Moon,
   mountain: FilledIcons.Mountain,
@@ -383,10 +394,12 @@ const ICON_MAP = {
   "shield-checkered": OutlineIcons.ShieldCheckered,
 
   // People & Family
+  "mood-happy": FilledIcons.MoodHappy,
   "baby-carriage": FilledIcons.BabyCarriage,
   man: FilledIcons.Man,
   woman: FilledIcons.Woman,
   paw: FilledIcons.Paw,
+  "paw-print": OutlineIcons.Paw,
   lifebuoy: FilledIcons.Lifebuoy,
   "thumb-up": FilledIcons.ThumbUp,
   "thumb-down": FilledIcons.ThumbDown,
@@ -427,6 +440,7 @@ const ICON_MAP = {
   navigation: FilledIcons.Navigation,
 
   // Shopping & Celebration
+  "christmas-tree": FilledIcons.ChristmasTree,
   trolley: FilledIcons.Trolley,
   "gift-card": FilledIcons.GiftCard,
   rosette: FilledIcons.Rosette,

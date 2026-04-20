@@ -16,26 +16,36 @@ import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 
-// --- Chip (filter-header style) ---
+// --- helpers ---
 
-/** Resolve a slot value: if a string is passed it is treated as an IconSvgName
- *  and rendered as <IconSvg>; otherwise the ReactNode is returned as-is. */
 function resolveSlot(
   slot: ReactNode | IconSvgName | undefined,
   size: IconSize = 14,
 ): ReactNode {
-  if (typeof slot === "string")
+  if (typeof slot === "string") {
     return <IconSvg name={slot as IconSvgName} size={size} />
+  }
   return slot ?? null
 }
+
+/** Convert hex → rgba with opacity (for subtle borders) */
+function withOpacity(hex: string, opacity: number): string {
+  const clean = hex.replace("#", "")
+
+  const r = parseInt(clean.substring(0, 2), 16)
+  const g = parseInt(clean.substring(2, 4), 16)
+  const b = parseInt(clean.substring(4, 6), 16)
+
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
+// --- Chip ---
 
 interface ChipProps extends PressableProps {
   label?: string
   children?: ReactNode
   selected?: boolean
-  /** Icon name string or any ReactNode */
   leading?: ReactNode | IconSvgName
-  /** Icon name string or any ReactNode */
   trailing?: ReactNode | IconSvgName
   hideCheck?: boolean
   checkIcon?: ReactNode | IconSvgName
@@ -57,7 +67,11 @@ export function Chip({
 }: ChipProps) {
   const { theme } = useUnistyles()
 
-  const borderColor = theme.colors.customColors.semi
+  const idleBorder = withOpacity(theme.colors.onSurface, 0.4)
+  const selectedBorder = theme.colors.primary
+
+  const textColor = selected ? theme.colors.onSecondary : theme.colors.onSurface
+
   const selectedBg = theme.colors.secondary
 
   const content = children ?? (
@@ -65,7 +79,7 @@ export function Chip({
       style={[
         chipStyles.chipLabel,
         {
-          color: selected ? theme.colors.primary : theme.colors.onSurface,
+          color: textColor,
           fontWeight: selected ? "600" : "400",
         },
         labelStyle,
@@ -83,14 +97,16 @@ export function Chip({
         chipStyles.chip,
         {
           backgroundColor: selected ? selectedBg : "transparent",
-          borderColor: selected ? "transparent" : borderColor,
           borderWidth: 1,
+          borderColor: selected ? selectedBorder : idleBorder,
         },
         style,
       ]}
     >
       {resolveSlot(leading)}
+
       {content}
+
       {trailing
         ? resolveSlot(trailing)
         : selected && !hideCheck
@@ -123,7 +139,6 @@ interface ChoiceChipsProps<T extends string> {
   choices: T[] | readonly T[]
   selectedValue: T
   onSelect: (value: T) => void
-  textStyle?: StyleProp<TextStyle>
 }
 
 export const ChoiceChips = <T extends string>({
@@ -138,6 +153,7 @@ export const ChoiceChips = <T extends string>({
     <View style={[styles.container, style]}>
       <View style={styles.header}>
         <Text style={styles.titleText}>{title}</Text>
+
         {description && (
           <Text style={styles.descriptionText}>{description}</Text>
         )}
@@ -146,6 +162,7 @@ export const ChoiceChips = <T extends string>({
       <View style={styles.chipsWrapper}>
         {choices.map((item, index) => {
           const isSelected = selectedValue === item
+
           return (
             <Chip
               key={`${item}-${index.toString()}`}
@@ -177,7 +194,8 @@ const styles = StyleSheet.create((theme) => ({
   },
   descriptionText: {
     fontSize: theme.typography.labelLarge.fontSize,
-    color: theme.colors.onSecondary,
+    color: theme.colors.onSurface,
+    opacity: 0.7,
     lineHeight: 20,
   },
   chipsWrapper: {

@@ -12,8 +12,6 @@ import { useUnistyles } from "react-native-unistyles"
 import { DateRangePresetModal } from "~/components/date-range-preset-modal"
 import { Chip } from "~/components/ui/chips"
 import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
-import { Pressable } from "~/components/ui/pressable"
-import { Text } from "~/components/ui/text"
 import type {
   AttachmentsOptionsType,
   GroupByOption,
@@ -378,21 +376,13 @@ export function TransactionFilterHeader({
         contentContainerStyle={filterHeaderStyles.pillRow}
       >
         {hasAnyFilter ? (
-          <Pressable
-            style={[filterHeaderStyles.clearAllPill, { borderColor }]}
+          <Chip
             onPress={handleClearAll}
-          >
-            <IconSvg name="x" size={18} />
-            <Text
-              variant="default"
-              style={[
-                filterHeaderStyles.clearAllLabel,
-                { color: theme.colors.primary },
-              ]}
-            >
-              {t("components.filters.clearAll")}
-            </Text>
-          </Pressable>
+            leading="x"
+            label={t("components.filters.clearAll")}
+            selected={false} // keep it outline style
+            labelStyle={{ color: theme.colors.primary }}
+          />
         ) : null}
         {visiblePills.map(({ key, icon, label, active }) => {
           const isExpanded = expandedPanel === key

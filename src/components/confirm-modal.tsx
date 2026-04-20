@@ -30,8 +30,8 @@ interface ConfirmModalProps {
   onConfirm: () => Promise<void> | void
   /** Title shown in the modal (e.g. "Delete category?"). */
   title: string
-  /** Description or warning message. */
-  description: string
+  /** Description or warning message. Omit for simple confirmations. */
+  description?: string
   /** Label for the confirm button (e.g. "Delete"). */
   confirmLabel?: string
   /** Label for the cancel button. Default "Cancel". */
@@ -112,9 +112,11 @@ export function ConfirmModal({
               {title}
             </Text>
 
-            <Text variant="p" style={styles.description}>
-              {description}
-            </Text>
+            {description ? (
+              <Text variant="p" style={styles.description}>
+                {description}
+              </Text>
+            ) : null}
 
             {note ? (
               <Text variant="small" style={styles.note}>

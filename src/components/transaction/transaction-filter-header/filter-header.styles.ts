@@ -11,19 +11,6 @@ export const filterHeaderStyles = StyleSheet.create((theme) => ({
     gap: 8,
     paddingVertical: 4,
   },
-  clearAllPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: theme.radius ?? 12,
-    borderWidth: 1,
-    gap: 6,
-  },
-  clearAllLabel: {
-    ...theme.typography.bodyMedium,
-    fontWeight: "500",
-  },
   panel: {
     marginTop: 10,
     borderRadius: theme.radius,

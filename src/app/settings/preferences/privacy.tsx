@@ -47,10 +47,20 @@ export default function PrivacyScreen() {
         )
         return
       }
-      setLockAppEnabled(true)
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: t("screens.settings.privacy.biometric.confirmEnable"),
+      })
+      if (result.success) {
+        setLockAppEnabled(true)
+      }
     } else {
-      setLockAppEnabled(false)
-      setLockAfterClosing(false)
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: t("screens.settings.privacy.biometric.confirmDisable"),
+      })
+      if (result.success) {
+        setLockAppEnabled(false)
+        setLockAfterClosing(false)
+      }
     }
   }
 

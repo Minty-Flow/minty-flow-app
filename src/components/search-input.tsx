@@ -47,6 +47,7 @@ export const SearchInput = ({
           size="icon"
           onPress={onClear}
           style={styles.clearButton}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <IconSvg name="x" size={20} color={theme.colors.onSecondary} />
         </Button>
@@ -81,8 +82,7 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSecondary,
   },
   clearButton: {
-    padding: 0,
-    width: 28,
-    height: 28,
+    width: 36,
+    height: 36,
   },
 }))

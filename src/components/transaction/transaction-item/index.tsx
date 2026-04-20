@@ -284,7 +284,8 @@ export const TransactionItem = ({
   return (
     <Swipeable
       ref={swipeableRef}
-      friction={1}
+      friction={2}
+      overshootFriction={8}
       rightThreshold={TRASH_ACTION_WIDTH / 2}
       leftThreshold={onRestore ? TRASH_ACTION_WIDTH / 2 : undefined}
       overshootRight={false}
