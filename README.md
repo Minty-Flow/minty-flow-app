@@ -12,17 +12,15 @@
 
 ## Download
 
-<p>
-  <a href="https://play.google.com/store/apps/details?id=com.mintyflow.tracker">
-    <img src="https://img.shields.io/badge/Google_Play-Download-C0FFCA?style=for-the-badge&logo=google-play&logoColor=C0FFCA" alt="Google Play" />
-  </a>
-  <a href="https://github.com/Minty-Flow/minty-flow-app/releases">
-    <img src="https://img.shields.io/badge/GitHub-Releases-C0FFCA?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Releases" />
-  </a>
-  <a href="https://github.com/Minty-Flow/minty-flow-page">
-    <img src="https://img.shields.io/badge/Minty_Flow-Website-C0FFCA?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Website" />
-  </a>
-</p>
+<!-- [![Google Play - Download](https://img.shields.io/badge/Google_Play-Download-C0FFCA?style=for-the-badge&logo=google-play&logoColor=C0FFCA)](https://play.google.com/store/apps/details?id=com.mintyflow.tracker)
+[![GitHub - Releases](https://img.shields.io/badge/GitHub-Releases-C0FFCA?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Minty-Flow/minty-flow-app/releases)
+[![Minty Flow - Website](https://img.shields.io/badge/Minty_Flow-Website-C0FFCA?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/Minty-Flow/minty-flow-page)
+ -->
+
+[![Google Play - Download](https://img.shields.io/badge/Google_Play-Download-161b22?style=for-the-badge&logo=google-play&logoColor=C0FFCA&labelColor=21262d)](https://play.google.com/store/apps/details?id=com.mintyflow.tracker)
+[![GitHub - Releases](https://img.shields.io/badge/GitHub-Releases-161b22?style=for-the-badge&logo=github&logoColor=C0FFCA&labelColor=21262d)](https://github.com/Minty-Flow/minty-flow-app/releases)
+[![Minty Flow - Website](https://img.shields.io/badge/Minty_Flow-Website-161b22?style=for-the-badge&logo=googlechrome&logoColor=C0FFCA&labelColor=21262d)](https://github.com/Minty-Flow/minty-flow-page)
+
 
 > **iOS support is coming.** The app is built with React Native and the iOS build works locally — a public TestFlight release is in progress.
 
