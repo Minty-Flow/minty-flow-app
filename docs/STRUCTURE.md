@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-06-11T12:45:35.062Z
+Generated on: 2026-06-11T14:08:35.065Z
 ```
 ./
 ├── .github/
@@ -960,6 +960,7 @@ Generated on: 2026-06-11T12:45:35.062Z
 │       ├── toast.ts
 │       └── transaction-list-utils.ts
 ├── .env.local
+├── .env.local.example
 ├── .gitignore
 ├── .svgrrc
 ├── app.json

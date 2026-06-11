@@ -16,12 +16,16 @@ const IGNORE: Set<string> = new Set([
   "ios",
   "tabler-icons",
   "unused-icons",
-  ".claude"
+  ".claude",
+  ".opencode",
+  ".agents"
 ]);
 
 // Ignored by path segment match (relative to ROOT)
 const IGNORE_PATHS: string[] = [
   "CLAUDE.md",
+  "AGENTS.md",
+  "RELEASE_NOTES.md",
   ".oac.json"
 ];
 

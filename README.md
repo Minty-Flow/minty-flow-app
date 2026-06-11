@@ -5,7 +5,7 @@
 <h1 align="center">Minty Flow</h1>
 
 <p align="center">
-  A free, open-source, and beautifully simple personal finance tracker — fully offline, privacy-first, built for Android (iOS coming soon).
+  A free, open-source, and beautifully simple personal finance tracker — fully offline, privacy-first, built for Android (iOS coming soon/when im rich).
 </p>
 
 ---
