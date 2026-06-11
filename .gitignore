@@ -104,3 +104,9 @@ CLAUDE.md
 *.aicache
 *.promptlog
 *.chatlog
+
+RELEASE_NOTES.md
+AGENTS.md
+
+# Agent skills
+.agents/
