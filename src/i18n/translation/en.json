@@ -1,0 +1,1379 @@
+{
+  "common": {
+    "failedToOpenLink": "Failed to open browser",
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "close": "Close",
+      "reset": "Reset",
+      "retry": "Retry",
+      "confirm": "Confirm",
+      "delete": "Delete",
+      "add": "Add",
+      "search": "Search",
+      "clear": "Clear",
+      "done": "Done",
+      "next": "Next",
+      "ok": "OK",
+      "saving": "Saving...",
+      "create": "Create",
+      "saveChanges": "Save Changes",
+      "discard": "Discard"
+    },
+    "states": {
+      "soon": "Soon"
+    },
+    "modals": {
+      "unsavedDescription": "All changes will be lost.",
+      "closeWithoutSaving": "Close without saving?",
+      "deletePermanently": "Delete permanently",
+      "deleteNoteGoal": "Linked transactions will no longer be associated with this goal. The transactions will not be deleted.",
+      "deleteNoteBudget": "Linked transactions will no longer be associated with this budget. The transactions will not be deleted.",
+      "deleteNoteLoan": "Linked transactions will no longer be associated with this loan. They will lose their initial payment and repayment tags. The transactions will not be deleted."
+    },
+    "timePeriods": {
+      "month": "By month",
+      "year": "By year"
+    },
+    "you": "you",
+    "account": {
+      "types": {
+        "checking": "Checking",
+        "savings": "Savings",
+        "credit": "Credit",
+        "investment": "Investment",
+        "other": "Other"
+      }
+    },
+    "transaction": {
+      "types": {
+        "expense": "Expense",
+        "income": "Income",
+        "transfer": "Transfer"
+      },
+      "untitledTransaction": "Untitled Transaction",
+      "uncategorized": "uncategorized"
+    },
+    "toast": {
+      "error": "Error",
+      "success": "Success",
+      "warning": "Warning",
+      "info": "Info",
+      "deleted": "Deleted"
+    }
+  },
+  "navigation": {
+    "tabs": {
+      "home": "Home",
+      "statistics": "Statistics",
+      "accounts": "Accounts",
+      "settings": "Settings",
+      "addTransaction": "Add Transaction"
+    },
+    "fab": {
+      "income": "Income",
+      "expense": "Expense",
+      "transfer": "Transfer"
+    }
+  },
+  "profile": {
+    "greeting": "Hi",
+    "edit": {
+      "title": "Edit Profile",
+      "nameLabel": "Name",
+      "namePlaceholder": "Enter your name",
+      "removePhoto": "Remove Photo",
+      "permission": {
+        "title": "Permission Required",
+        "description": "We need access to your photos to set a profile picture."
+      },
+      "toast": {
+        "failed": "Failed to save image"
+      }
+    }
+  },
+  "screens": {
+    "home": {
+      "summary": {
+        "income": "Income",
+        "expense": "Expense"
+      },
+      "upcoming": {
+        "header": "Upcoming",
+        "seeAll": "See all",
+        "recurringCount": "{{count}} recurring",
+        "pendingCount": "{{count}} pending",
+        "subHeaderRecurring": "RECURRING",
+        "confirmAll": {
+          "button": "Confirm all",
+          "modalTitle": "Confirm all?",
+          "modalDescription": "All transactions awaiting confirmation will be confirmed. This cannot be undone."
+        },
+        "chips": {
+          "daysCount": "Next {{count}} day(s)"
+        },
+        "a11y": {
+          "header": "Pending",
+          "confirm": "Confirm transaction",
+          "confirmAll": "Confirm all transactions",
+          "confirmAllButton": "Confirm all",
+          "cancelTransaction": "Cancel transaction"
+        }
+      },
+      "emptyState": {
+        "title": "No transactions yet"
+      }
+    },
+    "accounts": {
+      "title": "All Accounts",
+      "addNew": "Add new account",
+      "addNewAccount": "New Account",
+      "totalBalance": "Total Balance",
+      "countLabel": "Accounts",
+      "archivedSection": "Archived",
+      "archiveSuccess": "Account archived",
+      "unarchiveSuccess": "Account restored",
+      "card": {
+        "primary": "Primary",
+        "thisMonth": "This Month",
+        "in": "IN",
+        "out": "OUT",
+        "net": "NET",
+        "currentBalance": "Current Balance",
+        "netThisMonth": "Net this month",
+        "archived": "Archived"
+      },
+      "form": {
+        "title": {
+          "create": "Create Account",
+          "edit": "Edit Account"
+        },
+        "namePlaceholder": "Account name",
+        "placeholder": "Checking, Savings, etc.",
+        "initialBalance": "Initial balance",
+        "excludeFromBalanceLabel": "Exclude from balance",
+        "primaryAccountLabel": "Primary account",
+        "primaryAccountHint": "This account will be used as the default account for new transactions and other actions.",
+        "archiveButton": "Archive Account",
+        "unarchiveButton": "Restore Account",
+        "archiveBannerText": "Archiving an account hides it from everywhere except in reports. You can permanently delete the account with its associated transactions after archiving it.",
+        "archivedBannerText": "This account is archived. Restore it to make changes.",
+        "deleteLabel": "Permanently delete account",
+        "typeLabel": "Account type",
+
+        "archiveModal": {
+          "archiveTitle": "Archive this account?",
+          "archiveConfirm": "Archive",
+          "unarchiveTitle": "Restore this account?",
+          "unarchiveConfirm": "Restore"
+        },
+        "deleteModal": {
+          "title": "Permanently delete {{name}}?",
+          "descriptionWithCount_one": "This account has {{count}} transaction. Permanently deleting the account will also delete it. This action cannot be undone.",
+          "descriptionWithCount_other": "This account has {{count}} transactions. Permanently deleting the account will also delete them. This action cannot be undone.",
+          "descriptionEmpty": "Permanently deleting this account cannot be undone. This action is irreversible!"
+        },
+        "toast": {
+          "deleteFailed": "Failed to delete account.",
+          "createFailed": "Failed to create account.",
+          "updateFailed": "Failed to update account."
+        }
+      },
+      "detail": {
+        "title": "Account Details"
+      },
+      "a11y": {
+        "clear": "Clear account",
+        "select": "Select account",
+        "selectTo": "Select to account",
+        "clearTo": "Clear to account",
+        "add": "Add account",
+        "searchPlaceholder": "Search accounts..."
+      }
+    },
+    "stats": {
+      "moreOptions": "More options",
+      "currency": {
+        "sectionHeader": "{{currency}}"
+      },
+      "hero": {
+        "totalExpense": "Total Expense",
+        "totalIncome": "Total Income",
+        "netFlow": "Net Flow",
+        "transactionCount": "{{count}} txn",
+        "onPaceFor": "On pace for ~{{amount}}"
+      },
+      "averages": {
+        "title": "Daily Averages",
+        "expense": "Avg. Expense",
+        "income": "Avg. Income",
+        "net": "Avg. Net"
+      },
+      "chart": {
+        "dailyTrend": "Daily Trend",
+        "spendingByCategory": "Spending by Category",
+        "uncategorizedLabel": "Uncategorized",
+        "prevPeriod": "Previous",
+        "currentPeriod": "This month"
+      },
+      "pieToggle": {
+        "expenses": "Expenses",
+        "income": "Income",
+        "noData": "No data for this view"
+      },
+      "emptyState": {
+        "title": "No data for this period",
+        "description": "Add transactions to see your stats",
+        "allPending": "All transactions are pending",
+        "allTransfers": "All transactions are transfers",
+        "noTransactionsEver": "No transactions yet",
+        "addFirst": "Add your first transaction"
+      },
+      "pendingNotice": "{{count}} pending transactions excluded from stats",
+      "balance": {
+        "title": "Net Balance",
+        "opening": "Opening",
+        "closing": "Closing"
+      },
+      "delta": {
+        "notAvailable": "N/A"
+      }
+    },
+    "settings": {
+      "sections": {
+        "other": "Other"
+      },
+      "about": {
+        "version": "v{{version}}",
+        "tagline": "Made to help your money make cents.",
+        "handle": "@adelefaell"
+      },
+      "preferences": {
+        "title": "Preferences",
+        "appearance": {
+          "label": "Appearance",
+          "theme": {
+            "title": "Theme",
+            "selectThemePlaceholder": "Select a theme",
+            "other_themes": "Other Themes",
+            "current_theme": "Current Theme"
+          },
+          "moneyFormatting": {
+            "title": "Money Formatting",
+            "previewLabel": "Preview",
+            "displayFormatLabel": "Display format",
+            "options": {
+              "symbol": {
+                "label": "Symbol",
+                "description": "e.g., $, €, £"
+              },
+              "code": {
+                "label": "Code",
+                "description": "e.g., USD, EUR, GBP"
+              },
+              "name": {
+                "label": "Name",
+                "description": "e.g., US Dollar, Euro"
+              }
+            }
+          },
+          "toast": {
+            "title": "Toast Style",
+            "position": {
+              "label": "Position",
+              "top": "Top",
+              "topDescription": "Appears below the status bar",
+              "bottom": "Bottom",
+              "bottomDescription": "Appears above the home indicator"
+            },
+            "progressBar": {
+              "label": "Progress bar",
+              "description": "Visual countdown indicator"
+            },
+            "closeIcon": {
+              "label": "Close icon",
+              "description": "Manual dismiss button"
+            },
+            "reset": {
+              "title": "Reset Toast Style",
+              "description": "Are you sure you want to reset all toast style settings to their default values?",
+              "confirmLabel": "Reset",
+              "cancelLabel": "Cancel"
+            },
+            "preview": {
+              "label": "Preview",
+              "description": "Test your current settings with live notifications",
+              "showDemo": "Show demo",
+              "hideAll": "Hide all"
+            },
+            "resetButton": "Reset to defaults",
+            "optionsLabel": "Options",
+            "demo": {
+              "successDescription": "This is a success message",
+              "errorDescription": "This is an error message",
+              "infoDescription": "This is an info message",
+              "warningDescription": "This is a warning message"
+            }
+          },
+          "transactionStyle": {
+            "title": "Transaction Style",
+            "sections": {
+              "preview": "Preview",
+              "categoryDisplay": "Category Display",
+              "layout": "Layout",
+              "leadingIcon": "Leading Icon"
+            },
+            "showForUntitled": {
+              "label": "Show category for untitled",
+              "description": "Use the category name as the title when a transaction has no name"
+            },
+            "showAfterAccount": {
+              "label": "Show category after account",
+              "description": "Display the category name in the subtitle below the account"
+            },
+            "lessDense": {
+              "label": "Less dense layout",
+              "description": "Add extra vertical padding to each transaction row"
+            },
+            "iconSource": {
+              "label": "Icon source",
+              "description": "Choose what the leading icon represents"
+            },
+            "options": {
+              "category": "Category",
+              "account": "Account"
+            },
+            "info": "Changes apply immediately to all transaction lists across the app."
+          },
+          "buttonPlacement": {
+            "title": "Button Placement",
+            "subtitle": "Drag the buttons to reorder",
+            "info": "This order is reflected in the transaction buttons on the home screen"
+          }
+        },
+        "buttonFeedback": {
+          "label": "Button Feedback",
+          "soundHaptic": {
+            "title": "Sound / haptic feedback upon click"
+          },
+          "systemInfo": "This depends on your phone's system settings. Make sure \"Touch interactions\" is enabled in Sound settings."
+        },
+        "language": {
+          "title": "Language",
+          "sectionLabel": "change language",
+          "rtlReloadConfirm": {
+            "title": "Restart required",
+            "description": "Switching to this language requires a restart to apply the new text direction.",
+            "confirmLabel": "Restart"
+          }
+        },
+        "transactionLocation": {
+          "title": "Transaction Location",
+          "permissionWarning": "Location permission not granted",
+          "enable": {
+            "label": "Enable",
+            "description": "Auto-capture location on new transactions"
+          },
+          "autoAttach": {
+            "label": "Auto-attach",
+            "description": "Attach location without prompting"
+          },
+          "footerCaption": "When enabled, your current location can be attached to new transactions. You can still add or remove it manually on each transaction."
+        }
+      },
+      "trash": {
+        "title": "Trash",
+        "viewRemovedList": "View removed list",
+        "retention": {
+          "title": "Retention Period",
+          "description": "Automatically clear deleted items after a set period",
+          "daysCount": "{{count}} day",
+          "daysCountPlural": "{{count}} days",
+          "forever": "Forever"
+        },
+        "empty": {
+          "noTransactions": "No deleted transactions",
+          "label": "Empty trash bin",
+          "modal": {
+            "title": "Empty Trash",
+            "description": "All items in the trash will be permanently deleted. This action cannot be undone.",
+            "confirm": "Empty Trash",
+            "cancel": "Cancel"
+          },
+          "toast": {
+            "successTitle": "Trash Emptied",
+            "successDescription": "Your trash has been cleared.",
+            "errorTitle": "Cleanup Failed",
+            "errorDescription": "An unexpected error occurred. Please try again."
+          }
+        },
+        "swipeInfo": {
+          "title": "Swipe Gestures",
+          "description": "Swipe left to permanently delete a transaction.\nSwipe right to restore it to your transactions."
+        },
+        "a11y": {
+          "restore": "Restore",
+          "destroyPermanently": "Destroy permanently",
+          "moveToTrash": "Move to trash",
+          "infoButton": "Swipe gesture help"
+        }
+      },
+      "pending": {
+        "title": "Pending Transactions",
+        "empty": "No pending transactions",
+        "caption": "Pending transactions will not be counted towards income, expenses, and account balance.",
+        "settings": {
+          "showOnHome": "Show on home",
+          "requireConfirmation": {
+            "label": "Require confirmation",
+            "description": "When on, new planned transactions need your approval before they count. Existing transactions keep their original mode."
+          },
+          "updateDateOnConfirm": {
+            "label": "Update date on confirm",
+            "description": "Disable to retain original transaction date."
+          },
+          "notify": {
+            "label": "Notify me",
+            "description": "Schedule a reminder when a planned transaction is due."
+          },
+          "earlyReminder": {
+            "label": "Early reminder",
+            "30min": "30 min",
+            "1h": "1 hour",
+            "3h": "3 hours",
+            "1day": "1 day",
+            "2days": "2 days"
+          }
+        }
+      },
+      "goals": {
+        "title": "Goals",
+        "empty": "No goals yet. Create one to start saving.",
+        "addNew": "New Goal",
+        "archivedButton": "Archived",
+        "archiveSuccess": "Goal archived",
+        "unarchiveSuccess": "Goal restored",
+        "archived": {
+          "title": "Archived Goals",
+          "empty": "No archived goals"
+        },
+        "card": {
+          "saved": "Saved",
+          "spent": "Spent",
+          "of": "of",
+          "daysLeft": "{{count}} days left",
+          "overdue": "Overdue by {{count}} days",
+          "noDeadline": "No deadline",
+          "allAccounts": "All Accounts",
+          "archived": "Archived",
+          "left": "left",
+          "reachedLabel": "Reached!",
+          "status": {
+            "onTrack": "On track",
+            "behind": "Behind",
+            "flexible": "Flexible",
+            "reached": "Reached"
+          },
+          "insight": {
+            "savePerDay": "Save {{amount}}/day to hit it",
+            "spendPerDay": "Spend {{amount}}/day to hit it",
+            "goalReached": "🎉 Goal reached"
+          }
+        },
+        "detail": {
+          "title": "Goal",
+          "transactions": "Transactions",
+          "noTransactions": "No transactions linked to this goal yet",
+          "pendingNotice": "Pending transactions are not included in progress"
+        },
+        "form": {
+          "title": {
+            "create": "New Goal",
+            "edit": "Edit Goal"
+          },
+          "goalType": {
+            "savings": "Savings goal",
+            "expense": "Expense goal"
+          },
+          "nameLabel": "Goal Name",
+          "namePlaceholder": "e.g. Vacation Fund",
+          "descriptionLabel": "Description",
+          "descriptionPlaceholder": "Optional note about this goal",
+          "targetAmountLabel": "Target Amount",
+          "targetDateLabel": "Target Date",
+          "deleteLabel": "Delete Goal",
+          "archiveLabel": "Archive Goal",
+          "unarchiveLabel": "Restore Goal",
+
+          "archiveModal": {
+            "archiveTitle": "Archive this goal?",
+            "archiveConfirm": "Archive",
+            "unarchiveTitle": "Restore this goal?",
+            "unarchiveConfirm": "Restore"
+          },
+          "toast": {
+            "notFound": "Goal not found.",
+            "createFailed": "Failed to create goal.",
+            "updateFailed": "Failed to update goal.",
+            "deleteFailed": "Failed to delete goal."
+          }
+        }
+      },
+      "budgets": {
+        "title": "Budgets",
+        "empty": "No budgets yet. Create one to start tracking.",
+        "addNew": "New Budget",
+        "periods": {
+          "daily": "Daily",
+          "weekly": "Weekly",
+          "monthly": "Monthly",
+          "yearly": "Yearly",
+          "custom": "Custom"
+        },
+        "card": {
+          "spend": "SPEND",
+          "time": "TIME",
+          "of": "of",
+          "over": "over",
+          "left": "left",
+          "allAccounts": "All Accounts",
+          "alertThresholdReached": "Alert threshold reached",
+          "disabled": "Disabled",
+          "dayOf": "day {{current}}/{{total}}",
+          "dayXofY": "Day {{current}} of {{total}}",
+          "uncategorized": "Uncategorized",
+          "status": {
+            "onTrack": "On track",
+            "watch": "Watch",
+            "over": "Over"
+          },
+          "insight": {
+            "over": {
+              "daily": "Over by {{amount}} today",
+              "weekly": "Over by {{amount}} this week",
+              "monthly": "Over by {{amount}} this month",
+              "yearly": "Over by {{amount}} this year",
+              "custom": "Over by {{amount}} in {{range}}"
+            },
+            "dailyPace_one": "{{amount}}/day for {{count}} day",
+            "dailyPace_other": "{{amount}}/day for {{count}} days"
+          }
+        },
+        "detail": {
+          "title": "Budget",
+          "transactions": "Transactions",
+          "noTransactions": "No transactions in this period"
+        },
+        "form": {
+          "title": {
+            "create": "New Budget",
+            "edit": "Edit Budget"
+          },
+          "nameLabel": "Budget Name",
+          "namePlaceholder": "e.g. Groceries",
+          "amountLabel": "Amount",
+          "periodLabel": "Period",
+          "categoryLabel": "Categories",
+          "alertThresholdLabel": "Alert at (%)",
+          "startDateLabel": "Start Date",
+          "endDateLabel": "End Date",
+          "isActiveLabel": "Active",
+          "duplicateLabel": "Duplicate Budget",
+          "duplicateSuccess": "Budget duplicated",
+          "deleteLabel": "Delete Budget",
+
+          "toast": {
+            "notFound": "Budget not found.",
+            "createFailed": "Failed to create budget.",
+            "updateFailed": "Failed to update budget.",
+            "deleteFailed": "Failed to delete budget."
+          }
+        }
+      },
+      "loans": {
+        "title": "Loans",
+        "empty": "No loans yet",
+        "addNew": "Add Loan",
+        "type": {
+          "all": "All",
+          "lent": "Lent",
+          "borrowed": "Borrowed"
+        },
+        "card": {
+          "paid": "Paid",
+          "paidBack": "Paid back",
+          "received": "Received",
+          "of": "of",
+          "dueDate": "Due {{date}}",
+          "dueToday": "Due today",
+          "dueTomorrow": "Due tomorrow",
+          "dueInDays_one": "Due in {{count}} day",
+          "dueInDays_other": "Due in {{count}} days",
+          "noDueDate": "No due date",
+          "settled": "Settled",
+          "statusPaid": "Paid"
+        },
+        "form": {
+          "amountLabel": "Principal Amount",
+          "deleteLabel": "Delete Loan"
+        },
+        "detail": {
+          "title": "Loan",
+          "transactions": "Transactions",
+          "noTransactions": "No transactions linked to this loan yet"
+        },
+        "actions": {
+          "collect": "Collect",
+          "settle": "Settle",
+          "collectAll": "Collect All",
+          "settleAll": "Settle All",
+          "collectAllDesc": "Record full repayment of remaining balance",
+          "settleAllDesc": "Record full payment of remaining balance",
+          "partialCollect": "Partially Collect",
+          "partialSettle": "Partially Settle",
+          "partialCollectDesc": "Record a partial repayment",
+          "partialSettleDesc": "Record a partial payment",
+          "collectSuccess": "Repayment recorded",
+          "settleSuccess": "Payment recorded"
+        },
+        "initialTransaction": {
+          "title": "Loan: {{name}}"
+        }
+      },
+      "tags": {
+        "title": "Tags",
+        "searchPlaceholder": "Search tags...",
+        "newTag": "New tag",
+        "empty": {
+          "noTags": "No tags yet",
+          "noResults": "No tags found"
+        },
+        "form": {
+          "title": {
+            "create": "Create Tag",
+            "edit": "Edit Tag"
+          },
+          "tabs": {
+            "generic": "Generic",
+            "location": "Location",
+            "contact": "Person"
+          },
+          "nameLabelGeneric": "Tag name",
+          "nameLabelContact": "Contact name",
+          "placeholderGeneric": "Work, Shopping...",
+          "placeholderContact": "John Doe",
+          "deleteLabel": "Permanently delete",
+
+          "deleteModal": {
+            "title": "Permanently delete {{name}}?",
+            "descriptionWithCount_one": "This tag is used by {{count}} transaction. Permanently deleting the tag will unlink it and remove it permanently. This cannot be undone.",
+            "descriptionWithCount_other": "This tag is used by {{count}} transactions. Permanently deleting the tag will unlink it from all of them and remove it permanently. This cannot be undone.",
+            "descriptionEmpty": "Permanently deleting this tag cannot be undone."
+          },
+          "toast": {
+            "deleteFailed": "Failed to delete tag.",
+            "createFailed": "Failed to create tag.",
+            "updateFailed": "Failed to update tag."
+          },
+          "nameLabelLocation": "Location name",
+          "placeholderLocation": "Home, Work, Coffee Shop...",
+          "contactPermission": {
+            "denied": "Permission denied",
+            "deniedDescription": "We need contacts permission to select a contact from your phone."
+          }
+        }
+      },
+      "billSplitter": {
+        "title": "Bill Splitter",
+        "info": {
+          "title": "How It Works",
+          "description": "Add items to your bill, assign participants, and split costs. When you're done, generate loan transactions for each person who owes you."
+        },
+        "actions": {
+          "clearBill": "Clear",
+          "summary": "Summary",
+          "addItem": "Add Item",
+          "generateLoans": "Generate Next Loan"
+        },
+        "items": {
+          "empty": {
+            "title": "No Items",
+            "description": "Tap the + button to add an item to split."
+          }
+        },
+        "item": {
+          "name": "Item Name",
+          "price": "Price",
+          "quantity": "Multiplier",
+          "quantityDescription": "Multiplied to every item, useful for tax",
+          "splitEvenly": "Split Evenly",
+          "total": "Total"
+        },
+        "names": {
+          "title": "Participants",
+          "addName": "Add Name",
+          "placeholder": "Enter name",
+          "empty": {
+            "title": "No Participants",
+            "description": "Add people to split the bill with."
+          }
+        },
+        "summary": {
+          "title": "Summary",
+          "owedToYou": "Your share",
+          "selectAccount": "Select an account",
+          "noAccount": "Please select an account first.",
+          "noPayer": "Please select who you are first.",
+          "noItems": "Add items and participants to see the summary.",
+          "loanDescription": "Bill split",
+          "whoAreYou": {
+            "title": "Who Are You?"
+          }
+        },
+        "clear": {
+          "confirm": {
+            "title": "Clear Bill?",
+            "description": "This will remove all items and reset the bill. Participants will be kept."
+          }
+        }
+      },
+      "exchangeRates": {
+        "title": "Exchange Rates",
+        "apiTitle": "Exchange Rates API",
+        "loading": "Loading exchange rates…",
+        "searchPlaceholder": "Search currencies...",
+        "instructionCaption": "Select an entry to set a custom exchange rate. Note: All exchange rate calculations use USD as a reference.",
+        "infoModal": {
+          "title": "Exchange Rates",
+          "description": "Rates are shown as amount per 1 USD. Select an entry to set a custom rate. All calculations use USD as reference.",
+          "ok": "OK"
+        },
+        "errors": {
+          "invalidRate": "Rate must be greater than 0",
+          "invalidCurrencyCode": "Invalid currency code. Please use a valid ISO 4217 currency code.",
+          "fetchFailed": "Failed to fetch exchange rates. Please check your connection and try again.",
+          "invalidData": "Invalid exchange rate data. Please try again later.",
+          "usingCachedRates": "Using cached exchange rates. Rates may be outdated.",
+          "rateNotFound": "Exchange rate not found. Please try again or set a custom rate in Settings."
+        },
+        "a11y": {
+          "info": "Information about exchange rates"
+        }
+      },
+      "dataManagement": {
+        "title": "Data Management",
+        "sections": {
+          "export": "Export",
+          "import": "Import"
+        },
+        "exportJson": "Export Full Backup",
+        "exportJsonDesc": "Save a full JSON backup to your device",
+        "exportCsv": "Export Transactions (CSV)",
+        "exportCsvDesc": "Save non-deleted transactions as a spreadsheet",
+        "exportSaved": "Saved to device",
+        "exportSavedLocally": "Saved locally",
+        "exportError": "Export failed. Please try again.",
+        "exportFileNotFound": "Original file no longer exists. Please export again.",
+        "importJson": "Restore from Backup",
+        "importJsonDesc": "Replace all data from a JSON backup file",
+        "importSuccess": "Data restored successfully",
+        "importError": "Restore failed",
+        "importInvalidFile": "Please select a JSON backup file",
+        "importParseError": "The selected file is not valid JSON",
+        "importValidationError": "Invalid JSON backup file",
+        "importConfirm": {
+          "title": "Restore from Backup?",
+          "warning": "This will permanently erase all current data and replace it with the selected backup.",
+          "recordSummary": "{{count}} records across {{tables}} tables",
+          "confirm": "Restore",
+          "cancel": "Cancel"
+        },
+        "history": {
+          "title": "Export History",
+          "description": "Previously exported files",
+          "empty": "No exports yet",
+          "emptyDescription": "Exported files will appear here",
+          "saveAs": "Save As",
+          "clearAll": "Clear All",
+          "remove": "Remove",
+          "clearAllConfirmTitle": "Clear Export History?",
+          "clearAllConfirmMessage": "All export records and their files will be permanently deleted.",
+          "removeConfirmTitle": "Remove Export?",
+          "removeConfirmMessage": "This export record and its file will be permanently deleted.",
+          "share": "Share…",
+          "reSaved": "File saved to device"
+        }
+      },
+      "privacy": {
+        "title": "Privacy",
+        "settings": {
+          "maskNumber": "Mask money (⁕) at startup",
+          "maskNumberOnShake": "Mask money (⁕) when shaking",
+          "lockApp": "Lock app",
+          "lockAfterClosing": "Lock after closing"
+        },
+        "alert": {
+          "deviceLockRequired": {
+            "title": "Device lock required",
+            "message": "Set a PIN, pattern, password, or biometric in your device settings to use app lock."
+          }
+        },
+        "biometric": {
+          "confirmEnable": "Confirm to enable app lock",
+          "confirmDisable": "Confirm to disable app lock"
+        }
+      },
+      "reminders": {
+        "title": "Reminder",
+        "testNotification": "Press Test Notification",
+        "remindDaily": {
+          "label": "Remind daily",
+          "description": "Remind me to log my transactions"
+        },
+        "remindAt": "Remind me at",
+        "footerCaption": "Reminders will stop if you don't open the app for 7 consecutive days",
+        "notification": {
+          "title": "Time for a check-in! 🍃",
+          "body": "Don't forget to log your transactions for today."
+        },
+        "a11y": {
+          "grantNotifications": "Grant notifications permission",
+          "permissionWarning": "Notifications permission not granted"
+        }
+      },
+      "transfers": {
+        "title": "Transfers",
+        "layout": {
+          "subtitle": "Layout",
+          "caption": "Transfers are always separated in some views.",
+          "options": {
+            "combine": {
+              "label": "Combine",
+              "description": "Single net amount"
+            },
+            "separate": {
+              "label": "Separate",
+              "description": "Outgoing and incoming shown separately"
+            }
+          }
+        },
+        "totals": {
+          "subtitle": "Totals",
+          "excludeToggle": {
+            "label": "Exclude from totals",
+            "description": "Don't count towards total expense or income"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "transactionForm": {
+      "title": {
+        "create": "Create Transaction",
+        "edit": "Edit Transaction"
+      },
+      "notFoundTransaction": "Transaction not found.",
+      "fields": {
+        "transferTitle": "Transfer",
+        "transferTitleFull": "From {{from}} to {{to}}",
+        "amountLabel": "Amount",
+        "convertedAmountLabel": "Converted amount",
+        "notes": "Notes",
+        "notesPlaceholder": "Add notes about this transaction...",
+        "transactionDate": "Transaction date",
+        "fileAttachments": "File attachments",
+        "conversion": "Conversion",
+        "conversionRate": "Rate",
+        "category": "Category",
+        "account": "Account",
+        "toAccount": "To Account",
+        "tags": "Tags",
+        "goal": "Goal",
+        "budget": "Budget",
+        "loan": "Loan",
+        "clear": "Clear",
+        "addCategories": "categories",
+        "now": "Now",
+        "pending": "Pending",
+        "tapToEditNotes": "Tap to edit notes",
+        "addNotes": "Add notes...",
+        "moveToTrash": "Move to trash",
+        "restore": "Restore",
+        "location": "Location",
+        "refundLabel": "Refund"
+      },
+      "recurring": {
+        "label": "Recurring transaction",
+        "recurrence": "Recurrence",
+        "startsOn": "Starts on",
+        "endsOn": "Ends on",
+        "never": "Never",
+        "onADate": "On a date",
+        "occurrences": "Occurrences",
+        "timesCount_one": "{{count}} time",
+        "timesCount_other": "{{count}} times"
+      },
+      "addFiles": {
+        "label": "Add files",
+        "selectFromFiles": "Select from files",
+        "takeAPhoto": "Take a photo",
+        "selectMultipleMedia": "Select multiple media",
+        "selectAPhoto": "Select a photo"
+      },
+      "save": "Save",
+      "create": "Create",
+      "openFile": {
+        "title": "Open {{name}}?",
+        "description": "Are you sure you want to open this file?"
+      },
+      "removeAttachment": {
+        "title": "Delete file",
+        "description": "Are you sure you want to remove this attachment?"
+      },
+      "destroyModal": {
+        "description": "This transaction will be removed forever and cannot be restored."
+      },
+      "amountInput": {
+        "hint": "Enter amount or a math expression (e.g. 100/4)",
+        "showMathActions": "Show math actions",
+        "hideMathActions": "Hide math actions",
+        "mathToolbarHint": "Toggles inline math toolbar",
+        "insertOperator": "Insert {{op}}",
+        "operatorTimes": "times",
+        "backspace": "Backspace",
+        "applyResult": "Apply result",
+        "applyResultHint": "Tap to use this result",
+        "confirmAmount": "Confirm amount",
+        "entered": "Entered",
+        "resultLabel": "Result: "
+      },
+      "attachments": {
+        "openFileModal": "Open file",
+        "a11y": {
+          "removeAttachment": "Remove attachment",
+          "addFiles": "Add files",
+          "addFilesExpandHint": "Expand to add files",
+          "addFilesCollapseHint": "Collapse options"
+        }
+      },
+      "toast": {
+        "selectDestination": "Please select a destination account",
+        "fromToDifferent": "From and To accounts must be different",
+        "transferCreated": "Transfer created",
+        "transferUpdated": "Transfer updated",
+        "recurringCreated": "Recurring transaction created",
+        "recurringCreateFailed": "Failed to create recurring transaction",
+        "transactionCreated": "Transaction created",
+        "transactionUpdated": "Transaction updated",
+        "saveFailed": "Failed to save transaction",
+        "movedToTrash": "Moved to trash",
+        "moveToTrashFailed": "Failed to move to trash",
+        "restored": "Restored",
+        "restoredDescription": "Transaction restored.",
+        "restoreFailed": "Failed to restore transaction",
+        "couldNotSelectFile": "Could not select file",
+        "deleteRecurringSuccess": "Transaction deleted",
+        "deleteRecurringAllSuccess": "All recurring transactions deleted",
+        "deleteRecurringFutureSuccess": "This and future transactions deleted",
+        "deleteRecurringFailed": "Failed to delete transaction",
+        "editRecurringSuccess": "Transaction updated",
+        "editRecurringFutureSuccess": "This and future transactions updated",
+        "editRecurringFailed": "Failed to save transaction",
+        "upcomingConfirmFailed": "Failed to confirm",
+        "upcomingConfirmAllFailed": "Failed to confirm all",
+        "deletedDescription": "Transaction permanently removed.",
+        "deleteFailed": "Failed to delete transaction.",
+        "rateLoading": "Rate is still loading, please wait",
+        "setDifferentCurrencies": "Please set the converted amount for different currencies"
+      },
+      "a11y": {
+        "closePreview": "Close preview",
+        "selectedSuffix": ", selected",
+        "openNotesEditor": "Open notes editor",
+        "setDateTimeNow": "Set date and time to now",
+        "clearCategory": "Clear category",
+        "addCategories": "Add categories",
+        "selectCategory": "Select {{name}} category",
+        "clearGoal": "Clear goal",
+        "clearBudget": "Clear budget",
+        "clearLoan": "Clear loan",
+        "clearAllTags": "Clear all tags",
+        "addTag": "Add tag",
+        "noTagsFound": "No tags found",
+        "allTagsSelected": "All tags selected",
+        "amountInput": "Amount input"
+      }
+    },
+    "recurring": {
+      "frequency": {
+        "none": "None",
+        "daily": "Every day",
+        "weekly": "Every week, {{day}}",
+        "biweekly": "Every 2 weeks, {{day}}",
+        "monthly": "Every month, {{date}}",
+        "yearly": "Every year, {{date}}"
+      },
+      "deleteModal": {
+        "title": "Delete recurring transaction",
+        "subtitle": "Choose which transactions to remove",
+        "optionThis": "This transaction",
+        "optionThisSublabel": "Only remove this occurrence",
+        "optionAll": "All transactions",
+        "optionAllSublabel": "Remove every occurrence, past and future",
+        "optionFuture": "This and future transactions",
+        "optionFutureSublabel": "Keep the past, remove from here onward",
+        "confirmTitle": "Are you sure?",
+        "confirmMessage": "This action will delete all related transactions, and stop new transactions from being created. Recovering the transactions from trash bin wouldn't cause it to create new transactions.",
+        "cancel": "Cancel",
+        "delete": "Delete"
+      },
+      "editModal": {
+        "title": "Edit recurring transaction",
+        "subtitle": "Choose how far to apply your changes",
+        "optionThis": "This transaction",
+        "optionThisSublabel": "Only update this occurrence",
+        "optionFuture": "This and future transactions",
+        "optionFutureSublabel": "Update from here onward, keep the past",
+        "cancel": "Cancel"
+      }
+    },
+    "categories": {
+      "title": "Categories",
+      "presets": {
+        "addSelected": "Add {{count}} Selected",
+        "selectAll": "Select all",
+        "deselectAll": "Deselect all",
+        "selectedCount": "{{count}} selected",
+        "noneSelected": "None selected",
+        "expense": {
+          "groceries": "Groceries",
+          "transportation": "Transportation",
+          "healthcare": "Healthcare",
+          "education": "Education",
+          "shopping": "Shopping",
+          "dining": "Food & Dining",
+          "entertainment": "Entertainment",
+          "housing": "Housing & Utilities",
+          "fitness": "Health & Fitness",
+          "utilities": "Utilities",
+          "travel": "Travel",
+          "personalCare": "Personal Care",
+          "clothing": "Clothing",
+          "subscriptions": "Subscriptions",
+          "insurance": "Insurance",
+          "pets": "Pets",
+          "coffee": "Coffee & Drinks",
+          "charity": "Charity"
+        },
+        "income": {
+          "salary": "Salary",
+          "freelance": "Freelance",
+          "investment": "Investment",
+          "business": "Business",
+          "gift": "Gift",
+          "rental": "Rental Income",
+          "dividends": "Dividends",
+          "bonus": "Bonus",
+          "sideIncome": "Side Income",
+          "pension": "Pension",
+          "taxRefund": "Tax Refund",
+          "cashback": "Cashback",
+          "commission": "Commission",
+          "allowance": "Allowance",
+          "overtime": "Overtime"
+        }
+      },
+      "search": {
+        "placeholder": "Search {{tab}} categories..."
+      },
+      "types": {
+        "expense": "Expense",
+        "income": "Income",
+        "transfer": "Transfer"
+      },
+      "actions": {
+        "addNew": "Add New Category",
+        "addFromPresets": "Add From Presets"
+      },
+      "form": {
+        "title": {
+          "create": "Create Category",
+          "edit": "Edit Category"
+        },
+        "nameLabel": "Category name",
+        "namePlaceholder": "Groceries, Dining out, etc.",
+        "typeLabel": "Type",
+        "deleteLabel": "Permanently delete",
+
+        "deleteModal": {
+          "title": "Delete {{name}}?",
+          "descriptionWithCount_one": "This category is used by {{count}} transaction. Deleting will unlink it. This cannot be undone.",
+          "descriptionWithCount_other": "This category is used by {{count}} transactions. Deleting will unlink them. This cannot be undone.",
+          "descriptionEmpty": "Deleting this category cannot be undone."
+        },
+        "toast": {
+          "notFound": "Category not found",
+          "cannotDelete": "Cannot delete category",
+          "cannotDeleteDescription_one": "This category has {{count}} transaction. Please remove or reassign all transactions before deleting.",
+          "cannotDeleteDescription_other": "This category has {{count}} transactions. Please remove or reassign all transactions before deleting.",
+          "deleteFailed": "Failed to delete category. Please try again.",
+          "createFailed": "Failed to create category. Please try again.",
+          "updateFailed": "Failed to update category. Please try again."
+        }
+      },
+      "empty": {
+        "noCategories": {
+          "title": "No {{type}} categories yet",
+          "description": "Create your first category to start organizing your transactions"
+        },
+        "noResults": {
+          "title": "No results for \"{{query}}\"",
+          "description": "Try a different search term"
+        }
+      }
+    },
+    "filters": {
+      "searchPlaceholder": "Search by title...",
+      "clearAll": "Clear all",
+      "includeNotes": "Include notes",
+      "noCategoriesForType": "No categories for this type",
+      "chips": {
+        "accounts": "Accounts",
+        "allAccounts": "All",
+        "accountCount": "{{count}} acct",
+        "categories": "Categories",
+        "categoryCount_one": "{{count}} category",
+        "categoryCount_other": "{{count}} categories",
+        "tags": "Tags",
+        "tagCount_one": "{{count}} tag",
+        "tagCount_other": "{{count}} tags",
+        "type": "Type",
+        "allTypes": "All types",
+        "typeCount_one": "{{count}} type",
+        "typeCount_other": "{{count}} types",
+        "currency": "Currency",
+        "allCurrencies": "All currencies",
+        "currencyCount_one": "{{count}} currency",
+        "currencyCount_other": "{{count}} currencies",
+        "attachments": "Attachments",
+        "pendingStatus": "Pending Status",
+        "thisMonth": "This month",
+        "untitled": "Untitled",
+        "typeCount": "type count"
+      },
+      "attachmentOptions": {
+        "has": "Has Attachments",
+        "none": "Has No Attachments"
+      },
+      "pendingOptions": {
+        "all": "All",
+        "pending": "Pending",
+        "notPending": "Not Pending"
+      },
+      "groupByOptions": {
+        "hour": "Hour",
+        "day": "Day",
+        "week": "Week",
+        "month": "Month",
+        "year": "Year",
+        "allTime": "All time"
+      },
+      "searchMatch": {
+        "smart": "Smart",
+        "partial": "Partial match",
+        "exact": "Exact match",
+        "untitled": "Untitled"
+      }
+    },
+    "iconPicker": {
+      "title": "Select Icon",
+      "iconMode": "Icon",
+      "searchPlaceholder": "Search icons...",
+      "pasteImage": "Paste an image",
+      "pickImage": "Pick an image",
+      "emojiLetter": "Emoji/Letter",
+      "emojiInstruction": "Enter an emoji or a letter to use as an icon",
+      "imageMode": "Image",
+      "noIconsFound": "No icons found",
+      "tryDifferentSearch": "Try a different search term",
+      "errors": {
+        "clipboardRead": "Failed to read clipboard content",
+        "noImageLink": "No image link",
+        "noImageLinkDesc": "There is no link to copy from clipboard",
+        "invalidImageLink": "Invalid image link",
+        "invalidImageLinkDesc": "The clipboard does not contain a valid image URL",
+        "permissionRequired": "Permission Required",
+        "permissionDescription": "We need access to your photos to select an image."
+      }
+    },
+    "colorPicker": {
+      "currentTheme": "Current Theme",
+      "changeColor": "Change color",
+      "defaultColor": "Default color",
+      "noVariants": "No color variants available for the current theme"
+    },
+    "dateRange": {
+      "yearPlaceholder": "Select a year",
+      "title": "Select range",
+      "commonOptions": "Common options",
+      "customRange": "Custom range",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "now": "Now",
+      "yearInputPlaceholder": "Year",
+      "presets": {
+        "last30": "Last 30 days",
+        "thisWeek": "This week",
+        "thisMonth": "This month",
+        "thisYear": "This year",
+        "allTime": "All time"
+      }
+    },
+    "locationPicker": {
+      "title": "Pick Location",
+      "gettingLocation": "Getting location...",
+      "tapOrDrag": "Pan map to position pin",
+      "tapToEdit": "Tap on the map to edit",
+      "addLocation": "Add a location",
+      "removeLocation": "Remove location"
+    },
+    "selectors": {
+      "contacts": {
+        "searchPlaceholder": "Search contacts...",
+        "title": "Select contact",
+        "triggerLabel": "Select contact from phone",
+        "noContacts": "No contacts found",
+        "permissionDenied": "Contacts permission not granted",
+        "permissionRequired": "Permission Required",
+        "permissionDescription": "Please grant permission to access your contacts in order to select a contact from your phone."
+      },
+      "currency": {
+        "title": "Currency",
+        "triggerLabel": "Currency",
+        "searchPlaceholder": "Search currencies...",
+        "noCurrenciesFound": "No currencies found",
+        "cryptocurrency": "Cryptocurrency",
+        "searchPlaceholderEx": "Search... (country, currency, code)"
+      }
+    },
+    "transactionItem": {
+      "recurring": "Recurring",
+      "pending": "Pending",
+      "canceled": "Transaction canceled",
+      "failedToDelete": "Failed to delete"
+    },
+    "transactionList": {
+      "emptyDescription": "Transactions for this period will appear here",
+      "transactionCount": "• {{count}} transactions"
+    },
+    "categoryRow": {
+      "transactionCount_one": "{{count}} transaction",
+      "transactionCount_other": "{{count}} transactions"
+    },
+    "searchInput": {
+      "placeholder": "Search..."
+    },
+    "inlineCategoryPicker": {
+      "noCategories": "No categories yet",
+      "createCategory": "Create a category"
+    },
+    "currencyAccountSelector": {
+      "currencyLabel": "Currency",
+      "accountsLabel": "Accounts",
+      "selectAll": "Select all {{currency}} accounts",
+      "noAccounts": "No accounts yet",
+      "createAccount": "Create an account",
+      "noAccountsForCurrency": "No accounts for this currency",
+      "accountsClearedTitle": "Accounts cleared",
+      "accountsClearedDescription": "Selected accounts were removed because they don't match {{currency}}."
+    }
+  },
+  "validation": {
+    "required": {
+      "name": "Name is required",
+      "currency": "Currency is required",
+      "account": "Account is required",
+      "accountForTransaction": "Please choose an account to save this transaction.",
+      "toAccountForTransfer": "Please select a destination account for the transfer.",
+      "category": "Category is required",
+      "accounts": "Please select at least one account",
+      "categories": "Please select at least one category"
+    },
+    "tooLong": {
+      "name": "Name is too long"
+    },
+    "amount": {
+      "positive": "Amount must be greater than 0",
+      "invalid": "Enter a valid amount",
+      "targetPositive": "Target amount must be greater than 0"
+    },
+    "initialBalance": {
+      "negative": "Initial balance cannot be negative"
+    },
+    "endDate": {
+      "requiredForCustom": "End date is required for custom period"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "subtitle": "Take charge of your money, one day at a time"
+    },
+    "openSource": {
+      "title": "Free & open source",
+      "description": "No subscriptions, no hidden fees. The source code is open for anyone to inspect."
+    },
+    "privacy": {
+      "title": "Your data stays with you",
+      "description": "Everything is stored locally on your device or your own cloud — nothing leaves without your permission."
+    },
+    "start": {
+      "title": "How would you like to begin?",
+      "import": {
+        "title": "Restore from backup",
+        "description": "Bring back your data from an existing {{name}} backup"
+      },
+      "fresh": {
+        "title": "Begin from scratch",
+        "description": "Set up {{name}} for the first time"
+      }
+    },
+    "accounts": {
+      "title": "Pick your accounts",
+      "hint": "Choose from the suggestions below, or create your own. You can adjust this anytime.",
+      "addNew": "Create a custom account",
+      "suggested": "Suggested",
+      "presets": {
+        "main": "Main",
+        "cash": "Cash",
+        "savings": "Savings"
+      }
+    },
+    "expenseCategories": {
+      "title": "Expense categories",
+      "subtitle": "Pick categories to track your spending"
+    },
+    "incomeCategories": {
+      "title": "Income categories",
+      "subtitle": "Pick categories to track your earnings"
+    },
+    "profile": {
+      "title": "Your profile"
+    },
+    "actions": {
+      "next": "Next",
+      "getStarted": "Get started",
+      "done": "Done"
+    }
+  },
+  "dates": {
+    "unknown": "Unknown",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "tomorrow": "Tomorrow",
+    "thisDay": "This {{day}}",
+    "lastDay": "Last {{day}}",
+    "nextDay": "Next {{day}}",
+    "weekOf": "Week of {{date}}"
+  }
+}

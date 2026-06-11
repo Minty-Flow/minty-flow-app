@@ -1,0 +1,4 @@
+allowBuilds:
+  '@shopify/react-native-skia': true
+  msgpackr-extract: true
+networkConcurrency: 1

@@ -1,0 +1,106 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+app-example
+
+# generated native folders
+/ios
+/android
+/memory
+
+tabler-icons
+.tmp
+
+
+# Claude Code
+.claude/
+.claude-code/
+CLAUDE.md
+
+# ai plugins
+.oac.json
+
+# OpenCode
+.opencode/
+
+# Cursor
+.cursor/
+.cursor-tutor/
+
+# Continue
+.continue/
+
+# Aider
+.aider*
+.aider/
+
+# Gemini CLI
+.gemini/
+
+# Cline
+.cline/
+
+# Roo Code
+.roo/
+.roocode/
+
+# Copilot local artifacts
+.copilot/
+
+# Windsurf
+.windsurf/
+
+# OpenAI Codex CLI
+.codex/
+
+# Generic AI prompts, chats, memories, logs
+.ai/
+.prompts/
+.memory/
+.memories/
+.chats/
+.conversations/
+.llm/
+.llms/
+
+# AI generated logs/cache
+*.llmcache
+*.aicache
+*.promptlog
+*.chatlog

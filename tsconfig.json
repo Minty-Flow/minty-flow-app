@@ -1,0 +1,24 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "useDefineForClassFields": false,
+    "types": ["node"],
+    "paths": {
+      "~/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "plugins/with-android-release-signing.mts",
+    "scripts/check-missing-i18n-keys.mts",
+    "scripts/find-unused-styles.mts",
+    "scripts/generate-structure.mts",
+    "scripts/run-android-usb.mts"
+  ]
+}

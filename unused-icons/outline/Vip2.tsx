@@ -1,0 +1,24 @@
+import Svg, { Path } from "react-native-svg";
+import type { SvgProps } from "react-native-svg";
+const SvgVip2 = (props: SvgProps) => (
+  <Svg
+    width={24}
+    height={24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <Path d="M3 5h4" />
+    <Path d="M17 5h4" />
+    <Path d="M3 19h18" />
+    <Path d="M4 9l2 6h1l2 -6" />
+    <Path d="M12 10v5" />
+    <Path d="M16 15v-6h2a2 2 0 1 1 0 4h-2" />
+    <Path d="M10 5a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2" />
+  </Svg>
+);
+export default SvgVip2;

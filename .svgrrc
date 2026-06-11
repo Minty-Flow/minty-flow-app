@@ -1,0 +1,9 @@
+{
+  "native": true,
+  "typescript": true,
+  "icon": true,
+  "jsxRuntime": "automatic",
+  "svgoConfig": {
+    "plugins": ["removeXMLNS"]
+  }
+}
