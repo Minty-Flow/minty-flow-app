@@ -80,12 +80,12 @@ const styles = StyleSheet.create((theme) => ({
     gap: 4,
   },
   label: {
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     flexShrink: 1,
   },
   subline: {
     fontSize: theme.typography.labelXSmall.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     marginTop: -4,
   },
 }))

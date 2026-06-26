@@ -286,7 +286,7 @@ export const TransactionItem = ({
         <Pressable
           style={[
             transactionItemStyles.confirmButton,
-            { backgroundColor: theme.colors.customColors.success },
+            { backgroundColor: theme.colors.semantic.success },
           ]}
           onPress={onConfirm}
           accessibilityLabel={t("screens.home.upcoming.a11y.confirm")}

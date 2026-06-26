@@ -1,8 +1,8 @@
 {
   "expo": {
     "version": "0.0.1",
-    "name": "Minty Flow",
-    "slug": "minty-flow-app",
+    "name": "DEBUG-Minty Flow",
+    "slug": "DEBUG-minty-flow-app",
     "extra": {
       "supportsRTL": true
     },
@@ -12,7 +12,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mintyflow.tracker",
+      "bundleIdentifier": "debug.mintyflow.tracker",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -32,7 +32,7 @@
         "monochromeImage": "./src/assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.mintyflow.tracker",
+      "package": "debug.mintyflow.tracker",
       "blockedPermissions": ["android.permission.ACTIVITY_RECOGNITION"]
     },
     "web": {

@@ -47,7 +47,7 @@ export const upcomingSectionStyles = StyleSheet.create((theme) => ({
   seeAllText: {
     ...theme.typography.labelLarge,
     fontWeight: "600",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   pillRow: {
     flexDirection: "row",
@@ -81,7 +81,7 @@ export const upcomingSectionStyles = StyleSheet.create((theme) => ({
   subHeaderText: {
     ...theme.typography.labelXSmall,
     fontWeight: "600",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     letterSpacing: 0.5,
   },
   confirmAllButton: {

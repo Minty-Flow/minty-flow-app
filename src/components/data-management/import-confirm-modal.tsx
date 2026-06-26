@@ -66,14 +66,14 @@ export function ImportConfirmModal({
                 style={[
                   styles.iconCircle,
                   {
-                    backgroundColor: `${theme.colors.customColors.expense}20`,
+                    backgroundColor: `${theme.colors.semantic.expense}20`,
                   },
                 ]}
               >
                 <IconSvg
                   name="alert-triangle"
                   size={26}
-                  color={theme.colors.customColors.expense}
+                  color={theme.colors.semantic.expense}
                 />
               </View>
               <Text style={styles.title}>
@@ -108,7 +108,7 @@ export function ImportConfirmModal({
                   styles.button,
                   styles.cancelButton,
                   {
-                    borderColor: theme.colors.customColors.semi,
+                    borderColor: theme.colors.semantic.semi,
                     backgroundColor: `${theme.colors.onSurface}08`,
                   },
                   pressed && styles.buttonPressed,
@@ -129,7 +129,7 @@ export function ImportConfirmModal({
                   styles.button,
                   styles.confirmButton,
                   {
-                    backgroundColor: theme.colors.customColors.expense,
+                    backgroundColor: theme.colors.semantic.expense,
                   },
                   pressed && styles.buttonPressed,
                   isLoading && styles.buttonDisabled,

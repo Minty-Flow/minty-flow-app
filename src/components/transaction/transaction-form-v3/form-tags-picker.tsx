@@ -118,7 +118,7 @@ export function FormTagsPicker({
             variant="default"
             style={[
               transactionFormStyles.tagChipAddText,
-              tagPickerOpen && { color: theme.colors.customColors.semi },
+              tagPickerOpen && { color: theme.colors.semantic.semi },
             ]}
           >
             {tagPickerOpen
@@ -128,7 +128,7 @@ export function FormTagsPicker({
           <IconSvg
             name={tagPickerOpen ? "x-outline" : "plus-outline"}
             size={16}
-            color={tagPickerOpen ? theme.colors.customColors.semi : undefined}
+            color={tagPickerOpen ? theme.colors.semantic.semi : undefined}
           />
         </Pressable>
         {selectedTags.map((tag) => (
@@ -149,7 +149,7 @@ export function FormTagsPicker({
               <IconSvg
                 name="x-outline"
                 size={16}
-                color={theme.colors.customColors.semi}
+                color={theme.colors.semantic.semi}
               />
             }
           />
@@ -162,7 +162,7 @@ export function FormTagsPicker({
             placeholder="Search tags..."
             value={tagSearchQuery}
             onChangeText={setTagSearchQuery}
-            placeholderTextColor={theme.colors.customColors.semi}
+            placeholderTextColor={theme.colors.semantic.semi}
             style={transactionFormStyles.tagSearchInput}
           />
           <ScrollView
@@ -190,7 +190,7 @@ export function FormTagsPicker({
                       <IconSvg
                         name="plus-outline"
                         size={16}
-                        color={theme.colors.customColors.semi}
+                        color={theme.colors.semantic.semi}
                       />
                     }
                   />

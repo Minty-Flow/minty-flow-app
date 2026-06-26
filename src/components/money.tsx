@@ -148,9 +148,9 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSurface,
   },
   income: {
-    color: theme.colors.customColors.income,
+    color: theme.colors.semantic.income,
   },
   expense: {
-    color: theme.colors.customColors.expense,
+    color: theme.colors.semantic.expense,
   },
 }))

@@ -254,7 +254,6 @@ export function TransactionFormV3({
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSaving,
-    onConfirm: () => router.back(),
     onBlock: () => setModals({ unsavedModalVisible: true }),
   })
 
@@ -713,7 +712,7 @@ export function TransactionFormV3({
                     derivedTransferTitle ||
                     t("common.transaction.untitledTransaction")
                   }
-                  placeholderTextColor={theme.colors.customColors.semi}
+                  placeholderTextColor={theme.colors.semantic.semi}
                 />
               )}
             />

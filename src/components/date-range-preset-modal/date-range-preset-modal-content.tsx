@@ -166,7 +166,7 @@ export const DateRangePresetModalContent = ({
 
   const MONTH_NAMES = getMonthNames()
 
-  const mutedColor = theme.colors.customColors?.semi ?? theme.colors.onSurface
+  const mutedColor = theme.colors.semantic?.semi ?? theme.colors.onSurface
   const fgColor = theme.colors.onSurface
 
   return (

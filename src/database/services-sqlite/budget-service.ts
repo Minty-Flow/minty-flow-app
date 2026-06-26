@@ -1,10 +1,13 @@
 import { emit } from "~/database/events"
 import { runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
+import i18n from "~/i18n/config"
 import type {
   AddBudgetFormSchema,
   UpdateBudgetFormSchema,
 } from "~/schemas/budgets.schema"
+
+const { t } = i18n
 
 import type {
   RowBudget,
@@ -204,8 +207,7 @@ export async function duplicateBudgetById(id: string): Promise<string> {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         newId,
-        // TODO: this should be added to a key in the translation
-        `Copy of ${budget.name}`,
+        `${t("screens.settings.budgets.copyOfPrefix", { name: budget.name })}`,
         budget.amount,
         budget.currency_code,
         budget.period,

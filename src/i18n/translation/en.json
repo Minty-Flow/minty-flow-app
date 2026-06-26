@@ -523,6 +523,7 @@
         "title": "Budgets",
         "empty": "No budgets yet. Create one to start tracking.",
         "addNew": "New Budget",
+        "copyOfPrefix": "Copy of {{name}}",
         "periods": {
           "daily": "Daily",
           "weekly": "Weekly",

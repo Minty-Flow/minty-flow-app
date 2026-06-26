@@ -56,11 +56,11 @@ export function BalanceTimelineChart({
 
   const fallbackPalette = [
     theme.colors.primary,
-    theme.colors.customColors.income,
-    theme.colors.customColors.info,
-    theme.colors.customColors.warning,
-    theme.colors.customColors.expense,
-    theme.colors.customColors.success,
+    theme.colors.semantic.income,
+    theme.colors.semantic.info,
+    theme.colors.semantic.warning,
+    theme.colors.semantic.expense,
+    theme.colors.semantic.success,
     theme.colors.secondary,
     theme.colors.error,
   ]
@@ -101,8 +101,8 @@ export function BalanceTimelineChart({
             {
               font,
               tickCount: 3,
-              labelColor: theme.colors.customColors.semi,
-              lineColor: `${theme.colors.customColors.semi}40`,
+              labelColor: theme.colors.semantic.semi,
+              lineColor: `${theme.colors.semantic.semi}40`,
               lineWidth: 1,
               formatYLabel: (v) => {
                 const n = v as number
@@ -141,7 +141,7 @@ export function BalanceTimelineChart({
         <IconSvg
           name="arrow-narrow-right-outline"
           size={14}
-          color={theme.colors.customColors.semi}
+          color={theme.colors.semantic.semi}
         />
         <View style={styles.summaryItem}>
           <Text variant="muted" style={styles.summaryLabel}>
@@ -218,7 +218,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   summaryLabel: {
     fontSize: theme.typography.labelXSmall.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   summaryValue: {
     ...theme.typography.bodyMedium,
@@ -227,7 +227,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   accountsList: {
     borderTopWidth: 1,
-    borderTopColor: `${theme.colors.customColors.semi}30`,
+    borderTopColor: `${theme.colors.semantic.semi}30`,
     paddingTop: 10,
     gap: 8,
   },

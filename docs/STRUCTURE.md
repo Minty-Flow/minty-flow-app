@@ -1,8 +1,7 @@
 # Project Structure
-Generated on: 2026-06-11T14:08:35.065Z
+Generated on: 2026-06-26T22:53:29.875Z
 ```
 ./
-├── .github/
 ├── .husky/
 │   ├── _/
 │   │   ├── .gitignore
@@ -966,7 +965,6 @@ Generated on: 2026-06-11T14:08:35.065Z
 ├── app.json
 ├── babel.config.js
 ├── biome.json
-├── expo-env.d.ts
 ├── index.ts
 ├── LICENSE
 ├── metro.config.js

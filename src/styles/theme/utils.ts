@@ -4,6 +4,7 @@
 
 import type { MintyColorScheme } from "./types"
 
+// TODO: DEAD
 /** for future usgae
  * Lighten a hex color by a percentage
  * Used for generating dark theme primary colors
@@ -45,8 +46,8 @@ export const copyWith = (
 ): MintyColorScheme => ({
   ...base,
   ...overrides,
-  customColors: {
-    ...base.customColors,
-    ...(overrides.customColors || {}),
+  semantic: {
+    ...base.semantic,
+    ...(overrides.semantic || {}),
   },
 })

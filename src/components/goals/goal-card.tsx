@@ -99,19 +99,19 @@ export function GoalCard({ goal, onPress }: GoalCardProps) {
 
   const statusColors = {
     reached: {
-      dot: theme.colors.customColors.income,
-      text: theme.colors.customColors.income,
-      bg: `${theme.colors.customColors.income}20`,
+      dot: theme.colors.semantic.income,
+      text: theme.colors.semantic.income,
+      bg: `${theme.colors.semantic.income}20`,
     },
     onTrack: {
-      dot: theme.colors.customColors.income,
-      text: theme.colors.customColors.income,
-      bg: `${theme.colors.customColors.income}20`,
+      dot: theme.colors.semantic.income,
+      text: theme.colors.semantic.income,
+      bg: `${theme.colors.semantic.income}20`,
     },
     behind: {
-      dot: theme.colors.customColors.expense,
-      text: theme.colors.customColors.expense,
-      bg: `${theme.colors.customColors.expense}20`,
+      dot: theme.colors.semantic.expense,
+      text: theme.colors.semantic.expense,
+      bg: `${theme.colors.semantic.expense}20`,
     },
     flexible: {
       dot: theme.colors.onSecondary,
@@ -124,9 +124,9 @@ export function GoalCard({ goal, onPress }: GoalCardProps) {
 
   const progressBarColor =
     isCompleted || status === "reached"
-      ? theme.colors.customColors.income
+      ? theme.colors.semantic.income
       : status === "behind"
-        ? theme.colors.customColors.expense
+        ? theme.colors.semantic.expense
         : theme.colors.primary
 
   const progressPercent = Number((clampedProgress * 100).toFixed(1))
@@ -210,20 +210,14 @@ export function GoalCard({ goal, onPress }: GoalCardProps) {
         {isCompleted ? (
           <Text
             variant="small"
-            style={[
-              styles.rightText,
-              { color: theme.colors.customColors.income },
-            ]}
+            style={[styles.rightText, { color: theme.colors.semantic.income }]}
           >
             100%
           </Text>
         ) : (
           <Text
             variant="small"
-            style={[
-              styles.rightText,
-              { color: theme.colors.customColors.income },
-            ]}
+            style={[styles.rightText, { color: theme.colors.semantic.income }]}
           >
             <Money
               value={remaining}
@@ -250,7 +244,7 @@ const styles = StyleSheet.create((t) => ({
     backgroundColor: t.colors.surface,
     borderRadius: t.radius,
     borderWidth: 1,
-    borderColor: t.colors.customColors.semi,
+    borderColor: t.colors.semantic.semi,
     padding: 14,
     gap: 10,
   },

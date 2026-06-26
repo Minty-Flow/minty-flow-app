@@ -99,7 +99,7 @@ const styles = StyleSheet.create((theme) => ({
     },
   },
   placeholder: {
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   selectionColor: {
     color: theme.colors.secondary,

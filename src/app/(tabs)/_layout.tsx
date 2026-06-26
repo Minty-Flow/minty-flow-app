@@ -201,7 +201,7 @@ const TabLayout = () => {
   const fabOptionsByType: Record<string, FABOption> = {
     income: {
       icon: "chevrons-down-outline",
-      color: theme.colors.customColors.income,
+      color: theme.colors.semantic.income,
       iconColor: theme.colors.onError,
       label: t("navigation.fab.income"),
       onPress: () => {
@@ -214,7 +214,7 @@ const TabLayout = () => {
 
     expense: {
       icon: "chevrons-up-outline",
-      color: theme.colors.customColors.expense,
+      color: theme.colors.semantic.expense,
       iconColor: theme.colors.onError,
       label: t("navigation.fab.expense"),
       onPress: () => {

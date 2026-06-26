@@ -14,7 +14,7 @@ interface EmptyStateProps {
   variant?: EmptyStateVariant
 }
 
-// TODO: icon colors are not changing fast on theme change
+// FIXME: icon colors are not changing fast on theme change
 export function EmptyState({
   icon,
   title,
