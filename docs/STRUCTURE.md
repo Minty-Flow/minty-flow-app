@@ -1,7 +1,8 @@
 # Project Structure
-Generated on: 2026-06-26T22:53:29.875Z
+Generated on: 2026-06-30T17:44:01.297Z
 ```
 ./
+├── .github/
 ├── .husky/
 │   ├── _/
 │   │   ├── .gitignore
@@ -750,6 +751,10 @@ Generated on: 2026-06-26T22:53:29.875Z
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── styles.ts
 │   │   │   │   └── use-date-time-picker.tsx
+│   │   │   ├── switch/
+│   │   │   │   ├── index.tsx
+│   │   │   │   ├── switch.android.tsx
+│   │   │   │   └── switch.ios.tsx
 │   │   │   ├── activity-indicator-minty.tsx
 │   │   │   ├── button.tsx
 │   │   │   ├── chevron-icon.tsx
@@ -762,16 +767,12 @@ Generated on: 2026-06-26T22:53:29.875Z
 │   │   │   ├── permission-banner.tsx
 │   │   │   ├── pressable.tsx
 │   │   │   ├── separator.tsx
-│   │   │   ├── switch.android.tsx
-│   │   │   ├── switch.ios.tsx
-│   │   │   ├── switch.tsx
 │   │   │   ├── text.tsx
 │   │   │   ├── toast.tsx
 │   │   │   ├── tooltip.tsx
 │   │   │   └── view.tsx
 │   │   ├── action-item.tsx
 │   │   ├── app-lock-gate.tsx
-│   │   ├── bottom-sheet.tsx.md
 │   │   ├── color-variant-inline.tsx
 │   │   ├── confirm-modal.tsx
 │   │   ├── dynamic-icon.tsx
@@ -961,10 +962,12 @@ Generated on: 2026-06-26T22:53:29.875Z
 ├── .env.local
 ├── .env.local.example
 ├── .gitignore
+├── .nvmrc
 ├── .svgrrc
 ├── app.json
 ├── babel.config.js
 ├── biome.json
+├── expo-env.d.ts
 ├── index.ts
 ├── LICENSE
 ├── metro.config.js

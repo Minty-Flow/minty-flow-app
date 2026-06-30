@@ -26,6 +26,8 @@ export const transactionSchema = z
     location: z.string().max(255).nullable().optional(),
     extra: z.record(z.string(), z.string()).nullable().optional(),
     subtype: z.enum(TransactionSubTypeEnum).nullable().optional(),
+    // Not registered with RHF — exists solely to enable dirty tracking for conversion rate edits
+    conversionRate: z.number().positive().nullable().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.type === TransactionTypeEnum.TRANSFER && !data.toAccountId) {

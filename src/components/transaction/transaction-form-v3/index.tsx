@@ -271,6 +271,7 @@ export function TransactionFormV3({
     selectedAccount,
     selectedToAccount,
     transaction,
+    setValue,
   )
 
   const {
