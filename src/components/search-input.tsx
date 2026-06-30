@@ -38,7 +38,7 @@ export const SearchInput = ({
         placeholder={resolvedPlaceholder}
         style={[styles.input, style]}
         autoCapitalize="none"
-        placeholderTextColor={theme.colors.customColors.semi}
+        placeholderTextColor={theme.colors.semantic.semi}
         {...props}
       />
       {value && value.length > 0 && (

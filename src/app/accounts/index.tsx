@@ -304,7 +304,7 @@ const styles = StyleSheet.create((theme) => ({
   sectionLabel: {
     fontSize: theme.typography.labelSmall.fontSize,
     fontWeight: "600",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     letterSpacing: 0.8,
   },
   balanceRow: {
@@ -326,7 +326,7 @@ const styles = StyleSheet.create((theme) => ({
   accountsCount: {
     ...theme.typography.labelLarge,
     fontWeight: "600",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   searchContainer: {
     marginBottom: 10,

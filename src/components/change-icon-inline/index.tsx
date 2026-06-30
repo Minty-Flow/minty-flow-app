@@ -55,7 +55,7 @@ export function ChangeIconInline({
     onSecondary: theme.colors.onSecondary,
     error: theme.colors.error,
     onError: theme.colors.onError,
-    customColors: theme.colors.customColors,
+    semantic: theme.colors.semantic,
     rippleColor: theme.colors.rippleColor,
     shadow: theme.colors.shadow,
     boxShadow: theme.colors.boxShadow,
@@ -203,7 +203,7 @@ export function ChangeIconInline({
                 onCancel={handleEmojiCancel}
                 isValid={emojiValid}
                 inputRef={emojiInputRef}
-                placeholderTextColor={theme.colors.customColors.semi}
+                placeholderTextColor={theme.colors.semantic.semi}
               />
             )}
 

@@ -117,11 +117,11 @@ export const accountModifyStyles = StyleSheet.create((theme) => ({
     paddingBottom: 8,
   },
   primaryAccountHintIcon: {
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   primaryAccountHint: {
     flex: 1,
     fontSize: theme.typography.labelMedium.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
 }))

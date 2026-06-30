@@ -5,10 +5,9 @@
 import type { MintyTypographyTokens } from "./typography"
 
 /**
- * Custom colors (income, expense, semi + success/warning/info for compatibility)
+ * Semantic colors (income, expense, semi + success/warning/info for compatibility)
  */
-// TODO: dead code
-interface MintyCustomColors {
+interface MintySemanticColors {
   income: string // Green for income transactions (#32CC70 default)
   expense: string // Red for expense transactions (#FF4040 default)
   semi: string // Muted/secondary text labels (dark: #97919B, light: #6A666D)
@@ -30,7 +29,7 @@ export interface MintyThemeColors {
   onSecondary: string // Text on secondary surfaces
   error: string // Error states (#FF4040 default)
   onError: string // Text on error (#F5F6FA default)
-  customColors: MintyCustomColors
+  semantic: MintySemanticColors
   rippleColor: string // Ripple/highlight = onSurface at 8.6%
   shadow: string // Shadow color
   boxShadow: string // Box shadow for web

@@ -76,10 +76,9 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
     setUnsavedModalVisible(true)
   }, [])
 
-  const { confirmNavigation, allowNavigation } = useNavigationGuard({
+  const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSubmitting,
-    onConfirm: handleConfirm,
     onBlock: handleBlock,
   })
 
@@ -178,7 +177,8 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
         handleDelete={handleDelete}
         unsavedModalVisible={unsavedModalVisible}
         setUnsavedModalVisible={setUnsavedModalVisible}
-        confirmNavigation={confirmNavigation}
+        allowNavigation={allowNavigation}
+        handleConfirm={handleConfirm}
       />
     </View>
   )

@@ -21,7 +21,7 @@ export const palenight: MintyColorScheme = {
   onSecondary: "#F5F6FA",
   error: "#FF4040",
   onError: "#F5F6FA",
-  customColors: {
+  semantic: {
     income: "#C3E88D",
     expense: "#F07178",
     semi: "#676E95",
@@ -51,7 +51,7 @@ export const monochrome: MintyColorScheme = {
   onSecondary: "#101828",
   error: "#FF4040",
   onError: "#F5F6FA",
-  customColors: {
+  semantic: {
     income: "#32CC70",
     expense: "#FF4040",
     semi: "#6A666D",
@@ -80,7 +80,7 @@ export const nord: MintyColorScheme = {
   onSecondary: "#eceff4",
   error: "#bf616a",
   onError: "#f5f6fa",
-  customColors: {
+  semantic: {
     income: "#a3be8c",
     expense: "#bf616a",
     semi: "#4c566a",

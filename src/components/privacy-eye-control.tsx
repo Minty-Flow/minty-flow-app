@@ -11,7 +11,7 @@ export const PrivacyEyeControl = () => {
       <IconSvg
         name={privacyModeEnabled ? "eye" : "eye-off-outline"}
         size={24}
-        // color={privacyModeEnabled ? theme.colors.customColors.semi : undefined}
+        // color={privacyModeEnabled ? theme.colors.semantic.semi : undefined}
       />
     </Button>
   )

@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-06-11T14:08:35.065Z
+Generated on: 2026-06-30T17:44:01.297Z
 ```
 ./
 ├── .github/
@@ -751,6 +751,10 @@ Generated on: 2026-06-11T14:08:35.065Z
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── styles.ts
 │   │   │   │   └── use-date-time-picker.tsx
+│   │   │   ├── switch/
+│   │   │   │   ├── index.tsx
+│   │   │   │   ├── switch.android.tsx
+│   │   │   │   └── switch.ios.tsx
 │   │   │   ├── activity-indicator-minty.tsx
 │   │   │   ├── button.tsx
 │   │   │   ├── chevron-icon.tsx
@@ -763,16 +767,12 @@ Generated on: 2026-06-11T14:08:35.065Z
 │   │   │   ├── permission-banner.tsx
 │   │   │   ├── pressable.tsx
 │   │   │   ├── separator.tsx
-│   │   │   ├── switch.android.tsx
-│   │   │   ├── switch.ios.tsx
-│   │   │   ├── switch.tsx
 │   │   │   ├── text.tsx
 │   │   │   ├── toast.tsx
 │   │   │   ├── tooltip.tsx
 │   │   │   └── view.tsx
 │   │   ├── action-item.tsx
 │   │   ├── app-lock-gate.tsx
-│   │   ├── bottom-sheet.tsx.md
 │   │   ├── color-variant-inline.tsx
 │   │   ├── confirm-modal.tsx
 │   │   ├── dynamic-icon.tsx
@@ -962,6 +962,7 @@ Generated on: 2026-06-11T14:08:35.065Z
 ├── .env.local
 ├── .env.local.example
 ├── .gitignore
+├── .nvmrc
 ├── .svgrrc
 ├── app.json
 ├── babel.config.js

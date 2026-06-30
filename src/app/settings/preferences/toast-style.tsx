@@ -281,7 +281,7 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.labelXSmall.fontSize,
     fontWeight: "600",
     letterSpacing: 0.8,
-    color: theme.colors.customColors?.semi,
+    color: theme.colors.semantic?.semi,
   },
 
   card: {
@@ -306,11 +306,11 @@ const styles = StyleSheet.create((theme) => ({
   },
   rowDescription: {
     fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.customColors?.semi,
+    color: theme.colors.semantic?.semi,
   },
   divider: {
     height: 0.5,
-    backgroundColor: theme.colors.customColors?.semi,
+    backgroundColor: theme.colors.semantic?.semi,
     opacity: 0.4,
   },
 
@@ -336,12 +336,12 @@ const styles = StyleSheet.create((theme) => ({
   },
   toggleDescription: {
     fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
 
   previewDescription: {
     fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.customColors?.semi,
+    color: theme.colors.semantic?.semi,
   },
   previewButtons: {
     flexDirection: "row",

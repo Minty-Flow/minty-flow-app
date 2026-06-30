@@ -71,6 +71,7 @@ export function getDefaultValues(
       tags: [],
       location: undefined,
       subtype: initialSubtype ?? null,
+      conversionRate: null,
       ...prefill,
     }
   }
@@ -106,6 +107,7 @@ export function getDefaultValues(
     loanId: transaction.loanId ?? null,
     location: transaction.location,
     subtype: transaction.subtype ?? null,
+    conversionRate: null,
   }
 }
 

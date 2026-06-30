@@ -55,7 +55,7 @@ export const modalStyles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.customColors.semi,
+    borderBottomColor: theme.colors.semantic.semi,
   },
   headerTitle: {
     ...theme.typography.headlineSmall,

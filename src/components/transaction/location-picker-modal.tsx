@@ -379,7 +379,7 @@ const styles = UnistylesSheet.create((t) => ({
     paddingHorizontal: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: `${t.colors.customColors.semi}30`,
+    borderBottomColor: `${t.colors.semantic.semi}30`,
     backgroundColor: t.colors.surface,
   },
   title: {
@@ -402,7 +402,7 @@ const styles = UnistylesSheet.create((t) => ({
   },
   loadingText: {
     fontSize: t.typography.bodyLarge.fontSize,
-    color: t.colors.customColors.semi,
+    color: t.colors.semantic.semi,
   },
   fabMyLocation: {
     position: "absolute",
@@ -425,13 +425,13 @@ const styles = UnistylesSheet.create((t) => ({
     paddingTop: 16,
     gap: 14,
     borderTopWidth: 1,
-    borderTopColor: `${t.colors.customColors.semi}30`,
+    borderTopColor: `${t.colors.semantic.semi}30`,
     backgroundColor: t.colors.surface,
   },
   addressText: {
     fontSize: t.typography.bodyMedium.fontSize,
     textAlign: "center",
-    color: t.colors.customColors.semi,
+    color: t.colors.semantic.semi,
   },
   actions: {
     flexDirection: "row",

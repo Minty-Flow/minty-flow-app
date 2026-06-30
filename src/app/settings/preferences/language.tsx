@@ -153,7 +153,7 @@ const styles = StyleSheet.create((theme) => ({
     ...theme.typography.labelXSmall,
     fontWeight: "600",
     letterSpacing: 0.8,
-    color: theme.colors.customColors?.semi,
+    color: theme.colors.semantic?.semi,
   },
 
   card: {
@@ -177,7 +177,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   divider: {
     height: 0.5,
-    backgroundColor: theme.colors.customColors?.semi,
+    backgroundColor: theme.colors.semantic?.semi,
     opacity: 0.4,
   },
 }))

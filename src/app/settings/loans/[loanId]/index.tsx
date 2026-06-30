@@ -159,7 +159,7 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
 
   const subtitleParts = [account?.name, dueText()].filter(Boolean)
   const subtitleColor =
-    loan.isOverdue && !isPaid ? theme.colors.customColors.expense : mutedColor
+    loan.isOverdue && !isPaid ? theme.colors.semantic.expense : mutedColor
 
   const badgeLabel = isPaid
     ? t("screens.settings.loans.card.statusPaid")
