@@ -108,7 +108,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 16,
     backgroundColor: `${theme.colors.onSurface}08`,
     borderWidth: 1,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
   },
   nameText: {
     flex: 1,

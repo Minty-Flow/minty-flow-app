@@ -74,16 +74,16 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
   },
   goodBg: {
-    backgroundColor: `${theme.colors.customColors.income}18`,
+    backgroundColor: `${theme.colors.semantic.income}18`,
   },
   badBg: {
-    backgroundColor: `${theme.colors.customColors.expense}18`,
+    backgroundColor: `${theme.colors.semantic.expense}18`,
   },
   goodText: {
-    color: theme.colors.customColors.income,
+    color: theme.colors.semantic.income,
   },
   badText: {
-    color: theme.colors.customColors.expense,
+    color: theme.colors.semantic.expense,
   },
   textSm: {
     ...theme.typography.labelXSmall,

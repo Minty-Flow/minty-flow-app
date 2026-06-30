@@ -187,19 +187,19 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
     { dot: string; text: string; bg: string }
   > = {
     reached: {
-      dot: theme.colors.customColors.income,
-      text: theme.colors.customColors.income,
-      bg: `${theme.colors.customColors.income}20`,
+      dot: theme.colors.semantic.income,
+      text: theme.colors.semantic.income,
+      bg: `${theme.colors.semantic.income}20`,
     },
     onTrack: {
-      dot: theme.colors.customColors.income,
-      text: theme.colors.customColors.income,
-      bg: `${theme.colors.customColors.income}20`,
+      dot: theme.colors.semantic.income,
+      text: theme.colors.semantic.income,
+      bg: `${theme.colors.semantic.income}20`,
     },
     behind: {
-      dot: theme.colors.customColors.expense,
-      text: theme.colors.customColors.expense,
-      bg: `${theme.colors.customColors.expense}20`,
+      dot: theme.colors.semantic.expense,
+      text: theme.colors.semantic.expense,
+      bg: `${theme.colors.semantic.expense}20`,
     },
     flexible: {
       dot: theme.colors.onSecondary,
@@ -211,9 +211,9 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
 
   const progressBarColor =
     isCompleted || status === "reached"
-      ? theme.colors.customColors.income
+      ? theme.colors.semantic.income
       : status === "behind"
-        ? theme.colors.customColors.expense
+        ? theme.colors.semantic.expense
         : theme.colors.primary
 
   const dateSubtitle = (): string => {
@@ -343,7 +343,7 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
             <Text
               style={[
                 styles.remainingText,
-                { color: theme.colors.customColors.income },
+                { color: theme.colors.semantic.income },
               ]}
             >
               100%
@@ -356,7 +356,7 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
               hideSign
               style={[
                 styles.remainingText,
-                { color: theme.colors.customColors.income },
+                { color: theme.colors.semantic.income },
               ]}
             />
           )}

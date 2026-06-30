@@ -19,7 +19,7 @@ export const DEFAULT_LIGHT_BASE: MintyColorScheme = {
   onSecondary: "#33004F",
   error: "#FF4040",
   onError: "#F5F6FA",
-  customColors: {
+  semantic: {
     income: "#32CC70",
     expense: "#FF4040",
     semi: "#6A666D",
@@ -49,7 +49,7 @@ export const DEFAULT_DARK_BASE: MintyColorScheme = {
   onSecondary: "#F5F6FA",
   error: "#FF4040",
   onError: "#F5F6FA",
-  customColors: {
+  semantic: {
     income: "#32CC70",
     expense: "#FF4040",
     semi: "#97919B",
@@ -74,8 +74,8 @@ export const DEFAULT_OLED_BASE: MintyColorScheme = {
   onPrimary: "#000000",
   secondary: "#101010",
   onSecondary: "#F5F6FA",
-  customColors: {
-    ...DEFAULT_DARK_BASE.customColors,
+  semantic: {
+    ...DEFAULT_DARK_BASE.semantic,
     semi: "#606060",
   },
   shadow: "rgba(0, 0, 0, 0.7)",

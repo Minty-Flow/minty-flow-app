@@ -197,7 +197,7 @@ export default function AddItemScreen() {
   const isExact = totalRounded === 100
   const isOver = totalRounded > 100
   const totalColor = isExact
-    ? theme.colors.customColors.income
+    ? theme.colors.semantic.income
     : isOver
       ? theme.colors.error
       : theme.colors.onSecondary
@@ -395,7 +395,7 @@ export default function AddItemScreen() {
                       },
                     ]}
                     placeholder="0%"
-                    placeholderTextColor={theme.colors.customColors.semi}
+                    placeholderTextColor={theme.colors.semantic.semi}
                   />
                 )}
               </Pressable>
@@ -484,7 +484,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 14,
     backgroundColor: `${theme.colors.onSurface}08`,
     borderWidth: 1,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
     overflow: "hidden",
   },
   nameInput: {
@@ -500,7 +500,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 14,
     backgroundColor: `${theme.colors.onSurface}08`,
     borderWidth: 1,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
   },
   multiplierLabel: {
     fontSize: theme.typography.bodyLarge.fontSize,
@@ -526,7 +526,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 14,
     backgroundColor: `${theme.colors.onSurface}08`,
     borderWidth: 1,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
     overflow: "hidden",
   },
   // switchRow — matches budget-modify switchRow pattern exactly
@@ -539,7 +539,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 14,
     backgroundColor: `${theme.colors.onSurface}08`,
     borderWidth: 1,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
   },
   switchLeft: {
     flexDirection: "row",
@@ -563,7 +563,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 10,
     backgroundColor: `${theme.colors.onSurface}08`,
     borderWidth: 1,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
   },
   participantRowDeselected: {
     opacity: 0.45,
@@ -597,7 +597,7 @@ const styles = StyleSheet.create((theme) => ({
     minWidth: 52,
     textAlign: "right",
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.customColors.semi,
+    borderBottomColor: theme.colors.semantic.semi,
     paddingVertical: 2,
   },
   addParticipantButton: {
@@ -606,7 +606,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
     borderStyle: "dashed",
   },
   // Percentage total indicator row
@@ -619,7 +619,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 14,
     backgroundColor: `${theme.colors.onSurface}08`,
     borderWidth: 1,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
   },
   percentageTotalLabel: {
     fontSize: theme.typography.bodyMedium.fontSize,

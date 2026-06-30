@@ -312,7 +312,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.customColors.semi,
+    borderBottomColor: theme.colors.semantic.semi,
   },
   headerTitle: {
     ...theme.typography.headlineSmall,
@@ -367,7 +367,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingBottom: 8,
     paddingHorizontal: 20,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.customColors.semi,
+    borderTopColor: theme.colors.semantic.semi,
     backgroundColor: theme.colors.surface,
     gap: 12,
   },

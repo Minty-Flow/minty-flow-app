@@ -113,6 +113,6 @@ const styles = StyleSheet.create((theme) => ({
   settingLabelDescription: {
     fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "400",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
 }))

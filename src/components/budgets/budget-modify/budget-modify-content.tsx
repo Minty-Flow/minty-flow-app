@@ -108,10 +108,9 @@ export function BudgetModifyContent({
 
   const navigation = useNavigation()
   const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
-  const { confirmNavigation, allowNavigation } = useNavigationGuard({
+  const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSubmitting,
-    onConfirm: handleGoBack,
     onBlock: () => setUnsavedModalVisible(true),
   })
 
@@ -528,7 +527,8 @@ export function BudgetModifyContent({
         onConfirmDelete={handleDelete}
         onDiscardAndNavigate={() => {
           setUnsavedModalVisible(false)
-          confirmNavigation()
+          allowNavigation()
+          handleGoBack()
         }}
       />
 

@@ -51,7 +51,7 @@ export const transactionItemStyles = StyleSheet.create((theme) => ({
   },
   secondaryAmount: {
     fontSize: theme.typography.labelMedium.fontSize,
-    color: theme.colors.customColors?.semi,
+    color: theme.colors.semantic?.semi,
   },
   statusBadge: {
     flexDirection: "row",

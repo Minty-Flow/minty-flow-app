@@ -33,14 +33,13 @@ const layoutOptions: Array<{
 
 function LayoutPreview({ variant }: { variant: TransferLayoutType }) {
   const { theme } = useUnistyles()
-  const successColor =
-    theme.colors.customColors?.success ?? theme.colors.primary
+  const successColor = theme.colors.semantic?.success ?? theme.colors.primary
   return (
     <View native style={styles.previewRow}>
       <IconSvg
         name="arrows-right-left-outline"
         size={18}
-        color={theme.colors.customColors?.semi}
+        color={theme.colors.semantic?.semi}
       />
       <View native style={styles.slidersPreview}>
         {variant === TransferLayoutEnum.COMBINE ? (
@@ -218,11 +217,11 @@ const styles = StyleSheet.create((theme) => ({
   },
   rowDescription: {
     fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.customColors?.semi,
+    color: theme.colors.semantic?.semi,
   },
   divider: {
     height: 0.5,
-    backgroundColor: theme.colors.customColors?.semi,
+    backgroundColor: theme.colors.semantic?.semi,
     opacity: 0.4,
   },
 
@@ -248,7 +247,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   toggleDescription: {
     fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
 
   previewRow: {
@@ -264,6 +263,6 @@ const styles = StyleSheet.create((theme) => ({
     height: 6,
     borderRadius: 3,
     width: 200,
-    backgroundColor: theme.colors.customColors?.semi,
+    backgroundColor: theme.colors.semantic?.semi,
   },
 }))

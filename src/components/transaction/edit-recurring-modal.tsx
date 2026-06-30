@@ -68,8 +68,7 @@ function OptionRow({
   isLast,
 }: OptionRowProps) {
   const { theme } = useUnistyles()
-  const successColor =
-    theme.colors.customColors?.success ?? theme.colors.primary
+  const successColor = theme.colors.semantic?.success ?? theme.colors.primary
   return (
     <Pressable
       style={({ pressed }) => [
@@ -209,16 +208,14 @@ export function EditRecurringModal({
                 style={[
                   styles.iconCircle,
                   {
-                    backgroundColor: theme.colors.customColors?.success,
+                    backgroundColor: theme.colors.semantic?.success,
                   },
                 ]}
               >
                 <IconSvg
                   name="pencil-outline"
                   size={24}
-                  color={
-                    theme.colors.customColors?.success ?? theme.colors.primary
-                  }
+                  color={theme.colors.semantic?.success ?? theme.colors.primary}
                 />
               </View>
               <Text style={styles.title}>
@@ -313,7 +310,7 @@ const styles = UnistylesSheet.create((theme) => ({
     marginBottom: 12,
     borderWidth: 1,
     backgroundColor: `${theme.colors.onSurface}10`,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
   },
   optionRow: {
     flexDirection: "row",
@@ -323,7 +320,7 @@ const styles = UnistylesSheet.create((theme) => ({
   },
   optionRowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.customColors.semi,
+    borderBottomColor: theme.colors.semantic.semi,
   },
   optionRowPressed: { opacity: 0.7 },
   optionRowContent: { flex: 1, gap: 2 },
@@ -345,7 +342,7 @@ const styles = UnistylesSheet.create((theme) => ({
     alignItems: "center",
     borderWidth: 1,
     backgroundColor: `${theme.colors.onSurface}10`,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
   },
   cancelButtonPressed: { opacity: 0.7 },
   cancelText: {

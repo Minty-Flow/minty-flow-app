@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import type { UseFormSetValue } from "react-hook-form"
 
 import { getConversionRateForTransaction } from "~/database/services-sqlite/transfer-service"
+import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import { currencyRegistryService } from "~/services/currency-registry"
 import { exchangeRatesService } from "~/services/exchange-rates"
 import { useExchangeRatesPreferencesStore } from "~/stores/exchange-rates-preferences.store"
@@ -13,37 +15,39 @@ export function useFormConversionRate(
   selectedAccount: Account | undefined,
   selectedToAccount: Account | null | undefined,
   transaction: Transaction | null,
+  setValue: UseFormSetValue<TransactionFormValues>,
 ) {
-  const [conversionRate, setConversionRate] = useState<number | null>(null)
+  const [conversionRate, setConversionRateState] = useState<number | null>(null)
   const accountSelectionInitialMount = useRef(true)
   const conversionRatePairRef = useRef<{ from: string; to: string } | null>(
     null,
   )
   const getCustomRate = useExchangeRatesPreferencesStore((s) => s.getCustomRate)
 
-  // Load saved conversion rate when editing a transfer
   useEffect(() => {
     if (!transaction || transactionType !== "transfer") return
     let cancelled = false
     getConversionRateForTransaction(transaction).then((rate) => {
-      if (!cancelled && rate != null) setConversionRate(rate)
+      if (!cancelled && rate != null) {
+        setConversionRateState(rate)
+        setValue("conversionRate", rate, { shouldDirty: false })
+      }
     })
     return () => {
       cancelled = true
     }
-  }, [transaction?.id, transactionType, transaction])
+  }, [transaction?.id, transactionType, transaction, setValue])
 
-  // Clear conversion rate when user changes from/to account
   useEffect(() => {
     if (transactionType !== "transfer") return
     if (accountSelectionInitialMount.current) {
       accountSelectionInitialMount.current = false
       return
     }
-    setConversionRate(null)
-  }, [transactionType])
+    setConversionRateState(null)
+    setValue("conversionRate", null, { shouldDirty: false })
+  }, [transactionType, setValue])
 
-  // Clear rate on currency pair change
   useEffect(() => {
     if (
       transactionType !== "transfer" ||
@@ -57,7 +61,8 @@ export function useFormConversionRate(
     const prev = conversionRatePairRef.current
     conversionRatePairRef.current = { from: fromCurrency, to: toCurrency }
     if (prev && (prev.from !== fromCurrency || prev.to !== toCurrency)) {
-      setConversionRate(null)
+      setConversionRateState(null)
+      setValue("conversionRate", null, { shouldDirty: false })
     }
   }, [
     transactionType,
@@ -67,11 +72,11 @@ export function useFormConversionRate(
     selectedToAccount?.currencyCode,
     selectedAccount,
     selectedToAccount,
+    setValue,
   ])
   const usdCurrency = currencyRegistryService.getCurrencyByCode("USD")
   const useCode = usdCurrency?.code ?? "USD"
 
-  // Fetch conversion rate when transfer has different currencies
   useEffect(() => {
     if (
       transactionType !== "transfer" ||
@@ -105,11 +110,15 @@ export function useFormConversionRate(
       }
       if (cancelled) return
       if (custom !== undefined) {
-        setConversionRate(custom)
+        setConversionRateState(custom)
+        setValue("conversionRate", custom, { shouldDirty: false })
         return
       }
       const rate = await exchangeRatesService.getRate(fromCurrency, toCurrency)
-      if (!cancelled && rate != null) setConversionRate(rate)
+      if (!cancelled && rate != null) {
+        setConversionRateState(rate)
+        setValue("conversionRate", rate, { shouldDirty: false })
+      }
     }
     resolve()
     return () => {
@@ -126,7 +135,16 @@ export function useFormConversionRate(
     selectedAccount,
     selectedToAccount,
     useCode,
+    setValue,
   ])
+
+  const setConversionRate = useCallback(
+    (rate: number) => {
+      setConversionRateState(rate)
+      setValue("conversionRate", rate, { shouldDirty: true })
+    },
+    [setValue],
+  )
 
   return { conversionRate, setConversionRate }
 }

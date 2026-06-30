@@ -9,7 +9,7 @@ import type {
   AddAccountsFormSchema,
   UpdateAccountsFormSchema,
 } from "~/schemas/accounts.schema"
-import { TransactionTypeEnum } from "~/types/transactions"
+import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
 
 // ── Create ───────────────────────────────────────────────────────────────────
 
@@ -68,7 +68,10 @@ export async function updateAccount(
 ): Promise<void> {
   const now = new Date().toISOString()
 
-  await runInTransaction("account.update", async (db) => {
+  const balanceAdjustment = await runInTransaction<{
+    amount: number
+    type: TransactionType
+  } | null>("account.update", async (db) => {
     const existing = await db.getFirstAsync<{
       balance: number
       name: string
@@ -116,31 +119,37 @@ export async function updateAccount(
       ],
     )
 
-    // Balance adjustment via a compensating transaction
+    // Return balance adjustment info for after commit (avoid nested tx event timing)
     if (
       updates.balance !== undefined &&
       typeof updates.balance === "number" &&
       updates.balance !== existing.balance
     ) {
       const delta = updates.balance - existing.balance
-      const amount = Math.abs(delta)
-      const type =
-        delta > 0 ? TransactionTypeEnum.INCOME : TransactionTypeEnum.EXPENSE
-
-      const { createTransaction } = await import("./transaction-service")
-      await createTransaction({
-        amount,
-        type,
-        transactionDate: new Date(),
-        accountId: id,
-        categoryId: null,
-        title: "Balance adjustment",
-        description: null,
-        isPending: false,
-        tags: [],
-      })
+      return {
+        amount: Math.abs(delta),
+        type:
+          delta > 0 ? TransactionTypeEnum.INCOME : TransactionTypeEnum.EXPENSE,
+      }
     }
+    return null
   })
+
+  // Balance adjustment via compensating transaction (runs after outer tx commits)
+  if (balanceAdjustment) {
+    const { createTransaction } = await import("./transaction-service")
+    await createTransaction({
+      amount: balanceAdjustment.amount,
+      type: balanceAdjustment.type,
+      transactionDate: new Date(),
+      accountId: id,
+      categoryId: null,
+      title: "Balance adjustment",
+      description: null,
+      isPending: false,
+      tags: [],
+    })
+  }
 
   emit("accounts:dirty", { ids: [id] })
 }

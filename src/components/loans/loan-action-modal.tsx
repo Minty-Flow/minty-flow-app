@@ -244,7 +244,7 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 12,
     borderWidth: 1,
     backgroundColor: `${theme.colors.onSurface}10`,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
   },
   optionRow: {
     flexDirection: "row",
@@ -254,7 +254,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   optionRowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.customColors.semi,
+    borderBottomColor: theme.colors.semantic.semi,
   },
   optionRowPressed: { opacity: 0.7 },
   optionRowDisabled: { opacity: 0.5 },
@@ -277,7 +277,7 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     borderWidth: 1,
     backgroundColor: `${theme.colors.onSurface}10`,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
   },
   cancelButtonPressed: { opacity: 0.7 },
   cancelText: {
