@@ -179,7 +179,7 @@ export function FormAccountPicker({
             placeholder={t("screens.accounts.a11y.searchPlaceholder")}
             value={accountSearchQuery}
             onChangeText={setAccountSearchQuery}
-            placeholderTextColor={theme.colors.customColors.semi}
+            placeholderTextColor={theme.colors.semantic.semi}
             style={transactionFormStyles.pickerSearchInput}
           />
           <ScrollView

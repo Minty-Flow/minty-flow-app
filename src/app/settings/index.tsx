@@ -181,7 +181,7 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "600",
     letterSpacing: 0.8,
     textTransform: "uppercase",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   footer: {
     alignItems: "center",
@@ -189,7 +189,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingTop: 50,
   },
   footerTagline: {
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     ...theme.typography.labelMedium,
     fontStyle: "italic",
     textAlign: "center",
@@ -200,7 +200,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 5,
   },
   footerVersion: {
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     ...theme.typography.labelSmall,
   },
   footerLinkBtn: {

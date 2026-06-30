@@ -179,7 +179,7 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "600",
     letterSpacing: 0.8,
     textTransform: "uppercase",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     paddingHorizontal: 20,
     marginBottom: 8,
   },

@@ -15,7 +15,7 @@ export const smartInputStyles = StyleSheet.create((t) => ({
     marginBottom: 8,
   },
   label: {
-    color: t.colors.customColors.semi,
+    color: t.colors.semantic.semi,
     ...t.typography.labelMedium,
     fontWeight: "600",
     letterSpacing: 1,
@@ -37,9 +37,9 @@ export const smartInputStyles = StyleSheet.create((t) => ({
     lineHeight: 44,
     color:
       type === TransactionTypeEnum.EXPENSE
-        ? t.colors.customColors.expense
+        ? t.colors.semantic.expense
         : type === TransactionTypeEnum.INCOME
-          ? t.colors.customColors.income
+          ? t.colors.semantic.income
           : t.colors.onSurface,
     fontWeight: t.typography.displaySmall.fontWeight,
   }),
@@ -104,7 +104,7 @@ export const smartInputStyles = StyleSheet.create((t) => ({
     backgroundColor: `${t.colors.onSurface}10`,
   },
   formattedChipLabel: {
-    color: t.colors.customColors.semi,
+    color: t.colors.semantic.semi,
     fontSize: t.typography.bodyMedium.fontSize,
   },
   formattedChipValue: {
@@ -132,7 +132,7 @@ export const smartInputStyles = StyleSheet.create((t) => ({
     marginLeft: 4,
   },
   previewLabel: {
-    color: t.colors.customColors.semi,
+    color: t.colors.semantic.semi,
     fontSize: t.typography.labelLarge.fontSize,
   },
   previewValue: {
@@ -151,7 +151,7 @@ export const smartInputStyles = StyleSheet.create((t) => ({
     marginTop: 6,
   },
   semiColor: {
-    color: t.colors.customColors.semi,
+    color: t.colors.semantic.semi,
   },
   onSurface: {
     color: t.colors.onSurface,

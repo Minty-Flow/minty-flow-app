@@ -130,11 +130,11 @@ export function StatsCategoryPie({
 
     const fallbackPalette = [
       theme.colors.primary,
-      theme.colors.customColors.income,
-      theme.colors.customColors.info,
-      theme.colors.customColors.warning,
-      theme.colors.customColors.expense,
-      theme.colors.customColors.success,
+      theme.colors.semantic.income,
+      theme.colors.semantic.info,
+      theme.colors.semantic.warning,
+      theme.colors.semantic.expense,
+      theme.colors.semantic.success,
       theme.colors.secondary,
       theme.colors.error,
     ]
@@ -172,7 +172,7 @@ export function StatsCategoryPie({
       items.push({
         label: "Other",
         value: otherTotal,
-        color: theme.colors.customColors.semi,
+        color: theme.colors.semantic.semi,
         icon: null,
         colorSchemeName: null,
       })
@@ -193,12 +193,12 @@ export function StatsCategoryPie({
     theme.colors.primary,
     theme.colors.secondary,
     theme.colors.error,
-    theme.colors.customColors.income,
-    theme.colors.customColors.expense,
-    theme.colors.customColors.info,
-    theme.colors.customColors.warning,
-    theme.colors.customColors.success,
-    theme.colors.customColors.semi,
+    theme.colors.semantic.income,
+    theme.colors.semantic.expense,
+    theme.colors.semantic.info,
+    theme.colors.semantic.warning,
+    theme.colors.semantic.success,
+    theme.colors.semantic.semi,
   ])
 
   // Reset selection whenever the user switches expense/income mode
@@ -507,7 +507,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   legendPercent: {
     fontSize: theme.typography.labelMedium.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     minWidth: 40,
     textAlign: "right",
   },

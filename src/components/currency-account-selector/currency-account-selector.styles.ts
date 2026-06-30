@@ -68,7 +68,7 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
   // Divider
   // divider: {
   //   height: 1,
-  //   backgroundColor: t.colors.customColors.semi,
+  //   backgroundColor: t.colors.semantic.semi,
   //   marginHorizontal: 20,
   // },
   // Account trigger value — selected names, truncated

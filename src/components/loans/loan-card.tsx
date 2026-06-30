@@ -71,7 +71,7 @@ export function LoanCard({ loan, onPress }: LoanCardProps) {
 
   const subtitleParts = [account?.name, dueText()].filter(Boolean)
   const subtitleColor =
-    loan.isOverdue && !isPaid ? theme.colors.customColors.expense : mutedColor
+    loan.isOverdue && !isPaid ? theme.colors.semantic.expense : mutedColor
 
   const badgeLabel = isPaid
     ? t("screens.settings.loans.card.statusPaid")
@@ -194,7 +194,7 @@ const styles = StyleSheet.create((t) => ({
     backgroundColor: t.colors.surface,
     borderRadius: t.radius,
     borderWidth: 1,
-    borderColor: t.colors.customColors.semi,
+    borderColor: t.colors.semantic.semi,
     padding: 14,
     gap: 10,
   },

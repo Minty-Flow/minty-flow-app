@@ -48,7 +48,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   sectionLabel: {
     ...theme.typography.labelMedium,
     fontWeight: "600",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     textTransform: "capitalize",
     letterSpacing: 0.5,
     marginBottom: SECTION_GAP,
@@ -64,7 +64,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   sectionLabelInRow: {
     ...theme.typography.labelMedium,
     fontWeight: "600",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     textTransform: "capitalize",
     letterSpacing: 0.5,
   },
@@ -128,7 +128,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   conversionRateSummaryLabel: {
     ...theme.typography.bodyMedium,
     fontWeight: "600",
-    color: theme.colors.customColors?.semi ?? theme.colors.onSecondary,
+    color: theme.colors.semantic?.semi ?? theme.colors.onSecondary,
     letterSpacing: 0.5,
   },
   conversionRateSummaryValues: {
@@ -165,7 +165,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   },
   conversionOutcomeRate: {
     ...theme.typography.bodyLarge,
-    color: theme.colors.customColors?.semi ?? theme.colors.onSecondary,
+    color: theme.colors.semantic?.semi ?? theme.colors.onSecondary,
   },
   conversionInputRow: {
     marginTop: SECTION_GAP + 4,
@@ -192,12 +192,12 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   },
   accountTriggerBalance: {
     fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   accountTriggerPlaceholder: {
     flex: 1,
     fontSize: theme.typography.bodyLarge.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   inlineAccountPicker: {
     marginTop: FORM_GAP,
@@ -311,7 +311,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     paddingHorizontal: 12,
     borderRadius: theme.radius,
     borderWidth: 1,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
   },
   tagChipAdd: {
     borderStyle: "dashed",
@@ -319,7 +319,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     backgroundColor: "transparent",
   },
   tagChipCancel: {
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
     backgroundColor: "transparent",
   },
   tagChipAddText: {
@@ -344,7 +344,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   },
   tagPickerEmptyText: {
     fontSize: theme.typography.labelLarge.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     paddingVertical: SECTION_GAP,
   },
   createTagRow: {
@@ -413,7 +413,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     marginHorizontal: H_PAD,
     ...theme.typography.labelMedium,
     fontWeight: "600",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     letterSpacing: 0.5,
     marginBottom: SECTION_GAP,
   },
@@ -456,7 +456,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     paddingVertical: CARD_PAD,
     paddingHorizontal: H_PAD,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.customColors.semi,
+    borderBottomColor: theme.colors.semantic.semi,
   },
   endsOnOptionRowLast: {
     borderBottomWidth: 0,
@@ -488,12 +488,12 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   },
   fieldPlaceholder: {
     fontSize: theme.typography.bodyLarge.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     flex: 1,
     minWidth: 0,
   },
   chevronIcon: {
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     opacity: 0.7,
     alignSelf: "center",
   },
@@ -524,7 +524,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   addFilesLabel: {
     flex: 1,
     ...theme.typography.titleSmall,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   addFilesOptionsContainer: {
     marginTop: FORM_GAP,
@@ -540,7 +540,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     paddingVertical: CARD_PAD,
     paddingHorizontal: H_PAD,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.customColors.semi,
+    borderBottomColor: theme.colors.semantic.semi,
   },
   addFilesOptionRowLast: {
     borderBottomWidth: 0,
@@ -580,7 +580,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   attachmentMeta: {
     fontSize: theme.typography.bodyMedium.fontSize,
     marginTop: MICRO_GAP,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   attachmentRemoveBtn: {
     marginRight: H_PAD,
@@ -592,7 +592,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     paddingBottom: 2 * FORM_GAP,
     gap: ELEMENT_GAP,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.customColors.semi,
+    borderTopColor: theme.colors.semantic.semi,
   },
   footerButton: {
     flex: 1,

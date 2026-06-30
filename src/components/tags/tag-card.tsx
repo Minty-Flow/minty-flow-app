@@ -87,10 +87,10 @@ const styles = StyleSheet.create((theme) => ({
   },
   type: {
     fontSize: theme.typography.labelSmall.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     letterSpacing: 0.5,
   },
   chevron: {
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
 }))

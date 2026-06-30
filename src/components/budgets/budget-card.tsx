@@ -232,9 +232,9 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
       : "onTrack"
 
   const statusColor = {
-    onTrack: theme.colors.customColors.income,
-    watch: theme.colors.customColors.warning,
-    over: theme.colors.customColors.expense,
+    onTrack: theme.colors.semantic.income,
+    watch: theme.colors.semantic.warning,
+    over: theme.colors.semantic.expense,
   }[status]
   const statusBg = `${statusColor}20`
 
@@ -472,7 +472,7 @@ const styles = StyleSheet.create((t) => ({
     backgroundColor: t.colors.surface,
     borderRadius: t.radius,
     borderWidth: 1,
-    borderColor: t.colors.customColors.semi,
+    borderColor: t.colors.semantic.semi,
     padding: 14,
     marginBottom: 12,
     gap: 10,

@@ -247,7 +247,7 @@ export function UpcomingTransactionsSection({
           <IconSvg
             name={collapsed ? "chevron-down-outline" : "chevron-up-outline"}
             size={16}
-            color={theme.colors.customColors.semi}
+            color={theme.colors.semantic.semi}
           />
         </View>
       </Pressable>
@@ -268,7 +268,7 @@ export function UpcomingTransactionsSection({
               <ChevronIcon
                 direction={"trailing"}
                 size={18}
-                color={theme.colors.customColors.semi}
+                color={theme.colors.semantic.semi}
               />
             </Button>
           </View>
@@ -278,18 +278,18 @@ export function UpcomingTransactionsSection({
               <View
                 style={[
                   sectionStyles.pill,
-                  { backgroundColor: `${theme.colors.customColors.info}18` },
+                  { backgroundColor: `${theme.colors.semantic.info}18` },
                 ]}
               >
                 <IconSvg
                   name="repeat-outline"
                   size={14}
-                  color={theme.colors.customColors.info}
+                  color={theme.colors.semantic.info}
                 />
                 <Text
                   style={[
                     sectionStyles.pillText,
-                    { color: theme.colors.customColors.info },
+                    { color: theme.colors.semantic.info },
                   ]}
                 >
                   {t("screens.home.upcoming.recurringCount", {
@@ -302,18 +302,18 @@ export function UpcomingTransactionsSection({
               <View
                 style={[
                   sectionStyles.pill,
-                  { backgroundColor: `${theme.colors.customColors.warning}18` },
+                  { backgroundColor: `${theme.colors.semantic.warning}18` },
                 ]}
               >
                 <IconSvg
                   name="history-toggle-outline"
                   size={14}
-                  color={theme.colors.customColors.warning}
+                  color={theme.colors.semantic.warning}
                 />
                 <Text
                   style={[
                     sectionStyles.pillText,
-                    { color: theme.colors.customColors.warning },
+                    { color: theme.colors.semantic.warning },
                   ]}
                 >
                   {t("screens.home.upcoming.pendingCount", {
@@ -370,12 +370,12 @@ export function UpcomingTransactionsSection({
                     <IconSvg
                       name="checks-outline"
                       size={14}
-                      color={theme.colors.customColors.success}
+                      color={theme.colors.semantic.success}
                     />
                     <Text
                       style={[
                         sectionStyles.confirmAllText,
-                        { color: theme.colors.customColors.success },
+                        { color: theme.colors.semantic.success },
                       ]}
                     >
                       {t("screens.home.upcoming.a11y.confirmAllButton")}

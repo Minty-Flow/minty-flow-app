@@ -301,7 +301,7 @@ export default function TransactionAppearanceScreen() {
         <IconSvg
           name="info-circle-outline"
           size={14}
-          color={theme.colors.customColors.semi}
+          color={theme.colors.semantic.semi}
         />
         <Text style={styles.infoText}>
           {t("screens.settings.preferences.appearance.transactionStyle.info")}
@@ -334,7 +334,7 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.labelXSmall.fontSize,
     fontWeight: "600",
     letterSpacing: 0.8,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
 
   // Preview card
@@ -342,7 +342,7 @@ const styles = StyleSheet.create((theme) => ({
 
   divider: {
     height: 0.5,
-    backgroundColor: theme.colors.customColors.semi,
+    backgroundColor: theme.colors.semantic.semi,
     opacity: 0.4,
   },
 
@@ -370,7 +370,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   toggleDescription: {
     fontSize: theme.typography.labelMedium.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     lineHeight: 16,
   },
 
@@ -409,7 +409,7 @@ const styles = StyleSheet.create((theme) => ({
   infoText: {
     flex: 1,
     fontSize: theme.typography.labelMedium.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     lineHeight: 18,
   },
 }))

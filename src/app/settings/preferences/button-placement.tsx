@@ -151,12 +151,12 @@ export default function ButtonPlacementScreen() {
   const buttonConfigs: Record<FabButtonType, ButtonConfig> = {
     income: {
       icon: "chevrons-down-outline",
-      color: theme.colors.customColors.income,
+      color: theme.colors.semantic.income,
       iconColor: theme.colors.onError,
     },
     expense: {
       icon: "chevrons-up-outline",
-      color: theme.colors.customColors.expense,
+      color: theme.colors.semantic.expense,
       iconColor: theme.colors.onError,
     },
     transfer: {
@@ -208,7 +208,7 @@ export default function ButtonPlacementScreen() {
                 position: "absolute",
                 left: pos.x - 6,
                 top: pos.y - 6,
-                borderColor: theme.colors.customColors.semi,
+                borderColor: theme.colors.semantic.semi,
               },
             ]}
           />

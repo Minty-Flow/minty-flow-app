@@ -111,7 +111,7 @@ const styles = StyleSheet.create((theme) => ({
     padding: 16,
     backgroundColor: `${theme.colors.onSurface}08`,
     borderWidth: 1,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
     gap: 10,
     // Ensure card content doesn't bleed under the delete button area
     paddingTop: 18,

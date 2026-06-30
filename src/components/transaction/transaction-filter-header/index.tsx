@@ -309,7 +309,7 @@ export function TransactionFilterHeader({
     ? `${formatShortMonthDay(selectedRange.start)} – ${formatShortMonthDay(selectedRange.end)}`
     : t("components.filters.chips.thisMonth")
 
-  const borderColor = theme.colors.customColors.semi
+  const borderColor = theme.colors.semantic.semi
 
   const pills: {
     key: FilterPanelKey | "date"
