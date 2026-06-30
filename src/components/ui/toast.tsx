@@ -272,16 +272,16 @@ export const ToastManager = () => {
 
 const toastItemStyles = StyleSheet.create((theme) => ({
   iconSuccess: {
-    color: theme.colors.customColors.success,
+    color: theme.colors.semantic.success,
   },
   iconError: {
     color: theme.colors.error,
   },
   iconWarn: {
-    color: theme.colors.customColors.warning,
+    color: theme.colors.semantic.warning,
   },
   iconInfo: {
-    color: theme.colors.customColors.info,
+    color: theme.colors.semantic.info,
   },
   iconDefault: {
     color: theme.colors.onSurface,
@@ -290,16 +290,16 @@ const toastItemStyles = StyleSheet.create((theme) => ({
     color: theme.colors.onSurface,
   },
   progressBarSuccess: {
-    backgroundColor: theme.colors.customColors.success,
+    backgroundColor: theme.colors.semantic.success,
   },
   progressBarError: {
     backgroundColor: theme.colors.error,
   },
   progressBarWarn: {
-    backgroundColor: theme.colors.customColors.warning,
+    backgroundColor: theme.colors.semantic.warning,
   },
   progressBarInfo: {
-    backgroundColor: theme.colors.customColors.info,
+    backgroundColor: theme.colors.semantic.info,
   },
   progressBarDefault: {
     backgroundColor: theme.colors.primary,

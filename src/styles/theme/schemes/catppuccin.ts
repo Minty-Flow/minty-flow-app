@@ -21,7 +21,7 @@ const CATPPUCCIN_MOCHA_BASE: MintyColorScheme = {
   onSecondary: "#CDD6F4",
   error: "#F38BA8",
   onError: "#F5F6FA",
-  customColors: {
+  semantic: {
     income: "#A6E3A1",
     expense: "#F38BA8",
     semi: "#9399B2",
@@ -50,7 +50,7 @@ const CATPPUCCIN_MACCHIATO_BASE: MintyColorScheme = {
   onSecondary: "#CAD3F5",
   error: "#ED8796",
   onError: "#F5F6FA",
-  customColors: {
+  semantic: {
     income: "#A6DA95",
     expense: "#ED8796",
     semi: "#5B6078",
@@ -79,7 +79,7 @@ const CATPPUCCIN_FRAPPE_BASE: MintyColorScheme = {
   onSecondary: "#C6D0F5",
   error: "#E78284",
   onError: "#F5F6FA",
-  customColors: {
+  semantic: {
     income: "#A6D189",
     expense: "#E78284",
     semi: "#949CBB",

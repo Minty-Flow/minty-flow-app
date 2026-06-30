@@ -243,9 +243,9 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
       : "onTrack"
 
   const statusColor = {
-    onTrack: theme.colors.customColors.income,
-    watch: theme.colors.customColors.warning,
-    over: theme.colors.customColors.expense,
+    onTrack: theme.colors.semantic.income,
+    watch: theme.colors.semantic.warning,
+    over: theme.colors.semantic.expense,
   }[status]
   const statusBg = `${statusColor}20`
   const progressBarColor = statusColor

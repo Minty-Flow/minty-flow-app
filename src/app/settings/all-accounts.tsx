@@ -104,7 +104,7 @@ const styles = StyleSheet.create((theme) => ({
   archivedSectionLabel: {
     ...theme.typography.labelXSmall,
     fontWeight: "600",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     letterSpacing: 0.8,
     paddingTop: 8,
   },

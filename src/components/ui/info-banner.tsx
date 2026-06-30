@@ -28,11 +28,11 @@ const styles = StyleSheet.create((theme) => ({
     paddingTop: 16,
   },
   icon: {
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   text: {
     fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     lineHeight: 18,
     flex: 1,
   },

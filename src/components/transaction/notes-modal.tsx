@@ -89,7 +89,7 @@ function NotesModalContent({
           styles.toolbar,
           {
             backgroundColor: theme.colors.secondary,
-            borderBottomColor: theme.colors.customColors.semi,
+            borderBottomColor: theme.colors.semantic.semi,
           },
         ]}
       >
@@ -185,7 +185,7 @@ function NotesModalContent({
           defaultValue={initialValue}
           // autoFocus
           placeholder={t("components.transactionForm.fields.notesPlaceholder")}
-          placeholderTextColor={theme.colors.customColors.semi}
+          placeholderTextColor={theme.colors.semantic.semi}
           onChangeState={(e) => setActiveStyles(e.nativeEvent)}
           style={{
             ...styles.editor,
@@ -237,7 +237,7 @@ const styles = UnistylesSheet.create((theme) => ({
     alignItems: "center",
     justifyContent: "space-between",
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.customColors.semi,
+    borderBottomColor: theme.colors.semantic.semi,
   },
   title: {
     ...theme.typography.titleSmall,

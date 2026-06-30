@@ -388,7 +388,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   apiUrl: {
     fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   searchRow: {
     marginHorizontal: 20,
@@ -396,7 +396,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   instruction: {
     fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     marginHorizontal: 20,
     marginBottom: 16,
     lineHeight: 18,
@@ -455,7 +455,7 @@ const styles = StyleSheet.create((theme) => ({
   loadingText: {
     marginTop: 12,
     fontSize: theme.typography.bodyLarge.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   errorText: {
     fontSize: theme.typography.bodyLarge.fontSize,

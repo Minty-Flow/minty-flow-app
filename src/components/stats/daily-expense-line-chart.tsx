@@ -174,16 +174,16 @@ export function DailyExpenseLineChart({
           xAxis={{
             font,
             tickCount: 5,
-            labelColor: theme.colors.customColors.semi,
-            lineColor: `${theme.colors.customColors.semi}40`,
+            labelColor: theme.colors.semantic.semi,
+            lineColor: `${theme.colors.semantic.semi}40`,
             lineWidth: 1,
           }}
           yAxis={[
             {
               font,
               tickCount: 4,
-              labelColor: theme.colors.customColors.semi,
-              lineColor: `${theme.colors.customColors.semi}50`,
+              labelColor: theme.colors.semantic.semi,
+              lineColor: `${theme.colors.semantic.semi}50`,
               lineWidth: 1,
               formatYLabel: (v) => {
                 const n = v as number
@@ -212,7 +212,7 @@ export function DailyExpenseLineChart({
                 {hasPreviousData && (
                   <Line
                     points={points.prev}
-                    color={theme.colors.customColors.semi}
+                    color={theme.colors.semantic.semi}
                     strokeWidth={1.5}
                     opacity={0.35}
                     curveType="monotoneX"
@@ -301,7 +301,7 @@ const styles = StyleSheet.create((theme) => ({
     height: CHART_HEIGHT,
   },
   tooltipDay: {
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     fontWeight: "600",
     minWidth: 20,
   },
@@ -320,7 +320,7 @@ const styles = StyleSheet.create((theme) => ({
     width: 16,
     height: 2,
     borderRadius: 1,
-    backgroundColor: theme.colors.customColors.semi,
+    backgroundColor: theme.colors.semantic.semi,
     opacity: 0.5,
   },
   legendLabel: {

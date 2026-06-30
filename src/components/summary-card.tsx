@@ -172,8 +172,8 @@ const Card = ({
               size={12}
               color={
                 isIncome
-                  ? theme.colors.customColors.income
-                  : theme.colors.customColors.expense
+                  ? theme.colors.semantic.income
+                  : theme.colors.semantic.expense
               }
             />
           </View>
@@ -230,7 +230,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
     padding: 12,
     borderWidth: 1,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
     backgroundColor: theme.colors.surface,
     // minHeight: 110,
   },
@@ -252,10 +252,10 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
   },
   incomeBg: {
-    backgroundColor: `${theme.colors.customColors.income}20`,
+    backgroundColor: `${theme.colors.semantic.income}20`,
   },
   expenseBg: {
-    backgroundColor: `${theme.colors.customColors.expense}20`,
+    backgroundColor: `${theme.colors.semantic.expense}20`,
   },
   label: {
     color: theme.colors.onSecondary,
@@ -279,10 +279,10 @@ const styles = StyleSheet.create((theme) => ({
     opacity: 0.6,
   },
   incomeText: {
-    color: theme.colors.customColors.income,
+    color: theme.colors.semantic.income,
   },
   expenseText: {
-    color: theme.colors.customColors.expense,
+    color: theme.colors.semantic.expense,
   },
   indicator: {
     height: 2,
@@ -291,11 +291,11 @@ const styles = StyleSheet.create((theme) => ({
     marginTop: 4,
   },
   incomeIndicator: {
-    backgroundColor: theme.colors.customColors.income,
+    backgroundColor: theme.colors.semantic.income,
     // opacity: 0.4,
   },
   expenseIndicator: {
-    backgroundColor: theme.colors.customColors.expense,
+    backgroundColor: theme.colors.semantic.expense,
     // opacity: 0.4,
   },
 }))

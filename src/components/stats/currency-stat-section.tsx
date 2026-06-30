@@ -112,7 +112,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   divider: {
     height: 1,
-    backgroundColor: `${theme.colors.customColors.semi}30`,
+    backgroundColor: `${theme.colors.semantic.semi}30`,
     marginHorizontal: 16,
     marginBottom: 16,
   },
@@ -132,6 +132,6 @@ const styles = StyleSheet.create((theme) => ({
   sectionTitle: {
     paddingHorizontal: 16,
     fontWeight: "600",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
 }))

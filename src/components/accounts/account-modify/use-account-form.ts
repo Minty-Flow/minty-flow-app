@@ -71,10 +71,9 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
 
   const navigation = useNavigation()
   const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
-  const { confirmNavigation, allowNavigation } = useNavigationGuard({
+  const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSubmitting,
-    onConfirm: handleGoBack,
     onBlock: () => setUnsavedModalVisible(true),
   })
 
@@ -191,7 +190,7 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
     currentColorScheme,
     unsavedModalVisible,
     deleteModalVisible,
-    confirmNavigation,
+    allowNavigation,
     handleGoBack,
     setValue,
     handleSubmit,

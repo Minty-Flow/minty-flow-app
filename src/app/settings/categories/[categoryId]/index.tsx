@@ -296,7 +296,7 @@ const styles = StyleSheet.create((theme) => ({
   categoryType: {
     fontSize: theme.typography.labelXSmall.fontSize,
     fontWeight: "500",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     marginRight: 16,
   },
 

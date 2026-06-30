@@ -186,7 +186,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 12,
     borderRadius: theme.radius,
     borderWidth: 1.5,
-    borderColor: `${theme.colors.customColors.semi}50`,
+    borderColor: `${theme.colors.semantic.semi}50`,
     borderStyle: "dashed",
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -195,11 +195,11 @@ const styles = StyleSheet.create((theme) => ({
   archivedName: {
     flex: 1,
     ...theme.typography.bodyLarge,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   archivedBalance: {
     ...theme.typography.bodyLarge,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   cardHeader: {
     flexDirection: "row",
@@ -228,7 +228,7 @@ const styles = StyleSheet.create((theme) => ({
   accountType: {
     ...theme.typography.labelXSmall,
     fontWeight: "500",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
 
     letterSpacing: 0.5,
   },
@@ -256,12 +256,12 @@ const styles = StyleSheet.create((theme) => ({
     gap: 6,
     paddingTop: 6,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.customColors.semi,
+    borderTopColor: theme.colors.semantic.semi,
   },
   summaryLabel: {
     ...theme.typography.labelSmall,
     fontWeight: "600",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     letterSpacing: 0.8,
   },
   summaryRow: {
@@ -279,7 +279,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   summaryItemLabel: {
     ...theme.typography.labelXSmall,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     letterSpacing: 0.5,
   },
   summaryAmount: {
@@ -287,12 +287,12 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSecondary,
   },
   semiColor: {
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   incomeColor: {
-    color: theme.colors.customColors.income,
+    color: theme.colors.semantic.income,
   },
   expenseColor: {
-    color: theme.colors.customColors.expense,
+    color: theme.colors.semantic.expense,
   },
 }))

@@ -58,7 +58,7 @@ const leftActionStyles = StyleSheet.create((theme) => ({
     width: RESTORE_ACTION_WIDTH,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: theme.colors.customColors.success,
+    backgroundColor: theme.colors.semantic.success,
   },
   pressable: {
     flex: 1,

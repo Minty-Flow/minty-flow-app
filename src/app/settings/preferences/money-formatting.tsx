@@ -167,11 +167,11 @@ const styles = StyleSheet.create((theme) => ({
   },
   rowDescription: {
     fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   divider: {
     height: 0.5,
-    backgroundColor: theme.colors.customColors?.semi,
+    backgroundColor: theme.colors.semantic?.semi,
     opacity: 0.4,
   },
 }))

@@ -47,7 +47,7 @@ export function AccountModifyContent({
     unsavedModalVisible,
     deleteModalVisible,
     archiveModalVisible,
-    confirmNavigation,
+    allowNavigation,
     handleGoBack,
     setValue,
     handleSubmit,
@@ -220,7 +220,8 @@ export function AccountModifyContent({
         onConfirmArchive={handleArchive}
         onDiscardAndNavigate={() => {
           closeUnsavedModal()
-          confirmNavigation()
+          allowNavigation()
+          handleGoBack()
         }}
       />
     </View>

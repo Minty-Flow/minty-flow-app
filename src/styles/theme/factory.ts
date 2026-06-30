@@ -45,7 +45,7 @@ export class ThemeFactory {
       onSurface: s.onSurface,
       error: s.error,
       onError: s.onError,
-      customColors: s.customColors,
+      semantic: s.semantic,
       rippleColor,
       shadow: s.shadow,
       boxShadow: s.boxShadow,

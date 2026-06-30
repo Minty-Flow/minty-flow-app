@@ -266,7 +266,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 999,
     backgroundColor: `${theme.colors.onSurface}10`,
     borderWidth: 1,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
   },
   chipSelected: {
     backgroundColor: theme.colors.primary,
@@ -287,7 +287,7 @@ const styles = StyleSheet.create((theme) => ({
     padding: 16,
     backgroundColor: `${theme.colors.onSurface}08`,
     borderWidth: 1,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
     gap: 8,
     marginBottom: 4,
   },
@@ -317,7 +317,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 14,
     backgroundColor: `${theme.colors.onSurface}08`,
     borderWidth: 1,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
   },
   summaryCardPayer: {
     opacity: 0.5,

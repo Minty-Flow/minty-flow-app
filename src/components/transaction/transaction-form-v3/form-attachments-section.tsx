@@ -143,7 +143,7 @@ export function FormAttachmentsSection({
           <IconSvg
             name="plus-outline"
             size={20}
-            color={theme.colors.customColors.semi}
+            color={theme.colors.semantic.semi}
           />
           <Text variant="default" style={transactionFormStyles.addFilesLabel}>
             {t("components.transactionForm.addFiles.label")}

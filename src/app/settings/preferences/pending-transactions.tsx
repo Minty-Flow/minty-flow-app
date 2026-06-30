@@ -256,7 +256,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   toggleDescription: {
     fontSize: theme.typography.labelLarge.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     lineHeight: 20,
     paddingRight: 60,
   },

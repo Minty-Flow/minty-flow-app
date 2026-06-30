@@ -221,7 +221,7 @@ export default function BillSplitterScreen() {
                     placeholder={t("screens.accounts.a11y.searchPlaceholder")}
                     value={accountSearchQuery}
                     onChangeText={setAccountSearchQuery}
-                    placeholderTextColor={theme.colors.customColors.semi}
+                    placeholderTextColor={theme.colors.semantic.semi}
                     style={styles.pickerSearchInput}
                   />
                   <ScrollView
@@ -427,12 +427,12 @@ const styles = StyleSheet.create((theme) => ({
   },
   accountTriggerBalance: {
     fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   accountTriggerPlaceholder: {
     flex: 1,
     fontSize: theme.typography.bodyLarge.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   chevron: {
     opacity: 0.7,
@@ -527,7 +527,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 999,
     backgroundColor: `${theme.colors.onSurface}08`,
     borderWidth: 1,
-    borderColor: theme.colors.customColors.semi,
+    borderColor: theme.colors.semantic.semi,
     alignSelf: "center",
   },
   participantsChipText: {

@@ -239,7 +239,7 @@ export default function AccountDetailsScreen() {
                   <IconSvg
                     name="star-outline"
                     size={14}
-                    color={theme.colors.customColors.warning}
+                    color={theme.colors.semantic.warning}
                   />
                   <Text style={styles.primaryText}>
                     {t("screens.accounts.card.primary")}
@@ -419,17 +419,17 @@ const styles = StyleSheet.create((theme) => ({
   metaText: {
     fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "500",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
   metaSeparator: {
     fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     marginHorizontal: 2,
   },
   primaryText: {
     fontSize: theme.typography.bodyMedium.fontSize,
     fontWeight: "600",
-    color: theme.colors.customColors.warning,
+    color: theme.colors.semantic.warning,
   },
   archivedContainer: {
     flexDirection: "row",
@@ -449,7 +449,7 @@ const styles = StyleSheet.create((theme) => ({
   balanceLabel: {
     ...theme.typography.labelXSmall,
     fontWeight: "600",
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
     letterSpacing: 1,
   },
   balanceRow: {
@@ -469,7 +469,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   currencyCode: {
     ...theme.typography.titleSmall,
-    color: theme.colors.customColors.semi,
+    color: theme.colors.semantic.semi,
   },
 
   // ── Summary: Income & Expense pills + Net card ─────────────────

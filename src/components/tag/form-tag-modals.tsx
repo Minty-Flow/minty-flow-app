@@ -10,7 +10,8 @@ interface FormTagModalsProps {
   handleDelete: () => void
   unsavedModalVisible: boolean
   setUnsavedModalVisible: (visible: boolean) => void
-  confirmNavigation: () => void
+  allowNavigation: () => void
+  handleConfirm: () => void
 }
 
 export const FormTagModals = ({
@@ -20,7 +21,8 @@ export const FormTagModals = ({
   handleDelete,
   unsavedModalVisible,
   setUnsavedModalVisible,
-  confirmNavigation,
+  allowNavigation,
+  handleConfirm,
 }: FormTagModalsProps) => {
   const { t } = useTranslation()
 
@@ -54,7 +56,8 @@ export const FormTagModals = ({
         onRequestClose={() => setUnsavedModalVisible(false)}
         onConfirm={() => {
           setUnsavedModalVisible(false)
-          confirmNavigation()
+          allowNavigation()
+          handleConfirm()
         }}
         title={t("common.modals.closeWithoutSaving")}
         description={t("common.modals.unsavedDescription")}

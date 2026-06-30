@@ -67,12 +67,12 @@ export const TransactionItemRight = ({
           <IconSvg
             name="repeat-outline"
             size={12}
-            color={theme.colors.customColors.info}
+            color={theme.colors.semantic.info}
           />
           <Text
             style={[
               transactionItemStyles.statusBadgeText,
-              { color: theme.colors.customColors.info },
+              { color: theme.colors.semantic.info },
             ]}
           >
             {t("components.transactionItem.recurring")}
@@ -85,12 +85,12 @@ export const TransactionItemRight = ({
           <IconSvg
             name="history-toggle-outline"
             size={12}
-            color={theme.colors.customColors.warning}
+            color={theme.colors.semantic.warning}
           />
           <Text
             style={[
               transactionItemStyles.statusBadgeText,
-              { color: theme.colors.customColors.warning },
+              { color: theme.colors.semantic.warning },
             ]}
           >
             {t("components.transactionItem.pending")}
