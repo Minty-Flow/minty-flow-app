@@ -9,8 +9,9 @@ import {
   type TransactionWithRelations,
 } from "~/database/mappers/hydrateTransactions"
 import { getTransactionsByFilter } from "~/database/repos/transaction-repo"
+import { logger } from "~/utils/logger"
 
-type Status = "idle" | "loading" | "ready"
+type Status = "idle" | "loading" | "ready" | "error"
 
 interface CacheEntry {
   ids: string[]
@@ -73,30 +74,46 @@ const useTransactionStore = create<TransactionStoreState>()(
         },
       }))
 
-      const rows = await getTransactionsByFilter(filters)
-      const hydrated = await hydrateTransactions(rows)
-      const ids = hydrated.map((t) => t.id)
+      try {
+        const rows = await getTransactionsByFilter(filters)
+        const hydrated = await hydrateTransactions(rows)
+        const ids = hydrated.map((t) => t.id)
 
-      set((state) => {
-        const nextById = { ...state.byId }
-        for (const tx of hydrated) nextById[tx.id] = tx
+        set((state) => {
+          const nextById = { ...state.byId }
+          for (const tx of hydrated) nextById[tx.id] = tx
 
-        const nextCache = {
-          ...state.cache,
-          [hash]: { ids, status: "ready" as Status, dirty: false },
-        }
+          const nextCache = {
+            ...state.cache,
+            [hash]: { ids, status: "ready" as Status, dirty: false },
+          }
 
-        // GC: drop ids no longer referenced by any cache entry.
-        const referenced = new Set<string>()
-        for (const key in nextCache) {
-          for (const id of nextCache[key].ids) referenced.add(id)
-        }
-        for (const id in nextById) {
-          if (!referenced.has(id)) delete nextById[id]
-        }
+          // GC: drop ids no longer referenced by any cache entry.
+          const referenced = new Set<string>()
+          for (const key in nextCache) {
+            for (const id of nextCache[key].ids) referenced.add(id)
+          }
+          for (const id in nextById) {
+            if (!referenced.has(id)) delete nextById[id]
+          }
 
-        return { byId: nextById, cache: nextCache }
-      })
+          return { byId: nextById, cache: nextCache }
+        })
+      } catch (error) {
+        logger.error("Failed to fetch transactions", {
+          error: error instanceof Error ? error.message : String(error),
+        })
+        set((state) => ({
+          cache: {
+            ...state.cache,
+            [hash]: {
+              ids: existing?.ids ?? EMPTY_IDS,
+              status: "error",
+              dirty: false,
+            },
+          },
+        }))
+      }
     },
 
     markDirty: (changedIds) => {

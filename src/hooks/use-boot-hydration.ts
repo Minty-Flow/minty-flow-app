@@ -6,6 +6,7 @@ import { useCategoryStore } from "~/stores/db/category.store"
 import { useGoalStore } from "~/stores/db/goal.store"
 import { useLoanStore } from "~/stores/db/loan.store"
 import { useTagStore } from "~/stores/db/tag.store"
+import { logger } from "~/utils/logger"
 
 export function useBootHydration(): void {
   useEffect(() => {
@@ -16,6 +17,8 @@ export function useBootHydration(): void {
       useBudgetStore.getState().refreshAll(),
       useGoalStore.getState().refreshAll(),
       useLoanStore.getState().refreshAll(),
-    ])
+    ]).catch((error) => {
+      logger.error("Boot hydration failed", { error: String(error) })
+    })
   }, [])
 }
