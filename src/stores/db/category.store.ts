@@ -7,11 +7,12 @@ import { mapCategory } from "~/database/mappers/category.mapper"
 import { getAllCategories } from "~/database/repos/category-repo"
 import { getCategoryTransactionCounts } from "~/database/services-sqlite/category-service"
 import type { Category } from "~/types/categories"
+import { logger } from "~/utils/logger"
 
 interface CategoryStoreState {
   byId: Record<string, Category>
   ids: string[]
-  status: "idle" | "loading" | "ready"
+  status: "idle" | "loading" | "ready" | "error"
   refreshAll: () => Promise<void>
 }
 
@@ -27,24 +28,32 @@ export const useCategoryStore = create<CategoryStoreState>()(
       const gen = ++gen_2
       set({ status: "loading" })
 
-      const [rows, counts] = await Promise.all([
-        getAllCategories(),
-        getCategoryTransactionCounts(),
-      ])
-      const byId: Record<string, Category> = {}
-      const ids: string[] = []
+      try {
+        const [rows, counts] = await Promise.all([
+          getAllCategories(),
+          getCategoryTransactionCounts(),
+        ])
+        const byId: Record<string, Category> = {}
+        const ids: string[] = []
 
-      for (const row of rows) {
-        const category = {
-          ...mapCategory(row),
-          transactionCount: counts.get(row.id) ?? 0,
+        for (const row of rows) {
+          const category = {
+            ...mapCategory(row),
+            transactionCount: counts.get(row.id) ?? 0,
+          }
+          byId[category.id] = category
+          ids.push(category.id)
         }
-        byId[category.id] = category
-        ids.push(category.id)
-      }
 
-      if (gen_2 !== gen) return
-      set({ byId, ids, status: "ready" })
+        if (gen_2 !== gen) return
+        set({ byId, ids, status: "ready" })
+      } catch (error) {
+        if (gen_2 !== gen) return
+        logger.error("Failed to refresh categories", {
+          error: error instanceof Error ? error.message : String(error),
+        })
+        set({ status: "error" })
+      }
     },
   })),
 )
