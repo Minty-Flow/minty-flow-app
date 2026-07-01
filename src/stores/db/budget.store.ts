@@ -10,11 +10,12 @@ import {
   getBudgetCategoryIds,
 } from "~/database/repos/budget-repo"
 import type { Budget } from "~/types/budgets"
+import { logger } from "~/utils/logger"
 
 interface BudgetStoreState {
   byId: Record<string, Budget>
   ids: string[]
-  status: "idle" | "loading" | "ready"
+  status: "idle" | "loading" | "ready" | "error"
   refreshAll: () => Promise<void>
 }
 
@@ -30,32 +31,40 @@ export const useBudgetStore = create<BudgetStoreState>()(
       const gen = ++gen_2
       set({ status: "loading" })
 
-      const rows = await getAllBudgets()
-      const byId: Record<string, Budget> = {}
-      const ids: string[] = []
+      try {
+        const rows = await getAllBudgets()
+        const byId: Record<string, Budget> = {}
+        const ids: string[] = []
 
-      await Promise.all(
-        rows.map(async (row) => {
-          const [accountIds, categoryIds] = await Promise.all([
-            getBudgetAccountIds(row.id),
-            getBudgetCategoryIds(row.id),
-          ])
-          const budget = mapBudget(row, accountIds, categoryIds)
-          byId[budget.id] = budget
-          ids.push(budget.id)
-        }),
-      )
+        await Promise.all(
+          rows.map(async (row) => {
+            const [accountIds, categoryIds] = await Promise.all([
+              getBudgetAccountIds(row.id),
+              getBudgetCategoryIds(row.id),
+            ])
+            const budget = mapBudget(row, accountIds, categoryIds)
+            byId[budget.id] = budget
+            ids.push(budget.id)
+          }),
+        )
 
-      // Sort: active first, then by name
-      ids.sort((a, b) => {
-        const ba = byId[a]
-        const bb = byId[b]
-        if (ba.isActive !== bb.isActive) return ba.isActive ? -1 : 1
-        return ba.name.localeCompare(bb.name)
-      })
+        // Sort: active first, then by name
+        ids.sort((a, b) => {
+          const ba = byId[a]
+          const bb = byId[b]
+          if (ba.isActive !== bb.isActive) return ba.isActive ? -1 : 1
+          return ba.name.localeCompare(bb.name)
+        })
 
-      if (gen_2 !== gen) return
-      set({ byId, ids, status: "ready" })
+        if (gen_2 !== gen) return
+        set({ byId, ids, status: "ready" })
+      } catch (error) {
+        if (gen_2 !== gen) return
+        logger.error("Failed to refresh budgets", {
+          error: error instanceof Error ? error.message : String(error),
+        })
+        set({ status: "error" })
+      }
     },
   })),
 )
