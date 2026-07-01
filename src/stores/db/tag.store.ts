@@ -7,11 +7,12 @@ import { mapTag } from "~/database/mappers/tag.mapper"
 import { getAllTags } from "~/database/repos/tag-repo"
 import { getTagTransactionCounts } from "~/database/services-sqlite/tag-service"
 import type { Tag } from "~/types/tags"
+import { logger } from "~/utils/logger"
 
 interface TagStoreState {
   byId: Record<string, Tag>
   ids: string[]
-  status: "idle" | "loading" | "ready"
+  status: "idle" | "loading" | "ready" | "error"
   refreshAll: () => Promise<void>
 }
 
@@ -27,24 +28,32 @@ export const useTagStore = create<TagStoreState>()(
       const gen = ++gen_2
       set({ status: "loading" })
 
-      const [rows, counts] = await Promise.all([
-        getAllTags(),
-        getTagTransactionCounts(),
-      ])
-      const byId: Record<string, Tag> = {}
-      const ids: string[] = []
+      try {
+        const [rows, counts] = await Promise.all([
+          getAllTags(),
+          getTagTransactionCounts(),
+        ])
+        const byId: Record<string, Tag> = {}
+        const ids: string[] = []
 
-      for (const row of rows) {
-        const tag = {
-          ...mapTag(row),
-          transactionCount: counts.get(row.id) ?? 0,
+        for (const row of rows) {
+          const tag = {
+            ...mapTag(row),
+            transactionCount: counts.get(row.id) ?? 0,
+          }
+          byId[tag.id] = tag
+          ids.push(tag.id)
         }
-        byId[tag.id] = tag
-        ids.push(tag.id)
-      }
 
-      if (gen_2 !== gen) return
-      set({ byId, ids, status: "ready" })
+        if (gen_2 !== gen) return
+        set({ byId, ids, status: "ready" })
+      } catch (error) {
+        if (gen_2 !== gen) return
+        logger.error("Failed to refresh tags", {
+          error: error instanceof Error ? error.message : String(error),
+        })
+        set({ status: "error" })
+      }
     },
   })),
 )

@@ -10,12 +10,13 @@ import {
   getGoalAccountIds,
 } from "~/database/repos/goal-repo"
 import type { Goal, GoalType } from "~/types/goals"
+import { logger } from "~/utils/logger"
 
 interface GoalStoreState {
   byId: Record<string, Goal>
   ids: string[] // active goals
   archivedIds: string[]
-  status: "idle" | "loading" | "ready"
+  status: "idle" | "loading" | "ready" | "error"
   refreshAll: () => Promise<void>
 }
 
@@ -32,34 +33,42 @@ export const useGoalStore = create<GoalStoreState>()(
       const gen = ++gen_2
       set({ status: "loading" })
 
-      const [activeRows, archivedRows] = await Promise.all([
-        getAllGoals(),
-        getArchivedGoals(),
-      ])
+      try {
+        const [activeRows, archivedRows] = await Promise.all([
+          getAllGoals(),
+          getArchivedGoals(),
+        ])
 
-      const allRows = [...activeRows, ...archivedRows]
-      const byId: Record<string, Goal> = {}
-      const ids: string[] = []
-      const archivedIds: string[] = []
+        const allRows = [...activeRows, ...archivedRows]
+        const byId: Record<string, Goal> = {}
+        const ids: string[] = []
+        const archivedIds: string[] = []
 
-      await Promise.all(
-        allRows.map(async (row) => {
-          const accountIds = await getGoalAccountIds(row.id)
-          const goal = mapGoal(row, accountIds)
-          byId[goal.id] = goal
-          if (goal.isArchived) {
-            archivedIds.push(goal.id)
-          } else {
-            ids.push(goal.id)
-          }
-        }),
-      )
+        await Promise.all(
+          allRows.map(async (row) => {
+            const accountIds = await getGoalAccountIds(row.id)
+            const goal = mapGoal(row, accountIds)
+            byId[goal.id] = goal
+            if (goal.isArchived) {
+              archivedIds.push(goal.id)
+            } else {
+              ids.push(goal.id)
+            }
+          }),
+        )
 
-      ids.sort((a, b) => byId[a].name.localeCompare(byId[b].name))
-      archivedIds.sort((a, b) => byId[a].name.localeCompare(byId[b].name))
+        ids.sort((a, b) => byId[a].name.localeCompare(byId[b].name))
+        archivedIds.sort((a, b) => byId[a].name.localeCompare(byId[b].name))
 
-      if (gen_2 !== gen) return
-      set({ byId, ids, archivedIds, status: "ready" })
+        if (gen_2 !== gen) return
+        set({ byId, ids, archivedIds, status: "ready" })
+      } catch (error) {
+        if (gen_2 !== gen) return
+        logger.error("Failed to refresh goals", {
+          error: error instanceof Error ? error.message : String(error),
+        })
+        set({ status: "error" })
+      }
     },
   })),
 )
