@@ -42,6 +42,7 @@ import { usePendingTransactionsStore } from "~/stores/pending-transactions.store
 import { useTransactionLocationStore } from "~/stores/transaction-location.store"
 import { NewEnum } from "~/types/new"
 import {
+  RecurringEndEnum,
   type RecurringEndType,
   type RecurringFrequency,
   type TransactionLocation,
@@ -313,16 +314,19 @@ export function TransactionFormV3({
     })
   }, [transactionType, selectedAccount, selectedToAccount, t])
 
-  // TODO: make these strings more type safe
   const endsOnType: RecurringEndType =
     recurring.endAfterOccurrences !== null
-      ? "occurrences"
+      ? RecurringEndEnum.OCCURRENCES
       : recurring.endDate !== null
-        ? "date"
-        : "never"
+        ? RecurringEndEnum.DATE
+        : RecurringEndEnum.NEVER
 
   const recurringEndDateOccurrenceCount = useMemo(() => {
-    if (endsOnType !== "date" || !recurring.endDate || !recurring.frequency)
+    if (
+      endsOnType !== RecurringEndEnum.DATE ||
+      !recurring.endDate ||
+      !recurring.frequency
+    )
       return null
     return countOccurrencesBetween(
       recurring.startDate,
@@ -713,6 +717,7 @@ export function TransactionFormV3({
                     derivedTransferTitle ||
                     t("common.transaction.untitledTransaction")
                   }
+                  variant="title"
                   placeholderTextColor={theme.colors.semantic.semi}
                 />
               )}

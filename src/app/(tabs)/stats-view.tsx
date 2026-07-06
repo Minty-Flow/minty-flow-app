@@ -22,10 +22,12 @@ export default function StatsScreen() {
     supplementByCurrency,
     isLoading,
     dateRange,
+    activePreset,
     activeYear,
     activeMonth,
     setMonthRange,
     setCustomRange,
+    navigate,
     refetch,
   } = useStats()
 
@@ -49,11 +51,14 @@ export default function StatsScreen() {
           />
         }
       >
-        {/* Month navigation */}
+        {/* Month navigation with preset awareness */}
         <MonthYearPicker
           initialYear={activeYear}
           initialMonth={activeMonth}
           onSelect={setMonthRange}
+          activePreset={activePreset}
+          dateRange={dateRange}
+          onNavigate={navigate}
         />
 
         {/* More options row */}
@@ -100,8 +105,8 @@ export default function StatsScreen() {
         visible={modalVisible}
         initialStart={dateRange.from}
         initialEnd={dateRange.to}
-        onSave={(start, end) => {
-          setCustomRange(start, end)
+        onSave={(start, end, source) => {
+          setCustomRange(start, end, source)
           setModalVisible(false)
         }}
         onRequestClose={() => setModalVisible(false)}

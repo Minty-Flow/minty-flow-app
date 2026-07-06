@@ -1,4 +1,10 @@
-import { differenceInDays, getDay, startOfMonth, startOfWeek } from "date-fns"
+import {
+  differenceInDays,
+  getDay,
+  startOfMonth,
+  startOfWeek,
+  startOfYear,
+} from "date-fns"
 
 import { getDb } from "~/database/db"
 import type { RowAccount, RowCategory } from "~/database/types/rows"
@@ -346,7 +352,10 @@ function computeDailyData(
   return Array.from(map.values())
 }
 
-function getBucketKey(date: Date, interval: "day" | "week" | "month"): string {
+function getBucketKey(
+  date: Date,
+  interval: "day" | "week" | "month" | "year",
+): string {
   switch (interval) {
     case "day":
       return formatDateKey(date)
@@ -354,6 +363,8 @@ function getBucketKey(date: Date, interval: "day" | "week" | "month"): string {
       return formatDateKey(startOfWeek(date, { weekStartsOn: 1 }))
     case "month":
       return formatMonthKey(startOfMonth(date))
+    case "year":
+      return String(startOfYear(date).getFullYear())
   }
 }
 
