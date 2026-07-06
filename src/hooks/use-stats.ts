@@ -10,18 +10,25 @@ import type {
   StatsDateRangePreset,
   StatsSupplement,
 } from "~/types/stats"
-import { buildMonthRange, buildStatsDateRange } from "~/utils/stats-date-range"
+import {
+  buildMonthRange,
+  buildStatsDateRange,
+  navigateRange,
+} from "~/utils/stats-date-range"
+import type { DateRangePresetId } from "~/utils/time-utils"
 
 interface UseStatsReturn {
   byCurrency: CurrencyStats[]
   supplementByCurrency: StatsSupplement[]
   isLoading: boolean
   dateRange: StatsDateRange
+  activePreset: DateRangePresetId
   activeYear: number
   activeMonth: number
   setPreset: (preset: StatsDateRangePreset) => void
-  setCustomRange: (from: Date, to: Date) => void
+  setCustomRange: (from: Date, to: Date, source?: DateRangePresetId) => void
   setMonthRange: (year: number, month: number) => void
+  navigate: (direction: "prev" | "next") => void
   refetch: () => Promise<void>
 }
 
@@ -55,6 +62,8 @@ export function useStats(): UseStatsReturn {
   const now = new Date()
   const [activeYear, setActiveYear] = useState(() => now.getFullYear())
   const [activeMonth, setActiveMonth] = useState(() => now.getMonth())
+  const [activePreset, setActivePreset] =
+    useState<DateRangePresetId>("thisMonth")
   const [dateRange, setDateRange] = useState<StatsDateRange>(() =>
     buildStatsDateRange("thisMonth"),
   )
@@ -115,20 +124,48 @@ export function useStats(): UseStatsReturn {
   }, [dateRange, debouncedFetch])
 
   const setPreset = useCallback((preset: StatsDateRangePreset) => {
+    setActivePreset(preset)
     setDateRange(buildStatsDateRange(preset))
   }, [])
 
-  const setCustomRange = useCallback((from: Date, to: Date) => {
-    setDateRange(buildStatsDateRange("custom", from, to))
-    setActiveYear(from.getFullYear())
-    setActiveMonth(from.getMonth())
-  }, [])
+  const setCustomRange = useCallback(
+    (from: Date, to: Date, source?: DateRangePresetId) => {
+      const mappedPreset: StatsDateRangePreset =
+        source === "thisWeek" ||
+        source === "thisMonth" ||
+        source === "thisYear" ||
+        source === "last30" ||
+        source === "allTime"
+          ? source
+          : "custom"
+
+      setActivePreset(source ?? "custom")
+
+      if (mappedPreset !== "custom") {
+        setDateRange(buildStatsDateRange(mappedPreset))
+      } else {
+        setDateRange(buildStatsDateRange("custom", from, to))
+      }
+
+      setActiveYear(from.getFullYear())
+      setActiveMonth(from.getMonth())
+    },
+    [],
+  )
 
   const setMonthRange = useCallback((year: number, month: number) => {
     setActiveYear(year)
     setActiveMonth(month)
+    setActivePreset("custom")
     setDateRange(buildMonthRange(year, month))
   }, [])
+
+  const navigate = useCallback(
+    (direction: "prev" | "next") => {
+      setDateRange((prev) => navigateRange(prev, activePreset, direction))
+    },
+    [activePreset],
+  )
 
   const refetch = useCallback(
     () => fetchData(dateRange),
@@ -140,11 +177,13 @@ export function useStats(): UseStatsReturn {
     supplementByCurrency,
     isLoading,
     dateRange,
+    activePreset,
     activeYear,
     activeMonth,
     setPreset,
     setCustomRange,
     setMonthRange,
+    navigate,
     refetch,
   }
 }

@@ -4,7 +4,6 @@
 
 import type { MintyColorScheme } from "./types"
 
-// TODO: DEAD
 /** for future usgae
  * Lighten a hex color by a percentage
  * Used for generating dark theme primary colors

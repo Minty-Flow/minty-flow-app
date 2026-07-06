@@ -5,6 +5,7 @@ export type StatsDateRangePreset =
   | "thisMonth"
   | "last30"
   | "thisYear"
+  | "allTime"
   | "custom"
 
 export interface StatsDateRange {
@@ -15,7 +16,7 @@ export interface StatsDateRange {
   previousFrom: Date
   previousTo: Date
   /** Optimal grouping granularity for charts */
-  interval: "day" | "week" | "month"
+  interval: "day" | "week" | "month" | "year"
 }
 
 export interface DailyDataPoint {

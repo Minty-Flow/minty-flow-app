@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native-unistyles"
+import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import type { IconSvgName } from "~/components/ui/icon-svg"
 import { IconSvg } from "~/components/ui/icon-svg"
@@ -14,13 +14,13 @@ interface EmptyStateProps {
   variant?: EmptyStateVariant
 }
 
-// FIXME: icon colors are not changing fast on theme change
 export function EmptyState({
   icon,
   title,
   description,
   variant = "default",
 }: EmptyStateProps) {
+  const { theme } = useUnistyles()
   const isCompact = variant === "compact"
   const iconSize = isCompact ? 32 : 48
 
@@ -30,6 +30,7 @@ export function EmptyState({
         <IconSvg
           name={icon}
           size={iconSize}
+          color={theme.colors.onSecondary}
           style={[styles.icon, isCompact && styles.iconCompact]}
         />
       ) : null}
@@ -68,7 +69,6 @@ const styles = StyleSheet.create((t) => ({
   icon: {
     opacity: 0.5,
     marginBottom: 16,
-    color: t.colors.onSecondary,
   },
   iconCompact: {
     marginBottom: 8,

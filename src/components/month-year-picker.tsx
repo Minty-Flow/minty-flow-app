@@ -3,13 +3,16 @@ import { useTranslation } from "react-i18next"
 import { Keyboard } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
+import { MonthGrid } from "~/components/month-grid"
 import { Button } from "~/components/ui/button"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
-import { Input } from "~/components/ui/input"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { getDisplayMonthTitle, getMonthNames } from "~/utils/time-utils"
+import type { StatsDateRange } from "~/types/stats"
+import { canNavigate, formatNavigatorLabel } from "~/utils/stats-date-range"
+import type { DateRangePresetId } from "~/utils/time-utils"
+import { getDisplayMonthTitle } from "~/utils/time-utils"
 
 interface MonthYearPickerProps {
   initialYear: number
@@ -17,6 +20,10 @@ interface MonthYearPickerProps {
   onSelect: (year: number, month: number) => void
   onNow?: () => void
   onDone?: () => void
+  /** Optional: preset-aware mode for stats page integration */
+  activePreset?: DateRangePresetId
+  dateRange?: StatsDateRange
+  onNavigate?: (direction: "prev" | "next") => void
 }
 
 const MIN_YEAR = 1970
@@ -32,6 +39,9 @@ export function MonthYearPicker({
   onSelect,
   onNow,
   onDone,
+  activePreset,
+  dateRange,
+  onNavigate,
 }: MonthYearPickerProps) {
   const { t } = useTranslation()
 
@@ -42,11 +52,27 @@ export function MonthYearPicker({
     String(initialYear),
   )
 
-  const MONTH_NAMES = getMonthNames()
+  // Preset-aware mode
+  const isPresetMode = activePreset !== undefined && dateRange !== undefined
+  const navigable = isPresetMode ? canNavigate(activePreset) : true
 
-  const displayMonthName = getDisplayMonthTitle(localYear, localMonth)
+  // Compute pill label
+  const pillLabel = isPresetMode
+    ? activePreset === "last30"
+      ? t("components.dateRange.presets.last30")
+      : activePreset === "allTime"
+        ? t("components.dateRange.presets.allTime")
+        : formatNavigatorLabel(dateRange, activePreset)
+    : getDisplayMonthTitle(localYear, localMonth)
 
-  const goPrevMonth = useCallback(() => {
+  // Navigation handlers
+  const goPrev = useCallback(() => {
+    if (isPresetMode && onNavigate) {
+      onNavigate("prev")
+      return
+    }
+
+    // Legacy month navigation
     if (localMonth === 0) {
       const newYear = clampYear(localYear - 1)
       setLocalMonth(11)
@@ -58,9 +84,15 @@ export function MonthYearPicker({
       setLocalMonth(newMonth)
       onSelect(localYear, newMonth)
     }
-  }, [localMonth, localYear, onSelect])
+  }, [isPresetMode, onNavigate, localMonth, localYear, onSelect])
 
-  const goNextMonth = useCallback(() => {
+  const goNext = useCallback(() => {
+    if (isPresetMode && onNavigate) {
+      onNavigate("next")
+      return
+    }
+
+    // Legacy month navigation
     if (localMonth === 11) {
       const newYear = clampYear(localYear + 1)
       setLocalMonth(0)
@@ -72,10 +104,16 @@ export function MonthYearPicker({
       setLocalMonth(newMonth)
       onSelect(localYear, newMonth)
     }
-  }, [localMonth, localYear, onSelect])
+  }, [isPresetMode, onNavigate, localMonth, localYear, onSelect])
 
+  // Inline picker handlers
   const handleMonthPress = useCallback((monthIndex: number) => {
     setLocalMonth(monthIndex)
+  }, [])
+
+  const handleYearChange = useCallback((year: number) => {
+    setLocalYear(year)
+    setYearInputValue(String(year))
   }, [])
 
   const handleNow = useCallback(() => {
@@ -106,181 +144,80 @@ export function MonthYearPicker({
 
   return (
     <>
-      {/* Top Month Selector */}
-      <View style={styles.topMonthRow}>
-        <Button variant="secondary" size="icon" onPress={goPrevMonth}>
-          <ChevronIcon direction="leading" size={24} />
-        </Button>
+      {/* Top row: chevrons + pill */}
+      <View style={styles.topRow}>
+        {navigable && (
+          <Button variant="secondary" size="icon" onPress={goPrev}>
+            <ChevronIcon direction="leading" size={24} />
+          </Button>
+        )}
 
         <Pressable
-          style={styles.monthHeaderButton}
+          style={styles.pill}
           onPress={() => setMonthPickerOpen((v) => !v)}
         >
-          <Text style={styles.monthHeaderButtonText}>{displayMonthName}</Text>
+          <Text style={styles.pillText} numberOfLines={1}>
+            {pillLabel}
+          </Text>
         </Pressable>
 
-        <Button variant="secondary" size="icon" onPress={goNextMonth}>
-          <ChevronIcon direction="trailing" size={24} />
-        </Button>
+        {navigable && (
+          <Button variant="secondary" size="icon" onPress={goNext}>
+            <ChevronIcon direction="trailing" size={24} />
+          </Button>
+        )}
       </View>
 
-      {/* Inline Picker */}
+      {/* Inline month picker */}
       {monthPickerOpen && (
-        <View style={styles.monthPickerContainer}>
-          <View style={styles.expandedContent}>
-            <View style={styles.monthYearRow}>
-              <Input
-                value={yearInputValue}
-                onChangeText={(text) => {
-                  const normalized = text.replace(/[٠-٩]/g, (d) =>
-                    String(d.charCodeAt(0) - 0x0660),
-                  )
-                  const digits = normalized.replace(/\D/g, "").slice(0, 4)
-                  setYearInputValue(digits)
-
-                  const num = parseInt(digits, 10)
-                  if (!Number.isNaN(num)) {
-                    setLocalYear(clampYear(num))
-                  }
-                }}
-                keyboardType="number-pad"
-                maxLength={4}
-                placeholder={String(initialYear)}
-                style={styles.yearInput}
-                textAlign="center"
-              />
-            </View>
-
-            <View style={styles.monthGrid}>
-              {MONTH_NAMES.map((name, idx) => {
-                const isSelected = localMonth === idx
-
-                return (
-                  <Pressable
-                    key={name}
-                    onPress={() => handleMonthPress(idx)}
-                    style={[
-                      styles.monthCell,
-                      isSelected && styles.monthCellSelected,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.monthCellText,
-                        isSelected && styles.monthCellTextSelected,
-                      ]}
-                    >
-                      {name}
-                    </Text>
-                  </Pressable>
-                )
-              })}
-            </View>
-
-            <View style={styles.actionsRow}>
-              <Button variant="secondary" onPress={handleNow}>
-                <Text>{t("components.dateRange.now")}</Text>
-              </Button>
-
-              <Button variant="secondary" onPress={handleDone}>
-                <Text>{t("common.actions.done")}</Text>
-              </Button>
-            </View>
-          </View>
+        <View style={styles.pickerContainer}>
+          <MonthGrid
+            year={localYear}
+            yearInput={yearInputValue}
+            month={localMonth}
+            onYearInputChange={setYearInputValue}
+            onYearChange={handleYearChange}
+            onMonthChange={handleMonthPress}
+            onNow={handleNow}
+            onDone={handleDone}
+          />
         </View>
       )}
     </>
   )
 }
 
-const styles = StyleSheet.create((theme) => {
-  const primary = theme.colors.primary
+const styles = StyleSheet.create((theme) => ({
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    marginHorizontal: 20,
+    marginVertical: 10,
+  },
 
-  return {
-    topMonthRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 12,
-      marginHorizontal: 20,
-      marginVertical: 10,
-    },
+  pill: {
+    flex: 1,
+    backgroundColor: theme.colors.secondary,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: theme.radius,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
-    monthHeaderButton: {
-      backgroundColor: theme.colors.secondary,
-      paddingVertical: 10,
-      paddingHorizontal: 24,
-      borderRadius: theme.radius,
-      flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
-    },
+  pillText: {
+    ...theme.typography.titleSmall,
+    fontWeight: "600",
+    color: theme.colors.onSecondary,
+  },
 
-    monthHeaderButtonText: {
-      ...theme.typography.titleSmall,
-      fontWeight: "600",
-      color: theme.colors.onSecondary,
-    },
-
-    monthPickerContainer: {
-      marginHorizontal: 20,
-      marginVertical: 8,
-      overflow: "hidden",
-    },
-
-    expandedContent: {
-      padding: 20,
-      paddingTop: 0,
-      gap: 16,
-    },
-
-    monthYearRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 8,
-    },
-
-    yearInput: {
-      ...theme.typography.headlineSmall,
-      fontWeight: "600",
-      minWidth: 72,
-      borderRadius: theme.radius,
-      backgroundColor: theme.colors.surface,
-    },
-
-    monthGrid: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 8,
-    },
-
-    monthCell: {
-      width: "30%",
-      paddingVertical: 10,
-      borderRadius: theme.radius,
-      alignItems: "center",
-    },
-
-    monthCellSelected: {
-      backgroundColor: `${primary}20`,
-    },
-
-    monthCellText: {
-      color: theme.colors.onSurface,
-      fontWeight: "400",
-    },
-
-    monthCellTextSelected: {
-      color: primary,
-      fontWeight: "600",
-    },
-
-    actionsRow: {
-      flexDirection: "row",
-      justifyContent: "flex-end",
-      alignItems: "center",
-      gap: 12,
-    },
-  }
-})
+  pickerContainer: {
+    marginHorizontal: 20,
+    marginVertical: 8,
+    padding: 20,
+    paddingTop: 0,
+    overflow: "hidden",
+  },
+}))

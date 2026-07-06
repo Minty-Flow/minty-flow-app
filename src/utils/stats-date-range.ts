@@ -2,7 +2,9 @@ import {
   addDays,
   addMonths,
   addWeeks,
+  addYears,
   differenceInDays,
+  endOfDay,
   endOfMonth,
   endOfWeek,
   endOfYear,
@@ -17,12 +19,14 @@ import {
 } from "date-fns"
 
 import type { StatsDateRange, StatsDateRangePreset } from "~/types/stats"
+import type { DateRangePresetId } from "~/utils/time-utils"
 import {
   formatDateKey,
   formatDayYear,
   formatShortMonthDay,
   formatShortMonthDayYear,
   formatShortMonthName,
+  getDisplayMonthTitle,
 } from "~/utils/time-utils"
 
 /**
@@ -97,6 +101,19 @@ export function buildStatsDateRange(
       }
     }
 
+    case "allTime": {
+      const from = startOfYear(new Date(2000, 0, 1))
+      const to = endOfDay(now)
+      return {
+        preset,
+        from,
+        to,
+        previousFrom: from,
+        previousTo: to,
+        interval: "year",
+      }
+    }
+
     case "custom": {
       const from = customFrom ? startOfDay(customFrom) : startOfMonth(now)
       const to = customTo ? startOfDay(customTo) : endOfMonth(now)
@@ -131,7 +148,7 @@ export function buildStatsDateRange(
  */
 export function formatIntervalLabel(
   date: Date,
-  interval: "day" | "week" | "month",
+  interval: "day" | "week" | "month" | "year",
 ): string {
   switch (interval) {
     case "day":
@@ -140,6 +157,8 @@ export function formatIntervalLabel(
       return `W${getISOWeek(date)}`
     case "month":
       return formatShortMonthName(date)
+    case "year":
+      return String(date.getFullYear())
   }
 }
 
@@ -150,7 +169,7 @@ export function formatIntervalLabel(
 export function generateDateBuckets(
   from: Date,
   to: Date,
-  interval: "day" | "week" | "month",
+  interval: "day" | "week" | "month" | "year",
 ): Date[] {
   const buckets: Date[] = []
   let cursor =
@@ -158,7 +177,9 @@ export function generateDateBuckets(
       ? startOfWeek(from, { weekStartsOn: 1 })
       : interval === "month"
         ? startOfMonth(from)
-        : startOfDay(from)
+        : interval === "year"
+          ? startOfYear(from)
+          : startOfDay(from)
 
   while (cursor <= to) {
     buckets.push(cursor)
@@ -171,6 +192,9 @@ export function generateDateBuckets(
         break
       case "month":
         cursor = addMonths(cursor, 1)
+        break
+      case "year":
+        cursor = addYears(cursor, 1)
         break
     }
   }
@@ -217,5 +241,96 @@ export function buildMonthRange(year: number, month: number): StatsDateRange {
     previousFrom: startOfMonth(prevAnchor),
     previousTo: endOfMonth(prevAnchor),
     interval: "day",
+  }
+}
+
+/**
+ * Whether the given preset supports chevron navigation.
+ * `last30` and `allTime` are static ranges — no navigation.
+ */
+export function canNavigate(preset: DateRangePresetId): boolean {
+  return preset !== "last30" && preset !== "allTime"
+}
+
+/**
+ * Shift the date range by one unit in the given direction, preserving the preset.
+ * Returns the same range unchanged for non-navigable presets.
+ */
+export function navigateRange(
+  range: StatsDateRange,
+  preset: DateRangePresetId,
+  direction: "prev" | "next",
+): StatsDateRange {
+  const d = direction === "next" ? 1 : -1
+
+  switch (preset) {
+    case "thisWeek": {
+      const from = addWeeks(range.from, d)
+      const to = addWeeks(range.to, d)
+      const previousFrom = addWeeks(range.previousFrom, d)
+      const previousTo = addWeeks(range.previousTo, d)
+      return { ...range, from, to, previousFrom, previousTo }
+    }
+
+    case "thisMonth":
+    case "byMonth": {
+      const from = addMonths(range.from, d)
+      const to = endOfMonth(from)
+      const previousFrom = addMonths(range.previousFrom, d)
+      const previousTo = endOfMonth(previousFrom)
+      return { ...range, from, to, previousFrom, previousTo }
+    }
+
+    case "thisYear":
+    case "byYear": {
+      const from = addYears(range.from, d)
+      const to = endOfYear(from)
+      const previousFrom = addYears(range.previousFrom, d)
+      const previousTo = endOfYear(previousFrom)
+      return { ...range, from, to, previousFrom, previousTo }
+    }
+
+    case "custom": {
+      const spanDays = differenceInDays(range.to, range.from)
+      const shift = (spanDays + 1) * d
+      const from = addDays(range.from, shift)
+      const to = addDays(range.to, shift)
+      const previousTo = subDays(from, 1)
+      const previousFrom = subDays(previousTo, spanDays)
+      return { ...range, from, to, previousFrom, previousTo }
+    }
+
+    case "last30":
+    case "allTime":
+      return range
+  }
+}
+
+/**
+ * Produce a human-readable pill label for the navigator based on the active preset.
+ * Note: `last30` and `allTime` are handled by the caller via i18n — this function
+ * returns empty strings for those cases.
+ */
+export function formatNavigatorLabel(
+  range: StatsDateRange,
+  preset: DateRangePresetId,
+): string {
+  switch (preset) {
+    case "thisMonth":
+    case "byMonth":
+      return getDisplayMonthTitle(
+        range.from.getFullYear(),
+        range.from.getMonth(),
+      )
+    case "thisYear":
+    case "byYear":
+      return String(range.from.getFullYear())
+    case "thisWeek":
+      return `${formatShortMonthDay(range.from)} – ${formatShortMonthDay(range.to)}`
+    case "last30":
+    case "allTime":
+      return ""
+    case "custom":
+      return formatRangeLabel(range)
   }
 }
