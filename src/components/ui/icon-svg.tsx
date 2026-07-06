@@ -551,12 +551,14 @@ export type IconSize =
   | 256
   | 26
 
+type IconStyle = StyleProp<Omit<ViewStyle, "color">>
+
 type IconSymbolProps = Omit<SvgProps, "width" | "height"> & {
   name: IconSvgName
   /* default: 24 */
   size?: IconSize
   color?: string | OpaqueColorValue
-  style?: StyleProp<ViewStyle>
+  style?: IconStyle
 }
 
 export function IconSvg({
@@ -582,7 +584,7 @@ export function IconSvg({
       width={size}
       height={size}
       color={resolvedColor}
-      style={style as SvgProps["style"]}
+      style={style}
       {...rest}
     />
   )

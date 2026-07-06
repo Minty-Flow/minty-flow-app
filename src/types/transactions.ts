@@ -6,8 +6,15 @@ export type RecurringFrequency =
   | "yearly"
   | null
 
+export const RecurringEndEnum = {
+  NEVER: "never",
+  DATE: "date",
+  OCCURRENCES: "occurrences",
+}
+
 /** How a recurring transaction ends: never, on a specific date, or after N occurrences */
-export type RecurringEndType = "never" | "date" | "occurrences"
+export type RecurringEndType =
+  (typeof RecurringEndEnum)[keyof typeof RecurringEndEnum]
 
 /** Attachment metadata for transaction extra (e.g. file attachments) */
 export interface TransactionAttachment {

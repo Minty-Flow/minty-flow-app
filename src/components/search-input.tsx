@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next"
-import { View, type ViewStyle } from "react-native"
-import { StyleSheet, useUnistyles } from "react-native-unistyles"
+import { useUnistyles } from "react-native-unistyles"
 
 import { Button } from "~/components/ui/button"
 import { IconSvg } from "~/components/ui/icon-svg"
@@ -8,85 +7,54 @@ import { Input, type InputProps } from "~/components/ui/input"
 
 interface SearchInputProps extends InputProps {
   onClear?: () => void
-  containerStyle?: ViewStyle
 }
 
-export const SearchInput = ({
+export function SearchInput({
   value,
   onChangeText,
   onClear,
   placeholder,
-  containerStyle,
-  style,
   ...props
-}: SearchInputProps) => {
+}: SearchInputProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
-  const resolvedPlaceholder =
-    placeholder ?? t("components.searchInput.placeholder")
+
   return (
-    <View style={[styles.container, containerStyle]}>
-      <IconSvg
-        name="search-outline"
-        size={20}
-        style={styles.searchIcon}
-        color={theme.colors.onSecondary}
-      />
-      <Input
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={resolvedPlaceholder}
-        style={[styles.input, style]}
-        autoCapitalize="none"
-        placeholderTextColor={theme.colors.semantic.semi}
-        {...props}
-      />
-      {value && value.length > 0 && (
-        <Button
-          variant="ghost"
-          size="icon"
-          onPress={onClear}
-          style={styles.clearButton}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <IconSvg
-            name="x-outline"
-            size={20}
-            color={theme.colors.onSecondary}
-          />
-        </Button>
-      )}
-    </View>
+    <Input
+      {...props}
+      variant="search"
+      value={value}
+      onChangeText={onChangeText}
+      autoCapitalize="none"
+      placeholder={placeholder ?? t("components.searchInput.placeholder")}
+      left={
+        <IconSvg
+          name="search-outline"
+          size={20}
+          color={theme.colors.semantic.semi}
+        />
+      }
+      right={
+        value ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            onPress={onClear}
+            hitSlop={{
+              top: 8,
+              bottom: 8,
+              left: 8,
+              right: 8,
+            }}
+          >
+            <IconSvg
+              name="x-outline"
+              size={18}
+              color={theme.colors.semantic.semi}
+            />
+          </Button>
+        ) : undefined
+      }
+    />
   )
 }
-
-const styles = StyleSheet.create((theme) => ({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.secondary,
-    borderRadius: theme.radius,
-    paddingHorizontal: 12,
-    gap: 8,
-  },
-  searchIcon: {
-    color: theme.colors.onSecondary,
-    opacity: 0.5,
-  },
-  input: {
-    flex: 1,
-    height: 44,
-    backgroundColor: "transparent",
-    borderColor: "transparent",
-    borderWidth: 0,
-    fontSize: theme.typography.labelLarge.fontSize,
-    shadowColor: "transparent",
-    elevation: 0,
-    paddingHorizontal: 0,
-    color: theme.colors.onSecondary,
-  },
-  clearButton: {
-    width: 36,
-    height: 36,
-  },
-}))

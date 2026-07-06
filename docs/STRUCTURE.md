@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-07-01T13:09:44.202Z
+Generated on: 2026-07-06T21:42:51.055Z
 ```
 ./
 ├── .github/
@@ -751,15 +751,11 @@ Generated on: 2026-07-01T13:09:44.202Z
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── styles.ts
 │   │   │   │   └── use-date-time-picker.tsx
-│   │   │   ├── switch/
-│   │   │   │   ├── index.tsx
-│   │   │   │   ├── switch.android.tsx
-│   │   │   │   └── switch.ios.tsx
 │   │   │   ├── activity-indicator-minty.tsx
 │   │   │   ├── button.tsx
 │   │   │   ├── chevron-icon.tsx
 │   │   │   ├── chips.tsx
-│   │   │   ├── collapsible.tsx
+│   │   │   ├── collapsible.tsx.txt
 │   │   │   ├── empty-state.tsx
 │   │   │   ├── icon-svg.tsx
 │   │   │   ├── info-banner.tsx
@@ -767,6 +763,7 @@ Generated on: 2026-07-01T13:09:44.202Z
 │   │   │   ├── permission-banner.tsx
 │   │   │   ├── pressable.tsx
 │   │   │   ├── separator.tsx
+│   │   │   ├── switch.tsx
 │   │   │   ├── text.tsx
 │   │   │   ├── toast.tsx
 │   │   │   ├── tooltip.tsx
@@ -780,6 +777,7 @@ Generated on: 2026-07-01T13:09:44.202Z
 │   │   ├── info-modal.tsx
 │   │   ├── keyboard-sticky-view-minty.tsx
 │   │   ├── money.tsx
+│   │   ├── month-grid.tsx
 │   │   ├── month-year-picker.tsx
 │   │   ├── preset-list-item.tsx
 │   │   ├── privacy-eye-control.tsx

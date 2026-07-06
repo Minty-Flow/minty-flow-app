@@ -211,14 +211,12 @@ function ExchangeRatesContent({
                 <Button
                   variant="outline"
                   onPress={() => handleResetToApiRate(item.displayCode)}
-                  style={styles.resetButton}
                 >
                   <Text>{t("common.actions.reset")}</Text>
                 </Button>
                 <Button
                   variant="default"
                   onPress={() => handleSaveRate(item.displayCode, draftValue)}
-                  style={styles.saveButton}
                   disabled={isInvalidRate}
                 >
                   <Text>{t("common.actions.save")}</Text>
@@ -257,7 +255,6 @@ function ExchangeRatesContent({
         onChangeText={(query) => dispatch({ type: "SET_SEARCH", query })}
         onClear={() => dispatch({ type: "SET_SEARCH", query: "" })}
         placeholder={t("screens.settings.exchangeRates.searchPlaceholder")}
-        containerStyle={styles.searchRow}
       />
       <Text style={styles.instruction}>
         {t("screens.settings.exchangeRates.instructionCaption")}
@@ -390,10 +387,6 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.semantic.semi,
   },
-  searchRow: {
-    marginHorizontal: 20,
-    marginBottom: 12,
-  },
   instruction: {
     fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.semantic.semi,
@@ -444,18 +437,12 @@ const styles = StyleSheet.create((theme) => ({
     marginHorizontal: 20,
     marginVertical: 12,
   },
-  resetButton: {},
-  saveButton: {},
+
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: theme.colors.surface,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: theme.typography.bodyLarge.fontSize,
-    color: theme.colors.semantic.semi,
   },
   errorText: {
     fontSize: theme.typography.bodyLarge.fontSize,
