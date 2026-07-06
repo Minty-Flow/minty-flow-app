@@ -257,7 +257,6 @@ function ExchangeRatesContent({
         onChangeText={(query) => dispatch({ type: "SET_SEARCH", query })}
         onClear={() => dispatch({ type: "SET_SEARCH", query: "" })}
         placeholder={t("screens.settings.exchangeRates.searchPlaceholder")}
-        containerStyle={styles.searchRow}
       />
       <Text style={styles.instruction}>
         {t("screens.settings.exchangeRates.instructionCaption")}
@@ -389,10 +388,6 @@ const styles = StyleSheet.create((theme) => ({
   apiUrl: {
     fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.semantic.semi,
-  },
-  searchRow: {
-    marginHorizontal: 20,
-    marginBottom: 12,
   },
   instruction: {
     fontSize: theme.typography.bodyMedium.fontSize,

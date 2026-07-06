@@ -2,7 +2,6 @@ import { StyleSheet } from "react-native-unistyles"
 
 export const dateRangePresetModalStyles = StyleSheet.create((theme) => {
   const muted = theme.colors.semantic?.semi ?? theme.colors.onSurface
-  const primary = theme.colors.primary
   const radius = theme.radius
   const borderColor = `${muted}40`
 
@@ -38,7 +37,7 @@ export const dateRangePresetModalStyles = StyleSheet.create((theme) => {
       paddingHorizontal: 20,
     },
     presetButton: {
-      paddingVertical: 12,
+      paddingVertical: 8,
       paddingHorizontal: 20,
       borderRadius: radius,
       borderWidth: 1,
@@ -49,17 +48,9 @@ export const dateRangePresetModalStyles = StyleSheet.create((theme) => {
       gap: 8,
       flexShrink: 0,
     },
-    presetButtonSelected: {
-      borderColor: primary,
-      backgroundColor: `${primary}20`,
-    },
     presetButtonText: {
       color: theme.colors.onSurface,
       fontWeight: "400",
-    },
-    presetButtonTextSelected: {
-      color: primary,
-      fontWeight: "600",
     },
     collapsibleSection: {
       marginBottom: 8,
@@ -86,41 +77,6 @@ export const dateRangePresetModalStyles = StyleSheet.create((theme) => {
       paddingTop: 0,
       backgroundColor: theme.colors.surface,
     },
-    monthYearRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: 8,
-    },
-    monthYearInput: {
-      flex: 1,
-      minWidth: 72,
-      marginHorizontal: 8,
-      textAlign: "center",
-    },
-    monthGrid: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 8,
-    },
-    monthCell: {
-      width: "30%",
-      paddingVertical: 10,
-      borderRadius: radius,
-      backgroundColor: "transparent",
-      alignItems: "center",
-    },
-    monthCellSelected: {
-      backgroundColor: `${primary}20`,
-    },
-    monthCellText: {
-      color: theme.colors.onSurface,
-      fontWeight: "400",
-    },
-    monthCellTextSelected: {
-      color: primary,
-      fontWeight: "600",
-    },
     customRangeRow: {
       flexDirection: "row",
       alignItems: "center",
@@ -135,6 +91,12 @@ export const dateRangePresetModalStyles = StyleSheet.create((theme) => {
     },
     customRangeValueText: {
       color: muted,
+    },
+    actionsRow: {
+      flexDirection: "row",
+      justifyContent: "flex-end",
+      alignItems: "center",
+      gap: 12,
     },
     bottomBar: {
       flexDirection: "row",
