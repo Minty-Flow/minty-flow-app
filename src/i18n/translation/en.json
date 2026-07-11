@@ -897,6 +897,8 @@
         "addCategories": "categories",
         "now": "Now",
         "pending": "Pending",
+        "pendingHintOn": "The amount won't be deducted from your account until the transaction date arrives.",
+        "pendingHintOff": "The amount will be deducted from your account right away, even though it's dated in the future.",
         "tapToEditNotes": "Tap to edit notes",
         "addNotes": "Add notes...",
         "moveToTrash": "Move to trash",

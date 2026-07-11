@@ -2,7 +2,7 @@ import { StyleSheet } from "react-native-unistyles"
 
 export const upcomingSectionStyles = StyleSheet.create((theme) => ({
   wrapper: {
-    marginBottom: 16,
+    marginTop: 10,
   },
   headerRow: {
     flexDirection: "row",
@@ -31,15 +31,34 @@ export const upcomingSectionStyles = StyleSheet.create((theme) => ({
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
-  headerRight: {
+  collapsedPills: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 6,
+  },
+  miniPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  miniPillText: {
+    ...theme.typography.labelMedium,
+    fontWeight: "700",
+  },
+  headerDivider: {
+    height: 1,
+    backgroundColor: theme.colors.secondary,
+    opacity: 0.5,
+    marginHorizontal: 16,
   },
   seeAllRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
     paddingHorizontal: 16,
-    paddingBottom: 4,
+    paddingTop: 4,
   },
   seeAllButton: {
     alignSelf: "flex-end",
@@ -74,15 +93,22 @@ export const upcomingSectionStyles = StyleSheet.create((theme) => ({
   subHeader: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
   subHeaderText: {
     ...theme.typography.labelXSmall,
-    fontWeight: "600",
+    fontWeight: "700",
     color: theme.colors.semantic.semi,
     letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  subHeaderDivider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: theme.colors.secondary,
+    opacity: 0.5,
   },
   confirmAllButton: {
     flexDirection: "row",

@@ -1,10 +1,11 @@
 import type { Control } from "react-hook-form"
-import { Controller } from "react-hook-form"
+import { Controller, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
+import { InfoBanner } from "~/components/ui/info-banner"
 import { Pressable } from "~/components/ui/pressable"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
@@ -30,6 +31,12 @@ export function FormDateSection({
 }: Props) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
+
+  // Pending only makes sense for a future date, or when editing a tx that is
+  // already pending (e.g. an overdue one) so the user can still turn it off.
+  const isPending = useWatch({ control, name: "isPending" })
+  const isFuture = date.getTime() > startOfNextMinute().getTime()
+  const showPending = isFuture || !!isPending
 
   return (
     <>
@@ -71,46 +78,50 @@ export function FormDateSection({
         </Pressable>
       </View>
 
-      <Controller
-        control={control}
-        name="isPending"
-        render={({ field: { value, onChange } }) => {
-          const txDate = date
-          const isFuture =
-            txDate && txDate.getTime() > startOfNextMinute().getTime()
-          return (
-            <Pressable
-              style={transactionFormStyles.switchRow}
-              onPress={() => !isFuture && onChange(!(value ?? false))}
-              accessibilityRole="switch"
-              accessibilityState={{
-                checked: value ?? false,
-                disabled: !!isFuture,
-              }}
-            >
-              <View style={transactionFormStyles.switchLeft}>
-                <DynamicIcon
-                  icon="history-toggle-outline"
-                  size={20}
-                  color={theme.colors.primary}
-                  variant="badge"
-                />
-                <Text
-                  variant="default"
-                  style={transactionFormStyles.switchLabel}
+      {showPending && (
+        <Controller
+          control={control}
+          name="isPending"
+          render={({ field: { value, onChange } }) => {
+            const checked = value ?? false
+            return (
+              <>
+                <Pressable
+                  style={transactionFormStyles.pendingSwitchRow}
+                  onPress={() => onChange(!checked)}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked }}
                 >
-                  {t("components.transactionForm.fields.pending")}
-                </Text>
-              </View>
-              <Switch
-                value={value ?? false}
-                onValueChange={onChange}
-                disabled={!!isFuture}
-              />
-            </Pressable>
-          )
-        }}
-      />
+                  <View style={transactionFormStyles.switchLeft}>
+                    <DynamicIcon
+                      icon="history-toggle-outline"
+                      size={20}
+                      color={theme.colors.primary}
+                      variant="badge"
+                    />
+                    <Text
+                      variant="default"
+                      style={transactionFormStyles.switchLabel}
+                    >
+                      {t("components.transactionForm.fields.pending")}
+                    </Text>
+                  </View>
+                  <Switch value={checked} onValueChange={onChange} />
+                </Pressable>
+                <View style={{ marginTop: -8, paddingBottom: 16 }}>
+                  <InfoBanner
+                    text={
+                      checked
+                        ? t("components.transactionForm.fields.pendingHintOn")
+                        : t("components.transactionForm.fields.pendingHintOff")
+                    }
+                  />
+                </View>
+              </>
+            )
+          }}
+        />
+      )}
     </>
   )
 }
