@@ -224,6 +224,7 @@ const styles = StyleSheet.create((theme) => ({
   sectionContainer: {
     flexDirection: "row",
     gap: 12,
+    marginHorizontal: 20,
   },
   card: {
     flex: 1,

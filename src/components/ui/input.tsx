@@ -220,7 +220,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 0,
 
     borderWidth: 0,
-    borderBottomWidth: 1,
+    borderBottomWidth: 2,
 
     borderBottomColor: theme.colors.secondary,
 
@@ -231,7 +231,7 @@ const styles = StyleSheet.create((theme) => ({
 
   titleFocused: {
     borderBottomColor: theme.colors.primary,
-    borderBottomWidth: 1,
+    borderBottomWidth: 2,
   },
 
   titleInput: {

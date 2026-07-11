@@ -398,6 +398,13 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
   },
+  pendingSwitchRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: ROW_PADDING_V,
+    paddingHorizontal: H_PAD,
+  },
 
   recurringSwitchRow: {
     flexDirection: "row",

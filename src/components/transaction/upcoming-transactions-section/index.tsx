@@ -230,48 +230,83 @@ export function UpcomingTransactionsSection({
         onPress={() => setCollapsed((c) => !c)}
       >
         <View style={sectionStyles.headerLeft}>
+          <IconSvg
+            name="history-toggle-outline"
+            size={18}
+            color={theme.colors.semantic.semi}
+          />
           <Text style={sectionStyles.headerTitle}>
             {t("screens.home.upcoming.header")}
           </Text>
-          <View
-            style={[
-              sectionStyles.countBadge,
-              { backgroundColor: theme.colors.secondary },
-            ]}
-          >
-            <Text style={sectionStyles.countBadgeText}>{totalVisible}</Text>
-          </View>
+          {collapsed ? (
+            <View style={sectionStyles.collapsedPills}>
+              {recurring.length > 0 && (
+                <View
+                  style={[
+                    sectionStyles.miniPill,
+                    { backgroundColor: `${theme.colors.semantic.info}18` },
+                  ]}
+                >
+                  <IconSvg
+                    name="repeat-outline"
+                    size={12}
+                    color={theme.colors.semantic.info}
+                  />
+                  <Text
+                    style={[
+                      sectionStyles.miniPillText,
+                      { color: theme.colors.semantic.info },
+                    ]}
+                  >
+                    {recurring.length}
+                  </Text>
+                </View>
+              )}
+              {pending.length > 0 && (
+                <View
+                  style={[
+                    sectionStyles.miniPill,
+                    { backgroundColor: `${theme.colors.semantic.warning}18` },
+                  ]}
+                >
+                  <IconSvg
+                    name="history-toggle-outline"
+                    size={12}
+                    color={theme.colors.semantic.warning}
+                  />
+                  <Text
+                    style={[
+                      sectionStyles.miniPillText,
+                      { color: theme.colors.semantic.warning },
+                    ]}
+                  >
+                    {pending.length}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ) : (
+            <View
+              style={[
+                sectionStyles.countBadge,
+                { backgroundColor: theme.colors.secondary },
+              ]}
+            >
+              <Text style={sectionStyles.countBadgeText}>{totalVisible}</Text>
+            </View>
+          )}
         </View>
 
-        <View style={sectionStyles.headerRight}>
-          <IconSvg
-            name={collapsed ? "chevron-down-outline" : "chevron-up-outline"}
-            size={16}
-            color={theme.colors.semantic.semi}
-          />
-        </View>
+        <IconSvg
+          name={collapsed ? "chevron-down-outline" : "chevron-up-outline"}
+          size={16}
+          color={theme.colors.semantic.semi}
+        />
       </Pressable>
 
       {!collapsed && (
         <>
-          <View style={sectionStyles.seeAllRow}>
-            <Button
-              variant="link"
-              size="sm"
-              onPress={() => router.push("/settings/pending-transactions")}
-              style={sectionStyles.seeAllButton}
-            >
-              <Text style={sectionStyles.seeAllText}>
-                {t("screens.home.upcoming.seeAll")}
-              </Text>
-
-              <ChevronIcon
-                direction={"trailing"}
-                size={18}
-                color={theme.colors.semantic.semi}
-              />
-            </Button>
-          </View>
+          <View style={sectionStyles.headerDivider} />
 
           <View style={sectionStyles.pillRow}>
             {recurring.length > 0 && (
@@ -323,83 +358,102 @@ export function UpcomingTransactionsSection({
               </View>
             )}
           </View>
-        </>
-      )}
 
-      {!collapsed && (
-        <View style={sectionStyles.listContainer}>
-          {recurring.length > 0 && (
-            <>
-              <View style={sectionStyles.subHeader}>
-                <Text style={sectionStyles.subHeaderText}>
-                  {t("screens.home.upcoming.subHeaderRecurring")}
-                </Text>
-              </View>
-              {recurring.map((row) => (
-                <TransactionItem
-                  key={row.id}
-                  transactionWithRelations={row}
-                  variant="upcoming"
-                  onPress={() => onTransactionPress(row.id)}
-                  onConfirm={() => handleConfirm(row.id)}
-                  onBeforeDelete={handleBeforeDelete}
-                  onDelete={() => handleDeleteDone(row)}
-                  rightActionAccessibilityLabel={t(
-                    "screens.home.upcoming.a11y.cancelTransaction",
-                  )}
-                />
-              ))}
-            </>
-          )}
-
-          {pending.length > 0 && (
-            <>
-              <View style={sectionStyles.subHeader}>
-                <Text style={sectionStyles.subHeaderText}>
-                  {t("screens.home.upcoming.a11y.header")}
-                </Text>
-                {manualConfirmableCount > 1 && (
-                  <Button
-                    variant="ghost"
-                    onPress={openConfirmAllModal}
-                    style={sectionStyles.confirmAllButton}
-                    accessibilityLabel={t(
-                      "screens.home.upcoming.a11y.confirmAll",
+          <View style={sectionStyles.listContainer}>
+            {recurring.length > 0 && (
+              <>
+                <View style={sectionStyles.subHeader}>
+                  <Text style={sectionStyles.subHeaderText}>
+                    {t("screens.home.upcoming.subHeaderRecurring")}
+                  </Text>
+                  <View style={sectionStyles.subHeaderDivider} />
+                </View>
+                {recurring.map((row) => (
+                  <TransactionItem
+                    key={row.id}
+                    transactionWithRelations={row}
+                    variant="upcoming"
+                    onPress={() => onTransactionPress(row.id)}
+                    onConfirm={() => handleConfirm(row.id)}
+                    onBeforeDelete={handleBeforeDelete}
+                    onDelete={() => handleDeleteDone(row)}
+                    rightActionAccessibilityLabel={t(
+                      "screens.home.upcoming.a11y.cancelTransaction",
                     )}
-                  >
-                    <IconSvg
-                      name="checks-outline"
-                      size={14}
-                      color={theme.colors.semantic.success}
-                    />
-                    <Text
-                      style={[
-                        sectionStyles.confirmAllText,
-                        { color: theme.colors.semantic.success },
-                      ]}
+                  />
+                ))}
+              </>
+            )}
+
+            {pending.length > 0 && (
+              <>
+                <View style={sectionStyles.subHeader}>
+                  <Text style={sectionStyles.subHeaderText}>
+                    {t("screens.home.upcoming.a11y.header")}
+                  </Text>
+                  <View style={sectionStyles.subHeaderDivider} />
+                  {manualConfirmableCount > 1 && (
+                    <Button
+                      variant="ghost"
+                      onPress={openConfirmAllModal}
+                      style={sectionStyles.confirmAllButton}
+                      accessibilityLabel={t(
+                        "screens.home.upcoming.a11y.confirmAll",
+                      )}
                     >
-                      {t("screens.home.upcoming.a11y.confirmAllButton")}
-                    </Text>
-                  </Button>
-                )}
-              </View>
-              {pending.map((row) => (
-                <TransactionItem
-                  key={row.id}
-                  transactionWithRelations={row}
-                  variant="upcoming"
-                  onPress={() => onTransactionPress(row.id)}
-                  onConfirm={() => handleConfirm(row.id)}
-                  onBeforeDelete={handleBeforeDelete}
-                  onDelete={() => handleDeleteDone(row)}
-                  rightActionAccessibilityLabel={t(
-                    "screens.home.upcoming.a11y.cancelTransaction",
+                      <IconSvg
+                        name="checks-outline"
+                        size={14}
+                        color={theme.colors.semantic.success}
+                      />
+                      <Text
+                        style={[
+                          sectionStyles.confirmAllText,
+                          { color: theme.colors.semantic.success },
+                        ]}
+                      >
+                        {t("screens.home.upcoming.a11y.confirmAllButton")}
+                      </Text>
+                    </Button>
                   )}
-                />
-              ))}
-            </>
-          )}
-        </View>
+                </View>
+                {pending.map((row) => (
+                  <TransactionItem
+                    key={row.id}
+                    transactionWithRelations={row}
+                    variant="upcoming"
+                    onPress={() => onTransactionPress(row.id)}
+                    onConfirm={() => handleConfirm(row.id)}
+                    onBeforeDelete={handleBeforeDelete}
+                    onDelete={() => handleDeleteDone(row)}
+                    rightActionAccessibilityLabel={t(
+                      "screens.home.upcoming.a11y.cancelTransaction",
+                    )}
+                  />
+                ))}
+              </>
+            )}
+          </View>
+
+          <View style={sectionStyles.seeAllRow}>
+            <Button
+              variant="link"
+              size="sm"
+              onPress={() => router.push("/settings/pending-transactions")}
+              style={sectionStyles.seeAllButton}
+            >
+              <Text style={sectionStyles.seeAllText}>
+                {t("screens.home.upcoming.seeAll")}
+              </Text>
+
+              <ChevronIcon
+                direction={"trailing"}
+                size={18}
+                color={theme.colors.semantic.semi}
+              />
+            </Button>
+          </View>
+        </>
       )}
     </View>
   )
