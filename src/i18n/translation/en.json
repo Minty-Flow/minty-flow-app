@@ -193,6 +193,67 @@
     },
     "stats": {
       "moreOptions": "More options",
+      "dashboard": {
+        "soon": "Soon",
+        "cashFlow": "Cash flow",
+        "overspent": "Overspent",
+        "saved": "Saved",
+        "in": "In",
+        "out": "Out",
+        "pace": "Pace",
+        "totalSpent": "Total spent",
+        "avgPerDay": "Avg / day",
+        "topCategories": "Top categories",
+        "insights": "Insights",
+        "wrappedTitle": "Your {{month}}, wrapped",
+        "wrappedEntries": "{{count}} entries",
+        "wrappedBiggest": "biggest",
+        "netWorth": "Net worth",
+        "inPeriod": "in {{period}}",
+        "calendar": "Calendar",
+        "recurring": "Recurring",
+        "spendingMap": "Spending map",
+        "noSpendingWindow": "No spending in this window."
+      },
+      "cashFlow": {
+        "title": "Cash flow",
+        "income": "Income",
+        "spending": "Spending",
+        "other": "Other",
+        "fromBalance": "From balance",
+        "savedNode": "Saved",
+        "averagesByDay": "Averages, by day"
+      },
+      "categories": {
+        "title": "Categories",
+        "total": "Total",
+        "listView": "List",
+        "chartView": "Chart"
+      },
+      "wrapped": {
+        "title": "Wrapped",
+        "badgeCategory": "Category",
+        "badgeFrequent": "Frequent",
+        "badgeRhythm": "Rhythm",
+        "badgeShape": "Shape",
+        "categoryAbove": "{{category}} is {{percent}}% above your 3-month average",
+        "categoryBelow": "{{category}} is {{percent}}% below your 3-month average",
+        "vsAvg": "3-month average:",
+        "frequentSentence": "You logged \"{{title}}\" {{count}} times",
+        "rhythmSentence": "Your priciest day is {{day}}",
+        "shapeSentence": "Half your purchases are under",
+        "shapeSupport": "Median of {{count}} expenses"
+      },
+      "netWorth": {
+        "title": "Net worth",
+        "byAccount": "By account"
+      },
+      "calendar": {
+        "title": "Calendar",
+        "spentIn": "Spent in {{period}}",
+        "less": "Less",
+        "more": "More"
+      },
       "currency": {
         "sectionHeader": "{{currency}}"
       },
@@ -350,6 +411,12 @@
             "subtitle": "Drag the buttons to reorder",
             "info": "This order is reflected in the transaction buttons on the home screen"
           }
+        },
+        "weekStart": {
+          "label": "Week starts on",
+          "auto": "Auto",
+          "sunday": "Sunday",
+          "monday": "Monday"
         },
         "buttonFeedback": {
           "label": "Button Feedback",
@@ -765,28 +832,33 @@
         "title": "Data Management",
         "sections": {
           "export": "Export",
-          "import": "Import"
+          "import": "Import",
+          "history": "History"
         },
-        "exportJson": "Export Full Backup",
-        "exportJsonDesc": "Save a full JSON backup to your device",
+        "fileNameLabel": "File name",
+        "fileNameHelper": "Leave blank to use the default name. The extension is added for you.",
+        "exportZip": "Full Backup (ZIP)",
+        "exportZipDesc": "Can be fully restored later. Includes your attached files.",
+        "exportJson": "Export Data (JSON)",
+        "exportJsonDesc": "Essential data only. Images and attached files are not included.",
         "exportCsv": "Export Transactions (CSV)",
-        "exportCsvDesc": "Save non-deleted transactions as a spreadsheet",
+        "exportCsvDesc": "Cannot be used to restore. Ideal for opening in spreadsheet apps.",
         "exportSaved": "Saved to device",
         "exportSavedLocally": "Saved locally",
         "exportError": "Export failed. Please try again.",
         "exportFileNotFound": "Original file no longer exists. Please export again.",
         "importJson": "Restore from Backup",
-        "importJsonDesc": "Replace all data from a JSON backup file",
+        "importJsonDesc": "Replace all data from a JSON or ZIP backup file",
         "importSuccess": "Data restored successfully",
         "importError": "Restore failed",
-        "importInvalidFile": "Please select a JSON backup file",
+        "importRecovered": "Import interrupted — your data has been restored.",
         "importParseError": "The selected file is not valid JSON",
         "importValidationError": "Invalid JSON backup file",
         "importConfirm": {
-          "title": "Restore from Backup?",
-          "warning": "This will permanently erase all current data and replace it with the selected backup.",
+          "title": "Overwrite all data?",
+          "warning": "Everything currently in the app will be erased and replaced with the contents of the file you selected. This cannot be undone.",
           "recordSummary": "{{count}} records across {{tables}} tables",
-          "confirm": "Restore",
+          "confirm": "Overwrite",
           "cancel": "Cancel"
         },
         "history": {

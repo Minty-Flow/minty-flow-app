@@ -2,8 +2,8 @@ import {
   differenceInDays,
   getDay,
   startOfMonth,
-  startOfWeek,
   startOfYear,
+  subMonths,
 } from "date-fns"
 
 import { getDb } from "~/database/db"
@@ -26,6 +26,7 @@ import type {
   StatsRawRow,
   TopTagItem,
   TopTransactionItem,
+  WrappedInsights,
 } from "~/types/stats"
 import type { TransactionType } from "~/types/transactions"
 import {
@@ -38,13 +39,12 @@ import {
   generateDateBuckets,
   toDateKey,
 } from "~/utils/stats-date-range"
-import { formatDateKey, formatMonthKey } from "~/utils/time-utils"
-
-/* ------------------------------------------------------------------ */
-/* Day-of-week label helpers                                           */
-/* ------------------------------------------------------------------ */
-
-const DOW_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const
+import {
+  formatDateKey,
+  formatMonthKey,
+  formatShortMonthName,
+  startOfAppWeek,
+} from "~/utils/time-utils"
 
 /* ------------------------------------------------------------------ */
 /* Stats inclusion guards                                              */
@@ -360,7 +360,7 @@ function getBucketKey(
     case "day":
       return formatDateKey(date)
     case "week":
-      return formatDateKey(startOfWeek(date, { weekStartsOn: 1 }))
+      return formatDateKey(startOfAppWeek(date))
     case "month":
       return formatMonthKey(startOfMonth(date))
     case "year":
@@ -574,7 +574,6 @@ function computeSpendingByDayOfWeek(
     const expense = totals[day] ?? 0
     return {
       day,
-      dayLabel: DOW_LABELS[day] ?? "",
       expense,
       avgExpense: count > 0 ? expense / count : 0,
     }
@@ -832,11 +831,6 @@ async function computeCurrencyStats(
           : null
 
       const dailyData = computeDailyData(currRows, range.from, range.to)
-      const previousDailyData = computeDailyData(
-        prevRows,
-        range.previousFrom,
-        range.previousTo,
-      )
       const intervalData = computeIntervalData(currRows, prevRows, range)
       const categoryBreakdown = computeCategoryBreakdown(currRows, prevRows)
       const topCategory =
@@ -880,7 +874,6 @@ async function computeCurrencyStats(
         current,
         previous,
         dailyData,
-        previousDailyData,
         intervalData,
         categoryBreakdown,
         topCategory,
@@ -904,13 +897,163 @@ async function computeCurrencyStats(
   )
 }
 
+/* ------------------------------------------------------------------ */
+/* Wrapped insights                                                    */
+/* ------------------------------------------------------------------ */
+
+function computeMedianPurchase(rows: StatsRawRow[]): number | null {
+  const amounts = rows
+    .filter(isRealExpense)
+    .map((r) => Math.abs(r.amount))
+    .sort((a, b) => a - b)
+  if (amounts.length === 0) return null
+  const mid = Math.floor(amounts.length / 2)
+  const lower = amounts[mid - 1] ?? 0
+  const upper = amounts[mid] ?? 0
+  return amounts.length % 2 === 0 ? (lower + upper) / 2 : upper
+}
+
+function computeMostFrequent(
+  rows: StatsRawRow[],
+): WrappedInsights["mostFrequent"] {
+  const counts = new Map<string, { title: string; count: number }>()
+  for (const row of rows) {
+    if (!isRealExpense(row)) continue
+    const title = row.title?.trim()
+    if (!title) continue
+    const key = title.toLowerCase()
+    const entry = counts.get(key) ?? { title, count: 0 }
+    entry.count++
+    counts.set(key, entry)
+  }
+  let best: { title: string; count: number } | null = null
+  for (const entry of counts.values()) {
+    if (!best || entry.count > best.count) best = entry
+  }
+  // A single occurrence isn't "frequent"
+  return best && best.count > 1 ? best : null
+}
+
+/** Widest range span, in days, still comparable to a calendar-month average. */
+const MONTHISH_MIN_DAYS = 26
+const MONTHISH_MAX_DAYS = 32
+
+function computeTopCategoryTrend(
+  inRangeRows: StatsRawRow[],
+  historyRows: StatsRawRow[],
+  range: StatsDateRange,
+): WrappedInsights["topCategoryTrend"] {
+  // The trailing baseline is an average of calendar months and the final bar is
+  // labelled with a single month name, so the card is only meaningful when the
+  // range is itself about one month. Wider ranges (thisYear, allTime) compared a
+  // whole-range total against a monthly average; narrower ones (thisWeek) did the
+  // inverse. Both read as nonsense, so render nothing instead.
+  //
+  // Span alone isn't enough: a custom Jan 15 – Feb 14 range is month-length but
+  // straddles two, so its bar would be labelled "Jan" while holding half of Feb.
+  const spanDays = differenceInDays(range.to, range.from)
+  if (spanDays < MONTHISH_MIN_DAYS || spanDays > MONTHISH_MAX_DAYS) return null
+  if (range.from.getTime() !== startOfMonth(range.from).getTime()) return null
+
+  // Top expense category within the selected range
+  const totals = new Map<string | null, number>()
+  for (const row of inRangeRows) {
+    const contrib = expenseContribution(row)
+    if (contrib === 0) continue
+    totals.set(row.categoryId, (totals.get(row.categoryId) ?? 0) + contrib)
+  }
+  let topId: string | null = null
+  let topTotal = 0
+  let found = false
+  for (const [id, total] of totals) {
+    if (!found || total > topTotal) {
+      topId = id
+      topTotal = total
+      found = true
+    }
+  }
+  if (!found || topTotal <= 0) return null
+
+  const sample =
+    inRangeRows.find((r) => r.categoryId === topId) ?? inRangeRows[0]
+  if (!sample) return null
+
+  // Trailing 3 calendar months before the range start
+  const months: { label: string; total: number }[] = []
+  let trailingSum = 0
+  let monthsWithData = 0
+  for (let i = 3; i >= 1; i--) {
+    const monthStart = subMonths(startOfMonth(range.from), i)
+    const key = formatMonthKey(monthStart)
+    let total = 0
+    let hasSpend = false
+    for (const row of historyRows) {
+      if (row.categoryId !== topId) continue
+      if (formatMonthKey(startOfMonth(row.date)) !== key) continue
+      const contrib = expenseContribution(row)
+      // Income rows filed under an expense category contribute 0; counting them
+      // as a month of data would drag the baseline down with an empty month.
+      if (contrib !== 0) hasSpend = true
+      total += contrib
+    }
+    if (hasSpend) monthsWithData++
+    trailingSum += total
+    months.push({ label: formatShortMonthName(monthStart), total })
+  }
+  months.push({ label: formatShortMonthName(range.from), total: topTotal })
+
+  // Averaging over a fixed 3 deflates the baseline for anyone with less than
+  // three months of history, which inflates the headline percentage. Only count
+  // months the category actually has rows in. Zero such months leaves an avg of
+  // 0, which the caller already treats as "don't render".
+  return {
+    categoryName: sample.categoryName,
+    categoryIcon: sample.categoryIcon,
+    categoryColorSchemeName: sample.categoryColorSchemeName,
+    months,
+    trailingAvg: monthsWithData > 0 ? trailingSum / monthsWithData : 0,
+    currentTotal: topTotal,
+  }
+}
+
+export async function fetchWrappedInsights(
+  range: StatsDateRange,
+): Promise<WrappedInsights[]> {
+  const historyFrom = subMonths(startOfMonth(range.from), 3)
+  const rows = await fetchStatsTransactions(historyFrom, range.to)
+
+  const inRange = rows.filter((r) => r.date >= range.from && r.date <= range.to)
+  const history = rows.filter((r) => r.date < range.from)
+
+  const byCurrency = groupByCurrency(inRange)
+  const historyByCurrency = groupByCurrency(history)
+
+  return [...byCurrency.entries()].map(([currency, currencyRows]) => ({
+    currency,
+    medianPurchase: computeMedianPurchase(currencyRows),
+    mostFrequent: computeMostFrequent(currencyRows),
+    topCategoryTrend: computeTopCategoryTrend(
+      currencyRows,
+      historyByCurrency.get(currency) ?? [],
+      range,
+    ),
+  }))
+}
+
 export async function fetchAllStatsData(range: StatsDateRange) {
   const db = getDb()
+
+  // `allTime` has no prior period, so it carries its own range as the previous
+  // one. Fetching that would re-read the entire history and then report every
+  // metric as unchanged against itself; no rows means "no previous" instead.
+  const hasPreviousPeriod = range.previousFrom < range.from
 
   const [currentRows, previousRows, balanceRows, pendingMap, accounts] =
     await Promise.all([
       fetchStatsTransactions(range.from, range.to),
-      fetchStatsTransactions(range.previousFrom, range.previousTo),
+      hasPreviousPeriod
+        ? fetchStatsTransactions(range.previousFrom, range.previousTo)
+        : Promise.resolve<StatsRawRow[]>([]),
       fetchBalanceTimeline(range.from, range.to),
       fetchPendingSummary(range.from, range.to),
       db.getAllAsync<RowAccount>(`SELECT * FROM accounts`),

@@ -361,19 +361,11 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     color: theme.colors.primary,
   },
   inlineDateRow: {
-    flexDirection: "row",
-    alignItems: "center",
     gap: ROW_GAP,
-    paddingVertical: ROW_PADDING_V,
-    paddingHorizontal: H_PAD,
     justifyContent: "space-between",
   },
   recurringDateRow: {
-    flexDirection: "row",
-    alignItems: "center",
     gap: ROW_GAP,
-    paddingVertical: ROW_PADDING_V,
-    paddingHorizontal: H_PAD,
   },
   inlineDateText: {
     ...theme.typography.titleSmall,
@@ -382,11 +374,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     minWidth: 0,
   },
   switchRow: {
-    flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: ROW_PADDING_V,
-    paddingHorizontal: H_PAD,
     marginBottom: ELEMENT_GAP,
   },
   switchLeft: {
@@ -399,19 +387,11 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     color: theme.colors.onSurface,
   },
   pendingSwitchRow: {
-    flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: ROW_PADDING_V,
-    paddingHorizontal: H_PAD,
   },
 
   recurringSwitchRow: {
-    flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: ROW_PADDING_V,
-    paddingHorizontal: H_PAD,
   },
   recurringSubSection: {
     marginTop: 2 * FORM_GAP,
@@ -457,11 +437,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     marginHorizontal: H_PAD,
   },
   endsOnOptionRow: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: CARD_PAD,
-    paddingHorizontal: H_PAD,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.semantic.semi,
   },
@@ -505,7 +481,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     alignSelf: "center",
   },
   notesPressable: {
-    paddingVertical: ROW_PADDING_V,
+    paddingVertical: 14,
     paddingHorizontal: H_PAD,
   },
   notesHeaderRow: {
@@ -514,11 +490,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     gap: ROW_GAP,
   },
   notesHeader: {
-    flexDirection: "row",
-    alignItems: "center",
     gap: ROW_GAP,
-    paddingVertical: ROW_PADDING_V,
-    paddingHorizontal: H_PAD,
   },
   notesFullPreviewWrap: {
     marginTop: FORM_GAP,
@@ -541,11 +513,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     overflow: "hidden",
   },
   addFilesOptionRow: {
-    flexDirection: "row",
-    alignItems: "center",
     gap: ROW_GAP,
-    paddingVertical: CARD_PAD,
-    paddingHorizontal: H_PAD,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.semantic.semi,
   },
@@ -568,12 +536,8 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   },
   attachmentRowMain: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
     gap: ROW_GAP,
     minWidth: 0,
-    paddingVertical: ROW_PADDING_V,
-    paddingHorizontal: H_PAD,
   },
   attachmentInfo: {
     flex: 1,

@@ -24,11 +24,7 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
   },
   // Account rows
   accountRow: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
   },
   accountLeft: {
     flexDirection: "row",
@@ -112,11 +108,7 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
   },
   // Row inside the inline currency panel
   panelRow: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: `${t.colors.onSurface}10`,
   },

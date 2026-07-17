@@ -18,7 +18,7 @@ import { Button } from "~/components/ui/button"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { EmptyState } from "~/components/ui/empty-state"
 import { IconSvg } from "~/components/ui/icon-svg"
-import { Pressable } from "~/components/ui/pressable"
+import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { Toast } from "~/utils/toast"
 
@@ -153,7 +153,7 @@ function ContactItem({
     : "?"
 
   return (
-    <Pressable
+    <ListItem
       style={({ pressed }: { pressed: boolean }) => [
         modalStyles.item,
         contactItemStyles.itemGap,
@@ -174,7 +174,7 @@ function ContactItem({
           </Text>
         )}
       </View>
-    </Pressable>
+    </ListItem>
   )
 }
 
@@ -244,7 +244,7 @@ export function ContactSelectorModal({
   return (
     <>
       <View style={triggerStyles.wrapper}>
-        <Pressable
+        <ListItem
           style={triggerStyles.triggerRow}
           onPress={open}
           disabled={!editable}
@@ -262,7 +262,7 @@ export function ContactSelectorModal({
               style={triggerStyles.chevronIcon}
             />
           )}
-        </Pressable>
+        </ListItem>
       </View>
 
       <Modal

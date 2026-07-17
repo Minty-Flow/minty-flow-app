@@ -28,6 +28,11 @@ export const MINTY_SVGS: MintyIconData[] = [
   },
   { name: "receipt-outline", keywords: ["bill", "invoice", "receipt-outline"] },
   { name: "briefcase", keywords: ["work", "business", "job"] },
+  { name: "arrow-up-circle", keywords: ["income", "earned", "increase", "up"] },
+  {
+    name: "arrow-down-circle",
+    keywords: ["expense", "spent", "decrease", "down"],
+  },
 
   // Charts & Analytics
   { name: "chart-area-line", keywords: ["graph", "analytics", "trend"] },
@@ -68,9 +73,20 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "file-analytics", keywords: ["report", "data", "analytics"] },
   { name: "presentation", keywords: ["slides", "deck", "meeting"] },
   { name: "clipboard", keywords: ["document", "notes", "list"] },
+  { name: "files", keywords: ["documents", "copies", "multiple", "folder"] },
+  { name: "file-x-outline", keywords: ["delete file", "remove", "discard"] },
+  {
+    name: "file-type-jpg-outline",
+    keywords: ["jpg", "image file", "photo", "picture"],
+  },
 
   // Editing & Writing
   { name: "pencil", keywords: ["write", "edit", "draw"] },
+  { name: "eraser-outline", keywords: ["erase", "undo", "clean", "remove"] },
+  {
+    name: "writing-sign",
+    keywords: ["signature", "sign", "contract", "agreement"],
+  },
 
   // Math & Calculation
   { name: "calculator", keywords: ["math", "numbers", "compute"] },
@@ -78,11 +94,20 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "minus-outline", keywords: ["remove", "subtract", "delete"] },
   { name: "divide-outline", keywords: ["division", "math", "split"] },
   { name: "circle-plus", keywords: ["add", "new", "create"] },
+  {
+    name: "plus-minus-outline",
+    keywords: ["math", "adjust", "plus minus", "variance"],
+  },
+  {
+    name: "math-symbols-outline",
+    keywords: ["math", "symbols", "education", "formula"],
+  },
 
   // Devices & System
   { name: "device-desktop", keywords: ["computer", "pc", "desktop"] },
   { name: "device-mobile", keywords: ["phone", "mobile", "cell"] },
   { name: "database-outline", keywords: ["storage", "data", "server"] },
+  { name: "database", keywords: ["storage", "data", "server", "backup"] },
   { name: "settings", keywords: ["config", "gear", "preferences"] },
   { name: "plug-outline", keywords: ["power", "electricity", "utilities"] },
   { name: "refresh-outline", keywords: ["reload", "sync", "update"] },
@@ -132,6 +157,11 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "circle", keywords: ["shape", "circle", "round"] },
   { name: "circle-dot", keywords: ["radio", "select", "dot"] },
   { name: "triangle", keywords: ["shape", "triangle", "delta"] },
+  { name: "circles", keywords: ["shapes", "group", "overlap", "circles"] },
+  {
+    name: "square-asterisk",
+    keywords: ["required", "asterisk", "note", "footnote"],
+  },
 
   // Misc Utility
   { name: "bell", keywords: ["notification", "alert", "reminder"] },
@@ -152,6 +182,10 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "target-outline", keywords: ["goal", "aim", "objective"] },
   { name: "filter", keywords: ["sort", "search", "refine"] },
   { name: "filter-2-outline", keywords: ["sort", "search", "refine"] },
+  {
+    name: "filter-off-outline",
+    keywords: ["clear filter", "reset", "show all"],
+  },
   { name: "search-outline", keywords: ["find", "look", "query"] },
   { name: "external-link", keywords: ["open", "link", "navigate"] },
   { name: "repeat-outline", keywords: ["recurring", "cycle", "loop"] },
@@ -164,6 +198,14 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "home-share-outline", keywords: ["home", "share", "property"] },
   { name: "copy", keywords: ["duplicate", "clone", "copy"] },
   { name: "transfer-outline", keywords: ["transfer-outline", "move", "send"] },
+  {
+    name: "arrows-up-down-outline",
+    keywords: ["transfer", "swap", "sort", "vertical"],
+  },
+  {
+    name: "switch-horizontal-outline",
+    keywords: ["swap", "exchange", "switch", "convert"],
+  },
 
   // Navigation / Location
   { name: "current-location", keywords: ["gps", "here", "location"] },
@@ -218,15 +260,23 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "hospital-circle", keywords: ["hospital", "health", "medical"] },
   { name: "microscope", keywords: ["science", "lab", "research"] },
   { name: "device-watch", keywords: ["smartwatch", "fitness", "health"] },
+  {
+    name: "device-heart-monitor",
+    keywords: ["health", "monitor", "medical", "vitals"],
+  },
+  { name: "atom-2", keywords: ["science", "physics", "atom", "chemistry"] },
+  { name: "magnet", keywords: ["magnet", "attract", "science", "physics"] },
 
   // Home & Living
   { name: "bed", keywords: ["sleep", "bedroom", "home"] },
+  { name: "bed-flat", keywords: ["hotel", "accommodation", "stay", "sleep"] },
   { name: "bath", keywords: ["bathroom", "hygiene", "home"] },
   { name: "home", keywords: ["house", "home", "property"] },
   { name: "home-2", keywords: ["house", "home", "property"] },
   { name: "flower", keywords: ["nature", "garden", "decoration"] },
   { name: "leaf", keywords: ["nature", "plant", "eco"] },
   { name: "seedling", keywords: ["plant", "growth", "garden"] },
+  { name: "cactus", keywords: ["plant", "desert", "succulent", "nature"] },
   { name: "candle", keywords: ["light", "relaxation", "home"] },
   { name: "blender", keywords: ["kitchen", "cooking", "appliance"] },
   { name: "microwave", keywords: ["kitchen", "appliance", "cooking"] },
@@ -248,6 +298,7 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "steering-wheel", keywords: ["driving", "car", "vehicle"] },
   { name: "caravan", keywords: ["camping", "road trip", "travel"] },
   { name: "car-suv", keywords: ["suv", "vehicle", "car"] },
+  { name: "car-4wd", keywords: ["offroad", "4x4", "jeep", "vehicle"] },
   { name: "speedboat", keywords: ["boat", "water", "leisure"] },
 
   // Entertainment & Leisure
@@ -272,7 +323,9 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "sparkles", keywords: ["magic", "special", "celebration"] },
   { name: "microphone", keywords: ["music", "podcast", "recording"] },
   { name: "player-play", keywords: ["play", "media", "music"] },
+  { name: "player-pause", keywords: ["pause", "paused", "hold", "media"] },
   { name: "playlist", keywords: ["music", "queue", "media"] },
+  { name: "puzzle", keywords: ["games", "hobby", "jigsaw", "problem"] },
   { name: "device-tv", keywords: ["tv", "television", "entertainment"] },
   { name: "device-gamepad", keywords: ["gaming", "console", "entertainment"] },
   { name: "ball-bowling", keywords: ["bowling", "sport", "recreation"] },
@@ -283,6 +336,7 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "receipt-pound", keywords: ["bill", "gbp", "payment"] },
   { name: "receipt-rupee", keywords: ["bill", "inr", "payment"] },
   { name: "receipt-yen", keywords: ["bill", "jpy", "payment"] },
+  { name: "receipt-yuan", keywords: ["bill", "cny", "payment"] },
   { name: "report-money", keywords: ["finance", "report", "earnings"] },
   { name: "report-analytics", keywords: ["analytics", "report", "data"] },
   { name: "discount", keywords: ["sale", "offer", "coupon"] },
@@ -315,6 +369,10 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "message-2", keywords: ["chat", "bubble", "text"] },
   { name: "message-circle", keywords: ["chat", "bubble", "text"] },
   { name: "send", keywords: ["send", "submit", "share"] },
+  { name: "dialpad", keywords: ["dial", "keypad", "phone", "numbers"] },
+  { name: "messages", keywords: ["chats", "conversations", "inbox", "texts"] },
+  { name: "message-chatbot", keywords: ["bot", "chat", "assistant", "ai"] },
+  { name: "message-report", keywords: ["report", "flag chat", "complaint"] },
 
   // Work & Education
   { name: "book", keywords: ["reading", "education", "study"] },
@@ -329,6 +387,10 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "keyboard", keywords: ["typing", "computer", "input"] },
   { name: "briefcase-2", keywords: ["work", "business", "career"] },
   { name: "library", keywords: ["books", "education", "knowledge"] },
+  {
+    name: "library-plus",
+    keywords: ["add book", "new collection", "library", "save"],
+  },
 
   // Clothing & Fashion
   { name: "paint", keywords: ["art", "creativity", "hobbies", "design"] },
@@ -396,11 +458,27 @@ export const MINTY_SVGS: MintyIconData[] = [
     keywords: ["donut chart", "distribution", "analytics"],
   },
   { name: "presentation-analytics", keywords: ["report", "slides", "data"] },
+  {
+    name: "chart-bubble",
+    keywords: ["bubble chart", "scatter", "analytics", "data"],
+  },
 
   // Time & Alerts
   { name: "hourglass", keywords: ["time", "waiting", "timer"] },
   { name: "alarm", keywords: ["alarm", "reminder", "wake"] },
   { name: "bell-ringing", keywords: ["notification", "alert", "ringing"] },
+  { name: "clock-outline", keywords: ["time", "hour", "schedule", "duration"] },
+  { name: "alarm-plus", keywords: ["add alarm", "new reminder", "time"] },
+  {
+    name: "alarm-minus",
+    keywords: ["remove alarm", "cancel reminder", "time"],
+  },
+  { name: "bell-plus", keywords: ["subscribe", "add notification", "alert"] },
+  {
+    name: "bell-minus",
+    keywords: ["unsubscribe", "remove notification", "alert"],
+  },
+  { name: "bell-x", keywords: ["mute", "disable notification", "silence"] },
 
   // Shopping & Celebration
   {
@@ -413,6 +491,7 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "confetti", keywords: ["celebration", "party", "event"] },
   { name: "balloon", keywords: ["party", "celebration", "birthday"] },
   { name: "pennant", keywords: ["flag", "sport", "team"] },
+  { name: "pennant-2", keywords: ["flag", "sport", "team", "banner"] },
 
   // Misc
   { name: "quote", keywords: ["quote", "text", "speech"] },
@@ -421,6 +500,20 @@ export const MINTY_SVGS: MintyIconData[] = [
   { name: "timeline-event", keywords: ["event", "history", "timeline"] },
   { name: "bulb", keywords: ["idea", "light", "innovation"] },
   { name: "pin", keywords: ["location", "mark", "pin"] },
+  { name: "pinned", keywords: ["pinned", "saved", "important", "sticky"] },
   { name: "navigation", keywords: ["navigate", "direction", "gps"] },
   { name: "file-text", keywords: ["document", "notes", "text"] },
+  {
+    name: "question-mark-outline",
+    keywords: ["help", "unknown", "faq", "other"],
+  },
+
+  // Arrows & Direction
+  { name: "arrow-narrow-up-outline", keywords: ["up", "increase", "rise"] },
+  { name: "arrow-narrow-down-outline", keywords: ["down", "decrease", "fall"] },
+  { name: "arrow-narrow-left-outline", keywords: ["left", "back", "previous"] },
+  {
+    name: "arrow-narrow-right-outline",
+    keywords: ["right", "forward", "next"],
+  },
 ]

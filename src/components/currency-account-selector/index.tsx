@@ -19,6 +19,7 @@ import { DynamicIcon } from "~/components/dynamic-icon"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { EmptyState } from "~/components/ui/empty-state"
 import { IconSvg } from "~/components/ui/icon-svg"
+import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -56,7 +57,7 @@ const CurrencyPanelRow = memo(function CurrencyPanelRow({
 }: CurrencyPanelRowProps) {
   const { theme } = useUnistyles()
   return (
-    <Pressable
+    <ListItem
       style={[
         currencyAccountStyles.panelRow,
         isSelected && currencyAccountStyles.panelRowSelected,
@@ -72,7 +73,7 @@ const CurrencyPanelRow = memo(function CurrencyPanelRow({
       {isSelected && (
         <IconSvg name="check" size={20} color={theme.colors.primary} />
       )}
-    </Pressable>
+    </ListItem>
   )
 })
 
@@ -94,7 +95,7 @@ const AccountRow = memo(function AccountRow({
   const { theme } = useUnistyles()
 
   return (
-    <Pressable
+    <ListItem
       style={currencyAccountStyles.accountRow}
       onPress={() => onToggle(account.id)}
     >
@@ -119,7 +120,7 @@ const AccountRow = memo(function AccountRow({
         size={22}
         color={isSelected ? theme.colors.primary : theme.colors.onSecondary}
       />
-    </Pressable>
+    </ListItem>
   )
 })
 
@@ -269,7 +270,7 @@ export function CurrencyAccountSelector({
         </Text>
 
         {/* Currency trigger row */}
-        <Pressable
+        <ListItem
           style={triggerStyles.triggerRow}
           onPress={handleToggleCurrencyPanel}
           accessibilityState={{ expanded: currencyPanelOpen }}
@@ -291,7 +292,7 @@ export function CurrencyAccountSelector({
               style={triggerStyles.chevronIcon}
             />
           </View>
-        </Pressable>
+        </ListItem>
 
         {/* Inline currency panel */}
         {currencyPanelOpen && (
@@ -349,7 +350,7 @@ export function CurrencyAccountSelector({
             </Text> */}
 
             {/* Accounts trigger row */}
-            <Pressable
+            <ListItem
               style={triggerStyles.triggerRow}
               onPress={handleToggleAccountPanel}
               accessibilityState={{ expanded: accountPanelOpen }}
@@ -376,7 +377,7 @@ export function CurrencyAccountSelector({
                   style={triggerStyles.chevronIcon}
                 />
               </View>
-            </Pressable>
+            </ListItem>
 
             {/* Inline accounts panel */}
             {accountPanelOpen && (
@@ -398,7 +399,7 @@ export function CurrencyAccountSelector({
                   >
                     {/* Select all toggle — only when 2+ accounts share the currency */}
                     {matchingAccounts.length >= 2 && (
-                      <Pressable
+                      <ListItem
                         style={[
                           currencyAccountStyles.panelRow,
                           currencyAccountStyles.selectAllRow,
@@ -414,7 +415,7 @@ export function CurrencyAccountSelector({
                           name={allSelected ? "checks-outline" : "check"}
                           size={20}
                         />
-                      </Pressable>
+                      </ListItem>
                     )}
 
                     {matchingAccounts.map((account) => (

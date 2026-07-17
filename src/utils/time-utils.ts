@@ -1,8 +1,25 @@
+/**
+ * Owns every date operation that depends on app state — the active locale
+ * (formatting) and the first day of the week (`getWeekStartsOn`). Anything that
+ * reads one of those must live here so the policy is applied in exactly one
+ * place; callers that reach for date-fns directly are how those settings drift.
+ *
+ * Locale-independent math (`startOfMonth`, `addDays`, `differenceInDays`, …) is
+ * deliberately NOT re-exported: it carries no policy, and importing it straight
+ * from date-fns keeps the import site honest about whether app state is involved.
+ * If a future setting makes that math app-aware too — a user-configurable week
+ * start, a fiscal year, a fixed reporting timezone — then that assumption breaks
+ * and everything date-related should be exported from this file instead.
+ */
+
 import {
   addWeeks,
   type Day,
+  endOfWeek,
   type FormatOptions,
   format,
+  formatDistanceToNow,
+  getWeek,
   isSameWeek,
   isThisWeek,
   isToday,
@@ -37,7 +54,7 @@ export type DateRangePresetId =
   | "byYear"
   | "custom"
 
-type DateInput = Date | string | undefined | null
+type DateInput = Date | string | number | undefined | null
 
 /** * Using localized date-fns tokens:
  * P = localized date (05/29/1453)
@@ -68,6 +85,9 @@ const FORMAT = {
   SHORT_MONTH_NAME: "MMM",
   DAY_YEAR: "d, yyyy",
   SHORT_MONTH_DAY_YEAR: "MMM d, yyyy",
+  SHORT_DAY_NAME: "EEE",
+  DAY_INITIAL: "EEEEE",
+  DAY_OF_MONTH: "d",
 } as const
 
 // Helper to get the current locale object from the store
@@ -92,6 +112,35 @@ function toDate(date: DateInput): Date | null {
   if (date == null) return null
   const dateObj = date instanceof Date ? date : new Date(date)
   return isValid(dateObj) ? dateObj : null
+}
+
+/**
+ * Week boundaries honouring the user's week-start setting (device region when
+ * that setting is "auto").
+ *
+ * Never call date-fns `startOfWeek`/`endOfWeek`/`isSameWeek`/`getWeek` directly:
+ * their default is Sunday and passing an explicit `weekStartsOn: 1` hardcodes
+ * Monday. Either way the app disagrees with itself across screens for anyone
+ * whose week starts elsewhere.
+ */
+export function startOfAppWeek(date: Date): Date {
+  return startOfWeek(date, { weekStartsOn: getWeekStartsOn() })
+}
+
+export function endOfAppWeek(date: Date): Date {
+  return endOfWeek(date, { weekStartsOn: getWeekStartsOn() })
+}
+
+function isSameAppWeek(a: Date, b: Date): boolean {
+  return isSameWeek(a, b, { weekStartsOn: getWeekStartsOn() })
+}
+
+/**
+ * Week-of-year number anchored to the app's week start — unlike `getISOWeek`,
+ * which is always Monday-anchored and drifts a week off its own buckets.
+ */
+export function getAppWeek(date: Date): number {
+  return getWeek(date, { weekStartsOn: getWeekStartsOn() })
 }
 
 function formatWithPattern(date: DateInput, pattern: string): string {
@@ -124,23 +173,20 @@ export function formatFriendlyDate(date: DateInput): string {
   if (isTomorrow(dateObj)) return t("dates.tomorrow")
 
   const now = new Date()
-  const options = { weekStartsOn: getWeekStartsOn() as Day }
 
-  if (isThisWeek(dateObj, options)) {
+  if (isThisWeek(dateObj, { weekStartsOn: getWeekStartsOn() as Day })) {
     return t("dates.thisDay", {
       day: fmt(dateObj, FORMAT.DAY_NAME),
     })
   }
 
-  const lastWeekStart = startOfWeek(subWeeks(now, 1), options)
-  if (isSameWeek(dateObj, lastWeekStart, options)) {
+  if (isSameAppWeek(dateObj, startOfAppWeek(subWeeks(now, 1)))) {
     return t("dates.lastDay", {
       day: fmt(dateObj, FORMAT.DAY_NAME),
     })
   }
 
-  const nextWeekStart = startOfWeek(addWeeks(now, 1), options)
-  if (isSameWeek(dateObj, nextWeekStart, options)) {
+  if (isSameAppWeek(dateObj, startOfAppWeek(addWeeks(now, 1)))) {
     return t("dates.nextDay", {
       day: fmt(dateObj, FORMAT.DAY_NAME),
     })
@@ -260,6 +306,41 @@ export function getDisplayMonthTitle(year: number, monthIndex: number) {
 /** Short month name (e.g. "Feb"). */
 export function formatShortMonthName(date: DateInput): string {
   return formatWithPattern(date, FORMAT.SHORT_MONTH_NAME)
+}
+
+/** Stand-alone month name (e.g. "February") — for headings, not full dates. */
+export function formatMonthName(date: DateInput): string {
+  return formatWithPattern(date, FORMAT.MONTH_NAME)
+}
+
+/** Day of month without padding (e.g. "5") — for compact chart axes. */
+export function formatDayOfMonth(date: DateInput): string {
+  return formatWithPattern(date, FORMAT.DAY_OF_MONTH)
+}
+
+/**
+ * Localized weekday label by index (0 = Sunday … 6 = Saturday).
+ * "short" → "Mon", "narrow" → "M".
+ */
+export function getWeekdayLabel(
+  day: number,
+  style: "short" | "narrow" = "short",
+): string {
+  // 2024-01-07 was a Sunday, so `7 + day` lands on the matching weekday
+  return fmt(
+    new Date(2024, 0, 7 + day),
+    style === "narrow" ? FORMAT.DAY_INITIAL : FORMAT.SHORT_DAY_NAME,
+  )
+}
+
+/** Relative distance from now (e.g. "3 hours ago"). */
+export function formatRelativeToNow(date: DateInput): string {
+  const dateObj = toDate(date)
+  if (!dateObj) return ""
+  return formatDistanceToNow(dateObj, {
+    addSuffix: true,
+    locale: getCurrentLocale(),
+  })
 }
 
 /** Day and year (e.g. "15, 2025"). */

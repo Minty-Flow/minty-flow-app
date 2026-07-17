@@ -1,18 +1,16 @@
 import {
   endOfDay,
   endOfMonth,
-  endOfWeek,
   endOfYear,
   startOfDay,
   startOfMonth,
-  startOfWeek,
   startOfYear,
 } from "date-fns"
 import type { SQLiteBindValue } from "expo-sqlite"
 
 import type { BudgetPeriod } from "~/types/budgets"
 import { BudgetPeriodEnum } from "~/types/budgets"
-import { getWeekStartsOn } from "~/utils/get-week-start-on"
+import { endOfAppWeek, startOfAppWeek } from "~/utils/time-utils"
 
 import { query, queryOne } from "../sql"
 import type {
@@ -53,7 +51,6 @@ export function getBudgetPeriodRange(
   endDateIso: string | null,
 ): { periodStart: string; periodEnd: string } {
   const now = new Date()
-  const weekStartsOn = getWeekStartsOn()
   let periodStart: Date
   let periodEnd: Date = now
 
@@ -63,8 +60,8 @@ export function getBudgetPeriodRange(
       periodEnd = endOfDay(now)
       break
     case BudgetPeriodEnum.WEEKLY:
-      periodStart = startOfWeek(now, { weekStartsOn })
-      periodEnd = endOfWeek(now, { weekStartsOn })
+      periodStart = startOfAppWeek(now)
+      periodEnd = endOfAppWeek(now)
       break
     case BudgetPeriodEnum.MONTHLY:
       periodStart = startOfMonth(now)

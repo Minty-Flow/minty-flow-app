@@ -15,7 +15,7 @@ import { Button } from "~/components/ui/button"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { EmptyState } from "~/components/ui/empty-state"
 import { IconSvg } from "~/components/ui/icon-svg"
-import { Pressable } from "~/components/ui/pressable"
+import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { currencyRegistryService } from "~/services/currency-registry"
 import type { Currency } from "~/types/currency"
@@ -41,7 +41,7 @@ const CurrencyRow = memo(function CurrencyRow({
 }: CurrencyRowProps) {
   const { t } = useTranslation()
   return (
-    <Pressable
+    <ListItem
       style={({ pressed }: { pressed: boolean }) => [
         modalStyles.item,
         pressed && modalStyles.itemPressed,
@@ -65,7 +65,7 @@ const CurrencyRow = memo(function CurrencyRow({
           {item.code}
         </Text>
       </View>
-    </Pressable>
+    </ListItem>
   )
 })
 
@@ -153,7 +153,7 @@ export function CurrencySelectorModal({
   return (
     <>
       <View style={triggerStyles.wrapper}>
-        <Pressable
+        <ListItem
           style={triggerStyles.triggerRow}
           onPress={open}
           disabled={!editable}
@@ -176,7 +176,7 @@ export function CurrencySelectorModal({
               />
             )}
           </View>
-        </Pressable>
+        </ListItem>
       </View>
 
       <Modal

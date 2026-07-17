@@ -121,12 +121,6 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.surface,
 
     paddingHorizontal: 8,
-
-    _web: {
-      outlineStyle: "none",
-      transitionProperty: "border-color, box-shadow, background-color, opacity",
-      transitionDuration: "180ms",
-    },
   },
 
   input: {
@@ -139,12 +133,6 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: 8,
 
     minWidth: 0,
-
-    _web: {
-      outlineStyle: "none",
-      borderWidth: 0,
-      backgroundColor: "transparent",
-    },
   },
 
   slot: {
@@ -156,36 +144,20 @@ const styles = StyleSheet.create((theme) => ({
 
   focused: {
     borderColor: theme.colors.primary,
-
-    _web: {
-      boxShadow: `0 0 0 3px ${theme.colors.primary}22`,
-    },
   },
 
   error: {
     borderColor: theme.colors.error,
 
     backgroundColor: theme.colors.surface,
-
-    _web: {
-      boxShadow: `0 0 0 3px ${theme.colors.error}22`,
-    },
   },
 
   success: {
     borderColor: theme.colors.secondary,
-
-    _web: {
-      boxShadow: `0 0 0 3px ${theme.colors.secondary}22`,
-    },
   },
 
   disabled: {
     opacity: 0.55,
-
-    _web: {
-      cursor: "not-allowed",
-    },
   },
 
   multilineContainer: {
@@ -210,10 +182,6 @@ const styles = StyleSheet.create((theme) => ({
   search: {
     backgroundColor: theme.colors.secondary,
     borderColor: "transparent",
-
-    _web: {
-      boxShadow: "none",
-    },
   },
 
   titleContainer: {
@@ -245,11 +213,5 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "700",
 
     color: theme.colors.onSurface,
-
-    _web: {
-      outlineStyle: "none",
-      borderWidth: 0,
-      backgroundColor: "transparent",
-    },
   },
 }))

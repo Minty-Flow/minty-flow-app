@@ -36,7 +36,6 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     gap: 10,
     padding: 12,
-    marginHorizontal: 16,
     borderRadius: theme.radius,
     // primary color at ~10% opacity using hex suffix "18"
     backgroundColor: `${theme.colors.primary}18`,

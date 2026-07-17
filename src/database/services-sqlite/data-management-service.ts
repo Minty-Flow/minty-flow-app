@@ -1,7 +1,8 @@
 import * as DocumentPicker from "expo-document-picker"
+import { Directory, File, Paths } from "expo-file-system"
 import * as FileSystem from "expo-file-system/legacy"
-import * as IntentLauncher from "expo-intent-launcher"
 import { Platform, Share } from "react-native"
+import { unzip, zip } from "react-native-zip-archive"
 
 import { getDb } from "~/database/db"
 import { emit } from "~/database/events"
@@ -16,7 +17,9 @@ import {
   readSqliteSnapshot,
   writeSqliteSnapshot,
 } from "~/database/utils/import-snapshot"
-import { getMimeTypeForExtension } from "~/utils/file-icon"
+import { attachmentsDirectory } from "~/utils/attachments"
+import { getFileExtension, getMimeTypeForExtension } from "~/utils/file-icon"
+import { logger } from "~/utils/logger"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -28,6 +31,15 @@ interface BackupMeta {
 }
 
 type RawRow = Record<string, unknown>
+
+/** Doubles as the file extension of each export format. */
+export type ExportType = "json" | "csv" | "zip"
+
+interface SavedExport {
+  uri: string
+  fileName: string
+  savedToDevice: boolean
+}
 
 export interface MintyFlowBackup {
   meta: BackupMeta
@@ -52,7 +64,7 @@ type ImportResult =
   | { success: true; counts: Record<string, number> }
   | { success: false; error: string }
 
-export type ValidateBackupResult =
+type ValidateBackupResult =
   | { success: true; backup: MintyFlowBackup }
   | {
       success: false
@@ -228,47 +240,82 @@ const RESET_ORDER = [
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+/** Each export gets its own folder so two exports sharing a name can't overwrite each other. */
 async function prepareExportDir(): Promise<string> {
-  const dir = `${FileSystem.documentDirectory}exports/`
+  const dir = `${FileSystem.documentDirectory}exports/${Date.now()}/`
   await FileSystem.makeDirectoryAsync(dir, { intermediates: true })
   return dir
 }
 
-async function saveToDevice(
-  uri: string,
-  fileName: string,
-  ext: string,
-): Promise<boolean> {
-  if (Platform.OS === "android") {
-    try {
-      const mimeType = getMimeTypeForExtension(ext)
-      const result = await IntentLauncher.startActivityAsync(
-        "android.intent.action.CREATE_DOCUMENT",
-        {
-          type: mimeType,
-          extra: { "android.intent.extra.TITLE": fileName },
-        },
-      )
-      if (
-        result.resultCode !== IntentLauncher.ResultCode.Success ||
-        !result.data
-      ) {
-        return false
-      }
-      const content = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.UTF8,
-      })
-      await FileSystem.StorageAccessFramework.writeAsStringAsync(
-        result.data,
-        content,
-      )
-      return true
-    } catch {
-      return false
-    }
+/** Base name (no extension) suggested when the user doesn't type one. */
+export function defaultExportBaseName(type: ExportType): string {
+  const date = new Date().toISOString().slice(0, 10)
+  const stem = type === "csv" ? "minty-flow-transactions" : "minty-flow-backup"
+  return `${stem}-${date}`
+}
+
+/**
+ * Build `<base>.<ext>` from user-typed text.
+ *
+ * Sanitising lives here rather than in the caller because the result is concatenated
+ * into a file path — a separator or a leading dot must never survive.
+ */
+function toFileName(type: ExportType, baseName?: string): string {
+  const cleaned = (baseName ?? "")
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: stripping them is the point
+    .replace(/[/\\:*?"<>|\u0000-\u001f]/g, "")
+    .slice(0, 100)
+    .trim()
+    .replace(/^\.+/, "")
+  return `${cleaned || defaultExportBaseName(type)}.${type}`
+}
+
+/**
+ * Copy an exported file out of app-private storage to a folder the user picks.
+ *
+ * Android uses a folder picker, not a "Save as" dialog: CREATE_DOCUMENT is unusable here
+ * because expo-intent-launcher returns the result Intent's `toString()` as `data`, and
+ * `Intent.toString()` redacts the URI path (`content://…/...`), so the document URI never
+ * survives the trip to JS. Note Android itself forbids granting access to the Download
+ * root — users must pick another folder (Documents, or a Download subfolder).
+ *
+ * @returns false if the user cancelled or the copy failed.
+ */
+async function saveToDevice(uri: string, fileName: string): Promise<boolean> {
+  if (Platform.OS !== "android") {
+    await Share.share({ url: uri })
+    return true
   }
-  await Share.share({ url: uri })
-  return true
+
+  try {
+    const { StorageAccessFramework: SAF } = FileSystem
+    const permission = await SAF.requestDirectoryPermissionsAsync()
+    if (!permission.granted) return false
+
+    const ext = getFileExtension(fileName)
+    const targetUri = await SAF.createFileAsync(
+      permission.directoryUri,
+      fileName,
+      getMimeTypeForExtension(ext),
+    )
+
+    // Binary must not round-trip through a UTF-8 string — that corrupts it.
+    // ponytail: pulls the whole file through a base64 JS string (~1.33x), so a very large
+    // attachment set can OOM. SAF documents are read-only to File.copy
+    // (DestinationSink.ContentResource), so there is no streaming handoff available.
+    const encoding =
+      ext === "zip"
+        ? FileSystem.EncodingType.Base64
+        : FileSystem.EncodingType.UTF8
+    const content = await FileSystem.readAsStringAsync(uri, { encoding })
+    await SAF.writeAsStringAsync(targetUri, content, { encoding })
+    return true
+  } catch (e) {
+    logger.error("Save to device failed", {
+      message: e instanceof Error ? e.message : String(e),
+    })
+    return false
+  }
 }
 
 /** Convert a column value: normalize Unix-ms timestamps (WDB format) to ISO strings. */
@@ -362,13 +409,13 @@ async function buildBackupInMemory(): Promise<MintyFlowBackup> {
   }
 }
 
-async function generateJsonBackup(): Promise<{
+async function generateJsonBackup(baseName?: string): Promise<{
   uri: string
   fileName: string
 }> {
   const dir = await prepareExportDir()
   const backup = await buildBackupInMemory()
-  const fileName = `minty-flow-backup-${Date.now()}.json`
+  const fileName = toFileName("json", baseName)
   const uri = `${dir}${fileName}`
   await FileSystem.writeAsStringAsync(uri, JSON.stringify(backup, null, 2), {
     encoding: FileSystem.EncodingType.UTF8,
@@ -376,17 +423,119 @@ async function generateJsonBackup(): Promise<{
   return { uri, fileName }
 }
 
-export async function saveJsonToDevice(): Promise<{
-  uri: string
-  fileName: string
-  savedToDevice: boolean
-}> {
-  const { uri, fileName } = await generateJsonBackup()
-  const savedToDevice = await saveToDevice(uri, fileName, "json")
+export async function saveJsonToDevice(
+  baseName?: string,
+): Promise<SavedExport> {
+  const { uri, fileName } = await generateJsonBackup(baseName)
+  const savedToDevice = await saveToDevice(uri, fileName)
   return { uri, fileName, savedToDevice }
 }
 
-async function generateCsvExport(): Promise<{ uri: string; fileName: string }> {
+/** Name of the backup document inside a zip archive. */
+const BACKUP_JSON_NAME = "backup.json"
+
+async function generateZipBackup(
+  baseName?: string,
+): Promise<{ uri: string; fileName: string }> {
+  const dir = await prepareExportDir()
+  const backup = await buildBackupInMemory()
+  const jsonUri = `${dir}${BACKUP_JSON_NAME}`
+  await FileSystem.writeAsStringAsync(
+    jsonUri,
+    JSON.stringify(backup, null, 2),
+    {
+      encoding: FileSystem.EncodingType.UTF8,
+    },
+  )
+
+  const fileName = toFileName("zip", baseName)
+  const uri = `${dir}${fileName}`
+  const attachments = attachmentsDirectory()
+    .list()
+    .filter((entry): entry is File => entry instanceof File)
+    .map((file) => file.uri)
+
+  try {
+    // An array source zips to flat basenames, so the live attachment files are archived
+    // in place — a nested layout would need staging copies and twice the peak disk.
+    await zip([jsonUri, ...attachments], uri)
+  } finally {
+    await FileSystem.deleteAsync(jsonUri, { idempotent: true })
+  }
+
+  return { uri, fileName }
+}
+
+export async function saveZipToDevice(baseName?: string): Promise<SavedExport> {
+  const { uri, fileName } = await generateZipBackup(baseName)
+  const savedToDevice = await saveToDevice(uri, fileName)
+  return { uri, fileName, savedToDevice }
+}
+
+/**
+ * Read a picked backup, transparently unwrapping a zip archive.
+ *
+ * The extension only routes to a read strategy — it never rejects. `validateBackup`
+ * is the gate on whether the contents are actually a backup.
+ *
+ * @returns The backup JSON text, plus the staging dir holding the archive's attachment
+ *   files (null for a plain JSON pick). The caller owns the staging dir.
+ */
+export async function readPickedBackup(
+  uri: string,
+  name: string,
+): Promise<{ json: string; stagingDir: string | null }> {
+  if (!name.toLowerCase().endsWith(".zip")) {
+    const json = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.UTF8,
+    })
+    return { json, stagingDir: null }
+  }
+
+  const staging = new Directory(Paths.cache, `import-${Date.now()}`)
+  staging.create({ intermediates: true, idempotent: true })
+  try {
+    await unzip(uri, staging.uri)
+    const jsonFile = new File(staging, BACKUP_JSON_NAME)
+    if (!jsonFile.exists) throw new Error(`Archive has no ${BACKUP_JSON_NAME}`)
+    return { json: await jsonFile.text(), stagingDir: staging.uri }
+  } catch (e) {
+    deleteStagingDir(staging.uri)
+    throw e
+  }
+}
+
+/** Copy an archive's attachment files into permanent storage. Deletes the staging dir. */
+export async function restoreAttachmentsFromStaging(
+  stagingDir: string,
+): Promise<void> {
+  const destination = attachmentsDirectory()
+  const files = new Directory(stagingDir)
+    .list()
+    .filter(
+      (entry): entry is File =>
+        entry instanceof File && entry.name !== BACKUP_JSON_NAME,
+    )
+
+  await Promise.all(
+    files.map((file) =>
+      file.copy(new File(destination, file.name), { overwrite: true }),
+    ),
+  )
+  deleteStagingDir(stagingDir)
+}
+
+export function deleteStagingDir(stagingDir: string): void {
+  try {
+    new Directory(stagingDir).delete()
+  } catch {
+    // staging lives in the cache dir — the OS reclaims it either way
+  }
+}
+
+async function generateCsvExport(
+  baseName?: string,
+): Promise<{ uri: string; fileName: string }> {
   const dir = await prepareExportDir()
   const db = getDb()
   const transactions = await db.getAllAsync<RowTransaction>(
@@ -448,7 +597,7 @@ async function generateCsvExport(): Promise<{ uri: string; fileName: string }> {
   )
 
   const csv = [headers.join(","), ...rows].join("\r\n")
-  const fileName = `minty-flow-transactions-${Date.now()}.csv`
+  const fileName = toFileName("csv", baseName)
   const uri = `${dir}${fileName}`
   await FileSystem.writeAsStringAsync(uri, csv, {
     encoding: FileSystem.EncodingType.UTF8,
@@ -456,26 +605,23 @@ async function generateCsvExport(): Promise<{ uri: string; fileName: string }> {
   return { uri, fileName }
 }
 
-export async function saveCsvToDevice(): Promise<{
-  uri: string
-  fileName: string
-  savedToDevice: boolean
-}> {
-  const { uri, fileName } = await generateCsvExport()
-  const savedToDevice = await saveToDevice(uri, fileName, "csv")
+export async function saveCsvToDevice(baseName?: string): Promise<SavedExport> {
+  const { uri, fileName } = await generateCsvExport(baseName)
+  const savedToDevice = await saveToDevice(uri, fileName)
   return { uri, fileName, savedToDevice }
 }
 
 export async function saveExistingFileToDevice(
   uri: string,
   fileName: string,
-  ext: string,
 ): Promise<boolean> {
   const info = await FileSystem.getInfoAsync(uri)
   if (!info.exists) throw new Error("file_not_found")
-  return saveToDevice(uri, fileName, ext)
+  return saveToDevice(uri, fileName)
 }
 
+// ponytail: leaves the export's now-empty parent folder behind. Delete the folder too
+// once history records predating per-export folders can no longer be in the store.
 export async function deleteExportFile(uri: string): Promise<void> {
   try {
     const info = await FileSystem.getInfoAsync(uri)
@@ -678,8 +824,6 @@ export async function pickBackupFile(): Promise<{
   if (result.canceled || !result.assets?.[0]) return null
 
   const file = result.assets[0]
-  if (!file.name?.toLowerCase().endsWith(".json")) return null
-
   return { uri: file.uri, name: file.name ?? "backup" }
 }
 

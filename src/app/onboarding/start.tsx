@@ -1,5 +1,4 @@
-import { useNavigation, useRouter } from "expo-router"
-import { CommonActions } from "expo-router/react-navigation"
+import { useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
@@ -13,17 +12,11 @@ import { useOnboardingStore } from "~/stores/onboarding.store"
 export default function OnboardingStartScreen() {
   const { t } = useTranslation()
   const router = useRouter()
-  const navigation = useNavigation()
   const { setCompleted } = useOnboardingStore()
 
   const handleImport = () => {
     setCompleted()
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 1,
-        routes: [{ name: "(tabs)" }, { name: "settings/data-management" }],
-      }),
-    )
+    router.push("/settings/data-management?mode=import")
   }
 
   const handleFresh = () => {

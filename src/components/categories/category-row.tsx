@@ -68,7 +68,6 @@ const styles = StyleSheet.create((theme) => ({
     paddingRight: 20,
     backgroundColor: theme.colors.secondary,
     borderRadius: theme.radius,
-    marginHorizontal: 20,
   },
   rowContent: {
     backgroundColor: theme.colors.secondary,

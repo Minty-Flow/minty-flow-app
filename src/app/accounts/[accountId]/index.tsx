@@ -393,6 +393,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
     padding: 20,
     gap: 15,
+    marginHorizontal: 20,
   },
   headerTopRow: {
     flexDirection: "row",
@@ -477,6 +478,7 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     marginVertical: 5,
     gap: 5,
+    marginHorizontal: 20,
   },
   summaryPillCard: {
     flex: 1,
@@ -498,6 +500,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
     paddingVertical: 10,
     paddingHorizontal: 20,
+    marginHorizontal: 20,
   },
   summaryNetLabel: {
     ...theme.typography.labelLarge,

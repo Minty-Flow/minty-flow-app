@@ -6,7 +6,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles"
 import { ConfirmModal } from "~/components/confirm-modal"
 import { Button } from "~/components/ui/button"
 import { IconSvg } from "~/components/ui/icon-svg"
-import { Pressable } from "~/components/ui/pressable"
+import { ListItem } from "~/components/ui/list-item"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -129,7 +129,7 @@ export default function ToastStyleScreen() {
             const isLast = index === positionOptions.length - 1
             return (
               <View key={option.value} native>
-                <Pressable
+                <ListItem
                   style={styles.row}
                   onPress={() => setPosition(option.value)}
                   accessibilityRole="radio"
@@ -148,7 +148,7 @@ export default function ToastStyleScreen() {
                       color={theme.colors.primary}
                     />
                   ) : null}
-                </Pressable>
+                </ListItem>
                 {!isLast ? <View native style={styles.divider} /> : null}
               </View>
             )
@@ -162,7 +162,7 @@ export default function ToastStyleScreen() {
           </Text>
         </View>
         <View native style={styles.toggleCard}>
-          <Pressable
+          <ListItem
             style={styles.toggleRow}
             onPress={() => setShowProgressBar(!showProgressBar)}
           >
@@ -182,9 +182,9 @@ export default function ToastStyleScreen() {
               value={showProgressBar}
               onValueChange={setShowProgressBar}
             />
-          </Pressable>
+          </ListItem>
           <View native style={styles.divider} />
-          <Pressable
+          <ListItem
             style={styles.toggleRow}
             onPress={() => setShowCloseIcon(!showCloseIcon)}
           >
@@ -201,7 +201,7 @@ export default function ToastStyleScreen() {
               </Text>
             </View>
             <Switch value={showCloseIcon} onValueChange={setShowCloseIcon} />
-          </Pressable>
+          </ListItem>
         </View>
 
         {/* Preview */}
@@ -288,11 +288,7 @@ const styles = StyleSheet.create((theme) => ({
     overflow: "hidden",
   },
   row: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
     minHeight: 56,
   },
   rowContent: {
@@ -318,11 +314,7 @@ const styles = StyleSheet.create((theme) => ({
     overflow: "hidden",
   },
   toggleRow: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
     minHeight: 56,
   },
   toggleRowContent: {

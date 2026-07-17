@@ -1,5 +1,3 @@
-import { formatDistanceToNow } from "date-fns"
-import { ar, enUS } from "date-fns/locale"
 import * as FileSystem from "expo-file-system/legacy"
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -16,6 +14,7 @@ import { ConfirmModal } from "~/components/confirm-modal"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { EmptyState } from "~/components/ui/empty-state"
 import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
+import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -23,39 +22,34 @@ import {
   deleteExportFile,
   saveExistingFileToDevice,
 } from "~/database/services-sqlite/data-management-service"
-import i18n from "~/i18n/config"
-import { LangCodeEnum } from "~/i18n/language.constants"
+import type { TranslationKey } from "~/i18n/config"
 import {
   type ExportRecord,
   useExportHistoryStore,
 } from "~/stores/export-history.store"
 import { formatFileSize } from "~/utils/format-file-size"
+import { formatRelativeToNow } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
-function getRelativeLocale() {
-  return i18n.language === LangCodeEnum.AR ? ar : enUS
+const RECORD_ICONS: Record<ExportRecord["type"], IconSvgName> = {
+  json: "database-export-outline",
+  csv: "file-type-csv-outline",
+  zip: "file-zip-outline",
 }
 
-function formatRelative(iso: string): string {
-  try {
-    return formatDistanceToNow(new Date(iso), {
-      addSuffix: true,
-      locale: getRelativeLocale(),
-    })
-  } catch {
-    return ""
-  }
+const RECORD_TITLE_KEYS: Record<ExportRecord["type"], TranslationKey> = {
+  json: "screens.settings.dataManagement.exportJson",
+  csv: "screens.settings.dataManagement.exportCsv",
+  zip: "screens.settings.dataManagement.exportZip",
 }
 
 function getRecordIcon(type: ExportRecord["type"]): IconSvgName {
-  return type === "json" ? "database-export-outline" : "file-type-csv-outline"
+  return RECORD_ICONS[type]
 }
 
 function useRecordTitle(record: ExportRecord): string {
   const { t } = useTranslation()
-  return record.type === "json"
-    ? t("screens.settings.dataManagement.exportJson")
-    : t("screens.settings.dataManagement.exportCsv")
+  return t(RECORD_TITLE_KEYS[record.type])
 }
 
 interface ExportRowProps {
@@ -68,7 +62,7 @@ function ExportRow({ record, fileSize, onPress }: ExportRowProps) {
   const title = useRecordTitle(record)
   const icon = getRecordIcon(record.type)
   const sizeText = fileSize != null ? formatFileSize(fileSize) : null
-  const meta = [formatRelative(record.exportedAt), sizeText]
+  const meta = [formatRelativeToNow(record.exportedAt), sizeText]
     .filter(Boolean)
     .join(" · ")
 
@@ -117,18 +111,15 @@ function ActionModal({
   const { width } = useWindowDimensions()
   const maxCardWidth = Math.min(width - 32, 440)
 
-  const isJson = record?.type === "json"
-  const title = record
-    ? isJson
-      ? t("screens.settings.dataManagement.exportJson")
-      : t("screens.settings.dataManagement.exportCsv")
-    : ""
-  const icon: IconSvgName = isJson
-    ? "database-export-outline"
-    : "file-type-csv-outline"
+  const title = record ? t(RECORD_TITLE_KEYS[record.type]) : ""
+  const icon: IconSvgName = record
+    ? getRecordIcon(record.type)
+    : "database-export-outline"
   const sizeText = fileSize != null ? formatFileSize(fileSize) : null
   const meta = record
-    ? [formatRelative(record.exportedAt), sizeText].filter(Boolean).join(" · ")
+    ? [formatRelativeToNow(record.exportedAt), sizeText]
+        .filter(Boolean)
+        .join(" · ")
     : ""
 
   return (
@@ -208,7 +199,7 @@ function ActionButton({
   const { theme } = useUnistyles()
   const color = destructive ? theme.colors.error : theme.colors.onSurface
   return (
-    <Pressable
+    <ListItem
       style={({ pressed }) => [
         actionStyles.actionRow,
         pressed && actionStyles.actionRowPressed,
@@ -217,7 +208,7 @@ function ActionButton({
     >
       <IconSvg name={icon} size={20} color={color} />
       <Text style={[actionStyles.actionLabel, { color }]}>{label}</Text>
-    </Pressable>
+    </ListItem>
   )
 }
 
@@ -271,12 +262,10 @@ export default function ExportHistoryScreen() {
   const handleSave = useCallback(async () => {
     if (!activeRecord) return
     setActionId(null)
-    const ext = activeRecord.type === "json" ? "json" : "csv"
     try {
       const saved = await saveExistingFileToDevice(
         activeRecord.uri,
         activeRecord.fileName,
-        ext,
       )
       if (saved) {
         Toast.success({
@@ -546,11 +535,7 @@ const actionStyles = StyleSheet.create((theme) => ({
     marginBottom: 4,
   },
   actionRow: {
-    flexDirection: "row",
-    alignItems: "center",
     gap: 14,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
   },
   actionRowPressed: {
     opacity: 0.6,

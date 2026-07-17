@@ -67,19 +67,9 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
     gap: 8,
     flexShrink: 1,
-    _web: {
-      outlineStyle: "none",
-      transitionProperty: "all",
-      transitionDuration: "200ms",
-      cursor: "pointer",
-    },
   },
   disabled: {
     opacity: 0.5,
-    _web: {
-      pointerEvents: "none",
-      cursor: "not-allowed",
-    },
   },
 }))
 
@@ -120,21 +110,6 @@ const variantStyles = StyleSheet.create((theme) => ({
   },
   ghost: {
     backgroundColor: "transparent",
-    _web: {
-      _hover: {
-        backgroundColor: theme.colors.secondary,
-      },
-      _focusVisible: {
-        backgroundColor: theme.colors.secondary,
-        outlineWidth: 2,
-        outlineStyle: "solid",
-        outlineColor: theme.colors.primary,
-        outlineOffset: 2,
-      },
-      _active: {
-        backgroundColor: theme.colors.secondary,
-      },
-    },
   },
   link: {
     backgroundColor: "transparent",
@@ -185,11 +160,6 @@ export const buttonTextStyles = StyleSheet.create((theme) => ({
   base: {
     ...theme.typography.labelLarge,
     color: theme.colors.onSurface,
-    _web: {
-      pointerEvents: "none",
-      transitionProperty: "colors",
-      transitionDuration: "200ms",
-    },
   },
   default: {
     color: theme.colors.onPrimary,
@@ -205,18 +175,10 @@ export const buttonTextStyles = StyleSheet.create((theme) => ({
   },
   ghost: {
     color: theme.colors.onSurface,
-    _web: {
-      _hover: {
-        color: theme.colors.secondary,
-      },
-    },
   },
   link: {
     color: theme.colors.primary,
     textDecorationLine: "underline",
-    _web: {
-      textDecorationLine: "underline",
-    },
   },
 }))
 

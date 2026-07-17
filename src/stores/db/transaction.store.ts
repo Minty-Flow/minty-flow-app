@@ -19,7 +19,7 @@ interface CacheEntry {
   dirty: boolean
 }
 
-export interface TransactionFilters {
+interface TransactionFilters {
   from?: string // UTC ISO
   to?: string // UTC ISO
   accountIds?: string[]

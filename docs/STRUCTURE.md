@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-07-11T01:27:53.124Z
+Generated on: 2026-07-17T14:23:25.905Z
 ```
 ./
 ├── .github/
@@ -30,6 +30,8 @@ Generated on: 2026-07-11T01:27:53.124Z
 ├── docs/
 │   ├── refund-loans-new-design.md
 │   ├── release-notes-format.md
+│   ├── sankey-flow-decision.md
+│   ├── stats-redesign-plan.md
 │   └── STRUCTURE.md
 ├── plugins/
 │   └── with-android-release-signing.mts
@@ -111,6 +113,12 @@ Generated on: 2026-07-11T01:27:53.124Z
 │   │   │   ├── index.tsx
 │   │   │   ├── pending-transactions.tsx
 │   │   │   └── trash.tsx
+│   │   ├── stats/
+│   │   │   ├── calendar.tsx
+│   │   │   ├── cash-flow.tsx
+│   │   │   ├── categories.tsx
+│   │   │   ├── net-worth.tsx
+│   │   │   └── wrapped.tsx
 │   │   ├── transaction/
 │   │   │   └── [id].tsx
 │   │   ├── _layout.tsx
@@ -170,8 +178,6 @@ Generated on: 2026-07-11T01:27:53.124Z
 │   │   │   ├── currency-account-selector.styles.ts
 │   │   │   ├── index.tsx
 │   │   │   └── types.ts
-│   │   ├── data-management/
-│   │   │   └── import-confirm-modal.tsx
 │   │   ├── date-range-preset-modal/
 │   │   │   ├── date-range-preset-modal-content.tsx
 │   │   │   ├── date-range-preset-modal.styles.ts
@@ -257,8 +263,6 @@ Generated on: 2026-07-11T01:27:53.124Z
 │   │   │   │   ├── Car.tsx
 │   │   │   │   ├── Car4Wd.tsx
 │   │   │   │   ├── Caravan.tsx
-│   │   │   │   ├── CaretDown.tsx
-│   │   │   │   ├── CaretUp.tsx
 │   │   │   │   ├── CarSuv.tsx
 │   │   │   │   ├── CashBanknote.tsx
 │   │   │   │   ├── ChartArea.tsx
@@ -272,8 +276,6 @@ Generated on: 2026-07-11T01:27:53.124Z
 │   │   │   │   ├── Check.tsx
 │   │   │   │   ├── ChefHat.tsx
 │   │   │   │   ├── Cherry.tsx
-│   │   │   │   ├── ChevronDown.tsx
-│   │   │   │   ├── ChevronRight.tsx
 │   │   │   │   ├── ChristmasTree.tsx
 │   │   │   │   ├── Circle.tsx
 │   │   │   │   ├── CircleDot.tsx
@@ -600,6 +602,7 @@ Generated on: 2026-07-11T01:27:53.124Z
 │   │   │       ├── Share.tsx
 │   │   │       ├── ShieldCheckered.tsx
 │   │   │       ├── ShieldExclamation.tsx
+│   │   │       ├── ShoppingCart.tsx
 │   │   │       ├── Snowflake.tsx
 │   │   │       ├── Square.tsx
 │   │   │       ├── SquareCheck.tsx
@@ -652,18 +655,28 @@ Generated on: 2026-07-11T01:27:53.124Z
 │   │   │   ├── math-utils.ts
 │   │   │   └── styles.ts
 │   │   ├── stats/
-│   │   │   ├── balance-timeline-chart.tsx
-│   │   │   ├── chart-container.tsx
+│   │   │   ├── dashboard/
+│   │   │   │   ├── calendar-card.tsx
+│   │   │   │   ├── cash-flow-card.tsx
+│   │   │   │   ├── net-worth-card.tsx
+│   │   │   │   ├── pace-card.tsx
+│   │   │   │   ├── stat-card.tsx
+│   │   │   │   ├── top-categories-card.tsx
+│   │   │   │   └── wrapped-card.tsx
 │   │   │   ├── chart-crosshair.tsx
-│   │   │   ├── currency-hero-row.tsx
-│   │   │   ├── currency-stat-section.tsx
-│   │   │   ├── daily-expense-line-chart.tsx
+│   │   │   ├── currency-switcher.tsx
 │   │   │   ├── delta-badge.tsx
-│   │   │   ├── stat-hero-card.tsx
-│   │   │   ├── stats-averages-row.tsx
+│   │   │   ├── insight-card.tsx
+│   │   │   ├── mini-bars.tsx
+│   │   │   ├── net-worth-chart.tsx
+│   │   │   ├── rhythm-insight-card.tsx
+│   │   │   ├── sankey-flow.tsx
+│   │   │   ├── spending-heatmap.tsx
 │   │   │   ├── stats-category-pie.tsx
+│   │   │   ├── stats-detail-shell.tsx
 │   │   │   ├── stats-empty-state.tsx
 │   │   │   ├── stats-pending-notice.tsx
+│   │   │   ├── stats-period-header.tsx
 │   │   │   └── stats-skeleton.tsx
 │   │   ├── tag/
 │   │   │   ├── action-buttons.tsx
@@ -760,6 +773,7 @@ Generated on: 2026-07-11T01:27:53.124Z
 │   │   │   ├── icon-svg.tsx
 │   │   │   ├── info-banner.tsx
 │   │   │   ├── input.tsx
+│   │   │   ├── list-item.tsx
 │   │   │   ├── permission-banner.tsx
 │   │   │   ├── pressable.tsx
 │   │   │   ├── separator.tsx
@@ -793,7 +807,6 @@ Generated on: 2026-07-11T01:27:53.124Z
 │   │   ├── pre-sets-accounts.ts
 │   │   └── pre-sets-categories.ts
 │   ├── contexts/
-│   │   ├── pager-scroll-control.tsx
 │   │   └── scroll-into-view-context.tsx
 │   ├── database/
 │   │   ├── mappers/
@@ -907,7 +920,8 @@ Generated on: 2026-07-11T01:27:53.124Z
 │   │   ├── transaction-location.store.ts
 │   │   ├── transfers-preferences.store.ts
 │   │   ├── trash-bin.store.ts
-│   │   └── upcoming-section.store.ts
+│   │   ├── upcoming-section.store.ts
+│   │   └── week-start.store.ts
 │   ├── styles/
 │   │   ├── theme/
 │   │   │   ├── schemes/
@@ -940,6 +954,7 @@ Generated on: 2026-07-11T01:27:53.124Z
 │   │   └── transactions.ts
 │   └── utils/
 │       ├── account-types-list.ts
+│       ├── attachments.ts
 │       ├── file-icon.ts
 │       ├── format-file-size.ts
 │       ├── get-week-start-on.ts

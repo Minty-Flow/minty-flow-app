@@ -4,7 +4,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/ui/icon-svg"
 import { InfoBanner } from "~/components/ui/info-banner"
-import { Pressable } from "~/components/ui/pressable"
+import { ListItem } from "~/components/ui/list-item"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -98,7 +98,7 @@ export default function TransfersPreferencesScreen() {
           const isLast = index === layoutOptions.length - 1
           return (
             <View key={option.value} native>
-              <Pressable
+              <ListItem
                 style={styles.row}
                 onPress={() => setLayout(option.value)}
                 accessibilityRole="radio"
@@ -132,7 +132,7 @@ export default function TransfersPreferencesScreen() {
                     color={theme.colors.primary}
                   />
                 ) : null}
-              </Pressable>
+              </ListItem>
               {!isLast ? <View native style={styles.divider} /> : null}
             </View>
           )
@@ -147,7 +147,7 @@ export default function TransfersPreferencesScreen() {
         </Text>
       </View>
       <View native style={styles.toggleCard}>
-        <Pressable
+        <ListItem
           style={styles.toggleRow}
           onPress={() => setExcludeFromTotals(!excludeFromTotals)}
         >
@@ -163,7 +163,7 @@ export default function TransfersPreferencesScreen() {
             value={excludeFromTotals}
             onValueChange={setExcludeFromTotals}
           />
-        </Pressable>
+        </ListItem>
       </View>
     </ScrollView>
   )
@@ -199,11 +199,7 @@ const styles = StyleSheet.create((theme) => ({
     overflow: "hidden",
   },
   row: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
     minHeight: 56,
   },
   rowContent: {
@@ -229,11 +225,7 @@ const styles = StyleSheet.create((theme) => ({
     overflow: "hidden",
   },
   toggleRow: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
     minHeight: 56,
   },
   toggleRowContent: {

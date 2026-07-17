@@ -41,11 +41,7 @@ export const accountModifyStyles = StyleSheet.create((theme) => ({
     gap: 0,
   },
   switchRow: {
-    flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
   },
   switchLeft: {
     flexDirection: "row",

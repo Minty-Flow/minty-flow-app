@@ -21,6 +21,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { IconSvg } from "~/components/ui/icon-svg"
+import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { type LoanType, LoanTypeEnum } from "~/types/loans"
 
@@ -57,7 +58,7 @@ function OptionRow({
   const { theme } = useUnistyles()
 
   return (
-    <Pressable
+    <ListItem
       style={({ pressed }) => [
         styles.optionRow,
         !isLast && styles.optionRowBorder,
@@ -66,7 +67,7 @@ function OptionRow({
       ]}
       onPress={onPress}
       disabled={disabled}
-      android_ripple={disabled ? null : { color: theme.colors.rippleColor }}
+      disableRipple={disabled}
     >
       <View style={styles.optionRowContent}>
         <Text style={styles.optionLabel}>{label}</Text>
@@ -82,7 +83,7 @@ function OptionRow({
           style={styles.optionChevron}
         />
       )}
-    </Pressable>
+    </ListItem>
   )
 }
 
@@ -246,12 +247,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: `${theme.colors.onSurface}10`,
     borderColor: theme.colors.semantic.semi,
   },
-  optionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-  },
+  optionRow: {},
   optionRowBorder: {
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.semantic.semi,
