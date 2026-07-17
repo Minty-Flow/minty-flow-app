@@ -3,7 +3,7 @@
  * Used by both the home screen and account detail screen.
  */
 
-import { addDays, endOfMonth, startOfMonth, startOfWeek } from "date-fns"
+import { addDays, endOfMonth, startOfMonth } from "date-fns"
 
 import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
 import {
@@ -132,6 +132,7 @@ import {
   formatWeekKey,
   formatWeekTitle,
   formatYear,
+  startOfAppWeek,
 } from "~/utils/time-utils"
 
 /** Signed contribution for aggregation: income adds, expense subtracts, refund adds back, transfer is neutral. */
@@ -225,7 +226,7 @@ function getSectionKeyAndTitle(
         title: formatSectionDateTitle(date),
       }
     case "week": {
-      const weekStart = startOfWeek(date, { weekStartsOn: 1 })
+      const weekStart = startOfAppWeek(date)
       return {
         key: formatWeekKey(weekStart),
         title: formatWeekTitle(weekStart),

@@ -5,7 +5,7 @@ import { getLocales } from "expo-localization"
 
 import { useLanguageStore } from "~/stores/language.store"
 
-export type DateTimePickerProps = ExpoDateTimePickerProps
+type DateTimePickerProps = ExpoDateTimePickerProps
 
 /**
  * Project-wide DateTimePicker wrapper around `@expo/ui/community/datetime-picker`.

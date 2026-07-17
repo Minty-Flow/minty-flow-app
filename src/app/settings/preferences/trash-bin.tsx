@@ -8,7 +8,7 @@ import { ConfirmModal } from "~/components/confirm-modal"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { ChoiceChips } from "~/components/ui/chips"
 import { IconSvg } from "~/components/ui/icon-svg"
-import { Pressable } from "~/components/ui/pressable"
+import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { destroyAllDeletedTransactions } from "~/database/services-sqlite/transaction-service"
@@ -101,7 +101,7 @@ export default function TrashBinScreen() {
       />
 
       {/* View Removed List */}
-      <Pressable style={styles.actionItem} onPress={handleView}>
+      <ListItem style={styles.actionItem} onPress={handleView}>
         <View style={styles.actionItemLeft}>
           <View style={styles.actionItemContent}>
             <View style={styles.titleRow}>
@@ -117,10 +117,10 @@ export default function TrashBinScreen() {
           size={18}
           color={styles.actionItemIcon.color}
         />
-      </Pressable>
+      </ListItem>
 
       {/* Empty Trash Bin */}
-      <Pressable
+      <ListItem
         style={styles.actionItem}
         onPress={() => {
           setConfirmModalVisible(true)
@@ -140,7 +140,7 @@ export default function TrashBinScreen() {
           size={18}
           color={styles.actionTrashItemIcon.color}
         />
-      </Pressable>
+      </ListItem>
 
       {/* Empty Trash Modal */}
       <ConfirmModal
@@ -164,11 +164,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.surface,
   },
   actionItem: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 15,
-    paddingHorizontal: 20,
   },
   actionItemLeft: {
     flexDirection: "row",

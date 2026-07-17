@@ -9,7 +9,7 @@ import { TagCard } from "~/components/tags/tag-card"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { IconSvg } from "~/components/ui/icon-svg"
-import { Pressable } from "~/components/ui/pressable"
+import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useTags } from "~/stores/db/tag.store"
@@ -71,12 +71,12 @@ export default function TagsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Pressable style={styles.newTagButton} onPress={handleAddTag}>
+        <ListItem style={styles.newTagButton} onPress={handleAddTag}>
           <IconSvg name="plus-outline" size={24} />
           <Text variant="default" style={styles.newTagText}>
             {t("screens.settings.tags.newTag")}
           </Text>
-        </Pressable>
+        </ListItem>
 
         {filteredModels.length === 0 ? (
           <View style={styles.emptyWrapper}>
@@ -116,11 +116,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingBottom: 40,
   },
   newTagButton: {
-    flexDirection: "row",
-    alignItems: "center",
     gap: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
     marginVertical: 15,
   },
   newTagText: {

@@ -51,11 +51,7 @@ export const budgetModifyStyles = StyleSheet.create((theme) => ({
   },
   settingsList: {},
   switchRow: {
-    flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
   },
   switchLeft: {
     flexDirection: "row",

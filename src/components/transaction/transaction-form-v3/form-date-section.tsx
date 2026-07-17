@@ -6,6 +6,7 @@ import { useUnistyles } from "react-native-unistyles"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { InfoBanner } from "~/components/ui/info-banner"
+import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
@@ -57,7 +58,7 @@ export function FormDateSection({
             </Text>
           </Pressable>
         </View>
-        <Pressable
+        <ListItem
           style={transactionFormStyles.inlineDateRow}
           onPress={onDatePress}
         >
@@ -75,7 +76,7 @@ export function FormDateSection({
             size={20}
             style={transactionFormStyles.chevronIcon}
           />
-        </Pressable>
+        </ListItem>
       </View>
 
       {showPending && (
@@ -86,7 +87,7 @@ export function FormDateSection({
             const checked = value ?? false
             return (
               <>
-                <Pressable
+                <ListItem
                   style={transactionFormStyles.pendingSwitchRow}
                   onPress={() => onChange(!checked)}
                   accessibilityRole="switch"
@@ -107,7 +108,7 @@ export function FormDateSection({
                     </Text>
                   </View>
                   <Switch value={checked} onValueChange={onChange} />
-                </Pressable>
+                </ListItem>
                 <View style={{ marginTop: -8, paddingBottom: 16 }}>
                   <InfoBanner
                     text={

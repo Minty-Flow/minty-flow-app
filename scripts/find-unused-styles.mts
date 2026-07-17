@@ -146,10 +146,13 @@ function resolveImport(
   importSpec: string,
   knownFiles: Set<string>
 ): string | null {
-  if (!importSpec.startsWith(".")) return null;
+  // `~/` is the src alias (see tsconfig paths); anything else is a package.
+  const isAlias = importSpec.startsWith("~/");
+  if (!importSpec.startsWith(".") && !isAlias) return null;
 
-  const dir = path.dirname(fromFile);
-  const base = path.resolve(dir, importSpec);
+  const base = isAlias
+    ? path.resolve(ROOT, "src", importSpec.slice(2))
+    : path.resolve(path.dirname(fromFile), importSpec);
 
   const candidates = [
     base,
@@ -273,6 +276,25 @@ function collectUsedKeys(
   return used;
 }
 
+/**
+ * Whether a style sheet is ever subscripted with something other than a string
+ * literal — e.g. `textStyles[variant]`. Such a sheet has no statically knowable
+ * set of used keys.
+ */
+function isIndexedDynamically(
+  varName: string,
+  files: Iterable<string>,
+  contents: Map<string, string>
+): boolean {
+  const re = new RegExp(`\\b${varName}\\[\\s*(?!["'])`);
+
+  for (const file of files) {
+    if (re.test(contents.get(file) ?? "")) return true;
+  }
+
+  return false;
+}
+
 function run(): void {
   const files = findFiles(TARGET);
   const fileSet = new Set(files);
@@ -308,6 +330,11 @@ function run(): void {
     // Collect usage from all files that depend on this style file (directly or indirectly)
     const dependents = findDependentFiles(block.file, reverseMap);
     const filesToSearch = new Set([...dependents, block.file]);
+
+    // A sheet indexed by a runtime value (`styles[variant]`) can reach any key,
+    // so key-by-key analysis can't prove anything about it.
+    if (isIndexedDynamically(block.varName, filesToSearch, contents)) continue;
+
     const usedKeys = collectUsedKeys(filesToSearch, contents);
 
     const unused = defined.filter((k) => !usedKeys.has(k.key));

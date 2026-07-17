@@ -6,12 +6,9 @@ import {
   differenceInDays,
   endOfDay,
   endOfMonth,
-  endOfWeek,
   endOfYear,
-  getISOWeek,
   startOfDay,
   startOfMonth,
-  startOfWeek,
   startOfYear,
   subDays,
   subMonths,
@@ -21,12 +18,15 @@ import {
 import type { StatsDateRange, StatsDateRangePreset } from "~/types/stats"
 import type { DateRangePresetId } from "~/utils/time-utils"
 import {
+  endOfAppWeek,
   formatDateKey,
   formatDayYear,
   formatShortMonthDay,
   formatShortMonthDayYear,
   formatShortMonthName,
+  getAppWeek,
   getDisplayMonthTitle,
+  startOfAppWeek,
 } from "~/utils/time-utils"
 
 /**
@@ -42,8 +42,8 @@ export function buildStatsDateRange(
 
   switch (preset) {
     case "thisWeek": {
-      const from = startOfWeek(now, { weekStartsOn: 1 })
-      const to = endOfWeek(now, { weekStartsOn: 1 })
+      const from = startOfAppWeek(now)
+      const to = endOfAppWeek(now)
       const prevFrom = subDays(from, 7)
       const prevTo = subDays(to, 7)
       return {
@@ -102,8 +102,15 @@ export function buildStatsDateRange(
     }
 
     case "allTime": {
+      // TODO: transactions dated before 2000 are excluded. The floor is a fixed
+      // date rather than MIN(transaction_date) because `from` sizes a per-day
+      // bucket array; the epoch would double it to ~20k entries to cover a case
+      // that shouldn't happen. Query the real minimum if it ever does.
       const from = startOfYear(new Date(2000, 0, 1))
       const to = endOfDay(now)
+      // No prior period exists. `fetchAllStatsData` detects that via
+      // `previousFrom === from` and reports no previous rather than comparing
+      // the range against itself.
       return {
         preset,
         from,
@@ -116,7 +123,7 @@ export function buildStatsDateRange(
 
     case "custom": {
       const from = customFrom ? startOfDay(customFrom) : startOfMonth(now)
-      const to = customTo ? startOfDay(customTo) : endOfMonth(now)
+      const to = customTo ? endOfDay(customTo) : endOfMonth(now)
       const spanDays = differenceInDays(to, from)
       const interval =
         spanDays <= 14 ? "day" : spanDays <= 90 ? "week" : "month"
@@ -154,7 +161,7 @@ export function formatIntervalLabel(
     case "day":
       return formatShortMonthDay(date)
     case "week":
-      return `W${getISOWeek(date)}`
+      return `W${getAppWeek(date)}`
     case "month":
       return formatShortMonthName(date)
     case "year":
@@ -174,7 +181,7 @@ export function generateDateBuckets(
   const buckets: Date[] = []
   let cursor =
     interval === "week"
-      ? startOfWeek(from, { weekStartsOn: 1 })
+      ? startOfAppWeek(from)
       : interval === "month"
         ? startOfMonth(from)
         : interval === "year"

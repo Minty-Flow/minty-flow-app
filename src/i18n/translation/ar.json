@@ -231,6 +231,67 @@
         "onPaceFor": "في مسار ~{{amount}}"
       },
       "moreOptions": "المزيد من الخيارات",
+      "dashboard": {
+        "soon": "قريباً",
+        "cashFlow": "التدفق النقدي",
+        "overspent": "تجاوزت الإنفاق",
+        "saved": "وفّرت",
+        "in": "دخل",
+        "out": "خرج",
+        "pace": "الوتيرة",
+        "totalSpent": "إجمالي الإنفاق",
+        "avgPerDay": "المعدل / يوم",
+        "topCategories": "أعلى الفئات",
+        "insights": "رؤى",
+        "wrappedTitle": "ملخص {{month}}",
+        "wrappedEntries": "{{count}} عملية",
+        "wrappedBiggest": "الأكبر",
+        "netWorth": "صافي الثروة",
+        "inPeriod": "في {{period}}",
+        "calendar": "التقويم",
+        "recurring": "المتكررة",
+        "spendingMap": "خريطة الإنفاق",
+        "noSpendingWindow": "لا يوجد إنفاق في هذه الفترة."
+      },
+      "cashFlow": {
+        "title": "التدفق النقدي",
+        "income": "الدخل",
+        "spending": "الإنفاق",
+        "other": "أخرى",
+        "fromBalance": "من الرصيد",
+        "savedNode": "مدّخر",
+        "averagesByDay": "المعدلات اليومية"
+      },
+      "categories": {
+        "title": "الفئات",
+        "total": "الإجمالي",
+        "listView": "قائمة",
+        "chartView": "مخطط"
+      },
+      "wrapped": {
+        "title": "الملخص",
+        "badgeCategory": "فئة",
+        "badgeFrequent": "متكرر",
+        "badgeRhythm": "إيقاع",
+        "badgeShape": "نمط",
+        "categoryAbove": "{{category}} أعلى بنسبة {{percent}}% من متوسط 3 أشهر",
+        "categoryBelow": "{{category}} أقل بنسبة {{percent}}% من متوسط 3 أشهر",
+        "vsAvg": "متوسط 3 أشهر:",
+        "frequentSentence": "سجّلت \"{{title}}\" {{count}} مرة",
+        "rhythmSentence": "أكثر أيامك إنفاقاً هو {{day}}",
+        "shapeSentence": "نصف مشترياتك أقل من",
+        "shapeSupport": "الوسيط من {{count}} مصروفاً"
+      },
+      "netWorth": {
+        "title": "صافي الثروة",
+        "byAccount": "حسب الحساب"
+      },
+      "calendar": {
+        "title": "التقويم",
+        "spentIn": "أُنفق في {{period}}",
+        "less": "أقل",
+        "more": "أكثر"
+      },
       "pendingNotice": "{{count}} المعاملات المعلقة مستبعدة من الإحصائيات",
       "pieToggle": {
         "expenses": "نفقات",
@@ -349,6 +410,12 @@
             "subtitle": "اسحب الأزرار لإعادة ترتيبها",
             "info": "يظهر هذا الترتيب في أزرار المعاملات على الشاشة الرئيسية"
           }
+        },
+        "weekStart": {
+          "label": "يبدأ الأسبوع يوم",
+          "auto": "تلقائي",
+          "sunday": "الأحد",
+          "monday": "الاثنين"
         },
         "buttonFeedback": {
           "label": "استجابة الأزرار",
@@ -761,28 +828,33 @@
         "title": "إدارة البيانات",
         "sections": {
           "export": "تصدير",
-          "import": "استيراد"
+          "import": "استيراد",
+          "history": "السجل"
         },
-        "exportJson": "تصدير نسخة احتياطية كاملة",
-        "exportJsonDesc": "حفظ نسخة احتياطية JSON كاملة على جهازك",
+        "fileNameLabel": "اسم الملف",
+        "fileNameHelper": "اتركه فارغاً لاستخدام الاسم الافتراضي. تتم إضافة الامتداد تلقائياً.",
+        "exportZip": "نسخة احتياطية كاملة (ZIP)",
+        "exportZipDesc": "يمكن استعادتها بالكامل لاحقاً. تتضمن ملفاتك المرفقة.",
+        "exportJson": "تصدير البيانات (JSON)",
+        "exportJsonDesc": "البيانات الأساسية فقط. الصور والملفات المرفقة غير مضمّنة.",
         "exportCsv": "تصدير المعاملات (CSV)",
-        "exportCsvDesc": "حفظ المعاملات غير المحذوفة كجدول بيانات",
+        "exportCsvDesc": "لا يمكن استخدامه للاستعادة. مثالي للفتح في تطبيقات جداول البيانات.",
         "exportSaved": "تم الحفظ على الجهاز",
         "exportSavedLocally": "تم الحفظ محلياً",
         "exportError": "فشل التصدير. يرجى المحاولة مرة أخرى.",
         "exportFileNotFound": "الملف الأصلي لم يعد موجوداً. يرجى التصدير مجدداً.",
         "importJson": "استعادة من نسخة احتياطية",
-        "importJsonDesc": "استبدال جميع البيانات من ملف نسخة احتياطية JSON",
+        "importJsonDesc": "استبدال جميع البيانات من ملف نسخة احتياطية JSON أو ZIP",
         "importSuccess": "تمت استعادة البيانات بنجاح",
         "importError": "فشلت الاستعادة",
-        "importInvalidFile": "الرجاء تحديد ملف النسخ الاحتياطي JSON",
+        "importRecovered": "تمت مقاطعة الاستيراد — تمت استعادة بياناتك.",
         "importParseError": "الملف المحدد ليس JSON صالحاً",
         "importValidationError": "ملف النسخ الاحتياطي JSON غير صالح",
         "importConfirm": {
-          "title": "استعادة من نسخة احتياطية؟",
-          "warning": "سيؤدي هذا إلى مسح جميع البيانات الحالية نهائياً واستبدالها بالنسخة الاحتياطية المحددة.",
+          "title": "استبدال جميع البيانات؟",
+          "warning": "سيتم مسح كل ما هو موجود حالياً في التطبيق واستبداله بمحتويات الملف الذي حددته. لا يمكن التراجع عن هذا.",
           "recordSummary": "{{count}} سجل في {{tables}} جداول",
-          "confirm": "استعادة",
+          "confirm": "استبدال",
           "cancel": "إلغاء"
         },
         "history": {

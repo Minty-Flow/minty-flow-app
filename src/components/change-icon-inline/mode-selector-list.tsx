@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next"
 
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { IconSvg } from "~/components/ui/icon-svg"
-import { Pressable } from "~/components/ui/pressable"
+import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 
@@ -22,7 +22,7 @@ export function ModeSelectorList({
   const { t } = useTranslation()
   return (
     <>
-      <Pressable
+      <ListItem
         style={({ pressed }: { pressed: boolean }) => [
           styles.item,
           pressed && styles.itemPressed,
@@ -40,8 +40,8 @@ export function ModeSelectorList({
           size={20}
           style={styles.itemChevron}
         />
-      </Pressable>
-      <Pressable
+      </ListItem>
+      <ListItem
         style={({ pressed }: { pressed: boolean }) => [
           styles.item,
           pressed && styles.itemPressed,
@@ -59,8 +59,8 @@ export function ModeSelectorList({
           size={20}
           style={styles.itemChevron}
         />
-      </Pressable>
-      <Pressable
+      </ListItem>
+      <ListItem
         style={({ pressed }: { pressed: boolean }) => [
           styles.item,
           pressed && styles.itemPressed,
@@ -78,7 +78,7 @@ export function ModeSelectorList({
           size={20}
           style={styles.itemChevron}
         />
-      </Pressable>
+      </ListItem>
     </>
   )
 }

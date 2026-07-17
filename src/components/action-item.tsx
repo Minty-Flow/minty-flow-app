@@ -4,7 +4,7 @@ import { StyleSheet } from "react-native-unistyles"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
-import { Pressable } from "~/components/ui/pressable"
+import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 
@@ -28,7 +28,7 @@ export function ActionItem({
   const { t } = useTranslation()
 
   return (
-    <Pressable
+    <ListItem
       style={() => [
         styles.actionItem,
         // state.pressed && styles.actionItemPressed,
@@ -64,17 +64,13 @@ export function ActionItem({
       ) : (
         <ChevronIcon direction="trailing" size={18} />
       )}
-    </Pressable>
+    </ListItem>
   )
 }
 
 const styles = StyleSheet.create((theme) => ({
   actionItem: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
   },
   // actionItemPressed: {
   //   opacity: 0.8,

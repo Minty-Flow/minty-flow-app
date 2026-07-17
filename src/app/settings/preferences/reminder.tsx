@@ -8,6 +8,7 @@ import {
   useDateTimePicker,
 } from "~/components/ui/date-time-picker"
 import { InfoBanner } from "~/components/ui/info-banner"
+import { ListItem } from "~/components/ui/list-item"
 import { PermissionBanner } from "~/components/ui/permission-banner"
 import { Pressable } from "~/components/ui/pressable"
 import { Switch } from "~/components/ui/switch"
@@ -120,7 +121,7 @@ export default function ReminderScreen() {
       />
 
       {/* Remind daily */}
-      <Pressable
+      <ListItem
         style={styles.settingRow}
         onPress={() => handleToggleDailyReminder(!isDailyReminderEnabled)}
       >
@@ -136,7 +137,7 @@ export default function ReminderScreen() {
           value={isDailyReminderEnabled === true}
           onValueChange={handleToggleDailyReminder}
         />
-      </Pressable>
+      </ListItem>
 
       {isDailyReminderEnabled && (
         <>
@@ -190,11 +191,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
   },
   settingRow: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
     gap: 16,
   },
   labelContainer: {

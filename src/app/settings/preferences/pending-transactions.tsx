@@ -5,8 +5,8 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { ChoiceChips } from "~/components/ui/chips"
 import { InfoBanner } from "~/components/ui/info-banner"
+import { ListItem } from "~/components/ui/list-item"
 import { PermissionBanner } from "~/components/ui/permission-banner"
-import { Pressable } from "~/components/ui/pressable"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -71,7 +71,7 @@ function ToggleRow({
   onToggle: () => void
 }) {
   return (
-    <Pressable style={styles.toggleSection} onPress={onToggle}>
+    <ListItem style={styles.toggleSection} onPress={onToggle}>
       <View style={styles.toggleHeader}>
         <Text style={styles.toggleTitle}>{title}</Text>
 
@@ -80,7 +80,7 @@ function ToggleRow({
       {description && (
         <Text style={styles.toggleDescription}>{description}</Text>
       )}
-    </Pressable>
+    </ListItem>
   )
 }
 
@@ -241,7 +241,8 @@ const styles = StyleSheet.create((theme) => ({
     padding: 20,
   },
   toggleSection: {
-    padding: 20,
+    flexDirection: "column",
+    alignItems: "stretch",
   },
   toggleHeader: {
     flexDirection: "row",

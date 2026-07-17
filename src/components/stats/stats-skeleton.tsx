@@ -9,13 +9,7 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { View } from "~/components/ui/view"
 
-function ShimmerBlock({
-  width,
-  height,
-}: {
-  width: number | string
-  height: number
-}) {
+function ShimmerBlock({ height, half }: { height: number; half?: boolean }) {
   const opacity = useSharedValue(0.3)
 
   useEffect(() => {
@@ -28,11 +22,7 @@ function ShimmerBlock({
 
   return (
     <Animated.View
-      style={[
-        styles.shimmer,
-        { width: width as number, height },
-        animatedStyle,
-      ]}
+      style={[styles.shimmer, half && styles.half, { height }, animatedStyle]}
     />
   )
 }
@@ -40,74 +30,34 @@ function ShimmerBlock({
 export function StatsSkeleton() {
   return (
     <View style={styles.container}>
-      {/* Date range selector skeleton */}
-      <View style={styles.chipRow}>
-        <ShimmerBlock width={80} height={36} />
-        <ShimmerBlock width={90} height={36} />
-        <ShimmerBlock width={100} height={36} />
-        <ShimmerBlock width={80} height={36} />
+      <View style={styles.halfRow}>
+        <ShimmerBlock height={110} half />
+        <ShimmerBlock height={110} half />
       </View>
-
-      {/* Range label */}
-      <View style={styles.rangeLabelRow}>
-        <ShimmerBlock width={180} height={16} />
+      <ShimmerBlock height={160} />
+      <ShimmerBlock height={72} />
+      <ShimmerBlock height={180} />
+      <View style={styles.halfRow}>
+        <ShimmerBlock height={120} half />
+        <ShimmerBlock height={120} half />
       </View>
-
-      {/* Hero cards row */}
-      <View style={styles.heroRow}>
-        <ShimmerBlock width={160} height={90} />
-        <ShimmerBlock width={160} height={90} />
-        <ShimmerBlock width={160} height={90} />
-      </View>
-
-      {/* Chart placeholder */}
-      <View style={styles.section}>
-        <ShimmerBlock width={120} height={16} />
-        <ShimmerBlock width="100%" height={220} />
-      </View>
-
-      {/* Category pie placeholder */}
-      <View style={styles.section}>
-        <ShimmerBlock width={160} height={16} />
-        <ShimmerBlock width="100%" height={200} />
-      </View>
-
-      {/* Averages row */}
-      <View style={styles.avgRow}>
-        <ShimmerBlock width="31%" height={80} />
-        <ShimmerBlock width="31%" height={80} />
-        <ShimmerBlock width="31%" height={80} />
-      </View>
+      <ShimmerBlock height={72} />
     </View>
   )
 }
 
 const styles = StyleSheet.create((theme) => ({
   container: {
-    gap: 16,
+    gap: 12,
+    paddingHorizontal: 20,
     paddingTop: 8,
   },
-  chipRow: {
-    flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: 16,
-  },
-  rangeLabelRow: {
-    paddingHorizontal: 16,
-  },
-  heroRow: {
+  halfRow: {
     flexDirection: "row",
     gap: 12,
-    paddingHorizontal: 16,
   },
-  section: {
-    gap: 12,
-    paddingHorizontal: 16,
-  },
-  avgRow: {
-    flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: 16,
+  half: {
+    flex: 1,
   },
   shimmer: {
     backgroundColor: theme.colors.secondary,

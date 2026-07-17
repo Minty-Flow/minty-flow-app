@@ -76,10 +76,8 @@ export interface BalanceTimelinePoint {
 }
 
 export interface DayOfWeekPoint {
-  /** 0 = Sunday … 6 = Saturday */
+  /** 0 = Sunday … 6 = Saturday — label via `getWeekdayLabel` at render time */
   day: number
-  /** Short label e.g. "Mon" */
-  dayLabel: string
   expense: number
   /** Normalized by count of that weekday in range */
   avgExpense: number
@@ -143,8 +141,6 @@ export interface CurrencyStats {
   previous: CurrencyPeriodStats | null
   /** Day-by-day breakdown for line chart */
   dailyData: DailyDataPoint[]
-  /** Day-by-day breakdown for previous period (comparison line) */
-  previousDailyData: DailyDataPoint[]
   /** Interval breakdown for bar chart (day/week/month depending on range) */
   intervalData: IntervalDataPoint[]
   /** Spending by category, sorted by expense desc */
@@ -173,6 +169,25 @@ export interface CurrencyStats {
   pendingSummary: PendingSummary | null
   /** Top 5 expense transactions by amount */
   topTransactions: TopTransactionItem[]
+}
+
+/** Extra aggregations for the Wrapped screen (separate fetch) */
+export interface WrappedInsights {
+  currency: string
+  /** Median in-range expense amount; null when no expenses */
+  medianPurchase: number | null
+  /** Most repeated expense title within the range */
+  mostFrequent: { title: string; count: number } | null
+  /** Top expense category vs its trailing 3-month average */
+  topCategoryTrend: {
+    categoryName: string
+    categoryIcon: string | null
+    categoryColorSchemeName: string | null
+    /** 3 trailing calendar months + current range, oldest first */
+    months: { label: string; total: number }[]
+    trailingAvg: number
+    currentTotal: number
+  } | null
 }
 
 /** Supplement data fetched independently of the date range */

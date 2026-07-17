@@ -361,10 +361,6 @@ const toastStyles = StyleSheet.create((theme) => ({
     minHeight: 60,
     pointerEvents: "auto",
     backgroundColor: theme.colors.secondary,
-    _web: {
-      boxShadow: theme.colors.boxShadow,
-      cursor: "pointer",
-    },
     _ios: {
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },

@@ -35,10 +35,6 @@
       "package": "com.mintyflow.tracker",
       "blockedPermissions": ["android.permission.ACTIVITY_RECOGNITION"]
     },
-    "web": {
-      "output": "static",
-      "favicon": "./src/assets/images/favicon.png"
-    },
     "plugins": [
       "./plugins/with-android-release-signing",
       "expo-router",

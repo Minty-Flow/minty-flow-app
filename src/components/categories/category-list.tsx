@@ -14,7 +14,6 @@ import type { Category } from "~/types/categories"
 import { NewEnum } from "~/types/new"
 import type { TransactionType } from "~/types/transactions"
 
-import { Separator } from "../ui/separator"
 import { CategoryRow } from "./category-row"
 
 interface CategoryListProps {
@@ -37,33 +36,30 @@ function CategoryListHeader({
   const { t } = useTranslation()
 
   return (
-    <>
-      <View style={styles.headerContainer}>
-        <Button
-          variant="secondary"
-          size="default"
-          onPress={onAddCategory}
-          style={styles.headerButton}
-        >
-          <IconSvg name="plus-outline" size={20} />
-          <Text variant="default" style={styles.headerButtonText}>
-            {t("components.categories.actions.addNew")}
-          </Text>
-        </Button>
-        <Button
-          variant="secondary"
-          size="default"
-          onPress={onAddFromPresets}
-          style={styles.headerButton}
-        >
-          <IconSvg name="category-plus-outline" size={20} />
-          <Text variant="default" style={styles.headerButtonText}>
-            {t("components.categories.actions.addFromPresets")}
-          </Text>
-        </Button>
-      </View>
-      <Separator />
-    </>
+    <View style={styles.headerContainer}>
+      <Button
+        variant="secondary"
+        size="default"
+        onPress={onAddCategory}
+        style={styles.headerButton}
+      >
+        <IconSvg name="plus-outline" size={20} />
+        <Text variant="default" style={styles.headerButtonText}>
+          {t("components.categories.actions.addNew")}
+        </Text>
+      </Button>
+      <Button
+        variant="secondary"
+        size="default"
+        onPress={onAddFromPresets}
+        style={styles.headerButton}
+      >
+        <IconSvg name="category-plus-outline" size={20} />
+        <Text variant="default" style={styles.headerButtonText}>
+          {t("components.categories.actions.addFromPresets")}
+        </Text>
+      </Button>
+    </View>
   )
 }
 
@@ -186,12 +182,11 @@ export const CategoryList = ({
 const styles = StyleSheet.create((theme) => ({
   listContent: {
     paddingBottom: 100,
+    paddingHorizontal: 20,
     gap: 10,
   },
   headerContainer: {
     paddingVertical: 10,
-    paddingHorizontal: 20,
-
     gap: 10,
   },
   headerButton: {
@@ -207,5 +202,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   emptyWrapper: {
     flex: 1,
+    marginHorizontal: 20,
   },
 }))
