@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgRestore = (props: SvgProps) => (
   <Svg
     width={24}
@@ -17,5 +16,5 @@ const SvgRestore = (props: SvgProps) => (
     <Path d="M3 4.001v5h5" />
     <Path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
   </Svg>
-)
-export default SvgRestore
+);
+export default SvgRestore;

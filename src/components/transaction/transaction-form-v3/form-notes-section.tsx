@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next"
-import { EnrichedTextInput } from "react-native-enriched"
+import { EnrichedTextInput } from "react-native-enriched-html"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"

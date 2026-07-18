@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgChevronUp = (props: SvgProps) => (
   <Svg
     width={24}
@@ -15,5 +14,5 @@ const SvgChevronUp = (props: SvgProps) => (
   >
     <Path d="M6 15l6 -6l6 6" />
   </Svg>
-)
-export default SvgChevronUp
+);
+export default SvgChevronUp;

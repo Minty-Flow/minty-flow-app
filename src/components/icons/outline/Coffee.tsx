@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgCoffee = (props: SvgProps) => (
   <Svg
     width={24}
@@ -19,5 +18,5 @@ const SvgCoffee = (props: SvgProps) => (
     <Path d="M3 10h14v5a6 6 0 0 1 -6 6h-2a6 6 0 0 1 -6 -6v-5" />
     <Path d="M16.746 16.726a3 3 0 1 0 .252 -5.555" />
   </Svg>
-)
-export default SvgCoffee
+);
+export default SvgCoffee;

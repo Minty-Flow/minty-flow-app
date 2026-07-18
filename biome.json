@@ -14,7 +14,8 @@
       "!build",
       "!src/utils/logger.ts",
       "!scripts/*",
-      "!unused-icons"
+      "!src/components/icons/filled",
+      "!src/components/icons/outline"
     ]
   },
   "formatter": {

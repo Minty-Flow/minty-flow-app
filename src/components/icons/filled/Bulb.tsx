@@ -1,14 +1,7 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgBulb = (props: SvgProps) => (
-  <Svg
-    width={24}
-    height={24}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    {...props}
-  >
+  <Svg width={24} height={24} viewBox="0 0 24 24" fill="currentColor" {...props}>
     <Path d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z" />
     <Path d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z" />
     <Path d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z" />
@@ -17,5 +10,5 @@ const SvgBulb = (props: SvgProps) => (
     <Path d="M14 18a1 1 0 0 1 1 1a3 3 0 0 1 -6 0a1 1 0 0 1 .883 -.993l.117 -.007h4z" />
     <Path d="M12 6a6 6 0 0 1 3.6 10.8a1 1 0 0 1 -.471 .192l-.129 .008h-6a1 1 0 0 1 -.6 -.2a6 6 0 0 1 3.6 -10.8z" />
   </Svg>
-)
-export default SvgBulb
+);
+export default SvgBulb;

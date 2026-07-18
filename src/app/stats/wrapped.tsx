@@ -11,6 +11,7 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { on } from "~/database/events"
 import { fetchWrappedInsights } from "~/database/services-sqlite/stats-service"
+import { useDebouncedCallback } from "~/hooks/use-debounced-callback"
 import type {
   CurrencyStats,
   StatsDateRange,
@@ -78,7 +79,6 @@ function WrappedContent({
   const { t } = useTranslation()
   const [insights, setInsights] = useState<WrappedInsights[]>([])
   const fetchIdRef = useRef(0)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const fetchInsights = useCallback((range: StatsDateRange) => {
     const fetchId = ++fetchIdRef.current
@@ -93,19 +93,19 @@ function WrappedContent({
     fetchInsights(dateRange)
   }, [dateRange, fetchInsights])
 
+  const debouncedFetchInsights = useDebouncedCallback(fetchInsights, 300)
+
   // These cards read straight from SQLite rather than `useStats`, so nothing
   // else re-runs them when a transaction changes.
   useEffect(() => {
-    const unsub = on("transactions:dirty", () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      debounceRef.current = setTimeout(() => fetchInsights(dateRange), 300)
-    })
+    const unsub = on("transactions:dirty", () =>
+      debouncedFetchInsights(dateRange),
+    )
     return () => {
       fetchIdRef.current++
       unsub()
-      if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [dateRange, fetchInsights])
+  }, [dateRange, debouncedFetchInsights])
 
   const insight = insights.find((i) => i.currency === stats.currency)
 

@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgPageBreak = (props: SvgProps) => (
   <Svg
     width={24}
@@ -18,5 +17,5 @@ const SvgPageBreak = (props: SvgProps) => (
     <Path d="M3 14h3m4.5 0h3m4.5 0h3" />
     <Path d="M5 10v-5a2 2 0 0 1 2 -2h7l5 5v2" />
   </Svg>
-)
-export default SvgPageBreak
+);
+export default SvgPageBreak;

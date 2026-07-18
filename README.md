@@ -86,6 +86,34 @@ pnpm ios        # iOS (macOS only)
 
 **Pre-commit hook** (husky): runs `pnpm structure` → `pnpm lint:fix` → `pnpm types` automatically. All three must pass.
 
+### Icons
+
+Icons are generated from [tabler-icons](https://github.com/tabler/tabler-icons)
+via `svgr` into `src/components/icons/{filled,outline}`. That folder holds the
+full tabler set (every icon, used or not) as the single source of truth —
+`src/components/ui/icon-svg.tsx` only imports the ones it actually uses, so
+unused icons sit on disk but never enter the bundle.
+
+One-time setup — clone tabler-icons as a sibling of this repo, shallow and
+sparse so you only pull the `icons/` folder, not the whole tabler monorepo history:
+
+```bash
+git clone --depth=1 --filter=blob:none --sparse https://github.com/tabler/tabler-icons.git
+cd tabler-icons
+git sparse-checkout set icons
+cd ..
+```
+
+To pick up new/updated tabler icons:
+
+```bash
+cd tabler-icons && git pull && cd ..
+pnpm icons:sync
+```
+
+To use a new icon, add one import + one `ICON_MAP` entry in `icon-svg.tsx` —
+the file is already on disk after `icons:sync`.
+
 ---
 
 ## Support
