@@ -7,7 +7,7 @@ import { AttachmentPreviewModal } from "~/components/transaction/attachment-prev
 import { Button } from "~/components/ui/button"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { IconSvg } from "~/components/ui/icon-svg"
-import { Pressable } from "~/components/ui/pressable"
+import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TransactionAttachment } from "~/types/transactions"
@@ -74,7 +74,7 @@ export function FormAttachmentsSection({
           <View style={transactionFormStyles.attachmentsList}>
             {list.map((a) => (
               <View key={a.uri} style={transactionFormStyles.attachmentRow}>
-                <Pressable
+                <ListItem
                   style={transactionFormStyles.attachmentRowMain}
                   onPress={() => {
                     if (isImageExtension(a.ext)) {
@@ -105,7 +105,7 @@ export function FormAttachmentsSection({
                       {formatCreatedAt(a.addedAt)} • {formatFileSize(a.size)}
                     </Text>
                   </View>
-                </Pressable>
+                </ListItem>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -124,7 +124,7 @@ export function FormAttachmentsSection({
         )}
 
         {/* Add files toggle */}
-        <Pressable
+        <ListItem
           style={transactionFormStyles.notesHeader}
           onPress={onToggleAddFiles}
           accessibilityLabel={t(
@@ -155,11 +155,11 @@ export function FormAttachmentsSection({
             size={20}
             style={transactionFormStyles.chevronIcon}
           />
-        </Pressable>
+        </ListItem>
 
         {addFilesExpanded && (
           <View style={transactionFormStyles.addFilesOptionsContainer}>
-            <Pressable
+            <ListItem
               style={transactionFormStyles.addFilesOptionRow}
               onPress={onSelectFromFiles}
             >
@@ -180,8 +180,8 @@ export function FormAttachmentsSection({
                 size={20}
                 style={transactionFormStyles.chevronIcon}
               />
-            </Pressable>
-            <Pressable
+            </ListItem>
+            <ListItem
               style={transactionFormStyles.addFilesOptionRow}
               onPress={onTakePhoto}
             >
@@ -202,8 +202,8 @@ export function FormAttachmentsSection({
                 size={20}
                 style={transactionFormStyles.chevronIcon}
               />
-            </Pressable>
-            <Pressable
+            </ListItem>
+            <ListItem
               style={transactionFormStyles.addFilesOptionRow}
               onPress={onSelectMultipleMedia}
             >
@@ -224,8 +224,8 @@ export function FormAttachmentsSection({
                 size={20}
                 style={transactionFormStyles.chevronIcon}
               />
-            </Pressable>
-            <Pressable
+            </ListItem>
+            <ListItem
               style={[
                 transactionFormStyles.addFilesOptionRow,
                 transactionFormStyles.addFilesOptionRowLast,
@@ -249,7 +249,7 @@ export function FormAttachmentsSection({
                 size={20}
                 style={transactionFormStyles.chevronIcon}
               />
-            </Pressable>
+            </ListItem>
           </View>
         )}
       </View>

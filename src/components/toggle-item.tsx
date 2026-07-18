@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg, type IconSvgName } from "./ui/icon-svg"
-import { Pressable } from "./ui/pressable"
+import { ListItem } from "./ui/list-item"
 import { Switch } from "./ui/switch"
 import { Text } from "./ui/text"
 import { View } from "./ui/view"
@@ -22,7 +22,7 @@ export const ToggleItem = ({
   onValueChange,
 }: ToggleItemProps) => {
   return (
-    <Pressable style={styles.toggleItem} onPress={() => onValueChange(!value)}>
+    <ListItem style={styles.toggleItem} onPress={() => onValueChange(!value)}>
       <View style={styles.toggleItemIcon}>
         <IconSvg name={icon} size={20} />
       </View>
@@ -33,16 +33,12 @@ export const ToggleItem = ({
         )}
       </View>
       <Switch value={value} onValueChange={onValueChange} />
-    </Pressable>
+    </ListItem>
   )
 }
 
 const styles = StyleSheet.create((theme) => ({
   toggleItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
     minHeight: 56,
     backgroundColor: theme.colors.surface,
   },

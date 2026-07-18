@@ -118,6 +118,7 @@ const ICON_MAP = {
   tags: FilledIcons.Tags,
   "tag-plus-outline": OutlineIcons.TagPlus,
   "coin-pound": FilledIcons.CoinPound,
+  "cart-outline": OutlineIcons.ShoppingCart,
   "shopping-cart": FilledIcons.ShoppingCart,
   gift: FilledIcons.Gift,
   basket: FilledIcons.Basket,
@@ -127,6 +128,7 @@ const ICON_MAP = {
   // Devices & System
   "plug-outline": OutlineIcons.Plug,
   "database-outline": OutlineIcons.Database,
+  database: FilledIcons.Database,
   "database-export-outline": OutlineIcons.DatabaseExport,
   "database-import-outline": OutlineIcons.DatabaseImport,
   dialpad: FilledIcons.Dialpad,

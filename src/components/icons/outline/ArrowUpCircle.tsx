@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgArrowUpCircle = (props: SvgProps) => (
   <Svg
     width={24}
@@ -17,5 +16,5 @@ const SvgArrowUpCircle = (props: SvgProps) => (
     <Path d="M15 6l-3 -3l-3 3" />
     <Path d="M12 17a2 2 0 1 0 0 4a2 2 0 0 0 0 -4" />
   </Svg>
-)
-export default SvgArrowUpCircle
+);
+export default SvgArrowUpCircle;

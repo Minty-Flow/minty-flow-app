@@ -34,7 +34,9 @@ export function DynamicIcon({
   const isRaw = variant === "raw"
 
   // ---------- Image ----------
-  if (icon && isImageUrl(icon)) {
+  // Local picked images (profile/avatars) arrive as file:// URIs, which isImageUrl
+  // rejects on purpose (clipboard-paste guard). They're trusted here, so accept them.
+  if (icon && (isImageUrl(icon) || icon.startsWith("file://"))) {
     if (isRaw) {
       return (
         <Image

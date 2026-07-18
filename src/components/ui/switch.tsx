@@ -1,5 +1,6 @@
 import { Host } from "@expo/ui"
 import { Switch as ExpoSwitchAndroid } from "@expo/ui/jetpack-compose"
+import { size } from "@expo/ui/jetpack-compose/modifiers"
 import { Toggle } from "@expo/ui/swift-ui"
 import {
   disabled as disabledModifier,
@@ -9,7 +10,7 @@ import {
 import { Platform, Switch as RNSwitch } from "react-native"
 import { useUnistyles } from "react-native-unistyles"
 
-export interface SwitchProps {
+interface SwitchProps {
   value?: boolean
   onValueChange?: (value: boolean) => void
   disabled?: boolean
@@ -48,6 +49,7 @@ export const Switch = ({
           value={!!value}
           onCheckedChange={onValueChange}
           enabled={!disabled}
+          modifiers={[size(42, 26)]}
           colors={{
             checkedThumbColor: checkedThumb,
             checkedTrackColor: checkedTrack,

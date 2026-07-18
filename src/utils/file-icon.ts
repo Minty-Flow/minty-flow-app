@@ -20,6 +20,7 @@ export function isImageExtension(ext: string): boolean {
 
 /** Map file extension (lowercase, no dot) to MIME type for opening in external apps. */
 const EXT_TO_MIME: Record<string, string> = {
+  json: "application/json",
   pdf: "application/pdf",
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
@@ -59,9 +60,7 @@ export function getFileExtension(nameOrUri: string): string {
 }
 
 /**
- * Map file extension to DynamicIcon/IconSvg name for attachment display.
- * Uses the same logic as the design tip (FileImage, FileSpreadsheet, etc.)
- * mapped to MaterialCommunityIcons names.
+ * Map file extension to IconSvg name for attachment display.
  */
 export function getFileIconForExtension(ext: string): IconSvgName {
   switch (ext) {
@@ -78,11 +77,6 @@ export function getFileIconForExtension(ext: string): IconSvgName {
     case "ods":
     case "csv":
       return "file-outline"
-    // case "doc":
-    // case "docx":
-    // case "odt":
-    // case "txt":
-    //   return "file-document"
     case "pdf":
       return "file-type-pdf-outline"
     case "zip":
@@ -100,10 +94,6 @@ export function getFileIconForExtension(ext: string): IconSvgName {
     case "webm":
     case "flv":
       return "video-outline"
-    // case "ppt":
-    // case "pptx":
-    // case "odp":
-    //   return "file-presentation-box"
     default:
       return "file-outline"
   }

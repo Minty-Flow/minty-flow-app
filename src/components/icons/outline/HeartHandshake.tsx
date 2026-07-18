@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgHeartHandshake = (props: SvgProps) => (
   <Svg
     width={24}
@@ -18,5 +17,5 @@ const SvgHeartHandshake = (props: SvgProps) => (
     <Path d="M12.5 15.5l2 2" />
     <Path d="M15 13l2 2" />
   </Svg>
-)
-export default SvgHeartHandshake
+);
+export default SvgHeartHandshake;

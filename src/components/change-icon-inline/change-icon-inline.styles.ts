@@ -25,11 +25,7 @@ export const changeIconInlineStyles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.secondary,
   },
   item: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
   },
   itemPressed: {
     opacity: 0.7,

@@ -9,6 +9,7 @@ import { View } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/ui/icon-svg"
+import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { useScrollIntoView } from "~/hooks/use-scroll-into-view"
@@ -70,7 +71,7 @@ export function CategoryTypeInline({
 
   return (
     <View ref={wrapperRef} style={styles.wrapper}>
-      <Pressable
+      <ListItem
         style={styles.triggerRow}
         onPress={handleToggle}
         disabled={!editable}
@@ -94,7 +95,7 @@ export function CategoryTypeInline({
             />
           )}
         </View>
-      </Pressable>
+      </ListItem>
 
       {editable && expanded && (
         <View style={styles.panel}>
@@ -136,11 +137,7 @@ const styles = StyleSheet.create((theme) => ({
     width: "100%",
   },
   triggerRow: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
   },
   triggerLeft: {
     flexDirection: "row",

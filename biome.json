@@ -14,7 +14,8 @@
       "!build",
       "!src/utils/logger.ts",
       "!scripts/*",
-      "!unused-icons"
+      "!src/components/icons/filled",
+      "!src/components/icons/outline"
     ]
   },
   "formatter": {
@@ -29,6 +30,29 @@
       "suspicious": {
         "noUnknownAtRules": "off",
         "noConsole": "error"
+      },
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "date-fns": {
+                "importNames": [
+                  "startOfWeek",
+                  "endOfWeek",
+                  "isSameWeek",
+                  "isThisWeek",
+                  "getWeek",
+                  "getISOWeek",
+                  "eachWeekOfInterval",
+                  "getWeekOfMonth",
+                  "startOfWeekYear"
+                ],
+                "message": "Week boundaries and week numbering depend on the user's week-start setting; these default to Sunday (or, for getISOWeek, hardcode Monday). Use startOfAppWeek / endOfAppWeek / isSameAppWeek / getAppWeek from ~/utils/time-utils, or add a wrapper there."
+              }
+            }
+          }
+        }
       }
     },
     "domains": {
@@ -36,6 +60,18 @@
       "react": "recommended"
     }
   },
+  "overrides": [
+    {
+      "includes": ["src/utils/time-utils.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": "off"
+          }
+        }
+      }
+    }
+  ],
   "assist": {
     "actions": {
       "source": {

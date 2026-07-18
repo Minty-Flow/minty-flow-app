@@ -87,11 +87,7 @@ export const loanModifyStyles = StyleSheet.create((theme) => ({
   },
   // Due date row inside settings list
   dueDateSettingsRow: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
   },
   dueDateLeft: {
     flexDirection: "row",

@@ -22,7 +22,7 @@ import { View } from "~/components/ui/view"
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { CategoryBreakdownItem } from "~/types/stats"
 
-import { ChartContainer } from "./chart-container"
+import { DeltaBadge } from "./delta-badge"
 
 interface StatsCategoryPieProps {
   breakdown: CategoryBreakdownItem[]
@@ -108,6 +108,7 @@ export function StatsCategoryPie({
     label: string
     value: number
     color: string
+    prevValue: number | undefined
   } | null>(null)
 
   // Captures startAngle/endAngle for each slice so the tap handler can do
@@ -150,9 +151,13 @@ export function StatsCategoryPie({
     const topSlices = sorted.slice(0, maxSlices)
     const otherSlices = sorted.slice(maxSlices)
 
+    const getPrevValue = (b: CategoryBreakdownItem) =>
+      mode === "expense" ? b.prevTotalExpense : undefined
+
     const items: {
       label: string
       value: number
+      prevValue: number | undefined
       color: string
       icon: string | null
       colorSchemeName: string | null
@@ -162,6 +167,7 @@ export function StatsCategoryPie({
           ? t("screens.stats.chart.uncategorizedLabel")
           : item.categoryName,
       value: getValue(item),
+      prevValue: getPrevValue(item),
       color: getCategoryColor(item, i, fallbackPalette),
       icon: item.categoryIcon,
       colorSchemeName: item.categoryColorSchemeName,
@@ -172,6 +178,10 @@ export function StatsCategoryPie({
       items.push({
         label: "Other",
         value: otherTotal,
+        prevValue:
+          mode === "expense"
+            ? otherSlices.reduce((s, b) => s + b.prevTotalExpense, 0)
+            : undefined,
         color: theme.colors.semantic.semi,
         icon: null,
         colorSchemeName: null,
@@ -253,6 +263,7 @@ export function StatsCategoryPie({
             label: hit.label,
             value: hit.value,
             color: hit.color,
+            prevValue: hit.prevValue,
           })
         }
       }
@@ -302,144 +313,216 @@ export function StatsCategoryPie({
   )
 
   return (
-    <ChartContainer
-      title={t("screens.stats.chart.spendingByCategory")}
-      legend={segmentedControl}
-      legendBelow
-    >
-      {isPieEmpty ? (
-        <EmptyState
-          variant="compact"
-          icon="chart-pie"
-          title={t("screens.stats.pieToggle.noData")}
-        />
-      ) : (
-        <>
-          {/* GestureDetector wraps only the chart area so touches outside
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text variant="small" style={styles.title}>
+          {t("screens.stats.chart.spendingByCategory")}
+        </Text>
+        <View style={styles.legendCentered}>{segmentedControl}</View>
+      </View>
+
+      {/* Groups the body so the container's gap applies above it, not between
+          the total row, the pie and the legend. */}
+      <View>
+        {isPieEmpty ? (
+          <EmptyState
+            variant="compact"
+            icon="chart-pie"
+            title={t("screens.stats.pieToggle.noData")}
+          />
+        ) : (
+          <>
+            <View style={styles.totalRow}>
+              <Text variant="muted">{t("screens.stats.categories.total")}</Text>
+              <Money
+                value={total}
+                currency={currency}
+                tone={mode === "expense" ? "expense" : "income"}
+                showSign
+                compact
+                style={styles.totalAmount}
+              />
+            </View>
+
+            {/* GestureDetector wraps only the chart area so touches outside
               the 200×200 canvas don't accidentally register as slice hits */}
-          <View style={styles.chartWrapper}>
-            <GestureDetector gesture={tapGesture}>
-              <View style={styles.pieContainer}>
-                <PolarChart
-                  data={pieData}
-                  labelKey="label"
-                  valueKey="value"
-                  colorKey="color"
-                >
-                  <Pie.Chart innerRadius="50%">
-                    {({ slice }) => {
-                      // Capture angular span for tap hit-testing
-                      const index = pieData.findIndex(
-                        (d) => d.label === slice.label,
-                      )
-                      if (index !== -1) {
-                        pieSlicesRef.current[index] = {
-                          startAngle: slice.startAngle,
-                          endAngle: slice.endAngle,
-                        }
-                      }
-                      const isSelected =
-                        selectedSlice !== null && selectedSlice.index === index
-                      return (
-                        <PieSliceAnimated
-                          sliceIndex={index}
-                          selectedIndexSv={selectedIndexSv}
-                          isSelected={isSelected}
-                          surfaceColor={theme.colors.surface}
-                        />
-                      )
-                    }}
-                  </Pie.Chart>
-                </PolarChart>
-
-                {/* Center label — always shows total */}
-                <View style={styles.centerLabel}>
-                  <Money
-                    value={total}
-                    currency={currency}
-                    tone={mode === "expense" ? "expense" : "income"}
-                    variant="small"
-                    compact
-                    style={styles.centerAmount}
-                  />
-                  <Text variant="muted" style={styles.centerCurrency}>
-                    {currency}
-                  </Text>
-                </View>
-              </View>
-            </GestureDetector>
-          </View>
-
-          {/* Legend list — each row taps to highlight the corresponding slice */}
-          <View style={styles.legendList}>
-            {legendItems.map((item) => {
-              const colorScheme = getThemeStrict(item.colorSchemeName)
-              const percent = total > 0 ? (item.value / total) * 100 : 0
-              const itemIndex = pieData.findIndex((d) => d.label === item.label)
-              const isSelected =
-                selectedSlice !== null && selectedSlice.index === itemIndex
-              return (
-                <Pressable
-                  key={item.label}
-                  onPress={() => {
-                    if (itemIndex === -1) return
-                    if (selectedSlice?.index === itemIndex) {
-                      setSelectedSlice(null)
-                    } else {
-                      setSelectedSlice({
-                        index: itemIndex,
-                        label: item.label,
-                        value: item.value,
-                        color: item.color,
-                      })
-                    }
-                  }}
-                  style={[
-                    styles.legendRow,
-                    selectedSlice !== null &&
-                      !isSelected &&
-                      styles.legendRowDimmed,
-                  ]}
-                >
-                  <View
-                    style={[styles.legendDot, { backgroundColor: item.color }]}
-                  />
-                  {item.icon ? (
-                    <DynamicIcon
-                      icon={item.icon}
-                      size={14}
-                      colorScheme={colorScheme}
-                      variant="raw"
-                    />
-                  ) : null}
-                  <Text
-                    variant="small"
-                    style={styles.legendName}
-                    numberOfLines={1}
+            <View style={styles.chartWrapper}>
+              <GestureDetector gesture={tapGesture}>
+                <View style={styles.pieContainer}>
+                  <PolarChart
+                    data={pieData}
+                    labelKey="label"
+                    valueKey="value"
+                    colorKey="color"
                   >
-                    {item.label}
-                  </Text>
-                  <Text variant="muted" style={styles.legendPercent}>
-                    {percent.toFixed(1)}%
-                  </Text>
-                  <Money
-                    value={item.value}
-                    currency={currency}
-                    tone="transfer"
-                    variant="muted"
-                    compact
-                  />
-                </Pressable>
-              )
-            })}
-          </View>
-        </>
-      )}
-    </ChartContainer>
+                    <Pie.Chart innerRadius="50%">
+                      {({ slice }) => {
+                        // Capture angular span for tap hit-testing
+                        const index = pieData.findIndex(
+                          (d) => d.label === slice.label,
+                        )
+                        if (index !== -1) {
+                          pieSlicesRef.current[index] = {
+                            startAngle: slice.startAngle,
+                            endAngle: slice.endAngle,
+                          }
+                        }
+                        const isSelected =
+                          selectedSlice !== null &&
+                          selectedSlice.index === index
+                        return (
+                          <PieSliceAnimated
+                            sliceIndex={index}
+                            selectedIndexSv={selectedIndexSv}
+                            isSelected={isSelected}
+                            surfaceColor={theme.colors.surface}
+                          />
+                        )
+                      }}
+                    </Pie.Chart>
+                  </PolarChart>
+
+                  {/* Center label — selected slice, or total when nothing selected */}
+                  <View style={styles.centerLabel}>
+                    {selectedSlice ? (
+                      <>
+                        <Text
+                          variant="muted"
+                          style={styles.centerCurrency}
+                          numberOfLines={1}
+                        >
+                          {selectedSlice.label}
+                        </Text>
+                        <Money
+                          value={selectedSlice.value}
+                          currency={currency}
+                          tone={mode === "expense" ? "expense" : "income"}
+                          variant="small"
+                          compact
+                          style={styles.centerAmount}
+                        />
+                        <DeltaBadge
+                          current={selectedSlice.value}
+                          previous={selectedSlice.prevValue}
+                          invertedSentiment={mode === "expense"}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <Money
+                          value={total}
+                          currency={currency}
+                          tone={mode === "expense" ? "expense" : "income"}
+                          variant="small"
+                          compact
+                          style={styles.centerAmount}
+                        />
+                        <Text variant="muted" style={styles.centerCurrency}>
+                          {currency}
+                        </Text>
+                      </>
+                    )}
+                  </View>
+                </View>
+              </GestureDetector>
+            </View>
+
+            {/* Legend list — each row taps to highlight the corresponding slice */}
+            <View style={styles.legendList}>
+              {legendItems.map((item) => {
+                const colorScheme = getThemeStrict(item.colorSchemeName)
+                const percent = total > 0 ? (item.value / total) * 100 : 0
+                const itemIndex = pieData.findIndex(
+                  (d) => d.label === item.label,
+                )
+                const isSelected =
+                  selectedSlice !== null && selectedSlice.index === itemIndex
+                return (
+                  <Pressable
+                    key={item.label}
+                    onPress={() => {
+                      if (itemIndex === -1) return
+                      if (selectedSlice?.index === itemIndex) {
+                        setSelectedSlice(null)
+                      } else {
+                        setSelectedSlice({
+                          index: itemIndex,
+                          label: item.label,
+                          value: item.value,
+                          color: item.color,
+                          prevValue: item.prevValue,
+                        })
+                      }
+                    }}
+                    style={[
+                      styles.legendRow,
+                      selectedSlice !== null &&
+                        !isSelected &&
+                        styles.legendRowDimmed,
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.legendDot,
+                        { backgroundColor: item.color },
+                      ]}
+                    />
+                    {item.icon ? (
+                      <DynamicIcon
+                        icon={item.icon}
+                        size={14}
+                        colorScheme={colorScheme}
+                        variant="raw"
+                      />
+                    ) : null}
+                    <Text
+                      variant="small"
+                      style={styles.legendName}
+                      numberOfLines={1}
+                    >
+                      {item.label}
+                    </Text>
+                    <Text variant="muted" style={styles.legendPercent}>
+                      {percent.toFixed(1)}%
+                    </Text>
+                    <Money
+                      value={item.value}
+                      currency={currency}
+                      tone="transfer"
+                      variant="muted"
+                      compact
+                    />
+                  </Pressable>
+                )
+              })}
+            </View>
+          </>
+        )}
+      </View>
+    </View>
   )
 }
 
 const styles = StyleSheet.create((theme) => ({
+  container: {
+    backgroundColor: theme.colors.secondary,
+    borderRadius: theme.radius,
+    padding: 16,
+    gap: 12,
+    borderCurve: "continuous",
+  },
+  header: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  title: {
+    fontWeight: "600",
+  },
+  legendCentered: {
+    alignSelf: "stretch",
+    alignItems: "center",
+  },
   segmentRow: {
     flexDirection: "row",
     gap: 6,
@@ -477,6 +560,16 @@ const styles = StyleSheet.create((theme) => ({
     bottom: 0,
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 56,
+    gap: 2,
+  },
+  totalRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  totalAmount: {
+    fontWeight: "700",
   },
   centerAmount: {
     fontWeight: "700",

@@ -5,7 +5,7 @@ import { StyleSheet } from "react-native-unistyles"
 
 import type { IconSvgName } from "~/components/ui/icon-svg"
 import { IconSvg } from "~/components/ui/icon-svg"
-import { Pressable } from "~/components/ui/pressable"
+import { ListItem } from "~/components/ui/list-item"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -105,7 +105,7 @@ export default function PrivacyScreen() {
     >
       <View style={styles.container}>
         {settings.map((setting) => (
-          <Pressable
+          <ListItem
             key={setting.id}
             style={[
               styles.settingRow,
@@ -131,7 +131,7 @@ export default function PrivacyScreen() {
               onValueChange={setting.onValueChange}
               disabled={setting.disabled}
             />
-          </Pressable>
+          </ListItem>
         ))}
       </View>
     </ScrollView>
@@ -150,11 +150,7 @@ const styles = StyleSheet.create((theme) => ({
     marginBlock: 10,
   },
   settingRow: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
     gap: 16,
   },
   iconContainer: {

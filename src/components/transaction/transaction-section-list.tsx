@@ -180,7 +180,6 @@ export function TransactionSectionList({
     <SectionList
       sections={sections}
       ListHeaderComponent={renderHeader}
-      ListHeaderComponentStyle={styles.ListHeaderCompStyle}
       ListEmptyComponent={renderEmptyList}
       keyExtractor={keyExtractor}
       renderItem={renderItem}
@@ -279,10 +278,5 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "700",
     color: theme.colors.onSecondary,
     fontSize: theme.typography.labelMedium.fontSize,
-  },
-
-  ListHeaderCompStyle: {
-    marginHorizontal: 20,
-    borderRadius: theme.radius,
   },
 }))

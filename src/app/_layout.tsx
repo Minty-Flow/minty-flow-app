@@ -97,6 +97,28 @@ export default function RootLayout() {
                 options={{ headerShown: false }}
               />
 
+              {/* stats detail screens */}
+              <Stack.Screen
+                name="stats/cash-flow"
+                options={{ title: t("screens.stats.cashFlow.title") }}
+              />
+              <Stack.Screen
+                name="stats/categories"
+                options={{ title: t("screens.stats.categories.title") }}
+              />
+              <Stack.Screen
+                name="stats/wrapped"
+                options={{ title: t("screens.stats.wrapped.title") }}
+              />
+              <Stack.Screen
+                name="stats/net-worth"
+                options={{ title: t("screens.stats.netWorth.title") }}
+              />
+              <Stack.Screen
+                name="stats/calendar"
+                options={{ title: t("screens.stats.calendar.title") }}
+              />
+
               {/* settings screens */}
               <Stack.Screen
                 name="settings/edit-profile"

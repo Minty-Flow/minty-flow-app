@@ -4,7 +4,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { Money } from "~/components/money"
 import { IconSvg } from "~/components/ui/icon-svg"
-import { Pressable } from "~/components/ui/pressable"
+import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import {
@@ -76,7 +76,7 @@ export default function MoneyFormattingScreen() {
           const isLast = index === formatOptions.length - 1
           return (
             <View key={option.value} native>
-              <Pressable
+              <ListItem
                 style={styles.row}
                 onPress={() => setCurrencyLook(option.value)}
               >
@@ -99,7 +99,7 @@ export default function MoneyFormattingScreen() {
                     color={theme.colors.primary}
                   />
                 ) : null}
-              </Pressable>
+              </ListItem>
               {!isLast ? <View native style={styles.divider} /> : null}
             </View>
           )
@@ -149,11 +149,7 @@ const styles = StyleSheet.create((theme) => ({
     overflow: "hidden",
   },
   row: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
     minHeight: 56,
   },
   rowContent: {

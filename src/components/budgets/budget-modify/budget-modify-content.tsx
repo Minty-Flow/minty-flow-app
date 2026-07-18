@@ -18,7 +18,7 @@ import {
 } from "~/components/ui/date-time-picker"
 import { IconSvg } from "~/components/ui/icon-svg"
 import { Input } from "~/components/ui/input"
-import { Pressable } from "~/components/ui/pressable"
+import { ListItem } from "~/components/ui/list-item"
 import { Separator } from "~/components/ui/separator"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
@@ -40,6 +40,7 @@ import { getThemeStrict } from "~/styles/theme/registry"
 import { BudgetPeriodEnum } from "~/types/budgets"
 import { NewEnum } from "~/types/new"
 import { logger } from "~/utils/logger"
+import { formatShortMonthDayYear } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
 import { BudgetFormFooter } from "./budget-form-footer"
@@ -105,6 +106,7 @@ export function BudgetModifyContent({
   const watchedAlertThreshold = watch("alertThreshold")
   const watchedStartDate = watch("startDate")
   const watchedEndDate = watch("endDate")
+  const isActive = watch("isActive")
 
   const navigation = useNavigation()
   const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
@@ -217,19 +219,11 @@ export function BudgetModifyContent({
 
   // Formatted display strings for the date rows
   const formattedStartDate = watchedStartDate
-    ? new Date(watchedStartDate).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
+    ? formatShortMonthDayYear(watchedStartDate)
     : null
 
   const formattedEndDate = watchedEndDate
-    ? new Date(watchedEndDate).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
+    ? formatShortMonthDayYear(watchedEndDate)
     : null
 
   if (!isAddMode && !budget) {
@@ -359,7 +353,7 @@ export function BudgetModifyContent({
             {watchedPeriod === BudgetPeriodEnum.CUSTOM && (
               <>
                 {/* Start Date row */}
-                <Pressable
+                <ListItem
                   style={budgetModifyStyles.switchRow}
                   onPress={() =>
                     startDatePicker.open(new Date(watchedStartDate))
@@ -380,10 +374,10 @@ export function BudgetModifyContent({
                   >
                     {formattedStartDate ?? "—"}
                   </Text>
-                </Pressable>
+                </ListItem>
 
                 {/* End Date row */}
-                <Pressable
+                <ListItem
                   style={budgetModifyStyles.switchRow}
                   onPress={() =>
                     endDatePicker.open(
@@ -406,7 +400,7 @@ export function BudgetModifyContent({
                   >
                     {formattedEndDate ?? "—"}
                   </Text>
-                </Pressable>
+                </ListItem>
                 {errors.endDate && (
                   <Text variant="small" style={budgetModifyStyles.errorText}>
                     {t(errors.endDate.message as TranslationKey)}
@@ -453,21 +447,27 @@ export function BudgetModifyContent({
             </View>
 
             {/* isActive toggle row */}
-            <View style={budgetModifyStyles.switchRow}>
-              <View style={budgetModifyStyles.switchLeft}>
-                <IconSvg name="circle-dot-outline" size={24} />
-                <Text variant="default" style={budgetModifyStyles.switchLabel}>
-                  {t("screens.settings.budgets.form.isActiveLabel")}
-                </Text>
-              </View>
-              <Controller
-                control={control}
-                name="isActive"
-                render={({ field: { onChange, value } }) => (
+            <Controller
+              control={control}
+              name="isActive"
+              render={({ field: { onChange, value } }) => (
+                <ListItem
+                  style={budgetModifyStyles.switchRow}
+                  onPress={() => onChange(!isActive)}
+                >
+                  <View style={budgetModifyStyles.switchLeft}>
+                    <IconSvg name="circle-dot-outline" size={24} />
+                    <Text
+                      variant="default"
+                      style={budgetModifyStyles.switchLabel}
+                    >
+                      {t("screens.settings.budgets.form.isActiveLabel")}
+                    </Text>
+                  </View>
                   <Switch value={value} onValueChange={onChange} />
-                )}
-              />
-            </View>
+                </ListItem>
+              )}
+            />
           </View>
 
           {!isAddMode && <Separator />}

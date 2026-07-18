@@ -5,7 +5,7 @@ import {
   EnrichedTextInput,
   type EnrichedTextInputInstance,
   type OnChangeStateEvent,
-} from "react-native-enriched"
+} from "react-native-enriched-html"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import {
   StyleSheet as UnistylesSheet,

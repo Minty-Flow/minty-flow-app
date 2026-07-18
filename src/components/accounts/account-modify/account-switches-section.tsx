@@ -3,7 +3,7 @@ import { Controller } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
 import { IconSvg } from "~/components/ui/icon-svg"
-import { Pressable } from "~/components/ui/pressable"
+import { ListItem } from "~/components/ui/list-item"
 import { Separator } from "~/components/ui/separator"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
@@ -33,7 +33,7 @@ export function AccountSwitchesSection({
         control={control}
         name="excludeFromBalance"
         render={({ field: { value, onChange } }) => (
-          <Pressable
+          <ListItem
             style={accountModifyStyles.switchRow}
             onPress={() => onChange(!value)}
             accessibilityRole="switch"
@@ -47,7 +47,7 @@ export function AccountSwitchesSection({
             </View>
 
             <Switch value={value} />
-          </Pressable>
+          </ListItem>
         )}
       />
 
@@ -57,7 +57,7 @@ export function AccountSwitchesSection({
             control={control}
             name="isPrimary"
             render={({ field: { value, onChange } }) => (
-              <Pressable
+              <ListItem
                 style={accountModifyStyles.switchRow}
                 onPress={() => onChange(!value)}
                 accessibilityRole="switch"
@@ -74,7 +74,7 @@ export function AccountSwitchesSection({
                 </View>
 
                 <Switch value={value} />
-              </Pressable>
+              </ListItem>
             )}
           />
           {formIsPrimary && (

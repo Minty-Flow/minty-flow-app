@@ -20,6 +20,7 @@ import {
   useDateTimePicker,
 } from "~/components/ui/date-time-picker"
 import { Input } from "~/components/ui/input"
+import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { formatLoanDate } from "~/utils/time-utils"
@@ -183,7 +184,7 @@ export const DateRangePresetModalContent = ({
         {/* MONTH SECTION */}
 
         <View style={styles.collapsibleSection}>
-          <Pressable
+          <ListItem
             onPress={() => toggleSection("byMonth")}
             style={styles.rowBase}
           >
@@ -196,7 +197,7 @@ export const DateRangePresetModalContent = ({
               size={20}
               color={mutedColor}
             />
-          </Pressable>
+          </ListItem>
 
           {expandedSection === "byMonth" && (
             <View style={styles.expandedContent}>
@@ -218,7 +219,7 @@ export const DateRangePresetModalContent = ({
         {/* YEAR SECTION */}
 
         <View style={styles.collapsibleSection}>
-          <Pressable
+          <ListItem
             onPress={() => toggleSection("byYear")}
             style={styles.rowBase}
           >
@@ -231,7 +232,7 @@ export const DateRangePresetModalContent = ({
               size={20}
               color={mutedColor}
             />
-          </Pressable>
+          </ListItem>
 
           {expandedSection === "byYear" && (
             <View style={styles.expandedContent}>
@@ -266,7 +267,7 @@ export const DateRangePresetModalContent = ({
         {/* CUSTOM RANGE */}
 
         <View style={styles.collapsibleSection}>
-          <Pressable
+          <ListItem
             onPress={() => toggleSection("custom")}
             style={styles.rowBase}
           >
@@ -279,11 +280,11 @@ export const DateRangePresetModalContent = ({
               size={20}
               color={mutedColor}
             />
-          </Pressable>
+          </ListItem>
 
           {expandedSection === "custom" && (
             <View style={styles.expandedContentCompact}>
-              <Pressable
+              <ListItem
                 onPress={() => startDatePicker.open(customRange.start)}
                 style={styles.customRangeRow}
               >
@@ -302,9 +303,9 @@ export const DateRangePresetModalContent = ({
                     color={mutedColor}
                   />
                 </View>
-              </Pressable>
+              </ListItem>
 
-              <Pressable
+              <ListItem
                 onPress={() => endDatePicker.open(customRange.end)}
                 style={styles.customRangeRow}
               >
@@ -323,7 +324,7 @@ export const DateRangePresetModalContent = ({
                     color={mutedColor}
                   />
                 </View>
-              </Pressable>
+              </ListItem>
 
               <View
                 style={[

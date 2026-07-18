@@ -5,7 +5,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles"
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
 import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
-import { Pressable } from "~/components/ui/pressable"
+import { ListItem } from "~/components/ui/list-item"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -176,7 +176,7 @@ export default function TransactionAppearanceScreen() {
       </View>
 
       <View native style={styles.toggleCard}>
-        <Pressable
+        <ListItem
           style={styles.toggleRow}
           onPress={() => setShowCategoryForUntitled(!showCategoryForUntitled)}
         >
@@ -196,11 +196,11 @@ export default function TransactionAppearanceScreen() {
             value={showCategoryForUntitled}
             onValueChange={setShowCategoryForUntitled}
           />
-        </Pressable>
+        </ListItem>
 
         <View native style={styles.divider} />
 
-        <Pressable
+        <ListItem
           style={styles.toggleRow}
           onPress={() => setShowCategory(!showCategory)}
         >
@@ -217,7 +217,7 @@ export default function TransactionAppearanceScreen() {
             </Text>
           </View>
           <Switch value={showCategory} onValueChange={setShowCategory} />
-        </Pressable>
+        </ListItem>
       </View>
 
       {/* ── Layout ──────────────────────────────────────────────────── */}
@@ -230,7 +230,7 @@ export default function TransactionAppearanceScreen() {
       </View>
 
       <View native style={styles.toggleCard}>
-        <Pressable
+        <ListItem
           style={styles.toggleRow}
           onPress={() => setVariant(isLessDense ? "compact" : "elevated")}
         >
@@ -250,7 +250,7 @@ export default function TransactionAppearanceScreen() {
             value={isLessDense}
             onValueChange={(v) => setVariant(v ? "elevated" : "compact")}
           />
-        </Pressable>
+        </ListItem>
       </View>
 
       {/* ── Leading icon ─────────────────────────────────────────────── */}
@@ -351,11 +351,7 @@ const styles = StyleSheet.create((theme) => ({
     overflow: "hidden",
   },
   toggleRow: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
     minHeight: 56,
   },
   toggleRowContent: {

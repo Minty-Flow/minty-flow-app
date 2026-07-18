@@ -1,16 +1,14 @@
 import {
   endOfDay,
   endOfMonth,
-  endOfWeek,
   endOfYear,
   startOfDay,
   startOfMonth,
-  startOfWeek,
   startOfYear,
   subDays,
 } from "date-fns"
 
-import { getWeekStartsOn } from "~/utils/get-week-start-on"
+import { endOfAppWeek, startOfAppWeek } from "~/utils/time-utils"
 
 import type { PresetOption } from "./types"
 
@@ -28,13 +26,10 @@ function getPresetOptions(): PresetOption[] {
     {
       id: "thisWeek",
       label: "This week",
-      getRange: () => {
-        const weekStartsOn = getWeekStartsOn()
-        return {
-          start: startOfWeek(now, { weekStartsOn }),
-          end: endOfWeek(now, { weekStartsOn }),
-        }
-      },
+      getRange: () => ({
+        start: startOfAppWeek(now),
+        end: endOfAppWeek(now),
+      }),
     },
     {
       id: "thisMonth",

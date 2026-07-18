@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgFileTypePdf = (props: SvgProps) => (
   <Svg
     width={24}
@@ -20,5 +19,5 @@ const SvgFileTypePdf = (props: SvgProps) => (
     <Path d="M20 15h-3v6" />
     <Path d="M11 15v6h1a2 2 0 0 0 2 -2v-2a2 2 0 0 0 -2 -2h-1" />
   </Svg>
-)
-export default SvgFileTypePdf
+);
+export default SvgFileTypePdf;

@@ -13,6 +13,7 @@ import { StyleSheet } from "react-native-unistyles"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
+import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -75,7 +76,7 @@ export function InlineCategoryPicker({
   return (
     <View style={styles.container}>
       {/* ---- Trigger row ---- */}
-      <Pressable
+      <ListItem
         style={styles.triggerRow}
         onPress={() => setOpen((v) => !v)}
         accessibilityState={{ expanded: open }}
@@ -99,7 +100,7 @@ export function InlineCategoryPicker({
           </Text>
           <ChevronIcon direction={open ? "up" : "trailing"} size={18} />
         </View>
-      </Pressable>
+      </ListItem>
 
       {/* ---- Grid panel ---- */}
       {open &&
@@ -180,11 +181,7 @@ const styles = StyleSheet.create((theme) => ({
 
   // ---- Trigger ----
   triggerRow: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 20,
-    paddingHorizontal: H_PAD,
   },
   triggerLeft: {
     flexDirection: "row",

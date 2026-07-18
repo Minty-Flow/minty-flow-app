@@ -19,6 +19,7 @@ import { SmartAmountInput } from "~/components/smart-amount-input"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import { IconSvg } from "~/components/ui/icon-svg"
+import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -180,11 +181,10 @@ function ExchangeRatesContent({
 
       return (
         <View style={styles.entryWrapper}>
-          <Pressable
-            style={[
-              styles.entryRow,
-              (isEditing || item.isCustom) && styles.entryRowSelected,
-            ]}
+          <ListItem
+            style={
+              isEditing || item.isCustom ? styles.entryRowSelected : undefined
+            }
             onPress={() => handleSelectEntry(item.displayCode, displayRate)}
           >
             <Text style={styles.entryEquals}>=</Text>
@@ -192,7 +192,7 @@ function ExchangeRatesContent({
               {displayRate.toFixed(14)}
             </Text>
             <Text style={styles.entryCode}>{item.displayCode}</Text>
-          </Pressable>
+          </ListItem>
           {isEditing && (
             <View style={styles.inlineInput}>
               <SmartAmountInput
@@ -402,12 +402,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   entryWrapper: {
     marginBottom: 4,
-  },
-  entryRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
   },
   entryRowSelected: {
     backgroundColor: theme.colors.secondary,

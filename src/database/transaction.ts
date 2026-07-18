@@ -1,5 +1,4 @@
 import { getDb } from "./db"
-import { emitWriteEnd, emitWriteStart } from "./instrumentation"
 import { enqueueWrite } from "./write-queue"
 
 /**
@@ -32,10 +31,6 @@ let txDepth = 0
  * returns `void`, so results are captured via a `{ value: T }` box inside
  * the callback and extracted after the call completes.
  *
- * **Instrumentation:** emits write-start and write-end events (with duration)
- * via {@link emitWriteStart} / {@link emitWriteEnd} so perf listeners can
- * detect slow transactions (> 50 ms threshold).
- *
  * @param name - A human-readable label used in instrumentation events
  *   (e.g. `"account.create"`, `"transfer.delete"`).
  * @param fn - Async callback that receives the open database instance and
@@ -52,7 +47,7 @@ let txDepth = 0
  * ```
  */
 export async function runInTransaction<T>(
-  name: string,
+  _name: string,
   fn: (db: ReturnType<typeof getDb>) => Promise<T>,
 ): Promise<T> {
   // Re-entrant: if already inside a queued tx context, bypass queue to avoid deadlock
@@ -67,9 +62,7 @@ export async function runInTransaction<T>(
 
   return enqueueWrite(async () => {
     const db = getDb()
-    const start = performance.now()
 
-    emitWriteStart(name)
     txDepth++
 
     try {
@@ -82,7 +75,6 @@ export async function runInTransaction<T>(
       return captured.value
     } finally {
       txDepth--
-      emitWriteEnd(name, performance.now() - start)
     }
   })
 }

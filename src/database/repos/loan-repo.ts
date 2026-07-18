@@ -5,10 +5,6 @@ export async function getAllLoans(): Promise<RowLoan[]> {
   return query<RowLoan>(`SELECT * FROM loans ORDER BY name ASC`)
 }
 
-// export async function getLoanById(id: string): Promise<RowLoan | null> {
-//   return queryOne<RowLoan>(`SELECT * FROM loans WHERE id = ?`, [id])
-// }
-
 export async function getLoanProgress(
   loanId: string,
   loanType: "lent" | "borrowed",

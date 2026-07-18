@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgFilter2Search = (props: SvgProps) => (
   <Svg
     width={24}
@@ -19,5 +18,5 @@ const SvgFilter2Search = (props: SvgProps) => (
     <Path d="M15 18c0 .796 .316 1.559 .879 2.121c.563 .563 1.326 .879 2.121 .879c.796 0 1.559 -.316 2.121 -.879c.563 -.563 .879 -1.326 .879 -2.121c0 -.796 -.316 -1.559 -.879 -2.121c-.563 -.563 -1.326 -.879 -2.121 -.879c-.796 0 -1.559 .316 -2.121 .879c-.563 .563 -.879 1.326 -.879 2.121" />
     <Path d="M20.2 20.2l1.8 1.8" />
   </Svg>
-)
-export default SvgFilter2Search
+);
+export default SvgFilter2Search;

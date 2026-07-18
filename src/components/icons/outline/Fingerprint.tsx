@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgFingerprint = (props: SvgProps) => (
   <Svg
     width={24}
@@ -19,5 +18,5 @@ const SvgFingerprint = (props: SvgProps) => (
     <Path d="M8 15a18 18 0 0 0 1.8 6" />
     <Path d="M4.9 19a22 22 0 0 1 -.9 -7v-1a8 8 0 0 1 12 -6.95" />
   </Svg>
-)
-export default SvgFingerprint
+);
+export default SvgFingerprint;

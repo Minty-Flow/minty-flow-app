@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-07-06T21:42:51.055Z
+Generated on: 2026-07-18T11:42:31.451Z
 ```
 ./
 ├── .github/
@@ -30,15 +30,16 @@ Generated on: 2026-07-06T21:42:51.055Z
 ├── docs/
 │   ├── refund-loans-new-design.md
 │   ├── release-notes-format.md
+│   ├── sankey-flow-decision.md
+│   ├── stats-redesign-plan.md
 │   └── STRUCTURE.md
 ├── plugins/
 │   └── with-android-release-signing.mts
 ├── scripts/
-│   ├── add-icons.py
 │   ├── check-missing-i18n-keys.mts
 │   ├── find-unused-styles.mts
-│   ├── generate-structure.mts
-│   └── trim-icons.py
+│   ├── generate-icon-barrel.mts
+│   └── generate-structure.mts
 ├── src/
 │   ├── app/
 │   │   ├── (tabs)/
@@ -111,6 +112,12 @@ Generated on: 2026-07-06T21:42:51.055Z
 │   │   │   ├── index.tsx
 │   │   │   ├── pending-transactions.tsx
 │   │   │   └── trash.tsx
+│   │   ├── stats/
+│   │   │   ├── calendar.tsx
+│   │   │   ├── cash-flow.tsx
+│   │   │   ├── categories.tsx
+│   │   │   ├── net-worth.tsx
+│   │   │   └── wrapped.tsx
 │   │   ├── transaction/
 │   │   │   └── [id].tsx
 │   │   ├── _layout.tsx
@@ -170,8 +177,6 @@ Generated on: 2026-07-06T21:42:51.055Z
 │   │   │   ├── currency-account-selector.styles.ts
 │   │   │   ├── index.tsx
 │   │   │   └── types.ts
-│   │   ├── data-management/
-│   │   │   └── import-confirm-modal.tsx
 │   │   ├── date-range-preset-modal/
 │   │   │   ├── date-range-preset-modal-content.tsx
 │   │   │   ├── date-range-preset-modal.styles.ts
@@ -187,443 +192,8 @@ Generated on: 2026-07-06T21:42:51.055Z
 │   │   │   │   └── types.ts
 │   │   │   └── goal-card.tsx
 │   │   ├── icons/
-│   │   │   ├── filled/
-│   │   │   │   ├── Adjustments.tsx
-│   │   │   │   ├── Alarm.tsx
-│   │   │   │   ├── AlarmMinus.tsx
-│   │   │   │   ├── AlarmPlus.tsx
-│   │   │   │   ├── AlertCircle.tsx
-│   │   │   │   ├── AlertTriangle.tsx
-│   │   │   │   ├── Analyze.tsx
-│   │   │   │   ├── Apple.tsx
-│   │   │   │   ├── Archive.tsx
-│   │   │   │   ├── ArrowDownCircle.tsx
-│   │   │   │   ├── ArrowUpCircle.tsx
-│   │   │   │   ├── Atom2.tsx
-│   │   │   │   ├── Award.tsx
-│   │   │   │   ├── BabyCarriage.tsx
-│   │   │   │   ├── Backspace.tsx
-│   │   │   │   ├── BallBowling.tsx
-│   │   │   │   ├── Balloon.tsx
-│   │   │   │   ├── Bandage.tsx
-│   │   │   │   ├── Barbell.tsx
-│   │   │   │   ├── Basket.tsx
-│   │   │   │   ├── Bath.tsx
-│   │   │   │   ├── Bed.tsx
-│   │   │   │   ├── BedFlat.tsx
-│   │   │   │   ├── Beer.tsx
-│   │   │   │   ├── Bell.tsx
-│   │   │   │   ├── BellMinus.tsx
-│   │   │   │   ├── BellPlus.tsx
-│   │   │   │   ├── BellRinging.tsx
-│   │   │   │   ├── BellX.tsx
-│   │   │   │   ├── Bike.tsx
-│   │   │   │   ├── Binoculars.tsx
-│   │   │   │   ├── Blender.tsx
-│   │   │   │   ├── Bolt.tsx
-│   │   │   │   ├── Book.tsx
-│   │   │   │   ├── Bookmark.tsx
-│   │   │   │   ├── Bookmarks.tsx
-│   │   │   │   ├── Bottle.tsx
-│   │   │   │   ├── Bowl.tsx
-│   │   │   │   ├── BowlChopsticks.tsx
-│   │   │   │   ├── BowlSpoon.tsx
-│   │   │   │   ├── BrandApple.tsx
-│   │   │   │   ├── BrandFacebook.tsx
-│   │   │   │   ├── BrandGoogle.tsx
-│   │   │   │   ├── BrandInstagram.tsx
-│   │   │   │   ├── BrandLinkedin.tsx
-│   │   │   │   ├── BrandPaypal.tsx
-│   │   │   │   ├── BrandSpotify.tsx
-│   │   │   │   ├── BrandStripe.tsx
-│   │   │   │   ├── BrandTwitter.tsx
-│   │   │   │   ├── BrandWhatsapp.tsx
-│   │   │   │   ├── BrandYoutube.tsx
-│   │   │   │   ├── Bread.tsx
-│   │   │   │   ├── Briefcase.tsx
-│   │   │   │   ├── Briefcase2.tsx
-│   │   │   │   ├── BuildingBridge2.tsx
-│   │   │   │   ├── Bulb.tsx
-│   │   │   │   ├── Bus.tsx
-│   │   │   │   ├── Cactus.tsx
-│   │   │   │   ├── Calculator.tsx
-│   │   │   │   ├── Calendar.tsx
-│   │   │   │   ├── CalendarEvent.tsx
-│   │   │   │   ├── CalendarMonth.tsx
-│   │   │   │   ├── CalendarWeek.tsx
-│   │   │   │   ├── Camera.tsx
-│   │   │   │   ├── Campfire.tsx
-│   │   │   │   ├── Candle.tsx
-│   │   │   │   ├── Car.tsx
-│   │   │   │   ├── Car4Wd.tsx
-│   │   │   │   ├── Caravan.tsx
-│   │   │   │   ├── CaretDown.tsx
-│   │   │   │   ├── CaretUp.tsx
-│   │   │   │   ├── CarSuv.tsx
-│   │   │   │   ├── CashBanknote.tsx
-│   │   │   │   ├── ChartArea.tsx
-│   │   │   │   ├── ChartAreaLine.tsx
-│   │   │   │   ├── ChartBubble.tsx
-│   │   │   │   ├── ChartCandle.tsx
-│   │   │   │   ├── ChartDonut.tsx
-│   │   │   │   ├── ChartDots.tsx
-│   │   │   │   ├── ChartFunnel.tsx
-│   │   │   │   ├── ChartPie.tsx
-│   │   │   │   ├── Check.tsx
-│   │   │   │   ├── ChefHat.tsx
-│   │   │   │   ├── Cherry.tsx
-│   │   │   │   ├── ChevronDown.tsx
-│   │   │   │   ├── ChevronRight.tsx
-│   │   │   │   ├── ChristmasTree.tsx
-│   │   │   │   ├── Circle.tsx
-│   │   │   │   ├── CircleDot.tsx
-│   │   │   │   ├── CirclePlus.tsx
-│   │   │   │   ├── Circles.tsx
-│   │   │   │   ├── Clipboard.tsx
-│   │   │   │   ├── Clock.tsx
-│   │   │   │   ├── ClockHour4.tsx
-│   │   │   │   ├── Cloud.tsx
-│   │   │   │   ├── CloudComputing.tsx
-│   │   │   │   ├── Coin.tsx
-│   │   │   │   ├── CoinBitcoin.tsx
-│   │   │   │   ├── CoinEuro.tsx
-│   │   │   │   ├── CoinPound.tsx
-│   │   │   │   ├── CoinRupee.tsx
-│   │   │   │   ├── CoinYen.tsx
-│   │   │   │   ├── CoinYuan.tsx
-│   │   │   │   ├── Compass.tsx
-│   │   │   │   ├── Confetti.tsx
-│   │   │   │   ├── Cookie.tsx
-│   │   │   │   ├── Copy.tsx
-│   │   │   │   ├── CreditCard.tsx
-│   │   │   │   ├── Crown.tsx
-│   │   │   │   ├── CurrentLocation.tsx
-│   │   │   │   ├── Dashboard.tsx
-│   │   │   │   ├── Database.tsx
-│   │   │   │   ├── DeviceDesktop.tsx
-│   │   │   │   ├── DeviceGamepad.tsx
-│   │   │   │   ├── DeviceHeartMonitor.tsx
-│   │   │   │   ├── DeviceMobile.tsx
-│   │   │   │   ├── DeviceSpeaker.tsx
-│   │   │   │   ├── DeviceTablet.tsx
-│   │   │   │   ├── DeviceTv.tsx
-│   │   │   │   ├── DeviceWatch.tsx
-│   │   │   │   ├── Dialpad.tsx
-│   │   │   │   ├── Diamond.tsx
-│   │   │   │   ├── Discount.tsx
-│   │   │   │   ├── Download.tsx
-│   │   │   │   ├── Droplet.tsx
-│   │   │   │   ├── Dumpling.tsx
-│   │   │   │   ├── Egg.tsx
-│   │   │   │   ├── EggFried.tsx
-│   │   │   │   ├── Elevator.tsx
-│   │   │   │   ├── Exchange.tsx
-│   │   │   │   ├── ExternalLink.tsx
-│   │   │   │   ├── Eye.tsx
-│   │   │   │   ├── FaceMask.tsx
-│   │   │   │   ├── Ferry.tsx
-│   │   │   │   ├── File.tsx
-│   │   │   │   ├── FileAnalytics.tsx
-│   │   │   │   ├── FileDescription.tsx
-│   │   │   │   ├── FileDollar.tsx
-│   │   │   │   ├── FileInvoice.tsx
-│   │   │   │   ├── Files.tsx
-│   │   │   │   ├── FileText.tsx
-│   │   │   │   ├── Filter.tsx
-│   │   │   │   ├── Flag.tsx
-│   │   │   │   ├── Flag2.tsx
-│   │   │   │   ├── Flame.tsx
-│   │   │   │   ├── Flask.tsx
-│   │   │   │   ├── Flower.tsx
-│   │   │   │   ├── GardenCart.tsx
-│   │   │   │   ├── GasStation.tsx
-│   │   │   │   ├── Gift.tsx
-│   │   │   │   ├── GiftCard.tsx
-│   │   │   │   ├── Glass.tsx
-│   │   │   │   ├── GlassFull.tsx
-│   │   │   │   ├── Globe.tsx
-│   │   │   │   ├── Golf.tsx
-│   │   │   │   ├── Graph.tsx
-│   │   │   │   ├── Hanger2.tsx
-│   │   │   │   ├── Headphones.tsx
-│   │   │   │   ├── Headset.tsx
-│   │   │   │   ├── Heart.tsx
-│   │   │   │   ├── Home.tsx
-│   │   │   │   ├── Home2.tsx
-│   │   │   │   ├── HospitalCircle.tsx
-│   │   │   │   ├── Hourglass.tsx
-│   │   │   │   ├── Id.tsx
-│   │   │   │   ├── index.ts
-│   │   │   │   ├── InfoCircle.tsx
-│   │   │   │   ├── Key.tsx
-│   │   │   │   ├── Keyboard.tsx
-│   │   │   │   ├── Leaf.tsx
-│   │   │   │   ├── Library.tsx
-│   │   │   │   ├── LibraryPlus.tsx
-│   │   │   │   ├── Lifebuoy.tsx
-│   │   │   │   ├── Link.tsx
-│   │   │   │   ├── ListDetails.tsx
-│   │   │   │   ├── Lock.tsx
-│   │   │   │   ├── Lungs.tsx
-│   │   │   │   ├── Magnet.tsx
-│   │   │   │   ├── Mail.tsx
-│   │   │   │   ├── MailOpened.tsx
-│   │   │   │   ├── Man.tsx
-│   │   │   │   ├── MapPin.tsx
-│   │   │   │   ├── MedicalCross.tsx
-│   │   │   │   ├── Melon.tsx
-│   │   │   │   ├── Message.tsx
-│   │   │   │   ├── Message2.tsx
-│   │   │   │   ├── MessageChatbot.tsx
-│   │   │   │   ├── MessageCircle.tsx
-│   │   │   │   ├── MessageReport.tsx
-│   │   │   │   ├── Messages.tsx
-│   │   │   │   ├── Microphone.tsx
-│   │   │   │   ├── Microscope.tsx
-│   │   │   │   ├── Microwave.tsx
-│   │   │   │   ├── Milk.tsx
-│   │   │   │   ├── MoodHappy.tsx
-│   │   │   │   ├── Moon.tsx
-│   │   │   │   ├── Motorbike.tsx
-│   │   │   │   ├── Mountain.tsx
-│   │   │   │   ├── Mug.tsx
-│   │   │   │   ├── Mushroom.tsx
-│   │   │   │   ├── Navigation.tsx
-│   │   │   │   ├── Nurse.tsx
-│   │   │   │   ├── Paint.tsx
-│   │   │   │   ├── Palette.tsx
-│   │   │   │   ├── Paw.tsx
-│   │   │   │   ├── Pencil.tsx
-│   │   │   │   ├── Pennant.tsx
-│   │   │   │   ├── Pennant2.tsx
-│   │   │   │   ├── Phone.tsx
-│   │   │   │   ├── PhoneCall.tsx
-│   │   │   │   ├── Photo.tsx
-│   │   │   │   ├── Pig.tsx
-│   │   │   │   ├── Pill.tsx
-│   │   │   │   ├── Pin.tsx
-│   │   │   │   ├── Pinned.tsx
-│   │   │   │   ├── Pizza.tsx
-│   │   │   │   ├── Plane.tsx
-│   │   │   │   ├── PlaneArrival.tsx
-│   │   │   │   ├── PlaneDeparture.tsx
-│   │   │   │   ├── PlayerPause.tsx
-│   │   │   │   ├── PlayerPlay.tsx
-│   │   │   │   ├── Playlist.tsx
-│   │   │   │   ├── Plus.tsx
-│   │   │   │   ├── Presentation.tsx
-│   │   │   │   ├── PresentationAnalytics.tsx
-│   │   │   │   ├── Puzzle.tsx
-│   │   │   │   ├── Quote.tsx
-│   │   │   │   ├── ReceiptDollar.tsx
-│   │   │   │   ├── ReceiptEuro.tsx
-│   │   │   │   ├── ReceiptPound.tsx
-│   │   │   │   ├── ReceiptRupee.tsx
-│   │   │   │   ├── ReceiptYen.tsx
-│   │   │   │   ├── ReceiptYuan.tsx
-│   │   │   │   ├── ReportAnalytics.tsx
-│   │   │   │   ├── ReportMoney.tsx
-│   │   │   │   ├── Rosette.tsx
-│   │   │   │   ├── RosetteDiscount.tsx
-│   │   │   │   ├── RosetteDiscountCheck.tsx
-│   │   │   │   ├── Salad.tsx
-│   │   │   │   ├── Satellite.tsx
-│   │   │   │   ├── School.tsx
-│   │   │   │   ├── Seedling.tsx
-│   │   │   │   ├── Send.tsx
-│   │   │   │   ├── Settings.tsx
-│   │   │   │   ├── Shield.tsx
-│   │   │   │   ├── ShieldCheck.tsx
-│   │   │   │   ├── ShieldLock.tsx
-│   │   │   │   ├── Shirt.tsx
-│   │   │   │   ├── ShoppingCart.tsx
-│   │   │   │   ├── Soup.tsx
-│   │   │   │   ├── Sparkles.tsx
-│   │   │   │   ├── Sparkles2.tsx
-│   │   │   │   ├── Speedboat.tsx
-│   │   │   │   ├── SquareAsterisk.tsx
-│   │   │   │   ├── Stack.tsx
-│   │   │   │   ├── Star.tsx
-│   │   │   │   ├── SteeringWheel.tsx
-│   │   │   │   ├── Sun.tsx
-│   │   │   │   ├── Sunglasses.tsx
-│   │   │   │   ├── Sunrise.tsx
-│   │   │   │   ├── Sunset.tsx
-│   │   │   │   ├── Table.tsx
-│   │   │   │   ├── Tag.tsx
-│   │   │   │   ├── Tags.tsx
-│   │   │   │   ├── ThumbDown.tsx
-│   │   │   │   ├── ThumbUp.tsx
-│   │   │   │   ├── Ticket.tsx
-│   │   │   │   ├── TimelineEvent.tsx
-│   │   │   │   ├── ToolsKitchen2.tsx
-│   │   │   │   ├── Train.tsx
-│   │   │   │   ├── Trash.tsx
-│   │   │   │   ├── Triangle.tsx
-│   │   │   │   ├── Trolley.tsx
-│   │   │   │   ├── Trophy.tsx
-│   │   │   │   ├── Truck.tsx
-│   │   │   │   ├── Umbrella.tsx
-│   │   │   │   ├── User.tsx
-│   │   │   │   ├── Video.tsx
-│   │   │   │   ├── Woman.tsx
-│   │   │   │   ├── World.tsx
-│   │   │   │   ├── Writing.tsx
-│   │   │   │   ├── WritingSign.tsx
-│   │   │   │   └── ZoomMoney.tsx
-│   │   │   └── outline/
-│   │   │       ├── Activity.tsx
-│   │   │       ├── AddressBook.tsx
-│   │   │       ├── Affiliate.tsx
-│   │   │       ├── AlertSquareRounded.tsx
-│   │   │       ├── Anchor.tsx
-│   │   │       ├── Archive.tsx
-│   │   │       ├── ArchiveOff.tsx
-│   │   │       ├── ArrowDown.tsx
-│   │   │       ├── ArrowDownCircle.tsx
-│   │   │       ├── ArrowDownLeft.tsx
-│   │   │       ├── ArrowNarrowDown.tsx
-│   │   │       ├── ArrowNarrowLeft.tsx
-│   │   │       ├── ArrowNarrowRight.tsx
-│   │   │       ├── ArrowNarrowUp.tsx
-│   │   │       ├── ArrowsDiff.tsx
-│   │   │       ├── ArrowsMoveVertical.tsx
-│   │   │       ├── ArrowsRightLeft.tsx
-│   │   │       ├── ArrowsTransferUpDown.tsx
-│   │   │       ├── ArrowsUpDown.tsx
-│   │   │       ├── ArrowUp.tsx
-│   │   │       ├── ArrowUpCircle.tsx
-│   │   │       ├── ArrowUpRight.tsx
-│   │   │       ├── Asterisk.tsx
-│   │   │       ├── Basket.tsx
-│   │   │       ├── Bell.tsx
-│   │   │       ├── Building.tsx
-│   │   │       ├── BuildingBank.tsx
-│   │   │       ├── Calendar.tsx
-│   │   │       ├── CalendarRepeat.tsx
-│   │   │       ├── Camera.tsx
-│   │   │       ├── CaretDown.tsx
-│   │   │       ├── CaretUp.tsx
-│   │   │       ├── CashBanknote.tsx
-│   │   │       ├── CashBanknotePlus.tsx
-│   │   │       ├── Category.tsx
-│   │   │       ├── Category2.tsx
-│   │   │       ├── CategoryPlus.tsx
-│   │   │       ├── ChartBar.tsx
-│   │   │       ├── ChartHistogram.tsx
-│   │   │       ├── ChartPie.tsx
-│   │   │       ├── Check.tsx
-│   │   │       ├── Checks.tsx
-│   │   │       ├── ChevronDown.tsx
-│   │   │       ├── ChevronLeft.tsx
-│   │   │       ├── ChevronRight.tsx
-│   │   │       ├── ChevronsDown.tsx
-│   │   │       ├── ChevronsUp.tsx
-│   │   │       ├── ChevronUp.tsx
-│   │   │       ├── Circle.tsx
-│   │   │       ├── CircleDot.tsx
-│   │   │       ├── Circles.tsx
-│   │   │       ├── Clipboard.tsx
-│   │   │       ├── Clock.tsx
-│   │   │       ├── ClockBolt.tsx
-│   │   │       ├── Coffee.tsx
-│   │   │       ├── Coins.tsx
-│   │   │       ├── ColorSwatch.tsx
-│   │   │       ├── Copy.tsx
-│   │   │       ├── CreditCard.tsx
-│   │   │       ├── Currency.tsx
-│   │   │       ├── CurrencyDollar.tsx
-│   │   │       ├── Database.tsx
-│   │   │       ├── DatabaseExport.tsx
-│   │   │       ├── DatabaseImport.tsx
-│   │   │       ├── DeviceMobileOff.tsx
-│   │   │       ├── DeviceMobileVibration.tsx
-│   │   │       ├── Dice.tsx
-│   │   │       ├── Divide.tsx
-│   │   │       ├── Download.tsx
-│   │   │       ├── Equal.tsx
-│   │   │       ├── Eraser.tsx
-│   │   │       ├── EyeOff.tsx
-│   │   │       ├── File.tsx
-│   │   │       ├── Files.tsx
-│   │   │       ├── FileTypeCsv.tsx
-│   │   │       ├── FileTypeJpg.tsx
-│   │   │       ├── FileTypePdf.tsx
-│   │   │       ├── FileX.tsx
-│   │   │       ├── FileZip.tsx
-│   │   │       ├── Filter2.tsx
-│   │   │       ├── Filter2Search.tsx
-│   │   │       ├── Filter2X.tsx
-│   │   │       ├── FilterOff.tsx
-│   │   │       ├── Fingerprint.tsx
-│   │   │       ├── Graph.tsx
-│   │   │       ├── GripHorizontal.tsx
-│   │   │       ├── Hash.tsx
-│   │   │       ├── HeartHandshake.tsx
-│   │   │       ├── HistoryToggle.tsx
-│   │   │       ├── HomeShare.tsx
-│   │   │       ├── index.ts
-│   │   │       ├── InfoCircle.tsx
-│   │   │       ├── Language.tsx
-│   │   │       ├── LibraryPhoto.tsx
-│   │   │       ├── ListDetails.tsx
-│   │   │       ├── Lock.tsx
-│   │   │       ├── LockOpen.tsx
-│   │   │       ├── Map.tsx
-│   │   │       ├── MapPin.tsx
-│   │   │       ├── MathSymbols.tsx
-│   │   │       ├── Minus.tsx
-│   │   │       ├── MoonStars.tsx
-│   │   │       ├── PageBreak.tsx
-│   │   │       ├── Paperclip.tsx
-│   │   │       ├── PasswordMobilePhone.tsx
-│   │   │       ├── Paw.tsx
-│   │   │       ├── Pencil.tsx
-│   │   │       ├── Percentage.tsx
-│   │   │       ├── Photo.tsx
-│   │   │       ├── PigMoney.tsx
-│   │   │       ├── Plant.tsx
-│   │   │       ├── PlaylistX.tsx
-│   │   │       ├── Plug.tsx
-│   │   │       ├── Plus.tsx
-│   │   │       ├── PlusMinus.tsx
-│   │   │       ├── Puzzle.tsx
-│   │   │       ├── QuestionMark.tsx
-│   │   │       ├── Receipt.tsx
-│   │   │       ├── ReceiptRefund.tsx
-│   │   │       ├── Refresh.tsx
-│   │   │       ├── Repeat.tsx
-│   │   │       ├── Restore.tsx
-│   │   │       ├── Scale.tsx
-│   │   │       ├── Search.tsx
-│   │   │       ├── Settings.tsx
-│   │   │       ├── Share.tsx
-│   │   │       ├── ShieldCheckered.tsx
-│   │   │       ├── ShieldExclamation.tsx
-│   │   │       ├── Snowflake.tsx
-│   │   │       ├── Square.tsx
-│   │   │       ├── SquareCheck.tsx
-│   │   │       ├── Star.tsx
-│   │   │       ├── SwitchHorizontal.tsx
-│   │   │       ├── Tag.tsx
-│   │   │       ├── TagPlus.tsx
-│   │   │       ├── Tags.tsx
-│   │   │       ├── Target.tsx
-│   │   │       ├── Transfer.tsx
-│   │   │       ├── Trash.tsx
-│   │   │       ├── TrashOff.tsx
-│   │   │       ├── TrendingDown.tsx
-│   │   │       ├── TrendingUp.tsx
-│   │   │       ├── User.tsx
-│   │   │       ├── UserPlus.tsx
-│   │   │       ├── UserQuestion.tsx
-│   │   │       ├── Users.tsx
-│   │   │       ├── Video.tsx
-│   │   │       ├── Wallet.tsx
-│   │   │       ├── Wand.tsx
-│   │   │       ├── WorldMap.tsx
-│   │   │       ├── WorldPin.tsx
-│   │   │       └── X.tsx
+│   │   │   ├── filled/ /* tabler-icons, generated via `pnpm icons:sync` — not enumerated */
+│   │   │   └── outline/ /* tabler-icons, generated via `pnpm icons:sync` — not enumerated */
 │   │   ├── inline-category-picker/
 │   │   │   └── index.tsx
 │   │   ├── loans/
@@ -652,18 +222,28 @@ Generated on: 2026-07-06T21:42:51.055Z
 │   │   │   ├── math-utils.ts
 │   │   │   └── styles.ts
 │   │   ├── stats/
-│   │   │   ├── balance-timeline-chart.tsx
-│   │   │   ├── chart-container.tsx
+│   │   │   ├── dashboard/
+│   │   │   │   ├── calendar-card.tsx
+│   │   │   │   ├── cash-flow-card.tsx
+│   │   │   │   ├── net-worth-card.tsx
+│   │   │   │   ├── pace-card.tsx
+│   │   │   │   ├── stat-card.tsx
+│   │   │   │   ├── top-categories-card.tsx
+│   │   │   │   └── wrapped-card.tsx
 │   │   │   ├── chart-crosshair.tsx
-│   │   │   ├── currency-hero-row.tsx
-│   │   │   ├── currency-stat-section.tsx
-│   │   │   ├── daily-expense-line-chart.tsx
+│   │   │   ├── currency-switcher.tsx
 │   │   │   ├── delta-badge.tsx
-│   │   │   ├── stat-hero-card.tsx
-│   │   │   ├── stats-averages-row.tsx
+│   │   │   ├── insight-card.tsx
+│   │   │   ├── mini-bars.tsx
+│   │   │   ├── net-worth-chart.tsx
+│   │   │   ├── rhythm-insight-card.tsx
+│   │   │   ├── sankey-flow.tsx
+│   │   │   ├── spending-heatmap.tsx
 │   │   │   ├── stats-category-pie.tsx
+│   │   │   ├── stats-detail-shell.tsx
 │   │   │   ├── stats-empty-state.tsx
 │   │   │   ├── stats-pending-notice.tsx
+│   │   │   ├── stats-period-header.tsx
 │   │   │   └── stats-skeleton.tsx
 │   │   ├── tag/
 │   │   │   ├── action-buttons.tsx
@@ -760,6 +340,7 @@ Generated on: 2026-07-06T21:42:51.055Z
 │   │   │   ├── icon-svg.tsx
 │   │   │   ├── info-banner.tsx
 │   │   │   ├── input.tsx
+│   │   │   ├── list-item.tsx
 │   │   │   ├── permission-banner.tsx
 │   │   │   ├── pressable.tsx
 │   │   │   ├── separator.tsx
@@ -793,7 +374,6 @@ Generated on: 2026-07-06T21:42:51.055Z
 │   │   ├── pre-sets-accounts.ts
 │   │   └── pre-sets-categories.ts
 │   ├── contexts/
-│   │   ├── pager-scroll-control.tsx
 │   │   └── scroll-into-view-context.tsx
 │   ├── database/
 │   │   ├── mappers/
@@ -839,7 +419,6 @@ Generated on: 2026-07-06T21:42:51.055Z
 │   │   │   └── import-snapshot.ts
 │   │   ├── db.ts
 │   │   ├── events.ts
-│   │   ├── instrumentation.ts
 │   │   ├── sql.ts
 │   │   ├── transaction.ts
 │   │   └── write-queue.ts
@@ -848,6 +427,7 @@ Generated on: 2026-07-06T21:42:51.055Z
 │   │   ├── use-balance-before.ts
 │   │   ├── use-boot-hydration.ts
 │   │   ├── use-chart-font.ts
+│   │   ├── use-debounced-callback.ts
 │   │   ├── use-import-recovery.ts
 │   │   ├── use-location-permission-status.ts
 │   │   ├── use-navigation-guard.ts
@@ -907,7 +487,8 @@ Generated on: 2026-07-06T21:42:51.055Z
 │   │   ├── transaction-location.store.ts
 │   │   ├── transfers-preferences.store.ts
 │   │   ├── trash-bin.store.ts
-│   │   └── upcoming-section.store.ts
+│   │   ├── upcoming-section.store.ts
+│   │   └── week-start.store.ts
 │   ├── styles/
 │   │   ├── theme/
 │   │   │   ├── schemes/
@@ -940,6 +521,7 @@ Generated on: 2026-07-06T21:42:51.055Z
 │   │   └── transactions.ts
 │   └── utils/
 │       ├── account-types-list.ts
+│       ├── attachments.ts
 │       ├── file-icon.ts
 │       ├── format-file-size.ts
 │       ├── get-week-start-on.ts

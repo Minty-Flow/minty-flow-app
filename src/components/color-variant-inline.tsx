@@ -11,6 +11,7 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { EmptyState } from "~/components/ui/empty-state"
 import { IconSvg } from "~/components/ui/icon-svg"
+import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { useScrollIntoView } from "~/hooks/use-scroll-into-view"
@@ -135,7 +136,7 @@ export function ColorVariantInline({
   return (
     <View ref={wrapperRef} style={styles.wrapper}>
       {/* Trigger row – same look as the previous "Change color" row */}
-      <Pressable style={styles.triggerRow} onPress={handleToggle}>
+      <ListItem style={styles.triggerRow} onPress={handleToggle}>
         <View style={styles.triggerLeft}>
           <IconSvg name="palette" size={24} />
           <Text variant="default" style={styles.triggerLabel}>
@@ -162,7 +163,7 @@ export function ColorVariantInline({
             style={styles.chevronIcon}
           />
         </View>
-      </Pressable>
+      </ListItem>
 
       {/* Inline panel – same content and styles as ColorVariantSheet */}
       {expanded && (
@@ -244,11 +245,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   // Trigger row – matches modify screen settings row styles
   triggerRow: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
   },
   triggerLeft: {
     flexDirection: "row",

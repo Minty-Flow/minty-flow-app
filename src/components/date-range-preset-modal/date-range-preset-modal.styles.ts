@@ -56,11 +56,7 @@ export const dateRangePresetModalStyles = StyleSheet.create((theme) => {
       marginBottom: 8,
     },
     rowBase: {
-      flexDirection: "row",
-      alignItems: "center",
       justifyContent: "space-between",
-      paddingVertical: 14,
-      paddingHorizontal: 20,
       backgroundColor: theme.colors.surface,
     },
     rowText: {
@@ -78,11 +74,7 @@ export const dateRangePresetModalStyles = StyleSheet.create((theme) => {
       backgroundColor: theme.colors.surface,
     },
     customRangeRow: {
-      flexDirection: "row",
-      alignItems: "center",
       justifyContent: "space-between",
-      paddingVertical: 14,
-      paddingHorizontal: 20,
     },
     customRangeValue: {
       flexDirection: "row",

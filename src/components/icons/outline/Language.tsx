@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgLanguage = (props: SvgProps) => (
   <Svg
     width={24}
@@ -20,5 +19,5 @@ const SvgLanguage = (props: SvgProps) => (
     <Path d="M19.1 18h-6.2" />
     <Path d="M6.694 3l.793 .582" />
   </Svg>
-)
-export default SvgLanguage
+);
+export default SvgLanguage;

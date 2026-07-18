@@ -2,12 +2,9 @@ import {
   differenceInCalendarDays,
   endOfDay,
   endOfMonth,
-  endOfWeek,
   endOfYear,
-  format,
   startOfDay,
   startOfMonth,
-  startOfWeek,
   startOfYear,
 } from "date-fns"
 import { useEffect, useMemo, useState } from "react"
@@ -29,9 +26,16 @@ import { useCategories } from "~/stores/db/category.store"
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { Budget } from "~/types/budgets"
-import { getWeekStartsOn } from "~/utils/get-week-start-on"
 import { formatDisplayValue } from "~/utils/number-format"
-import { formatCustomPeriodRange } from "~/utils/time-utils"
+import {
+  endOfAppWeek,
+  formatCustomPeriodRange,
+  formatDateKey,
+  formatMonthKey,
+  formatWeekKey,
+  formatYear,
+  startOfAppWeek,
+} from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
 /**
@@ -58,17 +62,17 @@ function getBudgetPeriodKey(budget: BudgetAlertCtx): string {
   const now = new Date()
   switch (budget.period) {
     case "daily":
-      return format(now, "yyyy-MM-dd")
+      return formatDateKey(now)
     case "weekly":
-      return format(now, "RRRR-'W'II")
+      return formatWeekKey(now)
     case "monthly":
-      return format(now, "yyyy-MM")
+      return formatMonthKey(now)
     case "yearly":
-      return format(now, "yyyy")
+      return formatYear(now)
     case "custom":
       // Custom budgets have a fixed range — key on startDate so each unique
       // custom period gets its own alert slot.
-      return budget.startDate.toISOString().slice(0, 10)
+      return formatDateKey(budget.startDate)
   }
 }
 
@@ -118,14 +122,13 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
     // so rolling periods (daily/weekly/monthly/yearly) snap at boundary cross.
     void tick
     const now = new Date()
-    const wso = getWeekStartsOn()
     switch (budget.period) {
       case "daily":
         return { periodStart: startOfDay(now), periodEnd: endOfDay(now) }
       case "weekly":
         return {
-          periodStart: startOfWeek(now, { weekStartsOn: wso }),
-          periodEnd: endOfWeek(now, { weekStartsOn: wso }),
+          periodStart: startOfAppWeek(now),
+          periodEnd: endOfAppWeek(now),
         }
       case "monthly":
         return { periodStart: startOfMonth(now), periodEnd: endOfMonth(now) }

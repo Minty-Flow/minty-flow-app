@@ -4,8 +4,8 @@ import { Linking, ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { InfoBanner } from "~/components/ui/info-banner"
+import { ListItem } from "~/components/ui/list-item"
 import { PermissionBanner } from "~/components/ui/permission-banner"
-import { Pressable } from "~/components/ui/pressable"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -40,7 +40,7 @@ export default function TransactionLocationScreen() {
         showBanner={showBanner}
       />
 
-      <Pressable
+      <ListItem
         style={styles.settingRow}
         onPress={() => setIsEnabled(!isEnabled)}
       >
@@ -55,10 +55,10 @@ export default function TransactionLocationScreen() {
           </Text>
         </View>
         <Switch value={isEnabled} onValueChange={setIsEnabled} />
-      </Pressable>
+      </ListItem>
 
       {isEnabled && (
-        <Pressable
+        <ListItem
           style={styles.settingRow}
           onPress={() => setAutoAttach(!autoAttach)}
         >
@@ -75,7 +75,7 @@ export default function TransactionLocationScreen() {
             </Text>
           </View>
           <Switch value={autoAttach} onValueChange={setAutoAttach} />
-        </Pressable>
+        </ListItem>
       )}
 
       <InfoBanner
@@ -96,11 +96,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingBottom: 40,
   },
   settingRow: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
     gap: 16,
   },
   labelContainer: {
