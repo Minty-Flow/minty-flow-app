@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgAlertSquareRounded = (props: SvgProps) => (
   <Svg
     width={24}
@@ -17,5 +16,5 @@ const SvgAlertSquareRounded = (props: SvgProps) => (
     <Path d="M12 8v4" />
     <Path d="M12 16h.01" />
   </Svg>
-)
-export default SvgAlertSquareRounded
+);
+export default SvgAlertSquareRounded;

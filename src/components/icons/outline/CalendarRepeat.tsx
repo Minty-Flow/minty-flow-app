@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgCalendarRepeat = (props: SvgProps) => (
   <Svg
     width={24}
@@ -21,5 +20,5 @@ const SvgCalendarRepeat = (props: SvgProps) => (
     <Path d="M20 18l2 -2" />
     <Path d="M19 16a3 3 0 1 0 2 5.236" />
   </Svg>
-)
-export default SvgCalendarRepeat
+);
+export default SvgCalendarRepeat;

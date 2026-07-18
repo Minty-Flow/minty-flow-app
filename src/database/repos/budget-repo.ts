@@ -23,10 +23,6 @@ export async function getAllBudgets(): Promise<RowBudget[]> {
   return query<RowBudget>(`SELECT * FROM budgets ORDER BY name ASC`)
 }
 
-// export async function getBudgetById(id: string): Promise<RowBudget | null> {
-//   return queryOne<RowBudget>(`SELECT * FROM budgets WHERE id = ?`, [id])
-// }
-
 export async function getBudgetAccountIds(budgetId: string): Promise<string[]> {
   const rows = await query<RowBudgetAccount>(
     `SELECT * FROM budget_accounts WHERE budget_id = ?`,

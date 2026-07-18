@@ -9,17 +9,6 @@ export async function getPendingTransactions(): Promise<RowTransaction[]> {
   )
 }
 
-// export async function getTransactionsByIds(
-//   ids: string[],
-// ): Promise<RowTransaction[]> {
-//   if (ids.length === 0) return []
-//   const placeholders = ids.map(() => "?").join(",")
-//   return query<RowTransaction>(
-//     `SELECT * FROM transactions WHERE id IN (${placeholders})`,
-//     ids,
-//   )
-// }
-
 export async function getTransactionsByFilter(params: {
   from?: string
   to?: string

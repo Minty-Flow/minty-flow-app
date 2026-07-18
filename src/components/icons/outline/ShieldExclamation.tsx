@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgShieldExclamation = (props: SvgProps) => (
   <Svg
     width={24}
@@ -17,5 +16,5 @@ const SvgShieldExclamation = (props: SvgProps) => (
     <Path d="M19 16v3" />
     <Path d="M19 22v.01" />
   </Svg>
-)
-export default SvgShieldExclamation
+);
+export default SvgShieldExclamation;

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 
 import { on } from "~/database/events"
 import { fetchAllStatsData } from "~/database/services-sqlite/stats-service"
+import { useDebouncedCallback } from "~/hooks/use-debounced-callback"
 import { useAccounts } from "~/stores/db/account.store"
 import { useWeekStartStore } from "~/stores/week-start.store"
 import type { Account } from "~/types/accounts"
@@ -104,7 +105,6 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
     StatsSupplement[]
   >([])
   const [isLoading, setIsLoading] = useState(true)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const fetchIdRef = useRef(0)
 
   const accounts = useAccounts()
@@ -121,13 +121,7 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
     }
   }, [])
 
-  const debouncedFetch = useCallback(
-    (range: StatsDateRange) => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      debounceRef.current = setTimeout(() => fetchData(range), 300)
-    },
-    [fetchData],
-  )
+  const debouncedFetch = useDebouncedCallback(fetchData, 300)
 
   // `thisWeek` is the one preset whose boundaries move when the week-start
   // setting changes; every other range is week-agnostic, and week *buckets*
@@ -164,7 +158,6 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
       unsub2()
       unsub3()
       unsub4()
-      if (debounceRef.current) clearTimeout(debounceRef.current)
     }
   }, [dateRange, debouncedFetch])
 

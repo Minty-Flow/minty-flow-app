@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgDeviceMobileOff = (props: SvgProps) => (
   <Svg
     width={24}
@@ -18,5 +17,5 @@ const SvgDeviceMobileOff = (props: SvgProps) => (
     <Path d="M3 3l18 18" />
     <Path d="M12 17v.01" />
   </Svg>
-)
-export default SvgDeviceMobileOff
+);
+export default SvgDeviceMobileOff;

@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgChartHistogram = (props: SvgProps) => (
   <Svg
     width={24}
@@ -20,5 +19,5 @@ const SvgChartHistogram = (props: SvgProps) => (
     <Path d="M8 16v5" />
     <Path d="M3 11c6 0 5 -5 9 -5s3 5 9 5" />
   </Svg>
-)
-export default SvgChartHistogram
+);
+export default SvgChartHistogram;

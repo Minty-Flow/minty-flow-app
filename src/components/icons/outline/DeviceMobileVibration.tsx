@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgDeviceMobileVibration = (props: SvgProps) => (
   <Svg
     width={24}
@@ -18,5 +17,5 @@ const SvgDeviceMobileVibration = (props: SvgProps) => (
     <Path d="M9 17l0 .01" />
     <Path d="M21 6l-2 3l2 3l-2 3l2 3" />
   </Svg>
-)
-export default SvgDeviceMobileVibration
+);
+export default SvgDeviceMobileVibration;

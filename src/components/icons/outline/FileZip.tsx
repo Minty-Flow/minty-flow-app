@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgFileZip = (props: SvgProps) => (
   <Svg
     width={24}
@@ -22,5 +21,5 @@ const SvgFileZip = (props: SvgProps) => (
     <Path d="M11 13l-1 0" />
     <Path d="M13 15l-1 0" />
   </Svg>
-)
-export default SvgFileZip
+);
+export default SvgFileZip;

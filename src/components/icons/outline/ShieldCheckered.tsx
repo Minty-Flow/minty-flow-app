@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgShieldCheckered = (props: SvgProps) => (
   <Svg
     width={24}
@@ -17,5 +16,5 @@ const SvgShieldCheckered = (props: SvgProps) => (
     <Path d="M12 3v18" />
     <Path d="M3.5 12h17" />
   </Svg>
-)
-export default SvgShieldCheckered
+);
+export default SvgShieldCheckered;

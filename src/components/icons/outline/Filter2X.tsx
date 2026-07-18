@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgFilter2X = (props: SvgProps) => (
   <Svg
     width={24}
@@ -18,5 +17,5 @@ const SvgFilter2X = (props: SvgProps) => (
     <Path d="M9 18h4" />
     <Path d="M22 22l-5 -5m0 5l5 -5" />
   </Svg>
-)
-export default SvgFilter2X
+);
+export default SvgFilter2X;

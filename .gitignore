@@ -44,7 +44,6 @@ app-example
 /android
 /memory
 
-tabler-icons
 .tmp
 
 
@@ -110,3 +109,6 @@ AGENTS.md
 
 # Agent skills
 .agents/
+
+# tabler-icons source clone (own .git, pulled independently)
+tabler-icons/

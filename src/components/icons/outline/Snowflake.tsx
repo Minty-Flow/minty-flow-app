@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgSnowflake = (props: SvgProps) => (
   <Svg
     width={24}
@@ -26,5 +25,5 @@ const SvgSnowflake = (props: SvgProps) => (
     <Path d="M4.072 9.732l1.866 -1.232l.134 -2.232" />
     <Path d="M3.34 7l5.629 3.25l2.99 -1.738" />
   </Svg>
-)
-export default SvgSnowflake
+);
+export default SvgSnowflake;

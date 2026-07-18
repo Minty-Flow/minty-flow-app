@@ -1,14 +1,7 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgSunset = (props: SvgProps) => (
-  <Svg
-    width={24}
-    height={24}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    {...props}
-  >
+  <Svg width={24} height={24} viewBox="0 0 24 24" fill="currentColor" {...props}>
     <Path d="M4 16a1 1 0 0 1 0 2h-1a1 1 0 0 1 0 -2z" />
     <Path d="M21 16a1 1 0 0 1 0 2h-1a1 1 0 0 1 0 -2z" />
     <Path d="M6.307 9.893l.7 .7a1 1 0 0 1 -1.414 1.414l-.7 -.7a1 1 0 0 1 1.414 -1.414" />
@@ -17,5 +10,5 @@ const SvgSunset = (props: SvgProps) => (
     <Path d="M3 20h18a1 1 0 0 1 0 2h-18a1 1 0 0 1 0 -2" />
     <Path d="M12 12a5 5 0 0 1 4.583 7.002h-9.166a5 5 0 0 1 4.583 -7.002" />
   </Svg>
-)
-export default SvgSunset
+);
+export default SvgSunset;

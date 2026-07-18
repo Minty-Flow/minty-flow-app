@@ -100,13 +100,3 @@ export function useGoalsByType(goalType: GoalType): Goal[] {
     ),
   )
 }
-
-// export async function fetchGoalsByType(goalType: GoalType): Promise<Goal[]> {
-//   const rows = await getGoalsByType(goalType)
-//   return Promise.all(
-//     rows.map(async (row) => {
-//       const accountIds = await getGoalAccountIds(row.id)
-//       return mapGoal(row, accountIds)
-//     }),
-//   )
-// }
