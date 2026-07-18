@@ -102,11 +102,7 @@ export const goalModifyStyles = StyleSheet.create((theme) => ({
   },
   // Target date row inside settings list
   targetDateSettingsRow: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
   },
   targetDateLeft: {
     flexDirection: "row",

@@ -18,6 +18,7 @@ import {
 } from "~/components/ui/date-time-picker"
 import { IconSvg } from "~/components/ui/icon-svg"
 import { Input } from "~/components/ui/input"
+import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Separator } from "~/components/ui/separator"
 import { Text } from "~/components/ui/text"
@@ -37,6 +38,7 @@ import { getThemeStrict } from "~/styles/theme/registry"
 import { type GoalType, GoalTypeEnum } from "~/types/goals"
 import { NewEnum } from "~/types/new"
 import { logger } from "~/utils/logger"
+import { formatShortMonthDayYear } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
 import { GoalFormFooter } from "./goal-form-footer"
@@ -209,11 +211,7 @@ export function GoalModifyContent({
   const currentColorScheme = getThemeStrict(formColorSchemeName)
 
   const formattedTargetDate = formTargetDate
-    ? new Date(formTargetDate).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
+    ? formatShortMonthDayYear(formTargetDate)
     : null
 
   if (!isAddMode && !goal) {
@@ -344,7 +342,7 @@ export function GoalModifyContent({
           </View>
 
           {/* Target date — Pressable row that opens a date picker modal */}
-          <Pressable
+          <ListItem
             style={goalModifyStyles.targetDateSettingsRow}
             onPress={() =>
               targetDatePicker.open(
@@ -388,7 +386,7 @@ export function GoalModifyContent({
                 </Text>
               )}
             </View>
-          </Pressable>
+          </ListItem>
 
           {/* Color variant picker */}
           <ColorVariantInline

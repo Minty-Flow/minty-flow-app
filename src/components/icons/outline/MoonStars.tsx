@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgMoonStars = (props: SvgProps) => (
   <Svg
     width={24}
@@ -17,5 +16,5 @@ const SvgMoonStars = (props: SvgProps) => (
     <Path d="M17 4a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2" />
     <Path d="M19 11h2m-1 -1v2" />
   </Svg>
-)
-export default SvgMoonStars
+);
+export default SvgMoonStars;

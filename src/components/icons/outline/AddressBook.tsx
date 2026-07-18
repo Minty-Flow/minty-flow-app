@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgAddressBook = (props: SvgProps) => (
   <Svg
     width={24}
@@ -20,5 +19,5 @@ const SvgAddressBook = (props: SvgProps) => (
     <Path d="M4 12h3" />
     <Path d="M4 16h3" />
   </Svg>
-)
-export default SvgAddressBook
+);
+export default SvgAddressBook;

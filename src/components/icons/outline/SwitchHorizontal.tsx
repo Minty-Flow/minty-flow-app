@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgSwitchHorizontal = (props: SvgProps) => (
   <Svg
     width={24}
@@ -18,5 +17,5 @@ const SvgSwitchHorizontal = (props: SvgProps) => (
     <Path d="M8 13l-4 4l4 4" />
     <Path d="M4 17l9 0" />
   </Svg>
-)
-export default SvgSwitchHorizontal
+);
+export default SvgSwitchHorizontal;

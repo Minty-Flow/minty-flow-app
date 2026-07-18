@@ -10,7 +10,7 @@ import { FormLocationPicker } from "~/components/location/form-location-picker"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { TransactionTypeSelector } from "~/components/transaction/transaction-type-selector"
 import { Input } from "~/components/ui/input"
-import { Pressable } from "~/components/ui/pressable"
+import { ListItem } from "~/components/ui/list-item"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -49,6 +49,7 @@ import {
   TransactionSubTypeEnum,
   TransactionTypeEnum,
 } from "~/types/transactions"
+import { toStoredAttachment } from "~/utils/attachments"
 import { logger } from "~/utils/logger"
 import { buildRRuleString, countOccurrencesBetween } from "~/utils/recurrence"
 import { Toast } from "~/utils/toast"
@@ -279,6 +280,7 @@ export function TransactionFormV3({
     attachmentState,
     setAttachmentState,
     removeAttachment,
+    flushRemovedAttachments,
     handleSelectFromFiles,
     handleTakePhoto,
     handleSelectMultipleMedia,
@@ -441,7 +443,9 @@ export function TransactionFormV3({
         ? {}
         : { ...(transaction?.extra ?? {}) }
       if (attachmentState.list.length > 0) {
-        builtExtra.attachments = JSON.stringify(attachmentState.list)
+        builtExtra.attachments = JSON.stringify(
+          attachmentState.list.map(toStoredAttachment),
+        )
       } else {
         delete builtExtra.attachments
       }
@@ -557,6 +561,7 @@ export function TransactionFormV3({
           title: t("components.transactionForm.toast.transactionUpdated"),
         })
       }
+      flushRemovedAttachments()
       allowNavigation()
       router.back()
     } catch (error) {
@@ -746,7 +751,7 @@ export function TransactionFormV3({
 
           {transactionType === TransactionTypeEnum.EXPENSE &&
             !recurring.enabled && (
-              <Pressable
+              <ListItem
                 style={transactionFormStyles.switchRow}
                 onPress={() => {
                   setValue(
@@ -774,7 +779,7 @@ export function TransactionFormV3({
                   </Text>
                 </View>
                 <Switch value={isRefund} disabled={recurring.enabled} />
-              </Pressable>
+              </ListItem>
             )}
 
           <FormAccountPicker

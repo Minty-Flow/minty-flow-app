@@ -275,6 +275,7 @@ const styles = StyleSheet.create((theme) => ({
   headerCard: {
     backgroundColor: theme.colors.secondary,
     borderRadius: theme.radius,
+    marginHorizontal: 20,
   },
   headerTopRow: {
     flexDirection: "row",
@@ -305,6 +306,7 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     gap: 5,
     marginVertical: 5,
+    marginHorizontal: 20,
   },
   summaryPillCard: {
     flex: 1,

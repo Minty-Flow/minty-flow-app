@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgGripHorizontal = (props: SvgProps) => (
   <Svg
     width={24}
@@ -20,5 +19,5 @@ const SvgGripHorizontal = (props: SvgProps) => (
     <Path d="M18 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
     <Path d="M18 15a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
   </Svg>
-)
-export default SvgGripHorizontal
+);
+export default SvgGripHorizontal;

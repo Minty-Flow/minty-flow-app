@@ -12,7 +12,6 @@ import { useUnistyles } from "react-native-unistyles"
 import { DateRangePresetModal } from "~/components/date-range-preset-modal"
 import { Chip } from "~/components/ui/chips"
 import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
-import { usePagerScrollControl } from "~/contexts/pager-scroll-control"
 import type {
   AttachmentsOptionsType,
   GroupByOption,
@@ -65,15 +64,6 @@ export function TransactionFilterHeader({
   )
   const [dateModalVisible, setDateModalVisible] = useState(false)
   const { theme } = useUnistyles()
-  const pagerScroll = usePagerScrollControl()
-
-  const disablePagerScroll = useCallback(() => {
-    pagerScroll?.setScrollEnabled(false)
-  }, [pagerScroll])
-
-  const enablePagerScroll = useCallback(() => {
-    pagerScroll?.setScrollEnabled(true)
-  }, [pagerScroll])
 
   const togglePanel = useCallback((key: FilterPanelKey) => {
     setExpandedPanel((prev) => (prev === key ? null : key))
@@ -391,14 +381,11 @@ export function TransactionFilterHeader({
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={filterHeaderStyles.pillRow}
-        onTouchStart={disablePagerScroll}
-        onTouchEnd={enablePagerScroll}
-        onTouchCancel={enablePagerScroll}
       >
         {hasAnyFilter ? (
           <Chip
             onPress={handleClearAll}
-            leading="x"
+            leading="x-outline"
             label={t("components.filters.clearAll")}
             selected={false} // keep it outline style
             labelStyle={{ color: theme.colors.primary }}

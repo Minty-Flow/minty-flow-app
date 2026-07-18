@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgTrendingUp = (props: SvgProps) => (
   <Svg
     width={24}
@@ -16,5 +15,5 @@ const SvgTrendingUp = (props: SvgProps) => (
     <Path d="M3 17l6 -6l4 4l8 -8" />
     <Path d="M14 7l7 0l0 7" />
   </Svg>
-)
-export default SvgTrendingUp
+);
+export default SvgTrendingUp;

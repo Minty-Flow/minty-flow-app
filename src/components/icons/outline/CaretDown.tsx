@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgCaretDown = (props: SvgProps) => (
   <Svg
     width={24}
@@ -15,5 +14,5 @@ const SvgCaretDown = (props: SvgProps) => (
   >
     <Path d="M6 10l6 6l6 -6h-12" />
   </Svg>
-)
-export default SvgCaretDown
+);
+export default SvgCaretDown;

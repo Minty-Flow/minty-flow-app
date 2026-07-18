@@ -9,6 +9,7 @@ import { SmartAmountInput } from "~/components/smart-amount-input"
 import { Button } from "~/components/ui/button"
 import { IconSvg } from "~/components/ui/icon-svg"
 import { Input } from "~/components/ui/input"
+import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
@@ -291,7 +292,7 @@ export default function AddItemScreen() {
         )}
 
         {/* Split Evenly toggle — switchRow pattern from budget-modify */}
-        <Pressable
+        <ListItem
           style={styles.switchRow}
           onPress={() => setSplitEvenly(!splitEvenly)}
           accessibilityRole="switch"
@@ -304,7 +305,7 @@ export default function AddItemScreen() {
             </Text>
           </View>
           <Switch value={splitEvenly} onValueChange={setSplitEvenly} />
-        </Pressable>
+        </ListItem>
 
         {/* ── Participants section ──────────────────────────── */}
         <Text style={styles.sectionLabel}>

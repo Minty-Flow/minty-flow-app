@@ -29,6 +29,12 @@ const IGNORE_PATHS: string[] = [
   ".oac.json"
 ];
 
+// Dirs listed but not recursed into — contents are generated, not hand-authored
+const COLLAPSE_PATHS: Record<string, string> = {
+  "src/components/icons/filled": "tabler-icons, generated via `pnpm icons:sync` — not enumerated",
+  "src/components/icons/outline": "tabler-icons, generated via `pnpm icons:sync` — not enumerated"
+};
+
 const MAX_DEPTH = 8;
 
 function isIgnoredPath(fullPath: string): boolean {
@@ -68,6 +74,12 @@ function walk(dir: string, prefix: string = "", depth: number = 0): string {
       const fullPath = path.join(dir, entry.name);
 
       if (entry.isDirectory()) {
+        const rel = path.relative(ROOT, fullPath);
+        const collapseNote = COLLAPSE_PATHS[rel];
+        if (collapseNote) {
+          return prefix + connector + entry.name + `/ /* ${collapseNote} */\n`;
+        }
+
         // Guard against symlinked directories → prevents infinite loops
         const real = fs.realpathSync(fullPath);
         const rootReal = fs.realpathSync(ROOT);

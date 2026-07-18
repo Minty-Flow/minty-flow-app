@@ -11,11 +11,7 @@ export const triggerStyles = StyleSheet.create((theme) => ({
     width: "100%",
   },
   triggerRow: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
   },
   triggerLeft: {
     flexDirection: "row",
@@ -82,11 +78,7 @@ export const modalStyles = StyleSheet.create((theme) => ({
     alignItems: "center",
   },
   item: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
   },
   itemPressed: {
     opacity: 0.8,

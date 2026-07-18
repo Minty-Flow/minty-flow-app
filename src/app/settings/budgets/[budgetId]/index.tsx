@@ -2,11 +2,9 @@ import {
   differenceInCalendarDays,
   endOfDay,
   endOfMonth,
-  endOfWeek,
   endOfYear,
   startOfDay,
   startOfMonth,
-  startOfWeek,
   startOfYear,
 } from "date-fns"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
@@ -46,9 +44,12 @@ import { useCategories } from "~/stores/db/category.store"
 import { useTransactions } from "~/stores/db/transaction.store"
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
-import { getWeekStartsOn } from "~/utils/get-week-start-on"
 import { formatDisplayValue } from "~/utils/number-format"
-import { formatCustomPeriodRange } from "~/utils/time-utils"
+import {
+  endOfAppWeek,
+  formatCustomPeriodRange,
+  startOfAppWeek,
+} from "~/utils/time-utils"
 
 type BudgetStatus = "onTrack" | "watch" | "over"
 
@@ -205,14 +206,13 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
   // Period bounds — match card logic.
   const { periodStart, periodEnd } = (() => {
     const now = new Date()
-    const wso = getWeekStartsOn()
     switch (budget.period) {
       case "daily":
         return { periodStart: startOfDay(now), periodEnd: endOfDay(now) }
       case "weekly":
         return {
-          periodStart: startOfWeek(now, { weekStartsOn: wso }),
-          periodEnd: endOfWeek(now, { weekStartsOn: wso }),
+          periodStart: startOfAppWeek(now),
+          periodEnd: endOfAppWeek(now),
         }
       case "monthly":
         return { periodStart: startOfMonth(now), periodEnd: endOfMonth(now) }

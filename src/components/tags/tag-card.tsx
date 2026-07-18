@@ -6,7 +6,7 @@ import type { Tag } from "~/types/tags"
 
 import { DynamicIcon } from "../dynamic-icon"
 import { ChevronIcon } from "../ui/chevron-icon"
-import { Pressable } from "../ui/pressable"
+import { ListItem } from "../ui/list-item"
 import { Text } from "../ui/text"
 import { View } from "../ui/view"
 
@@ -26,7 +26,7 @@ export const TagCard = ({ tag }: TagCardProps) => {
   }
 
   return (
-    <Pressable style={styles.container} onPress={handlePress}>
+    <ListItem style={styles.container} onPress={handlePress}>
       <View
         style={[
           styles.iconContainer,
@@ -55,17 +55,12 @@ export const TagCard = ({ tag }: TagCardProps) => {
         size={20}
         color={styles.chevron.color}
       />
-    </Pressable>
+    </ListItem>
   )
 }
 
 const styles = StyleSheet.create((theme) => ({
   container: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-
     gap: 12,
   },
   iconContainer: {

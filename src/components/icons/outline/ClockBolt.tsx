@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgClockBolt = (props: SvgProps) => (
   <Svg
     width={24}
@@ -17,5 +16,5 @@ const SvgClockBolt = (props: SvgProps) => (
     <Path d="M12 7v5l3 3" />
     <Path d="M19 16l-2 3h4l-2 3" />
   </Svg>
-)
-export default SvgClockBolt
+);
+export default SvgClockBolt;

@@ -25,6 +25,7 @@ import {
 
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { IconSvg } from "~/components/ui/icon-svg"
+import { ListItem } from "~/components/ui/list-item"
 import {
   type RecurringTransactionTemplate,
   updateRecurringRuleTemplate,
@@ -70,7 +71,7 @@ function OptionRow({
   const { theme } = useUnistyles()
   const successColor = theme.colors.semantic?.success ?? theme.colors.primary
   return (
-    <Pressable
+    <ListItem
       style={({ pressed }) => [
         styles.optionRow,
         !isLast && styles.optionRowBorder,
@@ -78,7 +79,6 @@ function OptionRow({
       ]}
       onPress={onPress}
       disabled={loading}
-      android_ripple={{ color: theme.colors.rippleColor }}
     >
       <View style={styles.optionRowContent}>
         <Text style={styles.optionLabel}>{label}</Text>
@@ -94,7 +94,7 @@ function OptionRow({
           style={styles.optionChevron}
         />
       )}
-    </Pressable>
+    </ListItem>
   )
 }
 
@@ -312,12 +312,7 @@ const styles = UnistylesSheet.create((theme) => ({
     backgroundColor: `${theme.colors.onSurface}10`,
     borderColor: theme.colors.semantic.semi,
   },
-  optionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-  },
+  optionRow: {},
   optionRowBorder: {
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.semantic.semi,

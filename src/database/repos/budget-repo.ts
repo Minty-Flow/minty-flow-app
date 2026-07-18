@@ -1,18 +1,16 @@
 import {
   endOfDay,
   endOfMonth,
-  endOfWeek,
   endOfYear,
   startOfDay,
   startOfMonth,
-  startOfWeek,
   startOfYear,
 } from "date-fns"
 import type { SQLiteBindValue } from "expo-sqlite"
 
 import type { BudgetPeriod } from "~/types/budgets"
 import { BudgetPeriodEnum } from "~/types/budgets"
-import { getWeekStartsOn } from "~/utils/get-week-start-on"
+import { endOfAppWeek, startOfAppWeek } from "~/utils/time-utils"
 
 import { query, queryOne } from "../sql"
 import type {
@@ -24,10 +22,6 @@ import type {
 export async function getAllBudgets(): Promise<RowBudget[]> {
   return query<RowBudget>(`SELECT * FROM budgets ORDER BY name ASC`)
 }
-
-// export async function getBudgetById(id: string): Promise<RowBudget | null> {
-//   return queryOne<RowBudget>(`SELECT * FROM budgets WHERE id = ?`, [id])
-// }
 
 export async function getBudgetAccountIds(budgetId: string): Promise<string[]> {
   const rows = await query<RowBudgetAccount>(
@@ -53,7 +47,6 @@ export function getBudgetPeriodRange(
   endDateIso: string | null,
 ): { periodStart: string; periodEnd: string } {
   const now = new Date()
-  const weekStartsOn = getWeekStartsOn()
   let periodStart: Date
   let periodEnd: Date = now
 
@@ -63,8 +56,8 @@ export function getBudgetPeriodRange(
       periodEnd = endOfDay(now)
       break
     case BudgetPeriodEnum.WEEKLY:
-      periodStart = startOfWeek(now, { weekStartsOn })
-      periodEnd = endOfWeek(now, { weekStartsOn })
+      periodStart = startOfAppWeek(now)
+      periodEnd = endOfAppWeek(now)
       break
     case BudgetPeriodEnum.MONTHLY:
       periodStart = startOfMonth(now)

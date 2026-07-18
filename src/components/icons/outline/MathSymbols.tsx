@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgMathSymbols = (props: SvgProps) => (
   <Svg
     width={24}
@@ -23,5 +22,5 @@ const SvgMathSymbols = (props: SvgProps) => (
     <Path d="M18 20l.01 0" />
     <Path d="M4 18l4 0" />
   </Svg>
-)
-export default SvgMathSymbols
+);
+export default SvgMathSymbols;

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "version": "0.0.3",
+    "version": "0.0.5",
     "name": "Minty Flow",
     "slug": "minty-flow-app",
     "extra": {
@@ -18,7 +18,7 @@
       }
     },
     "android": {
-      "versionCode": 32,
+      "versionCode": 34,
       "permissions": [
         "READ_CONTACTS",
         "WRITE_CONTACTS",
@@ -34,10 +34,6 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.mintyflow.tracker",
       "blockedPermissions": ["android.permission.ACTIVITY_RECOGNITION"]
-    },
-    "web": {
-      "output": "static",
-      "favicon": "./src/assets/images/favicon.png"
     },
     "plugins": [
       "./plugins/with-android-release-signing",

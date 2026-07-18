@@ -3,6 +3,7 @@ import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
+import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
@@ -68,7 +69,7 @@ export function FormRecurringSection({
   return (
     <View style={transactionFormStyles.fieldBlock}>
       {/* Recurring toggle row */}
-      <Pressable
+      <ListItem
         style={transactionFormStyles.recurringSwitchRow}
         onPress={() => onToggle(!enabled)}
       >
@@ -84,7 +85,7 @@ export function FormRecurringSection({
           </Text>
         </View>
         <Switch value={enabled} onValueChange={onToggle} />
-      </Pressable>
+      </ListItem>
 
       {enabled && (
         <View>
@@ -140,7 +141,7 @@ export function FormRecurringSection({
             >
               {t("components.transactionForm.recurring.startsOn")}
             </Text>
-            <Pressable
+            <ListItem
               style={transactionFormStyles.recurringDateRow}
               onPress={onStartDatePress}
             >
@@ -161,7 +162,7 @@ export function FormRecurringSection({
                 size={20}
                 style={transactionFormStyles.chevronIcon}
               />
-            </Pressable>
+            </ListItem>
           </View>
 
           {/* Ends on */}
@@ -172,7 +173,7 @@ export function FormRecurringSection({
             >
               {t("components.transactionForm.recurring.endsOn")}
             </Text>
-            <Pressable
+            <ListItem
               style={transactionFormStyles.recurringDateRow}
               onPress={onEndPickerToggle}
             >
@@ -197,11 +198,11 @@ export function FormRecurringSection({
                 size={20}
                 style={transactionFormStyles.chevronIcon}
               />
-            </Pressable>
+            </ListItem>
 
             {endsOnPickerExpanded && (
               <View style={transactionFormStyles.endsOnPickerContainer}>
-                <Pressable
+                <ListItem
                   style={transactionFormStyles.endsOnOptionRow}
                   onPress={onEndTypeNever}
                 >
@@ -216,8 +217,8 @@ export function FormRecurringSection({
                     size={20}
                     style={transactionFormStyles.chevronIcon}
                   />
-                </Pressable>
-                <Pressable
+                </ListItem>
+                <ListItem
                   style={transactionFormStyles.endsOnOptionRow}
                   onPress={onEndTypeDate}
                 >
@@ -232,8 +233,8 @@ export function FormRecurringSection({
                     size={20}
                     style={transactionFormStyles.chevronIcon}
                   />
-                </Pressable>
-                <Pressable
+                </ListItem>
+                <ListItem
                   style={[
                     transactionFormStyles.endsOnOptionRow,
                     transactionFormStyles.endsOnOptionRowLast,
@@ -251,7 +252,7 @@ export function FormRecurringSection({
                     size={20}
                     style={transactionFormStyles.chevronIcon}
                   />
-                </Pressable>
+                </ListItem>
                 {endAfterOccurrences !== null && (
                   <View style={transactionFormStyles.occurrencePresetsRow}>
                     {ENDS_ON_OCCURRENCE_PRESETS.map((n) => (

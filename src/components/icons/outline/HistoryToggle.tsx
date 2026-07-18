@@ -1,6 +1,5 @@
-import type { SvgProps } from "react-native-svg"
-import Svg, { Path } from "react-native-svg"
-
+import Svg, { Path } from 'react-native-svg';
+import type { SvgProps } from 'react-native-svg';
 const SvgHistoryToggle = (props: SvgProps) => (
   <Svg
     width={24}
@@ -20,5 +19,5 @@ const SvgHistoryToggle = (props: SvgProps) => (
     <Path d="M6.907 4.579a8.954 8.954 0 0 1 3.093 -1.356" />
     <Path d="M12 8v4l3 3" />
   </Svg>
-)
-export default SvgHistoryToggle
+);
+export default SvgHistoryToggle;

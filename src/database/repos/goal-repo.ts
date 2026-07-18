@@ -13,10 +13,6 @@ export async function getArchivedGoals(): Promise<RowGoal[]> {
   )
 }
 
-// export async function getGoalById(id: string): Promise<RowGoal | null> {
-//   return queryOne<RowGoal>(`SELECT * FROM goals WHERE id = ?`, [id])
-// }
-
 export async function getGoalAccountIds(goalId: string): Promise<string[]> {
   const rows = await query<RowGoalAccount>(
     `SELECT * FROM goal_accounts WHERE goal_id = ?`,

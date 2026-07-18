@@ -9,7 +9,7 @@ export interface ExportRecord {
   fileName: string
   /** App-private file:// URI written at export time. */
   uri: string
-  type: "json" | "csv"
+  type: "json" | "csv" | "zip"
   exportedAt: string // ISO date string
 }
 

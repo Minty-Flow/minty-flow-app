@@ -19,6 +19,7 @@ import {
 } from "~/components/ui/date-time-picker"
 import { IconSvg } from "~/components/ui/icon-svg"
 import { Input } from "~/components/ui/input"
+import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Separator } from "~/components/ui/separator"
 import { Text } from "~/components/ui/text"
@@ -41,6 +42,7 @@ import {
   TransactionTypeEnum,
 } from "~/types/transactions"
 import { logger } from "~/utils/logger"
+import { formatShortMonthDayYear } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
 import { LoanFormFooter } from "./loan-form-footer"
@@ -258,11 +260,7 @@ export function LoanModifyContent({
   const currentColorScheme = getThemeStrict(formColorSchemeName)
 
   const formattedDueDate = formDueDate
-    ? new Date(formDueDate).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
+    ? formatShortMonthDayYear(formDueDate)
     : null
 
   if (!isAddMode && !loan) {
@@ -402,7 +400,7 @@ export function LoanModifyContent({
             />
 
             {/* Due date — optional pressable row */}
-            <Pressable
+            <ListItem
               style={loanModifyStyles.dueDateSettingsRow}
               onPress={() =>
                 dueDatePicker.open(
@@ -446,7 +444,7 @@ export function LoanModifyContent({
                   </Text>
                 )}
               </View>
-            </Pressable>
+            </ListItem>
           </View>
 
           {/* Description input — optional */}
