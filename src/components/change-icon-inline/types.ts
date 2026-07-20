@@ -1,4 +1,4 @@
-import type { IconSize } from "~/components/ui/icon-svg"
+import type { IconSize } from "~/components/icons"
 import type { MintyColorScheme } from "~/styles/theme/types"
 
 export interface ChangeIconInlineProps {

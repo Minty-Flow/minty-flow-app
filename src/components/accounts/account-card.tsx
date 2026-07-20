@@ -2,7 +2,7 @@ import { useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/ui/icon-svg"
+import { IconSvg } from "~/components/icons"
 import type { Account } from "~/types/accounts"
 import { TransactionTypeEnum } from "~/types/transactions"
 

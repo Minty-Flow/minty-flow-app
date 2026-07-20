@@ -19,8 +19,8 @@ import {
 } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { IconSvg } from "~/components/icons"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
-import { IconSvg } from "~/components/ui/icon-svg"
 import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { type LoanType, LoanTypeEnum } from "~/types/loans"

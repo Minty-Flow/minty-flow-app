@@ -1,7 +1,7 @@
+import { IconSvg } from "~/components/icons"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 
 import { Button } from "./ui/button"
-import { IconSvg } from "./ui/icon-svg"
 
 export const PrivacyEyeControl = () => {
   const { privacyMode: privacyModeEnabled, togglePrivacyMode: togglePrivacy } =

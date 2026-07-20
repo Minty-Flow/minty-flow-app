@@ -1,11 +1,11 @@
 import { useUnistyles } from "react-native-unistyles"
 
-import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
+import { IconSvg, type IconSvgName } from "~/components/icons"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import type { ThemeVariant, VariantOption } from "~/styles/theme/types"
 
-import type { ThemeVariant, VariantOption } from "../../utils/theme-utils"
 import { themeScreenStyles } from "./theme.styles"
 
 interface ThemeVariantPillsProps {

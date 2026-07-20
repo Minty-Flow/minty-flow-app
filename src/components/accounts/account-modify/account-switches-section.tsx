@@ -2,7 +2,7 @@ import type { Control } from "react-hook-form"
 import { Controller } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
-import { IconSvg } from "~/components/ui/icon-svg"
+import { IconSvg } from "~/components/icons"
 import { ListItem } from "~/components/ui/list-item"
 import { Separator } from "~/components/ui/separator"
 import { Switch } from "~/components/ui/switch"
