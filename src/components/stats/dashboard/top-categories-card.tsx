@@ -1,10 +1,12 @@
+import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { Money } from "~/components/money"
+import { getCategoryColor } from "~/components/stats/stats-category-pie"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { getThemeStrict } from "~/styles/theme/registry"
+import { getThemeVariantPalette, shuffleArray } from "~/styles/theme/utils"
 import type { CategoryBreakdownItem } from "~/types/stats"
 
 import { StatCard } from "./stat-card"
@@ -26,6 +28,11 @@ export function TopCategoriesCard({
   const top = breakdown.filter((b) => b.totalExpense > 0).slice(0, 3)
   const maxExpense = top[0]?.totalExpense ?? 0
 
+  const fallbackPalette = useMemo(
+    () => shuffleArray(getThemeVariantPalette(theme.name)),
+    [theme.name],
+  )
+
   return (
     <StatCard
       title={t("screens.stats.dashboard.topCategories")}
@@ -36,10 +43,8 @@ export function TopCategoriesCard({
         <Text variant="muted">{t("screens.stats.pieToggle.noData")}</Text>
       ) : (
         <View style={styles.list}>
-          {top.map((item) => {
-            const color =
-              getThemeStrict(item.categoryColorSchemeName)?.primary ??
-              theme.colors.primary
+          {top.map((item, index) => {
+            const color = getCategoryColor(item, index, fallbackPalette)
             const ratio = maxExpense > 0 ? item.totalExpense / maxExpense : 0
             return (
               <View key={item.categoryId ?? "uncategorized"} style={styles.row}>
@@ -55,6 +60,7 @@ export function TopCategoriesCard({
                     tone="transfer"
                     variant="muted"
                     compact
+                    style={styles.amount}
                   />
                 </View>
                 <View style={styles.track}>
@@ -92,6 +98,12 @@ const styles = StyleSheet.create((theme) => ({
   },
   name: {
     flex: 1,
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.onSurface,
+  },
+  amount: {
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.semantic.semi,
   },
   track: {
     height: 4,

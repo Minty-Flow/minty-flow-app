@@ -22,12 +22,12 @@ import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSw
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
+import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
-import { IconSvg } from "~/components/ui/icon-svg"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { on } from "~/database/events"

@@ -1,7 +1,8 @@
 import { Pressable, type StyleProp, type ViewStyle } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
-import { IconSvg, type IconSvgName } from "./ui/icon-svg"
+import { IconSvg, type IconSvgName } from "~/components/icons"
+
 import { Text } from "./ui/text"
 import { View } from "./ui/view"
 

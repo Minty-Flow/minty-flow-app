@@ -1,8 +1,8 @@
 import { ScrollView, View } from "react-native"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
+import { IconSvg } from "~/components/icons"
 import { Chip } from "~/components/ui/chips"
-import { IconSvg } from "~/components/ui/icon-svg"
 import type { Account } from "~/types/accounts"
 
 import { filterHeaderStyles } from "../filter-header.styles"

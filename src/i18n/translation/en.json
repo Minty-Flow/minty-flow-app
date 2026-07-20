@@ -448,6 +448,9 @@
           "footerCaption": "When enabled, your current location can be attached to new transactions. You can still add or remove it manually on each transaction."
         }
       },
+      "insights": {
+        "title": "Insights"
+      },
       "trash": {
         "title": "Trash",
         "viewRemovedList": "View removed list",

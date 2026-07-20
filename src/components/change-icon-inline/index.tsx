@@ -56,7 +56,6 @@ export function ChangeIconInline({
     error: theme.colors.error,
     onError: theme.colors.onError,
     semantic: theme.colors.semantic,
-    rippleColor: theme.colors.rippleColor,
     shadow: theme.colors.shadow,
     boxShadow: theme.colors.boxShadow,
     radius: theme.radius,

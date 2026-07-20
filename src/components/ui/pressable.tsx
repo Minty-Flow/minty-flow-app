@@ -58,6 +58,6 @@ const pressableStyles = StyleSheet.create((theme) => ({
     overflow: "hidden",
   },
   ripple: {
-    color: theme.colors.rippleColor,
+    color: theme.rippleColor,
   },
 }))

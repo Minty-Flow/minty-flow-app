@@ -4,6 +4,7 @@ import { FlatList, Modal, Pressable, TextInput, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { IconSvg, type IconSvgName } from "~/components/icons"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
@@ -14,7 +15,6 @@ import {
 import type { MintyColorScheme } from "~/styles/theme/types"
 
 import { DynamicIcon } from "../dynamic-icon"
-import { IconSvg, type IconSvgName } from "../ui/icon-svg"
 
 interface IconSelectionModalProps {
   visible: boolean

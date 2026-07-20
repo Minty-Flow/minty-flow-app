@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-07-18T11:42:31.451Z
+Generated on: 2026-07-20T23:11:58.637Z
 ```
 ./
 ├── .github/
@@ -28,10 +28,9 @@ Generated on: 2026-07-18T11:42:31.451Z
 ├── .zed/
 │   └── settings.json
 ├── docs/
-│   ├── refund-loans-new-design.md
-│   ├── release-notes-format.md
 │   ├── sankey-flow-decision.md
-│   ├── stats-redesign-plan.md
+│   ├── stats-improvement-plan.md
+│   ├── stats-recurring-spending-map-plan.md
 │   └── STRUCTURE.md
 ├── plugins/
 │   └── with-android-release-signing.mts
@@ -193,7 +192,10 @@ Generated on: 2026-07-18T11:42:31.451Z
 │   │   │   └── goal-card.tsx
 │   │   ├── icons/
 │   │   │   ├── filled/ /* tabler-icons, generated via `pnpm icons:sync` — not enumerated */
-│   │   │   └── outline/ /* tabler-icons, generated via `pnpm icons:sync` — not enumerated */
+│   │   │   ├── outline/ /* tabler-icons, generated via `pnpm icons:sync` — not enumerated */
+│   │   │   ├── icon-map.ts
+│   │   │   ├── icon-svg.tsx
+│   │   │   └── index.ts
 │   │   ├── inline-category-picker/
 │   │   │   └── index.tsx
 │   │   ├── loans/
@@ -337,7 +339,6 @@ Generated on: 2026-07-18T11:42:31.451Z
 │   │   │   ├── chips.tsx
 │   │   │   ├── collapsible.tsx.txt
 │   │   │   ├── empty-state.tsx
-│   │   │   ├── icon-svg.tsx
 │   │   │   ├── info-banner.tsx
 │   │   │   ├── input.tsx
 │   │   │   ├── list-item.tsx
@@ -535,7 +536,6 @@ Generated on: 2026-07-18T11:42:31.451Z
 │       ├── recurrence.ts
 │       ├── stats-date-range.ts
 │       ├── string-utils.ts
-│       ├── theme-utils.ts
 │       ├── time-utils.ts
 │       ├── toast.ts
 │       └── transaction-list-utils.ts

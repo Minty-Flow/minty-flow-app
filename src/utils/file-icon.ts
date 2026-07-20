@@ -1,4 +1,4 @@
-import type { IconSvgName } from "~/components/ui/icon-svg"
+import type { IconSvgName } from "~/components/icons"
 
 const IMAGE_EXTENSIONS = new Set([
   "png",

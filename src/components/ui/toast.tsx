@@ -11,8 +11,8 @@ import Animated, {
 import { StyleSheet } from "react-native-unistyles"
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets"
 
-import type { IconSvgName } from "~/components/ui/icon-svg"
-import { IconSvg } from "~/components/ui/icon-svg"
+import type { IconSvgName } from "~/components/icons"
+import { IconSvg } from "~/components/icons"
 import { type Toast, useToastStore } from "~/stores/toast.store"
 
 import { Pressable } from "./pressable"

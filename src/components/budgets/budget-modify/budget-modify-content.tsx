@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next"
 import { ChangeIconInline } from "~/components/change-icon-inline"
 import { ColorVariantInline } from "~/components/color-variant-inline"
 import { CurrencyAccountSelector } from "~/components/currency-account-selector"
+import { IconSvg } from "~/components/icons"
 import { InlineCategoryPicker } from "~/components/inline-category-picker"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
@@ -16,7 +17,6 @@ import {
   DateTimePickerModal,
   useDateTimePicker,
 } from "~/components/ui/date-time-picker"
-import { IconSvg } from "~/components/ui/icon-svg"
 import { Input } from "~/components/ui/input"
 import { ListItem } from "~/components/ui/list-item"
 import { Separator } from "~/components/ui/separator"

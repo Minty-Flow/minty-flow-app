@@ -7,12 +7,12 @@ import {
   AccountCard,
   type AccountCardProps,
 } from "~/components/accounts/account-card"
+import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { PrivacyEyeControl } from "~/components/privacy-eye-control"
 import { ReorderableListV2 } from "~/components/reorderable-list-v2"
 import { SearchInput } from "~/components/search-input"
 import { Button } from "~/components/ui/button"
-import { IconSvg } from "~/components/ui/icon-svg"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import {

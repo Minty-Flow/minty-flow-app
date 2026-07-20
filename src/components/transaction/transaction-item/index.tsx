@@ -6,7 +6,7 @@ import Swipeable, {
 import type { SharedValue } from "react-native-reanimated"
 import { useUnistyles } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/ui/icon-svg"
+import { IconSvg } from "~/components/icons"
 import { Pressable } from "~/components/ui/pressable"
 import { View } from "~/components/ui/view"
 import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"

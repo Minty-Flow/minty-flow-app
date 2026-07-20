@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
+import { IconSvg } from "~/components/icons"
 import { Button } from "~/components/ui/button"
-import { IconSvg } from "~/components/ui/icon-svg"
 import { Input, type InputProps } from "~/components/ui/input"
 
 interface SearchInputProps extends InputProps {

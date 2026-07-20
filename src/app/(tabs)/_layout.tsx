@@ -14,8 +14,8 @@ import Animated, {
 } from "react-native-reanimated"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { IconSvg, type IconSvgName } from "~/components/icons"
 import { Button } from "~/components/ui/button"
-import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
 import { Pressable } from "~/components/ui/pressable"
 import { Tooltip } from "~/components/ui/tooltip"
 import { View } from "~/components/ui/view"

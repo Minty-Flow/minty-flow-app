@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { InOutRow } from "~/components/stats/dashboard/cash-flow-card"
 import { DeltaBadge } from "~/components/stats/delta-badge"
 import { SankeyFlow, type SankeyNode } from "~/components/stats/sankey-flow"
 import { StatsDetailShell } from "~/components/stats/stats-detail-shell"
-import { IconSvg } from "~/components/ui/icon-svg"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { getThemeStrict } from "~/styles/theme/registry"
