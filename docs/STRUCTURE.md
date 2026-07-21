@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-07-20T23:11:58.637Z
+Generated on: 2026-07-21T00:21:49.299Z
 ```
 ./
 ├── .github/
@@ -28,7 +28,6 @@ Generated on: 2026-07-20T23:11:58.637Z
 ├── .zed/
 │   └── settings.json
 ├── docs/
-│   ├── sankey-flow-decision.md
 │   ├── stats-improvement-plan.md
 │   ├── stats-recurring-spending-map-plan.md
 │   └── STRUCTURE.md
