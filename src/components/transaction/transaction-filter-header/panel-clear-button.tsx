@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next"
 
+import { IconSvg } from "~/components/icons"
 import { Button } from "~/components/ui/button"
-import { IconSvg } from "~/components/ui/icon-svg"
 import { Text } from "~/components/ui/text"
 
 import { filterHeaderStyles } from "./filter-header.styles"

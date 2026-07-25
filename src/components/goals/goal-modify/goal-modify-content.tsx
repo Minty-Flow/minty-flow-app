@@ -8,6 +8,7 @@ import { useUnistyles } from "react-native-unistyles"
 import { ChangeIconInline } from "~/components/change-icon-inline"
 import { ColorVariantInline } from "~/components/color-variant-inline"
 import { CurrencyAccountSelector } from "~/components/currency-account-selector"
+import { IconSvg } from "~/components/icons"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { TabsMinty } from "~/components/tabs-minty"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
@@ -16,7 +17,6 @@ import {
   DateTimePickerModal,
   useDateTimePicker,
 } from "~/components/ui/date-time-picker"
-import { IconSvg } from "~/components/ui/icon-svg"
 import { Input } from "~/components/ui/input"
 import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"

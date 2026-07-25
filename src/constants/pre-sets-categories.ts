@@ -1,4 +1,4 @@
-import type { IconSvgName } from "~/components/ui/icon-svg"
+import type { IconSvgName } from "~/components/icons"
 import type { TranslationKey } from "~/i18n/config"
 import type { Category } from "~/types/categories"
 

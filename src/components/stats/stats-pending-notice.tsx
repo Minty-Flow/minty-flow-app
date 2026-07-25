@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/ui/icon-svg"
+import { IconSvg } from "~/components/icons"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { PendingSummary } from "~/types/stats"

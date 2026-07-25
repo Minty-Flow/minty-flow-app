@@ -12,8 +12,8 @@ import {
 } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
+import { IconSvg, type IconSvgName } from "~/components/icons"
 import { Button } from "~/components/ui/button"
-import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
 import { Text } from "~/components/ui/text"
 
 import { Pressable } from "./ui/pressable"

@@ -1,7 +1,7 @@
 import type { PressableProps } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
-import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
+import { IconSvg, type IconSvgName } from "~/components/icons"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"

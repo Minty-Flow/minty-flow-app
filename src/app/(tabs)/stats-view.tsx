@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next"
 import { RefreshControl, ScrollView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { CurrencySwitcher } from "~/components/stats/currency-switcher"
 import { CalendarCard } from "~/components/stats/dashboard/calendar-card"
 import { CashFlowCard } from "~/components/stats/dashboard/cash-flow-card"
 import { NetWorthCard } from "~/components/stats/dashboard/net-worth-card"
@@ -12,6 +11,7 @@ import { PaceCard } from "~/components/stats/dashboard/pace-card"
 import { StatCard } from "~/components/stats/dashboard/stat-card"
 import { TopCategoriesCard } from "~/components/stats/dashboard/top-categories-card"
 import { WrappedCard } from "~/components/stats/dashboard/wrapped-card"
+import { StatsCurrencyToggle } from "~/components/stats/stats-currency-toggle"
 import { StatsEmptyState } from "~/components/stats/stats-empty-state"
 import { StatsPendingNotice } from "~/components/stats/stats-pending-notice"
 import { StatsPeriodHeader } from "~/components/stats/stats-period-header"
@@ -104,11 +104,13 @@ export default function StatsScreen() {
 
       {stats && (
         <>
-          <CurrencySwitcher
-            currencies={byCurrency.map((s) => s.currency)}
-            value={stats.currency}
-            onChange={setSelectedCurrency}
-          />
+          <View style={styles.toggleRow}>
+            <StatsCurrencyToggle
+              currencies={byCurrency.map((s) => s.currency)}
+              value={stats.currency}
+              onChange={setSelectedCurrency}
+            />
+          </View>
 
           <View style={styles.grid}>
             <StatsPendingNotice
@@ -191,6 +193,11 @@ const styles = StyleSheet.create((theme) => ({
   content: {
     marginTop: 50,
     gap: 6,
+  },
+  toggleRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    paddingHorizontal: 20,
   },
   grid: {
     paddingHorizontal: 20,

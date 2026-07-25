@@ -104,7 +104,7 @@ export function SpendingHeatmap({
   const cellStyle = compact ? styles.cellCompact : styles.cell
   const cellColor = (bucket: number) =>
     bucket === 0
-      ? `${theme.colors.onSurface}0A`
+      ? `${theme.colors.onSurface}1F`
       : `${theme.colors.primary}${BUCKET_OPACITY[bucket]}`
 
   // M/W/F row labels — offsets 1/3/5 relative to a Sunday-start week

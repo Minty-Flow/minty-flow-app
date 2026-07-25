@@ -8,7 +8,7 @@ import { emit } from "~/database/events"
  * "auto" follows the device region (which starts the week on Saturday in much
  * of the Arabic-speaking world, so it is not reducible to a Sunday/Monday flag).
  */
-export type WeekStartPreference = "auto" | "sunday" | "monday"
+export type WeekStartPreference = "auto" | "saturday" | "sunday" | "monday"
 
 const weekStartStorage = createMMKV({
   id: "week-start-storage",

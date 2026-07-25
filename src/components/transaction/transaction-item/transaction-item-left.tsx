@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
-import { IconSvg } from "~/components/ui/icon-svg"
+import { IconSvg } from "~/components/icons"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { MintyColorScheme } from "~/styles/theme/types"

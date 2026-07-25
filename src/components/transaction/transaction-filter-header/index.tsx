@@ -10,8 +10,8 @@ import { ScrollView, View } from "react-native"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DateRangePresetModal } from "~/components/date-range-preset-modal"
+import { IconSvg, type IconSvgName } from "~/components/icons"
 import { Chip } from "~/components/ui/chips"
-import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
 import type {
   AttachmentsOptionsType,
   GroupByOption,

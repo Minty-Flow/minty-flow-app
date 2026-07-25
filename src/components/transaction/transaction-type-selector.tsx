@@ -1,13 +1,12 @@
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
+import { IconSvg, type IconSvgName } from "~/components/icons"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TranslationKey } from "~/i18n/config"
 import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
-
-import { IconSvg, type IconSvgName } from "../ui/icon-svg"
 
 interface TransactionTypeSelectorProps {
   value: TransactionType

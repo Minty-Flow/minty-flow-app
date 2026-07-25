@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
-import { IconSvg } from "~/components/ui/icon-svg"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -21,7 +21,7 @@ export function WrappedCard({ stats, monthLabel, onPress }: WrappedCardProps) {
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
-      <IconSvg name="sparkles-2" size={28} color={theme.colors.primary} />
+      <IconSvg name="sparkles" size={28} color={theme.colors.primary} />
       <View style={styles.body}>
         <Text variant="h4" style={styles.title} numberOfLines={1}>
           {t("screens.stats.dashboard.wrappedTitle", { month: monthLabel })}

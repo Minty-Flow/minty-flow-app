@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
-import { IconSvg } from "~/components/ui/icon-svg"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { CurrencyPeriodStats } from "~/types/stats"
@@ -80,7 +80,7 @@ export function CashFlowCard({
     >
       <View style={styles.headline}>
         <IconSvg
-          name={overspent ? "trending-down-outline" : "trending-up-outline"}
+          name={overspent ? "trending-down-outline" : "pig-money-outline"}
           size={18}
           color={
             overspent
@@ -116,12 +116,13 @@ const styles = StyleSheet.create((theme) => ({
   headline: {
     flexDirection: "row",
     alignItems: "center",
+    flexWrap: "wrap",
     gap: 6,
+    rowGap: 4,
     flex: 1,
   },
   headlineLabel: {
     fontSize: theme.typography.bodyMedium.fontSize,
-    flexShrink: 1,
   },
   headlineAmount: {
     fontWeight: "700",

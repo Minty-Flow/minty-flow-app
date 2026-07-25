@@ -1,8 +1,7 @@
 import type { OpaqueColorValue, StyleProp, ViewStyle } from "react-native"
 
+import { type IconSize, IconSvg } from "~/components/icons"
 import { useLanguageStore } from "~/stores/language.store"
-
-import { type IconSize, IconSvg } from "./icon-svg"
 
 type ChevronDirection = "trailing" | "leading" | "up" | "down"
 

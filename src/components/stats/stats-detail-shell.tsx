@@ -14,7 +14,7 @@ import type {
 import { formatRangeLabel } from "~/utils/stats-date-range"
 import type { DateRangePresetId } from "~/utils/time-utils"
 
-import { CurrencySwitcher } from "./currency-switcher"
+import { StatsCurrencyToggle } from "./stats-currency-toggle"
 import { StatsEmptyState } from "./stats-empty-state"
 import { StatsPeriodHeader } from "./stats-period-header"
 import { StatsSkeleton } from "./stats-skeleton"
@@ -142,11 +142,13 @@ export function StatsDetailShell({ init, children }: StatsDetailShellProps) {
 
       {stats && (
         <>
-          <CurrencySwitcher
-            currencies={byCurrency.map((s) => s.currency)}
-            value={stats.currency}
-            onChange={setSelectedCurrency}
-          />
+          <View style={styles.toggleRow}>
+            <StatsCurrencyToggle
+              currencies={byCurrency.map((s) => s.currency)}
+              value={stats.currency}
+              onChange={setSelectedCurrency}
+            />
+          </View>
           <View style={styles.body}>
             {children({ stats, supplement, dateRange, isLoading })}
           </View>
@@ -166,6 +168,10 @@ const styles = StyleSheet.create((theme) => ({
   content: {
     gap: 6,
     paddingTop: 8,
+  },
+  toggleRow: {
+    flexDirection: "row",
+    justifyContent: "center",
   },
   body: {
     paddingHorizontal: 20,

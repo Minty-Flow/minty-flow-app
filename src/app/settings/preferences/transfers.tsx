@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/ui/icon-svg"
+import { IconSvg } from "~/components/icons"
 import { InfoBanner } from "~/components/ui/info-banner"
 import { ListItem } from "~/components/ui/list-item"
 import { Switch } from "~/components/ui/switch"

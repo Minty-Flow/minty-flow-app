@@ -4,7 +4,7 @@ import { ScrollView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { AccountCard } from "~/components/accounts/account-card"
-import { IconSvg } from "~/components/ui/icon-svg"
+import { IconSvg } from "~/components/icons"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"

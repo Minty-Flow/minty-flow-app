@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next"
 
-import { IconSvg } from "../ui/icon-svg"
+import { IconSvg } from "~/components/icons"
+
 import { Pressable } from "../ui/pressable"
 import { Text } from "../ui/text"
 import { View } from "../ui/view"

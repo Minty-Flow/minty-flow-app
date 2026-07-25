@@ -2,7 +2,7 @@ import { useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/ui/icon-svg"
+import { IconSvg } from "~/components/icons"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -43,7 +43,7 @@ export default function OnboardingStartScreen() {
 
         <Pressable style={styles.card} onPress={handleFresh}>
           <View style={styles.cardIconBox}>
-            <IconSvg name="sparkles" size={56} />
+            <IconSvg name="brush-outline" size={56} />
           </View>
           <Text style={styles.cardTitle}>
             {t("onboarding.start.fresh.title")}

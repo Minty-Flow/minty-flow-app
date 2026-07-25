@@ -23,8 +23,8 @@ import {
   useUnistyles,
 } from "react-native-unistyles"
 
+import { IconSvg } from "~/components/icons"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
-import { IconSvg } from "~/components/ui/icon-svg"
 import { ListItem } from "~/components/ui/list-item"
 import type { RecurringTransactionTemplate } from "~/database/services-sqlite/recurring-transaction-service"
 import { disableRecurringRule } from "~/database/services-sqlite/recurring-transaction-service"

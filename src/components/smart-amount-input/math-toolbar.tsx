@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next"
 import Animated, { FadeInDown } from "react-native-reanimated"
 
-import { IconSvg } from "../ui/icon-svg"
+import { IconSvg } from "~/components/icons"
+
 import { Pressable } from "../ui/pressable"
 import { Text } from "../ui/text"
 import { View } from "../ui/view"

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
+import { IconSvg, type IconSvgName } from "~/components/icons"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 

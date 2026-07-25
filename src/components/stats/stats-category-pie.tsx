@@ -20,6 +20,7 @@ import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { getThemeStrict } from "~/styles/theme/registry"
+import { getThemeVariantPalette, shuffleArray } from "~/styles/theme/utils"
 import type { CategoryBreakdownItem } from "~/types/stats"
 
 import { DeltaBadge } from "./delta-badge"
@@ -36,7 +37,7 @@ const CENTER = CHART_SIZE / 2
 /** Matches the `innerRadius="50%"` prop on Pie.Chart */
 const INNER_RADIUS_RATIO = 0.5
 
-function getCategoryColor(
+export function getCategoryColor(
   item: CategoryBreakdownItem,
   index: number,
   fallbackPalette: string[],
@@ -124,21 +125,16 @@ export function StatsCategoryPie({
     selectedIndexSv.value = selectedSlice?.index ?? -1
   }, [selectedSlice, selectedIndexSv])
 
+  // Randomized once per theme category (re-shuffles only when the user switches theme category)
+  const fallbackPalette = useMemo(
+    () => shuffleArray(getThemeVariantPalette(theme.name)),
+    [theme.name],
+  )
+
   const { pieData, legendItems, total } = useMemo(() => {
     if (breakdown.length === 0) {
       return { pieData: [], legendItems: [], total: 0 }
     }
-
-    const fallbackPalette = [
-      theme.colors.primary,
-      theme.colors.semantic.income,
-      theme.colors.semantic.info,
-      theme.colors.semantic.warning,
-      theme.colors.semantic.expense,
-      theme.colors.semantic.success,
-      theme.colors.secondary,
-      theme.colors.error,
-    ]
 
     const getValue = (b: CategoryBreakdownItem) =>
       mode === "expense" ? b.totalExpense : b.totalIncome
@@ -200,14 +196,7 @@ export function StatsCategoryPie({
     maxSlices,
     mode,
     t,
-    theme.colors.primary,
-    theme.colors.secondary,
-    theme.colors.error,
-    theme.colors.semantic.income,
-    theme.colors.semantic.expense,
-    theme.colors.semantic.info,
-    theme.colors.semantic.warning,
-    theme.colors.semantic.success,
+    fallbackPalette,
     theme.colors.semantic.semi,
   ])
 

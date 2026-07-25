@@ -10,7 +10,7 @@ import Animated, {
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 import { scheduleOnRN } from "react-native-worklets"
 
-import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
+import { IconSvg, type IconSvgName } from "~/components/icons"
 import { InfoBanner } from "~/components/ui/info-banner"
 import { View } from "~/components/ui/view"
 import { FAB_BUTTON_SIZE, FAB_BUTTON_STYLE } from "~/constants/fab-button"

@@ -13,9 +13,9 @@ import {
 } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
+import { IconSvg, type IconSvgName } from "~/components/icons"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
-import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
 import { Text } from "~/components/ui/text"
 import { logger } from "~/utils/logger"
 
