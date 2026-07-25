@@ -6,16 +6,13 @@ import { StyleSheet } from "react-native-unistyles"
 import { ActionItem } from "~/components/action-item"
 import type { IconSvgName } from "~/components/icons"
 import { ToggleItem } from "~/components/toggle-item"
-import { Chip } from "~/components/ui/chips"
 import { InfoBanner } from "~/components/ui/info-banner"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TranslationKey } from "~/i18n/config"
 import { useAndroidSoundStore } from "~/stores/android-sound.store"
-import {
-  useWeekStartStore,
-  type WeekStartPreference,
-} from "~/stores/week-start.store"
+import { useWeekStartStore } from "~/stores/week-start.store"
+import { getWeekStartsOn } from "~/utils/get-week-start-on"
 
 interface PreferenceItem {
   titleKey: TranslationKey
@@ -94,28 +91,25 @@ const otherPreferenceItems: PreferenceItem[] = [
   },
 ]
 
-const WEEK_START_OPTIONS: {
-  value: WeekStartPreference
-  labelKey: TranslationKey
-}[] = [
-  { value: "auto", labelKey: "screens.settings.preferences.weekStart.auto" },
-  {
-    value: "sunday",
-    labelKey: "screens.settings.preferences.weekStart.sunday",
-  },
-  {
-    value: "monday",
-    labelKey: "screens.settings.preferences.weekStart.monday",
-  },
-]
-
 export default function PreferencesScreen() {
   const router = useRouter()
   const { t } = useTranslation()
   const setSoundEnabled = useAndroidSoundStore((s) => s.setSoundEnabled)
   const disableSound = useAndroidSoundStore((s) => s.disableSound)
   const weekStart = useWeekStartStore((s) => s.weekStart)
-  const setWeekStart = useWeekStartStore((s) => s.setWeekStart)
+
+  const weekStartTitle = (() => {
+    const numToPref: Record<number, string> = {
+      0: "sunday",
+      1: "monday",
+      6: "saturday",
+    }
+    const pref = weekStart === "auto" ? numToPref[getWeekStartsOn()] : weekStart
+    const dayLabel = pref
+      ? t(`screens.settings.preferences.weekStart.${pref}` as TranslationKey)
+      : ""
+    return `${t("screens.settings.preferences.weekStart.label")} · ${dayLabel}`
+  })()
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -130,6 +124,11 @@ export default function PreferencesScreen() {
               onPress={() => router.push(item.route)}
             />
           ))}
+          <ActionItem
+            icon="calendar-week"
+            title={weekStartTitle}
+            onPress={() => router.push("/settings/preferences/week-start")}
+          />
         </View>
       </View>
 
@@ -145,24 +144,6 @@ export default function PreferencesScreen() {
               icon={item.icon}
               title={t(item.titleKey)}
               onPress={() => router.push(item.route)}
-            />
-          ))}
-        </View>
-      </View>
-
-      {/* Week Start Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          {t("screens.settings.preferences.weekStart.label")}
-        </Text>
-        <View style={styles.chipsRow}>
-          {WEEK_START_OPTIONS.map((option) => (
-            <Chip
-              key={option.value}
-              label={t(option.labelKey)}
-              selected={weekStart === option.value}
-              hideCheck
-              onPress={() => setWeekStart(option.value)}
             />
           ))}
         </View>
@@ -225,11 +206,5 @@ const styles = StyleSheet.create((theme) => ({
   },
   itemsList: {
     gap: 0,
-  },
-  chipsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    paddingHorizontal: 20,
   },
 }))

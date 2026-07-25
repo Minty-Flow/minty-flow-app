@@ -252,7 +252,7 @@ export default function StatsCashFlowScreen() {
               <View style={styles.headline}>
                 <IconSvg
                   name={
-                    overspent ? "trending-down-outline" : "trending-up-outline"
+                    overspent ? "trending-down-outline" : "pig-money-outline"
                   }
                   size={18}
                   color={

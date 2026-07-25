@@ -24,6 +24,8 @@ import { useLanguageStore } from "~/stores/language.store"
 import { useOnboardingStore } from "~/stores/onboarding.store"
 import { NewEnum } from "~/types/new"
 
+// TODO: code of conduct to be added alongside contributions rules
+
 export default function RootLayout() {
   const { theme } = useUnistyles()
   const { t } = useTranslation()
@@ -353,6 +355,12 @@ export default function RootLayout() {
               <Stack.Screen
                 name="settings/preferences/transfers"
                 options={{ title: t("screens.settings.transfers.title") }}
+              />
+              <Stack.Screen
+                name="settings/preferences/week-start"
+                options={{
+                  title: t("screens.settings.preferences.weekStart.label"),
+                }}
               />
               <Stack.Screen
                 name="settings/preferences/transaction-appearance"

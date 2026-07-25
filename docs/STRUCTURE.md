@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-07-21T00:21:49.299Z
+Generated on: 2026-07-25T15:15:01.628Z
 ```
 ./
 ├── .github/
@@ -101,7 +101,8 @@ Generated on: 2026-07-21T00:21:49.299Z
 │   │   │   │   ├── transaction-appearance.tsx
 │   │   │   │   ├── transaction-location.tsx
 │   │   │   │   ├── transfers.tsx
-│   │   │   │   └── trash-bin.tsx
+│   │   │   │   ├── trash-bin.tsx
+│   │   │   │   └── week-start.tsx
 │   │   │   ├── tags/
 │   │   │   │   ├── [tagId].tsx
 │   │   │   │   └── index.tsx
@@ -241,6 +242,7 @@ Generated on: 2026-07-21T00:21:49.299Z
 │   │   │   ├── sankey-flow.tsx
 │   │   │   ├── spending-heatmap.tsx
 │   │   │   ├── stats-category-pie.tsx
+│   │   │   ├── stats-currency-toggle.tsx
 │   │   │   ├── stats-detail-shell.tsx
 │   │   │   ├── stats-empty-state.tsx
 │   │   │   ├── stats-pending-notice.tsx
