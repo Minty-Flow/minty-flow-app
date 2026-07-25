@@ -6,8 +6,8 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { ActionItem } from "~/components/action-item"
 import { ExternalLink } from "~/components/external-link"
+import type { IconSvgName } from "~/components/icons"
 import { ProfileSection } from "~/components/profile/profile-section"
-import type { IconSvgName } from "~/components/ui/icon-svg"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { AppData } from "~/constants/app-data"
@@ -21,6 +21,11 @@ interface SettingsItem {
 }
 
 const moneyManagementItems: SettingsItem[] = [
+  {
+    titleKey: "screens.settings.insights.title",
+    route: "/stats/wrapped",
+    icon: "sparkles",
+  },
   {
     titleKey: "screens.accounts.title",
     route: "/settings/all-accounts",

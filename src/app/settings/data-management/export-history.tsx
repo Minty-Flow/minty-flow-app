@@ -11,9 +11,9 @@ import {
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { ConfirmModal } from "~/components/confirm-modal"
+import { IconSvg, type IconSvgName } from "~/components/icons"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { EmptyState } from "~/components/ui/empty-state"
-import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
 import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"

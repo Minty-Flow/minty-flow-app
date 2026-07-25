@@ -10,14 +10,14 @@ import { ThemeHeader } from "~/components/theme/theme-header"
 import { ThemeVariantPills } from "~/components/theme/theme-variant-pills"
 import { type ThemeMode, useThemeStore } from "~/stores/theme.store"
 import { STANDALONE_THEMES, THEME_GROUPS } from "~/styles/theme/registry"
+import type { ThemeVariant } from "~/styles/theme/types"
 import {
   getCategoryForTheme,
   getThemeDisplayName,
   getThemesForVariant,
   getVariantForTheme,
   getVariantsForCategory,
-  type ThemeVariant,
-} from "~/utils/theme-utils"
+} from "~/styles/theme/utils"
 
 const ThemeSettingsScreen = () => {
   const { t } = useTranslation()

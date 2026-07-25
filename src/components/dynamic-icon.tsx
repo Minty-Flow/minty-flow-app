@@ -2,11 +2,7 @@ import { Image } from "expo-image"
 import { Text as RNText } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
-import {
-  type IconSize,
-  IconSvg,
-  type IconSvgName,
-} from "~/components/ui/icon-svg"
+import { type IconSize, IconSvg, type IconSvgName } from "~/components/icons"
 import { View } from "~/components/ui/view"
 import type { MintyThemeColors } from "~/styles/theme/types"
 import { isImageUrl } from "~/utils/is-image-url"

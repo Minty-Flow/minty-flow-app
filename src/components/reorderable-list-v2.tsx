@@ -15,7 +15,7 @@ import Animated, {
 } from "react-native-reanimated"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/ui/icon-svg"
+import { IconSvg } from "~/components/icons"
 import { View } from "~/components/ui/view"
 import { logger } from "~/utils/logger"
 

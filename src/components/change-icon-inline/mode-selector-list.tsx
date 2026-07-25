@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next"
 
+import { IconSvg } from "~/components/icons"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
-import { IconSvg } from "~/components/ui/icon-svg"
 import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"

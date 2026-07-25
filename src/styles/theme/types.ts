@@ -30,7 +30,6 @@ export interface MintyThemeColors {
   error: string // Error states (#FF4040 default)
   onError: string // Text on error (#F5F6FA default)
   semantic: MintySemanticColors
-  rippleColor: string // Ripple/highlight = onSurface at 8.6%
   shadow: string // Shadow color
   boxShadow: string // Box shadow for web
 }
@@ -55,6 +54,14 @@ export interface ThemeGroup {
   schemes: MintyColorScheme[]
 }
 
+export type ThemeVariant = string
+
+export interface VariantOption {
+  label: ThemeVariant
+  icon?: string
+  groupName: string
+}
+
 /**
  * Unistyles theme structure.
  * - colors: only color tokens (MintyThemeColors)
@@ -66,5 +73,6 @@ export interface UnistylesTheme {
   name: string
   iconName?: string
   radius: number
+  rippleColor: string // Derived from onSurface, not stored in scheme data
   typography: MintyTypographyTokens
 }

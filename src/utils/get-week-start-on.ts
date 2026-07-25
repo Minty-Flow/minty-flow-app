@@ -11,6 +11,7 @@ import { useWeekStartStore } from "~/stores/week-start.store"
  */
 export const getWeekStartsOn = (): 0 | 1 | 2 | 3 | 4 | 5 | 6 => {
   const preference = useWeekStartStore.getState().weekStart
+  if (preference === "saturday") return 6
   if (preference === "sunday") return 0
   if (preference === "monday") return 1
 

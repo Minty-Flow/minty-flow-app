@@ -7,7 +7,7 @@ import Animated, {
 } from "react-native-reanimated"
 import { StyleSheet } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/ui/icon-svg"
+import { IconSvg } from "~/components/icons"
 import { Pressable } from "~/components/ui/pressable"
 import { useAppLockStore } from "~/stores/app-lock.store"
 

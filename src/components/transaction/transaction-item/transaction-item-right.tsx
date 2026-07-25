@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
+import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
-import { IconSvg } from "~/components/ui/icon-svg"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"

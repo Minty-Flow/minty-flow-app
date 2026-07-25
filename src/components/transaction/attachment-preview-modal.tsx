@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next"
 import { Modal } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/ui/icon-svg"
+import { IconSvg } from "~/components/icons"
 import { Pressable } from "~/components/ui/pressable"
 import type { TransactionAttachment } from "~/types/transactions"
 

@@ -3,6 +3,7 @@ import { useLayoutEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
+import { IconSvg } from "~/components/icons"
 import { SearchInput } from "~/components/search-input"
 import { View } from "~/components/ui/view"
 import type { TranslationKey } from "~/i18n/config"
@@ -10,7 +11,6 @@ import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
 
 import { TabsMinty } from "../tabs-minty"
 import { Button } from "../ui/button"
-import { IconSvg } from "../ui/icon-svg"
 import { CategoryList } from "./category-list"
 
 interface CategoryScreenContentProps {

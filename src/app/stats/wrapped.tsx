@@ -133,7 +133,7 @@ function WrappedContent({
 
       {insight?.medianPurchase != null && (
         <InsightCard
-          icon="sparkles-2"
+          icon="sparkles"
           badge={t("screens.stats.wrapped.badgeShape")}
           sentence={
             <>

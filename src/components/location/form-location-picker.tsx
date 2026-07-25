@@ -8,8 +8,8 @@ import {
 import { WebView } from "react-native-webview"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
+import { IconSvg } from "~/components/icons"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
-import { IconSvg } from "~/components/ui/icon-svg"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"

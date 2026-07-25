@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { IconSvg, type IconSvgName } from "~/components/ui/icon-svg"
+import { IconSvg, type IconSvgName } from "~/components/icons"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -74,7 +74,8 @@ const styles = StyleSheet.create((theme) => ({
   },
   title: {
     flex: 1,
-    ...theme.typography.labelMedium,
+    ...theme.typography.labelSmall,
+    color: theme.colors.semantic.semi,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 1,

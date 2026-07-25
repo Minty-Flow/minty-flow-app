@@ -1,6 +1,7 @@
 import { StyleSheet } from "react-native-unistyles"
 
-import { IconSvg, type IconSvgName } from "./ui/icon-svg"
+import { IconSvg, type IconSvgName } from "~/components/icons"
+
 import { ListItem } from "./ui/list-item"
 import { Switch } from "./ui/switch"
 import { Text } from "./ui/text"

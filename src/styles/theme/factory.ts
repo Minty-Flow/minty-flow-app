@@ -33,8 +33,6 @@ export class ThemeFactory {
   get colors(): UnistylesTheme["colors"] {
     const s = this.mintyColorScheme
 
-    const rippleColor = hexWithAlpha(s.onSurface, 0x16) // 8.6%
-
     return {
       // MintyThemeColors
       primary: s.primary,
@@ -46,7 +44,6 @@ export class ThemeFactory {
       error: s.error,
       onError: s.onError,
       semantic: s.semantic,
-      rippleColor,
       shadow: s.shadow,
       boxShadow: s.boxShadow,
     }
@@ -75,6 +72,7 @@ export class ThemeFactory {
       name: this.name,
       iconName: this.iconName,
       radius: this.mintyColorScheme.radius,
+      rippleColor: hexWithAlpha(this.mintyColorScheme.onSurface, 0x16),
       typography,
     }
   }
