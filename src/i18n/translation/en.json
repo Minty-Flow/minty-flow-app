@@ -415,8 +415,11 @@
         "weekStart": {
           "label": "Week starts on",
           "auto": "Auto",
+          "saturday": "Saturday",
           "sunday": "Sunday",
-          "monday": "Monday"
+          "monday": "Monday",
+          "useDeviceSetting": "Use device setting",
+          "basedOnDevice": "Based on your device settings"
         },
         "buttonFeedback": {
           "label": "Button Feedback",
