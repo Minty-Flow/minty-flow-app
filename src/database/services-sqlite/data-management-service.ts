@@ -6,10 +6,7 @@ import { unzip, zip } from "react-native-zip-archive"
 
 import { getDb } from "~/database/db"
 import { emit } from "~/database/events"
-import {
-  SQLITE_V1_SQL,
-  SQLITE_V1_VERSION,
-} from "~/database/migrations/sqlite-v1"
+import { SQLITE_V3_VERSION } from "~/database/migrations/sqlite-v3"
 import { runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
 import {
@@ -20,6 +17,11 @@ import {
 import { attachmentsDirectory } from "~/utils/attachments"
 import { getFileExtension, getMimeTypeForExtension } from "~/utils/file-icon"
 import { logger } from "~/utils/logger"
+import {
+  assertMinorUnits,
+  getMinorUnitDigits,
+  minorUnitsToDecimalString,
+} from "~/utils/money"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -74,7 +76,7 @@ type ValidateBackupResult =
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const SCHEMA_VERSION = SQLITE_V1_VERSION
+const SCHEMA_VERSION = SQLITE_V3_VERSION
 
 // Columns stored as TEXT ISO dates in SQLite — used for WDB→SQLite migration
 // (WDB stores these as Unix milliseconds, so we convert on import).
@@ -538,8 +540,13 @@ async function generateCsvExport(
 ): Promise<{ uri: string; fileName: string }> {
   const dir = await prepareExportDir()
   const db = getDb()
-  const transactions = await db.getAllAsync<RowTransaction>(
-    "SELECT * FROM transactions WHERE is_deleted = 0",
+  const transactions = await db.getAllAsync<
+    RowTransaction & { currency_code: string }
+  >(
+    `SELECT t.*, a.currency_code
+     FROM transactions t
+     JOIN accounts a ON a.id = t.account_id
+     WHERE t.is_deleted = 0`,
   )
 
   const headers = [
@@ -580,7 +587,7 @@ async function generateCsvExport(
       escapeCsvField(r.id),
       escapeCsvField(r.transaction_date), // already ISO string in SQLite
       escapeCsvField(r.type),
-      escapeCsvField(r.amount),
+      escapeCsvField(minorUnitsToDecimalString(r.amount, r.currency_code)),
       escapeCsvField(r.title),
       escapeCsvField(r.description),
       escapeCsvField(r.category_id),
@@ -678,12 +685,18 @@ export function validateBackup(json: string): ValidateBackupResult {
     }
     if (
       typeof meta.schemaVersion !== "number" ||
-      meta.schemaVersion > SCHEMA_VERSION
+      meta.schemaVersion !== SCHEMA_VERSION
     ) {
+      const schemaVersion =
+        typeof meta.schemaVersion === "number" ? meta.schemaVersion : undefined
+      const msg =
+        schemaVersion === undefined || schemaVersion < SCHEMA_VERSION
+          ? `Backup uses schema v${schemaVersion}. App is v${SCHEMA_VERSION}. Old backups cannot be restored after the minor-units migration. Create a new backup.`
+          : `Backup schema version ${schemaVersion} is newer than app schema version ${SCHEMA_VERSION}. Update the app first.`
       return {
         success: false,
         reason: "validation_error",
-        message: `Backup schema version ${meta.schemaVersion} is newer than app schema version ${SCHEMA_VERSION}`,
+        message: msg,
       }
     }
     const data = p.data as Record<string, unknown> | undefined
@@ -716,6 +729,67 @@ export function validateBackup(json: string): ValidateBackupResult {
           success: false,
           reason: "validation_error",
           message: `Missing or invalid table: ${table}`,
+        }
+      }
+    }
+
+    const moneyColumns: Partial<Record<string, string[]>> = {
+      accounts: ["balance"],
+      budgets: ["amount"],
+      goals: ["target_amount"],
+      loans: ["principal_amount"],
+      transactions: ["amount", "account_balance_before"],
+    }
+    for (const [table, columns] of Object.entries(moneyColumns)) {
+      const rows = data[table] as RawRow[]
+      for (const [index, row] of rows.entries()) {
+        for (const column of columns ?? []) {
+          try {
+            assertMinorUnits(row[column] as number)
+          } catch {
+            return {
+              success: false,
+              reason: "validation_error",
+              message: `Invalid integer money: ${table}.${column} (row ${index})`,
+            }
+          }
+        }
+      }
+    }
+
+    for (const table of ["accounts", "budgets", "goals"]) {
+      for (const [index, row] of (data[table] as RawRow[]).entries()) {
+        try {
+          getMinorUnitDigits(String(row.currency_code))
+        } catch {
+          return {
+            success: false,
+            reason: "validation_error",
+            message: `Unknown currency: ${table} (row ${index})`,
+          }
+        }
+      }
+    }
+
+    const accountIds = new Set(
+      (data.accounts as RawRow[]).map((row) => String(row.id)),
+    )
+    for (const [index, row] of (
+      data.recurring_transactions as RawRow[]
+    ).entries()) {
+      try {
+        const template = JSON.parse(
+          String(row.json_transaction_template),
+        ) as RawRow
+        assertMinorUnits(template.amount as number)
+        if (!accountIds.has(String(template.accountId))) {
+          throw new Error("Unknown recurring account")
+        }
+      } catch {
+        return {
+          success: false,
+          reason: "validation_error",
+          message: `Invalid recurring money template (row ${index})`,
         }
       }
     }
@@ -856,8 +930,6 @@ async function resetDatabase(): Promise<void> {
     for (const table of RESET_ORDER) {
       await db.runAsync(`DELETE FROM ${table}`)
     }
-    // Recreate tables in case schema evolves (CREATE TABLE IF NOT EXISTS is idempotent)
-    await db.execAsync(SQLITE_V1_SQL)
   })
 }
 

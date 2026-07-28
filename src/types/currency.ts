@@ -14,6 +14,8 @@ export interface Currency {
   isCrypto?: boolean
   /** Whether this is a custom user-defined currency */
   isCustom?: boolean
+  /** ISO-style exponent used to store monetary values as minor-unit integers. */
+  minorUnitDigits: number
 }
 
 /**

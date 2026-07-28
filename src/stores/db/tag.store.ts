@@ -4,8 +4,9 @@ import { useShallow } from "zustand/react/shallow"
 
 import { on } from "~/database/events"
 import { mapTag } from "~/database/mappers/tag.mapper"
-import { getAllTags } from "~/database/repos/tag-repo"
 import { getTagTransactionCounts } from "~/database/services-sqlite/tag-service"
+import { query } from "~/database/sql"
+import type { RowTag } from "~/database/types/rows"
 import type { Tag } from "~/types/tags"
 import { logger } from "~/utils/logger"
 
@@ -30,7 +31,7 @@ export const useTagStore = create<TagStoreState>()(
 
       try {
         const [rows, counts] = await Promise.all([
-          getAllTags(),
+          query<RowTag>("SELECT * FROM tags ORDER BY name ASC"),
           getTagTransactionCounts(),
         ])
         const byId: Record<string, Tag> = {}

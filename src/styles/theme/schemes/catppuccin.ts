@@ -3,8 +3,8 @@
 // Mocha, Macchiato, Frappé bases
 // ============================================================================
 
+import { copyWith } from "../copy-with"
 import type { MintyColorScheme } from "../types"
-import { copyWith } from "../utils"
 
 /**
  * Catppuccin Mocha base (guide)

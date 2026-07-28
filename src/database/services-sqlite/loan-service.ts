@@ -2,8 +2,10 @@ import { emit } from "~/database/events"
 import { runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
 import type { AddLoanFormSchema } from "~/schemas/loans.schema"
+import { assertMinorUnits } from "~/utils/money"
 
 export async function createLoan(data: AddLoanFormSchema): Promise<string> {
+  assertMinorUnits(data.principalAmount)
   const id = generateId()
   const now = new Date().toISOString()
 
@@ -37,6 +39,9 @@ export async function updateLoanById(
   id: string,
   data: Partial<AddLoanFormSchema>,
 ): Promise<void> {
+  if (data.principalAmount !== undefined) {
+    assertMinorUnits(data.principalAmount)
+  }
   const now = new Date().toISOString()
 
   await runInTransaction("loan.update", async (db) => {

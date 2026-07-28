@@ -1,231 +1,127 @@
 import { currencyRegistryService } from "~/services/currency-registry"
+import {
+  assertMinorUnits,
+  getMinorUnitDigits,
+  minorUnitsToDecimalString,
+} from "~/utils/money"
 
-const LOCALE = "en-US"
+export const NUMBER_FORMAT_LOCALE = "en-US"
 
-// ------------------------
-// Calculator Configuration
-// ------------------------
-export const CALCULATOR_CONFIG = {
-  MAX_DIGITS: 14,
-  MAX_DECIMALS: 2,
-  DEFAULT_DISPLAY: "0",
-} as const
-
-// ------------------------
-// Internal helpers
-// ------------------------
-const getCurrencyLabel = (
-  currency: string,
-  currencyDisplay: Intl.NumberFormatOptions["currencyDisplay"] = "symbol",
-): string => {
-  if (currencyDisplay === "code") return currency
-  if (currencyDisplay === "name") {
-    return currencyRegistryService.getCurrencyName(currency)
-  }
-  return currencyRegistryService.getCurrencySymbol(currency)
+export interface FormatNumberOptions {
+  minimumFractionDigits?: number
+  maximumFractionDigits?: number
+  notation?: Intl.NumberFormatOptions["notation"]
+  signDisplay?: Intl.NumberFormatOptions["signDisplay"]
+  useGrouping?: boolean
 }
 
-const getSignPrefix = (
-  signDisplay: Intl.NumberFormatOptions["signDisplay"],
-  value: number,
-): string => {
-  if (signDisplay === "never") return ""
-  if (value === 0 && signDisplay === "exceptZero") return ""
-  if (value < 0) return "-"
-  if (signDisplay === "always" || signDisplay === "exceptZero") return "+"
-  return ""
-}
-
-const formatDecimal = (
-  value: number,
-  options: Intl.NumberFormatOptions,
-): string => {
-  const {
-    minimumFractionDigits = 0,
-    maximumFractionDigits = 2,
-    notation = "standard",
-    signDisplay = "auto",
-  } = options
-
-  const sign = getSignPrefix(signDisplay, value)
-
-  const formatted = new Intl.NumberFormat(LOCALE, {
-    style: "decimal",
-    minimumFractionDigits,
-    maximumFractionDigits,
-    notation,
-  }).format(Math.abs(value))
-
-  return `${sign}${formatted}`
-}
-
-interface NumberFormatterOptions
-  extends Omit<Intl.NumberFormatOptions, "style" | "currencySign"> {
-  showCurrency?: boolean
-}
-
-const numberFormatter = (
-  value: number,
-  options: NumberFormatterOptions,
-): string => {
-  const {
-    currency,
-    currencyDisplay,
-    showCurrency = true,
-    signDisplay = "auto",
-    ...decimalOptions
-  } = options
-
-  const base = formatDecimal(value, {
-    ...decimalOptions,
-    signDisplay,
-  })
-
-  if (!currency || !showCurrency) return base
-
-  const label = getCurrencyLabel(currency, currencyDisplay)
-  const sign = base.startsWith("-") || base.startsWith("+") ? base[0] : ""
-  const number = base.replace(/^[+-]/, "")
-
-  return `${sign}${label}${number}`
-}
-
-// ------------------------
-// Formatter memoization
-// ------------------------
-const CACHE_MAX_SIZE = 500
-
-type CacheKey = string
-const cache = new Map<CacheKey, string>()
-
-const getCachedFormatted = (
-  value: number,
-  options: NumberFormatterOptions,
-): string => {
-  const key = `${value}|${options.currency ?? ""}|${options.currencyDisplay ?? "symbol"}|${options.minimumFractionDigits}|${options.maximumFractionDigits}|${options.signDisplay}|${options.notation ?? "standard"}|${options.showCurrency ?? true}`
-
-  // Check cache
-  const cached = cache.get(key)
-  if (cached) {
-    // Move to end to mark as recently used (true LRU)
-    cache.delete(key)
-    cache.set(key, cached)
-    return cached
-  }
-
-  // Compute formatted value
-  const formatted = numberFormatter(value, options)
-
-  // Evict oldest if over limit
-  if (cache.size >= CACHE_MAX_SIZE) {
-    const firstKey = cache.keys().next().value
-    if (firstKey !== undefined) cache.delete(firstKey)
-  }
-
-  // Store new value
-  cache.set(key, formatted)
-  return formatted
-}
-
-// ------------------------
-// Public formatter options
-// ------------------------
-interface FormatDisplayValueOptions {
-  currency?: string
+export interface FormatMoneyOptions {
   currencyDisplay?: Intl.NumberFormatOptions["currencyDisplay"]
   compact?: boolean
   hideSign?: boolean
   showSign?: boolean
   hideSymbol?: boolean
   addParentheses?: boolean
-  minimumFractionDigits?: number
-  maximumFractionDigits?: number
 }
 
-// ------------------------
-// Public formatter (single source of truth)
-// ------------------------
-export const formatDisplayValue = (
-  raw: string | number,
-  options: FormatDisplayValueOptions = {},
-): string => {
-  const {
-    currency,
-    currencyDisplay,
-    compact = false,
-    hideSign = false,
-    showSign = false,
-    hideSymbol = false,
-    addParentheses = false,
-    minimumFractionDigits,
-    maximumFractionDigits,
-  } = options
+export interface FormatPercentOptions {
+  maximumFractionDigits?: number
+  showSign?: boolean
+}
 
-  // Convert number to string
-  const stringValue = typeof raw === "number" ? raw.toString() : raw
+const formatterCache = new Map<string, Intl.NumberFormat>()
 
-  // Determine sign display
-  const signDisplayValue: Intl.NumberFormatOptions["signDisplay"] = hideSign
-    ? "never"
-    : showSign
-      ? "exceptZero"
-      : "auto"
+function getFormatter(options: Intl.NumberFormatOptions): Intl.NumberFormat {
+  const key = `${NUMBER_FORMAT_LOCALE}:${JSON.stringify(options)}`
+  const cached = formatterCache.get(key)
+  if (cached) return cached
+  const formatter = new Intl.NumberFormat(NUMBER_FORMAT_LOCALE, options)
+  formatterCache.set(key, formatter)
+  return formatter
+}
 
-  // Allow "." or "123."
-  if (stringValue.endsWith(".")) {
-    const base = stringValue.slice(0, -1)
-    const num = base === "" ? 0 : Number(base)
-    if (Number.isNaN(num)) return "0."
+function getCurrencyLabel(
+  currency: string,
+  display: Intl.NumberFormatOptions["currencyDisplay"] = "symbol",
+): string {
+  if (display === "code") return currency
+  if (display === "name")
+    return currencyRegistryService.getCurrencyName(currency)
+  return currencyRegistryService.getCurrencySymbol(currency)
+}
 
-    const formatted = getCachedFormatted(num, {
-      currency: hideSymbol ? undefined : currency,
-      currencyDisplay,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-      signDisplay: signDisplayValue,
-      notation: compact ? "compact" : "standard",
-      showCurrency: !hideSymbol,
-    })
+function getSign(value: number, hideSign: boolean, showSign: boolean): string {
+  if (hideSign || value === 0) return ""
+  if (value < 0) return "-"
+  return showSign ? "+" : ""
+}
 
-    return `${formatted}.`
-  }
+function groupDigits(value: string): string {
+  return value.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+}
 
-  const num = Number(stringValue)
-  if (Number.isNaN(num)) {
-    if (stringValue === ".") return "0."
-    return CALCULATOR_CONFIG.DEFAULT_DISPLAY
-  }
+export function formatNumber(
+  value: number,
+  options: FormatNumberOptions = {},
+): string {
+  if (!Number.isFinite(value)) return "0"
+  return getFormatter({
+    minimumFractionDigits: options.minimumFractionDigits ?? 0,
+    maximumFractionDigits: options.maximumFractionDigits ?? 2,
+    notation: options.notation ?? "standard",
+    signDisplay: options.signDisplay ?? "auto",
+    useGrouping: options.useGrouping ?? true,
+  }).format(value)
+}
 
-  // Determine fraction digits
-  let minDecimals = minimumFractionDigits ?? 0
-  const maxDecimals = maximumFractionDigits ?? CALCULATOR_CONFIG.MAX_DECIMALS
+export function formatPercent(
+  percent: number,
+  options: FormatPercentOptions = {},
+): string {
+  return `${formatNumber(percent, {
+    maximumFractionDigits: options.maximumFractionDigits ?? 1,
+    signDisplay: options.showSign ? "exceptZero" : "auto",
+  })}%`
+}
 
-  // If raw string has decimals and no explicit min was set, preserve them
-  // Only check for string inputs (numbers won't have trailing decimals)
-  if (
-    minimumFractionDigits === undefined &&
-    typeof raw === "string" &&
-    stringValue.includes(".")
-  ) {
-    const decimals = stringValue.split(".")[1]?.length ?? 0
-    minDecimals = Math.min(decimals, maxDecimals)
-  }
+export function formatEditableNumber(raw: string): string {
+  const match = /^(\d+)(?:\.(\d*))?$/.exec(raw)
+  if (!match) return raw
+  const whole = groupDigits(match[1])
+  return match[2] === undefined ? whole : `${whole}.${match[2]}`
+}
 
-  let result = getCachedFormatted(num, {
-    currency: hideSymbol ? undefined : currency,
-    currencyDisplay,
-    minimumFractionDigits: minDecimals,
-    maximumFractionDigits: maxDecimals,
-    signDisplay: signDisplayValue,
-    notation: compact ? "compact" : "standard",
-    showCurrency: !hideSymbol,
-  })
+export function formatMoney(
+  minorUnits: number,
+  currency: string,
+  options: FormatMoneyOptions = {},
+): string {
+  assertMinorUnits(minorUnits)
+  const digits = getMinorUnitDigits(currency)
+  const decimal = minorUnitsToDecimalString(minorUnits, currency)
+  const negative = minorUnits < 0
+  const unsigned = decimal.replace(/^-/, "")
+  const [whole, rawFraction = ""] = unsigned.split(".")
+  const fraction = rawFraction.replace(/0+$/, "")
 
-  // Handle parentheses for negative values
-  if (addParentheses && num < 0) {
-    result = result.replace(/^-/, "")
-    return `(${result})`
-  }
+  const number = options.compact
+    ? formatNumber(Number(unsigned), {
+        maximumFractionDigits: digits,
+        notation: "compact",
+      })
+    : `${groupDigits(whole)}${fraction ? `.${fraction}` : ""}`
 
-  return result
+  const sign = getSign(
+    minorUnits,
+    options.hideSign ?? false,
+    options.showSign ?? false,
+  )
+  const label = options.hideSymbol
+    ? ""
+    : getCurrencyLabel(currency, options.currencyDisplay)
+  const result = `${sign}${label}${number}`
+
+  return options.addParentheses && negative
+    ? `(${result.replace(/^-/, "")})`
+    : result
 }

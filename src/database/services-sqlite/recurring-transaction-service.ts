@@ -5,6 +5,7 @@ import { generateId } from "~/database/utils/generate-id"
 import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import type { TransactionSubType } from "~/types/transactions"
 import { logger } from "~/utils/logger"
+import { assertMinorUnits } from "~/utils/money"
 import { nextAbsoluteOccurrence } from "~/utils/recurrence"
 
 // ── Row types ─────────────────────────────────────────────────────────────────
@@ -119,6 +120,7 @@ interface CreateRecurringRuleInput {
 export async function createRecurringRule(
   data: CreateRecurringRuleInput,
 ): Promise<string> {
+  assertMinorUnits(data.amount)
   const id = generateId()
   const now = new Date().toISOString()
 
@@ -182,6 +184,7 @@ export async function updateRecurringRuleTemplate(
   ruleId: string,
   fields: RecurringRuleTemplateUpdate,
 ): Promise<void> {
+  if (fields.amount !== undefined) assertMinorUnits(fields.amount)
   const rule = await queryOne<RowRecurring>(
     `SELECT * FROM recurring_transactions WHERE id = ?`,
     [ruleId],

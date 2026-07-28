@@ -3,14 +3,14 @@ import { useTranslation } from "react-i18next"
 import { TextInput } from "react-native"
 
 import type { TransactionType } from "~/types/transactions"
-import { CALCULATOR_CONFIG } from "~/utils/number-format"
 
 import { Text } from "../ui/text"
 import { View } from "../ui/view"
+import { MAX_AMOUNT_INPUT_LENGTH } from "./math-utils"
 import { smartInputStyles } from "./styles"
 
 interface AmountInputRowProps {
-  currencySymbol: string
+  currencySymbol?: string
   type?: TransactionType
   displayValue: string
   placeholder: string
@@ -35,11 +35,13 @@ export const AmountInputRow = ({
   const { t } = useTranslation()
   return (
     <View style={smartInputStyles.inputContainer}>
-      <View style={smartInputStyles.currencyWrap}>
-        <Text style={smartInputStyles.currencySymbol(type)} numberOfLines={1}>
-          {currencySymbol}
-        </Text>
-      </View>
+      {currencySymbol ? (
+        <View style={smartInputStyles.currencyWrap}>
+          <Text style={smartInputStyles.currencySymbol(type)} numberOfLines={1}>
+            {currencySymbol}
+          </Text>
+        </View>
+      ) : null}
       <TextInput
         ref={inputRef}
         style={smartInputStyles.mainInput}
@@ -56,7 +58,7 @@ export const AmountInputRow = ({
         accessibilityValue={{ text: displayValue || placeholder }}
         onFocus={onFocus}
         onBlur={onBlur}
-        maxLength={CALCULATOR_CONFIG.MAX_DIGITS}
+        maxLength={MAX_AMOUNT_INPUT_LENGTH}
       />
     </View>
   )

@@ -34,6 +34,7 @@ import {
   TransactionTypeEnum,
 } from "~/types/transactions"
 import { getWeekStartsOn } from "~/utils/get-week-start-on"
+import { roundToSafeInteger } from "~/utils/money"
 import {
   formatIntervalLabel,
   generateDateBuckets,
@@ -320,9 +321,9 @@ function computePeriodStats(
     totalExpense,
     totalIncome,
     net,
-    avgDailyExpense: totalExpense / daySpan,
-    avgDailyIncome: totalIncome / daySpan,
-    avgDailyNet: net / daySpan,
+    avgDailyExpense: roundToSafeInteger(totalExpense / daySpan),
+    avgDailyIncome: roundToSafeInteger(totalIncome / daySpan),
+    avgDailyNet: roundToSafeInteger(net / daySpan),
     transactionCount: count,
   }
 }
@@ -575,7 +576,7 @@ function computeSpendingByDayOfWeek(
     return {
       day,
       expense,
-      avgExpense: count > 0 ? expense / count : 0,
+      avgExpense: count > 0 ? roundToSafeInteger(expense / count) : 0,
     }
   })
 }
@@ -604,9 +605,9 @@ function computeForecast(
     isActive: true,
     daysElapsed,
     daysTotal,
-    forecastedExpense: expenseRate * daysTotal,
-    forecastedIncome: incomeRate * daysTotal,
-    forecastedNet: (incomeRate - expenseRate) * daysTotal,
+    forecastedExpense: roundToSafeInteger(expenseRate * daysTotal),
+    forecastedIncome: roundToSafeInteger(incomeRate * daysTotal),
+    forecastedNet: roundToSafeInteger((incomeRate - expenseRate) * daysTotal),
   }
 }
 
@@ -910,7 +911,9 @@ function computeMedianPurchase(rows: StatsRawRow[]): number | null {
   const mid = Math.floor(amounts.length / 2)
   const lower = amounts[mid - 1] ?? 0
   const upper = amounts[mid] ?? 0
-  return amounts.length % 2 === 0 ? (lower + upper) / 2 : upper
+  return amounts.length % 2 === 0
+    ? roundToSafeInteger((lower + upper) / 2)
+    : upper
 }
 
 function computeMostFrequent(
@@ -1011,7 +1014,8 @@ function computeTopCategoryTrend(
     categoryIcon: sample.categoryIcon,
     categoryColorSchemeName: sample.categoryColorSchemeName,
     months,
-    trailingAvg: monthsWithData > 0 ? trailingSum / monthsWithData : 0,
+    trailingAvg:
+      monthsWithData > 0 ? roundToSafeInteger(trailingSum / monthsWithData) : 0,
     currentTotal: topTotal,
   }
 }

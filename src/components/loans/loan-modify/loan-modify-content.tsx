@@ -42,6 +42,7 @@ import {
   TransactionTypeEnum,
 } from "~/types/transactions"
 import { logger } from "~/utils/logger"
+import { rescaleMinorUnits } from "~/utils/money"
 import { formatShortMonthDayYear } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
@@ -93,6 +94,7 @@ export function LoanModifyContent({
   const formIcon = watch("icon")
   const formColorSchemeName = watch("colorSchemeName")
   const formAccountId = watch("accountId")
+  const formPrincipalAmount = watch("principalAmount")
   const formCategoryId = watch("categoryId")
   const formDueDate = watch("dueDate")
 
@@ -125,10 +127,26 @@ export function LoanModifyContent({
       opts: { shouldDirty: boolean },
     ) => {
       if (name === "accountId") {
+        const nextAccount = accounts.find((account) => account.id === value)
+        if (
+          selectedAccount &&
+          nextAccount &&
+          selectedAccount.currencyCode !== nextAccount.currencyCode
+        ) {
+          setValue(
+            "principalAmount",
+            rescaleMinorUnits(
+              formPrincipalAmount,
+              selectedAccount.currencyCode,
+              nextAccount.currencyCode,
+            ),
+            opts,
+          )
+        }
         setValue("accountId", value, opts)
       }
     },
-    [setValue],
+    [accounts, formPrincipalAmount, selectedAccount, setValue],
   )
 
   const navigation = useNavigation()
@@ -360,9 +378,9 @@ export function LoanModifyContent({
                 name="principalAmount"
                 render={({ field: { onChange, value } }) => (
                   <SmartAmountInput
-                    value={value}
-                    onChange={onChange}
-                    currencyCode={currencyCode || undefined}
+                    valueMinor={value}
+                    onChangeMinor={onChange}
+                    currencyCode={currencyCode}
                     label={t("screens.settings.loans.form.amountLabel")}
                     error={
                       errors.principalAmount

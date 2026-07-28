@@ -6,6 +6,7 @@ import type {
   AddBudgetFormSchema,
   UpdateBudgetFormSchema,
 } from "~/schemas/budgets.schema"
+import { assertMinorUnits } from "~/utils/money"
 
 const { t } = i18n
 
@@ -16,6 +17,7 @@ import type {
 } from "../types/rows"
 
 export async function createBudget(data: AddBudgetFormSchema): Promise<string> {
+  assertMinorUnits(data.amount)
   const id = generateId()
   const now = new Date().toISOString()
 
@@ -64,6 +66,7 @@ export async function updateBudgetById(
   id: string,
   data: Partial<UpdateBudgetFormSchema>,
 ): Promise<void> {
+  if (data.amount !== undefined) assertMinorUnits(data.amount)
   const now = new Date().toISOString()
 
   await runInTransaction("budget.update", async (db) => {

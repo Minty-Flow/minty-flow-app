@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-07-25T15:15:01.628Z
+Generated on: 2026-07-28T11:52:42.618Z
 ```
 ./
 ├── .github/
@@ -28,13 +28,14 @@ Generated on: 2026-07-25T15:15:01.628Z
 ├── .zed/
 │   └── settings.json
 ├── docs/
-│   ├── stats-improvement-plan.md
+│   ├── money-architecture.md
 │   ├── stats-recurring-spending-map-plan.md
 │   └── STRUCTURE.md
 ├── plugins/
 │   └── with-android-release-signing.mts
 ├── scripts/
 │   ├── check-missing-i18n-keys.mts
+│   ├── check-number-formatting.mts
 │   ├── find-unused-styles.mts
 │   ├── generate-icon-barrel.mts
 │   └── generate-structure.mts
@@ -42,8 +43,7 @@ Generated on: 2026-07-25T15:15:01.628Z
 │   ├── app/
 │   │   ├── (tabs)/
 │   │   │   ├── _layout.tsx
-│   │   │   ├── index.tsx
-│   │   │   └── stats-view.tsx
+│   │   │   └── index.tsx
 │   │   ├── accounts/
 │   │   │   ├── [accountId]/
 │   │   │   │   ├── index.tsx
@@ -115,6 +115,8 @@ Generated on: 2026-07-25T15:15:01.628Z
 │   │   │   ├── calendar.tsx
 │   │   │   ├── cash-flow.tsx
 │   │   │   ├── categories.tsx
+│   │   │   ├── index.tsx
+│   │   │   ├── insights.tsx
 │   │   │   ├── net-worth.tsx
 │   │   │   └── wrapped.tsx
 │   │   ├── transaction/
@@ -227,6 +229,7 @@ Generated on: 2026-07-25T15:15:01.628Z
 │   │   │   ├── dashboard/
 │   │   │   │   ├── calendar-card.tsx
 │   │   │   │   ├── cash-flow-card.tsx
+│   │   │   │   ├── insights-section.tsx
 │   │   │   │   ├── net-worth-card.tsx
 │   │   │   │   ├── pace-card.tsx
 │   │   │   │   ├── stat-card.tsx
@@ -390,14 +393,14 @@ Generated on: 2026-07-25T15:15:01.628Z
 │   │   ├── migrations/
 │   │   │   ├── sqlite-runner.ts
 │   │   │   ├── sqlite-v1.ts
-│   │   │   └── sqlite-v2.ts
+│   │   │   ├── sqlite-v2.ts
+│   │   │   └── sqlite-v3.ts
 │   │   ├── repos/
 │   │   │   ├── account-repo.ts
 │   │   │   ├── budget-repo.ts
 │   │   │   ├── category-repo.ts
 │   │   │   ├── goal-repo.ts
 │   │   │   ├── loan-repo.ts
-│   │   │   ├── tag-repo.ts
 │   │   │   ├── transaction-repo.ts
 │   │   │   └── transaction-tag-repo.ts
 │   │   ├── services-sqlite/
@@ -499,6 +502,7 @@ Generated on: 2026-07-25T15:15:01.628Z
 │   │   │   │   └── standalone.ts
 │   │   │   ├── base.ts
 │   │   │   ├── colors.ts
+│   │   │   ├── copy-with.ts
 │   │   │   ├── factory.ts
 │   │   │   ├── registry.ts
 │   │   │   ├── types.ts
@@ -530,6 +534,7 @@ Generated on: 2026-07-25T15:15:01.628Z
 │       ├── is-image-url.ts
 │       ├── is-single-emoji-or-letter.ts
 │       ├── logger.ts
+│       ├── money.ts
 │       ├── number-format.ts
 │       ├── open-file.ts
 │       ├── parse-math-expression.ts
@@ -557,6 +562,7 @@ Generated on: 2026-07-25T15:15:01.628Z
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml
 ├── README.md
+├── skills-lock.json
 └── tsconfig.json
 
 ```

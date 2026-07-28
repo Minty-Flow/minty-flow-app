@@ -1,3 +1,5 @@
+export const MAX_AMOUNT_INPUT_LENGTH = 14
+
 // Leading minus is a sign (negative number), not an operator — so "Entered:" chip can show
 export const hasMathOperation = (text: string) => {
   const trimmed = text.trim()

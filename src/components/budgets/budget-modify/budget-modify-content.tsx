@@ -40,6 +40,7 @@ import { getThemeStrict } from "~/styles/theme/registry"
 import { BudgetPeriodEnum } from "~/types/budgets"
 import { NewEnum } from "~/types/new"
 import { logger } from "~/utils/logger"
+import { rescaleMinorUnits } from "~/utils/money"
 import { formatShortMonthDayYear } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
@@ -100,6 +101,7 @@ export function BudgetModifyContent({
   const formIcon = watch("icon")
   const formColorSchemeName = watch("colorSchemeName")
   const watchedCurrencyCode = watch("currencyCode")
+  const watchedAmount = watch("amount")
   const watchedAccountIds = watch("accountIds")
   const watchedPeriod = watch("period")
   const watchedCategoryIds = watch("categoryIds")
@@ -284,9 +286,16 @@ export function BudgetModifyContent({
               accounts={accounts}
               selectedCurrency={watchedCurrencyCode || null}
               selectedAccountIds={watchedAccountIds}
-              onCurrencyChange={(c) =>
+              onCurrencyChange={(c) => {
+                if (watchedCurrencyCode && c !== watchedCurrencyCode) {
+                  setValue(
+                    "amount",
+                    rescaleMinorUnits(watchedAmount, watchedCurrencyCode, c),
+                    { shouldDirty: true },
+                  )
+                }
                 setValue("currencyCode", c, { shouldDirty: true })
-              }
+              }}
               onAccountIdsChange={(ids) =>
                 setValue("accountIds", ids, { shouldDirty: true })
               }
@@ -299,9 +308,9 @@ export function BudgetModifyContent({
                 name="amount"
                 render={({ field: { onChange, value } }) => (
                   <SmartAmountInput
-                    value={value}
-                    onChange={onChange}
-                    currencyCode={watchedCurrencyCode || undefined}
+                    valueMinor={value}
+                    onChangeMinor={onChange}
+                    currencyCode={watchedCurrencyCode}
                     label={t("screens.settings.budgets.form.amountLabel")}
                     error={
                       errors.amount

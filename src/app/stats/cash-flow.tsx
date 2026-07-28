@@ -13,6 +13,7 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { getThemeVariantPalette, shuffleArray } from "~/styles/theme/utils"
 import type { CurrencyPeriodStats, CurrencyStats } from "~/types/stats"
+import { formatPercent } from "~/utils/number-format"
 
 interface SankeyLabels {
   income: string
@@ -121,7 +122,7 @@ function LegendList({
             {node.label}
           </Text>
           <Text variant="muted" style={styles.legendPercent}>
-            {total > 0 ? `${((node.value / total) * 100).toFixed(1)}%` : ""}
+            {total > 0 ? formatPercent((node.value / total) * 100) : ""}
           </Text>
           <Money
             value={node.value}

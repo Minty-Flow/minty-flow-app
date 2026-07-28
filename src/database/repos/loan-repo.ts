@@ -16,8 +16,9 @@ export async function getLoanProgress(
      WHERE loan_id = ?
        AND type = ?
        AND is_deleted = 0
-       AND is_pending = 0`,
-    [loanId, repaymentType],
+       AND is_pending = 0
+       AND account_id = (SELECT account_id FROM loans WHERE id = ?)`,
+    [loanId, repaymentType, loanId],
   )
   return row?.total ?? 0
 }
