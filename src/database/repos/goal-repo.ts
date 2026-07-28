@@ -34,12 +34,15 @@ export async function getGoalProgress(
 ): Promise<number> {
   const typeFilter = goalType === "expense" ? "expense" : "income"
   const row = await queryOne<{ total: number }>(
-    `SELECT COALESCE(SUM(amount), 0) as total
-     FROM transactions
-     WHERE goal_id = ?
-       AND type = ?
-       AND is_deleted = 0
-       AND is_pending = 0`,
+    `SELECT COALESCE(SUM(t.amount), 0) as total
+     FROM transactions t
+     JOIN accounts a ON a.id = t.account_id
+     JOIN goals g ON g.id = t.goal_id
+     WHERE t.goal_id = ?
+       AND t.type = ?
+       AND t.is_deleted = 0
+       AND t.is_pending = 0
+       AND a.currency_code = g.currency_code`,
     [goalId, typeFilter],
   )
   return row?.total ?? 0

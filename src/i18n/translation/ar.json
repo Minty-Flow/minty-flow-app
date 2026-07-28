@@ -213,7 +213,9 @@
         "currentPeriod": "هذا الشهر"
       },
       "currency": {
-        "sectionHeader": "{{currency}}"
+        "sectionHeader": "{{currency}}",
+        "showing": "عرض {{currency}}",
+        "tapToSwitch": "اضغط للتبديل"
       },
       "balance": {
         "title": "صافي الرصيد",
@@ -274,6 +276,8 @@
         "badgeFrequent": "متكرر",
         "badgeRhythm": "إيقاع",
         "badgeShape": "نمط",
+        "emptyTitle": "لا توجد حركة كافية بعد لعرض رؤى الملخص لهذه الفترة.",
+        "emptyDescription": "أضف مزيداً من سجل الإنفاق ضمن هذا النطاق وستظهر الرؤى هنا.",
         "categoryAbove": "{{category}} أعلى بنسبة {{percent}}% من متوسط 3 أشهر",
         "categoryBelow": "{{category}} أقل بنسبة {{percent}}% من متوسط 3 أشهر",
         "vsAvg": "متوسط 3 أشهر:",
@@ -1021,8 +1025,11 @@
         "applyResult": "تطبيق النتيجة",
         "applyResultHint": "اضغط لاستخدام هذه النتيجة",
         "confirmAmount": "تأكيد المبلغ",
-        "entered": "القيمة المُدخلة",
-        "resultLabel": "النتيجة: "
+        "errors": {
+          "invalidExpression": "تعبير غير صالح",
+          "divisionByZero": "لا يمكن القسمة على صفر",
+          "invalidResult": "نتيجة غير صالحة"
+        }
       },
       "attachments": {
         "openFileModal": "فتح الملف",

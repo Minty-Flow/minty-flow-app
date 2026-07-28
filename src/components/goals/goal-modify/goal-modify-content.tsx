@@ -38,6 +38,7 @@ import { getThemeStrict } from "~/styles/theme/registry"
 import { type GoalType, GoalTypeEnum } from "~/types/goals"
 import { NewEnum } from "~/types/new"
 import { logger } from "~/utils/logger"
+import { rescaleMinorUnits } from "~/utils/money"
 import { formatShortMonthDayYear } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
@@ -88,6 +89,7 @@ export function GoalModifyContent({
   const formColorSchemeName = watch("colorSchemeName")
   const formCurrencyCode = watch("currencyCode")
   const formAccountIds = watch("accountIds")
+  const formTargetAmount = watch("targetAmount")
   const formTargetDate = watch("targetDate")
 
   const navigation = useNavigation()
@@ -312,6 +314,13 @@ export function GoalModifyContent({
               selectedCurrency={formCurrencyCode || null}
               selectedAccountIds={formAccountIds}
               onCurrencyChange={(code) => {
+                if (formCurrencyCode && code !== formCurrencyCode) {
+                  setValue(
+                    "targetAmount",
+                    rescaleMinorUnits(formTargetAmount, formCurrencyCode, code),
+                    { shouldDirty: true },
+                  )
+                }
                 setValue("currencyCode", code, { shouldDirty: true })
               }}
               onAccountIdsChange={(ids) => {
@@ -327,9 +336,9 @@ export function GoalModifyContent({
               name="targetAmount"
               render={({ field: { onChange, value } }) => (
                 <SmartAmountInput
-                  value={value}
-                  onChange={onChange}
-                  currencyCode={formCurrencyCode || undefined}
+                  valueMinor={value}
+                  onChangeMinor={onChange}
+                  currencyCode={formCurrencyCode}
                   label={t("screens.settings.goals.form.targetAmountLabel")}
                   error={
                     errors.targetAmount

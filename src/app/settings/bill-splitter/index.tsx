@@ -1,5 +1,11 @@
 import { useNavigation, useRouter } from "expo-router"
-import { useCallback, useLayoutEffect, useMemo, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList, View as RNView, ScrollView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
@@ -31,7 +37,7 @@ export default function BillSplitterScreen() {
   const { theme } = useUnistyles()
   const router = useRouter()
   const navigation = useNavigation()
-  const currency = useMoneyFormattingStore((s) => s.preferredCurrency)
+  const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
 
   const participants = useBillSplitterStore((s) => s.participants)
   const items = useBillSplitterStore((s) => s.items)
@@ -39,6 +45,7 @@ export default function BillSplitterScreen() {
   const setAccountId = useBillSplitterStore((s) => s.setAccountId)
   const removeItem = useBillSplitterStore((s) => s.removeItem)
   const clearBill = useBillSplitterStore((s) => s.clearBill)
+  const setCurrencyCode = useBillSplitterStore((s) => s.setCurrencyCode)
 
   const [infoVisible, setInfoVisible] = useState(false)
   const [clearVisible, setClearVisible] = useState(false)
@@ -46,6 +53,9 @@ export default function BillSplitterScreen() {
   const [accountSearchQuery, setAccountSearchQuery] = useState("")
 
   const selectedAccount = accounts.find((a) => a.id === accountId) ?? null
+  const currency = selectedAccount?.currencyCode ?? preferredCurrency
+
+  useEffect(() => setCurrencyCode(currency), [currency, setCurrencyCode])
 
   const total = getBillTotal(items)
   const allocated = getAllocatedTotal(items)

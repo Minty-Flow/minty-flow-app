@@ -90,6 +90,7 @@ echo
 
 run_task "structure"  "$PM run structure"
 run_task "lint"       "$PM run lint:fix"
+run_task "numbers"    "$PM run check-number-formatting"
 
 if [ -d .git ]; then
   git add . 2>/dev/null || true

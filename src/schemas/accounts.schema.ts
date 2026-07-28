@@ -10,9 +10,10 @@ const addAccountsSchema = z
       .min(1, "validation.required.name")
       .max(50, "validation.tooLong.name"),
     type: z.enum(AccountTypeEnum),
-    balance: z.number({
-      error: "validation.amount.invalid",
-    }),
+    balance: z
+      .number({ error: "validation.amount.invalid" })
+      .safe()
+      .int("validation.amount.invalid"),
     currencyCode: z
       .string()
       .min(1, "validation.required.currency")

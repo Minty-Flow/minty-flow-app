@@ -84,7 +84,7 @@ export function LoanCard({ loan, onPress }: LoanCardProps) {
   const badgeBg = isPaid ? theme.colors.secondary : accentTint
 
   const progressBarColor = isPaid ? mutedColor : accentColor
-  const progressPercent = Number((clampedProgress * 100).toFixed(1))
+  const progressPercent = Math.round(clampedProgress * 1000) / 10
 
   return (
     <Pressable

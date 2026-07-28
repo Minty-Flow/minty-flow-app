@@ -2,6 +2,11 @@ import type { SQLiteDatabase } from "expo-sqlite"
 
 import { SQLITE_V1_SQL, SQLITE_V1_VERSION } from "./sqlite-v1"
 import { SQLITE_V2_SQL, SQLITE_V2_VERSION } from "./sqlite-v2"
+import {
+  assertSqliteV3State,
+  runSqliteV3Migration,
+  SQLITE_V3_VERSION,
+} from "./sqlite-v3"
 
 /**
  * A migration step. Use `sql` for pure DDL strings (executed via `execSync`),
@@ -26,6 +31,7 @@ type Migration =
 const migrations: Migration[] = [
   { version: SQLITE_V1_VERSION, sql: SQLITE_V1_SQL },
   { version: SQLITE_V2_VERSION, sql: SQLITE_V2_SQL },
+  { version: SQLITE_V3_VERSION, run: runSqliteV3Migration },
 ]
 
 /**
@@ -51,6 +57,9 @@ const migrations: Migration[] = [
 export function runSqliteMigrationsSync(db: SQLiteDatabase): void {
   const row = db.getFirstSync<{ user_version: number }>("PRAGMA user_version")
   const currentVersion = row?.user_version ?? 0
+  if (currentVersion === SQLITE_V3_VERSION) {
+    assertSqliteV3State(db)
+  }
 
   for (const migration of migrations) {
     if (migration.version > currentVersion) {

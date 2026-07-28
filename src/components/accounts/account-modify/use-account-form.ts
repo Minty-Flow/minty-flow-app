@@ -21,6 +21,7 @@ import { getThemeStrict } from "~/styles/theme/registry"
 import { AccountTypeEnum } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
 import { logger } from "~/utils/logger"
+import { rescaleMinorUnits } from "~/utils/money"
 import { Toast } from "~/utils/toast"
 
 import type { AccountModifyContentProps } from "./types"
@@ -67,6 +68,7 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
   const formColorSchemeName = watch("colorSchemeName")
   const formType = watch("type")
   const formCurrencyCode = watch("currencyCode")
+  const formBalance = watch("balance")
   const formIsPrimary = watch("isPrimary")
 
   const navigation = useNavigation()
@@ -170,6 +172,13 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
   }
 
   const handleCurrencySelected = (code: string) => {
+    if (code !== formCurrencyCode) {
+      setValue(
+        "balance",
+        rescaleMinorUnits(formBalance, formCurrencyCode, code),
+        { shouldDirty: true },
+      )
+    }
     setValue("currencyCode", code, { shouldDirty: true })
   }
 

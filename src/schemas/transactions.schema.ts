@@ -7,7 +7,11 @@ import {
 
 export const transactionSchema = z
   .object({
-    amount: z.number().gt(0, "validation.amount.positive"),
+    amount: z
+      .number()
+      .safe()
+      .int("validation.amount.invalid")
+      .gt(0, "validation.amount.positive"),
     type: z.enum(TransactionTypeEnum),
     transactionDate: z.date(),
     accountId: z.string().min(1, "validation.required.accountForTransaction"),
@@ -51,7 +55,7 @@ const dateOrNumber = z.union([z.number(), z.date()])
 const createTransferParamsSchema = z.object({
   fromAccountId: z.string().min(1),
   toAccountId: z.string().min(1),
-  amount: z.number().gt(0),
+  amount: z.number().safe().int().gt(0),
   /** When from/to accounts have different currencies: rate (toCurrency per 1 fromCurrency). Credit amount = amount * conversionRate. */
   conversionRate: z.number().gt(0).optional(),
   transactionDate: dateOrNumber.optional(),
@@ -62,7 +66,7 @@ const createTransferParamsSchema = z.object({
 export type CreateTransferParams = z.infer<typeof createTransferParamsSchema>
 
 const editTransferFieldsSchema = z.object({
-  amount: z.number().gt(0).optional(),
+  amount: z.number().safe().int().gt(0).optional(),
   /** When from/to have different currencies: rate (toCurrency per 1 fromCurrency). Credit amount = amount * conversionRate. */
   conversionRate: z.number().gt(0).optional(),
   transactionDate: dateOrNumber.optional(),

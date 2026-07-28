@@ -54,28 +54,3 @@ export async function queryOne<T = Record<string, unknown>>(
   const db = getDb()
   return db.getFirstAsync<T>(sql, params)
 }
-
-/**
- * Execute a write statement (`INSERT`, `UPDATE`, `DELETE`) outside of a
- * managed transaction.
- *
- * **Prefer {@link runInTransaction}** for all writes — it serialises through
- * the write queue and wraps the work in an atomic transaction. Use `exec` only
- * for one-off writes where atomicity and serialisation are guaranteed by the
- * surrounding context (e.g. inside a `runInTransaction` callback).
- *
- * @param sql - Parameterised SQL statement.
- * @param params - Bind parameters (positional `?` placeholders).
- *
- * @example
- * ```ts
- * await exec("UPDATE accounts SET sort_order = ? WHERE id = ?", [order, id])
- * ```
- */
-export async function exec(
-  sql: string,
-  params: SQLiteBindParams = [],
-): Promise<void> {
-  const db = getDb()
-  await db.runAsync(sql, params)
-}

@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router"
-import { useCallback, useMemo } from "react"
+import { useCallback, useEffect, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList, ScrollView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
@@ -26,13 +26,20 @@ export default function SummaryScreen() {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const router = useRouter()
-  const currency = useMoneyFormattingStore((s) => s.preferredCurrency)
+  const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
+  const billCurrency = useBillSplitterStore((s) => s.currencyCode)
+  const currency = billCurrency ?? preferredCurrency
 
   const participants = useBillSplitterStore((s) => s.participants)
   const items = useBillSplitterStore((s) => s.items)
   const payerId = useBillSplitterStore((s) => s.payerId)
   const accountId = useBillSplitterStore((s) => s.accountId)
   const setPayerId = useBillSplitterStore((s) => s.setPayerId)
+  const setCurrencyCode = useBillSplitterStore((s) => s.setCurrencyCode)
+
+  useEffect(() => {
+    if (!billCurrency) setCurrencyCode(currency)
+  }, [billCurrency, currency, setCurrencyCode])
 
   const summary = useMemo(
     () => getBillSummary(items, participants),

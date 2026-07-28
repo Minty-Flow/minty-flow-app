@@ -284,8 +284,7 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
             style={[
               styles.progressFill,
               {
-                width:
-                  `${(clampedProgress * 100).toFixed(1)}%` as DimensionValue,
+                width: `${clampedProgress * 100}%` as DimensionValue,
                 backgroundColor: progressBarColor,
               },
             ]}

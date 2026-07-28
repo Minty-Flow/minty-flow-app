@@ -6,6 +6,11 @@ import type {
   CreateTransferParams,
   EditTransferFields,
 } from "~/schemas/transactions.schema"
+import {
+  assertMinorUnits,
+  convertMinorUnits,
+  toMajorUnits,
+} from "~/utils/money"
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -124,6 +129,7 @@ export async function createTransfer(
     extra?: Record<string, string> | null
   },
 ): Promise<void> {
+  assertMinorUnits(params.amount)
   if (params.fromAccountId === params.toAccountId) {
     throw new Error("Cannot transfer to the same account.")
   }
@@ -164,7 +170,12 @@ export async function createTransfer(
       isCrossCurrency &&
       params.conversionRate != null &&
       params.conversionRate > 0
-        ? params.amount * params.conversionRate
+        ? convertMinorUnits(
+            params.amount,
+            fromAcc.currency_code,
+            toAcc.currency_code,
+            params.conversionRate,
+          )
         : params.amount
 
     const debitBalanceBefore = fromAcc.balance
@@ -283,6 +294,7 @@ export async function editTransfer(
   txId: string,
   fields: EditTransferFields,
 ): Promise<void> {
+  if (fields.amount !== undefined) assertMinorUnits(fields.amount)
   const now = new Date().toISOString()
   let affectedAccountIds: string[] = []
 
@@ -321,12 +333,42 @@ export async function editTransfer(
     const oldDebitAmount = Math.abs(debitRow.amount)
     const oldCreditAmount = creditRow.amount
     const newDebitAmount = fields.amount ?? oldDebitAmount
+    const [newFromAccount, newToAccount, oldFromAccount, oldToAccount] =
+      await Promise.all([
+        db.getFirstAsync<{ currency_code: string }>(
+          `SELECT currency_code FROM accounts WHERE id = ?`,
+          [newFromAccountId],
+        ),
+        db.getFirstAsync<{ currency_code: string }>(
+          `SELECT currency_code FROM accounts WHERE id = ?`,
+          [newToAccountId],
+        ),
+        db.getFirstAsync<{ currency_code: string }>(
+          `SELECT currency_code FROM accounts WHERE id = ?`,
+          [debitRow.account_id],
+        ),
+        db.getFirstAsync<{ currency_code: string }>(
+          `SELECT currency_code FROM accounts WHERE id = ?`,
+          [creditRow.account_id],
+        ),
+      ])
+    if (!newFromAccount || !newToAccount || !oldFromAccount || !oldToAccount) {
+      throw new Error("One or both accounts not found.")
+    }
     const oldImpliedRate =
-      oldDebitAmount > 0 ? oldCreditAmount / oldDebitAmount : 1
+      oldDebitAmount > 0
+        ? toMajorUnits(oldCreditAmount, oldToAccount.currency_code) /
+          toMajorUnits(oldDebitAmount, oldFromAccount.currency_code)
+        : 1
     const newConversionRate = fields.conversionRate ?? oldImpliedRate
     const newCreditAmount =
       newConversionRate > 0
-        ? newDebitAmount * newConversionRate
+        ? convertMinorUnits(
+            newDebitAmount,
+            newFromAccount.currency_code,
+            newToAccount.currency_code,
+            newConversionRate,
+          )
         : newDebitAmount
 
     const fromChanged = newFromAccountId !== debitRow.account_id

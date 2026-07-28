@@ -5,8 +5,10 @@ import type {
   AddGoalFormSchema,
   UpdateGoalFormSchema,
 } from "~/schemas/goals.schema"
+import { assertMinorUnits } from "~/utils/money"
 
 export async function createGoal(data: AddGoalFormSchema): Promise<string> {
+  assertMinorUnits(data.targetAmount)
   const id = generateId()
   const now = new Date().toISOString()
 
@@ -48,6 +50,7 @@ export async function updateGoalById(
   id: string,
   data: Partial<UpdateGoalFormSchema>,
 ): Promise<void> {
+  if (data.targetAmount !== undefined) assertMinorUnits(data.targetAmount)
   const now = new Date().toISOString()
 
   await runInTransaction("goal.update", async (db) => {

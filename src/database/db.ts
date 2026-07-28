@@ -40,9 +40,8 @@ export function getDb(): SQLite.SQLiteDatabase {
     PRAGMA busy_timeout=5000;
   `)
 
-  DB = db
-
   runSqliteMigrationsSync(db)
+  DB = db
 
   return db
 }

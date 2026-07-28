@@ -16,6 +16,8 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useChartFont } from "~/hooks/use-chart-font"
 import type { BalanceTimelinePoint, StatsDateRange } from "~/types/stats"
+import { getMinorUnitDigits } from "~/utils/money"
+import { formatNumber } from "~/utils/number-format"
 import {
   formatDayOfMonth,
   formatMonthKey,
@@ -132,9 +134,11 @@ export function NetWorthChart({
               lineColor: `${theme.colors.semantic.semi}30`,
               lineWidth: 1,
               formatYLabel: (v) => {
-                const n = v as number
-                if (Math.abs(n) >= 1000) return `${(n / 1000).toFixed(1)}k`
-                return String(Math.round(n))
+                const n = (v as number) / 10 ** getMinorUnitDigits(currency)
+                return formatNumber(n, {
+                  maximumFractionDigits: Math.abs(n) >= 1000 ? 1 : 0,
+                  notation: Math.abs(n) >= 1000 ? "compact" : "standard",
+                })
               },
             },
           ]}
@@ -177,7 +181,7 @@ export function NetWorthChart({
           {activeDate ? formatShortMonthDay(activeDate) : ""}
         </Text>
         <Money
-          value={active.balance}
+          value={points[active.index]?.balance ?? 0}
           currency={currency}
           tone="transfer"
           compact

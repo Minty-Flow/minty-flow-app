@@ -40,7 +40,7 @@ export default function MoneyFormattingScreen() {
   const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
   const setCurrencyLook = useMoneyFormattingStore((s) => s.setCurrencyLook)
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
-  const exampleAmount = 1234.56
+  const exampleAmount = 123_456
   const { t } = useTranslation()
 
   return (

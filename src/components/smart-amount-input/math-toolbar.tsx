@@ -75,8 +75,13 @@ export const MathToolbar = ({
           <Text style={smartInputStyles.mathBtnText}>C</Text>
         </Pressable>
         <Pressable
-          style={[smartInputStyles.mathBtn, smartInputStyles.okBtn]}
+          style={[
+            smartInputStyles.mathBtn,
+            smartInputStyles.okBtn,
+            previewError ? smartInputStyles.mathBtnDisabled : undefined,
+          ]}
           onPress={onSubmit}
+          disabled={!!previewError}
           accessibilityLabel={
             isInMathOperation
               ? t("components.transactionForm.amountInput.applyResult")

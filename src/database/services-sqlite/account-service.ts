@@ -10,12 +10,14 @@ import type {
   UpdateAccountsFormSchema,
 } from "~/schemas/accounts.schema"
 import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
+import { assertMinorUnits, rescaleMinorUnits } from "~/utils/money"
 
 // ── Create ───────────────────────────────────────────────────────────────────
 
 export async function createAccount(
   data: AddAccountsFormSchema,
 ): Promise<string> {
+  assertMinorUnits(data.balance)
   const id = generateId()
   const now = new Date().toISOString()
 
@@ -66,7 +68,9 @@ export async function updateAccount(
   id: string,
   updates: Partial<UpdateAccountsFormSchema>,
 ): Promise<void> {
+  if (updates.balance !== undefined) assertMinorUnits(updates.balance)
   const now = new Date().toISOString()
+  let currencyChanged = false
 
   const balanceAdjustment = await runInTransaction<{
     amount: number
@@ -81,6 +85,95 @@ export async function updateAccount(
       id,
     ])
     if (!existing) throw new Error(`Account ${id} not found`)
+    let comparableBalance = existing.balance
+
+    if (
+      updates.currencyCode &&
+      updates.currencyCode !== existing.currency_code
+    ) {
+      currencyChanged = true
+      comparableBalance = rescaleMinorUnits(
+        existing.balance,
+        existing.currency_code,
+        updates.currencyCode,
+      )
+      const transactions = await db.getAllAsync<{
+        id: string
+        amount: number
+        account_balance_before: number
+      }>(
+        `SELECT id, amount, account_balance_before
+         FROM transactions WHERE account_id = ?`,
+        [id],
+      )
+      for (const transaction of transactions) {
+        await db.runAsync(
+          `UPDATE transactions
+           SET amount = ?, account_balance_before = ?, updated_at = ?
+           WHERE id = ?`,
+          [
+            rescaleMinorUnits(
+              transaction.amount,
+              existing.currency_code,
+              updates.currencyCode,
+            ),
+            rescaleMinorUnits(
+              transaction.account_balance_before,
+              existing.currency_code,
+              updates.currencyCode,
+            ),
+            now,
+            transaction.id,
+          ],
+        )
+      }
+
+      const loans = await db.getAllAsync<{
+        id: string
+        principal_amount: number
+      }>(`SELECT id, principal_amount FROM loans WHERE account_id = ?`, [id])
+      for (const loan of loans) {
+        await db.runAsync(
+          `UPDATE loans SET principal_amount = ?, updated_at = ? WHERE id = ?`,
+          [
+            rescaleMinorUnits(
+              loan.principal_amount,
+              existing.currency_code,
+              updates.currencyCode,
+            ),
+            now,
+            loan.id,
+          ],
+        )
+      }
+
+      const recurringRows = await db.getAllAsync<{
+        id: string
+        json_transaction_template: string
+      }>(`SELECT id, json_transaction_template FROM recurring_transactions`)
+      for (const recurring of recurringRows) {
+        const template = JSON.parse(recurring.json_transaction_template) as {
+          accountId?: string
+          amount?: number
+        }
+        if (template.accountId !== id || template.amount === undefined) continue
+        template.amount = rescaleMinorUnits(
+          template.amount,
+          existing.currency_code,
+          updates.currencyCode,
+        )
+        await db.runAsync(
+          `UPDATE recurring_transactions
+           SET json_transaction_template = ? WHERE id = ?`,
+          [JSON.stringify(template), recurring.id],
+        )
+      }
+
+      await db.runAsync(
+        `UPDATE accounts SET balance = ?, updated_at = ? WHERE id = ?`,
+        [comparableBalance, now, id],
+      )
+    }
 
     if (updates.isPrimary === true) {
       await db.runAsync(
@@ -123,9 +216,9 @@ export async function updateAccount(
     if (
       updates.balance !== undefined &&
       typeof updates.balance === "number" &&
-      updates.balance !== existing.balance
+      updates.balance !== comparableBalance
     ) {
-      const delta = updates.balance - existing.balance
+      const delta = updates.balance - comparableBalance
       return {
         amount: Math.abs(delta),
         type:
@@ -152,6 +245,11 @@ export async function updateAccount(
   }
 
   emit("accounts:dirty", { ids: [id] })
+  if (currencyChanged) {
+    emit("transactions:dirty", {})
+    emit("loans:dirty", undefined)
+    emit("recurring_transactions:dirty", undefined)
+  }
 }
 
 // ── Archive / Unarchive ───────────────────────────────────────────────────────

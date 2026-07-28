@@ -35,7 +35,8 @@ import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { Goal } from "~/types/goals"
 import { logger } from "~/utils/logger"
-import { formatDisplayValue } from "~/utils/number-format"
+import { roundToSafeInteger } from "~/utils/money"
+import { formatMoney } from "~/utils/number-format"
 import { Toast } from "~/utils/toast"
 
 type GoalStatus = "onTrack" | "behind" | "flexible" | "reached"
@@ -233,8 +234,7 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
     const today = new Date()
     const daysLeft = Math.max(differenceInDays(goal.targetDate, today), 1)
     const daily = remaining / daysLeft
-    const raw = formatDisplayValue(daily, {
-      currency: goal.currencyCode,
+    const raw = formatMoney(roundToSafeInteger(daily), goal.currencyCode, {
       currencyDisplay: currencyLook,
       hideSign: true,
     })
@@ -315,8 +315,7 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
             style={[
               styles.progressFill,
               {
-                width:
-                  `${(clampedProgress * 100).toFixed(1)}%` as DimensionValue,
+                width: `${clampedProgress * 100}%` as DimensionValue,
                 backgroundColor: progressBarColor,
               },
             ]}

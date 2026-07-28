@@ -236,6 +236,8 @@
         "badgeFrequent": "Frequent",
         "badgeRhythm": "Rhythm",
         "badgeShape": "Shape",
+        "emptyTitle": "Not enough activity yet for Wrapped insights this period.",
+        "emptyDescription": "Add a bit more spending history in this range and insights will show up here.",
         "categoryAbove": "{{category}} is {{percent}}% above your 3-month average",
         "categoryBelow": "{{category}} is {{percent}}% below your 3-month average",
         "vsAvg": "3-month average:",
@@ -255,7 +257,9 @@
         "more": "More"
       },
       "currency": {
-        "sectionHeader": "{{currency}}"
+        "sectionHeader": "{{currency}}",
+        "showing": "Showing {{currency}}",
+        "tapToSwitch": "Tap to switch"
       },
       "hero": {
         "totalExpense": "Total Expense",
@@ -1026,8 +1030,11 @@
         "applyResult": "Apply result",
         "applyResultHint": "Tap to use this result",
         "confirmAmount": "Confirm amount",
-        "entered": "Entered",
-        "resultLabel": "Result: "
+        "errors": {
+          "invalidExpression": "Invalid expression",
+          "divisionByZero": "Cannot divide by zero",
+          "invalidResult": "Invalid result"
+        }
       },
       "attachments": {
         "openFileModal": "Open file",

@@ -13,6 +13,7 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { CategoryBreakdownItem } from "~/types/stats"
+import { formatPercent } from "~/utils/number-format"
 
 function BreakdownList({
   breakdown,
@@ -53,7 +54,7 @@ function BreakdownList({
                 : item.categoryName}
             </Text>
             <Text variant="muted" style={styles.listPercent}>
-              {percent.toFixed(1)}%
+              {formatPercent(percent)}
             </Text>
             <Money
               value={item.totalExpense}

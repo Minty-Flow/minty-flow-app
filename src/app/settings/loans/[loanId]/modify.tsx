@@ -36,9 +36,11 @@ export default function LoanModifyScreen() {
       name: params.prefillName,
       description: params.prefillDescription,
       accountId: params.prefillAccountId,
-      principalAmount: params.prefillAmount
-        ? Number.parseFloat(params.prefillAmount)
-        : undefined,
+      principalAmount:
+        params.prefillAmount &&
+        Number.isSafeInteger(Number(params.prefillAmount))
+          ? Number(params.prefillAmount)
+          : undefined,
       loanType: (Object.values(LoanTypeEnum) as string[]).includes(
         params.prefillLoanType ?? "",
       )

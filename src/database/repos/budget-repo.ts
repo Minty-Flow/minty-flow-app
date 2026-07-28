@@ -82,6 +82,7 @@ export function getBudgetPeriodRange(
 export async function getBudgetSpent(
   accountIds: string[],
   categoryIds: string[],
+  currencyCode: string,
   period: BudgetPeriod,
   startDateIso: string,
   endDateIso: string | null,
@@ -98,12 +99,18 @@ export async function getBudgetSpent(
     "t.is_deleted = 0",
     "t.is_pending = 0",
     "t.type = 'expense'",
+    "a.currency_code = ?",
     "t.id NOT IN (SELECT from_transaction_id FROM transfers UNION SELECT to_transaction_id FROM transfers)",
     `t.account_id IN (${accountIds.map(() => "?").join(",")})`,
     "t.transaction_date >= ?",
     "t.transaction_date <= ?",
   ]
-  const values: SQLiteBindValue[] = [...accountIds, periodStart, periodEnd]
+  const values: SQLiteBindValue[] = [
+    currencyCode,
+    ...accountIds,
+    periodStart,
+    periodEnd,
+  ]
 
   if (categoryIds.length > 0) {
     conditions.push(
@@ -113,7 +120,10 @@ export async function getBudgetSpent(
   }
 
   const row = await queryOne<{ total: number }>(
-    `SELECT COALESCE(SUM(CASE WHEN t.subtype = 'refund' THEN -t.amount ELSE t.amount END), 0) as total FROM transactions t WHERE ${conditions.join(" AND ")}`,
+    `SELECT COALESCE(SUM(CASE WHEN t.subtype = 'refund' THEN -t.amount ELSE t.amount END), 0) as total
+     FROM transactions t
+     JOIN accounts a ON a.id = t.account_id
+     WHERE ${conditions.join(" AND ")}`,
     values,
   )
   return Math.max(row?.total ?? 0, 0)
@@ -122,6 +132,7 @@ export async function getBudgetSpent(
 export async function getBudgetSpentByCategory(
   accountIds: string[],
   categoryIds: string[],
+  currencyCode: string,
   period: BudgetPeriod,
   startDateIso: string,
   endDateIso: string | null,
@@ -138,13 +149,19 @@ export async function getBudgetSpentByCategory(
     "t.is_deleted = 0",
     "t.is_pending = 0",
     "t.type = 'expense'",
+    "a.currency_code = ?",
     "t.id NOT IN (SELECT from_transaction_id FROM transfers UNION SELECT to_transaction_id FROM transfers)",
     `t.account_id IN (${accountIds.map(() => "?").join(",")})`,
     "t.transaction_date >= ?",
     "t.transaction_date <= ?",
     "t.category_id IS NOT NULL",
   ]
-  const values: SQLiteBindValue[] = [...accountIds, periodStart, periodEnd]
+  const values: SQLiteBindValue[] = [
+    currencyCode,
+    ...accountIds,
+    periodStart,
+    periodEnd,
+  ]
 
   if (categoryIds.length > 0) {
     conditions.push(
@@ -154,7 +171,11 @@ export async function getBudgetSpentByCategory(
   }
 
   const rows = await query<{ category_id: string; total: number }>(
-    `SELECT t.category_id, COALESCE(SUM(CASE WHEN t.subtype = 'refund' THEN -t.amount ELSE t.amount END), 0) as total FROM transactions t WHERE ${conditions.join(" AND ")} GROUP BY t.category_id`,
+    `SELECT t.category_id, COALESCE(SUM(CASE WHEN t.subtype = 'refund' THEN -t.amount ELSE t.amount END), 0) as total
+     FROM transactions t
+     JOIN accounts a ON a.id = t.account_id
+     WHERE ${conditions.join(" AND ")}
+     GROUP BY t.category_id`,
     values,
   )
   const result: Record<string, number> = {}
