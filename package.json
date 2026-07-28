@@ -1,7 +1,7 @@
 {
   "name": "minty-flow-app",
   "main": "index.ts",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "scripts": {
     "android": "expo run:android",
     "android:emu": "expo run:android --device Pixel_9_Pro",
@@ -16,6 +16,7 @@
     "structure": "node ./scripts/generate-structure.mts",
     "unused-styles": "node ./scripts/find-unused-styles.mts",
     "check-i18n-keys": "node ./scripts/check-missing-i18n-keys.mts",
+    "check-number-formatting": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ./scripts/check-number-formatting.mts",
     "icons:filled": "svgr --out-dir src/components/icons/filled tabler-icons/icons/filled",
     "icons:outline": "svgr --out-dir src/components/icons/outline tabler-icons/icons/outline",
     "icons:sync": "pnpm icons:filled && pnpm icons:outline && node scripts/generate-icon-barrel.mts"

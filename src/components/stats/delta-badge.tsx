@@ -4,6 +4,7 @@ import { StyleSheet } from "react-native-unistyles"
 import { IconSvg } from "~/components/icons"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { formatPercent } from "~/utils/number-format"
 
 interface DeltaBadgeProps {
   current: number
@@ -41,7 +42,7 @@ export function DeltaBadge({
   // "Good" depends on sentiment: for expense, decrease is good; for income, increase is good
   const isGood = invertedSentiment ? isNegative : isPositive
 
-  const formattedDelta = `${isPositive ? "+" : ""}${delta.toFixed(1)}%`
+  const formattedDelta = formatPercent(delta, { showSign: isPositive })
   const iconName = isPositive ? "trending-up-outline" : "trending-down-outline"
   const iconSize = size === "sm" ? 12 : 14
 

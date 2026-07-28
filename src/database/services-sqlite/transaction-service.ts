@@ -16,6 +16,7 @@ import type {
 } from "~/schemas/transactions.schema"
 import type { TransactionType } from "~/types/transactions"
 import { logger } from "~/utils/logger"
+import { assertMinorUnits } from "~/utils/money"
 
 function hasAttachmentsFromExtra(
   extra: Record<string, string> | null,
@@ -56,6 +57,7 @@ async function getTagIdsForTx(db: Db, txId: string): Promise<string[]> {
 export async function createTransaction(
   data: TransactionFormValues,
 ): Promise<string> {
+  assertMinorUnits(data.amount)
   const id = generateId()
   const now = new Date().toISOString()
   const extra = data.extra ?? null
@@ -150,6 +152,7 @@ export async function updateTransaction(
   id: string,
   data: Partial<TransactionFormValues>,
 ): Promise<void> {
+  if (data.amount !== undefined) assertMinorUnits(data.amount)
   const now = new Date().toISOString()
   let categoryChanged = false
   let tagsChanged = false

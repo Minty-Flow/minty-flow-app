@@ -6,8 +6,10 @@ import { Money } from "~/components/money"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { getItemAllocations } from "~/stores/bill-splitter.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { BillItem, Participant } from "~/types/bill-splitter"
+import { roundToSafeInteger } from "~/utils/money"
 
 interface BillItemCardProps {
   item: BillItem
@@ -26,7 +28,8 @@ export function BillItemCard({
   const { t } = useTranslation()
   const currency = useMoneyFormattingStore((s) => s.preferredCurrency)
 
-  const itemTotal = item.price * item.quantity
+  const itemTotal = roundToSafeInteger(item.price * item.quantity)
+  const allocations = getItemAllocations(item)
   const selectedSplits = item.splits.filter((s) => s.selected)
 
   return (
@@ -68,7 +71,7 @@ export function BillItemCard({
           )
           if (!participant) return null
 
-          const personAmount = itemTotal * (split.percentage / 100)
+          const personAmount = allocations.get(split.participantId) ?? 0
 
           return (
             <View key={split.participantId} style={styles.personRow}>

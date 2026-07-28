@@ -28,8 +28,8 @@ import { TransactionTypeEnum } from "~/types/transactions"
 
 import AccountsScreen from "../accounts"
 import SettingsScreen from "../settings"
+import StatsScreen from "../stats"
 import HomeScreen from "."
-import StatsScreen from "./stats-view"
 
 const AnimatedPressable = createAnimatedComponent(Pressable)
 

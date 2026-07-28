@@ -88,57 +88,39 @@ export const smartInputStyles = StyleSheet.create((t) => ({
     backgroundColor: t.colors.primary,
     width: 80,
   },
+  mathBtnDisabled: {
+    opacity: 0.4,
+  },
   okBtnText: {
     color: t.colors.onPrimary,
     fontWeight: "bold",
     fontSize: t.typography.bodyLarge.fontSize,
   },
-  formattedChip: {
-    marginTop: 12,
-    alignSelf: "flex-start",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+  liveRow: {
+    minHeight: 36,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: `${t.colors.onSurface}10`,
+    borderTopWidth: 1,
+    borderTopColor: `${t.colors.onSurface}12`,
+    paddingHorizontal: 4,
+    paddingVertical: 8,
+    gap: 8,
   },
-  formattedChipLabel: {
-    color: t.colors.semantic.semi,
+  liveRowError: {
+    borderTopColor: `${t.colors.error}30`,
+  },
+  liveExpression: {
+    flex: 1,
+    color: t.colors.onSecondary,
     fontSize: t.typography.bodyMedium.fontSize,
+    fontVariant: ["tabular-nums"],
   },
-  formattedChipValue: {
+  liveResult: {
+    flexShrink: 1,
     color: t.colors.onSurface,
-    ...t.typography.bodyLarge,
-    fontWeight: "600",
-  },
-  previewContainer: {
-    marginTop: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: t.colors.secondary,
-    alignSelf: "flex-start",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  previewErrorContainer: {
-    backgroundColor: `${t.colors.error}20`,
-  },
-  previewIconLeft: {
-    marginRight: 6,
-  },
-  previewIconRight: {
-    marginLeft: 4,
-  },
-  previewLabel: {
-    color: t.colors.semantic.semi,
-    fontSize: t.typography.labelLarge.fontSize,
-  },
-  previewValue: {
-    color: t.colors.onSurface,
-    fontSize: t.typography.bodyLarge.fontSize,
-    fontWeight: "bold",
+    fontSize: t.typography.bodyMedium.fontSize,
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
   },
   previewError: {
     color: t.colors.error,

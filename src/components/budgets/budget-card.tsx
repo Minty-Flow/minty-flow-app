@@ -26,7 +26,8 @@ import { useCategories } from "~/stores/db/category.store"
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { Budget } from "~/types/budgets"
-import { formatDisplayValue } from "~/utils/number-format"
+import { roundToSafeInteger } from "~/utils/money"
+import { formatMoney, formatPercent } from "~/utils/number-format"
 import {
   endOfAppWeek,
   formatCustomPeriodRange,
@@ -157,6 +158,7 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
       getBudgetSpent(
         budget.accountIds,
         budget.categoryIds,
+        budget.currencyCode,
         budget.period,
         budget.startDate.toISOString(),
         budget.endDate?.toISOString() ?? null,
@@ -172,6 +174,7 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
   }, [
     budget.accountIds,
     budget.categoryIds,
+    budget.currencyCode,
     budget.period,
     budget.startDate,
     budget.endDate,
@@ -246,8 +249,7 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
   // Insight line: per-day pace remaining, or over-budget summary.
   const insight = (() => {
     const formatAmt = (n: number) => {
-      const raw = formatDisplayValue(n.toString(), {
-        currency: budget.currencyCode,
+      const raw = formatMoney(roundToSafeInteger(n), budget.currencyCode, {
         currencyDisplay: currencyLook,
         hideSign: true,
       })
@@ -418,7 +420,7 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
             style={[
               styles.gaugeFill,
               {
-                width: `${(timeRatio * 100).toFixed(1)}%` as DimensionValue,
+                width: `${timeRatio * 100}%` as DimensionValue,
                 backgroundColor: theme.colors.onSecondary,
               },
             ]}
@@ -444,7 +446,7 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
             style={[
               styles.gaugeFill,
               {
-                width: `${(spendRatio * 100).toFixed(1)}%` as DimensionValue,
+                width: `${spendRatio * 100}%` as DimensionValue,
                 backgroundColor: progressColor,
               },
             ]}
@@ -457,7 +459,7 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
             { color: progressColor, fontWeight: "700" },
           ]}
         >
-          {Math.round(spendPercent)}%
+          {formatPercent(spendPercent, { maximumFractionDigits: 0 })}
         </Text>
       </View>
 

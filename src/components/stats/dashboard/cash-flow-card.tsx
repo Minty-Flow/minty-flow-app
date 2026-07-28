@@ -25,11 +25,13 @@ export function InOutRow({
 
   return (
     <View style={styles.inOutRow}>
-      <View style={styles.inOutSide}>
-        <View style={[styles.dot, styles.dotIncome]} />
-        <Text variant="muted" style={styles.inOutLabel}>
-          {t("screens.stats.dashboard.in")}
-        </Text>
+      <View style={styles.inOutColumn}>
+        <View style={styles.inOutLabelRow}>
+          <View style={[styles.dot, styles.dotIncome]} />
+          <Text variant="muted" style={styles.inOutLabel}>
+            {t("screens.stats.dashboard.in")}
+          </Text>
+        </View>
         <Money
           value={totalIncome}
           currency={currency}
@@ -37,9 +39,17 @@ export function InOutRow({
           visualTone="income"
           compact
           variant="small"
+          style={styles.inOutAmount}
         />
       </View>
-      <View style={styles.inOutSide}>
+
+      <View style={[styles.inOutColumn, styles.inOutColumnRight]}>
+        <View style={[styles.inOutLabelRow, styles.inOutLabelRowRight]}>
+          <Text variant="muted" style={styles.inOutLabel}>
+            {t("screens.stats.dashboard.out")}
+          </Text>
+          <View style={[styles.dot, styles.dotExpense]} />
+        </View>
         <Money
           value={totalExpense}
           currency={currency}
@@ -47,11 +57,8 @@ export function InOutRow({
           visualTone="expense"
           compact
           variant="small"
+          style={[styles.inOutAmount, styles.inOutAmountRight]}
         />
-        <Text variant="muted" style={styles.inOutLabel}>
-          {t("screens.stats.dashboard.out")}
-        </Text>
-        <View style={[styles.dot, styles.dotExpense]} />
       </View>
     </View>
   )
@@ -116,31 +123,44 @@ const styles = StyleSheet.create((theme) => ({
   headline: {
     flexDirection: "row",
     alignItems: "center",
-    flexWrap: "wrap",
     gap: 6,
-    rowGap: 4,
-    flex: 1,
   },
   headlineLabel: {
-    fontSize: theme.typography.bodyMedium.fontSize,
+    fontSize: theme.typography.labelXSmall.fontSize,
   },
   headlineAmount: {
     fontWeight: "700",
+    fontSize: theme.typography.bodyLarge.fontSize,
   },
   inOutRow: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    gap: 8,
-    flexWrap: "wrap",
+    gap: 16,
   },
-  inOutSide: {
+  inOutColumn: {
+    flex: 1,
+    gap: 4,
+  },
+  inOutColumnRight: {
+    alignItems: "flex-end",
+  },
+  inOutLabelRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
   },
+  inOutLabelRowRight: {
+    justifyContent: "flex-end",
+  },
+  inOutAmount: {
+    fontSize: theme.typography.labelLarge.fontSize,
+    fontWeight: "700",
+  },
+  inOutAmountRight: {
+    textAlign: "right",
+  },
   inOutLabel: {
-    fontSize: theme.typography.bodySmall.fontSize,
+    fontSize: theme.typography.labelXSmall.fontSize,
   },
   dot: {
     width: 6,

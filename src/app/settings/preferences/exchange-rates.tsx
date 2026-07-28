@@ -16,9 +16,9 @@ import { ExternalLink } from "~/components/external-link"
 import { IconSvg } from "~/components/icons"
 import { InfoModal } from "~/components/info-modal"
 import { SearchInput } from "~/components/search-input"
-import { SmartAmountInput } from "~/components/smart-amount-input"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
+import { Input } from "~/components/ui/input"
 import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -27,6 +27,7 @@ import { currencyRegistryService } from "~/services/currency-registry"
 import type { ExchangeRates } from "~/services/exchange-rates"
 import { exchangeRatesService } from "~/services/exchange-rates"
 import { useExchangeRatesPreferencesStore } from "~/stores/exchange-rates-preferences.store"
+import { formatNumber } from "~/utils/number-format"
 
 import {
   type EditorAction,
@@ -101,6 +102,7 @@ function ExchangeRatesContent({
   const { rates, error } = use(ratesPromise)
   const { searchQuery, editingCurrencyCode, draftRates } = editorState
   const { t } = useTranslation()
+  const [draftRateInput, setDraftRateInput] = useState<string | null>(null)
 
   const entries = useMemo((): RateEntry[] => {
     if (!rates?.rates) return []
@@ -138,14 +140,21 @@ function ExchangeRatesContent({
 
   const handleSelectEntry = useCallback(
     (code: string, currentRate: number) => {
+      setDraftRateInput(String(currentRate))
       dispatch({ type: "SELECT_ENTRY", code, rate: currentRate })
     },
     [dispatch],
   )
 
   const handleDraftChange = useCallback(
-    (code: string, value: number) => {
-      dispatch({ type: "DRAFT_CHANGE", code, value })
+    (code: string, rawValue: string) => {
+      setDraftRateInput(rawValue)
+      const value = Number.parseFloat(rawValue.replace(",", "."))
+      dispatch({
+        type: "DRAFT_CHANGE",
+        code,
+        value: Number.isFinite(value) ? value : 0,
+      })
     },
     [dispatch],
   )
@@ -154,6 +163,7 @@ function ExchangeRatesContent({
     (code: string, value: number) => {
       if (value <= 0) return
       setCustomRate(code, value)
+      setDraftRateInput(null)
       dispatch({ type: "CLEAR_DRAFT", code })
     },
     [setCustomRate, dispatch],
@@ -162,6 +172,7 @@ function ExchangeRatesContent({
   const handleResetToApiRate = useCallback(
     (code: string) => {
       removeCustomRate(code)
+      setDraftRateInput(null)
       dispatch({ type: "CLEAR_DRAFT", code })
     },
     [removeCustomRate, dispatch],
@@ -189,23 +200,29 @@ function ExchangeRatesContent({
           >
             <Text style={styles.entryEquals}>=</Text>
             <Text style={styles.entryAmount} numberOfLines={1}>
-              {displayRate.toFixed(14)}
+              {formatNumber(displayRate, {
+                minimumFractionDigits: 14,
+                maximumFractionDigits: 14,
+                useGrouping: false,
+              })}
             </Text>
             <Text style={styles.entryCode}>{item.displayCode}</Text>
           </ListItem>
           {isEditing && (
             <View style={styles.inlineInput}>
-              <SmartAmountInput
-                value={draftValue}
-                onChange={(value) => handleDraftChange(item.displayCode, value)}
-                currencyCode={item.displayCode}
-                label={`1 USD = ${draftValue.toLocaleString(undefined, { maximumFractionDigits: 6 })} ${item.displayCode}`}
-                placeholder="0"
-                error={
-                  isInvalidRate
-                    ? t("screens.settings.exchangeRates.errors.invalidRate")
-                    : undefined
+              <Text>
+                {`1 USD = ${formatNumber(draftValue, {
+                  maximumFractionDigits: 6,
+                })} ${item.displayCode}`}
+              </Text>
+              <Input
+                value={draftRateInput ?? String(draftValue || "")}
+                onChangeText={(value) =>
+                  handleDraftChange(item.displayCode, value)
                 }
+                keyboardType="decimal-pad"
+                placeholder="0"
+                error={isInvalidRate}
               />
               <View style={styles.saveButtonRow}>
                 <Button
@@ -234,6 +251,7 @@ function ExchangeRatesContent({
       customRates,
       handleSelectEntry,
       handleDraftChange,
+      draftRateInput,
       handleSaveRate,
       handleResetToApiRate,
       t,

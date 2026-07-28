@@ -11,7 +11,11 @@ const addLoanSchema = z.object({
   loanType: z.enum(LoanTypeEnum),
   accountId: z.string().min(1, "validation.required.account"),
   categoryId: z.string().min(1, "validation.required.category"),
-  principalAmount: z.number().positive("validation.amount.positive"),
+  principalAmount: z
+    .number()
+    .safe()
+    .int("validation.amount.invalid")
+    .positive("validation.amount.positive"),
   description: z.string().max(1000).nullable().optional(),
   dueDate: z.number().nullable().optional(),
   icon: z.string().max(100).nullable().optional(),

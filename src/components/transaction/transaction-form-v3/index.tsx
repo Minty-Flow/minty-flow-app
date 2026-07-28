@@ -51,6 +51,7 @@ import {
 } from "~/types/transactions"
 import { toStoredAttachment } from "~/utils/attachments"
 import { logger } from "~/utils/logger"
+import { rescaleMinorUnits } from "~/utils/money"
 import { buildRRuleString, countOccurrencesBetween } from "~/utils/recurrence"
 import { Toast } from "~/utils/toast"
 
@@ -216,6 +217,24 @@ export function TransactionFormV3({
   // Clear goalId/budgetId/loanId when account changes and current selection is no longer valid
   const handleAccountChange = useCallback(
     (newAccountId: string) => {
+      const nextAccount = accounts.find(
+        (account) => account.id === newAccountId,
+      )
+      if (
+        selectedAccount &&
+        nextAccount &&
+        selectedAccount.currencyCode !== nextAccount.currencyCode
+      ) {
+        setValue(
+          "amount",
+          rescaleMinorUnits(
+            amount ?? 0,
+            selectedAccount.currencyCode,
+            nextAccount.currencyCode,
+          ),
+          { shouldDirty: true },
+        )
+      }
       if (goalId) {
         const newGoals = newAccountId
           ? goals.filter((g) => g.accountIds.includes(newAccountId))
@@ -245,7 +264,19 @@ export function TransactionFormV3({
         }
       }
     },
-    [goalId, goals, budgetId, budgets, loanId, loans, categoryId, setValue],
+    [
+      accounts,
+      selectedAccount,
+      amount,
+      goalId,
+      goals,
+      budgetId,
+      budgets,
+      loanId,
+      loans,
+      categoryId,
+      setValue,
+    ],
   )
   const selectedToAccount =
     transactionType === TransactionTypeEnum.TRANSFER && toAccountId
@@ -737,11 +768,11 @@ export function TransactionFormV3({
           {/* Amount */}
           <View style={transactionFormStyles.balanceSection}>
             <SmartAmountInput
-              value={amount ?? 0}
-              onChange={(value) =>
+              valueMinor={amount ?? 0}
+              onChangeMinor={(value) =>
                 setValue("amount", value, { shouldDirty: true })
               }
-              currencyCode={selectedAccount?.currencyCode}
+              currencyCode={selectedAccount?.currencyCode ?? "USD"}
               error={amountError}
               label={t("components.transactionForm.fields.amountLabel")}
               placeholder="0"

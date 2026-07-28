@@ -14,7 +14,8 @@ import { getGoalProgress } from "~/database/repos/goal-repo"
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { Goal } from "~/types/goals"
-import { formatDisplayValue } from "~/utils/number-format"
+import { roundToSafeInteger } from "~/utils/money"
+import { formatMoney } from "~/utils/number-format"
 
 type GoalStatus = "onTrack" | "behind" | "flexible" | "reached"
 
@@ -85,8 +86,7 @@ export function GoalCard({ goal, onPress }: GoalCardProps) {
     const today = new Date()
     const daysLeft = Math.max(differenceInDays(goal.targetDate, today), 1)
     const daily = remaining / daysLeft
-    const raw = formatDisplayValue(daily, {
-      currency: goal.currencyCode,
+    const raw = formatMoney(roundToSafeInteger(daily), goal.currencyCode, {
       currencyDisplay: currencyLook,
       hideSign: true,
     })
@@ -129,7 +129,7 @@ export function GoalCard({ goal, onPress }: GoalCardProps) {
         ? theme.colors.semantic.expense
         : theme.colors.primary
 
-  const progressPercent = Number((clampedProgress * 100).toFixed(1))
+  const progressPercent = Math.round(clampedProgress * 1000) / 10
 
   return (
     <Pressable

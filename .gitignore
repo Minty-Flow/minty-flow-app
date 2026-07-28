@@ -106,6 +106,7 @@ CLAUDE.md
 
 RELEASE_NOTES.md
 AGENTS.md
+skills-lock.json
 
 # Agent skills
 .agents/

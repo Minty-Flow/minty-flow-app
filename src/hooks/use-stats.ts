@@ -151,13 +151,15 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
     const unsub1 = on("transactions:dirty", () => debouncedFetch(dateRange))
     const unsub2 = on("accounts:dirty", () => debouncedFetch(dateRange))
     const unsub3 = on("tags:dirty", () => debouncedFetch(dateRange))
-    const unsub4 = on("db:reset", () => debouncedFetch(dateRange))
+    const unsub4 = on("categories:dirty", () => debouncedFetch(dateRange))
+    const unsub5 = on("db:reset", () => debouncedFetch(dateRange))
     return () => {
       fetchIdRef.current++
       unsub1()
       unsub2()
       unsub3()
       unsub4()
+      unsub5()
     }
   }, [dateRange, debouncedFetch])
 

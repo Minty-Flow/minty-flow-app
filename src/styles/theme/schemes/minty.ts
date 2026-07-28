@@ -9,8 +9,8 @@ import {
   DEFAULT_OLED_BASE,
 } from "../base"
 import { MINTY_DARK_PRIMARY_COLORS, MINTY_LIGHT_COLORS } from "../colors"
+import { copyWith } from "../copy-with"
 import type { MintyColorScheme } from "../types"
-import { copyWith } from "../utils"
 
 /**
  * Minty Dark — 16 variants (Minty Dark theme group)

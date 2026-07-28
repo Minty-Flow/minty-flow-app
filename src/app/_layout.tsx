@@ -109,6 +109,10 @@ export default function RootLayout() {
                 options={{ title: t("screens.stats.categories.title") }}
               />
               <Stack.Screen
+                name="stats/insights"
+                options={{ title: t("screens.settings.insights.title") }}
+              />
+              <Stack.Screen
                 name="stats/wrapped"
                 options={{ title: t("screens.stats.wrapped.title") }}
               />

@@ -74,16 +74,16 @@ const styles = StyleSheet.create((theme) => ({
     gap: 8,
   },
   label: {
-    fontSize: theme.typography.bodySmall.fontSize,
+    fontSize: theme.typography.labelXSmall.fontSize,
   },
   totalRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    flexWrap: "wrap",
   },
   totalAmount: {
     fontWeight: "700",
+    fontSize: theme.typography.bodyLarge.fontSize,
   },
   avgRow: {
     flexDirection: "row",
@@ -93,5 +93,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   avgAmount: {
     fontWeight: "600",
+    fontSize: theme.typography.bodyMedium.fontSize,
   },
 }))
