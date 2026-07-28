@@ -161,7 +161,9 @@ const CURRENCY_SYMBOLS: CurrencySymbolMap = {
 }
 
 // ISO 4217 Currencies
-const ISO4217_CURRENCIES: ReadonlyArray<Omit<Currency, "symbol">> = [
+const ISO4217_CURRENCIES: ReadonlyArray<
+  Omit<Currency, "symbol" | "minorUnitDigits">
+> = [
   { code: "AED", name: "UAE Dirham", country: "UNITED ARAB EMIRATES (THE)" },
   { code: "AFN", name: "Afghani", country: "AFGHANISTAN" },
   { code: "ALL", name: "Lek", country: "ALBANIA" },
@@ -548,7 +550,9 @@ const ISO4217_CURRENCIES: ReadonlyArray<Omit<Currency, "symbol">> = [
 ] as const
 
 // Crypto currencies supported by exchange rate APIs
-const CRYPTO_CURRENCIES: ReadonlyArray<Omit<Currency, "symbol" | "country">> = [
+const CRYPTO_CURRENCIES: ReadonlyArray<
+  Omit<Currency, "symbol" | "country" | "minorUnitDigits">
+> = [
   { code: "BTC", name: "Bitcoin", isCrypto: true },
   { code: "ETH", name: "Ethereum", isCrypto: true },
   { code: "USDT", name: "Tether USDt", isCrypto: true },
@@ -585,6 +589,43 @@ const MULTINATION_CURRENCY_COUNTRY_NAME_OVERRIDE: Record<string, string> = {
   XCD: "CARIBBEAN ISLANDS",
   XCG: "CARIBBEAN ISLANDS",
   AUD: "AUSTRALIA AND OTHERS",
+}
+
+const ZERO_MINOR_UNIT_CODES = new Set([
+  "BIF",
+  "CLP",
+  "DJF",
+  "GNF",
+  "ISK",
+  "JPY",
+  "KMF",
+  "KRW",
+  "PYG",
+  "RWF",
+  "UGX",
+  "UYI",
+  "VND",
+  "VUV",
+  "XAF",
+  "XOF",
+  "XPF",
+])
+const THREE_MINOR_UNIT_CODES = new Set([
+  "BHD",
+  "IQD",
+  "JOD",
+  "KWD",
+  "LYD",
+  "OMR",
+  "TND",
+])
+const FOUR_MINOR_UNIT_CODES = new Set(["CLF", "UYW"])
+
+function inferIsoMinorUnitDigits(code: string): number {
+  if (ZERO_MINOR_UNIT_CODES.has(code)) return 0
+  if (THREE_MINOR_UNIT_CODES.has(code)) return 3
+  if (FOUR_MINOR_UNIT_CODES.has(code)) return 4
+  return 2
 }
 
 /**
@@ -642,6 +683,7 @@ class CurrencyRegistryService {
     return ISO4217_CURRENCIES.map((currency) => ({
       ...currency,
       symbol: getCurrencySymbol(currency.code),
+      minorUnitDigits: inferIsoMinorUnitDigits(currency.code),
     }))
   }
 
@@ -655,6 +697,7 @@ class CurrencyRegistryService {
       ...currency,
       country: "",
       symbol: currency.code,
+      minorUnitDigits: 8,
     }))
   }
 
@@ -699,6 +742,7 @@ class CurrencyRegistryService {
         iso4217Grouped.set(currency.code, {
           ...currency,
           symbol: getCurrencySymbol(currency.code),
+          minorUnitDigits: inferIsoMinorUnitDigits(currency.code),
           country:
             MULTINATION_CURRENCY_COUNTRY_NAME_OVERRIDE[currency.code] ??
             currency.country,
@@ -713,6 +757,7 @@ class CurrencyRegistryService {
         ...crypto,
         country: "",
         symbol: crypto.code,
+        minorUnitDigits: 8,
       })
     }
 
@@ -747,7 +792,10 @@ class CurrencyRegistryService {
    * @param currency - Custom currency data
    * @throws {Error} If currency code is invalid format or already exists
    */
-  registerCustomCurrency(currency: CustomCurrencyData): void {
+  registerCustomCurrency(
+    currency: Omit<CustomCurrencyData, "minorUnitDigits"> &
+      Partial<Pick<CustomCurrencyData, "minorUnitDigits">>,
+  ): void {
     // Validate currency code format (alphanumeric, uppercase)
     if (!/^[A-Z0-9]+$/.test(currency.code)) {
       throw new Error(
@@ -764,6 +812,16 @@ class CurrencyRegistryService {
     const customCurrency: CustomCurrencyData = {
       ...currency,
       isCustom: true,
+      minorUnitDigits: currency.minorUnitDigits ?? 2,
+    }
+    if (
+      !Number.isInteger(customCurrency.minorUnitDigits) ||
+      customCurrency.minorUnitDigits < 0 ||
+      customCurrency.minorUnitDigits > 8
+    ) {
+      throw new Error(
+        "Currency minor-unit digits must be an integer from 0 to 8.",
+      )
     }
 
     this.customCurrencies.push(customCurrency)
@@ -830,31 +888,12 @@ class CurrencyRegistryService {
    * Most currencies use 2 decimal places, but some like JPY use 0.
    *
    * @param currencyCode - Currency code
-   * @returns Number of decimal places (0 or 2)
+   * @returns Number of decimal places (0–8)
    */
   getCurrencyMinorUnits(currencyCode: string): number {
-    // Currencies with no minor units
-    const zeroDecimalCurrencies = ["JPY", "KRW", "VND", "CLP", "UGX"]
-
-    if (zeroDecimalCurrencies.includes(currencyCode)) {
-      return 0
-    }
-
-    // Default to 2 decimal places for most currencies
-    return 2
-  }
-
-  /**
-   * Rounds an amount to the appropriate number of minor units for a currency.
-   *
-   * @param amount - Amount to round
-   * @param currencyCode - Currency code
-   * @returns Rounded amount
-   */
-  roundToCurrencyMinorUnits(amount: number, currencyCode: string): number {
-    const minorUnits = this.getCurrencyMinorUnits(currencyCode)
-    const multiplier = 10 ** minorUnits
-    return Math.round(amount * multiplier) / multiplier
+    const currency = this.getCurrencyByCode(currencyCode)
+    if (!currency) throw new Error(`Unknown currency code: ${currencyCode}`)
+    return currency.minorUnitDigits
   }
 }
 

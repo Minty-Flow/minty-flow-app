@@ -20,6 +20,7 @@ import {
   TransactionSubTypeEnum,
   TransactionTypeEnum,
 } from "~/types/transactions"
+import { convertMinorUnits } from "~/utils/money"
 import { formatFriendlyDate, formatReadableTime } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
@@ -86,17 +87,29 @@ export const TransactionItem = ({
   const isCombinedTransfer = Boolean(
     isTransfer && transferLayout === "combine" && relatedAccount,
   )
-  const isCrossCurrencyTransfer =
+  const isCrossCurrencyTransfer = Boolean(
     isTransfer &&
-    relatedAccount &&
-    conversionRate != null &&
-    conversionRate > 0 &&
-    account?.currencyCode !== relatedAccount.currencyCode
+      account &&
+      relatedAccount &&
+      conversionRate != null &&
+      conversionRate > 0 &&
+      account.currencyCode !== relatedAccount.currencyCode,
+  )
   const otherCurrencyAmount =
-    isCrossCurrencyTransfer && conversionRate
+    isCrossCurrencyTransfer && conversionRate && account && relatedAccount
       ? amount < 0
-        ? Math.abs(amount) * conversionRate
-        : amount / conversionRate
+        ? convertMinorUnits(
+            Math.abs(amount),
+            account.currencyCode,
+            relatedAccount.currencyCode,
+            conversionRate,
+          )
+        : convertMinorUnits(
+            amount,
+            account.currencyCode,
+            relatedAccount.currencyCode,
+            1 / conversionRate,
+          )
       : null
   const icon = isTransfer ? "arrows-right-left-outline" : category?.icon
   const amountTone = isTransfer

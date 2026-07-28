@@ -23,7 +23,7 @@ interface SettingsItem {
 const moneyManagementItems: SettingsItem[] = [
   {
     titleKey: "screens.settings.insights.title",
-    route: "/stats/wrapped",
+    route: "/stats/insights" as Href,
     icon: "sparkles",
   },
   {

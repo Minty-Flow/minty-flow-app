@@ -1,11 +1,12 @@
 import { useLocalSearchParams, useRouter } from "expo-router"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView, TextInput } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { AddNameModal } from "~/components/bill-splitter/add-name-modal"
 import { IconSvg } from "~/components/icons"
+import { Money } from "~/components/money"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { Button } from "~/components/ui/button"
 import { Input } from "~/components/ui/input"
@@ -14,9 +15,13 @@ import { Pressable } from "~/components/ui/pressable"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useBillSplitterStore } from "~/stores/bill-splitter.store"
+import {
+  getItemAllocations,
+  useBillSplitterStore,
+} from "~/stores/bill-splitter.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { ItemSplit } from "~/types/bill-splitter"
+import { formatPercent } from "~/utils/number-format"
 
 // Per-participant string state for controlled percentage inputs.
 // Keyed by participantId — avoids the "33." reset bug by keeping raw
@@ -28,7 +33,13 @@ export default function AddItemScreen() {
   const { theme } = useUnistyles()
   const router = useRouter()
   const params = useLocalSearchParams<{ itemId?: string }>()
-  const currency = useMoneyFormattingStore((s) => s.preferredCurrency)
+  const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
+  const billCurrency = useBillSplitterStore((s) => s.currencyCode)
+  const currency = billCurrency ?? preferredCurrency
+  const setCurrencyCode = useBillSplitterStore((s) => s.setCurrencyCode)
+  useEffect(() => {
+    if (!billCurrency) setCurrencyCode(currency)
+  }, [billCurrency, currency, setCurrencyCode])
 
   const participants = useBillSplitterStore((s) => s.participants)
   const items = useBillSplitterStore((s) => s.items)
@@ -44,6 +55,9 @@ export default function AddItemScreen() {
   const [name, setName] = useState(editItem?.name ?? "")
   const [price, setPrice] = useState(editItem?.price ?? 0)
   const [quantity, setQuantity] = useState(editItem?.quantity ?? 1)
+  const [quantityInput, setQuantityInput] = useState(
+    String(editItem?.quantity ?? 1),
+  )
   const [splitEvenly, setSplitEvenly] = useState(editItem?.splitEvenly ?? true)
   const [splits, setSplits] = useState<ItemSplit[]>(() => {
     if (editItem) return editItem.splits
@@ -151,6 +165,18 @@ export default function AddItemScreen() {
         .reduce((sum, s) => sum + s.percentage, 0),
     [effectiveSplits],
   )
+  const previewAllocations = useMemo(
+    () =>
+      getItemAllocations({
+        id: "preview",
+        name,
+        price,
+        quantity: quantityNum,
+        splitEvenly,
+        splits: effectiveSplits,
+      }),
+    [effectiveSplits, name, price, quantityNum, splitEvenly],
+  )
 
   const handleSave = useCallback(() => {
     const finalSplits = splitEvenly
@@ -195,7 +221,7 @@ export default function AddItemScreen() {
 
   // Determine percentage total indicator color
   const totalRounded = Math.round(totalPercentage * 10) / 10
-  const isExact = totalRounded === 100
+  const isExact = Math.abs(totalPercentage - 100) < 0.000001
   const isOver = totalRounded > 100
   const totalColor = isExact
     ? theme.colors.semantic.income
@@ -203,7 +229,8 @@ export default function AddItemScreen() {
       ? theme.colors.error
       : theme.colors.onSecondary
 
-  const isSaveDisabled = !name.trim()
+  const isSaveDisabled =
+    !name.trim() || selectedCount === 0 || (!splitEvenly && !isExact)
 
   return (
     <View style={styles.container}>
@@ -232,8 +259,8 @@ export default function AddItemScreen() {
 
         <View style={styles.card}>
           <SmartAmountInput
-            value={price}
-            onChange={setPrice}
+            valueMinor={price}
+            onChangeMinor={setPrice}
             currencyCode={currency}
             label={t("screens.settings.billSplitter.item.price")}
             placeholder="0"
@@ -281,12 +308,16 @@ export default function AddItemScreen() {
 
         {multiplierExpanded && (
           <View style={styles.multiplierContent}>
-            <SmartAmountInput
-              value={quantity}
-              onChange={setQuantity}
-              label={t("screens.settings.billSplitter.item.quantity")}
+            <Input
+              value={quantityInput}
+              onChangeText={(value) => {
+                setQuantityInput(value)
+                const parsed = Number.parseFloat(value.replace(",", "."))
+                if (Number.isFinite(parsed)) setQuantity(parsed)
+              }}
+              onBlur={() => setQuantityInput(String(quantityNum))}
+              keyboardType="decimal-pad"
               placeholder="1"
-              decimalPlaces={2}
             />
           </View>
         )}
@@ -319,12 +350,7 @@ export default function AddItemScreen() {
             )
             if (!participant) return null
 
-            // Amount preview: price * quantity * percentage / 100
-            const amountPreview = price * quantityNum * (split.percentage / 100)
-            const amountFormatted =
-              split.selected && split.percentage > 0
-                ? amountPreview.toFixed(1)
-                : null
+            const amountPreview = previewAllocations.get(split.participantId)
 
             return (
               <Pressable
@@ -356,17 +382,21 @@ export default function AddItemScreen() {
                 </Text>
 
                 {/* Amount preview */}
-                {amountFormatted !== null && (
-                  <Text style={styles.amountPreview}>
-                    {currency ? `${currency} ` : ""}
-                    {amountFormatted}
-                  </Text>
+                {amountPreview !== undefined && (
+                  <Money
+                    value={amountPreview}
+                    currency={currency}
+                    tone="transfer"
+                    hideSign
+                    variant="small"
+                    style={styles.amountPreview}
+                  />
                 )}
 
                 {splitEvenly ? (
                   <Text style={styles.percentageText}>
                     {split.selected && selectedCount > 0
-                      ? `${(100 / selectedCount).toFixed(1)}%`
+                      ? formatPercent(100 / selectedCount)
                       : "0%"}
                   </Text>
                 ) : (
@@ -423,7 +453,7 @@ export default function AddItemScreen() {
               {t("screens.settings.billSplitter.item.total")}
             </Text>
             <Text style={[styles.percentageTotalValue, { color: totalColor }]}>
-              {totalRounded.toFixed(1)}%
+              {formatPercent(totalRounded)}
             </Text>
           </View>
         )}

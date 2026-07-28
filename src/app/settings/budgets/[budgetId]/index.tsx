@@ -44,7 +44,8 @@ import { useCategories } from "~/stores/db/category.store"
 import { useTransactions } from "~/stores/db/transaction.store"
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
-import { formatDisplayValue } from "~/utils/number-format"
+import { roundToSafeInteger } from "~/utils/money"
+import { formatMoney } from "~/utils/number-format"
 import {
   endOfAppWeek,
   formatCustomPeriodRange,
@@ -117,6 +118,7 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
       getBudgetSpent(
         budget.accountIds,
         budget.categoryIds,
+        budget.currencyCode,
         budget.period,
         budget.startDate.toISOString(),
         budget.endDate?.toISOString() ?? null,
@@ -126,6 +128,7 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
       getBudgetSpentByCategory(
         budget.accountIds,
         budget.categoryIds,
+        budget.currencyCode,
         budget.period,
         budget.startDate.toISOString(),
         budget.endDate?.toISOString() ?? null,
@@ -256,8 +259,7 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
       : t(`screens.settings.budgets.periods.${budget.period}` as TranslationKey)
 
   const formatAmt = (n: number) => {
-    const raw = formatDisplayValue(n.toString(), {
-      currency: budget.currencyCode,
+    const raw = formatMoney(roundToSafeInteger(n), budget.currencyCode, {
       currencyDisplay: currencyLook,
       hideSign: true,
     })
@@ -392,7 +394,7 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
         ) : (
           <RNView
             style={{
-              width: `${(spendRatio * 100).toFixed(1)}%` as DimensionValue,
+              width: `${spendRatio * 100}%` as DimensionValue,
               height: "100%",
               backgroundColor: progressBarColor,
             }}

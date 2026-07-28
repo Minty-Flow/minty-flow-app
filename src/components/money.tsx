@@ -5,11 +5,13 @@ import { StyleSheet } from "react-native-unistyles"
 import { Text, type TextVariant } from "~/components/ui/text"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
-import { formatDisplayValue } from "~/utils/number-format"
+import { logger } from "~/utils/logger"
+import { assertMinorUnits } from "~/utils/money"
+import { formatMoney } from "~/utils/number-format"
 
 interface MoneyProps {
-  value: string | number
-  currency?: string
+  value: number
+  currency: string
   compact?: boolean
   hideSign?: boolean
   showSign?: boolean
@@ -40,15 +42,19 @@ export const Money: FC<MoneyProps> = ({
   variant = "p",
   native = false,
 }) => {
-  const stringValue = typeof value === "number" ? value.toString() : value
-
   // Preferences
   const privacyModeActive = useMoneyFormattingStore((s) => s.privacyMode)
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
 
   // Numeric value (used only for inference)
-  const numericValue =
-    typeof value === "number" ? value : Number.parseFloat(stringValue || "0")
+  const numericValue = useMemo(() => {
+    try {
+      return assertMinorUnits(value)
+    } catch {
+      logger.warn("Money received non-minor-unit value", { value })
+      return Math.round(value)
+    }
+  }, [value])
 
   // Sign behavior: tone controls + / - / no sign
   const resolvedSignTone: TransactionType =
@@ -86,36 +92,28 @@ export const Money: FC<MoneyProps> = ({
   }, [numericValue, resolvedSignTone])
 
   // Format
-  const formatted = useMemo(() => {
-    const opts = {
+  const formatted = useMemo(
+    () =>
+      formatMoney(signedValue, currency, {
+        currencyDisplay: currencyLook,
+        compact,
+        hideSign: resolvedSignTone === TransactionTypeEnum.TRANSFER || hideSign,
+        showSign: resolvedSignTone !== TransactionTypeEnum.TRANSFER && showSign,
+        hideSymbol,
+        addParentheses,
+      }),
+    [
+      signedValue,
       currency,
-      currencyDisplay: currencyLook,
+      currencyLook,
       compact,
-      hideSign: resolvedSignTone === TransactionTypeEnum.TRANSFER || hideSign,
-      showSign: resolvedSignTone !== TransactionTypeEnum.TRANSFER && showSign,
+      hideSign,
+      showSign,
       hideSymbol,
       addParentheses,
-    }
-    try {
-      return formatDisplayValue(signedValue.toString(), opts)
-    } catch {
-      return formatDisplayValue(signedValue.toString(), {
-        compact,
-        hideSign,
-        showSign,
-      })
-    }
-  }, [
-    signedValue,
-    currency,
-    currencyLook,
-    compact,
-    hideSign,
-    showSign,
-    hideSymbol,
-    addParentheses,
-    resolvedSignTone,
-  ])
+      resolvedSignTone,
+    ],
+  )
 
   // Privacy masking
   const privacyMasked = useMemo(

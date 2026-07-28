@@ -23,12 +23,14 @@ interface StatsDetailContext {
   stats: CurrencyStats
   supplement: StatsSupplement | undefined
   dateRange: StatsDateRange
+  activePreset: DateRangePresetId
   isLoading: boolean
 }
 
 interface StatsDetailShellProps {
   /** Overrides route params (e.g. net-worth/calendar force thisYear) */
   init?: UseStatsInit
+  showPeriodHeader?: boolean
   children: (ctx: StatsDetailContext) => ReactNode
 }
 
@@ -82,7 +84,11 @@ function useStatsInitFromParams(): UseStatsInit {
   }
 }
 
-export function StatsDetailShell({ init, children }: StatsDetailShellProps) {
+export function StatsDetailShell({
+  init,
+  showPeriodHeader = true,
+  children,
+}: StatsDetailShellProps) {
   const { theme } = useUnistyles()
   const paramsInit = useStatsInitFromParams()
   const {
@@ -124,15 +130,17 @@ export function StatsDetailShell({ init, children }: StatsDetailShellProps) {
         />
       }
     >
-      <StatsPeriodHeader
-        activeYear={activeYear}
-        activeMonth={activeMonth}
-        activePreset={activePreset}
-        dateRange={dateRange}
-        setMonthRange={setMonthRange}
-        setCustomRange={setCustomRange}
-        navigate={navigate}
-      />
+      {showPeriodHeader ? (
+        <StatsPeriodHeader
+          activeYear={activeYear}
+          activeMonth={activeMonth}
+          activePreset={activePreset}
+          dateRange={dateRange}
+          setMonthRange={setMonthRange}
+          setCustomRange={setCustomRange}
+          navigate={navigate}
+        />
+      ) : null}
 
       {isFirstLoad && <StatsSkeleton />}
 
@@ -150,7 +158,13 @@ export function StatsDetailShell({ init, children }: StatsDetailShellProps) {
             />
           </View>
           <View style={styles.body}>
-            {children({ stats, supplement, dateRange, isLoading })}
+            {children({
+              stats,
+              supplement,
+              dateRange,
+              activePreset,
+              isLoading,
+            })}
           </View>
         </>
       )}

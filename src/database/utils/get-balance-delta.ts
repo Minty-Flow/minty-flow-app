@@ -4,6 +4,7 @@ import {
   TransactionTypeEnum,
 } from "~/types/transactions"
 import { logger } from "~/utils/logger"
+import { assertMinorUnits } from "~/utils/money"
 
 /**
  * Compute the signed balance delta for a transaction.
@@ -33,6 +34,7 @@ export const getBalanceDelta = (
   type: TransactionType,
   subtype?: string | null,
 ): number => {
+  assertMinorUnits(amount)
   if (type === TransactionTypeEnum.TRANSFER && amount > 0) {
     // Transfer amounts must be pre-signed by the caller (debit row negative, credit row positive).
     // A positive amount on a transfer row indicates the sign contract was not applied upstream.

@@ -1,30 +1,26 @@
 import { type Href, router } from "expo-router"
 import { useState } from "react"
-import { useTranslation } from "react-i18next"
 import { RefreshControl, ScrollView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { CalendarCard } from "~/components/stats/dashboard/calendar-card"
 import { CashFlowCard } from "~/components/stats/dashboard/cash-flow-card"
-import { NetWorthCard } from "~/components/stats/dashboard/net-worth-card"
+import {
+  type StatsInsightsRoute,
+  StatsInsightsSection,
+} from "~/components/stats/dashboard/insights-section"
 import { PaceCard } from "~/components/stats/dashboard/pace-card"
-import { StatCard } from "~/components/stats/dashboard/stat-card"
 import { TopCategoriesCard } from "~/components/stats/dashboard/top-categories-card"
-import { WrappedCard } from "~/components/stats/dashboard/wrapped-card"
 import { StatsCurrencyToggle } from "~/components/stats/stats-currency-toggle"
 import { StatsEmptyState } from "~/components/stats/stats-empty-state"
 import { StatsPendingNotice } from "~/components/stats/stats-pending-notice"
 import { StatsPeriodHeader } from "~/components/stats/stats-period-header"
 import { StatsSkeleton } from "~/components/stats/stats-skeleton"
-import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useStats } from "~/hooks/use-stats"
 import { formatRangeLabel } from "~/utils/stats-date-range"
-import { formatMonthName } from "~/utils/time-utils"
 
 export default function StatsScreen() {
   const { theme } = useUnistyles()
-  const { t } = useTranslation()
   const {
     byCurrency,
     supplementByCurrency,
@@ -59,7 +55,7 @@ export default function StatsScreen() {
     | "/stats/calendar"
   >
 
-  const pushDetail = (screen: ScreensType) =>
+  const pushDetail = (screen: ScreensType | StatsInsightsRoute) =>
     router.push({
       pathname: screen,
       params: {
@@ -137,44 +133,12 @@ export default function StatsScreen() {
               currency={stats.currency}
               onPress={() => pushDetail("/stats/categories")}
             />
-
-            <Text variant="h4" style={styles.sectionHeader}>
-              {t("screens.stats.dashboard.insights")}
-            </Text>
-
-            <WrappedCard
+            <StatsInsightsSection
               stats={stats}
-              monthLabel={formatMonthName(dateRange.from)}
-              onPress={() => pushDetail("/stats/wrapped")}
-            />
-
-            <NetWorthCard
-              netBalance={supplement?.currentNetBalance ?? stats.closingBalance}
-              balanceDelta={stats.balanceDelta}
-              periodLabel={formatRangeLabel(dateRange)}
-              timeline={stats.balanceTimeline}
-              currency={stats.currency}
-              onPress={() => pushDetail("/stats/net-worth")}
-            />
-
-            <View style={styles.halfRow}>
-              <CalendarCard
-                dailyData={stats.dailyData}
-                from={dateRange.from}
-                to={dateRange.to}
-                onPress={() => pushDetail("/stats/calendar")}
-              />
-              <StatCard
-                title={t("screens.stats.dashboard.recurring")}
-                icon="repeat-outline"
-                soon
-              />
-            </View>
-
-            <StatCard
-              title={t("screens.stats.dashboard.spendingMap")}
-              icon="map-outline"
-              soon
+              supplement={supplement}
+              dateRange={dateRange}
+              onNavigate={pushDetail}
+              showHeader
             />
           </View>
         </>
@@ -206,10 +170,6 @@ const styles = StyleSheet.create((theme) => ({
   halfRow: {
     flexDirection: "row",
     gap: 12,
-  },
-  sectionHeader: {
-    fontWeight: "700",
-    marginTop: 8,
   },
   bottomSpacer: {
     height: 100,

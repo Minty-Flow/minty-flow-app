@@ -8,6 +8,11 @@ import type {
   ItemSplit,
   Participant,
 } from "~/types/bill-splitter"
+import {
+  assertMinorUnits,
+  rescaleMinorUnits,
+  roundToSafeInteger,
+} from "~/utils/money"
 
 /**
  * MMKV storage instance for bill splitter data.
@@ -27,6 +32,7 @@ interface BillSplitterState {
   items: BillItem[]
   payerId: string | null
   accountId: string | null
+  currencyCode: string | null
 
   addParticipant: (name: string) => void
   removeParticipant: (id: string) => void
@@ -35,6 +41,7 @@ interface BillSplitterState {
   removeItem: (id: string) => void
   setPayerId: (id: string | null) => void
   setAccountId: (id: string | null) => void
+  setCurrencyCode: (currencyCode: string) => void
   clearBill: () => void
 }
 
@@ -51,6 +58,7 @@ export const useBillSplitterStore = create<BillSplitterState>()(
       items: [],
       payerId: null,
       accountId: null,
+      currencyCode: null,
 
       addParticipant: (name) =>
         set((state) => ({
@@ -73,17 +81,25 @@ export const useBillSplitterStore = create<BillSplitterState>()(
           payerId: state.payerId === id ? null : state.payerId,
         })),
 
-      addItem: (item) =>
+      addItem: (item) => {
+        assertMinorUnits(item.price)
+        if (item.price < 0)
+          throw new Error("Bill item price cannot be negative")
         set((state) => ({
           items: [...state.items, { ...item, id: generateId() }],
-        })),
+        }))
+      },
 
-      updateItem: (id, item) =>
+      updateItem: (id, item) => {
+        assertMinorUnits(item.price)
+        if (item.price < 0)
+          throw new Error("Bill item price cannot be negative")
         set((state) => ({
           items: state.items.map((existing) =>
             existing.id === id ? { ...item, id } : existing,
           ),
-        })),
+        }))
+      },
 
       removeItem: (id) =>
         set((state) => ({
@@ -93,6 +109,21 @@ export const useBillSplitterStore = create<BillSplitterState>()(
       setPayerId: (id) => set({ payerId: id }),
 
       setAccountId: (id) => set({ accountId: id }),
+      setCurrencyCode: (currencyCode) =>
+        set((state) => ({
+          currencyCode,
+          items:
+            state.currencyCode && state.currencyCode !== currencyCode
+              ? state.items.map((item) => ({
+                  ...item,
+                  price: rescaleMinorUnits(
+                    item.price,
+                    state.currencyCode as string,
+                    currencyCode,
+                  ),
+                }))
+              : state.items,
+        })),
 
       clearBill: () =>
         set({
@@ -100,10 +131,19 @@ export const useBillSplitterStore = create<BillSplitterState>()(
           items: [],
           payerId: null,
           accountId: null,
+          currencyCode: null,
         }),
     }),
     {
       name: "bill-splitter-store",
+      version: 3,
+      migrate: () => ({
+        participants: [],
+        items: [],
+        payerId: null,
+        accountId: null,
+        currencyCode: null,
+      }),
       storage: createJSONStorage(() => ({
         getItem: (name) => billSplitterStorage.getString(name) ?? null,
         setItem: (name, value) => billSplitterStorage.set(name, value),
@@ -124,17 +164,22 @@ function redistributeEvenly(splits: ItemSplit[]): ItemSplit[] {
 
 /** Compute the total bill amount (sum of price * quantity for all items). */
 export function getBillTotal(items: BillItem[]): number {
-  return items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  return items.reduce(
+    (sum, item) => sum + roundToSafeInteger(item.price * item.quantity),
+    0,
+  )
 }
 
 /** Compute the total allocated amount across all items and participants. */
 export function getAllocatedTotal(items: BillItem[]): number {
   return items.reduce((sum, item) => {
-    const itemTotal = item.price * item.quantity
-    const allocatedPercent = item.splits
-      .filter((s) => s.selected)
-      .reduce((acc, s) => acc + s.percentage, 0)
-    return sum + itemTotal * (allocatedPercent / 100)
+    return (
+      sum +
+      [...getItemAllocations(item).values()].reduce(
+        (allocated, value) => allocated + value,
+        0,
+      )
+    )
   }, 0)
 }
 
@@ -144,17 +189,42 @@ export function getBillSummary(
   participants: Participant[],
 ): BillSummaryEntry[] {
   return participants.map((p) => {
-    const owedAmount = items.reduce((sum, item) => {
-      const split = item.splits.find((s) => s.participantId === p.id)
-      if (!split?.selected) return sum
-      const itemTotal = item.price * item.quantity
-      return sum + itemTotal * (split.percentage / 100)
-    }, 0)
+    const owedAmount = items.reduce(
+      (sum, item) => sum + (getItemAllocations(item).get(p.id) ?? 0),
+      0,
+    )
 
     return {
       participantId: p.id,
       name: p.name,
-      owedAmount: Math.round(owedAmount * 100) / 100,
+      owedAmount,
     }
   })
+}
+
+export function getItemAllocations(item: BillItem): Map<string, number> {
+  const selected = item.splits.filter(
+    (split) => split.selected && split.percentage > 0,
+  )
+  if (selected.length === 0) return new Map()
+
+  const total = roundToSafeInteger(item.price * item.quantity)
+  const weight = selected.reduce((sum, split) => sum + split.percentage, 0)
+  const allocations = selected.map((split) => {
+    const exact = (total * split.percentage) / 100
+    const floor = Math.floor(exact)
+    return { id: split.participantId, amount: floor, remainder: exact - floor }
+  })
+
+  let remainder =
+    roundToSafeInteger((total * weight) / 100) -
+    allocations.reduce((sum, row) => sum + row.amount, 0)
+  allocations.sort(
+    (a, b) => b.remainder - a.remainder || a.id.localeCompare(b.id),
+  )
+  for (const row of allocations) {
+    if (remainder-- <= 0) break
+    row.amount++
+  }
+  return new Map(allocations.map((row) => [row.id, row.amount]))
 }

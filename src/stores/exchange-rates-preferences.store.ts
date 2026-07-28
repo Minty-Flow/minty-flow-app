@@ -38,6 +38,9 @@ export const useExchangeRatesPreferencesStore =
       (set, get) => ({
         ...DEFAULTS,
         setCustomRate: (currencyCode, rate) => {
+          if (!Number.isFinite(rate) || rate <= 0) {
+            throw new Error("Exchange rate must be finite and positive")
+          }
           const key = normalizeCode(currencyCode)
           set((state) => ({
             customRates: {

@@ -125,18 +125,3 @@ export function shuffleArray<T>(items: T[]): T[] {
   }
   return result
 }
-
-/**
- * Create a copy of a color scheme with overrides
- */
-export const copyWith = (
-  base: MintyColorScheme,
-  overrides: Partial<MintyColorScheme>,
-): MintyColorScheme => ({
-  ...base,
-  ...overrides,
-  semantic: {
-    ...base.semantic,
-    ...(overrides.semantic || {}),
-  },
-})

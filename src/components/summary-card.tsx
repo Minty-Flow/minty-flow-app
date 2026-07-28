@@ -7,6 +7,7 @@ import { Money } from "~/components/money"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
+import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import type { TransactionType } from "~/types/transactions"
 import {
@@ -115,6 +116,9 @@ const Card = ({
   extraByCurrency = EMPTY_EXTRA_BY_CURRENCY,
 }: CardProps) => {
   const { theme } = useUnistyles()
+  const preferredCurrency = useMoneyFormattingStore(
+    (state) => state.preferredCurrency,
+  )
   const isIncome = type === TransactionTypeEnum.INCOME
   const icon: IconSvgName = isIncome
     ? "arrow-down-left-outline"
@@ -203,7 +207,12 @@ const Card = ({
               <Text variant="small" style={styles.currencyCode}>
                 -
               </Text>
-              <Money value={0} style={colorStyle} variant="small" />
+              <Money
+                value={0}
+                currency={preferredCurrency}
+                style={colorStyle}
+                variant="small"
+              />
             </View>
           )}
         </View>

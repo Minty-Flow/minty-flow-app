@@ -120,8 +120,8 @@ export function AccountModifyContent({
               name="balance"
               render={({ field: { value, onChange } }) => (
                 <SmartAmountInput
-                  value={Number(value) || 0}
-                  onChange={(v) => onChange(v)}
+                  valueMinor={Number(value) || 0}
+                  onChangeMinor={(v) => onChange(v)}
                   currencyCode={formCurrencyCode}
                   label={t("screens.accounts.form.initialBalance")}
                   placeholder="0"

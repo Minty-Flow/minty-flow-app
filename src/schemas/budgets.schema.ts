@@ -17,7 +17,11 @@ const addBudgetSchema = z
       .min(1, "validation.required.currency")
       .max(6, "validation.required.currency"),
     accountIds: z.array(z.string()).min(1, "validation.required.accounts"),
-    amount: z.number().positive("validation.amount.positive"),
+    amount: z
+      .number()
+      .safe()
+      .int("validation.amount.invalid")
+      .positive("validation.amount.positive"),
     period: z.enum(
       Object.values(BudgetPeriodEnum) as [BudgetPeriod, ...BudgetPeriod[]],
     ),

@@ -22,6 +22,7 @@ import { View } from "~/components/ui/view"
 import { getThemeStrict } from "~/styles/theme/registry"
 import { getThemeVariantPalette, shuffleArray } from "~/styles/theme/utils"
 import type { CategoryBreakdownItem } from "~/types/stats"
+import { formatPercent } from "~/utils/number-format"
 
 import { DeltaBadge } from "./delta-badge"
 
@@ -472,7 +473,7 @@ export function StatsCategoryPie({
                       {item.label}
                     </Text>
                     <Text variant="muted" style={styles.legendPercent}>
-                      {percent.toFixed(1)}%
+                      {formatPercent(percent)}
                     </Text>
                     <Money
                       value={item.value}

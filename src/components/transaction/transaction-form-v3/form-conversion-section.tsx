@@ -7,6 +7,12 @@ import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { Account } from "~/types/accounts"
+import {
+  convertMinorUnits,
+  getMinorUnitDigits,
+  toMajorUnits,
+} from "~/utils/money"
+import { formatNumber } from "~/utils/number-format"
 
 import { transactionFormStyles } from "./form.styles"
 
@@ -28,11 +34,16 @@ export function FormConversionSection({
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
 
-  const amountNum =
-    typeof amount === "number"
-      ? amount
-      : Number.parseFloat(String(amount ?? "")) || 0
-  const convertedAmount = (conversionRate ?? 0) * amountNum
+  const amountNum = amount
+  const convertedAmount =
+    conversionRate && amountNum
+      ? convertMinorUnits(
+          amountNum,
+          selectedAccount.currencyCode,
+          selectedToAccount.currencyCode,
+          conversionRate,
+        )
+      : 0
 
   return (
     <View style={transactionFormStyles.fieldBlock}>
@@ -72,13 +83,13 @@ export function FormConversionSection({
             </Text>
             <View style={transactionFormStyles.conversionRateSummaryValues}>
               <Money
-                value={1}
+                value={10 ** getMinorUnitDigits(selectedAccount.currencyCode)}
                 currency={selectedAccount.currencyCode}
                 style={transactionFormStyles.conversionRateAmount}
               />
               <Text style={transactionFormStyles.conversionRateEquals}>=</Text>
               <Text style={transactionFormStyles.conversionOutcomeRate}>
-                {(conversionRate ?? 0).toLocaleString(undefined, {
+                {formatNumber(conversionRate ?? 0, {
                   maximumFractionDigits: 6,
                 })}{" "}
                 {selectedToAccount.currencyCode}
@@ -97,7 +108,7 @@ export function FormConversionSection({
             </View>
             <Text style={transactionFormStyles.conversionRateEquals}>×</Text>
             <Text style={transactionFormStyles.conversionOutcomeRate}>
-              {(conversionRate ?? 0).toLocaleString(undefined, {
+              {formatNumber(conversionRate ?? 0, {
                 maximumFractionDigits: 6,
               })}
             </Text>
@@ -112,10 +123,17 @@ export function FormConversionSection({
           {/* SmartAmountInput to change the converted amount (deduces rate on change) */}
           <View style={transactionFormStyles.conversionInputRow}>
             <SmartAmountInput
-              value={convertedAmount}
-              onChange={(value) => {
-                if (amountNum > 0 && typeof value === "number") {
-                  onConversionRateChange(value / amountNum)
+              valueMinor={convertedAmount}
+              onChangeMinor={(value) => {
+                const sourceMajor = toMajorUnits(
+                  amountNum,
+                  selectedAccount.currencyCode,
+                )
+                if (sourceMajor > 0) {
+                  onConversionRateChange(
+                    toMajorUnits(value, selectedToAccount.currencyCode) /
+                      sourceMajor,
+                  )
                 }
               }}
               currencyCode={selectedToAccount.currencyCode}

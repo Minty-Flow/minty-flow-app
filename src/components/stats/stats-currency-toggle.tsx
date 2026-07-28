@@ -1,4 +1,5 @@
 import { useCallback } from "react"
+import { useTranslation } from "react-i18next"
 import { Pressable } from "react-native"
 import Animated, {
   useAnimatedStyle,
@@ -11,6 +12,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
 import { Text } from "~/components/ui/text"
+import { View } from "~/components/ui/view"
 import { currencyRegistryService } from "~/services/currency-registry"
 
 interface StatsCurrencyToggleProps {
@@ -24,6 +26,7 @@ export function StatsCurrencyToggle({
   value,
   onChange,
 }: StatsCurrencyToggleProps) {
+  const { t } = useTranslation()
   const { theme } = useUnistyles()
   const opacity = useSharedValue(1)
   const scale = useSharedValue(1)
@@ -54,50 +57,65 @@ export function StatsCurrencyToggle({
   const moreThan2 = currencies.length > 2
 
   return (
-    <Pressable onPress={handlePress} hitSlop={8}>
-      <Animated.View style={[styles.capsule, animStyle]}>
-        <Text style={styles.symbol} native>
-          {symbol}
+    <Pressable onPress={handlePress} hitSlop={12}>
+      <View style={styles.wrap}>
+        <Animated.View style={[styles.capsule, animStyle]}>
+          <Text style={styles.symbol} native>
+            {symbol}
+          </Text>
+          <Text style={styles.code} native>
+            {value}
+          </Text>
+          <IconSvg
+            name={moreThan2 ? "repeat-outline" : "arrows-right-left-outline"}
+            size={14}
+            color={theme.colors.primary}
+            style={styles.swap}
+          />
+        </Animated.View>
+
+        <Text variant="muted" style={styles.helper}>
+          {t("screens.stats.currency.showing", { currency: value })} ·{" "}
+          {t("screens.stats.currency.tapToSwitch")}
         </Text>
-        <Text style={styles.code} native>
-          {value}
-        </Text>
-        <IconSvg
-          name={moreThan2 ? "repeat-outline" : "arrows-right-left-outline"}
-          size={14}
-          color={theme.colors.onSecondary}
-          style={styles.swap}
-        />
-      </Animated.View>
+      </View>
     </Pressable>
   )
 }
 
 const styles = StyleSheet.create((theme) => ({
+  wrap: {
+    alignItems: "center",
+    gap: 6,
+  },
   capsule: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
+    gap: 6,
     backgroundColor: theme.colors.secondary,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    borderRadius: 999,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
     borderWidth: 1,
-    borderColor: theme.colors.semantic.semi,
+    borderColor: theme.colors.primary + "33",
   },
   symbol: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
     color: theme.colors.primary,
   },
   code: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "700",
     letterSpacing: 0.5,
-    color: theme.colors.onSecondary,
+    color: theme.colors.onSurface,
   },
   swap: {
     marginLeft: 3,
-    opacity: 0.5,
+    opacity: 0.75,
+  },
+  helper: {
+    fontSize: theme.typography.labelSmall.fontSize,
+    textAlign: "center",
   },
 }))
