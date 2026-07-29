@@ -10,9 +10,8 @@ import { StatsDetailShell } from "~/components/stats/stats-detail-shell"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { on } from "~/database/events"
-import { fetchWrappedInsights } from "~/database/services-sqlite/stats-service"
-import { useDebouncedCallback } from "~/hooks/use-debounced-callback"
+import { useDatabaseChangeSignal } from "~/database/drizzle/hooks/use-database-change-signal"
+import { fetchWrappedInsights } from "~/database/services/stats-service"
 import type {
   CurrencyStats,
   StatsDateRange,
@@ -81,6 +80,7 @@ function WrappedContent({
   const [insights, setInsights] = useState<WrappedInsights[]>([])
   const [isInsightsLoading, setIsInsightsLoading] = useState(true)
   const fetchIdRef = useRef(0)
+  const dbChangeSignal = useDatabaseChangeSignal()
   const fetchInsights = useCallback((range: StatsDateRange) => {
     const fetchId = ++fetchIdRef.current
     fetchWrappedInsights(range)
@@ -93,24 +93,13 @@ function WrappedContent({
       })
   }, [])
   useEffect(() => {
+    void dbChangeSignal
+    setIsInsightsLoading(true)
     fetchInsights(dateRange)
-  }, [dateRange, fetchInsights])
-  const debouncedFetchInsights = useDebouncedCallback(fetchInsights, 300)
-  // These cards read straight from SQLite rather than `useStats`, so nothing
-  // else re-runs them when a transaction changes.
-  useEffect(() => {
-    const refresh = () => {
-      setIsInsightsLoading(true)
-      debouncedFetchInsights(dateRange)
-    }
-    const unsub1 = on("transactions:dirty", refresh)
-    const unsub2 = on("categories:dirty", refresh)
     return () => {
       fetchIdRef.current++
-      unsub1()
-      unsub2()
     }
-  }, [dateRange, debouncedFetchInsights])
+  }, [dateRange, dbChangeSignal, fetchInsights])
   const insight = insights.find((i) => i.currency === stats.currency)
   const hasRhythm = stats.spendingByDayOfWeek.some((day) => day.avgExpense > 0)
   const hasAnyInsight = Boolean(

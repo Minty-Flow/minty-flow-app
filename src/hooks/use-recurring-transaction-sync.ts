@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react"
 import { AppState } from "react-native"
 
-import { synchronizeAllRecurringTransactions } from "~/database/services-sqlite/recurring-transaction-service"
+import { synchronizeAllRecurringTransactions } from "~/database/services/recurring-transaction-service"
 import { useDebouncedCallback } from "~/hooks/use-debounced-callback"
 import { autoConfirmationService } from "~/services/auto-confirmation-service"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"

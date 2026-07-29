@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
@@ -7,12 +7,6 @@ import { TransactionFormV3 } from "~/components/transaction/transaction-form-v3"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { on } from "~/database/events"
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
-import {
-  getTagIdsForTransaction,
-  getTransactionById,
-} from "~/database/services-sqlite/transaction-service"
 import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import { useActiveAccounts } from "~/stores/db/account.store"
 import { useAllBudgets } from "~/stores/db/budget.store"
@@ -20,6 +14,10 @@ import { useCategoriesByType } from "~/stores/db/category.store"
 import { useGoalsByType } from "~/stores/db/goal.store"
 import { useAllLoans } from "~/stores/db/loan.store"
 import { useTags } from "~/stores/db/tag.store"
+import {
+  type TransactionWithRelations,
+  useTransactions,
+} from "~/stores/db/transaction.store"
 import { GoalTypeEnum } from "~/types/goals"
 import { NewEnum } from "~/types/new"
 import {
@@ -96,40 +94,15 @@ function TransactionEditor({
 
 function EditTransactionScreen({ transactionId }: { transactionId: string }) {
   const { t } = useTranslation()
-  const [transaction, setTransaction] = useState<
-    TransactionWithRelations | null | undefined
-  >(undefined)
-  const [initialTagIds, setInitialTagIds] = useState<string[]>([])
+  const { items, status } = useTransactions({
+    id: transactionId,
+    includeDeleted: true,
+    limit: 1,
+  })
+  const transaction = items[0] ?? null
+  const initialTagIds = transaction?.tagIds ?? []
 
-  useEffect(() => {
-    let cancelled = false
-    const load = async () => {
-      const tx = await getTransactionById(transactionId)
-      if (!cancelled) setTransaction(tx ?? null)
-    }
-    void load()
-    const unsub = on("transactions:dirty", () => void load())
-    return () => {
-      cancelled = true
-      unsub()
-    }
-  }, [transactionId])
-
-  useEffect(() => {
-    let cancelled = false
-    const load = async () => {
-      const ids = await getTagIdsForTransaction(transactionId)
-      if (!cancelled) setInitialTagIds(ids)
-    }
-    void load()
-    const unsub = on("transactions:dirty", () => void load())
-    return () => {
-      cancelled = true
-      unsub()
-    }
-  }, [transactionId])
-
-  if (transaction === undefined) {
+  if (status === "idle" || status === "loading") {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>

@@ -18,7 +18,7 @@ import { View } from "~/components/ui/view"
 import {
   getMonthRange,
   updateAccountsOrder,
-} from "~/database/services-sqlite/account-service"
+} from "~/database/services/account-service"
 import { useActiveAccounts } from "~/stores/db/account.store"
 import { useTransactions } from "~/stores/db/transaction.store"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"

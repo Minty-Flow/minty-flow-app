@@ -1,5 +1,9 @@
-import { getDb } from "./db"
+import { drizzleDb } from "./drizzle/db"
 import { enqueueWrite } from "./write-queue"
+
+export type DbTransaction = Parameters<
+  Parameters<typeof drizzleDb.transaction>[0]
+>[0]
 
 /**
  * Tracks nesting depth of active transaction contexts.
@@ -27,52 +31,32 @@ let txDepth = 0
  * transaction context. This lets services call other services without
  * deadlocking the queue.
  *
- * **`withTransactionAsync` workaround:** expo-sqlite's `withTransactionAsync`
- * returns `void`, so results are captured via a `{ value: T }` box inside
- * the callback and extracted after the call completes.
- *
- * @param name - A human-readable label used in instrumentation events
- *   (e.g. `"account.create"`, `"transfer.delete"`).
+ * @param name - Reserved human-readable label for call-site clarity.
  * @param fn - Async callback that receives the open database instance and
  *   performs all reads/writes. Its return value is forwarded to the caller.
  * @returns A promise that resolves with `fn`'s return value once the
  *   transaction commits, or rejects if the transaction rolls back.
  *
- * @example
- * ```ts
- * const id = await runInTransaction("account.create", async (db) => {
- *   await db.runAsync("INSERT INTO accounts (...) VALUES (?)", [name])
- *   return newId
- * })
- * ```
  */
 export async function runInTransaction<T>(
   _name: string,
-  fn: (db: ReturnType<typeof getDb>) => Promise<T>,
+  fn: (db: DbTransaction) => T,
 ): Promise<T> {
-  // Re-entrant: if already inside a queued tx context, bypass queue to avoid deadlock
+  // Re-entrant: if already inside a queued tx context, bypass queue to avoid deadlock.
   if (txDepth > 0) {
     txDepth++
     try {
-      return await fn(getDb())
+      return drizzleDb.transaction(fn)
     } finally {
       txDepth--
     }
   }
 
   return enqueueWrite(async () => {
-    const db = getDb()
-
     txDepth++
 
     try {
-      // withTransactionAsync callback must return void; capture result separately
-      let captured: { value: T } | undefined
-      await db.withTransactionAsync(async () => {
-        captured = { value: await fn(db) }
-      })
-      if (!captured) throw new Error("Transaction callback did not execute")
-      return captured.value
+      return drizzleDb.transaction(fn)
     } finally {
       txDepth--
     }

@@ -1,6 +1,6 @@
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
 import i18n from "~/i18n/config"
 import type { TransactionFormValues } from "~/schemas/transactions.schema"
+import type { TransactionWithRelations } from "~/stores/db/transaction.store"
 import type { Account } from "~/types/accounts"
 import {
   type RecurringFrequency,

@@ -12,7 +12,7 @@ import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty
 import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { getMonthRange } from "~/database/services-sqlite/account-service"
+import { getMonthRange } from "~/database/services/account-service"
 import { useCategoriesByType, useCategory } from "~/stores/db/category.store"
 import { useTags } from "~/stores/db/tag.store"
 import { useTransactions } from "~/stores/db/transaction.store"

@@ -1,8 +1,12 @@
 import { useLocalSearchParams } from "expo-router"
 
 import { BudgetModifyContent } from "~/components/budgets/budget-modify/budget-modify-content"
+import {
+  RouteLoadingState,
+  RouteNotFoundState,
+} from "~/components/route-load-state"
+import { useBudgetsQuery } from "~/database/drizzle/hooks/use-budgets-query"
 import { useActiveAccounts } from "~/stores/db/account.store"
-import { useBudget } from "~/stores/db/budget.store"
 import { useCategoriesByType } from "~/stores/db/category.store"
 import { NewEnum } from "~/types/new"
 import { TransactionTypeEnum } from "~/types/transactions"
@@ -12,7 +16,8 @@ export default function ModifyBudgetScreen() {
   const budgetId = params.budgetId
 
   const isAddMode = budgetId === NewEnum.NEW || !budgetId
-  const budget = useBudget(budgetId ?? "")
+  const budgetsQuery = useBudgetsQuery()
+  const budget = budgetsQuery.data.find((item) => item.id === budgetId)
   const accounts = useActiveAccounts()
   const categories = useCategoriesByType(TransactionTypeEnum.EXPENSE)
 
@@ -25,6 +30,9 @@ export default function ModifyBudgetScreen() {
       />
     )
   }
+
+  if (budgetsQuery.updatedAt === undefined) return <RouteLoadingState />
+  if (!budget) return <RouteNotFoundState message="Budget not found." />
 
   return (
     <BudgetModifyContent

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import { getBalanceAtTransaction } from "~/database/services-sqlite/balance-service"
+import { getBalanceAtTransaction } from "~/database/services/balance-service"
 import type { Transaction } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 

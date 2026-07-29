@@ -1,9 +1,13 @@
 import { useLocalSearchParams } from "expo-router"
 
 import { LoanModifyContent } from "~/components/loans/loan-modify/loan-modify-content"
+import {
+  RouteLoadingState,
+  RouteNotFoundState,
+} from "~/components/route-load-state"
+import { useLoansQuery } from "~/database/drizzle/hooks/use-loans-query"
 import { useActiveAccounts } from "~/stores/db/account.store"
 import { useCategories } from "~/stores/db/category.store"
-import { useLoan } from "~/stores/db/loan.store"
 import { type LoanType, LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
 export default function LoanModifyScreen() {
@@ -17,7 +21,8 @@ export default function LoanModifyScreen() {
   }>()
   const loanId = params.loanId ?? NewEnum.NEW
   const isAddMode = loanId === NewEnum.NEW || !loanId
-  const loan = useLoan(loanId)
+  const loansQuery = useLoansQuery()
+  const loan = loansQuery.data.find((item) => item.id === loanId)
   const accounts = useActiveAccounts()
   const categories = useCategories()
   const prefill = (() => {
@@ -53,6 +58,9 @@ export default function LoanModifyScreen() {
       />
     )
   }
+  if (loansQuery.updatedAt === undefined) return <RouteLoadingState />
+  if (!loan) return <RouteNotFoundState message="Loan not found." />
+
   return (
     <LoanModifyContent
       key={loanId}

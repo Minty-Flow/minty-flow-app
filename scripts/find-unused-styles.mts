@@ -5,6 +5,8 @@ import path from "node:path";
 
 const ROOT = process.cwd();
 const TARGET = path.resolve(ROOT, process.argv[2] || "src");
+const IGNORE_DIRS = new Set(["node_modules", ".git"]);
+const IGNORE_PATHS = new Set([path.resolve(ROOT, "src/components/icons")]);
 
 interface StyleBlock {
   file: string;
@@ -30,7 +32,7 @@ function findFiles(dir: string, acc: string[] = []): string[] {
     const full = path.join(dir, e.name);
 
     if (e.isDirectory()) {
-      if (e.name !== "node_modules" && e.name !== ".git") {
+      if (!IGNORE_DIRS.has(e.name) && !IGNORE_PATHS.has(full)) {
         findFiles(full, acc);
       }
     } else if (e.name.endsWith(".ts") || e.name.endsWith(".tsx")) {

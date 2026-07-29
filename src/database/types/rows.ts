@@ -176,7 +176,7 @@ export interface RowGoalAccount {
 /**
  * Raw row from the `loans` table.
  *
- * `loan_type` is one of `LENT | BORROWED`.
+ * `loan_type` is one of `lent | borrowed`.
  * Unlike budgets and goals, loans use direct FK columns (`account_id`,
  * `category_id`) rather than join tables.
  * Payment progress is computed from `transactions.loan_id` at query time.

@@ -1,4 +1,4 @@
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
+import type { TransactionWithRelations } from "~/stores/db/transaction.store"
 
 export interface UpcomingTransactionsSectionProps {
   transactions: TransactionWithRelations[]

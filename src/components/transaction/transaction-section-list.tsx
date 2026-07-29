@@ -17,7 +17,7 @@ import { UpcomingTransactionsSection } from "~/components/transaction/upcoming-t
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
+import type { TransactionWithRelations } from "~/stores/db/transaction.store"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import type {
   SearchState,

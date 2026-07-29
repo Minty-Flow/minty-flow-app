@@ -18,7 +18,7 @@ import {
   destroyAccount,
   getMonthRange,
   unarchiveAccount,
-} from "~/database/services-sqlite/account-service"
+} from "~/database/services/account-service"
 import { useAccount } from "~/stores/db/account.store"
 import { useCategoriesByType } from "~/stores/db/category.store"
 import { useTags } from "~/stores/db/tag.store"

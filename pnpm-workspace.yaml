@@ -5,6 +5,7 @@
 # Your Existing Configuration
 allowBuilds:
   '@shopify/react-native-skia': true
+  esbuild: true
   msgpackr-extract: true
 
 minimumReleaseAgeExclude:

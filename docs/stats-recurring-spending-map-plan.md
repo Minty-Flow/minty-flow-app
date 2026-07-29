@@ -12,17 +12,17 @@ Two Stats dashboard cards remain dimmed `soon` placeholders (`src/app/(tabs)/sta
 
 **A1.** `src/utils/recurrence.ts` — add `nextNOccurrences(ruleStrings, range, anchor, n)`: bounded loop around the existing `nextAbsoluteOccurrence`, advancing anchor each call, stopping at `n` results or on `null`. Same file, no new imports. (S)
 
-**A2.** `src/database/services-sqlite/recurring-transaction-service.ts` — add `listActiveRecurringRules(anchor = new Date())`:
+**A2.** `src/database/services/recurring-transaction-service.ts` — add `listActiveRecurringRules(anchor = new Date())`:
 - Base query: `SELECT * FROM recurring_transactions WHERE disabled = 0` — same predicate `synchronizeAllRecurringTransactions` already uses.
 - Reuse the file's existing private `parseTemplate` / `parseTimeRange` / `parseRules` helpers.
-- Batch-join `accounts` and `categories` for currency/name/icon, same `IN (...)` placeholder pattern `stats-service.ts` already uses.
+- Batch-join `accounts` and `categories` for currency/name/icon using Drizzle queries.
 - Per rule: `nextOccurrence` via `nextAbsoluteOccurrence`; `monthlyEquivalent` = amount × an approximate frequency multiplier read off the parsed RRule (`DAILY ×30.44`, `WEEKLY ×4.345`, biweekly `×2.17`, `MONTHLY ×1`, `YEARLY ÷12`) — add this multiplier helper to `recurrence.ts` alongside A1, marked with a `ponytail:` comment naming it as a deliberate approximation, not calendar-exact projection.
 - Return sorted by `nextOccurrence` ascending.
 (M)
 
 **A3.** `src/components/stats/dashboard/recurring-card.tsx` — new half-width `StatCard` (`icon="repeat-outline"`). Body: `stats.expenseBySubtype.recurring` vs `.oneTime` as a compact 2-segment ratio bar — copy `TopCategoriesCard`'s track/fill pattern (`src/components/stats/dashboard/top-categories-card.tsx`). Zero new data — pure props from the already-fetched `CurrencyStats`, matching every other card's "no self-fetch" rule. (S)
 
-**A4.** `src/app/stats/recurring.tsx` — new detail screen, mirrors `src/app/stats/wrapped.tsx`'s `WrappedContent` shape exactly: local `useState<ActiveRecurringRule[]>`, fetch in a `useEffect` with a `fetchIdRef` race guard, `useDebouncedCallback` (`src/hooks/use-debounced-callback.ts`), subscribe to `on("recurring_transactions:dirty", refetch)` from `~/database/events` — NOT keyed on `dateRange`, since active rules aren't period-scoped (unlike Wrapped). Layout:
+**A4.** `src/app/stats/recurring.tsx` — new detail screen, mirrors `src/app/stats/wrapped.tsx`'s `WrappedContent` shape exactly: local `useState<ActiveRecurringRule[]>`, fetch in a `useEffect` with a `fetchIdRef` race guard, `useDebouncedCallback` (`src/hooks/use-debounced-callback.ts`), and refresh from the Drizzle live-query signal. Layout:
 - Top: `expenseBySubtype` recurring-vs-one-time bar (from the shell's `stats`, free) — same visual language as A3.
 - Below: plain row list of active rules (title, category icon, next-due date, monthly-equivalent amount) — plain `View`/`Text`/`Money` rows like `ByAccountList` in `src/app/stats/net-worth.tsx`, no new list component.
 - Empty state: no active rules → `Text variant="muted"`, no bespoke empty-state component needed.
@@ -35,9 +35,9 @@ Two Stats dashboard cards remain dimmed `soon` placeholders (`src/app/(tabs)/sta
 
 ## Part B — Spending Map
 
-**B1.** `src/database/services-sqlite/stats-service.ts` — add a `locationSummary: { pinCount: number; topAddress: string | null } | null` field to `CurrencyStats`, computed by a small parallel query added to `fetchAllStatsData`'s existing `Promise.all` (same tier as `fetchPendingSummary`). Does not touch `fetchStatsTransactions`/`StatsRawRow` — the shared hot path stays untouched. (S)
+**B1.** `src/database/services/stats-service.ts` — add a `locationSummary: { pinCount: number; topAddress: string | null } | null` field to `CurrencyStats`, computed by a small parallel query added to `fetchAllStatsData`'s existing `Promise.all` (same tier as `fetchPendingSummary`). Does not touch `fetchStatsTransactions`/`StatsRawRow` — the shared hot path stays untouched. (S)
 
-**B2.** `src/database/services-sqlite/stats-service.ts` — add `fetchSpendingMapData(range)`, structurally identical to `fetchWrappedInsights`: own SQL query (`location IS NOT NULL`, plus the standard deleted/pending/transfer filters), own return type `SpendingMapData[]` (one per currency, each with parsed pins: `{ latitude, longitude, address, amount, title, date }[]`). Inline `try/catch JSON.parse` for the `location` column at this single call site (matches the existing precedent of no shared parse helper for what's currently only 1-2 call sites). (M)
+**B2.** `src/database/services/stats-service.ts` — add `fetchSpendingMapData(range)`, structurally identical to `fetchWrappedInsights`: own Drizzle query (`location IS NOT NULL`, plus the standard deleted/pending/transfer filters), own return type `SpendingMapData[]` (one per currency, each with parsed pins: `{ latitude, longitude, address, amount, title, date }[]`). Inline `try/catch JSON.parse` for the `location` column at this single call site (matches the existing precedent of no shared parse helper for what's currently only 1-2 call sites). (M)
 
 **B3.** `src/components/stats/spending-map-webview.tsx` — new. Extend `form-location-picker.tsx`'s HTML-builder pattern (not `location-picker-modal.tsx` — that one's a single-pin picker, wrong shape). New `buildMultiPinHtml(pins, primaryColor)`: same Leaflet/OSM `<script>`/`<style>` skeleton, loop `L.marker(...).bindPopup(...)` per pin, re-enable `zoomControl`/`dragging`/`scrollWheelZoom` (the form preview explicitly disables these), `map.fitBounds()` over all pins instead of a fixed center. Cap rendered pins at ~200 for WebView responsiveness, marked with a `ponytail:` comment (ceiling + upgrade path: real clustering if reports of slowness come in) rather than building pagination now. (M)
 
@@ -61,6 +61,6 @@ A1 → A2 → A3 → A4 → A5 (Recurring end-to-end first, it's the smaller/sel
 
 1. `pnpm types` → `pnpm lint` → `pnpm check-i18n-keys` after each part.
 2. `pnpm android` manual pass:
-   - Recurring card shows the recurring/one-time ratio and opens the detail screen; detail screen lists active rules with correct next-due dates and monthly-equivalent amounts; disabling a rule (via the existing edit/delete-recurring modals elsewhere in the app) removes it from the list without a manual refresh (via the `recurring_transactions:dirty` subscription).
+   - Recurring card shows the recurring/one-time ratio and opens the detail screen; detail screen lists active rules with correct next-due dates and monthly-equivalent amounts; disabling a rule (via the existing edit/delete-recurring modals elsewhere in the app) removes it from the list without a manual refresh.
    - Spending Map card shows pin count + top address (or the right empty affordance if location tracking is off); detail screen renders pins on the Leaflet map, fits bounds correctly, and the "top locations" list matches what's plotted; toggling location tracking off in Settings and back navigates correctly to/from the CTA.
    - Both new routes appear correctly in `_layout.tsx`'s stack (back navigation, header title from i18n).

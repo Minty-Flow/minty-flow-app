@@ -4,7 +4,7 @@ import { AppState } from "react-native"
 import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
 import { hydrateTransactions } from "~/database/mappers/hydrateTransactions"
 import { getPendingTransactions } from "~/database/repos/transaction-repo"
-import { confirmTransaction } from "~/database/services-sqlite/transaction-service"
+import { confirmTransaction } from "~/database/services/transaction-service"
 import { logger } from "~/utils/logger"
 
 /**

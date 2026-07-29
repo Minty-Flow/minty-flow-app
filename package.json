@@ -1,7 +1,7 @@
 {
   "name": "minty-flow-app",
   "main": "index.ts",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "scripts": {
     "android": "expo run:android",
     "android:emu": "expo run:android --device Pixel_9_Pro",
@@ -25,7 +25,9 @@
     "@expo/ui": "~57.0.7",
     "@hookform/resolvers": "^5.4.0",
     "@shopify/react-native-skia": "^2.6.2",
+    "babel-plugin-inline-import": "^3.0.0",
     "date-fns": "^4.3.0",
+    "drizzle-orm": "^0.45.2",
     "expo": "^57.0.7",
     "expo-blur": "~57.0.2",
     "expo-build-properties": "^57.0.6",
@@ -86,6 +88,8 @@
     "@types/node": "^25.9.1",
     "@types/react": "~19.2.15",
     "babel-preset-expo": "~57.0.3",
+    "drizzle-kit": "^0.31.10",
+    "expo-drizzle-studio-plugin": "^0.2.1",
     "husky": "^9.1.7",
     "typescript": "^6.0.3"
   },

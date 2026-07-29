@@ -5,7 +5,7 @@
 
 import { addDays, endOfMonth, startOfMonth } from "date-fns"
 
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
+import type { TransactionWithRelations } from "~/stores/db/transaction.store"
 import {
   TransferLayoutEnum,
   type TransferLayoutType,
