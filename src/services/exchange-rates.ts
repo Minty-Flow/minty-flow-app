@@ -353,8 +353,8 @@ class ExchangeRatesService {
     }
 
     const errorMessage = `Exchange rate not found for ${fromCurrency} to ${toCurrency}. Please try again or set a custom rate in Settings.`
-    this.showToast("screens.settings.exchangeRates.errors.rateNotFound")
-    logger.error("Exchange rate not found", {
+    this.showToast("screens.settings.exchangeRates.errors.rateNotFound", "warn")
+    logger.warn("Exchange rate not found", {
       fromCurrency,
       toCurrency,
       error: errorMessage,

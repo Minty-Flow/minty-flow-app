@@ -5,31 +5,39 @@ import {
   RouteLoadingState,
   RouteNotFoundState,
 } from "~/components/route-load-state"
-import { useGoalsQuery } from "~/database/drizzle/hooks/use-goals-query"
-import { useActiveAccounts } from "~/stores/db/account.store"
+import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
+import { useGoalsQuery } from "~/database/drizzle/read-models/goal-read-model"
+import { useModifyRouteLoader } from "~/hooks/use-modify-route-loader"
 import { NewEnum } from "~/types/new"
 
 export default function GoalModifyScreen() {
   const params = useLocalSearchParams<{ goalId: string }>()
   const goalId = params.goalId ?? NewEnum.NEW
-  const isAddMode = goalId === NewEnum.NEW || !goalId
 
   const goalsQuery = useGoalsQuery()
-  const goal = goalsQuery.data.find((item) => item.id === goalId)
+  const loadState = useModifyRouteLoader({
+    id: goalId,
+    data: goalsQuery.data,
+    updatedAt: goalsQuery.updatedAt,
+    find: (item, id) => item.id === id,
+    notFoundMessage: "Goal not found.",
+  })
   const accounts = useActiveAccounts()
 
-  if (isAddMode) {
+  if (loadState.mode === "new") {
     return <GoalModifyContent goalModifyId={NewEnum.NEW} accounts={accounts} />
   }
 
-  if (goalsQuery.updatedAt === undefined) return <RouteLoadingState />
-  if (!goal) return <RouteNotFoundState message="Goal not found." />
+  if (loadState.mode === "loading") return <RouteLoadingState />
+  if (loadState.mode === "not-found") {
+    return <RouteNotFoundState message={loadState.message} />
+  }
 
   return (
     <GoalModifyContent
       key={goalId}
       goalModifyId={goalId}
-      goal={goal}
+      goal={loadState.entity}
       accounts={accounts}
     />
   )

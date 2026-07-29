@@ -6,7 +6,7 @@ import { StyleSheet } from "react-native-unistyles"
 import { GoalCard } from "~/components/goals/goal-card"
 import { EmptyState } from "~/components/ui/empty-state"
 import { View } from "~/components/ui/view"
-import { useArchivedGoals } from "~/stores/db/goal.store"
+import { useArchivedGoals } from "~/database/drizzle/read-models/goal-read-model"
 import type { Goal } from "~/types/goals"
 export default function ArchivedGoalsScreen() {
   const goals = useArchivedGoals()

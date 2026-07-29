@@ -8,7 +8,7 @@ import { IconSvg } from "~/components/icons"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Pressable } from "~/components/ui/pressable"
 import { View } from "~/components/ui/view"
-import { useAllBudgets } from "~/stores/db/budget.store"
+import { useAllBudgets } from "~/database/drizzle/read-models/budget-read-model"
 import type { Budget } from "~/types/budgets"
 import { NewEnum } from "~/types/new"
 export default function BudgetsScreen() {

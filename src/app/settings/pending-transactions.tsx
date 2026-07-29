@@ -12,13 +12,13 @@ import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { View } from "~/components/ui/view"
-import { getMonthRange } from "~/database/services/account-service"
-import { useCategoriesByType } from "~/stores/db/category.store"
-import { useTags } from "~/stores/db/tag.store"
+import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
+import { useTags } from "~/database/drizzle/read-models/tag-read-model"
 import {
   type TransactionWithRelations,
   useTransactions,
-} from "~/stores/db/transaction.store"
+} from "~/database/drizzle/read-models/transaction-read-model"
+import { getMonthRange } from "~/database/services/account-service"
 import type {
   SearchState,
   TransactionListFilterState,
@@ -93,7 +93,9 @@ export default function PendingTransactionsScreen() {
       onPress={() => router.push(`/transaction/${item.id}`)}
       onDelete={handleDeleteDone}
       onWillOpen={(methods) => {
-        openSwipeableRef.current?.close()
+        if (openSwipeableRef.current !== methods) {
+          openSwipeableRef.current?.close()
+        }
         openSwipeableRef.current = methods
       }}
     />

@@ -246,7 +246,7 @@ export async function applyRecurringEditScope({
   payload: RecurringEditPayload
 }): Promise<void> {
   const { detachFromRule, updateFutureRecurringInstances, updateTransaction } =
-    await import("./transaction-service")
+    await import("./ledger-service")
 
   if (scope === "this") {
     await detachFromRule(transactionId)
@@ -280,7 +280,7 @@ export async function applyRecurringDeleteScope({
     deleteAllRecurringInstances,
     deleteFutureRecurringInstances,
     deleteTransaction,
-  } = await import("./transaction-service")
+  } = await import("./ledger-service")
 
   switch (scope) {
     case "this":
@@ -470,7 +470,7 @@ async function synchronizeRecurringTransaction(
           isPending,
         }
 
-        const { createTransaction } = await import("./transaction-service")
+        const { createTransaction } = await import("./ledger-service")
 
         await createTransaction(txData)
       } else {
@@ -480,7 +480,7 @@ async function synchronizeRecurringTransaction(
           throw new Error("Recurring transfer missing transferToAccountId")
         }
 
-        const { createTransfer } = await import("./transfer-service")
+        const { createTransfer } = await import("./ledger-service")
 
         await createTransfer(
           {

@@ -14,17 +14,17 @@ import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { View } from "~/components/ui/view"
+import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
+import { useTags } from "~/database/drizzle/read-models/tag-read-model"
+import {
+  type TransactionWithRelations,
+  useTransactions,
+} from "~/database/drizzle/read-models/transaction-read-model"
 import { getMonthRange } from "~/database/services/account-service"
 import {
   destroyTransaction,
   restoreTransaction,
-} from "~/database/services/transaction-service"
-import { useCategoriesByType } from "~/stores/db/category.store"
-import { useTags } from "~/stores/db/tag.store"
-import {
-  type TransactionWithRelations,
-  useTransactions,
-} from "~/stores/db/transaction.store"
+} from "~/database/services/ledger-service"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import type {
   SearchState,
@@ -149,7 +149,9 @@ export default function TrashScreen() {
       onDelete={() => setPendingDestroyItem(item)}
       onRestore={handleRestore(item)}
       onWillOpen={(methods) => {
-        openSwipeableRef.current?.close()
+        if (openSwipeableRef.current !== methods) {
+          openSwipeableRef.current?.close()
+        }
         openSwipeableRef.current = methods
       }}
       rightActionAccessibilityLabel={t(

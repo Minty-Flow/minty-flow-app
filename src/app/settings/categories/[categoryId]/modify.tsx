@@ -5,7 +5,8 @@ import {
   RouteLoadingState,
   RouteNotFoundState,
 } from "~/components/route-load-state"
-import { useCategoriesQuery } from "~/database/drizzle/hooks/use-categories-query"
+import { useCategoriesQuery } from "~/database/drizzle/read-models/category-read-model"
+import { useModifyRouteLoader } from "~/hooks/use-modify-route-loader"
 import { NewEnum } from "~/types/new"
 import type { TransactionType } from "~/types/transactions"
 
@@ -15,13 +16,16 @@ export default function EditCategoryScreen() {
     initialType: TransactionType
   }>()
 
-  const isAddMode = params.categoryId === NewEnum.NEW || !params.categoryId
   const categoriesQuery = useCategoriesQuery()
-  const category = categoriesQuery.data.find(
-    (item) => item.id === params.categoryId,
-  )
+  const loadState = useModifyRouteLoader({
+    id: params.categoryId,
+    data: categoriesQuery.data,
+    updatedAt: categoriesQuery.updatedAt,
+    find: (item, id) => item.id === id,
+    notFoundMessage: "Category not found.",
+  })
 
-  if (isAddMode) {
+  if (loadState.mode === "new") {
     return (
       <CategoryModifyContent
         categoryModifyId={params.categoryId || NewEnum.NEW}
@@ -30,14 +34,16 @@ export default function EditCategoryScreen() {
     )
   }
 
-  if (categoriesQuery.updatedAt === undefined) return <RouteLoadingState />
-  if (!category) return <RouteNotFoundState message="Category not found." />
+  if (loadState.mode === "loading") return <RouteLoadingState />
+  if (loadState.mode === "not-found") {
+    return <RouteNotFoundState message={loadState.message} />
+  }
 
   return (
     <CategoryModifyContent
       key={params.categoryId}
       categoryModifyId={params.categoryId}
-      category={category}
+      category={loadState.entity}
     />
   )
 }

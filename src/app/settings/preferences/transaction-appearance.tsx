@@ -9,7 +9,7 @@ import { ListItem } from "~/components/ui/list-item"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import type { TransactionWithRelations } from "~/stores/db/transaction.store"
+import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
 import { useTransactionItemAppearanceStore } from "~/stores/transaction-item-appearance.store"
 
 // ─── Mock data for preview ────────────────────────────────────────────────────

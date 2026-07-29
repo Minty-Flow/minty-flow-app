@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-07-29T17:00:32.331Z
+Generated on: 2026-07-29T23:08:09.338Z
 ```
 ./
 ├── .github/
@@ -383,16 +383,22 @@ Generated on: 2026-07-29T17:00:32.331Z
 │   ├── contexts/
 │   │   └── scroll-into-view-context.tsx
 │   ├── database/
+│   │   ├── backup/
+│   │   │   ├── backup-format.ts
+│   │   │   └── backup-import-plan.ts
 │   │   ├── drizzle/
 │   │   │   ├── hooks/
-│   │   │   │   ├── use-accounts-query.ts
-│   │   │   │   ├── use-budgets-query.ts
-│   │   │   │   ├── use-categories-query.ts
-│   │   │   │   ├── use-database-change-signal.ts
-│   │   │   │   ├── use-goals-query.ts
-│   │   │   │   ├── use-loans-query.ts
-│   │   │   │   ├── use-tags-query.ts
-│   │   │   │   └── use-transactions-query.ts
+│   │   │   ├── read-models/
+│   │   │   │   ├── account-read-model.ts
+│   │   │   │   ├── budget-read-model.ts
+│   │   │   │   ├── category-read-model.ts
+│   │   │   │   ├── entity-read-model.ts
+│   │   │   │   ├── goal-read-model.ts
+│   │   │   │   ├── loan-read-model.ts
+│   │   │   │   ├── stats-data.ts
+│   │   │   │   ├── stats-read-model.ts
+│   │   │   │   ├── tag-read-model.ts
+│   │   │   │   └── transaction-read-model.ts
 │   │   │   ├── db.ts
 │   │   │   └── schema.ts
 │   │   ├── mappers/
@@ -400,15 +406,10 @@ Generated on: 2026-07-29T17:00:32.331Z
 │   │   │   ├── budget.mapper.ts
 │   │   │   ├── category.mapper.ts
 │   │   │   ├── goal.mapper.ts
-│   │   │   ├── hydrateTransactions.ts
 │   │   │   ├── loan.mapper.ts
 │   │   │   ├── tag.mapper.ts
 │   │   │   └── transaction.mapper.ts
 │   │   ├── repos/
-│   │   │   ├── account-repo.ts
-│   │   │   ├── category-repo.ts
-│   │   │   ├── transaction-repo.ts
-│   │   │   └── transaction-tag-repo.ts
 │   │   ├── services/
 │   │   │   ├── account-service.ts
 │   │   │   ├── balance-service.ts
@@ -416,12 +417,10 @@ Generated on: 2026-07-29T17:00:32.331Z
 │   │   │   ├── category-service.ts
 │   │   │   ├── data-management-service.ts
 │   │   │   ├── goal-service.ts
+│   │   │   ├── ledger-service.ts
 │   │   │   ├── loan-service.ts
 │   │   │   ├── recurring-transaction-service.ts
-│   │   │   ├── stats-service.ts
-│   │   │   ├── tag-service.ts
-│   │   │   ├── transaction-service.ts
-│   │   │   └── transfer-service.ts
+│   │   │   └── tag-service.ts
 │   │   ├── types/
 │   │   │   └── rows.ts
 │   │   ├── utils/
@@ -439,6 +438,7 @@ Generated on: 2026-07-29T17:00:32.331Z
 │   │   ├── use-debounced-callback.ts
 │   │   ├── use-import-recovery.ts
 │   │   ├── use-location-permission-status.ts
+│   │   ├── use-modify-route-loader.ts
 │   │   ├── use-navigation-guard.ts
 │   │   ├── use-notification-permission-status.ts
 │   │   ├── use-notification-sync.ts
@@ -447,7 +447,6 @@ Generated on: 2026-07-29T17:00:32.331Z
 │   │   ├── use-retention-cleanup.ts
 │   │   ├── use-scroll-into-view.ts
 │   │   ├── use-shake-listener.ts
-│   │   ├── use-stats.ts
 │   │   └── use-time-reactivity.ts
 │   ├── i18n/
 │   │   ├── translation/
@@ -470,13 +469,6 @@ Generated on: 2026-07-29T17:00:32.331Z
 │   │   └── pending-transaction-notifications.ts
 │   ├── stores/
 │   │   ├── db/
-│   │   │   ├── account.store.ts
-│   │   │   ├── budget.store.ts
-│   │   │   ├── category.store.ts
-│   │   │   ├── goal.store.ts
-│   │   │   ├── loan.store.ts
-│   │   │   ├── tag.store.ts
-│   │   │   └── transaction.store.ts
 │   │   ├── android-sound.store.ts
 │   │   ├── app-lock.store.ts
 │   │   ├── bill-splitter.store.ts

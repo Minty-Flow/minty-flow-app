@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
@@ -10,14 +9,12 @@ import { StatsDetailShell } from "~/components/stats/stats-detail-shell"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useDatabaseChangeSignal } from "~/database/drizzle/hooks/use-database-change-signal"
-import { fetchWrappedInsights } from "~/database/services/stats-service"
+import { useWrappedInsights } from "~/database/drizzle/read-models/stats-read-model"
 import type {
   CurrencyStats,
   StatsDateRange,
   WrappedInsights,
 } from "~/types/stats"
-import { logger } from "~/utils/logger"
 import { formatNumber } from "~/utils/number-format"
 
 function CategoryTrendCard({
@@ -77,29 +74,8 @@ function WrappedContent({
   dateRange: StatsDateRange
 }) {
   const { t } = useTranslation()
-  const [insights, setInsights] = useState<WrappedInsights[]>([])
-  const [isInsightsLoading, setIsInsightsLoading] = useState(true)
-  const fetchIdRef = useRef(0)
-  const dbChangeSignal = useDatabaseChangeSignal()
-  const fetchInsights = useCallback((range: StatsDateRange) => {
-    const fetchId = ++fetchIdRef.current
-    fetchWrappedInsights(range)
-      .then((result) => {
-        if (fetchIdRef.current === fetchId) setInsights(result)
-      })
-      .catch((error) => logger.error("wrapped insights fetch failed", error))
-      .finally(() => {
-        if (fetchIdRef.current === fetchId) setIsInsightsLoading(false)
-      })
-  }, [])
-  useEffect(() => {
-    void dbChangeSignal
-    setIsInsightsLoading(true)
-    fetchInsights(dateRange)
-    return () => {
-      fetchIdRef.current++
-    }
-  }, [dateRange, dbChangeSignal, fetchInsights])
+  const { insights, isLoading: isInsightsLoading } =
+    useWrappedInsights(dateRange)
   const insight = insights.find((i) => i.currency === stats.currency)
   const hasRhythm = stats.spendingByDayOfWeek.some((day) => day.avgExpense > 0)
   const hasAnyInsight = Boolean(

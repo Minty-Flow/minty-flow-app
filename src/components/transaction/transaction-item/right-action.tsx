@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next"
+import { TouchableOpacity } from "react-native-gesture-handler"
 import Animated, {
   interpolate,
   type SharedValue,
@@ -7,14 +8,11 @@ import Animated, {
 import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
-import { Pressable } from "~/components/ui/pressable"
-import { View } from "~/components/ui/view"
 
-const TRASH_ACTION_WIDTH = 100
+const TRASH_ACTION_WIDTH = 128
 
 type RightActionProps = {
   progress: SharedValue<number>
-  translation: SharedValue<number>
   onTrashPress: () => void
   accessibilityLabel?: string
 }
@@ -39,36 +37,32 @@ export const RightAction = ({
   })
 
   return (
-    <View style={rightActionStyles.container}>
-      <Pressable
-        style={rightActionStyles.pressable}
-        onPress={onTrashPress}
-        accessibilityLabel={accessibilityLabel}
-      >
-        <Animated.View style={iconStyle}>
-          <IconSvg
-            name="trash-outline"
-            size={24}
-            color={rightActionStyles.trashIcon.color}
-          />
-        </Animated.View>
-      </Pressable>
-    </View>
+    <TouchableOpacity
+      style={rightActionStyles.container}
+      onPress={onTrashPress}
+      activeOpacity={1}
+      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+    >
+      <Animated.View style={iconStyle}>
+        <IconSvg
+          name="trash-outline"
+          size={24}
+          color={rightActionStyles.trashIcon.color}
+        />
+      </Animated.View>
+    </TouchableOpacity>
   )
 }
 
 const rightActionStyles = StyleSheet.create((theme) => ({
   container: {
     width: TRASH_ACTION_WIDTH,
+    height: "100%",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: theme.colors.error,
-  },
-  pressable: {
-    flex: 1,
-    width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
   },
   trashIcon: {
     color: theme.colors.onError,

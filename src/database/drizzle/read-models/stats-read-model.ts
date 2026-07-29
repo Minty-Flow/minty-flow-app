@@ -1,9 +1,19 @@
 import { addWeeks } from "date-fns"
+import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { useDatabaseChangeSignal } from "~/database/drizzle/hooks/use-database-change-signal"
-import { fetchAllStatsData } from "~/database/services/stats-service"
-import { useAccounts } from "~/stores/db/account.store"
+import { drizzleDb } from "~/database/drizzle/db"
+import { useAccounts } from "~/database/drizzle/read-models/account-read-model"
+import {
+  fetchAllStatsData,
+  fetchWrappedInsights,
+} from "~/database/drizzle/read-models/stats-data"
+import {
+  accounts,
+  categories,
+  tags,
+  transactions,
+} from "~/database/drizzle/schema"
 import { useWeekStartStore } from "~/stores/week-start.store"
 import type { Account } from "~/types/accounts"
 import type {
@@ -11,19 +21,23 @@ import type {
   StatsDateRange,
   StatsDateRangePreset,
   StatsSupplement,
+  WrappedInsights,
 } from "~/types/stats"
 import { getWeekStartsOn } from "~/utils/get-week-start-on"
+import { logger } from "~/utils/logger"
 import {
   buildMonthRange,
   buildStatsDateRange,
   navigateRange,
 } from "~/utils/stats-date-range"
 import type { DateRangePresetId } from "~/utils/time-utils"
+
 export interface UseStatsInit {
   preset?: DateRangePresetId
   from?: Date
   to?: Date
 }
+
 interface UseStatsReturn {
   byCurrency: CurrencyStats[]
   supplementByCurrency: StatsSupplement[]
@@ -38,6 +52,40 @@ interface UseStatsReturn {
   navigate: (direction: "prev" | "next") => void
   refetch: () => Promise<void>
 }
+
+export interface UseWrappedInsightsReturn {
+  insights: WrappedInsights[]
+  isLoading: boolean
+}
+
+function useStatsDatabaseChangeSignal(): string {
+  const tx = useLiveQuery(
+    drizzleDb
+      .select({ id: transactions.id, updatedAt: transactions.updatedAt })
+      .from(transactions),
+  )
+  const account = useLiveQuery(
+    drizzleDb
+      .select({ id: accounts.id, updatedAt: accounts.updatedAt })
+      .from(accounts),
+  )
+  const category = useLiveQuery(
+    drizzleDb
+      .select({ id: categories.id, updatedAt: categories.updatedAt })
+      .from(categories),
+  )
+  const tag = useLiveQuery(
+    drizzleDb.select({ id: tags.id, updatedAt: tags.updatedAt }).from(tags),
+  )
+
+  return [
+    tx.updatedAt?.getTime() ?? 0,
+    account.updatedAt?.getTime() ?? 0,
+    category.updatedAt?.getTime() ?? 0,
+    tag.updatedAt?.getTime() ?? 0,
+  ].join(":")
+}
+
 function computeSupplements(accounts: Account[]): StatsSupplement[] {
   const currencySet = new Set(accounts.map((a) => a.currencyCode))
   const supplements: StatsSupplement[] = []
@@ -60,6 +108,7 @@ function computeSupplements(accounts: Account[]): StatsSupplement[] {
   }
   return supplements
 }
+
 function buildInitialState(init?: UseStatsInit): {
   preset: DateRangePresetId
   range: StatsDateRange
@@ -81,6 +130,7 @@ function buildInitialState(init?: UseStatsInit): {
   }
   return { preset, range: buildStatsDateRange(preset) }
 }
+
 export function useStats(init?: UseStatsInit): UseStatsReturn {
   const [activeYear, setActiveYear] = useState(() =>
     (init?.from ?? new Date()).getFullYear(),
@@ -103,7 +153,7 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
   const fetchIdRef = useRef(0)
   const activeFetchCountRef = useRef(0)
   const accounts = useAccounts()
-  const dbChangeSignal = useDatabaseChangeSignal()
+  const dbChangeSignal = useStatsDatabaseChangeSignal()
   const supplementByCurrency = computeSupplements(accounts)
   const _weekStart = useWeekStartStore((s) => s.weekStart)
   const weekStartsOn = getWeekStartsOn()
@@ -124,7 +174,6 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
     const fetchId = ++fetchIdRef.current
     activeFetchCountRef.current++
 
-    // Move what was in `finally` into a small helper so we don't repeat ourselves
     const finalizeFetch = () => {
       activeFetchCountRef.current = Math.max(0, activeFetchCountRef.current - 1)
       setIsLoading(activeFetchCountRef.current > 0)
@@ -132,14 +181,10 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
 
     try {
       const stats = await fetchAllStatsData(range)
-
-      // Cleanup for the success path
       finalizeFetch()
-
       if (fetchIdRef.current !== fetchId) return
       setByCurrency(stats)
     } catch (error) {
-      // Cleanup for the error path
       finalizeFetch()
       throw error
     }
@@ -172,9 +217,6 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
         ? source
         : "custom"
     setActivePreset(source ?? "custom")
-    // `byMonth` must route through `buildMonthRange` exactly as
-    // `buildInitialState` does, or the tab and the detail screen it opens
-    // disagree on interval and previous-period for the same month.
     if (source === "byMonth") {
       setRange(buildMonthRange(from.getFullYear(), from.getMonth()))
     } else if (mappedPreset === "thisWeek") {
@@ -220,4 +262,32 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
     navigate,
     refetch,
   }
+}
+
+export function useWrappedInsights(
+  dateRange: StatsDateRange,
+): UseWrappedInsightsReturn {
+  const [insights, setInsights] = useState<WrappedInsights[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const fetchIdRef = useRef(0)
+  const dbChangeSignal = useStatsDatabaseChangeSignal()
+
+  useEffect(() => {
+    void dbChangeSignal
+    const fetchId = ++fetchIdRef.current
+    setIsLoading(true)
+    fetchWrappedInsights(dateRange)
+      .then((result) => {
+        if (fetchIdRef.current === fetchId) setInsights(result)
+      })
+      .catch((error) => logger.error("wrapped insights fetch failed", error))
+      .finally(() => {
+        if (fetchIdRef.current === fetchId) setIsLoading(false)
+      })
+    return () => {
+      fetchIdRef.current++
+    }
+  }, [dateRange, dbChangeSignal])
+
+  return { insights, isLoading }
 }

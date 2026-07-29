@@ -18,12 +18,13 @@ import { TypeTabs } from "~/components/tag/type-tabs"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
-import { useTagsQuery } from "~/database/drizzle/hooks/use-tags-query"
+import { useTagsQuery } from "~/database/drizzle/read-models/tag-read-model"
 import {
   createTag,
   deleteTagById,
   updateTagById,
 } from "~/database/services/tag-service"
+import { useModifyRouteLoader } from "~/hooks/use-modify-route-loader"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import { type AddTagsFormSchema, addTagsSchema } from "~/schemas/tags.schema"
 import { getThemeStrict } from "~/styles/theme/registry"
@@ -178,14 +179,23 @@ export default function EditTagScreen() {
     tagId: string
   }>()
   const tagsQuery = useTagsQuery()
-  const tag = tagsQuery.data.find((item) => item.id === tagId)
-  if (tagId === NewEnum.NEW || !tagId) {
+  const loadState = useModifyRouteLoader({
+    id: tagId,
+    data: tagsQuery.data,
+    updatedAt: tagsQuery.updatedAt,
+    find: (item, id) => item.id === id,
+    notFoundMessage: "Tag not found.",
+  })
+
+  if (loadState.mode === "new") {
     return <EditTagScreenInner tagId={NewEnum.NEW} />
   }
-  if (tagsQuery.updatedAt === undefined) return <RouteLoadingState />
-  if (!tag) return <RouteNotFoundState message="Tag not found." />
+  if (loadState.mode === "loading") return <RouteLoadingState />
+  if (loadState.mode === "not-found") {
+    return <RouteNotFoundState message={loadState.message} />
+  }
 
-  return <EditTagScreenInner key={tagId} tagId={tagId} tag={tag} />
+  return <EditTagScreenInner key={tagId} tagId={tagId} tag={loadState.entity} />
 }
 const styles = StyleSheet.create((theme) => ({
   container: {

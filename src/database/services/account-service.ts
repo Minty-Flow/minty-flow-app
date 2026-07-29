@@ -235,7 +235,7 @@ export async function updateAccount(
 
   // Balance adjustment via compensating transaction (runs after outer tx commits)
   if (balanceAdjustment) {
-    const { createTransaction } = await import("./transaction-service")
+    const { createTransaction } = await import("./ledger-service")
     await createTransaction({
       amount: balanceAdjustment.amount,
       type: balanceAdjustment.type,

@@ -10,7 +10,7 @@ import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Pressable } from "~/components/ui/pressable"
 import { View } from "~/components/ui/view"
-import { useAllGoals } from "~/stores/db/goal.store"
+import { useAllGoals } from "~/database/drizzle/read-models/goal-read-model"
 import type { Goal } from "~/types/goals"
 import { NewEnum } from "~/types/new"
 export default function GoalsScreen() {

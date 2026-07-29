@@ -1,4 +1,4 @@
-import type { TransactionWithRelations } from "~/stores/db/transaction.store"
+import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
 import type { Budget } from "~/types/budgets"
 import type { Goal } from "~/types/goals"
 import type { Loan } from "~/types/loans"

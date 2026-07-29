@@ -6,8 +6,9 @@ import {
   RouteLoadingState,
   RouteNotFoundState,
 } from "~/components/route-load-state"
-import { useAccountsQuery } from "~/database/drizzle/hooks/use-accounts-query"
+import { useAccountsQuery } from "~/database/drizzle/read-models/account-read-model"
 import { getAccountTransactionCount } from "~/database/services/account-service"
+import { useModifyRouteLoader } from "~/hooks/use-modify-route-loader"
 import { NewEnum } from "~/types/new"
 
 export default function EditAccountScreen() {
@@ -16,7 +17,13 @@ export default function EditAccountScreen() {
   const isAddMode = accountId === NewEnum.NEW || !accountId
 
   const accountsQuery = useAccountsQuery()
-  const account = accountsQuery.data.find((item) => item.id === accountId)
+  const loadState = useModifyRouteLoader({
+    id: accountId,
+    data: accountsQuery.data,
+    updatedAt: accountsQuery.updatedAt,
+    find: (item, id) => item.id === id,
+    notFoundMessage: "Account not found.",
+  })
   const [transactionCount, setTransactionCount] = useState(0)
 
   useEffect(() => {
@@ -24,18 +31,20 @@ export default function EditAccountScreen() {
     getAccountTransactionCount(accountId).then(setTransactionCount)
   }, [accountId, isAddMode])
 
-  if (isAddMode) {
+  if (loadState.mode === "new") {
     return <AccountModifyContent accountId={NewEnum.NEW} />
   }
 
-  if (accountsQuery.updatedAt === undefined) return <RouteLoadingState />
-  if (!account) return <RouteNotFoundState message="Account not found." />
+  if (loadState.mode === "loading") return <RouteLoadingState />
+  if (loadState.mode === "not-found") {
+    return <RouteNotFoundState message={loadState.message} />
+  }
 
   return (
     <AccountModifyContent
       key={accountId}
       accountId={accountId}
-      account={account}
+      account={loadState.entity}
       transactionCount={transactionCount}
     />
   )
