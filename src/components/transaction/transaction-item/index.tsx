@@ -9,10 +9,10 @@ import { useUnistyles } from "react-native-unistyles"
 import { IconSvg } from "~/components/icons"
 import { Pressable } from "~/components/ui/pressable"
 import { View } from "~/components/ui/view"
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
-import { deleteTransaction } from "~/database/services-sqlite/transaction-service"
-import { deleteTransfer } from "~/database/services-sqlite/transfer-service"
+import { deleteTransaction } from "~/database/services/transaction-service"
+import { deleteTransfer } from "~/database/services/transfer-service"
 import { useIsConfirmable } from "~/hooks/use-time-reactivity"
+import type { TransactionWithRelations } from "~/stores/db/transaction.store"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { useTransactionItemAppearanceStore } from "~/stores/transaction-item-appearance.store"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
@@ -39,7 +39,7 @@ interface TransactionItemProps {
   /** If provided and returns true, parent handles delete (e.g. shows recurring modal); item will not delete and only close swipe. */
   onBeforeDelete?: (row: TransactionWithRelations) => boolean | Promise<boolean>
   /** Left-swipe restore action. Only shown when the transaction is already deleted (trash). */
-  onRestore?: () => void
+  onRestore?: () => void | Promise<void>
   onConfirm?: () => void
   onWillOpen?: (methods: SwipeableMethods) => void
   rightActionAccessibilityLabel?: string
@@ -161,9 +161,9 @@ export const TransactionItem = ({
   const subtitleText = `${accountLabel}${categorySegment}${timeSegment}`
   const showRecurringBadge = isUpcoming && isAutoRecurring
   const showPendingBadge = isUpcoming && !isAutoRecurring
-  const handleRestorePress = (closeSwipe: () => void) => {
+  const handleRestorePress = async (closeSwipe: () => void) => {
+    await Promise.resolve(onRestore?.())
     closeSwipe()
-    onRestore?.()
   }
   const renderLeftActions = (
     progress: SharedValue<number>,
@@ -175,7 +175,9 @@ export const TransactionItem = ({
     <LeftAction
       progress={progress}
       translation={translation}
-      onRestorePress={() => handleRestorePress(swipeableMethods.close)}
+      onRestorePress={() => {
+        void handleRestorePress(swipeableMethods.close)
+      }}
       accessibilityLabel={leftActionAccessibilityLabel}
     />
   )

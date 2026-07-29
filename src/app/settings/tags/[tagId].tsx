@@ -6,6 +6,10 @@ import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
 import type { IconSvgName } from "~/components/icons"
+import {
+  RouteLoadingState,
+  RouteNotFoundState,
+} from "~/components/route-load-state"
 import { ActionButtons } from "~/components/tag/action-buttons"
 import { DeleteSection } from "~/components/tag/delete-section"
 import { FormTagFields } from "~/components/tag/form-tag-fields"
@@ -14,14 +18,14 @@ import { TypeTabs } from "~/components/tag/type-tabs"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
+import { useTagsQuery } from "~/database/drizzle/hooks/use-tags-query"
 import {
   createTag,
   deleteTagById,
   updateTagById,
-} from "~/database/services-sqlite/tag-service"
+} from "~/database/services/tag-service"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import { type AddTagsFormSchema, addTagsSchema } from "~/schemas/tags.schema"
-import { useTag } from "~/stores/db/tag.store"
 import { getThemeStrict } from "~/styles/theme/registry"
 import { NewEnum } from "~/types/new"
 import { type Tag, TagKindEnum, type TagKindType } from "~/types/tags"
@@ -173,10 +177,14 @@ export default function EditTagScreen() {
   const { tagId } = useLocalSearchParams<{
     tagId: string
   }>()
-  const tag = useTag(tagId ?? "")
+  const tagsQuery = useTagsQuery()
+  const tag = tagsQuery.data.find((item) => item.id === tagId)
   if (tagId === NewEnum.NEW || !tagId) {
     return <EditTagScreenInner tagId={NewEnum.NEW} />
   }
+  if (tagsQuery.updatedAt === undefined) return <RouteLoadingState />
+  if (!tag) return <RouteNotFoundState message="Tag not found." />
+
   return <EditTagScreenInner key={tagId} tagId={tagId} tag={tag} />
 }
 const styles = StyleSheet.create((theme) => ({

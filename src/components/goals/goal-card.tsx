@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { type DimensionValue, View as RNView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
@@ -8,11 +7,11 @@ import { Money } from "~/components/money"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { on } from "~/database/events"
-import { getGoalProgress } from "~/database/repos/goal-repo"
+import { useTransactions } from "~/stores/db/transaction.store"
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { Goal } from "~/types/goals"
+import { getLiveGoalProgress } from "~/utils/live-progress"
 import { roundToSafeInteger } from "~/utils/money"
 import { formatMoney } from "~/utils/number-format"
 import {
@@ -26,22 +25,8 @@ interface GoalCardProps {
 }
 
 export function GoalCard({ goal, onPress }: GoalCardProps) {
-  const [currentAmount, setCurrentAmount] = useState(0)
-
-  useEffect(() => {
-    let cancelled = false
-    const fetch = () =>
-      getGoalProgress(goal.id, goal.goalType || "savings").then((v) => {
-        if (!cancelled) setCurrentAmount(v)
-      })
-    fetch()
-    const unsub = on("transactions:dirty", fetch)
-    return () => {
-      cancelled = true
-      unsub()
-    }
-  }, [goal.id, goal.goalType])
-
+  const { items: progressTransactions } = useTransactions({ goalId: goal.id })
+  const currentAmount = getLiveGoalProgress(goal, progressTransactions)
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const isRTL = useLanguageStore((s) => s.isRTL)

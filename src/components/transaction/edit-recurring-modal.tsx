@@ -21,7 +21,7 @@ import { ListItem } from "~/components/ui/list-item"
 import {
   applyRecurringEditScope,
   type RecurringTransactionTemplate,
-} from "~/database/services-sqlite/recurring-transaction-service"
+} from "~/database/services/recurring-transaction-service"
 import type { RecurringEditPayload } from "~/schemas/transactions.schema"
 import type { Transaction } from "~/types/transactions"
 import { logger } from "~/utils/logger"

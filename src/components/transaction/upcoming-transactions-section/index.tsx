@@ -10,8 +10,7 @@ import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
-import { confirmTransaction } from "~/database/services-sqlite/transaction-service"
+import { confirmTransaction } from "~/database/services/transaction-service"
 import { useRecurringRule } from "~/hooks/use-recurring-rule"
 import { useMinuteTick } from "~/hooks/use-time-reactivity"
 import {
@@ -19,6 +18,7 @@ import {
   isPreapproved,
   useAutoConfirmVersion,
 } from "~/services/auto-confirmation-service"
+import type { TransactionWithRelations } from "~/stores/db/transaction.store"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import { useUpcomingSectionStore } from "~/stores/upcoming-section.store"

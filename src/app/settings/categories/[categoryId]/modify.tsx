@@ -1,7 +1,11 @@
 import { useLocalSearchParams } from "expo-router"
 
 import { CategoryModifyContent } from "~/components/categories/category-modify/category-modify-content"
-import { useCategory } from "~/stores/db/category.store"
+import {
+  RouteLoadingState,
+  RouteNotFoundState,
+} from "~/components/route-load-state"
+import { useCategoriesQuery } from "~/database/drizzle/hooks/use-categories-query"
 import { NewEnum } from "~/types/new"
 import type { TransactionType } from "~/types/transactions"
 
@@ -12,7 +16,10 @@ export default function EditCategoryScreen() {
   }>()
 
   const isAddMode = params.categoryId === NewEnum.NEW || !params.categoryId
-  const category = useCategory(params.categoryId ?? "")
+  const categoriesQuery = useCategoriesQuery()
+  const category = categoriesQuery.data.find(
+    (item) => item.id === params.categoryId,
+  )
 
   if (isAddMode) {
     return (
@@ -22,6 +29,9 @@ export default function EditCategoryScreen() {
       />
     )
   }
+
+  if (categoriesQuery.updatedAt === undefined) return <RouteLoadingState />
+  if (!category) return <RouteNotFoundState message="Category not found." />
 
   return (
     <CategoryModifyContent

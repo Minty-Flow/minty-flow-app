@@ -55,9 +55,8 @@ async function runWithRetry<T>(fn: Task<T>, retries = 3): Promise<T> {
  * Enqueue a write task onto the global FIFO write chain.
  *
  * **Why this exists:** expo-sqlite's WAL mode allows one writer at a time.
- * Running concurrent `withTransactionAsync` calls causes `SQLITE_BUSY`.
- * All writes are serialised through this queue so that only one transaction
- * is in-flight at any moment.
+ * Concurrent write transactions can hit `SQLITE_BUSY`, so writes are
+ * serialised through this queue.
  *
  * **Poison-proofing:** each task is appended as
  * `chain.then(task).then(void, void)`, so a rejection in one task does not
@@ -76,11 +75,7 @@ async function runWithRetry<T>(fn: Task<T>, retries = 3): Promise<T> {
  *
  * @example
  * ```ts
- * // Direct use (prefer runInTransaction for transactional work)
- * const id = await enqueueWrite(async () => {
- *   await getDb().runAsync("INSERT INTO accounts ...", [...])
- *   return newId
- * })
+ * // Direct use is rare; prefer runInTransaction for transactional DB work.
  * ```
  */
 export function enqueueWrite<T>(task: Task<T>): Promise<T> {

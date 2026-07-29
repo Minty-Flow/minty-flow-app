@@ -13,7 +13,7 @@ import {
   type CategoryPreset,
   IncomePresets,
 } from "~/constants/pre-sets-categories"
-import { createCategory } from "~/database/services-sqlite/category-service"
+import { createCategory } from "~/database/services/category-service"
 import type { TranslationKey } from "~/i18n/config"
 import { useCategoriesByType } from "~/stores/db/category.store"
 import { TransactionTypeEnum } from "~/types/transactions"

@@ -1,11 +1,14 @@
+import { inArray, or } from "drizzle-orm"
+
 import type { Account } from "~/types/accounts"
 import type { Category } from "~/types/categories"
 import type { Transaction } from "~/types/transactions"
 
+import { drizzleDb } from "../drizzle/db"
+import { transfers } from "../drizzle/schema"
 import { getAllAccounts } from "../repos/account-repo"
 import { getAllCategories } from "../repos/category-repo"
 import { getTagsForTransactions } from "../repos/transaction-tag-repo"
-import { query } from "../sql"
 import type { RowTransaction } from "../types/rows"
 import { mapAccount } from "./account.mapper"
 import { mapCategory } from "./category.mapper"
@@ -79,13 +82,23 @@ export async function hydrateTransactions(
     }
   >()
   if (txIds.length > 0) {
-    const tfPlaceholders = txIds.map(() => "?").join(",")
-    const transferRows = await query<RowTransfer>(
-      `SELECT id, from_transaction_id, to_transaction_id, from_account_id, to_account_id, conversion_rate
-       FROM transfers
-       WHERE from_transaction_id IN (${tfPlaceholders}) OR to_transaction_id IN (${tfPlaceholders})`,
-      [...txIds, ...txIds],
-    )
+    const transferRows = drizzleDb
+      .select({
+        id: transfers.id,
+        from_transaction_id: transfers.fromTransactionId,
+        to_transaction_id: transfers.toTransactionId,
+        from_account_id: transfers.fromAccountId,
+        to_account_id: transfers.toAccountId,
+        conversion_rate: transfers.conversionRate,
+      })
+      .from(transfers)
+      .where(
+        or(
+          inArray(transfers.fromTransactionId, txIds),
+          inArray(transfers.toTransactionId, txIds),
+        ),
+      )
+      .all() satisfies RowTransfer[]
     for (const tf of transferRows) {
       transferMap.set(tf.from_transaction_id, {
         transferId: tf.to_transaction_id,

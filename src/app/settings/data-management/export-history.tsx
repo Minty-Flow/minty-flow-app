@@ -15,7 +15,7 @@ import { View } from "~/components/ui/view"
 import {
   deleteExportFile,
   saveExistingFileToDevice,
-} from "~/database/services-sqlite/data-management-service"
+} from "~/database/services/data-management-service"
 import type { TranslationKey } from "~/i18n/config"
 import {
   type ExportRecord,

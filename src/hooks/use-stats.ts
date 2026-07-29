@@ -1,9 +1,8 @@
 import { addWeeks } from "date-fns"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { on } from "~/database/events"
-import { fetchAllStatsData } from "~/database/services-sqlite/stats-service"
-import { useDebouncedCallback } from "~/hooks/use-debounced-callback"
+import { useDatabaseChangeSignal } from "~/database/drizzle/hooks/use-database-change-signal"
+import { fetchAllStatsData } from "~/database/services/stats-service"
 import { useAccounts } from "~/stores/db/account.store"
 import { useWeekStartStore } from "~/stores/week-start.store"
 import type { Account } from "~/types/accounts"
@@ -104,6 +103,7 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
   const fetchIdRef = useRef(0)
   const activeFetchCountRef = useRef(0)
   const accounts = useAccounts()
+  const dbChangeSignal = useDatabaseChangeSignal()
   const supplementByCurrency = computeSupplements(accounts)
   const _weekStart = useWeekStartStore((s) => s.weekStart)
   const weekStartsOn = getWeekStartsOn()
@@ -144,31 +144,14 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
       throw error
     }
   }, [])
-  const debouncedFetch = useDebouncedCallback(fetchData, 300)
-  // Initial and range-driven fetch
   useEffect(() => {
+    void dbChangeSignal
+    setIsLoading(true)
     void fetchData(dateRange)
-  }, [dateRange, fetchData])
-  // Re-fetch stats on any relevant DB change
-  useEffect(() => {
-    const refresh = () => {
-      setIsLoading(true)
-      debouncedFetch(dateRange)
-    }
-    const unsub1 = on("transactions:dirty", refresh)
-    const unsub2 = on("accounts:dirty", refresh)
-    const unsub3 = on("tags:dirty", refresh)
-    const unsub4 = on("categories:dirty", refresh)
-    const unsub5 = on("db:reset", refresh)
     return () => {
       fetchIdRef.current++
-      unsub1()
-      unsub2()
-      unsub3()
-      unsub4()
-      unsub5()
     }
-  }, [dateRange, debouncedFetch])
+  }, [dateRange, dbChangeSignal, fetchData])
   const setPreset = (preset: StatsDateRangePreset) => {
     setIsLoading(true)
     setActivePreset(preset)

@@ -14,15 +14,17 @@ import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { View } from "~/components/ui/view"
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
-import { getMonthRange } from "~/database/services-sqlite/account-service"
+import { getMonthRange } from "~/database/services/account-service"
 import {
   destroyTransaction,
   restoreTransaction,
-} from "~/database/services-sqlite/transaction-service"
+} from "~/database/services/transaction-service"
 import { useCategoriesByType } from "~/stores/db/category.store"
 import { useTags } from "~/stores/db/tag.store"
-import { useTransactions } from "~/stores/db/transaction.store"
+import {
+  type TransactionWithRelations,
+  useTransactions,
+} from "~/stores/db/transaction.store"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import type {
   SearchState,
@@ -41,7 +43,6 @@ import {
   applyTransferLayout,
 } from "~/utils/transaction-list-utils"
 
-//TODO: transfer txns are still shown as separate they dont respect the preferences settings and the restore swipe button is broken not being able to press
 export default function TrashScreen() {
   const { t } = useTranslation()
   const router = useRouter()

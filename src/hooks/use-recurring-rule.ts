@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import {
   findRecurringById,
   type RecurringTransactionTemplate,
-} from "~/database/services-sqlite/recurring-transaction-service"
+} from "~/database/services/recurring-transaction-service"
 
 /**
  * Fetch the recurring rule for a transaction. Returns null when ruleId is null

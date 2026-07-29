@@ -1,8 +1,8 @@
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
 import type {
   RecurringEditPayload,
   TransactionFormValues,
 } from "~/schemas/transactions.schema"
+import type { TransactionWithRelations } from "~/stores/db/transaction.store"
 import type { Account } from "~/types/accounts"
 import type { Budget } from "~/types/budgets"
 import type { Category } from "~/types/categories"

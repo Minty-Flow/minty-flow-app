@@ -11,7 +11,7 @@ import { ChoiceChips } from "~/components/ui/chips"
 import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { destroyAllDeletedTransactions } from "~/database/services-sqlite/transaction-service"
+import { destroyAllDeletedTransactions } from "~/database/services/transaction-service"
 import { useTrashBinStore } from "~/stores/trash-bin.store"
 import { Toast } from "~/utils/toast"
 

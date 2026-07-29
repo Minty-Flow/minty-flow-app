@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-07-29T12:06:02.855Z
+Generated on: 2026-07-29T15:52:36.152Z
 ```
 ./
 ├── .github/
@@ -28,17 +28,15 @@ Generated on: 2026-07-29T12:06:02.855Z
 ├── .zed/
 │   └── settings.json
 ├── docs/
-│   ├── reactive-data-migration/
-│   │   ├── 00-roadmap.md
-│   │   ├── 01-foundation.md
-│   │   ├── 02-schema-baseline.md
-│   │   ├── 03-migrations.md
-│   │   ├── 04-live-query-cutover.md
-│   │   ├── 05-writes-and-transactions.md
-│   │   └── 06-cleanup-and-validation.md
-│   ├── money-architecture.md
 │   ├── stats-recurring-spending-map-plan.md
 │   └── STRUCTURE.md
+├── drizzle/
+│   ├── meta/
+│   │   ├── _journal.json
+│   │   └── 0000_snapshot.json
+│   ├── 0000_safe_maximus.sql
+│   ├── migrations.d.ts
+│   └── migrations.js
 ├── plugins/
 │   └── with-android-release-signing.mts
 ├── scripts/
@@ -200,12 +198,6 @@ Generated on: 2026-07-29T12:06:02.855Z
 │   │   │   │   ├── goal-modify.styles.ts
 │   │   │   │   └── types.ts
 │   │   │   └── goal-card.tsx
-│   │   ├── icons/
-│   │   │   ├── filled/ /* tabler-icons, generated via `pnpm icons:sync` — not enumerated */
-│   │   │   ├── outline/ /* tabler-icons, generated via `pnpm icons:sync` — not enumerated */
-│   │   │   ├── icon-map.ts
-│   │   │   ├── icon-svg.tsx
-│   │   │   └── index.ts
 │   │   ├── inline-category-picker/
 │   │   │   └── index.tsx
 │   │   ├── loans/
@@ -377,6 +369,7 @@ Generated on: 2026-07-29T12:06:02.855Z
 │   │   ├── preset-list-item.tsx
 │   │   ├── privacy-eye-control.tsx
 │   │   ├── reorderable-list-v2.tsx
+│   │   ├── route-load-state.tsx
 │   │   ├── search-input.tsx
 │   │   ├── summary-card.tsx
 │   │   ├── tabs-minty.tsx
@@ -390,6 +383,18 @@ Generated on: 2026-07-29T12:06:02.855Z
 │   ├── contexts/
 │   │   └── scroll-into-view-context.tsx
 │   ├── database/
+│   │   ├── drizzle/
+│   │   │   ├── hooks/
+│   │   │   │   ├── use-accounts-query.ts
+│   │   │   │   ├── use-budgets-query.ts
+│   │   │   │   ├── use-categories-query.ts
+│   │   │   │   ├── use-database-change-signal.ts
+│   │   │   │   ├── use-goals-query.ts
+│   │   │   │   ├── use-loans-query.ts
+│   │   │   │   ├── use-tags-query.ts
+│   │   │   │   └── use-transactions-query.ts
+│   │   │   ├── db.ts
+│   │   │   └── schema.ts
 │   │   ├── mappers/
 │   │   │   ├── account.mapper.ts
 │   │   │   ├── budget.mapper.ts
@@ -399,18 +404,12 @@ Generated on: 2026-07-29T12:06:02.855Z
 │   │   │   ├── loan.mapper.ts
 │   │   │   ├── tag.mapper.ts
 │   │   │   └── transaction.mapper.ts
-│   │   ├── migrations/
-│   │   │   ├── sqlite-runner.ts
-│   │   │   └── sqlite-v3.ts
 │   │   ├── repos/
 │   │   │   ├── account-repo.ts
-│   │   │   ├── budget-repo.ts
 │   │   │   ├── category-repo.ts
-│   │   │   ├── goal-repo.ts
-│   │   │   ├── loan-repo.ts
 │   │   │   ├── transaction-repo.ts
 │   │   │   └── transaction-tag-repo.ts
-│   │   ├── services-sqlite/
+│   │   ├── services/
 │   │   │   ├── account-service.ts
 │   │   │   ├── balance-service.ts
 │   │   │   ├── budget-service.ts
@@ -430,14 +429,12 @@ Generated on: 2026-07-29T12:06:02.855Z
 │   │   │   ├── get-balance-delta.ts
 │   │   │   └── import-snapshot.ts
 │   │   ├── db.ts
-│   │   ├── events.ts
-│   │   ├── sql.ts
+│   │   ├── forced-migration.ts
 │   │   ├── transaction.ts
 │   │   └── write-queue.ts
 │   ├── hooks/
 │   │   ├── exchange-rates-editor.reducer.ts
 │   │   ├── use-balance-before.ts
-│   │   ├── use-boot-hydration.ts
 │   │   ├── use-chart-font.ts
 │   │   ├── use-debounced-callback.ts
 │   │   ├── use-import-recovery.ts
@@ -484,6 +481,7 @@ Generated on: 2026-07-29T12:06:02.855Z
 │   │   ├── app-lock.store.ts
 │   │   ├── bill-splitter.store.ts
 │   │   ├── button-placement.store.ts
+│   │   ├── db-migration.store.ts
 │   │   ├── exchange-rates-preferences.store.ts
 │   │   ├── export-history.store.ts
 │   │   ├── language.store.ts
@@ -540,6 +538,7 @@ Generated on: 2026-07-29T12:06:02.855Z
 │       ├── get-week-start-on.ts
 │       ├── is-image-url.ts
 │       ├── is-single-emoji-or-letter.ts
+│       ├── live-progress.ts
 │       ├── logger.ts
 │       ├── money.ts
 │       ├── number-format.ts
@@ -562,6 +561,7 @@ Generated on: 2026-07-29T12:06:02.855Z
 ├── babel.config.js
 ├── biome.json
 ├── doctor.config.json
+├── drizzle.config.ts
 ├── expo-env.d.ts
 ├── index.ts
 ├── LICENSE

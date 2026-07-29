@@ -10,7 +10,7 @@ import {
   destroyAccount,
   unarchiveAccount,
   updateAccount,
-} from "~/database/services-sqlite/account-service"
+} from "~/database/services/account-service"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import {
   type AddAccountsFormSchema,

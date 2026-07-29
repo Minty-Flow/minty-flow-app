@@ -1,86 +1,10 @@
-import { create } from "zustand"
-import { subscribeWithSelector } from "zustand/middleware"
-import { useShallow } from "zustand/react/shallow"
-
-import { on } from "~/database/events"
-import { mapBudget } from "~/database/mappers/budget.mapper"
-import {
-  getAllBudgets,
-  getBudgetAccountIds,
-  getBudgetCategoryIds,
-} from "~/database/repos/budget-repo"
+import { useBudgetsQuery } from "~/database/drizzle/hooks/use-budgets-query"
 import type { Budget } from "~/types/budgets"
-import { logger } from "~/utils/logger"
-
-interface BudgetStoreState {
-  byId: Record<string, Budget>
-  ids: string[]
-  status: "idle" | "loading" | "ready" | "error"
-  refreshAll: () => Promise<void>
-}
-
-let gen_2 = 0
-
-export const useBudgetStore = create<BudgetStoreState>()(
-  subscribeWithSelector((set) => ({
-    byId: {},
-    ids: [],
-    status: "idle",
-
-    refreshAll: async () => {
-      const gen = ++gen_2
-      set({ status: "loading" })
-
-      try {
-        const rows = await getAllBudgets()
-        const byId: Record<string, Budget> = {}
-        const ids: string[] = []
-
-        await Promise.all(
-          rows.map(async (row) => {
-            const [accountIds, categoryIds] = await Promise.all([
-              getBudgetAccountIds(row.id),
-              getBudgetCategoryIds(row.id),
-            ])
-            const budget = mapBudget(row, accountIds, categoryIds)
-            byId[budget.id] = budget
-            ids.push(budget.id)
-          }),
-        )
-
-        // Sort: active first, then by name
-        ids.sort((a, b) => {
-          const ba = byId[a]
-          const bb = byId[b]
-          if (ba.isActive !== bb.isActive) return ba.isActive ? -1 : 1
-          return ba.name.localeCompare(bb.name)
-        })
-
-        if (gen_2 !== gen) return
-        set({ byId, ids, status: "ready" })
-      } catch (error) {
-        if (gen_2 !== gen) return
-        logger.error("Failed to refresh budgets", {
-          error: error instanceof Error ? error.message : String(error),
-        })
-        set({ status: "error" })
-      }
-    },
-  })),
-)
-
-on("budgets:dirty", () => {
-  useBudgetStore.getState().refreshAll()
-})
-
-on("db:reset", () => {
-  useBudgetStore.getState().refreshAll()
-})
 
 export function useAllBudgets(): Budget[] {
-  return useBudgetStore(useShallow((s) => s.ids.map((id) => s.byId[id])))
+  return useBudgetsQuery().data
 }
 
 export function useBudget(id: string): Budget | undefined {
-  return useBudgetStore((s) => s.byId[id])
+  return useAllBudgets().find((budget) => budget.id === id)
 }

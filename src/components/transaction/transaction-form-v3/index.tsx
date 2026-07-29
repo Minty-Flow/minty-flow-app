@@ -15,19 +15,19 @@ import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
-import { createRecurringRule } from "~/database/services-sqlite/recurring-transaction-service"
+import { createRecurringRule } from "~/database/services/recurring-transaction-service"
 import {
   createTransaction,
   deleteTransaction,
   destroyTransaction,
   restoreTransaction,
   updateTransaction,
-} from "~/database/services-sqlite/transaction-service"
+} from "~/database/services/transaction-service"
 import {
   createTransfer,
   deleteTransfer,
   editTransfer,
-} from "~/database/services-sqlite/transfer-service"
+} from "~/database/services/transfer-service"
 import { useBalanceAtTransaction } from "~/hooks/use-balance-before"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import { useRecurringRule } from "~/hooks/use-recurring-rule"

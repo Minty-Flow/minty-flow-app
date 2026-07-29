@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 
-import { recoverInterruptedImport } from "~/database/services-sqlite/data-management-service"
+import { recoverInterruptedImport } from "~/database/services/data-management-service"
 import i18n from "~/i18n/config"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"

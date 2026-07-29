@@ -30,7 +30,7 @@ import {
   deleteGoalById,
   unarchiveGoalById,
   updateGoalById,
-} from "~/database/services-sqlite/goal-service"
+} from "~/database/services/goal-service"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import type { TranslationKey } from "~/i18n/config"
 import { type AddGoalFormSchema, addGoalSchema } from "~/schemas/goals.schema"

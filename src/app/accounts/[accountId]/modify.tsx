@@ -2,8 +2,12 @@ import { useLocalSearchParams } from "expo-router"
 import { useEffect, useState } from "react"
 
 import { AccountModifyContent } from "~/components/accounts/account-modify/account-modify-content"
-import { getAccountTransactionCount } from "~/database/services-sqlite/account-service"
-import { useAccount } from "~/stores/db/account.store"
+import {
+  RouteLoadingState,
+  RouteNotFoundState,
+} from "~/components/route-load-state"
+import { useAccountsQuery } from "~/database/drizzle/hooks/use-accounts-query"
+import { getAccountTransactionCount } from "~/database/services/account-service"
 import { NewEnum } from "~/types/new"
 
 export default function EditAccountScreen() {
@@ -11,7 +15,8 @@ export default function EditAccountScreen() {
   const accountId = params.accountId
   const isAddMode = accountId === NewEnum.NEW || !accountId
 
-  const account = useAccount(accountId ?? "")
+  const accountsQuery = useAccountsQuery()
+  const account = accountsQuery.data.find((item) => item.id === accountId)
   const [transactionCount, setTransactionCount] = useState(0)
 
   useEffect(() => {
@@ -22,6 +27,9 @@ export default function EditAccountScreen() {
   if (isAddMode) {
     return <AccountModifyContent accountId={NewEnum.NEW} />
   }
+
+  if (accountsQuery.updatedAt === undefined) return <RouteLoadingState />
+  if (!account) return <RouteNotFoundState message="Account not found." />
 
   return (
     <AccountModifyContent

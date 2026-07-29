@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { type DimensionValue, View as RNView } from "react-native"
 import { createMMKV } from "react-native-mmkv"
@@ -9,14 +9,15 @@ import { Money } from "~/components/money"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { on } from "~/database/events"
-import { getBudgetSpent } from "~/database/repos/budget-repo"
 import { useMinuteTick } from "~/hooks/use-time-reactivity"
 import type { TranslationKey } from "~/i18n/config"
 import { useCategories } from "~/stores/db/category.store"
+import { useTransactions } from "~/stores/db/transaction.store"
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
+import { useWeekStartStore } from "~/stores/week-start.store"
 import type { Budget } from "~/types/budgets"
+import { getLiveBudgetSpent } from "~/utils/live-progress"
 import { roundToSafeInteger } from "~/utils/money"
 import { formatMoney, formatPercent } from "~/utils/number-format"
 import {
@@ -57,13 +58,13 @@ interface BudgetCardProps {
   onPress: () => void
 }
 export function BudgetCard({ budget, onPress }: BudgetCardProps) {
-  const [spentAmount, setSpentAmount] = useState(0)
   const allCategories = useCategories()
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const isRTL = useLanguageStore((s) => s.isRTL)
   const privacyMode = useMoneyFormattingStore((s) => s.privacyMode)
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
+  const weekStart = useWeekStartStore((s) => s.weekStart)
   const linkedCategories = budget.categoryIds
     .map((id) => allCategories.find((c) => c.id === id))
     .filter((c): c is NonNullable<typeof c> => Boolean(c))
@@ -71,49 +72,20 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
   // to a new window the moment their boundary crosses, even if the app is
   // left open across midnight / week-start / month-start.
   const tick = useMinuteTick()
-  const progress = (() => {
+  const progressWindow = (() => {
     // `tick` consumed to make the dep array honest — fires recompute each minute
     // so rolling periods (daily/weekly/monthly/yearly) snap at boundary cross.
     void tick
-    return getBudgetProgressModel(budget, spentAmount)
+    void weekStart
+    return getBudgetProgressModel(budget, 0)
   })()
-  // Stable ms values: only change when the period boundary actually crosses,
-  // so the spent-fetch effect doesn't re-fire every minute.
-  const periodStartMs = progress.periodStart.getTime()
-  const periodEndMs = progress.periodEnd.getTime()
-  useEffect(() => {
-    // periodStartMs / periodEndMs read so they enter the dep array honestly —
-    // a boundary cross flips one of them, forcing a refetch with the new window.
-    void periodStartMs
-    void periodEndMs
-    let cancelled = false
-    const fetch = () =>
-      getBudgetSpent(
-        budget.accountIds,
-        budget.categoryIds,
-        budget.currencyCode,
-        budget.period,
-        budget.startDate.toISOString(),
-        budget.endDate?.toISOString() ?? null,
-      ).then((v) => {
-        if (!cancelled) setSpentAmount(v)
-      })
-    fetch()
-    const unsub = on("transactions:dirty", fetch)
-    return () => {
-      cancelled = true
-      unsub()
-    }
-  }, [
-    budget.accountIds,
-    budget.categoryIds,
-    budget.currencyCode,
-    budget.period,
-    budget.startDate,
-    budget.endDate,
-    periodStartMs,
-    periodEndMs,
-  ])
+  const { items: progressTransactions } = useTransactions({
+    accountIds: budget.accountIds.length > 0 ? budget.accountIds : ["__none__"],
+    from: progressWindow.periodStart.toISOString(),
+    to: progressWindow.periodEnd.toISOString(),
+  })
+  const spentAmount = getLiveBudgetSpent(budget, progressTransactions)
+  const progress = getBudgetProgressModel(budget, spentAmount)
   const {
     spent,
     limit,

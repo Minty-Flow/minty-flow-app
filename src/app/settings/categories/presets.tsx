@@ -14,7 +14,7 @@ import {
   ExpensePresets,
   IncomePresets,
 } from "~/constants/pre-sets-categories"
-import { createCategory } from "~/database/services-sqlite/category-service"
+import { createCategory } from "~/database/services/category-service"
 import { useCategoriesByType } from "~/stores/db/category.store"
 import type { Category } from "~/types/categories"
 import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"

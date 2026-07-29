@@ -83,8 +83,10 @@ pnpm ios        # iOS (macOS only)
 | `pnpm types` | TypeScript type check |
 | `pnpm structure` | Regenerate docs/STRUCTURE.md |
 | `pnpm check-i18n-keys` | Find missing translation keys |
+| `pnpm unused-styles` | Find unused unistyles StyleSheets |
+| `pnpm check-number-formatting` | Verify centralized number formatting rules |
 
-**Pre-commit hook** (husky): runs `pnpm structure` → `pnpm lint:fix` → `pnpm types` automatically. All three must pass.
+**Pre-commit hook** (husky): runs `pnpm structure` → `pnpm lint:fix` → `pnpm check-number-formatting` → `pnpm types` automatically. All four must pass.
 
 ### Icons
 
@@ -132,6 +134,5 @@ Minty Flow is a personal project built in free time. If you find it useful:
 - Arabic — including full RTL layout support
 
 Want to add your language? Translations live in `src/i18n/translation/`.
-
 
 
