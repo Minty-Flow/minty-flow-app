@@ -96,7 +96,10 @@ export function useGoal(id: string): Goal | undefined {
 export function useGoalsByType(goalType: GoalType): Goal[] {
   return useGoalStore(
     useShallow((s) =>
-      s.ids.map((id) => s.byId[id]).filter((g) => g?.goalType === goalType),
+      s.ids.flatMap((id) => {
+        const goal = s.byId[id]
+        return goal?.goalType === goalType ? [goal] : []
+      }),
     ),
   )
 }

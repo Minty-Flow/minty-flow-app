@@ -98,8 +98,11 @@ export async function synchronizePlannedTransactionNotifications(): Promise<void
   const pending = await getPendingTransactions()
   const now = startOfNextMinute()
 
-  for (const t of pending) {
-    if (new Date(t.transaction_date).getTime() <= now.getTime()) continue
-    await scheduleForPlannedTransaction(t, earlyReminderInSeconds)
-  }
+  await Promise.all(
+    pending.flatMap((t) =>
+      new Date(t.transaction_date).getTime() <= now.getTime()
+        ? []
+        : [scheduleForPlannedTransaction(t, earlyReminderInSeconds)],
+    ),
+  )
 }

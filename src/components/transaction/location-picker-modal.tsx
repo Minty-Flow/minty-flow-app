@@ -1,6 +1,6 @@
 import * as Haptics from "expo-haptics"
 import * as Location from "expo-location"
-import { useCallback, useReducer, useRef, useState } from "react"
+import { useReducer, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Modal, Platform } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -16,27 +16,32 @@ import { View } from "~/components/ui/view"
 import type { TransactionLocation } from "~/types/transactions"
 
 const GPS_FALLBACK_COORDINATES = { latitude: 37.7749, longitude: -122.4194 }
-
 interface LocationPickerModalProps {
   visible: boolean
   initialLocation?: TransactionLocation | null
   onConfirm: (location: TransactionLocation) => void
   onRequestClose: () => void
 }
-
 type LocationContentState = {
   mapHtml: string | null
-  coords: { latitude: number; longitude: number } | null
-  gpsCoords: { latitude: number; longitude: number } | null
+  coords: {
+    latitude: number
+    longitude: number
+  } | null
+  gpsCoords: {
+    latitude: number
+    longitude: number
+  } | null
 }
-
 function mergeReducer<S>(state: S, update: Partial<S>): S {
   return { ...state, ...update }
 }
-
 // Add this helper OUTSIDE the component, next to fetchGpsCoords and fetchReverseGeocode:
-type WebViewMapMessage = { type: string; lat: number; lng: number }
-
+type WebViewMapMessage = {
+  type: string
+  lat: number
+  lng: number
+}
 function parseWebViewMessage(raw: string): WebViewMapMessage | null {
   try {
     return JSON.parse(raw) as WebViewMapMessage
@@ -44,7 +49,6 @@ function parseWebViewMessage(raw: string): WebViewMapMessage | null {
     return null
   }
 }
-
 /**
  * Generates self-contained MapLibre GL HTML with a static center-pin crosshair.
  * The user pans the map under the pin — much more precise for thumb-driven navigation.
@@ -142,7 +146,6 @@ function buildMaplibreHtml(lat: number, lng: number): string {
 </body>
 </html>`
 }
-
 // ---------------------------------------------------------------------------
 // Async helpers — defined OUTSIDE the component so React Compiler never sees
 // try/finally inside component scope.
@@ -165,7 +168,6 @@ async function fetchGpsCoords(): Promise<{
     return GPS_FALLBACK_COORDINATES
   }
 }
-
 async function fetchReverseGeocode(
   lat: number,
   lng: number,
@@ -185,7 +187,6 @@ async function fetchReverseGeocode(
     return null
   }
 }
-
 // ---------------------------------------------------------------------------
 // LocationPickerContent
 // ---------------------------------------------------------------------------
@@ -196,12 +197,9 @@ function LocationPickerContent({
 }: Omit<LocationPickerModalProps, "visible">) {
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
-
   const webviewRef = useRef<WebView>(null)
   const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   const [address, setAddress] = useState<string | null>(null)
-
   const [locState, setLocState] = useReducer(
     mergeReducer<LocationContentState>,
     initialLocation, // passed as the seed
@@ -215,31 +213,25 @@ function LocationPickerContent({
       }
     },
   )
-
-  const triggerReverseGeocode = useCallback((lat: number, lng: number) => {
+  const triggerReverseGeocode = (lat: number, lng: number) => {
     if (geocodeTimer.current) clearTimeout(geocodeTimer.current)
     // async/await with try/finally moved into fetchReverseGeocode() above
     geocodeTimer.current = setTimeout(() => {
       fetchReverseGeocode(lat, lng).then((result) => setAddress(result))
     }, 800)
-  }, [])
-
-  const handleMessage = useCallback(
-    (event: WebViewMessageEvent) => {
-      const data = parseWebViewMessage(event.nativeEvent.data)
-      if (!data) return
-      if (data.type === "pin_moved" || data.type === "map_loaded") {
-        setLocState({ coords: { latitude: data.lat, longitude: data.lng } })
-        triggerReverseGeocode(data.lat, data.lng)
-      }
-      if (data.type === "pin_moved") {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-      }
-    },
-    [triggerReverseGeocode],
-  )
-
-  const handleResetToGps = useCallback(async () => {
+  }
+  const handleMessage = (event: WebViewMessageEvent) => {
+    const data = parseWebViewMessage(event.nativeEvent.data)
+    if (!data) return
+    if (data.type === "pin_moved" || data.type === "map_loaded") {
+      setLocState({ coords: { latitude: data.lat, longitude: data.lng } })
+      triggerReverseGeocode(data.lat, data.lng)
+    }
+    if (data.type === "pin_moved") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    }
+  }
+  const handleResetToGps = async () => {
     // Use cached coords if already fetched
     let gps = locState.gpsCoords
     if (!gps) {
@@ -253,23 +245,20 @@ function LocationPickerContent({
         lng: gps.longitude,
       }),
     )
-  }, [locState.gpsCoords])
-
-  const handleConfirm = useCallback(() => {
+  }
+  const handleConfirm = () => {
     if (!locState.coords) return
     onConfirm({
       latitude: locState.coords.latitude,
       longitude: locState.coords.longitude,
       address,
     })
-  }, [onConfirm, locState.coords, address])
-
+  }
   const footerLabel =
     address ??
     (locState.coords
       ? `${locState.coords.latitude.toFixed(5)}, ${locState.coords.longitude.toFixed(5)}`
       : t("components.locationPicker.tapOrDrag"))
-
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -346,7 +335,6 @@ function LocationPickerContent({
     </View>
   )
 }
-
 export function LocationPickerModal({
   visible,
   initialLocation,
@@ -368,7 +356,6 @@ export function LocationPickerModal({
     </Modal>
   )
 }
-
 const styles = UnistylesSheet.create((t) => ({
   container: {
     flex: 1,

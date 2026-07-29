@@ -6,6 +6,7 @@ import {
   hydrateTransactions,
   type TransactionWithRelations,
 } from "~/database/mappers/hydrateTransactions"
+import { runPreparedBatch } from "~/database/sql"
 import { runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
 import { generateId } from "~/database/utils/generate-id"
@@ -125,12 +126,11 @@ export async function createTransaction(
       }
 
       if (data.tags?.length) {
-        for (const tagId of data.tags) {
-          await db.runAsync(
-            `INSERT OR IGNORE INTO transaction_tags (transaction_id, tag_id) VALUES (?, ?)`,
-            [id, tagId],
-          )
-        }
+        await runPreparedBatch(
+          db,
+          `INSERT OR IGNORE INTO transaction_tags (transaction_id, tag_id) VALUES (?, ?)`,
+          data.tags.map((tagId) => [id, tagId]),
+        )
       }
 
       return { id, accountId: data.accountId }
@@ -249,22 +249,20 @@ export async function updateTransaction(
       const existingSet = new Set(existingTagIds)
       const newSet = new Set(data.tags)
 
-      for (const tagId of existingTagIds) {
-        if (!newSet.has(tagId)) {
-          await db.runAsync(
-            `DELETE FROM transaction_tags WHERE transaction_id = ? AND tag_id = ?`,
-            [id, tagId],
-          )
-        }
-      }
-      for (const tagId of data.tags) {
-        if (!existingSet.has(tagId)) {
-          await db.runAsync(
-            `INSERT OR IGNORE INTO transaction_tags (transaction_id, tag_id) VALUES (?, ?)`,
-            [id, tagId],
-          )
-        }
-      }
+      await runPreparedBatch(
+        db,
+        `DELETE FROM transaction_tags WHERE transaction_id = ? AND tag_id = ?`,
+        existingTagIds.flatMap((tagId) =>
+          newSet.has(tagId) ? [] : [[id, tagId]],
+        ),
+      )
+      await runPreparedBatch(
+        db,
+        `INSERT OR IGNORE INTO transaction_tags (transaction_id, tag_id) VALUES (?, ?)`,
+        data.tags.flatMap((tagId) =>
+          existingSet.has(tagId) ? [] : [[id, tagId]],
+        ),
+      )
     }
 
     // -- Transaction row update --
@@ -352,7 +350,6 @@ export async function deleteTransaction(id: string): Promise<void> {
   let tagsChanged = false
   let accountId: string | undefined
   let transferAffectedIds: string[] | undefined
-  let partnerTxId: string | undefined
 
   await runInTransaction("transaction.delete", async (db) => {
     const tx = await requireTx(db, id)
@@ -375,7 +372,7 @@ export async function deleteTransaction(id: string): Promise<void> {
         [id, id],
       )
       if (partnerRow) {
-        partnerTxId =
+        const partnerTxId =
           partnerRow.from_transaction_id === id
             ? partnerRow.to_transaction_id
             : partnerRow.from_transaction_id
@@ -427,13 +424,11 @@ export async function deleteTransaction(id: string): Promise<void> {
 
   if (transferAffectedIds) {
     emit("accounts:dirty", { ids: transferAffectedIds })
-    emit("transactions:dirty", {
-      ids: [id, partnerTxId].filter(Boolean) as string[],
-    })
+    emit("transactions:dirty", {})
     emit("transfers:dirty", undefined)
   } else {
     if (accountId) emit("accounts:dirty", { ids: [accountId] })
-    emit("transactions:dirty", { ids: [id] })
+    emit("transactions:dirty", {})
   }
   if (categoryChanged) emit("categories:dirty", undefined)
   if (tagsChanged) emit("tags:dirty", undefined)
@@ -446,9 +441,21 @@ export async function restoreTransaction(id: string): Promise<void> {
   let categoryChanged = false
   let tagsChanged = false
   let accountId: string | undefined
+  let transferAccountIds: string[] | undefined
 
   await runInTransaction("transaction.restore", async (db) => {
     const tx = await requireTx(db, id)
+
+    const transferPartner = await db.getFirstAsync<{ id: string }>(
+      `SELECT id FROM transfers WHERE from_transaction_id = ? OR to_transaction_id = ?`,
+      [id, id],
+    )
+    if (transferPartner) {
+      const { restoreTransferById } = await import("./transfer-service")
+      transferAccountIds = await restoreTransferById(tx.id, db)
+      return
+    }
+
     if (!tx.is_deleted) return
 
     accountId = tx.account_id
@@ -490,7 +497,9 @@ export async function restoreTransaction(id: string): Promise<void> {
     }
   })
 
-  if (accountId) emit("accounts:dirty", { ids: [accountId] })
+  const dirtyAccountIds = transferAccountIds ?? (accountId ? [accountId] : [])
+  if (dirtyAccountIds.length) emit("accounts:dirty", { ids: dirtyAccountIds })
+  if (transferAccountIds) emit("transfers:dirty", undefined)
   // Broadcast: restoring un-sets is_deleted, so the row may re-enter cached filters.
   emit("transactions:dirty", {})
   if (categoryChanged) emit("categories:dirty", undefined)
@@ -504,9 +513,21 @@ export async function destroyTransaction(id: string): Promise<void> {
   let categoryChanged = false
   let tagsChanged = false
   let accountId: string | undefined
+  let transferAccountIds: string[] | undefined
 
   await runInTransaction("transaction.destroy", async (db) => {
     const tx = await requireTx(db, id)
+
+    const transferPartner = await db.getFirstAsync<{ id: string }>(
+      `SELECT id FROM transfers WHERE from_transaction_id = ? OR to_transaction_id = ?`,
+      [id, id],
+    )
+    if (transferPartner) {
+      const { destroyTransferById } = await import("./transfer-service")
+      transferAccountIds = await destroyTransferById(tx.id, db)
+      return
+    }
+
     accountId = tx.account_id
 
     if (!tx.is_deleted) {
@@ -546,8 +567,10 @@ export async function destroyTransaction(id: string): Promise<void> {
     await db.runAsync(`DELETE FROM transactions WHERE id = ?`, [id])
   })
 
-  if (accountId) emit("accounts:dirty", { ids: [accountId] })
-  emit("transactions:dirty", { ids: [id] })
+  const dirtyAccountIds = transferAccountIds ?? (accountId ? [accountId] : [])
+  if (dirtyAccountIds.length) emit("accounts:dirty", { ids: dirtyAccountIds })
+  if (transferAccountIds) emit("transfers:dirty", undefined)
+  emit("transactions:dirty", {})
   if (categoryChanged) emit("categories:dirty", undefined)
   if (tagsChanged) emit("tags:dirty", undefined)
 }
@@ -600,54 +623,61 @@ export async function confirmTransaction(
 
     const accountIds = [...new Set(legs.map((l) => l.account_id))]
 
-    for (const leg of legs) {
-      if (shouldConfirm) {
-        const acc = await db.getFirstAsync<{ balance: number }>(
-          `SELECT balance FROM accounts WHERE id = ?`,
-          [leg.account_id],
-        )
-        const balanceBefore = acc?.balance ?? 0
-        const delta = getBalanceDelta(
+    if (shouldConfirm) {
+      const placeholders = accountIds.map(() => "?").join(",")
+      const balances = await db.getAllAsync<{ id: string; balance: number }>(
+        `SELECT id, balance FROM accounts WHERE id IN (${placeholders})`,
+        accountIds,
+      )
+      const balanceByAccountId = new Map(
+        balances.map((row) => [row.id, row.balance]),
+      )
+      const deltas = legs.map((leg) => ({
+        leg,
+        delta: getBalanceDelta(
           leg.amount,
           leg.type as TransactionType,
           leg.subtype,
-        )
+        ),
+      }))
 
-        await db.runAsync(
-          `UPDATE accounts SET balance = balance + ?, updated_at = ? WHERE id = ?`,
-          [delta, now, leg.account_id],
-        )
-        await db.runAsync(
-          `UPDATE transactions SET
+      await runPreparedBatch(
+        db,
+        `UPDATE accounts SET balance = balance + ?, updated_at = ? WHERE id = ?`,
+        deltas.map(({ leg, delta }) => [delta, now, leg.account_id]),
+      )
+      await runPreparedBatch(
+        db,
+        `UPDATE transactions SET
             is_pending = 0,
             account_balance_before = ?,
             transaction_date = CASE WHEN ? THEN ? ELSE transaction_date END,
             updated_at = ?
           WHERE id = ?`,
-          [
-            balanceBefore,
-            options.updateTransactionDate ? 1 : 0,
-            now,
-            now,
-            leg.id,
-          ],
-        )
-      } else {
-        // Re-pending: reverse balance delta
-        const delta = getBalanceDelta(
-          leg.amount,
-          leg.type as TransactionType,
-          leg.subtype,
-        )
-        await db.runAsync(
-          `UPDATE accounts SET balance = balance - ?, updated_at = ? WHERE id = ?`,
-          [delta, now, leg.account_id],
-        )
-        await db.runAsync(
-          `UPDATE transactions SET is_pending = 1, account_balance_before = 0, updated_at = ? WHERE id = ?`,
-          [now, leg.id],
-        )
-      }
+        deltas.map(({ leg }) => [
+          balanceByAccountId.get(leg.account_id) ?? 0,
+          options.updateTransactionDate ? 1 : 0,
+          now,
+          now,
+          leg.id,
+        ]),
+      )
+    } else {
+      const deltas = legs.map((leg) => [
+        getBalanceDelta(leg.amount, leg.type as TransactionType, leg.subtype),
+        now,
+        leg.account_id,
+      ])
+      await runPreparedBatch(
+        db,
+        `UPDATE accounts SET balance = balance - ?, updated_at = ? WHERE id = ?`,
+        deltas,
+      )
+      await runPreparedBatch(
+        db,
+        `UPDATE transactions SET is_pending = 1, account_balance_before = 0, updated_at = ? WHERE id = ?`,
+        legs.map((leg) => [now, leg.id]),
+      )
     }
 
     affectedAccountIds.push(...accountIds)

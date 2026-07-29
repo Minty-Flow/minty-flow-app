@@ -1,4 +1,3 @@
-import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView, useWindowDimensions } from "react-native"
 import { Gesture, GestureDetector } from "react-native-gesture-handler"
@@ -22,27 +21,27 @@ import {
 
 const BUTTON_SIZE = FAB_BUTTON_SIZE
 const CONTAINER_HEIGHT = 230
-
-type SlotPos = { x: number; y: number }
-
+type SlotPos = {
+  id: string
+  x: number
+  y: number
+}
 // Slot 0 = center/top, Slot 1 = right, Slot 2 = left
 // These match FAB_OPTION_POSITIONS indices in _layout.tsx
 function getSlotPositions(containerWidth: number): SlotPos[] {
   const cx = (containerWidth - BUTTON_SIZE) / 2
   const sideX = Math.round(containerWidth * 0.14)
   return [
-    { x: cx, y: 14 },
-    { x: containerWidth - sideX - BUTTON_SIZE, y: 114 },
-    { x: sideX, y: 114 },
+    { id: "center", x: cx, y: 14 },
+    { id: "right", x: containerWidth - sideX - BUTTON_SIZE, y: 114 },
+    { id: "left", x: sideX, y: 114 },
   ]
 }
-
 interface ButtonConfig {
   icon: IconSvgName
   color: string
   iconColor: string
 }
-
 function DraggableButton({
   config,
   slotIndex,
@@ -58,12 +57,7 @@ function DraggableButton({
   const ty = useSharedValue(0)
   const scale = useSharedValue(1)
   const isDragging = useSharedValue(false)
-
-  const triggerSwap = useCallback(
-    (from: number, to: number) => onSwap(from, to),
-    [onSwap],
-  )
-
+  const triggerSwap = (from: number, to: number) => onSwap(from, to)
   const pan = Gesture.Pan()
     .onStart(() => {
       "worklet"
@@ -80,10 +74,8 @@ function DraggableButton({
       const myPos = slotPositions[slotIndex]
       const fingerX = myPos.x + BUTTON_SIZE / 2 + tx.value
       const fingerY = myPos.y + BUTTON_SIZE / 2 + ty.value
-
       let nearestSlot = slotIndex
       let minDistSq = Number.POSITIVE_INFINITY
-
       for (let i = 0; i < slotPositions.length; i++) {
         const p = slotPositions[i]
         const dx = fingerX - (p.x + BUTTON_SIZE / 2)
@@ -94,17 +86,14 @@ function DraggableButton({
           nearestSlot = i
         }
       }
-
       if (nearestSlot !== slotIndex) {
         scheduleOnRN(triggerSwap, slotIndex, nearestSlot)
       }
-
       isDragging.value = false
       scale.value = withTiming(1, { duration: 120 })
       tx.value = 0
       ty.value = 0
     })
-
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: tx.value },
@@ -114,9 +103,7 @@ function DraggableButton({
     zIndex: isDragging.value ? 100 : 2,
     elevation: isDragging.value ? 12 : 3,
   }))
-
   const slotPos = slotPositions[slotIndex]
-
   return (
     <GestureDetector gesture={pan}>
       <Animated.View
@@ -136,18 +123,14 @@ function DraggableButton({
     </GestureDetector>
   )
 }
-
 export default function ButtonPlacementScreen() {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const { width } = useWindowDimensions()
-
   const order = useButtonPlacementStore((s) => s.order)
   const setOrder = useButtonPlacementStore((s) => s.setOrder)
-
   const containerWidth = width - 48
   const slotPositions = getSlotPositions(containerWidth)
-
   const buttonConfigs: Record<FabButtonType, ButtonConfig> = {
     income: {
       icon: "chevrons-down-outline",
@@ -165,18 +148,13 @@ export default function ButtonPlacementScreen() {
       iconColor: theme.colors.onSecondary,
     },
   }
-
-  const handleSwap = useCallback(
-    (from: number, to: number) => {
-      const newOrder = [...order] as ButtonPlacementOrder
-      const temp = newOrder[from]
-      newOrder[from] = newOrder[to]
-      newOrder[to] = temp
-      setOrder(newOrder)
-    },
-    [order, setOrder],
-  )
-
+  const handleSwap = (from: number, to: number) => {
+    const newOrder = [...order] as ButtonPlacementOrder
+    const temp = newOrder[from]
+    newOrder[from] = newOrder[to]
+    newOrder[to] = temp
+    setOrder(newOrder)
+  }
   return (
     <ScrollView
       style={styles.container}
@@ -199,9 +177,9 @@ export default function ButtonPlacementScreen() {
         ]}
       >
         {/* Dashed slot placeholders behind buttons */}
-        {slotPositions.map((pos, i) => (
+        {slotPositions.map((pos) => (
           <View
-            key={`${pos.x}-${pos.y}-${i.toString()}`}
+            key={pos.id}
             style={[
               styles.slotPlaceholder,
               {
@@ -233,7 +211,6 @@ export default function ButtonPlacementScreen() {
     </ScrollView>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
@@ -245,11 +222,9 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     gap: 28,
   },
-
   dragArea: {
     position: "relative",
   },
-
   slotPlaceholder: {
     width: BUTTON_SIZE + 12,
     height: BUTTON_SIZE + 12,
@@ -258,7 +233,6 @@ const styles = StyleSheet.create((theme) => ({
     borderStyle: "dashed",
     opacity: 0.5,
   },
-
   button: {
     ...FAB_BUTTON_STYLE,
     shadowColor: theme.colors.shadow,

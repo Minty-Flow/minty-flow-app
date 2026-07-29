@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next"
-import { ScrollView, View } from "react-native"
+import { FlatList, View } from "react-native"
 import { useUnistyles } from "react-native-unistyles"
 
 import { Chip } from "~/components/ui/chips"
@@ -32,6 +32,7 @@ export function CurrencyPanel({
 }: CurrencyPanelProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
+  const selectedCurrencySet = new Set(selectedCurrencies)
   // Deduplicate currency codes while preserving order of first appearance.
   const currencies = [...new Set(accounts.map((a) => a.currencyCode))].filter(
     Boolean,
@@ -53,18 +54,15 @@ export function CurrencyPanel({
   return (
     <View>
       {chunk(currencies, CHIPS_PER_ROW).map((row) => (
-        <ScrollView
+        <FlatList
           key={row.join(",")}
           horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={filterHeaderStyles.chipScrollRow}
-          style={filterHeaderStyles.categoryRow}
-        >
-          {row.map((code) => (
+          data={row}
+          keyExtractor={(code) => code}
+          renderItem={({ item: code }) => (
             <Chip
-              key={code}
               label={code}
-              selected={selectedCurrencies.includes(code)}
+              selected={selectedCurrencySet.has(code)}
               onPress={() => onToggle(code)}
               leading={
                 <Text
@@ -81,8 +79,11 @@ export function CurrencyPanel({
                 </Text>
               }
             />
-          ))}
-        </ScrollView>
+          )}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={filterHeaderStyles.chipScrollRow}
+          style={filterHeaderStyles.categoryRow}
+        />
       ))}
 
       <View style={filterHeaderStyles.panelHeader}>

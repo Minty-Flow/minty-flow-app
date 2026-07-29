@@ -1,21 +1,18 @@
-import { type ReactNode, useCallback, useState } from "react"
+import { type ReactNode, useState } from "react"
 import {
   TextInput as RNTextInput,
   type TextInputProps as RNTextInputProps,
   View,
 } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
-
 export interface InputProps extends RNTextInputProps {
   error?: boolean
   success?: boolean
   native?: boolean
-
   left?: ReactNode
   right?: ReactNode
   variant?: "default" | "search" | "title"
 }
-
 export function Input({
   variant = "default",
   error = false,
@@ -31,23 +28,18 @@ export function Input({
   ...props
 }: InputProps) {
   const [focused, setFocused] = useState(false)
-
-  const handleFocus = useCallback(
-    (e: Parameters<NonNullable<RNTextInputProps["onFocus"]>>[0]) => {
-      setFocused(true)
-      onFocus?.(e)
-    },
-    [onFocus],
-  )
-
-  const handleBlur = useCallback(
-    (e: Parameters<NonNullable<RNTextInputProps["onBlur"]>>[0]) => {
-      setFocused(false)
-      onBlur?.(e)
-    },
-    [onBlur],
-  )
-
+  const handleFocus = (
+    e: Parameters<NonNullable<RNTextInputProps["onFocus"]>>[0],
+  ) => {
+    setFocused(true)
+    onFocus?.(e)
+  }
+  const handleBlur = (
+    e: Parameters<NonNullable<RNTextInputProps["onBlur"]>>[0],
+  ) => {
+    setFocused(false)
+    onBlur?.(e)
+  }
   if (native) {
     return (
       <RNTextInput
@@ -59,23 +51,17 @@ export function Input({
       />
     )
   }
-
   return (
     <View
       style={[
         styles.container,
-
         variant === "search" && styles.search,
         variant === "title" && styles.titleContainer,
-
         focused && variant !== "title" && styles.focused,
-
         focused && variant === "title" && styles.titleFocused,
-
         error && styles.error,
         success && styles.success,
         !editable && styles.disabled,
-
         multiline && styles.multilineContainer,
       ]}
     >
@@ -89,11 +75,8 @@ export function Input({
         onBlur={handleBlur}
         style={[
           styles.input,
-
           variant === "title" && styles.titleInput,
-
           multiline && styles.multilineInput,
-
           typeof style === "function" ? undefined : style,
         ]}
         placeholderTextColor={
@@ -106,112 +89,80 @@ export function Input({
     </View>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     width: "100%",
-
     flexDirection: "row",
     alignItems: "center",
-
     borderWidth: 1,
     borderRadius: theme.radius,
-
     borderColor: theme.colors.onSurface,
     backgroundColor: theme.colors.surface,
-
     paddingHorizontal: 8,
   },
-
   input: {
     flex: 1,
-
     color: theme.colors.onSurface,
-
     fontSize: theme.typography.bodyLarge.fontSize,
-
     paddingVertical: 8,
-
     minWidth: 0,
   },
-
   slot: {
     justifyContent: "center",
     alignItems: "center",
-
     marginHorizontal: 6,
   },
-
   focused: {
     borderColor: theme.colors.primary,
   },
-
   error: {
     borderColor: theme.colors.error,
-
     backgroundColor: theme.colors.surface,
   },
-
   success: {
     borderColor: theme.colors.secondary,
   },
-
   disabled: {
     opacity: 0.55,
   },
-
   multilineContainer: {
     alignItems: "flex-start",
     minHeight: 120,
   },
-
   multilineInput: {
     textAlignVertical: "top",
     paddingTop: 12,
     minHeight: 100,
   },
-
   placeholder: {
     color: theme.colors.semantic.semi,
   },
-
   selectionColor: {
     color: `${theme.colors.primary}80`,
   },
-
   search: {
     backgroundColor: theme.colors.secondary,
     borderColor: "transparent",
   },
-
   titleContainer: {
     paddingHorizontal: 0,
-
     borderWidth: 0,
     borderBottomWidth: 2,
-
     borderBottomColor: theme.colors.secondary,
-
     borderRadius: 0,
-
     backgroundColor: "transparent",
   },
-
   titleFocused: {
     borderBottomColor: theme.colors.primary,
     borderBottomWidth: 2,
   },
-
   titleInput: {
     flex: 1,
     paddingHorizontal: 0,
     paddingVertical: 8,
-
     fontSize: theme.typography.headlineLarge.fontSize,
     lineHeight: 34,
-
     fontWeight: "700",
-
     color: theme.colors.onSurface,
   },
 }))

@@ -1,13 +1,4 @@
-import {
-  differenceInCalendarDays,
-  endOfDay,
-  endOfMonth,
-  endOfYear,
-  startOfDay,
-  startOfMonth,
-  startOfYear,
-} from "date-fns"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { type DimensionValue, View as RNView } from "react-native"
 import { createMMKV } from "react-native-mmkv"
@@ -29,14 +20,10 @@ import type { Budget } from "~/types/budgets"
 import { roundToSafeInteger } from "~/utils/money"
 import { formatMoney, formatPercent } from "~/utils/number-format"
 import {
-  endOfAppWeek,
-  formatCustomPeriodRange,
-  formatDateKey,
-  formatMonthKey,
-  formatWeekKey,
-  formatYear,
-  startOfAppWeek,
-} from "~/utils/time-utils"
+  getBudgetPeriodKey,
+  getBudgetProgressModel,
+} from "~/utils/planning-progress"
+import { formatCustomPeriodRange } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
 /**
@@ -46,7 +33,6 @@ import { Toast } from "~/utils/toast"
  */
 const budgetAlertStorage = createMMKV({ id: "budget-alert-storage" })
 const ALERTED_STORAGE_KEY = "alertedBudgetKeys"
-
 function loadAlertedKeys(): Set<string> {
   const raw = budgetAlertStorage.getString(ALERTED_STORAGE_KEY)
   if (!raw) return new Set()
@@ -56,46 +42,20 @@ function loadAlertedKeys(): Set<string> {
     return new Set()
   }
 }
-
 type BudgetAlertCtx = Pick<Budget, "id" | "period" | "startDate">
-
-function getBudgetPeriodKey(budget: BudgetAlertCtx): string {
-  const now = new Date()
-  switch (budget.period) {
-    case "daily":
-      return formatDateKey(now)
-    case "weekly":
-      return formatWeekKey(now)
-    case "monthly":
-      return formatMonthKey(now)
-    case "yearly":
-      return formatYear(now)
-    case "custom":
-      // Custom budgets have a fixed range — key on startDate so each unique
-      // custom period gets its own alert slot.
-      return formatDateKey(budget.startDate)
-  }
-}
-
 const alertedKeys = loadAlertedKeys()
-
 function hasAlertedInPeriod(budget: BudgetAlertCtx): boolean {
   return alertedKeys.has(`${budget.id}:${getBudgetPeriodKey(budget)}`)
 }
-
 function markAlerted(budget: BudgetAlertCtx): void {
   const key = `${budget.id}:${getBudgetPeriodKey(budget)}`
   alertedKeys.add(key)
   budgetAlertStorage.set(ALERTED_STORAGE_KEY, JSON.stringify([...alertedKeys]))
 }
-
-type BudgetStatus = "onTrack" | "watch" | "over"
-
 interface BudgetCardProps {
   budget: Budget
   onPress: () => void
 }
-
 export function BudgetCard({ budget, onPress }: BudgetCardProps) {
   const [spentAmount, setSpentAmount] = useState(0)
   const allCategories = useCategories()
@@ -104,50 +64,23 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
   const isRTL = useLanguageStore((s) => s.isRTL)
   const privacyMode = useMoneyFormattingStore((s) => s.privacyMode)
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
-
-  const linkedCategories = useMemo(
-    () =>
-      budget.categoryIds
-        .map((id) => allCategories.find((c) => c.id === id))
-        .filter((c): c is NonNullable<typeof c> => Boolean(c)),
-    [budget.categoryIds, allCategories],
-  )
-
+  const linkedCategories = budget.categoryIds
+    .map((id) => allCategories.find((c) => c.id === id))
+    .filter((c): c is NonNullable<typeof c> => Boolean(c))
   // Tick every minute so rolling periods (daily/weekly/monthly/yearly) snap
   // to a new window the moment their boundary crosses, even if the app is
   // left open across midnight / week-start / month-start.
   const tick = useMinuteTick()
-
-  const { periodStart, periodEnd } = useMemo(() => {
+  const progress = (() => {
     // `tick` consumed to make the dep array honest — fires recompute each minute
     // so rolling periods (daily/weekly/monthly/yearly) snap at boundary cross.
     void tick
-    const now = new Date()
-    switch (budget.period) {
-      case "daily":
-        return { periodStart: startOfDay(now), periodEnd: endOfDay(now) }
-      case "weekly":
-        return {
-          periodStart: startOfAppWeek(now),
-          periodEnd: endOfAppWeek(now),
-        }
-      case "monthly":
-        return { periodStart: startOfMonth(now), periodEnd: endOfMonth(now) }
-      case "yearly":
-        return { periodStart: startOfYear(now), periodEnd: endOfYear(now) }
-      default:
-        return {
-          periodStart: budget.startDate,
-          periodEnd: budget.endDate ?? now,
-        }
-    }
-  }, [budget.period, budget.startDate, budget.endDate, tick])
-
+    return getBudgetProgressModel(budget, spentAmount)
+  })()
   // Stable ms values: only change when the period boundary actually crosses,
   // so the spent-fetch effect doesn't re-fire every minute.
-  const periodStartMs = periodStart.getTime()
-  const periodEndMs = periodEnd.getTime()
-
+  const periodStartMs = progress.periodStart.getTime()
+  const periodEndMs = progress.periodEnd.getTime()
   useEffect(() => {
     // periodStartMs / periodEndMs read so they enter the dep array honestly —
     // a boundary cross flips one of them, forcing a refetch with the new window.
@@ -181,16 +114,24 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
     periodStartMs,
     periodEndMs,
   ])
-
-  const spent = spentAmount
-  const limit = budget.amount
-
+  const {
+    spent,
+    limit,
+    totalDays,
+    elapsedDays,
+    daysRemaining,
+    timeRatio,
+    spendRatio,
+    spendPercent,
+    isOverBudget,
+    remaining,
+    status,
+  } = progress
   const budgetId = budget.id
   const budgetName = budget.name
   const alertThreshold = budget.alertThreshold
   const budgetPeriod = budget.period
   const budgetStartDateMs = budget.startDate.getTime()
-
   useEffect(() => {
     if (!alertThreshold || limit <= 0) return
     const ctx: BudgetAlertCtx = {
@@ -217,35 +158,13 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
     budgetName,
     t,
   ])
-
-  const totalDays =
-    Math.max(differenceInCalendarDays(periodEnd, periodStart), 0) + 1
-  const elapsedDays = Math.min(
-    Math.max(differenceInCalendarDays(new Date(), periodStart), 0) + 1,
-    totalDays,
-  )
-  const daysRemaining = Math.max(totalDays - elapsedDays, 0)
-  const timeRatio = totalDays > 0 ? elapsedDays / totalDays : 0
-  const spendRatio = limit > 0 ? Math.min(spent / limit, 1) : 0
-  const spendPercent = limit > 0 ? (spent / limit) * 100 : 0
-
-  const isOverBudget = spent > limit
-  const remaining = limit - spent
-  const status: BudgetStatus = isOverBudget
-    ? "over"
-    : limit > 0 && spent / limit - timeRatio >= 0.1
-      ? "watch"
-      : "onTrack"
-
   const statusColor = {
     onTrack: theme.colors.semantic.income,
     watch: theme.colors.semantic.warning,
     over: theme.colors.semantic.expense,
   }[status]
   const statusBg = `${statusColor}20`
-
   const progressColor = statusColor
-
   // Insight line: per-day pace remaining, or over-budget summary.
   const insight = (() => {
     const formatAmt = (n: number) => {
@@ -274,7 +193,6 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
       count: daysRemaining,
     })
   })()
-
   // Icons: up to 2 category icons + overflow chip; falls back to budget icon
   // when no categories are linked.
   const visibleCats = linkedCategories.slice(0, 1)
@@ -283,7 +201,6 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
     0,
   )
   const useCategoryIcons = visibleCats.length > 0
-
   return (
     <Pressable
       style={styles.card}
@@ -471,7 +388,6 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
     </Pressable>
   )
 }
-
 const styles = StyleSheet.create((t) => ({
   card: {
     backgroundColor: t.colors.surface,

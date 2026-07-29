@@ -1,21 +1,5 @@
-import {
-  differenceInCalendarDays,
-  endOfDay,
-  endOfMonth,
-  endOfYear,
-  startOfDay,
-  startOfMonth,
-  startOfYear,
-} from "date-fns"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { type DimensionValue, FlatList, View as RNView } from "react-native"
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
@@ -46,18 +30,12 @@ import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { roundToSafeInteger } from "~/utils/money"
 import { formatMoney } from "~/utils/number-format"
-import {
-  endOfAppWeek,
-  formatCustomPeriodRange,
-  startOfAppWeek,
-} from "~/utils/time-utils"
-
-type BudgetStatus = "onTrack" | "watch" | "over"
+import { getBudgetProgressModel } from "~/utils/planning-progress"
+import { formatCustomPeriodRange } from "~/utils/time-utils"
 
 /* ------------------------------------------------------------------ */
 /* Detail screen                                                      */
 /* ------------------------------------------------------------------ */
-
 function BudgetDetailInner({ budgetId }: { budgetId: string }) {
   const { t } = useTranslation()
   const router = useRouter()
@@ -67,7 +45,6 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
   const privacyMode = useMoneyFormattingStore((s) => s.privacyMode)
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
-
   const budget = useBudget(budgetId)
   const allAccounts = useActiveAccounts()
   const allCategories = useCategories()
@@ -75,31 +52,28 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
   const [spentByCategory, setSpentByCategory] = useState<
     Record<string, number>
   >({})
-
-  const accountNames = useMemo(
-    () =>
-      (budget?.accountIds ?? [])
-        .map((id) => allAccounts.find((a) => a.id === id)?.name)
-        .filter(Boolean) as string[],
-    [budget?.accountIds, allAccounts],
-  )
-
-  const linkedCategories = useMemo(
-    () =>
-      (budget?.categoryIds ?? [])
-        .map((id) => allCategories.find((c) => c.id === id))
-        .filter((c): c is NonNullable<typeof c> => Boolean(c)),
-    [budget?.categoryIds, allCategories],
-  )
-  const periodRange = useMemo(() => {
+  const accountNames = (() => {
+    const accountNameById = new Map(allAccounts.map((a) => [a.id, a.name]))
+    return (budget?.accountIds ?? []).flatMap((id) => {
+      const name = accountNameById.get(id)
+      return name ? [name] : []
+    })
+  })()
+  const linkedCategories = (() => {
+    const categoryById = new Map(allCategories.map((c) => [c.id, c]))
+    return (budget?.categoryIds ?? []).flatMap((id) => {
+      const category = categoryById.get(id)
+      return category ? [category] : []
+    })
+  })()
+  const periodRange = (() => {
     if (!budget) return null
     return getBudgetPeriodRange(
       budget.period,
       budget.startDate.toISOString(),
       budget.endDate?.toISOString() ?? null,
     )
-  }, [budget])
-
+  })()
   const { items: transactionsFull } = useTransactions(
     periodRange && budget
       ? {
@@ -110,7 +84,6 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
         }
       : {},
   )
-
   useEffect(() => {
     if (!budget) return
     let cancelled = false
@@ -143,34 +116,28 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
       unsub()
     }
   }, [budget])
-
-  const handleTransactionPress = useCallback(
-    (id: string) => {
-      router.push({ pathname: "/transaction/[id]", params: { id } })
-    },
-    [router],
-  )
-  const handleDeleteDone = useCallback(() => {
+  const handleTransactionPress = (id: string) => {
+    router.push({ pathname: "/transaction/[id]", params: { id } })
+  }
+  const handleDeleteDone = () => {
     openSwipeableRef.current?.close()
-  }, [])
-
-  const handleWillOpen = useCallback((methods: SwipeableMethods) => {
+  }
+  const handleWillOpen = (methods: SwipeableMethods) => {
     openSwipeableRef.current?.close()
     openSwipeableRef.current = methods
-  }, [])
-
-  const renderTransactionItem = useCallback(
-    ({ item }: { item: TransactionWithRelations }) => (
-      <TransactionItem
-        transactionWithRelations={item}
-        onPress={() => handleTransactionPress(item.id)}
-        onDelete={handleDeleteDone}
-        onWillOpen={handleWillOpen}
-      />
-    ),
-    [handleTransactionPress, handleDeleteDone, handleWillOpen],
+  }
+  const renderTransactionItem = ({
+    item,
+  }: {
+    item: TransactionWithRelations
+  }) => (
+    <TransactionItem
+      transactionWithRelations={item}
+      onPress={() => handleTransactionPress(item.id)}
+      onDelete={handleDeleteDone}
+      onWillOpen={handleWillOpen}
+    />
   )
-
   useLayoutEffect(() => {
     navigation.setOptions({
       title: t("screens.settings.budgets.detail.title"),
@@ -190,7 +157,6 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
       ),
     })
   }, [navigation, router, budgetId, t])
-
   if (!budget) {
     return (
       <View style={styles.container}>
@@ -200,51 +166,17 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
       </View>
     )
   }
-
-  const limit = budget.amount
-  const spent = spentAmount
-  const isOverBudget = spent > limit
-  const remaining = limit - spent
-
-  // Period bounds — match card logic.
-  const { periodStart, periodEnd } = (() => {
-    const now = new Date()
-    switch (budget.period) {
-      case "daily":
-        return { periodStart: startOfDay(now), periodEnd: endOfDay(now) }
-      case "weekly":
-        return {
-          periodStart: startOfAppWeek(now),
-          periodEnd: endOfAppWeek(now),
-        }
-      case "monthly":
-        return { periodStart: startOfMonth(now), periodEnd: endOfMonth(now) }
-      case "yearly":
-        return { periodStart: startOfYear(now), periodEnd: endOfYear(now) }
-      default:
-        return {
-          periodStart: budget.startDate,
-          periodEnd: budget.endDate ?? now,
-        }
-    }
-  })()
-
-  const totalDays =
-    Math.max(differenceInCalendarDays(periodEnd, periodStart), 0) + 1
-  const elapsedDays = Math.min(
-    Math.max(differenceInCalendarDays(new Date(), periodStart), 0) + 1,
+  const {
+    limit,
+    spent,
     totalDays,
-  )
-  const daysRemaining = Math.max(totalDays - elapsedDays, 0)
-  const timeRatio = totalDays > 0 ? elapsedDays / totalDays : 0
-  const spendRatio = limit > 0 ? Math.min(spent / limit, 1) : 0
-
-  const status: BudgetStatus = isOverBudget
-    ? "over"
-    : limit > 0 && spent / limit - timeRatio >= 0.1
-      ? "watch"
-      : "onTrack"
-
+    elapsedDays,
+    isOverBudget,
+    remaining,
+    daysRemaining,
+    spendRatio,
+    status,
+  } = getBudgetProgressModel(budget, spentAmount)
   const statusColor = {
     onTrack: theme.colors.semantic.income,
     watch: theme.colors.semantic.warning,
@@ -252,12 +184,10 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
   }[status]
   const statusBg = `${statusColor}20`
   const progressBarColor = statusColor
-
   const periodLabel =
     budget.period === "custom"
       ? formatCustomPeriodRange(budget.startDate, budget.endDate)
       : t(`screens.settings.budgets.periods.${budget.period}` as TranslationKey)
-
   const formatAmt = (n: number) => {
     const raw = formatMoney(roundToSafeInteger(n), budget.currencyCode, {
       currencyDisplay: currencyLook,
@@ -282,14 +212,12 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
           count: daysRemaining,
         })
       : null
-
   // Per-category breakdown — sorted by spend descending, only categories with
   // non-zero spend. The segmented progress bar mirrors this order so colors
   // map left-to-right.
   const categoryBreakdown = linkedCategories
     .map((c) => ({ category: c, spent: spentByCategory[c.id] ?? 0 }))
     .sort((a, b) => b.spent - a.spent)
-
   // Uncategorized portion — when total spend exceeds the sum of category
   // segments (transactions without a linked category, etc.).
   const categorizedTotal = categoryBreakdown.reduce(
@@ -297,13 +225,11 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
     0,
   )
   const uncategorizedSpent = Math.max(spent - categorizedTotal, 0)
-
   // Segment widths are percentages of the limit so segments stay proportional
   // to their share of spend. We cap each at 100% so a single over-budget
   // segment doesn't overflow the bar visually.
   const segmentPct = (n: number) =>
     limit > 0 ? Math.min((n / limit) * 100, 100) : 0
-
   const headerContent = (
     <View style={styles.headerCard}>
       <View style={styles.titleRow}>
@@ -454,7 +380,6 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
       </Text>
     </View>
   )
-
   return (
     <View style={styles.container}>
       <FlatList
@@ -475,21 +400,19 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
     </View>
   )
 }
-
 /* ------------------------------------------------------------------ */
 /* Route component                                                    */
 /* ------------------------------------------------------------------ */
-
 export default function BudgetDetailScreen() {
-  const { budgetId } = useLocalSearchParams<{ budgetId: string }>()
+  const { budgetId } = useLocalSearchParams<{
+    budgetId: string
+  }>()
   if (!budgetId) return null
   return <BudgetDetailInner budgetId={budgetId} />
 }
-
 /* ------------------------------------------------------------------ */
 /* Styles                                                             */
 /* ------------------------------------------------------------------ */
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
@@ -503,7 +426,6 @@ const styles = StyleSheet.create((theme) => ({
   listContent: {
     paddingBottom: 40,
   },
-
   // Header card
   headerCard: {
     padding: 20,
@@ -631,7 +553,6 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSecondary,
     fontStyle: "italic",
   },
-
   // Transactions
   transactionsLabel: {
     ...theme.typography.bodyLarge,

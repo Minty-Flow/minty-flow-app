@@ -1,13 +1,5 @@
-import { differenceInDays } from "date-fns"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { type DimensionValue, FlatList, View as RNView } from "react-native"
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
@@ -33,30 +25,18 @@ import { useGoal } from "~/stores/db/goal.store"
 import { useTransactions } from "~/stores/db/transaction.store"
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
-import type { Goal } from "~/types/goals"
 import { logger } from "~/utils/logger"
 import { roundToSafeInteger } from "~/utils/money"
 import { formatMoney } from "~/utils/number-format"
+import {
+  type GoalStatus,
+  getGoalProgressModel,
+} from "~/utils/planning-progress"
 import { Toast } from "~/utils/toast"
-
-type GoalStatus = "onTrack" | "behind" | "flexible" | "reached"
-
-function getGoalStatus(goal: Goal, progress: number): GoalStatus {
-  if (progress >= 1) return "reached"
-  if (!goal.targetDate) return "flexible"
-  const today = new Date()
-  const daysLeft = differenceInDays(goal.targetDate, today)
-  if (daysLeft < 0) return "behind"
-  const totalDays = differenceInDays(goal.targetDate, goal.createdAt)
-  if (totalDays <= 0) return "onTrack"
-  const elapsed = differenceInDays(today, goal.createdAt)
-  return progress >= Math.min(elapsed / totalDays, 1) ? "onTrack" : "behind"
-}
 
 /* ------------------------------------------------------------------ */
 /* Detail screen                                                      */
 /* ------------------------------------------------------------------ */
-
 function GoalDetailInner({ goalId }: { goalId: string }) {
   const { t } = useTranslation()
   const router = useRouter()
@@ -67,20 +47,17 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
   const [unarchiveModalVisible, setUnarchiveModalVisible] = useState(false)
-
   const goal = useGoal(goalId)
   const allAccounts = useActiveAccounts()
   const [currentAmount, setCurrentAmount] = useState(0)
   const { items: transactionsFull } = useTransactions({ goalId })
-
-  const accountNames = useMemo(
-    () =>
-      (goal?.accountIds ?? [])
-        .map((id) => allAccounts.find((a) => a.id === id)?.name)
-        .filter(Boolean) as string[],
-    [goal?.accountIds, allAccounts],
-  )
-
+  const accountNames = (() => {
+    const accountNameById = new Map(allAccounts.map((a) => [a.id, a.name]))
+    return (goal?.accountIds ?? []).flatMap((id) => {
+      const name = accountNameById.get(id)
+      return name ? [name] : []
+    })
+  })()
   useEffect(() => {
     if (!goal) return
     let cancelled = false
@@ -95,23 +72,17 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
       unsub()
     }
   }, [goalId, goal])
-
-  const handleTransactionPress = useCallback(
-    (id: string) => {
-      router.push({ pathname: "/transaction/[id]", params: { id } })
-    },
-    [router],
-  )
-  const handleDeleteDone = useCallback(() => {
+  const handleTransactionPress = (id: string) => {
+    router.push({ pathname: "/transaction/[id]", params: { id } })
+  }
+  const handleDeleteDone = () => {
     openSwipeableRef.current?.close()
-  }, [])
-
-  const handleWillOpen = useCallback((methods: SwipeableMethods) => {
+  }
+  const handleWillOpen = (methods: SwipeableMethods) => {
     openSwipeableRef.current?.close()
     openSwipeableRef.current = methods
-  }, [])
-
-  const handleUnarchive = useCallback(async () => {
+  }
+  const handleUnarchive = async () => {
     try {
       await unarchiveGoalById(goalId)
       Toast.success({ title: t("screens.settings.goals.unarchiveSuccess") })
@@ -119,22 +90,20 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
       logger.error("Error unarchiving goal", { error })
       Toast.error({ title: t("common.toast.error") })
     }
-  }, [goalId, t])
-
-  const renderTransactionItem = useCallback(
-    ({ item }: { item: TransactionWithRelations }) => (
-      <TransactionItem
-        transactionWithRelations={item}
-        onPress={() => handleTransactionPress(item.id)}
-        onDelete={handleDeleteDone}
-        onWillOpen={handleWillOpen}
-      />
-    ),
-    [handleTransactionPress, handleDeleteDone, handleWillOpen],
+  }
+  const renderTransactionItem = ({
+    item,
+  }: {
+    item: TransactionWithRelations
+  }) => (
+    <TransactionItem
+      transactionWithRelations={item}
+      onPress={() => handleTransactionPress(item.id)}
+      onDelete={handleDeleteDone}
+      onWillOpen={handleWillOpen}
+    />
   )
-
   const isArchived = goal?.isArchived ?? false
-
   useLayoutEffect(() => {
     navigation.setOptions({
       title: t("screens.settings.goals.detail.title"),
@@ -163,7 +132,6 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
         ),
     })
   }, [navigation, router, goalId, isArchived, t])
-
   if (!goal) {
     return (
       <View style={styles.container}>
@@ -173,19 +141,22 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
       </View>
     )
   }
-
   const isExpenseGoal = goal.goalType === "expense"
-  const resolved = currentAmount ?? 0
-  const progress = goal.targetAmount > 0 ? resolved / goal.targetAmount : 0
-  const clampedProgress = Math.min(progress, 1)
-  const isCompleted = progress >= 1
-  const remaining = Math.max(goal.targetAmount - resolved, 0)
-
-  const status = getGoalStatus(goal, progress)
-
+  const {
+    currentAmount: resolved,
+    clampedProgress,
+    isCompleted,
+    remaining,
+    daysLeft,
+    status,
+  } = getGoalProgressModel(goal, currentAmount)
   const statusColors: Record<
     GoalStatus,
-    { dot: string; text: string; bg: string }
+    {
+      dot: string
+      text: string
+      bg: string
+    }
   > = {
     reached: {
       dot: theme.colors.semantic.income,
@@ -209,31 +180,27 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
     },
   }
   const badge = statusColors[status]
-
   const progressBarColor =
     isCompleted || status === "reached"
       ? theme.colors.semantic.income
       : status === "behind"
         ? theme.colors.semantic.expense
         : theme.colors.primary
-
   const dateSubtitle = (): string => {
     if (isCompleted) return t("screens.settings.goals.card.reachedLabel")
-    if (!goal.targetDate) return t("screens.settings.goals.card.noDeadline")
-    const diff = differenceInDays(goal.targetDate, new Date())
-    if (diff === 0)
+    if (daysLeft === null) return t("screens.settings.goals.card.noDeadline")
+    if (daysLeft === 0)
       return t("screens.settings.goals.card.daysLeft", { count: 0 })
-    if (diff < 0)
-      return t("screens.settings.goals.card.overdue", { count: Math.abs(diff) })
-    return t("screens.settings.goals.card.daysLeft", { count: diff })
+    if (daysLeft < 0)
+      return t("screens.settings.goals.card.overdue", {
+        count: Math.abs(daysLeft),
+      })
+    return t("screens.settings.goals.card.daysLeft", { count: daysLeft })
   }
-
   const insightText = (): string => {
     if (isCompleted) return t("screens.settings.goals.card.insight.goalReached")
-    if (!goal.targetDate) return t("screens.settings.goals.card.noDeadline")
-    const today = new Date()
-    const daysLeft = Math.max(differenceInDays(goal.targetDate, today), 1)
-    const daily = remaining / daysLeft
+    if (daysLeft === null) return t("screens.settings.goals.card.noDeadline")
+    const daily = remaining / Math.max(daysLeft, 1)
     const raw = formatMoney(roundToSafeInteger(daily), goal.currencyCode, {
       currencyDisplay: currencyLook,
       hideSign: true,
@@ -244,11 +211,9 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
       : "screens.settings.goals.card.insight.savePerDay"
     return t(key, { amount })
   }
-
   const progressLabel = isExpenseGoal
     ? t("screens.settings.goals.card.spent")
     : t("screens.settings.goals.card.saved")
-
   const headerContent = (
     <View style={styles.headerCard}>
       <View style={styles.headerTopRow}>
@@ -382,7 +347,6 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
       </Text>
     </View>
   )
-
   return (
     <View style={styles.container}>
       <FlatList
@@ -417,21 +381,19 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
     </View>
   )
 }
-
 /* ------------------------------------------------------------------ */
 /* Route component                                                    */
 /* ------------------------------------------------------------------ */
-
 export default function GoalDetailScreen() {
-  const { goalId } = useLocalSearchParams<{ goalId: string }>()
+  const { goalId } = useLocalSearchParams<{
+    goalId: string
+  }>()
   if (!goalId) return null
   return <GoalDetailInner goalId={goalId} />
 }
-
 /* ------------------------------------------------------------------ */
 /* Styles                                                             */
 /* ------------------------------------------------------------------ */
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
@@ -445,7 +407,6 @@ const styles = StyleSheet.create((theme) => ({
   listContent: {
     paddingBottom: 40,
   },
-
   // Header card
   headerCard: {
     padding: 20,
@@ -522,7 +483,6 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.onSecondary,
   },
-
   // Progress
   progressSection: {
     gap: 8,
@@ -558,7 +518,6 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSecondary,
     fontStyle: "italic",
   },
-
   // Pending notice
   pendingNoticeRow: {
     flexDirection: "row",
@@ -570,7 +529,6 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSecondary,
     flex: 1,
   },
-
   // Transactions
   transactionsLabel: {
     ...theme.typography.bodyLarge,

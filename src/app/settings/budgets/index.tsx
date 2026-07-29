@@ -1,5 +1,4 @@
 import { useRouter } from "expo-router"
-import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
@@ -12,31 +11,20 @@ import { View } from "~/components/ui/view"
 import { useAllBudgets } from "~/stores/db/budget.store"
 import type { Budget } from "~/types/budgets"
 import { NewEnum } from "~/types/new"
-
 export default function BudgetsScreen() {
   const budgets = useAllBudgets()
   const { theme } = useUnistyles()
   const { t } = useTranslation()
   const router = useRouter()
-
-  const handleAddBudget = useCallback(() => {
+  const handleAddBudget = () => {
     router.push(`/settings/budgets/${NewEnum.NEW}/modify`)
-  }, [router])
-
-  const handleEditBudget = useCallback(
-    (budgetId: string) => {
-      router.push(`/settings/budgets/${budgetId}`)
-    },
-    [router],
+  }
+  const handleEditBudget = (budgetId: string) => {
+    router.push(`/settings/budgets/${budgetId}`)
+  }
+  const renderBudgetItem = ({ item }: { item: Budget }) => (
+    <BudgetCard budget={item} onPress={() => handleEditBudget(item.id)} />
   )
-
-  const renderBudgetItem = useCallback(
-    ({ item }: { item: Budget }) => (
-      <BudgetCard budget={item} onPress={() => handleEditBudget(item.id)} />
-    ),
-    [handleEditBudget],
-  )
-
   return (
     <View style={styles.container}>
       <FlatList
@@ -62,7 +50,6 @@ export default function BudgetsScreen() {
     </View>
   )
 }
-
 const styles = StyleSheet.create((t) => ({
   container: {
     flex: 1,

@@ -1,11 +1,10 @@
-import { type FC, useMemo } from "react"
+import type { FC } from "react"
 import type { StyleProp, TextStyle } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { Text, type TextVariant } from "~/components/ui/text"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
-import { logger } from "~/utils/logger"
 import { assertMinorUnits } from "~/utils/money"
 import { formatMoney } from "~/utils/number-format"
 
@@ -26,7 +25,6 @@ interface MoneyProps {
   variant?: TextVariant
   native?: boolean
 }
-
 export const Money: FC<MoneyProps> = ({
   value,
   currency,
@@ -45,17 +43,8 @@ export const Money: FC<MoneyProps> = ({
   // Preferences
   const privacyModeActive = useMoneyFormattingStore((s) => s.privacyMode)
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
-
   // Numeric value (used only for inference)
-  const numericValue = useMemo(() => {
-    try {
-      return assertMinorUnits(value)
-    } catch {
-      logger.warn("Money received non-minor-unit value", { value })
-      return Math.round(value)
-    }
-  }, [value])
-
+  const numericValue = assertMinorUnits(value)
   // Sign behavior: tone controls + / - / no sign
   const resolvedSignTone: TransactionType =
     tone !== "auto"
@@ -65,71 +54,44 @@ export const Money: FC<MoneyProps> = ({
         : numericValue > 0
           ? TransactionTypeEnum.INCOME
           : TransactionTypeEnum.TRANSFER
-
   // Visual tone: color only; defaults to sign tone when "auto" or omitted
   const resolvedVisualTone: TransactionType =
     visualTone === "auto" || visualTone == null ? resolvedSignTone : visualTone
-
   /**
    * Enforce sign by tone:
    * - income   → +
    * - expense  → -
    * - transfer → no sign
    */
-  const signedValue = useMemo(() => {
+  const signedValue = (() => {
     const abs = Math.abs(numericValue)
-
     if (resolvedSignTone === TransactionTypeEnum.EXPENSE) {
       return -abs
     }
-
     if (resolvedSignTone === TransactionTypeEnum.INCOME) {
       return abs
     }
-
     // TRANSFER → no sign
     return abs
-  }, [numericValue, resolvedSignTone])
-
+  })()
   // Format
-  const formatted = useMemo(
-    () =>
-      formatMoney(signedValue, currency, {
-        currencyDisplay: currencyLook,
-        compact,
-        hideSign: resolvedSignTone === TransactionTypeEnum.TRANSFER || hideSign,
-        showSign: resolvedSignTone !== TransactionTypeEnum.TRANSFER && showSign,
-        hideSymbol,
-        addParentheses,
-      }),
-    [
-      signedValue,
-      currency,
-      currencyLook,
-      compact,
-      hideSign,
-      showSign,
-      hideSymbol,
-      addParentheses,
-      resolvedSignTone,
-    ],
-  )
-
+  const formatted = formatMoney(signedValue, currency, {
+    currencyDisplay: currencyLook,
+    compact,
+    hideSign: resolvedSignTone === TransactionTypeEnum.TRANSFER || hideSign,
+    showSign: resolvedSignTone !== TransactionTypeEnum.TRANSFER && showSign,
+    hideSymbol,
+    addParentheses,
+  })
   // Privacy masking
-  const privacyMasked = useMemo(
-    () => formatted.replace(/[\d٠-٩۰-۹]/gu, "⁕"),
-    [formatted],
-  )
-
+  const privacyMasked = formatted.replace(/[\d٠-٩۰-۹]/gu, "⁕")
   const shouldHide = !disablePrivacyMode && privacyModeActive
-
   const toneStyles =
     resolvedVisualTone === TransactionTypeEnum.INCOME
       ? styles.income
       : resolvedVisualTone === TransactionTypeEnum.EXPENSE
         ? styles.expense
         : styles.transfer
-
   return (
     <Text
       variant={variant}
@@ -140,7 +102,6 @@ export const Money: FC<MoneyProps> = ({
     </Text>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   transfer: {
     color: theme.colors.onSurface,

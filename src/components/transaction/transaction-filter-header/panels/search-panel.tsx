@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next"
-import { ScrollView, TextInput, View } from "react-native"
+import { FlatList, TextInput, View } from "react-native"
 import { useUnistyles } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
@@ -39,21 +39,21 @@ export function SearchPanel({
 
   return (
     <View>
-      <ScrollView
+      <FlatList
         horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={filterHeaderStyles.searchMatchRow}
-        style={filterHeaderStyles.searchMatchScroll}
-      >
-        {SEARCH_MATCH_OPTIONS.map((opt) => (
+        data={SEARCH_MATCH_OPTIONS}
+        keyExtractor={(opt) => opt.id}
+        renderItem={({ item: opt }) => (
           <Chip
-            key={opt.id}
             label={t(`components.filters.searchMatch.${opt.id}`)}
             selected={matchType === opt.id}
             onPress={() => onMatchTypeChange(opt.id)}
           />
-        ))}
-      </ScrollView>
+        )}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={filterHeaderStyles.searchMatchRow}
+        style={filterHeaderStyles.searchMatchScroll}
+      />
       <View style={filterHeaderStyles.searchRow}>
         <IconSvg name="search-outline" size={20} />
         <TextInput

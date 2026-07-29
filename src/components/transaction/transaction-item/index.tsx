@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react"
+import { useRef } from "react"
 import { useTranslation } from "react-i18next"
 import Swipeable, {
   type SwipeableMethods,
@@ -31,9 +31,7 @@ import { TransactionItemLeft } from "./transaction-item-left"
 import { TransactionItemRight } from "./transaction-item-right"
 
 const TRASH_ACTION_WIDTH = 100
-
 type TransactionItemVariant = "default" | "upcoming"
-
 interface TransactionItemProps {
   transactionWithRelations: TransactionWithRelations
   onPress?: () => void
@@ -48,7 +46,6 @@ interface TransactionItemProps {
   leftActionAccessibilityLabel?: string
   variant?: TransactionItemVariant
 }
-
 export const TransactionItem = ({
   transactionWithRelations,
   onPress,
@@ -81,7 +78,6 @@ export const TransactionItem = ({
     transferId,
     subtype,
   } = transactionWithRelations
-
   const isTransfer = txIsTransfer || type === TransactionTypeEnum.TRANSFER
   const transferLayout = useTransfersPreferencesStore((s) => s.layout)
   const isCombinedTransfer = Boolean(
@@ -119,7 +115,6 @@ export const TransactionItem = ({
     : subtype === TransactionSubTypeEnum.REFUND
       ? TransactionTypeEnum.INCOME
       : type
-
   // ── Appearance preferences ──────────────────────────────────────────────
   const appearanceVariant = useTransactionItemAppearanceStore((s) => s.variant)
   const showCategoryInSubtitle = useTransactionItemAppearanceStore(
@@ -131,33 +126,25 @@ export const TransactionItem = ({
   const leadingIconPref = useTransactionItemAppearanceStore(
     (s) => s.leadingIcon,
   )
-
   const untitledLabel = t("common.transaction.untitledTransaction")
-
   const trimmedTitle = title?.trim()
-
   const isUntitled = !trimmedTitle
-
   const displayTitle =
     showCategoryForUntitled && isUntitled
       ? (category?.name ?? untitledLabel)
       : (trimmedTitle ?? untitledLabel)
-
   const displayIcon =
     leadingIconPref === "account" ? (account?.icon ?? icon) : icon
   const displayColorScheme =
     leadingIconPref === "account" ? account?.colorScheme : category?.colorScheme
-
   const globalRequireConfirmation = usePendingTransactionsStore(
     (s) => s.requireConfirmation,
   )
   const requireConfirmation =
     requiresManualConfirmation ?? globalRequireConfirmation
-
   const isUpcoming = variant === "upcoming"
   const isConfirmable = useIsConfirmable(transactionWithRelations)
   const isAutoRecurring = Boolean(extra?.recurringId)
-
   const accountLabel =
     isCombinedTransfer && relatedAccount
       ? `${account?.name} → ${relatedAccount.name}`
@@ -172,89 +159,69 @@ export const TransactionItem = ({
     ? ` • ${formatFriendlyDate(transactionDate)}, ${formatReadableTime(transactionDate)}`
     : ` • ${formatReadableTime(transactionDate)}`
   const subtitleText = `${accountLabel}${categorySegment}${timeSegment}`
-
   const showRecurringBadge = isUpcoming && isAutoRecurring
   const showPendingBadge = isUpcoming && !isAutoRecurring
-
-  const handleRestorePress = useCallback(
-    (closeSwipe: () => void) => {
-      closeSwipe()
-      onRestore?.()
+  const handleRestorePress = (closeSwipe: () => void) => {
+    closeSwipe()
+    onRestore?.()
+  }
+  const renderLeftActions = (
+    progress: SharedValue<number>,
+    translation: SharedValue<number>,
+    swipeableMethods: {
+      close: () => void
     },
-    [onRestore],
+  ) => (
+    <LeftAction
+      progress={progress}
+      translation={translation}
+      onRestorePress={() => handleRestorePress(swipeableMethods.close)}
+      accessibilityLabel={leftActionAccessibilityLabel}
+    />
   )
-
-  const renderLeftActions = useCallback(
-    (
-      progress: SharedValue<number>,
-      translation: SharedValue<number>,
-      swipeableMethods: { close: () => void },
-    ) => (
-      <LeftAction
-        progress={progress}
-        translation={translation}
-        onRestorePress={() => handleRestorePress(swipeableMethods.close)}
-        accessibilityLabel={leftActionAccessibilityLabel}
-      />
-    ),
-    [handleRestorePress, leftActionAccessibilityLabel],
-  )
-
-  const handleTrashPress = useCallback(
-    async (closeSwipe: () => void) => {
-      if (onBeforeDelete) {
-        const handled = await Promise.resolve(
-          onBeforeDelete(transactionWithRelations),
-        )
-        if (handled) {
-          closeSwipe()
-          return
-        }
-      }
-      if (isDeleted) {
+  const handleTrashPress = async (closeSwipe: () => void) => {
+    if (onBeforeDelete) {
+      const handled = await Promise.resolve(
+        onBeforeDelete(transactionWithRelations),
+      )
+      if (handled) {
         closeSwipe()
-        onDelete?.()
         return
       }
-      const promise =
-        txIsTransfer && transferId ? deleteTransfer(id) : deleteTransaction(id)
-      promise
-        .then(() =>
-          Toast.success({
-            title: isUpcoming
-              ? t("components.transactionItem.canceled")
-              : t("components.transactionForm.toast.movedToTrash"),
-          }),
-        )
-        .catch(() =>
-          Toast.error({
-            title: isUpcoming
-              ? t("components.transactionItem.failedToDelete")
-              : t("components.transactionForm.toast.moveToTrashFailed"),
-          }),
-        )
-        .finally(() => {
-          closeSwipe()
-          onDelete?.()
-        })
-    },
-    [
-      id,
-      txIsTransfer,
-      transferId,
-      isDeleted,
-      transactionWithRelations,
-      isUpcoming,
-      onDelete,
-      onBeforeDelete,
-      t,
-    ],
-  )
-
+    }
+    if (isDeleted) {
+      closeSwipe()
+      onDelete?.()
+      return
+    }
+    const promise =
+      txIsTransfer && transferId ? deleteTransfer(id) : deleteTransaction(id)
+    promise
+      .then(() =>
+        Toast.success({
+          title: isUpcoming
+            ? t("components.transactionItem.canceled")
+            : t("components.transactionForm.toast.movedToTrash"),
+        }),
+      )
+      .catch(() =>
+        Toast.error({
+          title: isUpcoming
+            ? t("components.transactionItem.failedToDelete")
+            : t("components.transactionForm.toast.moveToTrashFailed"),
+        }),
+      )
+      .finally(() => {
+        closeSwipe()
+        onDelete?.()
+      })
+  }
   const renderRightActions = (
     progress: SharedValue<number>,
     translation: SharedValue<number>,
-    swipeableMethods: { close: () => void },
+    swipeableMethods: {
+      close: () => void
+    },
   ) => (
     <RightAction
       progress={progress}
@@ -263,7 +230,6 @@ export const TransactionItem = ({
       accessibilityLabel={rightActionAccessibilityLabel}
     />
   )
-
   const content = (
     <View style={transactionItemStyles.container}>
       <Pressable
@@ -309,11 +275,9 @@ export const TransactionItem = ({
       )}
     </View>
   )
-
   if (onDelete == null) {
     return content
   }
-
   return (
     <Swipeable
       ref={swipeableRef}

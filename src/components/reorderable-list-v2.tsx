@@ -1,4 +1,3 @@
-import { useCallback } from "react"
 import {
   FlatList,
   type FlatListProps,
@@ -21,7 +20,6 @@ import { logger } from "~/utils/logger"
 
 const AnimatedView = Animated.createAnimatedComponent(View)
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
-
 /**
  * Pure helper function to move an item in an array
  */
@@ -32,7 +30,6 @@ function moveItem<T>(list: T[], from: number, to: number): T[] {
   next.splice(to, 0, item)
   return next
 }
-
 interface ReorderableRowProps<T> {
   item: T
   index: number
@@ -41,7 +38,6 @@ interface ReorderableRowProps<T> {
   onMove: (from: number, to: number) => void
   showButtons: boolean
 }
-
 function ReorderableRow<T>({
   item,
   index,
@@ -55,7 +51,6 @@ function ReorderableRow<T>({
   const isFirst = index === 0
   const isLast = index === dataLength - 1
 
-  // Create separators object for renderItem (FlatList compatibility)
   const separators = {
     highlight: () => {},
     unhighlight: () => {},
@@ -69,37 +64,46 @@ function ReorderableRow<T>({
   const downButtonScale = useSharedValue(1)
   const itemScale = useSharedValue(1)
 
-  // Animated styles for buttons
+  // Animated styles for buttons (Use .get() instead of .value)
   const upButtonStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: upButtonScale.value }],
+    transform: [{ scale: upButtonScale.get() }],
   }))
-
   const downButtonStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: downButtonScale.value }],
+    transform: [{ scale: downButtonScale.get() }],
   }))
 
-  // Animated style for item
+  // Animated style for item (Use .get() instead of .value)
   const itemAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: itemScale.value }],
+    transform: [{ scale: itemScale.get() }],
   }))
 
   const handleMoveUp = () => {
-    upButtonScale.value = withTiming(0.9, { duration: 100 }, () => {
-      upButtonScale.value = withTiming(1, { duration: 100 })
-    })
-    itemScale.value = withTiming(0.98, { duration: 150 }, () => {
-      itemScale.value = withTiming(1, { duration: 150 })
-    })
+    // Use .set() instead of .value =
+    upButtonScale.set(
+      withTiming(0.9, { duration: 100 }, () => {
+        upButtonScale.set(withTiming(1, { duration: 100 }))
+      }),
+    )
+    itemScale.set(
+      withTiming(0.98, { duration: 150 }, () => {
+        itemScale.set(withTiming(1, { duration: 150 }))
+      }),
+    )
     onMove(index, index - 1)
   }
 
   const handleMoveDown = () => {
-    downButtonScale.value = withTiming(0.9, { duration: 100 }, () => {
-      downButtonScale.value = withTiming(1, { duration: 100 })
-    })
-    itemScale.value = withTiming(0.98, { duration: 150 }, () => {
-      itemScale.value = withTiming(1, { duration: 150 })
-    })
+    // Use .set() instead of .value =
+    downButtonScale.set(
+      withTiming(0.9, { duration: 100 }, () => {
+        downButtonScale.set(withTiming(1, { duration: 100 }))
+      }),
+    )
+    itemScale.set(
+      withTiming(0.98, { duration: 150 }, () => {
+        itemScale.set(withTiming(1, { duration: 150 }))
+      }),
+    )
     onMove(index, index + 1)
   }
 
@@ -146,7 +150,6 @@ function ReorderableRow<T>({
     </AnimatedView>
   )
 }
-
 interface ReorderableListV2Props<T>
   extends Omit<FlatListProps<T>, "renderItem"> {
   data: T[]
@@ -155,7 +158,6 @@ interface ReorderableListV2Props<T>
   showButtons?: boolean
   keyExtractor?: (item: T, index: number) => string
 }
-
 export function ReorderableListV2<T>({
   data,
   onReorder,
@@ -169,30 +171,22 @@ export function ReorderableListV2<T>({
       "ReorderableListV2: no keyExtractor provided. Index-based keys will break reorder animations.",
     )
   }
-  const move = useCallback(
-    (from: number, to: number) => {
-      const next = moveItem(data, from, to)
-      if (next !== data) {
-        onReorder(next)
-      }
-    },
-    [data, onReorder],
+  const move = (from: number, to: number) => {
+    const next = moveItem(data, from, to)
+    if (next !== data) {
+      onReorder(next)
+    }
+  }
+  const renderReorderableItem: ListRenderItem<T> = ({ item, index }) => (
+    <ReorderableRow
+      item={item}
+      index={index}
+      renderItem={renderItem}
+      dataLength={data.length}
+      onMove={move}
+      showButtons={showButtons}
+    />
   )
-
-  const renderReorderableItem: ListRenderItem<T> = useCallback(
-    ({ item, index }) => (
-      <ReorderableRow
-        item={item}
-        index={index}
-        renderItem={renderItem}
-        dataLength={data.length}
-        onMove={move}
-        showButtons={showButtons}
-      />
-    ),
-    [renderItem, move, data.length, showButtons],
-  )
-
   return (
     <FlatList
       {...flatListProps}
@@ -202,7 +196,6 @@ export function ReorderableListV2<T>({
     />
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   row: {
     flexDirection: "row",

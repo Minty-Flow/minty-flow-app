@@ -36,9 +36,10 @@ export default function OnboardingExpenseCategoriesScreen() {
     }
   }
 
-  const availableKeys = ExpensePresets.filter(
-    (p) => !addedKeys.has(`${p.icon}:${p.type}`),
-  ).map((p) => `${p.icon}:${p.type}`)
+  const availableKeys = ExpensePresets.flatMap((p) => {
+    const key = `${p.icon}:${p.type}`
+    return addedKeys.has(key) ? [] : [key]
+  })
 
   const allSelected =
     availableKeys.length > 0 && availableKeys.every((k) => selectedKeys.has(k))

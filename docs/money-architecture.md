@@ -20,7 +20,6 @@ Owns money domain logic:
 - `getMinorUnitDigits`
 - `assertMinorUnits`
 - `parseMajorUnits`
-- `majorNumberToMinorUnits`
 - `toMajorUnits`
 - `convertMinorUnits`
 - `rescaleMinorUnits`
@@ -134,7 +133,7 @@ These are the kinds of shortcuts that silently break multi-currency behavior or 
 
 ## Migration Notes
 
-The v3 SQLite migration converts legacy decimal-era money into integer minor units. That migration is the boundary between the old representation and the new one. New runtime code should assume integer minor units everywhere outside explicitly labeled migration/import compatibility code.
+Schema v3 is already the integer-money schema. Runtime code assumes stored money is in minor units everywhere.
 
 ## Enforcement
 

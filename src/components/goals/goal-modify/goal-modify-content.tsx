@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useNavigation, useRouter } from "expo-router"
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
@@ -46,7 +46,6 @@ import { GoalFormFooter } from "./goal-form-footer"
 import { GoalFormModals } from "./goal-form-modals"
 import { goalModifyStyles } from "./goal-modify.styles"
 import type { GoalModifyContentProps } from "./types"
-
 export function GoalModifyContent({
   goalModifyId,
   goal,
@@ -55,13 +54,10 @@ export function GoalModifyContent({
   const { t } = useTranslation()
   const router = useRouter()
   const { theme } = useUnistyles()
-
   const isAddMode = goalModifyId === NewEnum.NEW || !goalModifyId
-
-  const handleGoBack = useCallback(() => {
+  const handleGoBack = () => {
     router.back()
-  }, [router])
-
+  }
   const {
     control,
     handleSubmit: handleFormSubmit,
@@ -82,7 +78,6 @@ export function GoalModifyContent({
       targetDate: goal?.targetDate ? goal.targetDate.getTime() : null,
     },
   })
-
   const formGoalType = watch("goalType")
   const formName = watch("name")
   const formIcon = watch("icon")
@@ -91,34 +86,27 @@ export function GoalModifyContent({
   const formAccountIds = watch("accountIds")
   const formTargetAmount = watch("targetAmount")
   const formTargetDate = watch("targetDate")
-
   const navigation = useNavigation()
-
   const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSubmitting,
     onBlock: () => setUnsavedModalVisible(true),
   })
-
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
   const [archiveModalVisible, setArchiveModalVisible] = useState(false)
-
   const targetDatePicker = useDateTimePicker({
     onConfirm: (date) =>
       setValue("targetDate", date.getTime(), { shouldDirty: true }),
   })
-
   const onSubmit = async (data: AddGoalFormSchema) => {
     const trimmedName = data.name.trim()
-
     try {
       if (isAddMode) {
         await createGoal({
           ...data,
           name: trimmedName,
         })
-
         allowNavigation()
         handleGoBack()
       } else {
@@ -126,7 +114,6 @@ export function GoalModifyContent({
           ...data,
           name: trimmedName,
         })
-
         allowNavigation()
         handleGoBack()
       }
@@ -140,9 +127,7 @@ export function GoalModifyContent({
       })
     }
   }
-
   const handleSubmit = handleFormSubmit(onSubmit)
-
   const handleDelete = async () => {
     try {
       if (!goal) {
@@ -152,9 +137,7 @@ export function GoalModifyContent({
         })
         return
       }
-
       await deleteGoalById(goalModifyId)
-
       allowNavigation()
       // Dismiss 2 levels: the edit screen and the goal detail screen
       router.dismiss(2)
@@ -166,7 +149,6 @@ export function GoalModifyContent({
       })
     }
   }
-
   const handleArchive = async () => {
     try {
       if (!goal) return
@@ -188,34 +170,24 @@ export function GoalModifyContent({
       Toast.error({ title: t("common.toast.error") })
     }
   }
-
   const handleIconSelected = (icon: string | null) => {
     setValue("icon", icon, { shouldDirty: true })
   }
-
   const handleColorSelected = (schemeName: string) => {
     setValue("colorSchemeName", schemeName, { shouldDirty: true })
   }
-
   const handleColorCleared = () => {
     setValue("colorSchemeName", undefined, { shouldDirty: true })
   }
-
   const handleClearDate = () => {
     setValue("targetDate", null, { shouldDirty: true })
   }
-
-  const handleGoalTypeChange = useCallback(
-    (v: GoalType) => setValue("goalType", v, { shouldDirty: true }),
-    [setValue],
-  )
-
+  const handleGoalTypeChange = (v: GoalType) =>
+    setValue("goalType", v, { shouldDirty: true })
   const currentColorScheme = getThemeStrict(formColorSchemeName)
-
   const formattedTargetDate = formTargetDate
     ? formatShortMonthDayYear(formTargetDate)
     : null
-
   if (!isAddMode && !goal) {
     return (
       <View style={goalModifyStyles.container}>
@@ -225,7 +197,6 @@ export function GoalModifyContent({
       </View>
     )
   }
-
   return (
     <View style={goalModifyStyles.container}>
       <ScrollIntoViewProvider

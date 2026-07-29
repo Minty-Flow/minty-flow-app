@@ -1,13 +1,7 @@
 import * as FileSystem from "expo-file-system/legacy"
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import {
-  FlatList,
-  Modal,
-  Share,
-  TouchableWithoutFeedback,
-  useWindowDimensions,
-} from "react-native"
+import { FlatList, Modal, Share, useWindowDimensions } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { ConfirmModal } from "~/components/confirm-modal"
@@ -36,28 +30,23 @@ const RECORD_ICONS: Record<ExportRecord["type"], IconSvgName> = {
   csv: "file-type-csv-outline",
   zip: "file-zip-outline",
 }
-
 const RECORD_TITLE_KEYS: Record<ExportRecord["type"], TranslationKey> = {
   json: "screens.settings.dataManagement.exportJson",
   csv: "screens.settings.dataManagement.exportCsv",
   zip: "screens.settings.dataManagement.exportZip",
 }
-
 function getRecordIcon(type: ExportRecord["type"]): IconSvgName {
   return RECORD_ICONS[type]
 }
-
 function useRecordTitle(record: ExportRecord): string {
   const { t } = useTranslation()
   return t(RECORD_TITLE_KEYS[record.type])
 }
-
 interface ExportRowProps {
   record: ExportRecord
   fileSize: number | null
   onPress: () => void
 }
-
 function ExportRow({ record, fileSize, onPress }: ExportRowProps) {
   const title = useRecordTitle(record)
   const icon = getRecordIcon(record.type)
@@ -65,7 +54,6 @@ function ExportRow({ record, fileSize, onPress }: ExportRowProps) {
   const meta = [formatRelativeToNow(record.exportedAt), sizeText]
     .filter(Boolean)
     .join(" · ")
-
   return (
     <Pressable
       style={({ pressed }) => [rowStyles.row, pressed && rowStyles.rowPressed]}
@@ -86,7 +74,6 @@ function ExportRow({ record, fileSize, onPress }: ExportRowProps) {
     </Pressable>
   )
 }
-
 interface ActionModalProps {
   visible: boolean
   record: ExportRecord | null
@@ -96,7 +83,6 @@ interface ActionModalProps {
   onShare: () => void
   onDelete: () => void
 }
-
 function ActionModal({
   visible,
   record,
@@ -110,7 +96,6 @@ function ActionModal({
   const { theme } = useUnistyles()
   const { width } = useWindowDimensions()
   const maxCardWidth = Math.min(width - 32, 440)
-
   const title = record ? t(RECORD_TITLE_KEYS[record.type]) : ""
   const icon: IconSvgName = record
     ? getRecordIcon(record.type)
@@ -121,7 +106,6 @@ function ActionModal({
         .filter(Boolean)
         .join(" · ")
     : ""
-
   return (
     <Modal
       visible={visible && record !== null}
@@ -130,14 +114,15 @@ function ActionModal({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <Pressable
-        style={[actionStyles.backdrop, { width }]}
-        onPress={onClose}
-        accessibilityLabel={t("common.actions.close")}
-        native
-        disableRipple
-      >
-        <TouchableWithoutFeedback onPress={() => {}}>
+      <View style={actionStyles.modalRoot}>
+        <Pressable
+          style={actionStyles.backdrop}
+          onPress={onClose}
+          accessibilityLabel={t("common.actions.close")}
+          native
+          disableRipple
+        />
+        <View style={actionStyles.content}>
           <View style={[actionStyles.card, { maxWidth: maxCardWidth }]}>
             <View style={actionStyles.header}>
               <View style={actionStyles.headerIcon}>
@@ -177,19 +162,17 @@ function ActionModal({
               destructive
             />
           </View>
-        </TouchableWithoutFeedback>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   )
 }
-
 interface ActionButtonProps {
   icon: IconSvgName
   label: string
   onPress: () => void
   destructive?: boolean
 }
-
 function ActionButton({
   icon,
   label,
@@ -211,24 +194,20 @@ function ActionButton({
     </ListItem>
   )
 }
-
 interface ConfirmState {
   visible: boolean
   type: "remove" | "clearAll"
   targetId?: string
 }
-
 export default function ExportHistoryScreen() {
   const { t } = useTranslation()
   const { exports, removeExport, clearAll } = useExportHistoryStore()
-
   const [fileSizes, setFileSizes] = useState<Record<string, number | null>>({})
   const [actionId, setActionId] = useState<string | null>(null)
   const [confirm, setConfirm] = useState<ConfirmState>({
     visible: false,
     type: "remove",
   })
-
   useEffect(() => {
     let cancelled = false
     async function loadSizes() {
@@ -254,12 +233,10 @@ export default function ExportHistoryScreen() {
       cancelled = true
     }
   }, [exports])
-
   const activeRecord = actionId
     ? (exports.find((e) => e.id === actionId) ?? null)
     : null
-
-  const handleSave = useCallback(async () => {
+  const handleSave = async () => {
     if (!activeRecord) return
     setActionId(null)
     try {
@@ -280,9 +257,8 @@ export default function ExportHistoryScreen() {
           : t("screens.settings.dataManagement.exportError"),
       })
     }
-  }, [activeRecord, t])
-
-  const handleShare = useCallback(async () => {
+  }
+  const handleShare = async () => {
     if (!activeRecord) return
     setActionId(null)
     try {
@@ -299,18 +275,15 @@ export default function ExportHistoryScreen() {
         title: t("screens.settings.dataManagement.exportError"),
       })
     }
-  }, [activeRecord, t])
-
+  }
   function handleDeletePress() {
     if (!activeRecord) return
     setConfirm({ visible: true, type: "remove", targetId: activeRecord.id })
     setActionId(null)
   }
-
   function handleClearAllPress() {
     setConfirm({ visible: true, type: "clearAll" })
   }
-
   async function handleConfirmDelete() {
     if (confirm.type === "clearAll") {
       await Promise.all(exports.map((r) => deleteExportFile(r.uri)))
@@ -322,7 +295,6 @@ export default function ExportHistoryScreen() {
     if (record) await deleteExportFile(record.uri)
     removeExport(confirm.targetId)
   }
-
   return (
     <View style={styles.container}>
       {exports.length > 0 && (
@@ -405,7 +377,6 @@ export default function ExportHistoryScreen() {
     </View>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
@@ -450,7 +421,6 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.error,
   },
 }))
-
 const rowStyles = StyleSheet.create((theme) => ({
   row: {
     flexDirection: "row",
@@ -486,11 +456,20 @@ const rowStyles = StyleSheet.create((theme) => ({
     color: theme.colors.onSecondary,
   },
 }))
-
 const actionStyles = StyleSheet.create((theme) => ({
-  backdrop: {
+  modalRoot: {
     flex: 1,
+  },
+  backdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: theme.colors.shadow,
+  },
+  content: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 16,

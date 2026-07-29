@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useNavigation, useRouter } from "expo-router"
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
@@ -57,7 +57,6 @@ const PERIOD_OPTIONS = [
   BudgetPeriodEnum.YEARLY,
   BudgetPeriodEnum.CUSTOM,
 ] as const
-
 export function BudgetModifyContent({
   budgetModifyId,
   budget,
@@ -66,13 +65,10 @@ export function BudgetModifyContent({
 }: BudgetModifyContentProps) {
   const { t } = useTranslation()
   const router = useRouter()
-
   const isAddMode = budgetModifyId === NewEnum.NEW || !budgetModifyId
-
-  const handleGoBack = useCallback(() => {
+  const handleGoBack = () => {
     router.back()
-  }, [router])
-
+  }
   const {
     control,
     handleSubmit: handleFormSubmit,
@@ -96,7 +92,6 @@ export function BudgetModifyContent({
       isActive: budget?.isActive ?? true,
     },
   })
-
   const formName = watch("name")
   const formIcon = watch("icon")
   const formColorSchemeName = watch("colorSchemeName")
@@ -109,7 +104,6 @@ export function BudgetModifyContent({
   const watchedStartDate = watch("startDate")
   const watchedEndDate = watch("endDate")
   const isActive = watch("isActive")
-
   const navigation = useNavigation()
   const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
@@ -117,9 +111,7 @@ export function BudgetModifyContent({
     when: isDirty && !isSubmitting,
     onBlock: () => setUnsavedModalVisible(true),
   })
-
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-
   const startDatePicker = useDateTimePicker({
     onConfirm: (date) =>
       setValue("startDate", date.getTime(), { shouldDirty: true }),
@@ -128,19 +120,15 @@ export function BudgetModifyContent({
     onConfirm: (date) =>
       setValue("endDate", date.getTime(), { shouldDirty: true }),
   })
-
   const onSubmit = async (data: AddBudgetFormSchema) => {
     const trimmedName = data.name.trim()
-
     try {
       if (isAddMode) {
         await createBudget({ ...data, name: trimmedName })
-
         allowNavigation()
         handleGoBack()
       } else {
         await updateBudgetById(budgetModifyId, { ...data, name: trimmedName })
-
         allowNavigation()
         handleGoBack()
       }
@@ -156,9 +144,7 @@ export function BudgetModifyContent({
       })
     }
   }
-
   const handleSubmit = handleFormSubmit(onSubmit)
-
   const handleDelete = async () => {
     try {
       if (!budget) {
@@ -168,9 +154,7 @@ export function BudgetModifyContent({
         })
         return
       }
-
       await deleteBudgetById(budgetModifyId)
-
       allowNavigation()
       router.dismiss(2)
     } catch (error) {
@@ -181,7 +165,6 @@ export function BudgetModifyContent({
       })
     }
   }
-
   const handleDuplicate = async () => {
     try {
       if (!budget) {
@@ -191,9 +174,7 @@ export function BudgetModifyContent({
         })
         return
       }
-
       await duplicateBudgetById(budgetModifyId)
-
       Toast.success({
         title: t("screens.settings.budgets.form.duplicateSuccess"),
       })
@@ -204,30 +185,23 @@ export function BudgetModifyContent({
       Toast.error({ title: t("common.toast.error") })
     }
   }
-
   const handleIconSelected = (icon: string | null) => {
     setValue("icon", icon, { shouldDirty: true })
   }
-
   const handleColorSelected = (schemeName: string) => {
     setValue("colorSchemeName", schemeName, { shouldDirty: true })
   }
-
   const handleColorCleared = () => {
     setValue("colorSchemeName", undefined, { shouldDirty: true })
   }
-
   const currentColorScheme = getThemeStrict(formColorSchemeName)
-
   // Formatted display strings for the date rows
   const formattedStartDate = watchedStartDate
     ? formatShortMonthDayYear(watchedStartDate)
     : null
-
   const formattedEndDate = watchedEndDate
     ? formatShortMonthDayYear(watchedEndDate)
     : null
-
   if (!isAddMode && !budget) {
     return (
       <View style={budgetModifyStyles.container}>
@@ -237,7 +211,6 @@ export function BudgetModifyContent({
       </View>
     )
   }
-
   return (
     <View style={budgetModifyStyles.container}>
       <ScrollIntoViewProvider

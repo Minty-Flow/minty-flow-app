@@ -7,6 +7,7 @@ import { unzip, zip } from "react-native-zip-archive"
 import { getDb } from "~/database/db"
 import { emit } from "~/database/events"
 import { SQLITE_V3_VERSION } from "~/database/migrations/sqlite-v3"
+import { runPreparedBatch } from "~/database/sql"
 import { runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
 import {
@@ -415,8 +416,10 @@ async function generateJsonBackup(baseName?: string): Promise<{
   uri: string
   fileName: string
 }> {
-  const dir = await prepareExportDir()
-  const backup = await buildBackupInMemory()
+  const [dir, backup] = await Promise.all([
+    prepareExportDir(),
+    buildBackupInMemory(),
+  ])
   const fileName = toFileName("json", baseName)
   const uri = `${dir}${fileName}`
   await FileSystem.writeAsStringAsync(uri, JSON.stringify(backup, null, 2), {
@@ -439,8 +442,10 @@ const BACKUP_JSON_NAME = "backup.json"
 async function generateZipBackup(
   baseName?: string,
 ): Promise<{ uri: string; fileName: string }> {
-  const dir = await prepareExportDir()
-  const backup = await buildBackupInMemory()
+  const [dir, backup] = await Promise.all([
+    prepareExportDir(),
+    buildBackupInMemory(),
+  ])
   const jsonUri = `${dir}${BACKUP_JSON_NAME}`
   await FileSystem.writeAsStringAsync(
     jsonUri,
@@ -691,7 +696,7 @@ export function validateBackup(json: string): ValidateBackupResult {
         typeof meta.schemaVersion === "number" ? meta.schemaVersion : undefined
       const msg =
         schemaVersion === undefined || schemaVersion < SCHEMA_VERSION
-          ? `Backup uses schema v${schemaVersion}. App is v${SCHEMA_VERSION}. Old backups cannot be restored after the minor-units migration. Create a new backup.`
+          ? `Backup uses schema v${schemaVersion}. App is v${SCHEMA_VERSION}. Create a new backup with a current app version before restoring here.`
           : `Backup schema version ${schemaVersion} is newer than app schema version ${SCHEMA_VERSION}. Update the app first.`
       return {
         success: false,
@@ -927,9 +932,9 @@ export function countBackupRecords(backup: MintyFlowBackup): {
  */
 async function resetDatabase(): Promise<void> {
   await runInTransaction("import.reset", async (db) => {
-    for (const table of RESET_ORDER) {
-      await db.runAsync(`DELETE FROM ${table}`)
-    }
+    await db.execAsync(
+      RESET_ORDER.map((table) => `DELETE FROM ${table}`).join(";\n"),
+    )
   })
 }
 
@@ -948,15 +953,19 @@ async function insertRows(tableName: string, rows: RawRow[]): Promise<void> {
   const sql = `INSERT OR IGNORE INTO ${tableName} (${cols.join(", ")}) VALUES (${placeholders})`
   const db = getDb()
 
-  for (const row of rows) {
-    const values = cols.map((col) => {
-      if (isTransactions && col === "has_attachments") {
-        return deriveHasAttachments(row.extra)
-      }
-      return normalizeColumnValue(col, row[col])
-    })
-    await db.runAsync(sql, values as (string | number | null)[])
-  }
+  await runPreparedBatch(
+    db,
+    sql,
+    rows.map((row) => {
+      const values = cols.map((col) => {
+        if (isTransactions && col === "has_attachments") {
+          return deriveHasAttachments(row.extra)
+        }
+        return normalizeColumnValue(col, row[col])
+      })
+      return values as (string | number | null)[]
+    }),
+  )
 }
 
 async function insertAllTiers(data: MintyFlowBackup["data"]): Promise<void> {

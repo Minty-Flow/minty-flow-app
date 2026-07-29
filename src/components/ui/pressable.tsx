@@ -1,3 +1,4 @@
+import type { ComponentRef, Ref } from "react"
 import {
   Pressable as RNPressable,
   type PressableProps as RNPressableProps,
@@ -9,6 +10,7 @@ import { useAndroidSoundStore } from "~/stores/android-sound.store"
 interface PressableProps extends RNPressableProps {
   native?: boolean
   disableRipple?: boolean
+  ref?: Ref<ComponentRef<typeof RNPressable>>
 }
 
 export const Pressable = ({
@@ -16,6 +18,7 @@ export const Pressable = ({
   style,
   disableRipple,
   accessibilityRole = "button",
+  ref,
   ...props
 }: PressableProps) => {
   const disableSound = useAndroidSoundStore((s) => s.disableSound)
@@ -30,6 +33,7 @@ export const Pressable = ({
   if (native)
     return (
       <RNPressable
+        ref={ref}
         style={style}
         android_disableSound={disableSound}
         android_ripple={sharedRipple}
@@ -40,6 +44,7 @@ export const Pressable = ({
 
   return (
     <RNPressable
+      ref={ref}
       style={
         typeof style === "function"
           ? (state) => [style(state), pressableStyles.base]

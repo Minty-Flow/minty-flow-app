@@ -19,7 +19,6 @@ const addBudgetSchema = z
     accountIds: z.array(z.string()).min(1, "validation.required.accounts"),
     amount: z
       .number()
-      .safe()
       .int("validation.amount.invalid")
       .positive("validation.amount.positive"),
     period: z.enum(

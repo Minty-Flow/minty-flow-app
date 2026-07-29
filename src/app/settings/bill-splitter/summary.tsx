@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router"
-import { useCallback, useEffect, useMemo } from "react"
+import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import { FlatList, ScrollView } from "react-native"
+import { FlatList } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
@@ -21,7 +21,6 @@ import type { BillSummaryEntry } from "~/types/bill-splitter"
 import { LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
 import { Toast } from "~/utils/toast"
-
 export default function SummaryScreen() {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
@@ -29,98 +28,76 @@ export default function SummaryScreen() {
   const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
   const billCurrency = useBillSplitterStore((s) => s.currencyCode)
   const currency = billCurrency ?? preferredCurrency
-
   const participants = useBillSplitterStore((s) => s.participants)
   const items = useBillSplitterStore((s) => s.items)
   const payerId = useBillSplitterStore((s) => s.payerId)
   const accountId = useBillSplitterStore((s) => s.accountId)
   const setPayerId = useBillSplitterStore((s) => s.setPayerId)
   const setCurrencyCode = useBillSplitterStore((s) => s.setCurrencyCode)
-
   useEffect(() => {
     if (!billCurrency) setCurrencyCode(currency)
   }, [billCurrency, currency, setCurrencyCode])
-
-  const summary = useMemo(
-    () => getBillSummary(items, participants),
-    [items, participants],
-  )
-
-  const totalBill = useMemo(() => getBillTotal(items), [items])
-
+  const summary = getBillSummary(items, participants)
+  const totalBill = getBillTotal(items)
   // Amount the payer themselves owes (their own share of the bill)
-  const payerEntry = useMemo(
-    () => summary.find((s) => s.participantId === payerId) ?? null,
-    [summary, payerId],
-  )
-
-  const handleGenerateLoan = useCallback(
-    (entry: BillSummaryEntry) => {
-      if (!accountId) {
-        Toast.warn({
-          title: t("screens.settings.billSplitter.summary.noAccount"),
-        })
-        return
-      }
-      if (!payerId) {
-        Toast.warn({
-          title: t("screens.settings.billSplitter.summary.noPayer"),
-        })
-        return
-      }
-
-      router.push({
-        pathname: "/settings/loans/[loanId]/modify",
-        params: {
-          loanId: NewEnum.NEW,
-          prefillName: entry.name,
-          prefillDescription: t(
-            "screens.settings.billSplitter.summary.loanDescription",
-          ),
-          prefillAccountId: accountId,
-          prefillAmount: entry.owedAmount.toString(),
-          prefillLoanType: LoanTypeEnum.LENT,
-        },
+  const payerEntry = summary.find((s) => s.participantId === payerId) ?? null
+  const handleGenerateLoan = (entry: BillSummaryEntry) => {
+    if (!accountId) {
+      Toast.warn({
+        title: t("screens.settings.billSplitter.summary.noAccount"),
       })
-    },
-    [accountId, payerId, router, t],
-  )
-
-  const renderItem = useCallback(
-    ({ item }: { item: BillSummaryEntry }) => {
-      const isPayer = item.participantId === payerId
-
-      return (
-        <Pressable
-          style={[styles.summaryCard, isPayer && styles.summaryCardPayer]}
-          onPress={() => !isPayer && handleGenerateLoan(item)}
-          disabled={isPayer}
-        >
-          <Text style={styles.nameText} numberOfLines={1}>
-            {item.name}
-            {isPayer ? ` (${t("common.you")})` : ""}
-          </Text>
-          <View style={styles.amountContainer}>
-            <Money
-              value={item.owedAmount}
-              currency={currency}
-              hideSign
-              style={styles.amountText}
+      return
+    }
+    if (!payerId) {
+      Toast.warn({
+        title: t("screens.settings.billSplitter.summary.noPayer"),
+      })
+      return
+    }
+    router.push({
+      pathname: "/settings/loans/[loanId]/modify",
+      params: {
+        loanId: NewEnum.NEW,
+        prefillName: entry.name,
+        prefillDescription: t(
+          "screens.settings.billSplitter.summary.loanDescription",
+        ),
+        prefillAccountId: accountId,
+        prefillAmount: entry.owedAmount.toString(),
+        prefillLoanType: LoanTypeEnum.LENT,
+      },
+    })
+  }
+  const renderItem = ({ item }: { item: BillSummaryEntry }) => {
+    const isPayer = item.participantId === payerId
+    return (
+      <Pressable
+        style={[styles.summaryCard, isPayer && styles.summaryCardPayer]}
+        onPress={() => !isPayer && handleGenerateLoan(item)}
+        disabled={isPayer}
+      >
+        <Text style={styles.nameText} numberOfLines={1}>
+          {item.name}
+          {isPayer ? ` (${t("common.you")})` : ""}
+        </Text>
+        <View style={styles.amountContainer}>
+          <Money
+            value={item.owedAmount}
+            currency={currency}
+            hideSign
+            style={styles.amountText}
+          />
+          {!isPayer ? (
+            <IconSvg
+              name="chevron-right-outline"
+              size={16}
+              color={theme.colors.onSecondary}
             />
-            {!isPayer ? (
-              <IconSvg
-                name="chevron-right-outline"
-                size={16}
-                color={theme.colors.onSecondary}
-              />
-            ) : null}
-          </View>
-        </Pressable>
-      )
-    },
-    [payerId, currency, theme, handleGenerateLoan, t],
-  )
-
+          ) : null}
+        </View>
+      </Pressable>
+    )
+  }
   return (
     <View style={styles.container}>
       <FlatList
@@ -139,17 +116,17 @@ export default function SummaryScreen() {
               <Text style={styles.payerLabel}>
                 {t("screens.settings.billSplitter.summary.whoAreYou.title")}
               </Text>
-              <ScrollView
+              <FlatList
                 horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.chipsRow}
-              >
-                {participants.map((p) => {
-                  const isSelected = p.id === payerId
+                data={participants}
+                keyExtractor={(participant) => participant.id}
+                renderItem={({ item: participant }) => {
+                  const isSelected = participant.id === payerId
                   return (
                     <Pressable
-                      key={p.id}
-                      onPress={() => setPayerId(isSelected ? null : p.id)}
+                      onPress={() =>
+                        setPayerId(isSelected ? null : participant.id)
+                      }
                       style={[styles.chip, isSelected && styles.chipSelected]}
                       accessibilityRole="radio"
                       accessibilityState={{ selected: isSelected }}
@@ -160,12 +137,14 @@ export default function SummaryScreen() {
                           isSelected && styles.chipTextSelected,
                         ]}
                       >
-                        {p.name}
+                        {participant.name}
                       </Text>
                     </Pressable>
                   )
-                })}
-              </ScrollView>
+                }}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.chipsRow}
+              />
             </View>
 
             {/* Total summary: total bill and, once a payer is chosen, their own share */}
@@ -229,7 +208,6 @@ export default function SummaryScreen() {
     </View>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
@@ -249,7 +227,6 @@ const styles = StyleSheet.create((theme) => ({
   separator: {
     height: 0,
   },
-
   // Payer chip selector
   payerSection: {
     marginBottom: 12,
@@ -287,7 +264,6 @@ const styles = StyleSheet.create((theme) => ({
   chipTextSelected: {
     color: theme.colors.onPrimary,
   },
-
   // Totals summary card
   totalsCard: {
     borderRadius: 16,
@@ -313,7 +289,6 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
-
   // Participant cards
   summaryCard: {
     flexDirection: "row",
@@ -345,7 +320,6 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "600",
     color: theme.colors.onSurface,
   },
-
   // Footer
   footer: {
     position: "absolute",

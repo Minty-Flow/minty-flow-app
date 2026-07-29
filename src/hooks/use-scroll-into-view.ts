@@ -2,7 +2,6 @@ import { useCallback, useRef } from "react"
 import type { View } from "react-native"
 
 import { useScrollIntoViewContext } from "~/contexts/scroll-into-view-context"
-
 /**
  * When used inside ScrollIntoViewProvider, returns wrapperRef and scrollIntoView.
  * Call scrollIntoView() when expanding so the ScrollView scrolls to this component.
@@ -11,10 +10,8 @@ import { useScrollIntoViewContext } from "~/contexts/scroll-into-view-context"
 export function useScrollIntoView() {
   const ctx = useScrollIntoViewContext()
   const wrapperRef = useRef<View>(null)
-
   const scrollIntoView = useCallback(() => {
     if (!ctx || !wrapperRef.current) return
-
     requestAnimationFrame(() => {
       wrapperRef.current?.measureInWindow((_, wy: number) => {
         ctx.scrollContainerRef.current?.measureInWindow((_, sy: number) => {
@@ -27,6 +24,5 @@ export function useScrollIntoView() {
       })
     })
   }, [ctx])
-
   return { wrapperRef, scrollIntoView }
 }

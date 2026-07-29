@@ -3,7 +3,6 @@ import {
   type TransactionType,
   TransactionTypeEnum,
 } from "~/types/transactions"
-import { logger } from "~/utils/logger"
 import { assertMinorUnits } from "~/utils/money"
 
 /**
@@ -20,8 +19,8 @@ import { assertMinorUnits } from "~/utils/money"
  * | transfer| (pre-signed)  | amount    |
  *
  * Transfer rows carry pre-signed amounts: the debit row has a negative amount
- * and the credit row has a positive amount. A positive amount on a transfer
- * row indicates the caller broke the sign contract — a warning is logged.
+ * and the credit row has a positive amount. Return the stored signed amount as
+ * is for transfer rows.
  *
  * @param amount  - The raw `amount` column value. Always positive for
  *                  income/expense; pre-signed for transfers.
@@ -35,13 +34,6 @@ export const getBalanceDelta = (
   subtype?: string | null,
 ): number => {
   assertMinorUnits(amount)
-  if (type === TransactionTypeEnum.TRANSFER && amount > 0) {
-    // Transfer amounts must be pre-signed by the caller (debit row negative, credit row positive).
-    // A positive amount on a transfer row indicates the sign contract was not applied upstream.
-    logger.warn("[getBalanceDelta] Transfer amount should be pre-signed:", {
-      amount,
-    })
-  }
 
   if (type === TransactionTypeEnum.INCOME) return amount
   if (type === TransactionTypeEnum.TRANSFER) return amount // signed amount on row

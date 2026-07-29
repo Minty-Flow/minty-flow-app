@@ -2,7 +2,10 @@ import { emit } from "~/database/events"
 import { query, queryOne } from "~/database/sql"
 import { runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
-import type { TransactionFormValues } from "~/schemas/transactions.schema"
+import type {
+  RecurringEditPayload,
+  TransactionFormValues,
+} from "~/schemas/transactions.schema"
 import type { TransactionSubType } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { assertMinorUnits } from "~/utils/money"
@@ -212,6 +215,74 @@ export async function updateRecurringRuleTemplate(
   })
 
   emit("recurring_transactions:dirty", undefined)
+}
+
+export type RecurringEditScope = "this" | "this_and_future"
+export type RecurringDeleteScope = "this" | "all" | "this_and_future"
+
+export async function applyRecurringEditScope({
+  scope,
+  transactionId,
+  transactionDate,
+  ruleId,
+  payload,
+}: {
+  scope: RecurringEditScope
+  transactionId: string
+  transactionDate: Date
+  ruleId: string
+  payload: RecurringEditPayload
+}): Promise<void> {
+  const { detachFromRule, updateFutureRecurringInstances, updateTransaction } =
+    await import("./transaction-service")
+
+  if (scope === "this") {
+    await detachFromRule(transactionId)
+    await updateTransaction(transactionId, payload)
+    return
+  }
+
+  await updateFutureRecurringInstances(ruleId, transactionDate, payload)
+  await updateRecurringRuleTemplate(ruleId, {
+    amount: payload.amount,
+    title: payload.title,
+    categoryId: payload.categoryId,
+    accountId: payload.accountId,
+    type: payload.type,
+  })
+  await updateTransaction(transactionId, payload)
+}
+
+export async function applyRecurringDeleteScope({
+  scope,
+  transactionId,
+  transactionDate,
+  ruleId,
+}: {
+  scope: RecurringDeleteScope
+  transactionId: string
+  transactionDate: Date
+  ruleId: string
+}): Promise<void> {
+  const {
+    deleteAllRecurringInstances,
+    deleteFutureRecurringInstances,
+    deleteTransaction,
+  } = await import("./transaction-service")
+
+  switch (scope) {
+    case "this":
+      await deleteTransaction(transactionId)
+      return
+    case "all":
+      await deleteAllRecurringInstances(ruleId)
+      await disableRecurringRule(ruleId)
+      return
+    case "this_and_future":
+      await deleteFutureRecurringInstances(ruleId, transactionDate)
+      await disableRecurringRule(ruleId)
+      return
+  }
 }
 
 // ── Sync ──────────────────────────────────────────────────────────────────────

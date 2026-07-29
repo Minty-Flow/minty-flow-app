@@ -1,4 +1,5 @@
 import { emit } from "~/database/events"
+import { runPreparedBatch } from "~/database/sql"
 import { runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
 import i18n from "~/i18n/config"
@@ -43,19 +44,17 @@ export async function createBudget(data: AddBudgetFormSchema): Promise<string> {
       ],
     )
 
-    for (const accountId of data.accountIds) {
-      await db.runAsync(
-        `INSERT INTO budget_accounts (budget_id, account_id, created_at) VALUES (?, ?, ?)`,
-        [id, accountId, now],
-      )
-    }
+    await runPreparedBatch(
+      db,
+      `INSERT INTO budget_accounts (budget_id, account_id, created_at) VALUES (?, ?, ?)`,
+      data.accountIds.map((accountId) => [id, accountId, now]),
+    )
 
-    for (const categoryId of data.categoryIds) {
-      await db.runAsync(
-        `INSERT INTO budget_categories (budget_id, category_id, created_at) VALUES (?, ?, ?)`,
-        [id, categoryId, now],
-      )
-    }
+    await runPreparedBatch(
+      db,
+      `INSERT INTO budget_categories (budget_id, category_id, created_at) VALUES (?, ?, ?)`,
+      data.categoryIds.map((categoryId) => [id, categoryId, now]),
+    )
   })
 
   emit("budgets:dirty", undefined)
@@ -106,24 +105,22 @@ export async function updateBudgetById(
 
     if (data.accountIds !== undefined) {
       await db.runAsync(`DELETE FROM budget_accounts WHERE budget_id = ?`, [id])
-      for (const accountId of data.accountIds) {
-        await db.runAsync(
-          `INSERT INTO budget_accounts (budget_id, account_id, created_at) VALUES (?, ?, ?)`,
-          [id, accountId, now],
-        )
-      }
+      await runPreparedBatch(
+        db,
+        `INSERT INTO budget_accounts (budget_id, account_id, created_at) VALUES (?, ?, ?)`,
+        data.accountIds.map((accountId) => [id, accountId, now]),
+      )
     }
 
     if (data.categoryIds !== undefined) {
       await db.runAsync(`DELETE FROM budget_categories WHERE budget_id = ?`, [
         id,
       ])
-      for (const categoryId of data.categoryIds) {
-        await db.runAsync(
-          `INSERT INTO budget_categories (budget_id, category_id, created_at) VALUES (?, ?, ?)`,
-          [id, categoryId, now],
-        )
-      }
+      await runPreparedBatch(
+        db,
+        `INSERT INTO budget_categories (budget_id, category_id, created_at) VALUES (?, ?, ?)`,
+        data.categoryIds.map((categoryId) => [id, categoryId, now]),
+      )
     }
   })
 
@@ -175,21 +172,20 @@ export async function duplicateBudgetById(id: string): Promise<string> {
       throw new Error(`Budget not found: ${id}`)
     }
 
-    const accounts = await db.getAllAsync<Pick<RowBudgetAccount, "account_id">>(
-      `SELECT account_id
-       FROM budget_accounts
-       WHERE budget_id = ?`,
-      [id],
-    )
-
-    const categories = await db.getAllAsync<
-      Pick<RowBudgetCategory, "category_id">
-    >(
-      `SELECT category_id
-       FROM budget_categories
-       WHERE budget_id = ?`,
-      [id],
-    )
+    const [accounts, categories] = await Promise.all([
+      db.getAllAsync<Pick<RowBudgetAccount, "account_id">>(
+        `SELECT account_id
+         FROM budget_accounts
+         WHERE budget_id = ?`,
+        [id],
+      ),
+      db.getAllAsync<Pick<RowBudgetCategory, "category_id">>(
+        `SELECT category_id
+         FROM budget_categories
+         WHERE budget_id = ?`,
+        [id],
+      ),
+    ])
 
     await db.runAsync(
       `INSERT INTO budgets (
@@ -225,27 +221,25 @@ export async function duplicateBudgetById(id: string): Promise<string> {
       ],
     )
 
-    for (const account of accounts) {
-      await db.runAsync(
-        `INSERT INTO budget_accounts (
+    await runPreparedBatch(
+      db,
+      `INSERT INTO budget_accounts (
           budget_id,
           account_id,
           created_at
         ) VALUES (?, ?, ?)`,
-        [newId, account.account_id, now],
-      )
-    }
+      accounts.map((account) => [newId, account.account_id, now]),
+    )
 
-    for (const category of categories) {
-      await db.runAsync(
-        `INSERT INTO budget_categories (
+    await runPreparedBatch(
+      db,
+      `INSERT INTO budget_categories (
           budget_id,
           category_id,
           created_at
         ) VALUES (?, ?, ?)`,
-        [newId, category.category_id, now],
-      )
-    }
+      categories.map((category) => [newId, category.category_id, now]),
+    )
   })
 
   emit("budgets:dirty", undefined)

@@ -6,7 +6,7 @@ import {
   startOfMonth,
   startOfYear,
 } from "date-fns"
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -33,7 +33,6 @@ import type {
   PresetButtonId,
   PresetOption,
 } from "./types"
-
 export const DateRangePresetModalContent = ({
   initialStart,
   initialEnd,
@@ -44,27 +43,22 @@ export const DateRangePresetModalContent = ({
   const { theme } = useUnistyles()
   const insets = useSafeAreaInsets()
   const now = new Date()
-
   const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null)
-
   /** Custom range */
   const [customRange, setCustomRange] = useState(() => ({
     start: initialStart ?? now,
     end: initialEnd ?? now,
   }))
-
   /** Month picker */
   const [monthState, setMonthState] = useState(() => ({
     year: now.getFullYear(),
     yearInput: String(now.getFullYear()),
     month: now.getMonth(),
   }))
-
   /** Year picker */
   const [byYearInput, setByYearInput] = useState(() =>
     String(now.getFullYear()),
   )
-
   const startDatePicker = useDateTimePicker({
     onConfirm: (date) =>
       setCustomRange((prev) => ({
@@ -79,71 +73,56 @@ export const DateRangePresetModalContent = ({
         end: date,
       })),
   })
-
-  const toggleSection = useCallback((section: ExpandedSection) => {
+  const toggleSection = (section: ExpandedSection) => {
     setExpandedSection((prev) => (prev === section ? null : section))
-  }, [])
-
-  const handlePresetSelect = useCallback(
-    (preset: PresetOption) => {
-      const { start, end } = preset.getRange()
-      onSave(start, end, preset.id)
-      onRequestClose()
-    },
-    [onSave, onRequestClose],
-  )
-
-  const handleByMonthSelect = useCallback((monthIndex: number) => {
+  }
+  const handlePresetSelect = (preset: PresetOption) => {
+    const { start, end } = preset.getRange()
+    onSave(start, end, preset.id)
+    onRequestClose()
+  }
+  const handleByMonthSelect = (monthIndex: number) => {
     setMonthState((s) => ({ ...s, month: monthIndex }))
-  }, [])
-
-  const handleByYearNow = useCallback(() => {
+  }
+  const handleByYearNow = () => {
     setByYearInput(String(now.getFullYear()))
-  }, [now])
-
-  const handleByMonthNow = useCallback(() => {
+  }
+  const handleByMonthNow = () => {
     const y = now.getFullYear()
     setMonthState({
       year: y,
       yearInput: String(y),
       month: now.getMonth(),
     })
-  }, [now])
-
-  const handleByMonthYearChange = useCallback((year: number) => {
+  }
+  const handleByMonthYearChange = (year: number) => {
     setMonthState((s) => ({ ...s, year, yearInput: String(year) }))
-  }, [])
-
-  const handleByMonthYearInputChange = useCallback((val: string) => {
+  }
+  const handleByMonthYearInputChange = (val: string) => {
     setMonthState((s) => ({ ...s, yearInput: val }))
-  }, [])
-
-  const handleByMonthDone = useCallback(() => {
+  }
+  const handleByMonthDone = () => {
     const d = new Date(monthState.year, monthState.month, 1)
     onSave(startOfMonth(d), endOfMonth(d), "byMonth")
     onRequestClose()
-  }, [monthState, onSave, onRequestClose])
-
-  const handleByYearDone = useCallback(() => {
+  }
+  const handleByYearDone = () => {
     const y = Number.parseInt(byYearInput, 10)
     const year =
       Number.isFinite(y) && y >= 1970 && y <= 2100 ? y : now.getFullYear()
     const d = new Date(year, 0, 1)
     onSave(startOfYear(d), endOfYear(d), "byYear")
     onRequestClose()
-  }, [byYearInput, now, onSave, onRequestClose])
-
-  const handleCustomDone = useCallback(() => {
+  }
+  const handleCustomDone = () => {
     const start =
       customRange.start < customRange.end ? customRange.start : customRange.end
     const end =
       customRange.start < customRange.end ? customRange.end : customRange.start
     onSave(startOfDay(start), endOfDay(end), "custom")
     onRequestClose()
-  }, [customRange, onSave, onRequestClose])
-
+  }
   const mutedColor = theme.colors.semantic?.semi ?? theme.colors.onSurface
-
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>

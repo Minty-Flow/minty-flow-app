@@ -1,14 +1,11 @@
 import { useLocalSearchParams } from "expo-router"
-import { useMemo } from "react"
 
 import { LoanModifyContent } from "~/components/loans/loan-modify/loan-modify-content"
-import type { LoanPrefill } from "~/components/loans/loan-modify/types"
 import { useActiveAccounts } from "~/stores/db/account.store"
 import { useCategories } from "~/stores/db/category.store"
 import { useLoan } from "~/stores/db/loan.store"
 import { type LoanType, LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
-
 export default function LoanModifyScreen() {
   const params = useLocalSearchParams<{
     loanId: string
@@ -20,12 +17,10 @@ export default function LoanModifyScreen() {
   }>()
   const loanId = params.loanId ?? NewEnum.NEW
   const isAddMode = loanId === NewEnum.NEW || !loanId
-
   const loan = useLoan(loanId)
   const accounts = useActiveAccounts()
   const categories = useCategories()
-
-  const prefill = useMemo<LoanPrefill | undefined>(() => {
+  const prefill = (() => {
     if (
       !params.prefillName &&
       !params.prefillAccountId &&
@@ -47,14 +42,7 @@ export default function LoanModifyScreen() {
         ? (params.prefillLoanType as LoanType)
         : undefined,
     }
-  }, [
-    params.prefillName,
-    params.prefillDescription,
-    params.prefillAccountId,
-    params.prefillAmount,
-    params.prefillLoanType,
-  ])
-
+  })()
   if (isAddMode) {
     return (
       <LoanModifyContent
@@ -65,7 +53,6 @@ export default function LoanModifyScreen() {
       />
     )
   }
-
   return (
     <LoanModifyContent
       key={loanId}

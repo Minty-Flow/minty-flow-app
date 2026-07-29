@@ -137,8 +137,8 @@ async function fetchStatsTransactions(
 
   const accountIds = [...new Set(rows.map((r) => r.account_id))]
   const categoryIds = [
-    ...new Set(rows.map((r) => r.category_id).filter(Boolean)),
-  ] as string[]
+    ...new Set(rows.flatMap((r) => (r.category_id ? [r.category_id] : []))),
+  ]
 
   const placeholders = (n: number) => Array(n).fill("?").join(", ")
 
@@ -904,8 +904,7 @@ async function computeCurrencyStats(
 
 function computeMedianPurchase(rows: StatsRawRow[]): number | null {
   const amounts = rows
-    .filter(isRealExpense)
-    .map((r) => Math.abs(r.amount))
+    .flatMap((r) => (isRealExpense(r) ? [Math.abs(r.amount)] : []))
     .sort((a, b) => a - b)
   if (amounts.length === 0) return null
   const mid = Math.floor(amounts.length / 2)

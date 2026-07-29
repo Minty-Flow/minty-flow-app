@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { addWeeks } from "date-fns"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { on } from "~/database/events"
 import { fetchAllStatsData } from "~/database/services-sqlite/stats-service"
@@ -12,19 +13,18 @@ import type {
   StatsDateRangePreset,
   StatsSupplement,
 } from "~/types/stats"
+import { getWeekStartsOn } from "~/utils/get-week-start-on"
 import {
   buildMonthRange,
   buildStatsDateRange,
   navigateRange,
 } from "~/utils/stats-date-range"
 import type { DateRangePresetId } from "~/utils/time-utils"
-
 export interface UseStatsInit {
   preset?: DateRangePresetId
   from?: Date
   to?: Date
 }
-
 interface UseStatsReturn {
   byCurrency: CurrencyStats[]
   supplementByCurrency: StatsSupplement[]
@@ -39,16 +39,13 @@ interface UseStatsReturn {
   navigate: (direction: "prev" | "next") => void
   refetch: () => Promise<void>
 }
-
 function computeSupplements(accounts: Account[]): StatsSupplement[] {
   const currencySet = new Set(accounts.map((a) => a.currencyCode))
   const supplements: StatsSupplement[] = []
-
   for (const currency of currencySet) {
     const currencyAccounts = accounts.filter((a) => a.currencyCode === currency)
     const included = currencyAccounts.filter((a) => !a.excludeFromBalance)
     const currentNetBalance = included.reduce((s, a) => s + a.balance, 0)
-
     supplements.push({
       currency,
       currentNetBalance,
@@ -62,10 +59,8 @@ function computeSupplements(accounts: Account[]): StatsSupplement[] {
       })),
     })
   }
-
   return supplements
 }
-
 function buildInitialState(init?: UseStatsInit): {
   preset: DateRangePresetId
   range: StatsDateRange
@@ -87,7 +82,6 @@ function buildInitialState(init?: UseStatsInit): {
   }
   return { preset, range: buildStatsDateRange(preset) }
 }
-
 export function useStats(init?: UseStatsInit): UseStatsReturn {
   const [activeYear, setActiveYear] = useState(() =>
     (init?.from ?? new Date()).getFullYear(),
@@ -99,60 +93,73 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
   const [activePreset, setActivePreset] = useState<DateRangePresetId>(
     initial.preset,
   )
-  const [dateRange, setDateRange] = useState<StatsDateRange>(initial.range)
+  const [range, setRange] = useState<StatsDateRange>(initial.range)
+  const [weekAnchor, setWeekAnchor] = useState(() =>
+    initial.preset === "thisWeek"
+      ? initial.range.from
+      : (init?.from ?? new Date()),
+  )
   const [byCurrency, setByCurrency] = useState<CurrencyStats[]>([])
-  const [supplementByCurrency, setSupplementByCurrency] = useState<
-    StatsSupplement[]
-  >([])
   const [isLoading, setIsLoading] = useState(true)
   const fetchIdRef = useRef(0)
-
+  const activeFetchCountRef = useRef(0)
   const accounts = useAccounts()
-
+  const supplementByCurrency = computeSupplements(accounts)
+  const _weekStart = useWeekStartStore((s) => s.weekStart)
+  const weekStartsOn = getWeekStartsOn()
+  const dateRange = useMemo(
+    () =>
+      activePreset === "thisWeek"
+        ? buildStatsDateRange(
+            "thisWeek",
+            undefined,
+            undefined,
+            weekAnchor,
+            weekStartsOn,
+          )
+        : range,
+    [activePreset, range, weekAnchor, weekStartsOn],
+  )
   const fetchData = useCallback(async (range: StatsDateRange) => {
     const fetchId = ++fetchIdRef.current
-    setIsLoading(true)
+    activeFetchCountRef.current++
+
+    // Move what was in `finally` into a small helper so we don't repeat ourselves
+    const finalizeFetch = () => {
+      activeFetchCountRef.current = Math.max(0, activeFetchCountRef.current - 1)
+      setIsLoading(activeFetchCountRef.current > 0)
+    }
+
     try {
       const stats = await fetchAllStatsData(range)
+
+      // Cleanup for the success path
+      finalizeFetch()
+
       if (fetchIdRef.current !== fetchId) return
       setByCurrency(stats)
-    } finally {
-      if (fetchIdRef.current === fetchId) setIsLoading(false)
+    } catch (error) {
+      // Cleanup for the error path
+      finalizeFetch()
+      throw error
     }
   }, [])
-
   const debouncedFetch = useDebouncedCallback(fetchData, 300)
-
-  // `thisWeek` is the one preset whose boundaries move when the week-start
-  // setting changes; every other range is week-agnostic, and week *buckets*
-  // inside a range are recomputed by the refetch the store already triggers.
-  const weekStart = useWeekStartStore((s) => s.weekStart)
-  const prevWeekStartRef = useRef(weekStart)
-  useEffect(() => {
-    if (prevWeekStartRef.current === weekStart) return
-    prevWeekStartRef.current = weekStart
-    if (activePreset === "thisWeek") {
-      setDateRange(buildStatsDateRange("thisWeek"))
-    }
-  }, [weekStart, activePreset])
-
   // Initial and range-driven fetch
   useEffect(() => {
-    fetchData(dateRange)
+    void fetchData(dateRange)
   }, [dateRange, fetchData])
-
-  // Supplements reactively follow account store (already Zustand-reactive)
-  useEffect(() => {
-    setSupplementByCurrency(computeSupplements(accounts))
-  }, [accounts])
-
   // Re-fetch stats on any relevant DB change
   useEffect(() => {
-    const unsub1 = on("transactions:dirty", () => debouncedFetch(dateRange))
-    const unsub2 = on("accounts:dirty", () => debouncedFetch(dateRange))
-    const unsub3 = on("tags:dirty", () => debouncedFetch(dateRange))
-    const unsub4 = on("categories:dirty", () => debouncedFetch(dateRange))
-    const unsub5 = on("db:reset", () => debouncedFetch(dateRange))
+    const refresh = () => {
+      setIsLoading(true)
+      debouncedFetch(dateRange)
+    }
+    const unsub1 = on("transactions:dirty", refresh)
+    const unsub2 = on("accounts:dirty", refresh)
+    const unsub3 = on("tags:dirty", refresh)
+    const unsub4 = on("categories:dirty", refresh)
+    const unsub5 = on("db:reset", refresh)
     return () => {
       fetchIdRef.current++
       unsub1()
@@ -162,61 +169,60 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
       unsub5()
     }
   }, [dateRange, debouncedFetch])
-
-  const setPreset = useCallback((preset: StatsDateRangePreset) => {
+  const setPreset = (preset: StatsDateRangePreset) => {
+    setIsLoading(true)
     setActivePreset(preset)
-    setDateRange(buildStatsDateRange(preset))
-  }, [])
-
-  const setCustomRange = useCallback(
-    (from: Date, to: Date, source?: DateRangePresetId) => {
-      const mappedPreset: StatsDateRangePreset =
-        source === "thisWeek" ||
-        source === "thisMonth" ||
-        source === "thisYear" ||
-        source === "last30" ||
-        source === "allTime"
-          ? source
-          : "custom"
-
-      setActivePreset(source ?? "custom")
-
-      // `byMonth` must route through `buildMonthRange` exactly as
-      // `buildInitialState` does, or the tab and the detail screen it opens
-      // disagree on interval and previous-period for the same month.
-      if (source === "byMonth") {
-        setDateRange(buildMonthRange(from.getFullYear(), from.getMonth()))
-      } else if (mappedPreset !== "custom") {
-        setDateRange(buildStatsDateRange(mappedPreset))
-      } else {
-        setDateRange(buildStatsDateRange("custom", from, to))
-      }
-
-      setActiveYear(from.getFullYear())
-      setActiveMonth(from.getMonth())
-    },
-    [],
-  )
-
-  const setMonthRange = useCallback((year: number, month: number) => {
+    if (preset === "thisWeek") {
+      setWeekAnchor(new Date())
+    } else {
+      setRange(buildStatsDateRange(preset))
+    }
+  }
+  const setCustomRange = (from: Date, to: Date, source?: DateRangePresetId) => {
+    setIsLoading(true)
+    const mappedPreset: StatsDateRangePreset =
+      source === "thisWeek" ||
+      source === "thisMonth" ||
+      source === "thisYear" ||
+      source === "last30" ||
+      source === "allTime"
+        ? source
+        : "custom"
+    setActivePreset(source ?? "custom")
+    // `byMonth` must route through `buildMonthRange` exactly as
+    // `buildInitialState` does, or the tab and the detail screen it opens
+    // disagree on interval and previous-period for the same month.
+    if (source === "byMonth") {
+      setRange(buildMonthRange(from.getFullYear(), from.getMonth()))
+    } else if (mappedPreset === "thisWeek") {
+      setWeekAnchor(new Date(from))
+    } else if (mappedPreset !== "custom") {
+      setRange(buildStatsDateRange(mappedPreset))
+    } else {
+      setRange(buildStatsDateRange("custom", from, to))
+    }
+    setActiveYear(from.getFullYear())
+    setActiveMonth(from.getMonth())
+  }
+  const setMonthRange = (year: number, month: number) => {
+    setIsLoading(true)
     setActiveYear(year)
     setActiveMonth(month)
     setActivePreset("byMonth")
-    setDateRange(buildMonthRange(year, month))
-  }, [])
-
-  const navigate = useCallback(
-    (direction: "prev" | "next") => {
-      setDateRange((prev) => navigateRange(prev, activePreset, direction))
-    },
-    [activePreset],
-  )
-
-  const refetch = useCallback(
-    () => fetchData(dateRange),
-    [dateRange, fetchData],
-  )
-
+    setRange(buildMonthRange(year, month))
+  }
+  const navigate = (direction: "prev" | "next") => {
+    setIsLoading(true)
+    if (activePreset === "thisWeek") {
+      setWeekAnchor((prev) => addWeeks(prev, direction === "next" ? 1 : -1))
+      return
+    }
+    setRange((prev) => navigateRange(prev, activePreset, direction))
+  }
+  const refetch = () => {
+    setIsLoading(true)
+    return fetchData(dateRange)
+  }
   return {
     byCurrency,
     supplementByCurrency,

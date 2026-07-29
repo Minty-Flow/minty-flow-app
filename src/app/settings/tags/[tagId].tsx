@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
@@ -32,15 +32,12 @@ interface EditTagScreenInnerProps {
   tagId: string
   tag?: Tag
 }
-
 function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
   const { t } = useTranslation()
   const router = useRouter()
   const navigation = useNavigation()
   const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
-
   const isAddMode = tagId === NewEnum.NEW || !tagId
-
   const {
     control,
     handleSubmit: handleFormSubmit,
@@ -56,34 +53,27 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
       colorSchemeName: tag?.colorSchemeName || undefined,
     },
   })
-
   const formName = watch("name")
   const formIcon = watch("icon")
   const formColorSchemeName = watch("colorSchemeName")
   const formType = watch("type")
-
   const iconBasedType = (type?: TagKindType): IconSvgName => {
     if (type === TagKindEnum.CONTACT) return "address-book-outline"
     if (type === TagKindEnum.LOCATION) return "map-outline"
     return "tag"
   }
-
-  const handleConfirm = useCallback(() => {
+  const handleConfirm = () => {
     router.back()
-  }, [router])
-
-  const handleBlock = useCallback(() => {
+  }
+  const handleBlock = () => {
     setUnsavedModalVisible(true)
-  }, [])
-
+  }
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSubmitting,
     onBlock: handleBlock,
   })
-
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-
   const onSubmit = async (data: AddTagsFormSchema) => {
     try {
       if (isAddMode) {
@@ -103,7 +93,6 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
       })
     }
   }
-
   const handleDelete = async () => {
     try {
       await deleteTagById(tagId)
@@ -117,9 +106,7 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
       })
     }
   }
-
   const currentColorScheme = getThemeStrict(formColorSchemeName)
-
   if (!isAddMode && !tag) {
     return (
       <View style={styles.container}>
@@ -129,7 +116,6 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
       </View>
     )
   }
-
   return (
     <View style={styles.container}>
       <ScrollIntoViewProvider
@@ -183,18 +169,16 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
     </View>
   )
 }
-
 export default function EditTagScreen() {
-  const { tagId } = useLocalSearchParams<{ tagId: string }>()
+  const { tagId } = useLocalSearchParams<{
+    tagId: string
+  }>()
   const tag = useTag(tagId ?? "")
-
   if (tagId === NewEnum.NEW || !tagId) {
     return <EditTagScreenInner tagId={NewEnum.NEW} />
   }
-
   return <EditTagScreenInner key={tagId} tagId={tagId} tag={tag} />
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,

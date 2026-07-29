@@ -1,7 +1,7 @@
 import { endOfMonth, startOfMonth } from "date-fns"
 
 import { emit } from "~/database/events"
-import { query } from "~/database/sql"
+import { query, runPreparedBatch } from "~/database/sql"
 import { runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
 import { generateId } from "~/database/utils/generate-id"
@@ -91,11 +91,12 @@ export async function updateAccount(
       updates.currencyCode &&
       updates.currencyCode !== existing.currency_code
     ) {
+      const nextCurrencyCode = updates.currencyCode
       currencyChanged = true
       comparableBalance = rescaleMinorUnits(
         existing.balance,
         existing.currency_code,
-        updates.currencyCode,
+        nextCurrencyCode,
       )
       const transactions = await db.getAllAsync<{
         id: string
@@ -106,51 +107,50 @@ export async function updateAccount(
          FROM transactions WHERE account_id = ?`,
         [id],
       )
-      for (const transaction of transactions) {
-        await db.runAsync(
-          `UPDATE transactions
-           SET amount = ?, account_balance_before = ?, updated_at = ?
-           WHERE id = ?`,
-          [
-            rescaleMinorUnits(
-              transaction.amount,
-              existing.currency_code,
-              updates.currencyCode,
-            ),
-            rescaleMinorUnits(
-              transaction.account_balance_before,
-              existing.currency_code,
-              updates.currencyCode,
-            ),
-            now,
-            transaction.id,
-          ],
-        )
-      }
+      await runPreparedBatch(
+        db,
+        `UPDATE transactions
+         SET amount = ?, account_balance_before = ?, updated_at = ?
+         WHERE id = ?`,
+        transactions.map((transaction) => [
+          rescaleMinorUnits(
+            transaction.amount,
+            existing.currency_code,
+            nextCurrencyCode,
+          ),
+          rescaleMinorUnits(
+            transaction.account_balance_before,
+            existing.currency_code,
+            nextCurrencyCode,
+          ),
+          now,
+          transaction.id,
+        ]),
+      )
 
       const loans = await db.getAllAsync<{
         id: string
         principal_amount: number
       }>(`SELECT id, principal_amount FROM loans WHERE account_id = ?`, [id])
-      for (const loan of loans) {
-        await db.runAsync(
-          `UPDATE loans SET principal_amount = ?, updated_at = ? WHERE id = ?`,
-          [
-            rescaleMinorUnits(
-              loan.principal_amount,
-              existing.currency_code,
-              updates.currencyCode,
-            ),
-            now,
-            loan.id,
-          ],
-        )
-      }
+      await runPreparedBatch(
+        db,
+        `UPDATE loans SET principal_amount = ?, updated_at = ? WHERE id = ?`,
+        loans.map((loan) => [
+          rescaleMinorUnits(
+            loan.principal_amount,
+            existing.currency_code,
+            nextCurrencyCode,
+          ),
+          now,
+          loan.id,
+        ]),
+      )
 
       const recurringRows = await db.getAllAsync<{
         id: string
         json_transaction_template: string
       }>(`SELECT id, json_transaction_template FROM recurring_transactions`)
+      const recurringUpdates: [string, string][] = []
       for (const recurring of recurringRows) {
         const template = JSON.parse(recurring.json_transaction_template) as {
           accountId?: string
@@ -160,14 +160,16 @@ export async function updateAccount(
         template.amount = rescaleMinorUnits(
           template.amount,
           existing.currency_code,
-          updates.currencyCode,
+          nextCurrencyCode,
         )
-        await db.runAsync(
-          `UPDATE recurring_transactions
-           SET json_transaction_template = ? WHERE id = ?`,
-          [JSON.stringify(template), recurring.id],
-        )
+        recurringUpdates.push([JSON.stringify(template), recurring.id])
       }
+      await runPreparedBatch(
+        db,
+        `UPDATE recurring_transactions
+         SET json_transaction_template = ? WHERE id = ?`,
+        recurringUpdates,
+      )
 
       await db.runAsync(
         `UPDATE accounts SET balance = ?, updated_at = ? WHERE id = ?`,
@@ -304,9 +306,9 @@ export async function destroyAccount(id: string): Promise<void> {
       transferTxIdSet.add(row.from_transaction_id)
       transferTxIdSet.add(row.to_transaction_id)
     }
-    const transferTxIds = txs
-      .filter((t) => transferTxIdSet.has(t.id))
-      .map((t) => t.id)
+    const transferTxIds = txs.flatMap((t) =>
+      transferTxIdSet.has(t.id) ? [t.id] : [],
+    )
 
     if (transferTxIds.length > 0) {
       const placeholders = transferTxIds.map(() => "?").join(",")
@@ -352,22 +354,27 @@ export async function destroyAccount(id: string): Promise<void> {
           }
         }
 
-        // Reverse partner account balances
-        for (const [accId, totalDelta] of partnerAccountDeltas) {
-          await db.runAsync(
-            `UPDATE accounts SET balance = balance - ?, updated_at = ? WHERE id = ?`,
-            [totalDelta, now, accId],
-          )
-        }
+        await runPreparedBatch(
+          db,
+          `UPDATE accounts SET balance = balance - ?, updated_at = ? WHERE id = ?`,
+          [...partnerAccountDeltas].map(([accId, totalDelta]) => [
+            totalDelta,
+            now,
+            accId,
+          ]),
+        )
 
-        // Soft-delete partner transactions
-        for (const tx of partnerTxs) {
-          if (!tx.is_deleted) {
-            await db.runAsync(
-              `UPDATE transactions SET is_deleted = 1, deleted_at = ?, updated_at = ? WHERE id = ?`,
-              [now, now, tx.id],
-            )
-          }
+        const partnerIdsToDelete = partnerTxs.flatMap((tx) =>
+          tx.is_deleted ? [] : [tx.id],
+        )
+        if (partnerIdsToDelete.length > 0) {
+          const deletePlaceholders = partnerIdsToDelete.map(() => "?").join(",")
+          await db.runAsync(
+            `UPDATE transactions
+             SET is_deleted = 1, deleted_at = ?, updated_at = ?
+             WHERE id IN (${deletePlaceholders})`,
+            [now, now, ...partnerIdsToDelete],
+          )
         }
 
         // Delete transfers join rows
@@ -416,12 +423,11 @@ export async function updateAccountsOrder(
 ): Promise<void> {
   const now = new Date().toISOString()
   await runInTransaction("account.reorder", async (db) => {
-    for (let i = 0; i < entries.length; i++) {
-      await db.runAsync(
-        `UPDATE accounts SET sort_order = ?, updated_at = ? WHERE id = ?`,
-        [i, now, entries[i].id],
-      )
-    }
+    await runPreparedBatch(
+      db,
+      `UPDATE accounts SET sort_order = ?, updated_at = ? WHERE id = ?`,
+      entries.map((entry, i) => [i, now, entry.id]),
+    )
   })
   emit("accounts:dirty", {
     ids: entries.map((e) => e.id),

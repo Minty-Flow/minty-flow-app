@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-07-28T11:52:42.618Z
+Generated on: 2026-07-29T12:06:02.855Z
 ```
 ./
 ├── .github/
@@ -28,6 +28,14 @@ Generated on: 2026-07-28T11:52:42.618Z
 ├── .zed/
 │   └── settings.json
 ├── docs/
+│   ├── reactive-data-migration/
+│   │   ├── 00-roadmap.md
+│   │   ├── 01-foundation.md
+│   │   ├── 02-schema-baseline.md
+│   │   ├── 03-migrations.md
+│   │   ├── 04-live-query-cutover.md
+│   │   ├── 05-writes-and-transactions.md
+│   │   └── 06-cleanup-and-validation.md
 │   ├── money-architecture.md
 │   ├── stats-recurring-spending-map-plan.md
 │   └── STRUCTURE.md
@@ -238,6 +246,7 @@ Generated on: 2026-07-28T11:52:42.618Z
 │   │   │   ├── chart-crosshair.tsx
 │   │   │   ├── currency-switcher.tsx
 │   │   │   ├── delta-badge.tsx
+│   │   │   ├── get-category-color.ts
 │   │   │   ├── insight-card.tsx
 │   │   │   ├── mini-bars.tsx
 │   │   │   ├── net-worth-chart.tsx
@@ -392,8 +401,6 @@ Generated on: 2026-07-28T11:52:42.618Z
 │   │   │   └── transaction.mapper.ts
 │   │   ├── migrations/
 │   │   │   ├── sqlite-runner.ts
-│   │   │   ├── sqlite-v1.ts
-│   │   │   ├── sqlite-v2.ts
 │   │   │   └── sqlite-v3.ts
 │   │   ├── repos/
 │   │   │   ├── account-repo.ts
@@ -539,6 +546,7 @@ Generated on: 2026-07-28T11:52:42.618Z
 │       ├── open-file.ts
 │       ├── parse-math-expression.ts
 │       ├── pending-transactions.ts
+│       ├── planning-progress.ts
 │       ├── recurrence.ts
 │       ├── stats-date-range.ts
 │       ├── string-utils.ts
@@ -553,6 +561,7 @@ Generated on: 2026-07-28T11:52:42.618Z
 ├── app.json
 ├── babel.config.js
 ├── biome.json
+├── doctor.config.json
 ├── expo-env.d.ts
 ├── index.ts
 ├── LICENSE

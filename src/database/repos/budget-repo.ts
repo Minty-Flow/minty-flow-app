@@ -1,16 +1,7 @@
-import {
-  endOfDay,
-  endOfMonth,
-  endOfYear,
-  startOfDay,
-  startOfMonth,
-  startOfYear,
-} from "date-fns"
 import type { SQLiteBindValue } from "expo-sqlite"
 
 import type { BudgetPeriod } from "~/types/budgets"
-import { BudgetPeriodEnum } from "~/types/budgets"
-import { endOfAppWeek, startOfAppWeek } from "~/utils/time-utils"
+import { getBudgetPeriodBounds } from "~/utils/planning-progress"
 
 import { query, queryOne } from "../sql"
 import type {
@@ -46,32 +37,11 @@ export function getBudgetPeriodRange(
   startDateIso: string,
   endDateIso: string | null,
 ): { periodStart: string; periodEnd: string } {
-  const now = new Date()
-  let periodStart: Date
-  let periodEnd: Date = now
-
-  switch (period) {
-    case BudgetPeriodEnum.DAILY:
-      periodStart = startOfDay(now)
-      periodEnd = endOfDay(now)
-      break
-    case BudgetPeriodEnum.WEEKLY:
-      periodStart = startOfAppWeek(now)
-      periodEnd = endOfAppWeek(now)
-      break
-    case BudgetPeriodEnum.MONTHLY:
-      periodStart = startOfMonth(now)
-      periodEnd = endOfMonth(now)
-      break
-    case BudgetPeriodEnum.YEARLY:
-      periodStart = startOfYear(now)
-      periodEnd = endOfYear(now)
-      break
-    default:
-      periodStart = new Date(startDateIso)
-      if (endDateIso != null) periodEnd = new Date(endDateIso)
-      break
-  }
+  const { periodStart, periodEnd } = getBudgetPeriodBounds(
+    period,
+    new Date(startDateIso),
+    endDateIso != null ? new Date(endDateIso) : null,
+  )
 
   return {
     periodStart: periodStart.toISOString(),

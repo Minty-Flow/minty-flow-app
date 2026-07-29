@@ -5,7 +5,7 @@ import {
   Skia,
   vec,
 } from "@shopify/react-native-skia"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
@@ -18,16 +18,13 @@ import type { BalanceTimelinePoint } from "~/types/stats"
 import { StatCard } from "./stat-card"
 
 const CHART_HEIGHT = 64
-
 interface SparklineProps {
   timeline: BalanceTimelinePoint[]
 }
-
 function Sparkline({ timeline }: SparklineProps) {
   const { theme } = useUnistyles()
   const [width, setWidth] = useState(0)
-
-  const { linePath, areaPath } = useMemo(() => {
+  const { linePath, areaPath } = (() => {
     if (width === 0 || timeline.length < 2) {
       return { linePath: null, areaPath: null }
     }
@@ -37,7 +34,6 @@ function Sparkline({ timeline }: SparklineProps) {
     const span = max - min || 1
     const pad = 4
     const usable = CHART_HEIGHT - pad * 2
-
     const line = Skia.Path.Make()
     const area = Skia.Path.Make()
     timeline.forEach((point, i) => {
@@ -55,8 +51,7 @@ function Sparkline({ timeline }: SparklineProps) {
     area.lineTo(width, CHART_HEIGHT)
     area.close()
     return { linePath: line, areaPath: area }
-  }, [timeline, width])
-
+  })()
   return (
     <View
       style={styles.chartWrap}
@@ -87,7 +82,6 @@ function Sparkline({ timeline }: SparklineProps) {
     </View>
   )
 }
-
 interface NetWorthCardProps {
   netBalance: number
   balanceDelta: number
@@ -96,7 +90,6 @@ interface NetWorthCardProps {
   currency: string
   onPress: () => void
 }
-
 export function NetWorthCard({
   netBalance,
   balanceDelta,
@@ -108,7 +101,6 @@ export function NetWorthCard({
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const deltaUp = balanceDelta >= 0
-
   return (
     <StatCard
       title={t("screens.stats.dashboard.netWorth")}
@@ -151,7 +143,6 @@ export function NetWorthCard({
     </StatCard>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   total: {
     fontWeight: "700",

@@ -73,7 +73,10 @@ export function useCategories(): Category[] {
 export function useCategoriesByType(type: string): Category[] {
   return useCategoryStore(
     useShallow((s) =>
-      s.ids.map((id) => s.byId[id]).filter((c) => c?.type === type),
+      s.ids.flatMap((id) => {
+        const category = s.byId[id]
+        return category?.type === type ? [category] : []
+      }),
     ),
   )
 }

@@ -55,8 +55,13 @@ function DateTimePickerModalInner({
       onRequestClose={onClose}
       accessibilityViewIsModal
     >
-      <Pressable style={datePickerModalStyles.overlay} onPress={onClose}>
+      <View style={datePickerModalStyles.overlay}>
         <Pressable
+          style={datePickerModalStyles.backdrop}
+          onPress={onClose}
+          accessibilityLabel={t("common.actions.close")}
+        />
+        <View
           style={[
             datePickerModalStyles.sheet,
             {
@@ -64,7 +69,6 @@ function DateTimePickerModalInner({
               paddingBottom: insets.bottom + 8,
             },
           ]}
-          onPress={(e) => e.stopPropagation()}
         >
           <View
             style={[
@@ -124,8 +128,8 @@ function DateTimePickerModalInner({
               }}
             />
           </View>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   )
 }

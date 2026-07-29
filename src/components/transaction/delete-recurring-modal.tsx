@@ -6,15 +6,13 @@
  *   2. All transactions   — soft-delete rule + all instances
  *   3. This and future    — soft-delete rule + instances from this date onward
  */
-
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
   Alert,
   Modal,
   Pressable,
   Text,
-  TouchableWithoutFeedback,
   useWindowDimensions,
   View,
 } from "react-native"
@@ -26,13 +24,10 @@ import {
 import { IconSvg } from "~/components/icons"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { ListItem } from "~/components/ui/list-item"
-import type { RecurringTransactionTemplate } from "~/database/services-sqlite/recurring-transaction-service"
-import { disableRecurringRule } from "~/database/services-sqlite/recurring-transaction-service"
 import {
-  deleteAllRecurringInstances,
-  deleteFutureRecurringInstances,
-  deleteTransaction,
-} from "~/database/services-sqlite/transaction-service"
+  applyRecurringDeleteScope,
+  type RecurringTransactionTemplate,
+} from "~/database/services-sqlite/recurring-transaction-service"
 import { autoConfirmationService } from "~/services/auto-confirmation-service"
 import type { Transaction } from "~/types/transactions"
 import { logger } from "~/utils/logger"
@@ -41,7 +36,6 @@ import { Toast } from "~/utils/toast"
 import { ChevronIcon } from "../ui/chevron-icon"
 
 type DeleteScope = "this" | "all" | "this_and_future"
-
 interface DeleteRecurringModalProps {
   visible: boolean
   transaction: Transaction
@@ -49,7 +43,6 @@ interface DeleteRecurringModalProps {
   onRequestClose: () => void
   onDeleted: () => void
 }
-
 interface OptionRowProps {
   label: string
   sublabel: string
@@ -58,7 +51,6 @@ interface OptionRowProps {
   isLast?: boolean
   isDestructive?: boolean
 }
-
 function OptionRow({
   label,
   sublabel,
@@ -105,7 +97,6 @@ function OptionRow({
     </ListItem>
   )
 }
-
 export function DeleteRecurringModal({
   visible,
   transaction,
@@ -118,92 +109,60 @@ export function DeleteRecurringModal({
   const { width } = useWindowDimensions()
   const maxCardWidth = Math.min(width - 48, 400)
   const { theme } = useUnistyles()
-
-  const performDelete = useCallback(
-    async (scope: DeleteScope) => {
-      if (loadingScope) return
-      setLoadingScope(scope)
-      autoConfirmationService.cancelSchedule(transaction.id)
-
-      try {
-        switch (scope) {
-          case "this": {
-            await deleteTransaction(transaction.id)
-            Toast.success({
-              title: t(
-                "components.transactionForm.toast.deleteRecurringSuccess",
-              ),
-            })
-            break
-          }
-
-          case "all": {
-            await deleteAllRecurringInstances(recurringRule.id)
-            await disableRecurringRule(recurringRule.id)
-            Toast.success({
-              title: t(
-                "components.transactionForm.toast.deleteRecurringAllSuccess",
-              ),
-            })
-            break
-          }
-
-          case "this_and_future": {
-            await deleteFutureRecurringInstances(
-              recurringRule.id,
-              transaction.transactionDate,
-            )
-            await disableRecurringRule(recurringRule.id)
-            Toast.success({
-              title: t(
-                "components.transactionForm.toast.deleteRecurringFutureSuccess",
-              ),
-            })
-            break
-          }
-        }
-
-        onRequestClose()
-        onDeleted()
-      } catch (error) {
-        logger.error("DeleteRecurringModal: failed to delete", {
-          scope,
-          error: error instanceof Error ? error.message : String(error),
-        })
-        Toast.error({
-          title: t("components.transactionForm.toast.deleteRecurringFailed"),
-        })
-      }
-      setLoadingScope(null)
-    },
-    [loadingScope, transaction, recurringRule, onRequestClose, onDeleted, t],
-  )
-
-  const handleDelete = useCallback(
-    (scope: DeleteScope) => {
-      if (scope === "all" || scope === "this_and_future") {
-        Alert.alert(
-          t("components.recurring.deleteModal.confirmTitle"),
-          t("components.recurring.deleteModal.confirmMessage"),
-          [
-            {
-              text: t("components.recurring.deleteModal.cancel"),
-              style: "cancel",
-            },
-            {
-              text: t("components.recurring.deleteModal.delete"),
-              style: "destructive",
-              onPress: () => performDelete(scope),
-            },
-          ],
-        )
-      } else {
-        void performDelete(scope)
-      }
-    },
-    [performDelete, t],
-  )
-
+  const performDelete = async (scope: DeleteScope) => {
+    if (loadingScope) return
+    setLoadingScope(scope)
+    autoConfirmationService.cancelSchedule(transaction.id)
+    try {
+      await applyRecurringDeleteScope({
+        scope,
+        transactionId: transaction.id,
+        transactionDate: transaction.transactionDate,
+        ruleId: recurringRule.id,
+      })
+      Toast.success({
+        title: t(
+          scope === "this"
+            ? "components.transactionForm.toast.deleteRecurringSuccess"
+            : scope === "all"
+              ? "components.transactionForm.toast.deleteRecurringAllSuccess"
+              : "components.transactionForm.toast.deleteRecurringFutureSuccess",
+        ),
+      })
+      onRequestClose()
+      onDeleted()
+    } catch (error) {
+      logger.error("DeleteRecurringModal: failed to delete", {
+        scope,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      Toast.error({
+        title: t("components.transactionForm.toast.deleteRecurringFailed"),
+      })
+    }
+    setLoadingScope(null)
+  }
+  const handleDelete = (scope: DeleteScope) => {
+    if (scope === "all" || scope === "this_and_future") {
+      Alert.alert(
+        t("components.recurring.deleteModal.confirmTitle"),
+        t("components.recurring.deleteModal.confirmMessage"),
+        [
+          {
+            text: t("components.recurring.deleteModal.cancel"),
+            style: "cancel",
+          },
+          {
+            text: t("components.recurring.deleteModal.delete"),
+            style: "destructive",
+            onPress: () => performDelete(scope),
+          },
+        ],
+      )
+    } else {
+      void performDelete(scope)
+    }
+  }
   return (
     <Modal
       visible={visible}
@@ -213,12 +172,13 @@ export function DeleteRecurringModal({
       onRequestClose={onRequestClose}
       accessibilityViewIsModal
     >
-      <Pressable
-        style={[styles.backdrop, { width }]}
-        onPress={onRequestClose}
-        accessibilityLabel={t("common.actions.close")}
-      >
-        <TouchableWithoutFeedback onPress={() => {}}>
+      <View style={styles.modalRoot}>
+        <Pressable
+          style={styles.backdrop}
+          onPress={onRequestClose}
+          accessibilityLabel={t("common.actions.close")}
+        />
+        <View style={styles.content}>
           <View
             style={[
               styles.card,
@@ -228,7 +188,6 @@ export function DeleteRecurringModal({
                 borderRadius: theme.radius ?? 16,
               },
             ]}
-            pointerEvents="box-none"
           >
             <View style={styles.header}>
               <View
@@ -295,16 +254,25 @@ export function DeleteRecurringModal({
               </Text>
             </Pressable>
           </View>
-        </TouchableWithoutFeedback>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   )
 }
-
 const styles = UnistylesSheet.create((theme) => ({
-  backdrop: {
+  modalRoot: {
     flex: 1,
+  },
+  backdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: theme.colors.shadow,
+  },
+  content: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,

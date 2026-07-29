@@ -1,4 +1,3 @@
-import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
@@ -30,26 +29,21 @@ const DAY_OPTIONS: {
     labelKey: "screens.settings.preferences.weekStart.monday",
   },
 ]
-
 const NUM_TO_PREF: Record<number, WeekStartPreference> = {
   0: "sunday",
   1: "monday",
   6: "saturday",
 }
-
 export default function WeekStartScreen() {
   const { t } = useTranslation()
   const weekStart = useWeekStartStore((s) => s.weekStart)
   const setWeekStart = useWeekStartStore((s) => s.setWeekStart)
-
   const isAuto = weekStart === "auto"
-
   // When auto, resolve the device day so the matching chip stays highlighted
-  const resolvedDay = useMemo(() => {
+  const resolvedDay = (() => {
     if (!isAuto) return weekStart
     return NUM_TO_PREF[getWeekStartsOn()] ?? "monday"
-  }, [isAuto, weekStart])
-
+  })()
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.section}>
@@ -92,7 +86,6 @@ export default function WeekStartScreen() {
     </ScrollView>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,

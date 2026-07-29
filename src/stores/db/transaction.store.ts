@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react"
+import { useEffect } from "react"
 import { create } from "zustand"
 import { subscribeWithSelector } from "zustand/middleware"
 import { useShallow } from "zustand/react/shallow"
@@ -12,13 +12,11 @@ import { getTransactionsByFilter } from "~/database/repos/transaction-repo"
 import { logger } from "~/utils/logger"
 
 type Status = "idle" | "loading" | "ready" | "error"
-
 interface CacheEntry {
   ids: string[]
   status: Status
   dirty: boolean
 }
-
 interface TransactionFilters {
   from?: string // UTC ISO
   to?: string // UTC ISO
@@ -32,14 +30,12 @@ interface TransactionFilters {
   limit?: number
   offset?: number
 }
-
 interface TransactionStoreState {
   byId: Record<string, TransactionWithRelations>
   cache: Record<string, CacheEntry>
   fetch: (hash: string, filters: TransactionFilters) => Promise<void>
   markDirty: (changedIds?: string[]) => void
 }
-
 /**
  * Stable, deterministic cache key. Dates must be ISO strings — never raw Date objects.
  */
@@ -51,18 +47,14 @@ function stableFilterHash(filters: TransactionFilters): string {
   }
   return JSON.stringify(sorted)
 }
-
 const EMPTY_IDS: string[] = []
-
 const useTransactionStore = create<TransactionStoreState>()(
   subscribeWithSelector((set, get) => ({
     byId: {},
     cache: {},
-
     fetch: async (hash, filters) => {
       const existing = get().cache[hash]
       if (existing?.status === "loading") return
-
       set((state) => ({
         cache: {
           ...state.cache,
@@ -73,21 +65,17 @@ const useTransactionStore = create<TransactionStoreState>()(
           },
         },
       }))
-
       try {
         const rows = await getTransactionsByFilter(filters)
         const hydrated = await hydrateTransactions(rows)
         const ids = hydrated.map((t) => t.id)
-
         set((state) => {
           const nextById = { ...state.byId }
           for (const tx of hydrated) nextById[tx.id] = tx
-
           const nextCache = {
             ...state.cache,
             [hash]: { ids, status: "ready" as Status, dirty: false },
           }
-
           // GC: drop ids no longer referenced by any cache entry.
           const referenced = new Set<string>()
           for (const key in nextCache) {
@@ -96,7 +84,6 @@ const useTransactionStore = create<TransactionStoreState>()(
           for (const id in nextById) {
             if (!referenced.has(id)) delete nextById[id]
           }
-
           return { byId: nextById, cache: nextCache }
         })
       } catch (error) {
@@ -115,7 +102,6 @@ const useTransactionStore = create<TransactionStoreState>()(
         }))
       }
     },
-
     markDirty: (changedIds) => {
       set((state) => {
         const next: Record<string, CacheEntry> = {}
@@ -136,15 +122,11 @@ const useTransactionStore = create<TransactionStoreState>()(
     },
   })),
 )
-
 // Debounced refresh: mark dirty immediately, refetch after 50 ms
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
-
 on("transactions:dirty", (payload) => {
   useTransactionStore.getState().markDirty(payload?.ids)
-
   if (debounceTimer) return
-
   debounceTimer = setTimeout(() => {
     debounceTimer = null
     const { cache, fetch } = useTransactionStore.getState()
@@ -155,7 +137,6 @@ on("transactions:dirty", (payload) => {
     }
   }, 50)
 })
-
 on("db:reset", () => {
   if (debounceTimer) {
     clearTimeout(debounceTimer)
@@ -163,37 +144,32 @@ on("db:reset", () => {
   }
   useTransactionStore.setState({ byId: {}, cache: {} })
 })
-
 export function useTransactions(filters: TransactionFilters): {
   items: TransactionWithRelations[]
   status: Status
 } {
   const hash = stableFilterHash(filters)
-
   const entry = useTransactionStore(useShallow((s) => s.cache[hash]))
   const fetch = useTransactionStore((s) => s.fetch)
-
   const ids = entry?.ids ?? EMPTY_IDS
   const status = entry?.status ?? "idle"
   const isNew = !entry
   const isDirty = entry?.dirty ?? false
-
   useEffect(() => {
     if (isNew || isDirty) {
       // Reconstruct filters from hash — hash fully encodes them
       fetch(hash, JSON.parse(hash) as TransactionFilters)
     }
   }, [hash, isNew, isDirty, fetch])
-
   const itemsRaw = useTransactionStore(
-    useShallow((s) => ids.map((id) => s.byId[id]).filter(Boolean)),
+    useShallow((s) =>
+      ids.flatMap((id) => {
+        const item = s.byId[id]
+        return item ? [item] : []
+      }),
+    ),
   )
-
   // Stable identity when ids + underlying rows unchanged.
-  const items = useMemo(
-    () => itemsRaw as TransactionWithRelations[],
-    [itemsRaw],
-  )
-
+  const items = itemsRaw as TransactionWithRelations[]
   return { items, status }
 }

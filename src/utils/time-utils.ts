@@ -123,12 +123,16 @@ function toDate(date: DateInput): Date | null {
  * Monday. Either way the app disagrees with itself across screens for anyone
  * whose week starts elsewhere.
  */
-export function startOfAppWeek(date: Date): Date {
-  return startOfWeek(date, { weekStartsOn: getWeekStartsOn() })
+export function startOfAppWeek(date: Date, weekStartsOn?: Day | number): Date {
+  return startOfWeek(date, {
+    weekStartsOn: (weekStartsOn ?? getWeekStartsOn()) as Day,
+  })
 }
 
-export function endOfAppWeek(date: Date): Date {
-  return endOfWeek(date, { weekStartsOn: getWeekStartsOn() })
+export function endOfAppWeek(date: Date, weekStartsOn?: Day | number): Date {
+  return endOfWeek(date, {
+    weekStartsOn: (weekStartsOn ?? getWeekStartsOn()) as Day,
+  })
 }
 
 function isSameAppWeek(a: Date, b: Date): boolean {

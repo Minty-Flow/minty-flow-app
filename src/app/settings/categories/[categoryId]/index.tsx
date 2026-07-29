@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useLayoutEffect, useMemo, useState } from "react"
+import { useLayoutEffect, useState } from "react"
 import { StyleSheet } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
@@ -29,12 +29,12 @@ import {
   TransactionSubTypeEnum,
   TransactionTypeEnum,
 } from "~/types/transactions"
-
 export default function CategoryDetailsScreen() {
-  const { categoryId } = useLocalSearchParams<{ categoryId: string }>()
+  const { categoryId } = useLocalSearchParams<{
+    categoryId: string
+  }>()
   const router = useRouter()
   const navigation = useNavigation()
-
   const [selectedYear, setSelectedYear] = useState(() =>
     new Date().getFullYear(),
   )
@@ -47,18 +47,12 @@ export default function CategoryDetailsScreen() {
   const [searchState, setSearchState] =
     useState<SearchState>(DEFAULT_SEARCH_STATE)
   const [showFilters, setShowFilters] = useState(false)
-
   const category = useCategory(categoryId ?? "")
   const categoriesExpense = useCategoriesByType(TransactionTypeEnum.EXPENSE)
   const categoriesIncome = useCategoriesByType(TransactionTypeEnum.INCOME)
   const categoriesTransfer = useCategoriesByType(TransactionTypeEnum.TRANSFER)
   const tags = useTags()
-
-  const { fromDate, toDate } = useMemo(
-    () => getMonthRange(selectedYear, selectedMonth),
-    [selectedYear, selectedMonth],
-  )
-
+  const { fromDate, toDate } = getMonthRange(selectedYear, selectedMonth)
   const { items: transactionsFull } = useTransactions(
     categoryId
       ? {
@@ -68,71 +62,50 @@ export default function CategoryDetailsScreen() {
         }
       : {},
   )
-
   const colorScheme = getThemeStrict(category?.colorSchemeName ?? null)
-
-  const categoriesByType = useMemo(
-    () => ({
-      expense: categoriesExpense,
-      income: categoriesIncome,
-      transfer: categoriesTransfer,
-    }),
-    [categoriesExpense, categoriesIncome, categoriesTransfer],
-  )
-
-  const dominantCurrency = useMemo(() => {
+  const categoriesByType = {
+    expense: categoriesExpense,
+    income: categoriesIncome,
+    transfer: categoriesTransfer,
+  }
+  const dominantCurrency = (() => {
     for (const r of transactionsFull) {
       const code = r.account?.currencyCode
       if (code) return code
     }
     return ""
-  }, [transactionsFull])
-
-  const monthIn = useMemo(
-    () =>
-      transactionsFull
-        .filter(
-          (r) =>
-            r.type === TransactionTypeEnum.INCOME &&
-            !r.isPending &&
-            !r.isDeleted,
-        )
-        .reduce((sum, r) => {
-          if (
-            r.subtype === TransactionSubTypeEnum.LOAN_BORROWED ||
-            r.subtype === TransactionSubTypeEnum.LOAN_RECEIVED
-          ) {
-            return sum
-          }
-          return sum + r.amount
-        }, 0),
-    [transactionsFull],
-  )
-
-  const monthOut = useMemo(
-    () =>
-      transactionsFull
-        .filter(
-          (r) =>
-            r.type === TransactionTypeEnum.EXPENSE &&
-            !r.isPending &&
-            !r.isDeleted,
-        )
-        .reduce((sum, r) => {
-          if (
-            r.subtype === TransactionSubTypeEnum.LOAN_REPAYMENT ||
-            r.subtype === TransactionSubTypeEnum.LOAN_LENT
-          ) {
-            return sum
-          }
-          if (r.subtype === TransactionSubTypeEnum.REFUND) {
-            return sum - r.amount
-          }
-          return sum + r.amount
-        }, 0),
-    [transactionsFull],
-  )
-
+  })()
+  const monthIn = transactionsFull
+    .filter(
+      (r) =>
+        r.type === TransactionTypeEnum.INCOME && !r.isPending && !r.isDeleted,
+    )
+    .reduce((sum, r) => {
+      if (
+        r.subtype === TransactionSubTypeEnum.LOAN_BORROWED ||
+        r.subtype === TransactionSubTypeEnum.LOAN_RECEIVED
+      ) {
+        return sum
+      }
+      return sum + r.amount
+    }, 0)
+  const monthOut = transactionsFull
+    .filter(
+      (r) =>
+        r.type === TransactionTypeEnum.EXPENSE && !r.isPending && !r.isDeleted,
+    )
+    .reduce((sum, r) => {
+      if (
+        r.subtype === TransactionSubTypeEnum.LOAN_REPAYMENT ||
+        r.subtype === TransactionSubTypeEnum.LOAN_LENT
+      ) {
+        return sum
+      }
+      if (r.subtype === TransactionSubTypeEnum.REFUND) {
+        return sum - r.amount
+      }
+      return sum + r.amount
+    }, 0)
   useLayoutEffect(() => {
     navigation.setOptions({
       title: category?.name ?? "",
@@ -164,7 +137,6 @@ export default function CategoryDetailsScreen() {
       ),
     })
   }, [navigation, router, category?.id, category?.name, showFilters])
-
   if (!category) {
     return (
       <View style={styles.container}>
@@ -174,10 +146,8 @@ export default function CategoryDetailsScreen() {
       </View>
     )
   }
-
   const typeLabel =
     category.type.charAt(0).toUpperCase() + category.type.slice(1)
-
   const headerContent = (
     <>
       {/* Category Header Card */}
@@ -225,7 +195,6 @@ export default function CategoryDetailsScreen() {
       )}
     </>
   )
-
   return (
     <View style={styles.container}>
       <MonthYearPicker
@@ -260,7 +229,6 @@ export default function CategoryDetailsScreen() {
     </View>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
@@ -270,7 +238,6 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
     alignItems: "center",
   },
-
   // ── Header Card ──────────────────────────────────────────────
   headerCard: {
     backgroundColor: theme.colors.secondary,
@@ -300,7 +267,6 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.semantic.semi,
     marginRight: 16,
   },
-
   // ── Summary: Income & Expense pills ─────────────────
   summaryRow: {
     flexDirection: "row",

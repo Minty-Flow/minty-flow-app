@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
-import { ScrollView } from "react-native"
+import { FlatList } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { AccountCard } from "~/components/accounts/account-card"
@@ -30,46 +30,45 @@ export default function AllAccountsScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView
+      <FlatList
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <Pressable style={styles.newAccountButton} onPress={handleAddAccount}>
-          <IconSvg
-            name="plus-outline"
-            size={32}
-            color={theme.colors.onSecondary}
-          />
-          <Text variant="default" style={styles.newAccountText}>
-            {t("screens.accounts.addNew")}
-          </Text>
-        </Pressable>
-
-        {accounts.map((account) => (
-          <AccountCard
-            key={account.id}
-            account={account}
-            isReorderMode={false}
-          />
-        ))}
-
-        {archivedAccounts.length > 0 && (
-          <>
-            <Text variant="small" style={styles.archivedSectionLabel}>
-              {t("screens.accounts.archivedSection")}
-            </Text>
-            {archivedAccounts.map((account) => (
-              <AccountCard
-                key={account.id}
-                account={account}
-                isReorderMode={false}
-                isArchived
-              />
-            ))}
-          </>
+        data={accounts}
+        keyExtractor={(account) => account.id}
+        renderItem={({ item: account }) => (
+          <AccountCard account={account} isReorderMode={false} />
         )}
-      </ScrollView>
+        ListHeaderComponent={
+          <Pressable style={styles.newAccountButton} onPress={handleAddAccount}>
+            <IconSvg
+              name="plus-outline"
+              size={32}
+              color={theme.colors.onSecondary}
+            />
+            <Text variant="default" style={styles.newAccountText}>
+              {t("screens.accounts.addNew")}
+            </Text>
+          </Pressable>
+        }
+        ListFooterComponent={
+          archivedAccounts.length > 0 ? (
+            <>
+              <Text variant="small" style={styles.archivedSectionLabel}>
+                {t("screens.accounts.archivedSection")}
+              </Text>
+              {archivedAccounts.map((account) => (
+                <AccountCard
+                  key={account.id}
+                  account={account}
+                  isReorderMode={false}
+                  isArchived
+                />
+              ))}
+            </>
+          ) : null
+        }
+        showsVerticalScrollIndicator={false}
+      />
     </View>
   )
 }

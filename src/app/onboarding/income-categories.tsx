@@ -36,9 +36,10 @@ export default function OnboardingIncomeCategoriesScreen() {
     }
   }
 
-  const availableKeys = IncomePresets.filter(
-    (p) => !addedKeys.has(`${p.icon}:${p.type}`),
-  ).map((p) => `${p.icon}:${p.type}`)
+  const availableKeys = IncomePresets.flatMap((p) => {
+    const key = `${p.icon}:${p.type}`
+    return addedKeys.has(key) ? [] : [key]
+  })
 
   const allSelected =
     availableKeys.length > 0 && availableKeys.every((k) => selectedKeys.has(k))
