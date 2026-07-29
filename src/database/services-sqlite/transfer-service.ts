@@ -1,11 +1,14 @@
 import { emit } from "~/database/events"
+import { runPreparedBatch } from "~/database/sql"
 import { runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
 import { generateId } from "~/database/utils/generate-id"
+import { getBalanceDelta } from "~/database/utils/get-balance-delta"
 import type {
   CreateTransferParams,
   EditTransferFields,
 } from "~/schemas/transactions.schema"
+import type { TransactionType } from "~/types/transactions"
 import {
   assertMinorUnits,
   convertMinorUnits,
@@ -67,6 +70,28 @@ async function getTransferRow(
   )
 }
 
+async function getTransferLegs(
+  txId: string,
+  db: Db,
+): Promise<RowTransaction[]> {
+  const tx = await db.getFirstAsync<RowTransaction>(
+    `SELECT * FROM transactions WHERE id = ?`,
+    [txId],
+  )
+  if (!tx) return []
+
+  const legs: RowTransaction[] = [tx]
+  const partner = await getPartnerTxId(txId, db)
+  if (!partner) return legs
+
+  const paired = await db.getFirstAsync<RowTransaction>(
+    `SELECT * FROM transactions WHERE id = ?`,
+    [partner.partnerId],
+  )
+  if (paired) legs.push(paired)
+  return legs
+}
+
 async function getConversionRate(txId: string): Promise<number | null> {
   const sql = await import("~/database/sql")
   const row = await sql.queryOne<{ conversion_rate: number }>(
@@ -104,18 +129,113 @@ export async function deleteTransferById(txId: string, db: Db): Promise<void> {
     if (paired) legs.push(paired)
   }
 
+  await runPreparedBatch(
+    db,
+    `UPDATE accounts SET balance = balance - ?, updated_at = ? WHERE id = ?`,
+    legs.flatMap((leg) =>
+      !leg.is_deleted && !leg.is_pending
+        ? [[leg.amount, now, leg.account_id]]
+        : [],
+    ),
+  )
+  await runPreparedBatch(
+    db,
+    `UPDATE transactions SET is_deleted = 1, deleted_at = ?, updated_at = ? WHERE id = ?`,
+    legs.map((leg) => [now, now, leg.id]),
+  )
+}
+
+export async function restoreTransferById(
+  txId: string,
+  db: Db,
+): Promise<string[]> {
+  const now = new Date().toISOString()
+  const affectedAccountIds = new Set<string>()
+  const legs = await getTransferLegs(txId, db)
+
   for (const leg of legs) {
-    if (!leg.is_deleted && !leg.is_pending) {
+    if (!leg.is_deleted) continue
+
+    affectedAccountIds.add(leg.account_id)
+
+    if (!leg.is_pending) {
+      const delta = getBalanceDelta(
+        leg.amount,
+        leg.type as TransactionType,
+        leg.subtype,
+      )
+      const acc = await db.getFirstAsync<{ balance: number }>(
+        `SELECT balance FROM accounts WHERE id = ?`,
+        [leg.account_id],
+      )
+      const balanceBefore = acc?.balance ?? 0
       await db.runAsync(
-        `UPDATE accounts SET balance = balance - ?, updated_at = ? WHERE id = ?`,
-        [leg.amount, now, leg.account_id],
+        `UPDATE accounts SET balance = balance + ?, updated_at = ? WHERE id = ?`,
+        [delta, now, leg.account_id],
+      )
+      await db.runAsync(
+        `UPDATE transactions SET
+          is_deleted = 0,
+          deleted_at = NULL,
+          account_balance_before = ?,
+          updated_at = ?
+         WHERE id = ?`,
+        [balanceBefore, now, leg.id],
+      )
+    } else {
+      await db.runAsync(
+        `UPDATE transactions SET
+          is_deleted = 0,
+          deleted_at = NULL,
+          updated_at = ?
+         WHERE id = ?`,
+        [now, leg.id],
       )
     }
-    await db.runAsync(
-      `UPDATE transactions SET is_deleted = 1, deleted_at = ?, updated_at = ? WHERE id = ?`,
-      [now, now, leg.id],
-    )
   }
+
+  return Array.from(affectedAccountIds)
+}
+
+export async function destroyTransferById(
+  txId: string,
+  db: Db,
+): Promise<string[]> {
+  const now = new Date().toISOString()
+  const affectedAccountIds = new Set<string>()
+  const legs = await getTransferLegs(txId, db)
+
+  for (const leg of legs) {
+    affectedAccountIds.add(leg.account_id)
+    if (!leg.is_deleted && !leg.is_pending) {
+      const delta = getBalanceDelta(
+        leg.amount,
+        leg.type as TransactionType,
+        leg.subtype,
+      )
+      await db.runAsync(
+        `UPDATE accounts SET balance = balance - ?, updated_at = ? WHERE id = ?`,
+        [delta, now, leg.account_id],
+      )
+    }
+  }
+
+  await runPreparedBatch(
+    db,
+    `DELETE FROM transaction_tags WHERE transaction_id = ?`,
+    legs.map((leg) => [leg.id]),
+  )
+  await db.runAsync(
+    `DELETE FROM transfers WHERE from_transaction_id = ? OR to_transaction_id = ?`,
+    [txId, txId],
+  )
+  await runPreparedBatch(
+    db,
+    `DELETE FROM transactions WHERE id = ?`,
+    legs.map((leg) => [leg.id]),
+  )
+
+  return Array.from(affectedAccountIds)
 }
 
 // ── Create ───────────────────────────────────────────────────────────────────

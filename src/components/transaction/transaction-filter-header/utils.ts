@@ -16,6 +16,7 @@ export function inferInitialCategoryType(
   categoriesByType: Record<TransactionType, Category[]>,
 ): TransactionType | null {
   if (selectedIds.length === 0) return null
+  const selectedIdSet = new Set(selectedIds)
   const types: TransactionType[] = [
     TransactionTypeEnum.EXPENSE,
     TransactionTypeEnum.INCOME,
@@ -23,7 +24,7 @@ export function inferInitialCategoryType(
   ]
   for (const type of types) {
     const cats = categoriesByType[type] ?? []
-    if (cats.some((c) => selectedIds.includes(c.id))) return type
+    if (cats.some((c) => selectedIdSet.has(c.id))) return type
   }
   return null
 }

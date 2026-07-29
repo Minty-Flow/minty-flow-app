@@ -16,6 +16,7 @@ import {
 } from "date-fns"
 
 import type { StatsDateRange, StatsDateRangePreset } from "~/types/stats"
+import { getWeekStartsOn } from "~/utils/get-week-start-on"
 import type { DateRangePresetId } from "~/utils/time-utils"
 import {
   endOfAppWeek,
@@ -37,13 +38,17 @@ export function buildStatsDateRange(
   preset: StatsDateRangePreset,
   customFrom?: Date,
   customTo?: Date,
+  anchorDate?: Date,
+  weekStartsOn?: number,
 ): StatsDateRange {
   const now = new Date()
 
   switch (preset) {
     case "thisWeek": {
-      const from = startOfAppWeek(now)
-      const to = endOfAppWeek(now)
+      const anchor = anchorDate ?? now
+      const weekStart = weekStartsOn ?? getWeekStartsOn()
+      const from = startOfAppWeek(anchor, weekStart)
+      const to = endOfAppWeek(anchor, weekStart)
       const prevFrom = subDays(from, 7)
       const prevTo = subDays(to, 7)
       return {

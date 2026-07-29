@@ -1,4 +1,3 @@
-import { differenceInDays } from "date-fns"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { type DimensionValue, View as RNView } from "react-native"
@@ -16,20 +15,10 @@ import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { Goal } from "~/types/goals"
 import { roundToSafeInteger } from "~/utils/money"
 import { formatMoney } from "~/utils/number-format"
-
-type GoalStatus = "onTrack" | "behind" | "flexible" | "reached"
-
-function getGoalStatus(goal: Goal, progress: number): GoalStatus {
-  if (progress >= 1) return "reached"
-  if (!goal.targetDate) return "flexible"
-  const today = new Date()
-  const daysLeft = differenceInDays(goal.targetDate, today)
-  if (daysLeft < 0) return "behind"
-  const totalDays = differenceInDays(goal.targetDate, goal.createdAt)
-  if (totalDays <= 0) return "onTrack"
-  const elapsed = differenceInDays(today, goal.createdAt)
-  return progress >= Math.min(elapsed / totalDays, 1) ? "onTrack" : "behind"
-}
+import {
+  type GoalStatus,
+  getGoalProgressModel,
+} from "~/utils/planning-progress"
 
 interface GoalCardProps {
   goal: Goal
@@ -60,32 +49,31 @@ export function GoalCard({ goal, onPress }: GoalCardProps) {
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
 
   const isExpenseGoal = goal.goalType === "expense"
-  const resolved = currentAmount
-  const progress = goal.targetAmount > 0 ? resolved / goal.targetAmount : 0
-  const clampedProgress = Math.min(progress, 1)
-  const isCompleted = progress >= 1
-  const remaining = Math.max(goal.targetAmount - resolved, 0)
-
-  const status = getGoalStatus(goal, progress)
+  const {
+    currentAmount: resolved,
+    clampedProgress,
+    isCompleted,
+    remaining,
+    daysLeft,
+    status,
+  } = getGoalProgressModel(goal, currentAmount)
 
   const dateSubtitle = (): string => {
     if (isCompleted) return t("screens.settings.goals.card.reachedLabel")
-    if (!goal.targetDate) return t("screens.settings.goals.card.noDeadline")
-    const today = new Date()
-    const diff = differenceInDays(goal.targetDate, today)
-    if (diff === 0)
+    if (daysLeft === null) return t("screens.settings.goals.card.noDeadline")
+    if (daysLeft === 0)
       return t("screens.settings.goals.card.daysLeft", { count: 0 })
-    if (diff < 0)
-      return t("screens.settings.goals.card.overdue", { count: Math.abs(diff) })
-    return t("screens.settings.goals.card.daysLeft", { count: diff })
+    if (daysLeft < 0)
+      return t("screens.settings.goals.card.overdue", {
+        count: Math.abs(daysLeft),
+      })
+    return t("screens.settings.goals.card.daysLeft", { count: daysLeft })
   }
 
   const insightText = (): string => {
     if (isCompleted) return t("screens.settings.goals.card.insight.goalReached")
-    if (!goal.targetDate) return t("screens.settings.goals.card.noDeadline")
-    const today = new Date()
-    const daysLeft = Math.max(differenceInDays(goal.targetDate, today), 1)
-    const daily = remaining / daysLeft
+    if (daysLeft === null) return t("screens.settings.goals.card.noDeadline")
+    const daily = remaining / Math.max(daysLeft, 1)
     const raw = formatMoney(roundToSafeInteger(daily), goal.currencyCode, {
       currencyDisplay: currencyLook,
       hideSign: true,

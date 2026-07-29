@@ -1,5 +1,5 @@
 import { Circle } from "@shopify/react-native-skia"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { useWindowDimensions } from "react-native"
 import Animated, {
   useAnimatedReaction,
@@ -28,13 +28,11 @@ import {
 import { ChartCrosshair } from "./chart-crosshair"
 
 const CHART_HEIGHT = 220
-
 interface NetWorthChartProps {
   timeline: BalanceTimelinePoint[]
   currency: string
   interval: StatsDateRange["interval"]
 }
-
 /** Keep the last point of each calendar month when the range spans months */
 function bucketTimeline(
   timeline: BalanceTimelinePoint[],
@@ -47,7 +45,6 @@ function bucketTimeline(
   }
   return [...byMonth.values()]
 }
-
 export function NetWorthChart({
   timeline,
   currency,
@@ -56,20 +53,11 @@ export function NetWorthChart({
   const { theme } = useUnistyles()
   const font = useChartFont()
   const { width: screenWidth } = useWindowDimensions()
-
-  const points = useMemo(
-    () => bucketTimeline(timeline, interval),
-    [timeline, interval],
-  )
-  const chartData = useMemo(
-    () => points.map((p, i) => ({ x: i, balance: p.balance })),
-    [points],
-  )
-
+  const points = bucketTimeline(timeline, interval)
+  const chartData = points.map((p, i) => ({ x: i, balance: p.balance }))
   const { state } = useChartPressState({ x: 0 as number, y: { balance: 0 } })
   const [active, setActive] = useState({ index: 0, balance: 0 })
   const [tooltipWidth, setTooltipWidth] = useState(0)
-
   useAnimatedReaction(
     () => ({ x: state.x.value.value, balance: state.y.balance.value.value }),
     (next) => {
@@ -77,7 +65,6 @@ export function NetWorthChart({
     },
     [],
   )
-
   const tooltipStyle = useAnimatedStyle(() => {
     let left = state.x.position.value - tooltipWidth / 2
     left = Math.min(Math.max(8, left), screenWidth - tooltipWidth - 48)
@@ -88,22 +75,17 @@ export function NetWorthChart({
       top: state.y.balance.position.value - 56,
     }
   })
-
   const dotOpacity = useDerivedValue(() => (state.isActive.value ? 1 : 0))
-
-  const yDomain = useMemo(() => {
+  const yDomain = (() => {
     if (chartData.length === 0) return [0, 1] as [number, number]
     const values = chartData.map((d) => d.balance)
     const min = Math.min(...values)
     const max = Math.max(...values)
     const padding = Math.max((max - min) * 0.15, Math.abs(max) * 0.05, 1)
     return [min - padding, max + padding] as [number, number]
-  }, [chartData])
-
+  })()
   const activeDate = points[active.index]?.date
-
   if (chartData.length < 2) return null
-
   return (
     <View style={styles.card}>
       <View style={styles.chartArea}>
@@ -192,7 +174,6 @@ export function NetWorthChart({
     </View>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   card: {
     backgroundColor: theme.colors.secondary,

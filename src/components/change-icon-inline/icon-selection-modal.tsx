@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList, Modal, Pressable, TextInput, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -23,84 +23,76 @@ interface IconSelectionModalProps {
   initialIcon?: string | null
   colorScheme?: MintyColorScheme | null
 }
-
 // Grid layout configuration
 const COLUMNS = 6
-
-const IconItem = memo(
-  ({
-    iconName,
-    isSelected,
-    onPress,
-    color,
-    selectedColor,
-  }: {
-    iconName: string
-    isSelected: boolean
-    onPress: (name: string) => void
-    color: string
-    selectedColor: string
-  }) => {
-    return (
-      <Pressable
-        style={[
-          styles.iconItem,
-          isSelected && { backgroundColor: selectedColor },
-        ]}
-        onPress={() => onPress(iconName)}
-      >
-        <IconSvg name={iconName as IconSvgName} size={28} color={color} />
-      </Pressable>
-    )
-  },
-)
-
+const IconItem = ({
+  iconName,
+  isSelected,
+  onPress,
+  color,
+  selectedColor,
+}: {
+  iconName: string
+  isSelected: boolean
+  onPress: (name: string) => void
+  color: string
+  selectedColor: string
+}) => {
+  return (
+    <Pressable
+      style={[
+        styles.iconItem,
+        isSelected && { backgroundColor: selectedColor },
+      ]}
+      onPress={() => onPress(iconName)}
+    >
+      <IconSvg name={iconName as IconSvgName} size={28} color={color} />
+    </Pressable>
+  )
+}
 /**
  * SearchHeader - Memoised search input for the icon modal
  */
-const SearchHeader = memo(
-  ({
-    searchQuery,
-    onSearchChange,
-    onClear,
-    placeholderTextColor,
-  }: {
-    searchQuery: string
-    onSearchChange: (text: string) => void
-    onClear: () => void
-    placeholderTextColor: string
-  }) => {
-    const { t } = useTranslation()
-    return (
-      <View style={styles.searchContainer}>
-        <IconSvg
-          name="search-outline"
-          size={20}
-          color={styles.searchIcon.color}
-        />
-        <TextInput
-          style={styles.searchInput}
-          placeholder={t("components.iconPicker.searchPlaceholder")}
-          placeholderTextColor={placeholderTextColor}
-          value={searchQuery}
-          onChangeText={onSearchChange}
-          autoCorrect={false}
-          autoCapitalize="none"
-        />
-        {searchQuery.length > 0 && (
-          <Pressable
-            onPress={onClear}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            style={styles.clearButton}
-          >
-            <IconSvg name="x-outline" size={20} color={placeholderTextColor} />
-          </Pressable>
-        )}
-      </View>
-    )
-  },
-)
-
+const SearchHeader = ({
+  searchQuery,
+  onSearchChange,
+  onClear,
+  placeholderTextColor,
+}: {
+  searchQuery: string
+  onSearchChange: (text: string) => void
+  onClear: () => void
+  placeholderTextColor: string
+}) => {
+  const { t } = useTranslation()
+  return (
+    <View style={styles.searchContainer}>
+      <IconSvg
+        name="search-outline"
+        size={20}
+        color={styles.searchIcon.color}
+      />
+      <TextInput
+        style={styles.searchInput}
+        placeholder={t("components.iconPicker.searchPlaceholder")}
+        placeholderTextColor={placeholderTextColor}
+        value={searchQuery}
+        onChangeText={onSearchChange}
+        autoCorrect={false}
+        autoCapitalize="none"
+      />
+      {searchQuery.length > 0 && (
+        <Pressable
+          onPress={onClear}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={styles.clearButton}
+        >
+          <IconSvg name="x-outline" size={20} color={placeholderTextColor} />
+        </Pressable>
+      )}
+    </View>
+  )
+}
 /**
  * Fuzzy search: scores icons by name / keyword match, returns top 100.
  * Extracted to module level as it is a pure function.
@@ -112,13 +104,10 @@ const searchIcons = (
   if (!query.trim()) {
     return icons
   }
-
   const lowerQuery = query.toLowerCase().trim()
-
   const scoredIcons = icons.map((icon) => {
     let score = 0
     const iconNameLower = icon.name.toLowerCase()
-
     if (iconNameLower === lowerQuery) {
       score += 100
     } else if (iconNameLower.startsWith(lowerQuery)) {
@@ -126,7 +115,6 @@ const searchIcons = (
     } else if (iconNameLower.includes(lowerQuery)) {
       score += 25
     }
-
     for (const keyword of icon.keywords) {
       const keywordLower = keyword.toLowerCase()
       if (keywordLower === lowerQuery) {
@@ -137,17 +125,14 @@ const searchIcons = (
         score += 20
       }
     }
-
     return { icon, score }
   })
-
   return scoredIcons
     .filter(({ score }) => score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, 100)
     .map(({ icon }) => icon)
 }
-
 /**
  * IconSelectionModal – full-screen modal icon picker with fuzzy search.
  *
@@ -167,58 +152,42 @@ export const IconSelectionModal = ({
   const [selectedIcon, setSelectedIcon] = useState<string | null>(
     initialIcon || null,
   )
-
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 200)
     return () => clearTimeout(timer)
   }, [searchQuery])
-
   // Reset state when modal opens
-  const handleShow = useCallback(() => {
+  const handleShow = () => {
     setSelectedIcon(initialIcon || null)
     setSearchQuery("")
     setDebouncedQuery("")
-  }, [initialIcon])
-
-  const availableIcons = useMemo(
-    () => searchIcons(MINTY_SVGS, debouncedQuery),
-    [debouncedQuery],
-  )
-
-  const handleIconSelect = useCallback((iconName: string) => {
+  }
+  const availableIcons = searchIcons(MINTY_SVGS, debouncedQuery)
+  const handleIconSelect = (iconName: string) => {
     setSelectedIcon(iconName)
-  }, [])
-
-  const keyExtractor = useCallback((item: MintyIconData) => item.name, [])
-
-  const handleDone = useCallback(() => {
+  }
+  const keyExtractor = (item: MintyIconData) => item.name
+  const handleDone = () => {
     if (selectedIcon) {
       onIconSelected?.(selectedIcon)
       onClose()
     }
-  }, [selectedIcon, onIconSelected, onClose])
-
-  const handleSearchChange = useCallback((text: string) => {
+  }
+  const handleSearchChange = (text: string) => {
     setSearchQuery(text)
-  }, [])
-
-  const handleClearSearch = useCallback(() => {
+  }
+  const handleClearSearch = () => {
     setSearchQuery("")
-  }, [])
-
-  const renderIconItem = useCallback(
-    ({ item }: { item: MintyIconData }) => (
-      <IconItem
-        iconName={item.name}
-        isSelected={selectedIcon === item.name}
-        onPress={handleIconSelect}
-        color={theme.colors.onSurface}
-        selectedColor={theme.colors.secondary}
-      />
-    ),
-    [selectedIcon, handleIconSelect, theme.colors],
+  }
+  const renderIconItem = ({ item }: { item: MintyIconData }) => (
+    <IconItem
+      iconName={item.name}
+      isSelected={selectedIcon === item.name}
+      onPress={handleIconSelect}
+      color={theme.colors.onSurface}
+      selectedColor={theme.colors.secondary}
+    />
   )
-
   return (
     <Modal
       visible={visible}
@@ -299,7 +268,6 @@ export const IconSelectionModal = ({
     </Modal>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   modalContainer: {
     flex: 1,

@@ -1,4 +1,4 @@
-import { useCallback, useReducer, useRef } from "react"
+import { useReducer, useRef } from "react"
 import type { UseFormSetValue, UseFormWatch } from "react-hook-form"
 import { Platform } from "react-native"
 
@@ -8,7 +8,6 @@ import { startOfNextMinute } from "~/utils/pending-transactions"
 
 import { mergeReducer } from "./form-utils"
 import type { DatePickerState, DatePickerTarget, RecurringState } from "./types"
-
 export function useFormDatePicker(
   recurring: RecurringState,
   setRecurring: (update: Partial<RecurringState>) => void,
@@ -25,61 +24,47 @@ export function useFormDatePicker(
     },
   )
   const datePickerTargetRef = useRef<DatePickerTarget>("transaction")
-
-  const applyTarget = useCallback(
-    (date: Date) => {
-      const tgt = datePickerTargetRef.current
-      if (tgt === "recurringStart") setRecurring({ startDate: date })
-      else if (tgt === "recurringEnd") setRecurring({ endDate: date })
-      else {
-        setValue("transactionDate", date, { shouldDirty: true })
-        setValue("isPending", date.getTime() > startOfNextMinute().getTime(), {
-          shouldDirty: true,
-        })
-      }
-    },
-    [setRecurring, setValue],
-  )
-
-  const openDatePicker = useCallback(
-    (target: DatePickerTarget = "transaction") => {
-      datePickerTargetRef.current = target
-      const current =
-        target === "recurringStart"
-          ? recurring.startDate
-          : target === "recurringEnd"
-            ? (recurring.endDate ?? new Date())
-            : watch("transactionDate")
-      setDatePicker({ tempDate: current })
-      if (Platform.OS === "android") {
-        setDatePicker({ androidStage: "date", tempDate: current })
-      } else {
-        setDatePicker({ mode: "date", visible: true })
-      }
-    },
-    [watch, recurring.startDate, recurring.endDate],
-  )
-
-  const confirmIosDate = useCallback(
-    (date: Date) => {
-      if (datePicker.mode === "time") {
-        applyTarget(date)
-        setDatePicker({ visible: false })
-      } else {
-        setDatePicker({ mode: "time", tempDate: date })
-      }
-    },
-    [datePicker.mode, applyTarget],
-  )
-
-  const handleSetNow = useCallback(() => {
+  const applyTarget = (date: Date) => {
+    const tgt = datePickerTargetRef.current
+    if (tgt === "recurringStart") setRecurring({ startDate: date })
+    else if (tgt === "recurringEnd") setRecurring({ endDate: date })
+    else {
+      setValue("transactionDate", date, { shouldDirty: true })
+      setValue("isPending", date.getTime() > startOfNextMinute().getTime(), {
+        shouldDirty: true,
+      })
+    }
+  }
+  const openDatePicker = (target: DatePickerTarget = "transaction") => {
+    datePickerTargetRef.current = target
+    const current =
+      target === "recurringStart"
+        ? recurring.startDate
+        : target === "recurringEnd"
+          ? (recurring.endDate ?? new Date())
+          : watch("transactionDate")
+    setDatePicker({ tempDate: current })
+    if (Platform.OS === "android") {
+      setDatePicker({ androidStage: "date", tempDate: current })
+    } else {
+      setDatePicker({ mode: "date", visible: true })
+    }
+  }
+  const confirmIosDate = (date: Date) => {
+    if (datePicker.mode === "time") {
+      applyTarget(date)
+      setDatePicker({ visible: false })
+    } else {
+      setDatePicker({ mode: "time", tempDate: date })
+    }
+  }
+  const handleSetNow = () => {
     const now = new Date()
     setValue("transactionDate", now, { shouldDirty: true })
     setValue("isPending", now.getTime() > startOfNextMinute().getTime(), {
       shouldDirty: true,
     })
-  }, [setValue])
-
+  }
   const pickerElement =
     Platform.OS === "android" && datePicker.androidStage === "date" ? (
       <DateTimePicker
@@ -108,7 +93,6 @@ export function useFormDatePicker(
         onDismiss={() => setDatePicker({ androidStage: null })}
       />
     ) : null
-
   return {
     datePicker,
     setDatePicker,

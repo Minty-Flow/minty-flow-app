@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView, TextInput } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
@@ -27,12 +27,13 @@ import { formatPercent } from "~/utils/number-format"
 // Keyed by participantId — avoids the "33." reset bug by keeping raw
 // string until blur, then parsing to number.
 type PercentageStrings = Record<string, string>
-
 export default function AddItemScreen() {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const router = useRouter()
-  const params = useLocalSearchParams<{ itemId?: string }>()
+  const params = useLocalSearchParams<{
+    itemId?: string
+  }>()
   const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
   const billCurrency = useBillSplitterStore((s) => s.currencyCode)
   const currency = billCurrency ?? preferredCurrency
@@ -40,18 +41,15 @@ export default function AddItemScreen() {
   useEffect(() => {
     if (!billCurrency) setCurrencyCode(currency)
   }, [billCurrency, currency, setCurrencyCode])
-
   const participants = useBillSplitterStore((s) => s.participants)
   const items = useBillSplitterStore((s) => s.items)
   const addItem = useBillSplitterStore((s) => s.addItem)
   const updateItem = useBillSplitterStore((s) => s.updateItem)
   const addParticipant = useBillSplitterStore((s) => s.addParticipant)
-
   const editItem = params.itemId
     ? items.find((i) => i.id === params.itemId)
     : undefined
   const isEditMode = !!editItem
-
   const [name, setName] = useState(editItem?.name ?? "")
   const [price, setPrice] = useState(editItem?.price ?? 0)
   const [quantity, setQuantity] = useState(editItem?.quantity ?? 1)
@@ -67,7 +65,6 @@ export default function AddItemScreen() {
       percentage: participants.length > 0 ? 100 / participants.length : 0,
     }))
   })
-
   // String state for percentage inputs — prevents "33." from resetting to "33"
   const [percentageStrings, setPercentageStrings] = useState<PercentageStrings>(
     () => {
@@ -79,20 +76,16 @@ export default function AddItemScreen() {
       return initial
     },
   )
-
   const [addNameVisible, setAddNameVisible] = useState(false)
   const [multiplierExpanded, setMultiplierExpanded] = useState(
     editItem ? editItem.quantity !== 1 : false,
   )
-
   const quantityNum = Math.max(quantity > 0 ? quantity : 1, 0.01)
-
   const selectedCount = splits.filter((s) => s.selected).length
-
   // Recalculate even split when toggling participants or splitEvenly.
   // Also syncs newly added participants into the splits list so they
   // immediately get the correct even share instead of 0%.
-  const effectiveSplits = useMemo(() => {
+  const effectiveSplits = (() => {
     // Merge in any participants not yet present in splits
     const existingIds = new Set(splits.map((s) => s.participantId))
     const merged = [...splits]
@@ -105,7 +98,6 @@ export default function AddItemScreen() {
     const active = merged.filter((s) =>
       participants.some((p) => p.id === s.participantId),
     )
-
     if (!splitEvenly) return active
     const activeSelected = active.filter((s) => s.selected).length
     const evenPercentage = activeSelected > 0 ? 100 / activeSelected : 0
@@ -113,72 +105,49 @@ export default function AddItemScreen() {
       ...s,
       percentage: s.selected ? evenPercentage : 0,
     }))
-  }, [splits, splitEvenly, participants])
-
-  const toggleParticipant = useCallback((participantId: string) => {
+  })()
+  const toggleParticipant = (participantId: string) => {
     setSplits((prev) =>
       prev.map((s) =>
         s.participantId === participantId ? { ...s, selected: !s.selected } : s,
       ),
     )
-  }, [])
-
+  }
   // Only update numeric split state on blur — keeps string state authoritative during typing
-  const handlePercentageChange = useCallback(
-    (participantId: string, rawValue: string) => {
-      setPercentageStrings((prev) => ({ ...prev, [participantId]: rawValue }))
-    },
-    [],
-  )
-
-  const handlePercentageBlur = useCallback(
-    (participantId: string, rawValue: string) => {
-      const numValue = Number.parseFloat(rawValue)
-      const clamped = Number.isNaN(numValue) ? 0 : Math.min(numValue, 100)
-      setSplits((prev) =>
-        prev.map((s) =>
-          s.participantId === participantId ? { ...s, percentage: clamped } : s,
-        ),
-      )
-      // Normalise the displayed string after blur
-      setPercentageStrings((prev) => ({
-        ...prev,
-        [participantId]: clamped > 0 ? clamped.toString() : "",
-      }))
-    },
-    [],
-  )
-
-  const handleAddParticipant = useCallback(
-    (pName: string) => {
-      addParticipant(pName)
-      // New participant will be picked up by effectiveSplits on next render
-    },
-    [addParticipant],
-  )
-
+  const handlePercentageChange = (participantId: string, rawValue: string) => {
+    setPercentageStrings((prev) => ({ ...prev, [participantId]: rawValue }))
+  }
+  const handlePercentageBlur = (participantId: string, rawValue: string) => {
+    const numValue = Number.parseFloat(rawValue)
+    const clamped = Number.isNaN(numValue) ? 0 : Math.min(numValue, 100)
+    setSplits((prev) =>
+      prev.map((s) =>
+        s.participantId === participantId ? { ...s, percentage: clamped } : s,
+      ),
+    )
+    // Normalise the displayed string after blur
+    setPercentageStrings((prev) => ({
+      ...prev,
+      [participantId]: clamped > 0 ? clamped.toString() : "",
+    }))
+  }
+  const handleAddParticipant = (pName: string) => {
+    addParticipant(pName)
+    // New participant will be picked up by effectiveSplits on next render
+  }
   // Total of selected participants' percentages — used for the indicator bar
-  const totalPercentage = useMemo(
-    () =>
-      effectiveSplits
-        .filter((s) => s.selected)
-        .reduce((sum, s) => sum + s.percentage, 0),
-    [effectiveSplits],
-  )
-  const previewAllocations = useMemo(
-    () =>
-      getItemAllocations({
-        id: "preview",
-        name,
-        price,
-        quantity: quantityNum,
-        splitEvenly,
-        splits: effectiveSplits,
-      }),
-    [effectiveSplits, name, price, quantityNum, splitEvenly],
-  )
-
-  const handleSave = useCallback(() => {
+  const totalPercentage = effectiveSplits
+    .filter((s) => s.selected)
+    .reduce((sum, s) => sum + s.percentage, 0)
+  const previewAllocations = getItemAllocations({
+    id: "preview",
+    name,
+    price,
+    quantity: quantityNum,
+    splitEvenly,
+    splits: effectiveSplits,
+  })
+  const handleSave = () => {
     const finalSplits = splitEvenly
       ? effectiveSplits.map((s) => ({
           ...s,
@@ -187,7 +156,6 @@ export default function AddItemScreen() {
             : 0,
         }))
       : effectiveSplits
-
     const itemData = {
       name,
       price,
@@ -195,30 +163,16 @@ export default function AddItemScreen() {
       splitEvenly,
       splits: finalSplits,
     }
-
     if (isEditMode && params.itemId) {
       updateItem(params.itemId, itemData)
     } else {
       addItem(itemData)
     }
     router.back()
-  }, [
-    name,
-    price,
-    quantityNum,
-    splitEvenly,
-    effectiveSplits,
-    isEditMode,
-    params.itemId,
-    addItem,
-    updateItem,
-    router,
-  ])
-
-  const handleCancel = useCallback(() => {
+  }
+  const handleCancel = () => {
     router.back()
-  }, [router])
-
+  }
   // Determine percentage total indicator color
   const totalRounded = Math.round(totalPercentage * 10) / 10
   const isExact = Math.abs(totalPercentage - 100) < 0.000001
@@ -228,10 +182,8 @@ export default function AddItemScreen() {
     : isOver
       ? theme.colors.error
       : theme.colors.onSecondary
-
   const isSaveDisabled =
     !name.trim() || selectedCount === 0 || (!splitEvenly && !isExact)
-
   return (
     <View style={styles.container}>
       <ScrollView
@@ -349,9 +301,7 @@ export default function AddItemScreen() {
               (p) => p.id === split.participantId,
             )
             if (!participant) return null
-
             const amountPreview = previewAllocations.get(split.participantId)
-
             return (
               <Pressable
                 key={split.participantId}
@@ -490,7 +440,6 @@ export default function AddItemScreen() {
     </View>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,

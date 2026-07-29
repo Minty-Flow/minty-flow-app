@@ -1,7 +1,6 @@
 import { Group, Paint } from "@shopify/react-native-skia"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Gesture, GestureDetector } from "react-native-gesture-handler"
 import {
   Easing,
   type SharedValue,
@@ -25,40 +24,24 @@ import type { CategoryBreakdownItem } from "~/types/stats"
 import { formatPercent } from "~/utils/number-format"
 
 import { DeltaBadge } from "./delta-badge"
+import { getCategoryColor } from "./get-category-color"
 
 interface StatsCategoryPieProps {
   breakdown: CategoryBreakdownItem[]
   currency: string
   maxSlices?: number
 }
-
 /** Fixed chart size — pieContainer is always 200×200 */
 const CHART_SIZE = 200
 const CENTER = CHART_SIZE / 2
 /** Matches the `innerRadius="50%"` prop on Pie.Chart */
 const INNER_RADIUS_RATIO = 0.5
-
-export function getCategoryColor(
-  item: CategoryBreakdownItem,
-  index: number,
-  fallbackPalette: string[],
-): string {
-  const scheme = getThemeStrict(item.categoryColorSchemeName)
-  if (scheme) return scheme.primary
-  return (
-    fallbackPalette[index % fallbackPalette.length] ??
-    fallbackPalette[0] ??
-    "#888888"
-  )
-}
-
 interface PieSliceAnimatedProps {
   sliceIndex: number
   selectedIndexSv: SharedValue<number>
   isSelected: boolean
   surfaceColor: string
 }
-
 /**
  * Wraps a single Pie.Slice in a Skia Group whose scale is animated via
  * Reanimated on the UI thread — smooth spring transition without React re-renders.
@@ -70,7 +53,6 @@ function PieSliceAnimated({
   surfaceColor,
 }: PieSliceAnimatedProps) {
   const scale = useSharedValue(1.0)
-
   useAnimatedReaction(
     () => selectedIndexSv.value,
     (selectedIndex) => {
@@ -83,9 +65,7 @@ function PieSliceAnimated({
     },
     [sliceIndex],
   )
-
   const transform = useDerivedValue(() => [{ scale: scale.value }])
-
   return (
     <Group origin={{ x: CENTER, y: CENTER }} transform={transform}>
       <Pie.Slice animate={{ type: "timing", duration: 200 }}>
@@ -96,7 +76,6 @@ function PieSliceAnimated({
     </Group>
   )
 }
-
 export function StatsCategoryPie({
   breakdown,
   currency,
@@ -112,45 +91,36 @@ export function StatsCategoryPie({
     color: string
     prevValue: number | undefined
   } | null>(null)
-
   // Captures startAngle/endAngle for each slice so the tap handler can do
   // angle-based hit-testing without needing Skia canvas coordinates.
-  const pieSlicesRef = useRef<Array<{ startAngle: number; endAngle: number }>>(
-    [],
-  )
-
+  const pieSlicesRef = useRef<
+    Array<{
+      startAngle: number
+      endAngle: number
+    }>
+  >([])
   // SharedValue mirror of selectedSlice?.index — drives per-slice spring animations
   // on the UI thread without going through React renders.
   const selectedIndexSv = useSharedValue(-1)
   useEffect(() => {
     selectedIndexSv.value = selectedSlice?.index ?? -1
   }, [selectedSlice, selectedIndexSv])
-
   // Randomized once per theme category (re-shuffles only when the user switches theme category)
-  const fallbackPalette = useMemo(
-    () => shuffleArray(getThemeVariantPalette(theme.name)),
-    [theme.name],
-  )
-
-  const { pieData, legendItems, total } = useMemo(() => {
+  const fallbackPalette = shuffleArray(getThemeVariantPalette(theme.name))
+  const { pieData, legendItems, total } = (() => {
     if (breakdown.length === 0) {
       return { pieData: [], legendItems: [], total: 0 }
     }
-
     const getValue = (b: CategoryBreakdownItem) =>
       mode === "expense" ? b.totalExpense : b.totalIncome
-
     const sorted = breakdown
       .filter((b) => getValue(b) > 0)
       .sort((a, b) => getValue(b) - getValue(a))
-
     const totalVal = sorted.reduce((s, b) => s + getValue(b), 0)
     const topSlices = sorted.slice(0, maxSlices)
     const otherSlices = sorted.slice(maxSlices)
-
     const getPrevValue = (b: CategoryBreakdownItem) =>
       mode === "expense" ? b.prevTotalExpense : undefined
-
     const items: {
       label: string
       value: number
@@ -169,7 +139,6 @@ export function StatsCategoryPie({
       icon: item.categoryIcon,
       colorSchemeName: item.categoryColorSchemeName,
     }))
-
     if (otherSlices.length > 0) {
       const otherTotal = otherSlices.reduce((s, b) => s + getValue(b), 0)
       items.push({
@@ -184,87 +153,58 @@ export function StatsCategoryPie({
         colorSchemeName: null,
       })
     }
-
     const filteredItems = items.filter((item) => item.value > 0)
-
     return {
       pieData: filteredItems,
       legendItems: items,
       total: totalVal,
     }
-  }, [
-    breakdown,
-    maxSlices,
-    mode,
-    t,
-    fallbackPalette,
-    theme.colors.semantic.semi,
-  ])
-
+  })()
   // Reset selection whenever the user switches expense/income mode
   const handleModeChange = (newMode: "expense" | "income") => {
     setMode(newMode)
     setSelectedSlice(null)
   }
-
-  // Tap gesture: convert touch coordinates to a polar angle and find the
-  // corresponding slice via the angles captured in pieSlicesRef.
-  const tapGesture = Gesture.Tap()
-    .runOnJS(true)
-    .onEnd((event) => {
-      const dx = event.x - CENTER
-      const dy = event.y - CENTER
-      const dist = Math.sqrt(dx * dx + dy * dy)
-
-      const outerRadius = CENTER // 100
-      const innerRadius = outerRadius * INNER_RADIUS_RATIO // 60
-
-      // Tapped in the donut hole or outside the chart — deselect
-      if (dist < innerRadius || dist > outerRadius) {
-        setSelectedSlice(null)
-        return
-      }
-
-      // Convert to Skia's clockwise angle from 3 o'clock (right).
-      // victory-native passes startAngle/endAngle directly to Skia's arcToOval,
-      // which uses 0° = right, increasing clockwise — so no offset needed.
-      const angle = (Math.atan2(dy, dx) * 180) / Math.PI
-
-      // Normalise to [0, 360)
-      const normAngle = ((angle % 360) + 360) % 360
-
-      const hitIndex = pieSlicesRef.current.findIndex(
-        (s) => normAngle >= s.startAngle && normAngle < s.endAngle,
-      )
-
-      if (hitIndex === -1) {
-        setSelectedSlice(null)
-        return
-      }
-
-      // Tapping the already-selected slice deselects it
-      if (selectedSlice?.index === hitIndex) {
-        setSelectedSlice(null)
-      } else {
-        const hit = pieData[hitIndex]
-        if (hit) {
-          setSelectedSlice({
-            index: hitIndex,
-            label: hit.label,
-            value: hit.value,
-            color: hit.color,
-            prevValue: hit.prevValue,
-          })
-        }
-      }
-    })
-
+  const handleChartPress = (event: {
+    nativeEvent: { locationX: number; locationY: number }
+  }) => {
+    const dx = event.nativeEvent.locationX - CENTER
+    const dy = event.nativeEvent.locationY - CENTER
+    const dist = Math.sqrt(dx * dx + dy * dy)
+    const outerRadius = CENTER
+    const innerRadius = outerRadius * INNER_RADIUS_RATIO
+    if (dist < innerRadius || dist > outerRadius) {
+      setSelectedSlice(null)
+      return
+    }
+    const angle = (Math.atan2(dy, dx) * 180) / Math.PI
+    const normAngle = ((angle % 360) + 360) % 360
+    const hitIndex = pieSlicesRef.current.findIndex(
+      (s) => normAngle >= s.startAngle && normAngle < s.endAngle,
+    )
+    if (hitIndex === -1) {
+      setSelectedSlice(null)
+      return
+    }
+    if (selectedSlice?.index === hitIndex) {
+      setSelectedSlice(null)
+      return
+    }
+    const hit = pieData[hitIndex]
+    if (hit) {
+      setSelectedSlice({
+        index: hitIndex,
+        label: hit.label,
+        value: hit.value,
+        color: hit.color,
+        prevValue: hit.prevValue,
+      })
+    }
+  }
   // If there are no categories at all, hide the section entirely
   if (breakdown.length === 0) return null
-
   // pieData may be empty if the selected mode (expense/income) has no data
   const isPieEmpty = pieData.length === 0
-
   const segmentedControl = (
     <View style={styles.segmentRow}>
       <Pressable
@@ -301,7 +241,6 @@ export function StatsCategoryPie({
       </Pressable>
     </View>
   )
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -312,7 +251,7 @@ export function StatsCategoryPie({
       </View>
 
       {/* Groups the body so the container's gap applies above it, not between
-          the total row, the pie and the legend. */}
+            the total row, the pie and the legend. */}
       <View>
         {isPieEmpty ? (
           <EmptyState
@@ -337,84 +276,80 @@ export function StatsCategoryPie({
             {/* GestureDetector wraps only the chart area so touches outside
               the 200×200 canvas don't accidentally register as slice hits */}
             <View style={styles.chartWrapper}>
-              <GestureDetector gesture={tapGesture}>
-                <View style={styles.pieContainer}>
-                  <PolarChart
-                    data={pieData}
-                    labelKey="label"
-                    valueKey="value"
-                    colorKey="color"
-                  >
-                    <Pie.Chart innerRadius="50%">
-                      {({ slice }) => {
-                        // Capture angular span for tap hit-testing
-                        const index = pieData.findIndex(
-                          (d) => d.label === slice.label,
-                        )
-                        if (index !== -1) {
-                          pieSlicesRef.current[index] = {
-                            startAngle: slice.startAngle,
-                            endAngle: slice.endAngle,
-                          }
+              <Pressable onPress={handleChartPress} style={styles.pieContainer}>
+                <PolarChart
+                  data={pieData}
+                  labelKey="label"
+                  valueKey="value"
+                  colorKey="color"
+                >
+                  <Pie.Chart innerRadius="50%">
+                    {({ slice }) => {
+                      const index = pieData.findIndex(
+                        (d) => d.label === slice.label,
+                      )
+                      if (index !== -1) {
+                        pieSlicesRef.current[index] = {
+                          startAngle: slice.startAngle,
+                          endAngle: slice.endAngle,
                         }
-                        const isSelected =
-                          selectedSlice !== null &&
-                          selectedSlice.index === index
-                        return (
-                          <PieSliceAnimated
-                            sliceIndex={index}
-                            selectedIndexSv={selectedIndexSv}
-                            isSelected={isSelected}
-                            surfaceColor={theme.colors.surface}
-                          />
-                        )
-                      }}
-                    </Pie.Chart>
-                  </PolarChart>
+                      }
+                      const isSelected =
+                        selectedSlice !== null && selectedSlice.index === index
+                      return (
+                        <PieSliceAnimated
+                          sliceIndex={index}
+                          selectedIndexSv={selectedIndexSv}
+                          isSelected={isSelected}
+                          surfaceColor={theme.colors.surface}
+                        />
+                      )
+                    }}
+                  </Pie.Chart>
+                </PolarChart>
 
-                  {/* Center label — selected slice, or total when nothing selected */}
-                  <View style={styles.centerLabel}>
-                    {selectedSlice ? (
-                      <>
-                        <Text
-                          variant="muted"
-                          style={styles.centerCurrency}
-                          numberOfLines={1}
-                        >
-                          {selectedSlice.label}
-                        </Text>
-                        <Money
-                          value={selectedSlice.value}
-                          currency={currency}
-                          tone={mode === "expense" ? "expense" : "income"}
-                          variant="small"
-                          compact
-                          style={styles.centerAmount}
-                        />
-                        <DeltaBadge
-                          current={selectedSlice.value}
-                          previous={selectedSlice.prevValue}
-                          invertedSentiment={mode === "expense"}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <Money
-                          value={total}
-                          currency={currency}
-                          tone={mode === "expense" ? "expense" : "income"}
-                          variant="small"
-                          compact
-                          style={styles.centerAmount}
-                        />
-                        <Text variant="muted" style={styles.centerCurrency}>
-                          {currency}
-                        </Text>
-                      </>
-                    )}
-                  </View>
+                {/* Center label — selected slice, or total when nothing selected */}
+                <View style={styles.centerLabel}>
+                  {selectedSlice ? (
+                    <>
+                      <Text
+                        variant="muted"
+                        style={styles.centerCurrency}
+                        numberOfLines={1}
+                      >
+                        {selectedSlice.label}
+                      </Text>
+                      <Money
+                        value={selectedSlice.value}
+                        currency={currency}
+                        tone={mode === "expense" ? "expense" : "income"}
+                        variant="small"
+                        compact
+                        style={styles.centerAmount}
+                      />
+                      <DeltaBadge
+                        current={selectedSlice.value}
+                        previous={selectedSlice.prevValue}
+                        invertedSentiment={mode === "expense"}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <Money
+                        value={total}
+                        currency={currency}
+                        tone={mode === "expense" ? "expense" : "income"}
+                        variant="small"
+                        compact
+                        style={styles.centerAmount}
+                      />
+                      <Text variant="muted" style={styles.centerCurrency}>
+                        {currency}
+                      </Text>
+                    </>
+                  )}
                 </View>
-              </GestureDetector>
+              </Pressable>
             </View>
 
             {/* Legend list — each row taps to highlight the corresponding slice */}
@@ -492,7 +427,6 @@ export function StatsCategoryPie({
     </View>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     backgroundColor: theme.colors.secondary,

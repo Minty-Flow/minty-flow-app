@@ -1,5 +1,5 @@
 import { useNavigation, useRouter } from "expo-router"
-import { useCallback, useLayoutEffect, useMemo, useState } from "react"
+import { useCallback, useLayoutEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList, ScrollView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
@@ -16,23 +16,18 @@ import { LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
 
 type LoanTypeFilter = "all" | "lent" | "borrowed"
-
 export default function LoansScreen() {
   const loans = useAllLoans()
   const { theme } = useUnistyles()
   const { t } = useTranslation()
   const router = useRouter()
   const navigation = useNavigation()
-
   const [filterVisible, setFilterVisible] = useState(false)
   const [activeFilter, setActiveFilter] = useState<LoanTypeFilter>("all")
-
   const isFiltered = activeFilter !== "all"
-
   const toggleFilter = useCallback(() => {
     setFilterVisible((v) => !v)
   }, [])
-
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -53,38 +48,29 @@ export default function LoansScreen() {
       ),
     })
   }, [navigation, toggleFilter, isFiltered, theme, t, filterVisible])
-
-  const handleAddLoan = useCallback(() => {
+  const handleAddLoan = () => {
     router.push(`/settings/loans/${NewEnum.NEW}/modify`)
-  }, [router])
-
-  const handleLoanPress = useCallback(
-    (loanId: string) => {
-      router.push(`/settings/loans/${loanId}`)
-    },
-    [router],
+  }
+  const handleLoanPress = (loanId: string) => {
+    router.push(`/settings/loans/${loanId}`)
+  }
+  const renderLoanItem = ({ item }: { item: Loan }) => (
+    <LoanCard loan={item} onPress={() => handleLoanPress(item.id)} />
   )
-
-  const renderLoanItem = useCallback(
-    ({ item }: { item: Loan }) => (
-      <LoanCard loan={item} onPress={() => handleLoanPress(item.id)} />
-    ),
-    [handleLoanPress],
-  )
-
-  const filteredLoans = useMemo(() => {
+  const filteredLoans = (() => {
     if (activeFilter === "all") return loans
     if (activeFilter === "lent")
       return loans.filter((l) => l.loanType === LoanTypeEnum.LENT)
     return loans.filter((l) => l.loanType === LoanTypeEnum.BORROWED)
-  }, [loans, activeFilter])
-
-  const chips: { key: LoanTypeFilter; label: string }[] = [
+  })()
+  const chips: {
+    key: LoanTypeFilter
+    label: string
+  }[] = [
     { key: "all", label: t("screens.settings.loans.type.all") },
     { key: "lent", label: t("screens.settings.loans.type.lent") },
     { key: "borrowed", label: t("screens.settings.loans.type.borrowed") },
   ]
-
   return (
     <View style={styles.container}>
       {filterVisible ? (
@@ -131,7 +117,6 @@ export default function LoansScreen() {
     </View>
   )
 }
-
 const styles = StyleSheet.create((t) => ({
   container: {
     flex: 1,

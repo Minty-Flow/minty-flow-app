@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
@@ -39,44 +39,29 @@ function HomeScreen() {
   } | null>(null)
   const [searchState, setSearchState] =
     useState<SearchState>(DEFAULT_SEARCH_STATE)
-
   const homeTimeframe = usePendingTransactionsStore((s) => s.homeTimeframe)
   const { t } = useTranslation()
   const router = useRouter()
-
   const profileName = useProfileStore((s) => s.name)
   const image = useProfileStore((s) => s.imageUri)
-
   const accounts = useActiveAccounts()
   const categoriesExpense = useCategoriesByType(TransactionTypeEnum.EXPENSE)
   const categoriesIncome = useCategoriesByType(TransactionTypeEnum.INCOME)
   const categoriesTransfer = useCategoriesByType(TransactionTypeEnum.TRANSFER)
   const tags = useTags()
-
-  const { fromDate, toDate } = useMemo(
-    () => buildQueryFilters(selectedRange, homeTimeframe),
-    [selectedRange, homeTimeframe],
-  )
-
+  const { fromDate, toDate } = buildQueryFilters(selectedRange, homeTimeframe)
   const { items: transactionsFull } = useTransactions({
     from: new Date(fromDate).toISOString(),
     to: new Date(toDate).toISOString(),
   })
-
-  const categoriesByType = useMemo(
-    () => ({
-      expense: categoriesExpense,
-      income: categoriesIncome,
-      transfer: categoriesTransfer,
-    }),
-    [categoriesExpense, categoriesIncome, categoriesTransfer],
+  const categoriesByType = {
+    expense: categoriesExpense,
+    income: categoriesIncome,
+    transfer: categoriesTransfer,
+  }
+  const summaryHeader = (
+    <SummarySection transactionsWithRelations={transactionsFull} />
   )
-
-  const summaryHeader = useMemo(
-    () => <SummarySection transactionsWithRelations={transactionsFull} />,
-    [transactionsFull],
-  )
-
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -122,9 +107,7 @@ function HomeScreen() {
     </View>
   )
 }
-
 export default HomeScreen
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,

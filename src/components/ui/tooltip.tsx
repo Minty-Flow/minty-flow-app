@@ -1,14 +1,9 @@
 import * as Haptics from "expo-haptics"
 import {
-  cloneElement,
   createContext,
-  type ReactElement,
   type ReactNode,
-  type Ref,
-  useCallback,
   useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react"
@@ -33,7 +28,11 @@ import { logger } from "~/utils/logger"
 import { Text } from "./text"
 
 type ExitPositionType = "top" | "bottom"
-
+type TriggerMeasure = {
+  measureInWindow: (
+    callback: (x: number, y: number, width: number, height: number) => void,
+  ) => void
+}
 type TooltipData = {
   text: string
   x: number
@@ -42,17 +41,19 @@ type TooltipData = {
   height: number
   position?: ExitPositionType
 }
-
 type TooltipContextType = {
   showTooltip: (data: TooltipData) => void
   hideTooltip: () => void
 }
-
+type TooltipTriggerProps = Pick<
+  PressableProps,
+  "delayLongPress" | "onLongPress" | "onPressOut"
+> & {
+  ref: (node: TriggerMeasure | null) => void
+}
 const TooltipContext = createContext<TooltipContextType | null>(null)
-
 const TOOLTIP_SPACING = 0
 const SCREEN_EDGE_PADDING = 8
-
 export const TooltipProvider = ({ children }: { children: ReactNode }) => {
   const { width: screenWidth } = useWindowDimensions()
   const isRTL = useLanguageStore((s) => s.isRTL)
@@ -61,7 +62,6 @@ export const TooltipProvider = ({ children }: { children: ReactNode }) => {
   // Track the position for exit animation - only updates when tooltip is visible
   const exitPositionRef = useRef<ExitPositionType>("top")
   const exitPosition = useSharedValue<ExitPositionType>("top")
-
   // Track exit position for animation; update ref and shared value when tooltip changes
   useEffect(() => {
     const currentPosition = tooltip?.position || "top"
@@ -73,19 +73,15 @@ export const TooltipProvider = ({ children }: { children: ReactNode }) => {
       })
     }
   }, [tooltip, exitPosition])
-
   // Memoize position calculation
-  const position = useMemo(() => {
+  const position = (() => {
     if (!tooltip || tooltipSize.width === 0 || tooltipSize.height === 0)
       return { top: 0, left: 0, translateX: 0 }
-
     const pos = tooltip.position || "top"
-
     // Center horizontally on pressable — symmetric, no RTL branching needed
     const pressableCenterX = tooltip.x + tooltip.width / 2
     const left = pressableCenterX - tooltipSize.width / 2
     let translateX = 0
-
     if (left + translateX < SCREEN_EDGE_PADDING) {
       translateX = SCREEN_EDGE_PADDING - left
     }
@@ -93,31 +89,24 @@ export const TooltipProvider = ({ children }: { children: ReactNode }) => {
     if (rightEdge > screenWidth - SCREEN_EDGE_PADDING) {
       translateX -= rightEdge - (screenWidth - SCREEN_EDGE_PADDING)
     }
-
     const top =
       pos === "bottom"
         ? tooltip.y + tooltip.height + TOOLTIP_SPACING
         : tooltip.y - tooltipSize.height - TOOLTIP_SPACING
-
     return { top, left, translateX }
-  }, [tooltip, tooltipSize, screenWidth])
-
+  })()
   // Extract tooltip position for use in worklets
   const tooltipPosition = tooltip?.position || "top"
-
   // Derive animated values based on tooltip state
   const isVisible = useDerivedValue(() => {
     return tooltip !== null && tooltipSize.width > 0 && tooltipSize.height > 0
   }, [tooltip, tooltipSize])
-
   const animatedOpacity = useDerivedValue(() => {
     return withTiming(isVisible.value ? 1 : 0, { duration: 150 })
   }, [isVisible])
-
   const animatedTranslateY = useDerivedValue(() => {
     // Use current position when visible, stored exit position when hidden
     const position = isVisible.value ? tooltipPosition : exitPosition.value
-
     if (!isVisible.value) {
       // Exit animation
       const exitOffset =
@@ -127,11 +116,9 @@ export const TooltipProvider = ({ children }: { children: ReactNode }) => {
     // Enter animation: from offset to 0
     return withTiming(0, { duration: 150 })
   }, [isVisible, tooltipPosition, exitPosition])
-
   const animatedTranslateX = useDerivedValue(() => {
     return position.translateX
   }, [position.translateX])
-
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: animatedOpacity.value,
     transform: [
@@ -139,16 +126,13 @@ export const TooltipProvider = ({ children }: { children: ReactNode }) => {
       { translateY: animatedTranslateY.value },
     ],
   }))
-
-  const showTooltip = useCallback((data: TooltipData) => {
+  const showTooltip = (data: TooltipData) => {
     setTooltip(data)
-  }, [])
-
-  const hideTooltip = useCallback(() => {
+  }
+  const hideTooltip = () => {
     setTooltip(null)
     setTooltipSize({ width: 0, height: 0 })
-  }, [])
-
+  }
   const styles = StyleSheet.create((t) => ({
     tooltip: {
       position: "absolute",
@@ -170,7 +154,6 @@ export const TooltipProvider = ({ children }: { children: ReactNode }) => {
       textAlign: "center",
     },
   }))
-
   return (
     <TooltipContext.Provider value={{ showTooltip, hideTooltip }}>
       {children}
@@ -215,77 +198,54 @@ export const TooltipProvider = ({ children }: { children: ReactNode }) => {
     </TooltipContext.Provider>
   )
 }
-
 type TooltipProps = {
   text: string
-  children: ReactElement<PressableProps>
   delayLongPress?: number
   hapticFeedback?: boolean
   position?: ExitPositionType
 }
-
-type PressEvent = Parameters<NonNullable<PressableProps["onLongPress"]>>[0]
-
-export const Tooltip = ({
+export function useTooltipTrigger({
   text,
-  children,
   delayLongPress = 350,
   hapticFeedback = true,
   position = "top",
-}: TooltipProps) => {
+}: TooltipProps) {
   const context = useContext(TooltipContext)
-  const pressableRef = useRef<RNView>(null)
-
-  const handleLongPress = useCallback(() => {
-    if (!pressableRef.current || !context) return
-
-    pressableRef.current.measureInWindow((x, y, width, height) => {
-      context.showTooltip({ text, x, y, width, height, position })
-
+  const triggerRef = useRef<TriggerMeasure | null>(null)
+  const handleLongPress = () => {
+    if (!context) return
+    triggerRef.current?.measureInWindow((x, y, width, height) => {
+      if (width <= 0 || height <= 0) return
+      context.showTooltip({
+        text,
+        x,
+        y,
+        width,
+        height,
+        position,
+      })
       if (hapticFeedback && Platform.OS === "ios") {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
       }
     })
-  }, [text, context, hapticFeedback, position])
-
-  const handlePressOut = useCallback(() => {
+  }
+  const handlePressOut = () => {
     if (!context) return
     context.hideTooltip()
-  }, [context])
-
+  }
   if (!context) {
     logger.warn("Tooltip must be used within TooltipProvider")
-    return children
   }
-
-  const childRef = (children as { ref?: Ref<RNView> })?.ref
-
-  const childWithHandlers = cloneElement(children, {
-    ...children.props,
-    onLongPress: (e: PressEvent) => {
-      handleLongPress()
-      children.props.onLongPress?.(e)
-    },
-    onPressOut: (e: PressEvent) => {
-      handlePressOut()
-      children.props.onPressOut?.(e)
-    },
+  return {
     delayLongPress,
-    ref: (node: RNView | null) => {
-      pressableRef.current = node
-      if (childRef) {
-        if (typeof childRef === "function") {
-          childRef(node)
-        } else if (
-          childRef &&
-          typeof childRef === "object" &&
-          "current" in childRef
-        ) {
-          ;(childRef as { current: RNView | null }).current = node
-        }
-      }
+    ref: (node: TriggerMeasure | null) => {
+      triggerRef.current = node
     },
-  } as Partial<PressableProps>)
-
-  return childWithHandlers
+    onLongPress: () => {
+      handleLongPress()
+    },
+    onPressOut: () => {
+      handlePressOut()
+    },
+  } satisfies TooltipTriggerProps
 }

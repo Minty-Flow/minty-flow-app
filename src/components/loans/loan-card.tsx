@@ -1,4 +1,3 @@
-import { differenceInDays } from "date-fns"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { type DimensionValue, View as RNView } from "react-native"
@@ -15,7 +14,7 @@ import { getLoanProgress } from "~/database/repos/loan-repo"
 import { useAccount } from "~/stores/db/account.store"
 import { useLanguageStore } from "~/stores/language.store"
 import type { Loan } from "~/types/loans"
-import { LoanTypeEnum } from "~/types/loans"
+import { getLoanProgressModel } from "~/utils/planning-progress"
 import { formatShortMonthDay } from "~/utils/time-utils"
 
 interface LoanCardProps {
@@ -44,13 +43,15 @@ export function LoanCard({ loan, onPress }: LoanCardProps) {
     }
   }, [loan.id, loan.loanType])
 
-  const isLent = loan.loanType === LoanTypeEnum.LENT
-  const paid = paidAmount ?? 0
-  const principal = loan.principalAmount
-  const progress = principal > 0 ? paid / principal : 0
-  const clampedProgress = Math.min(progress, 1)
-  const isPaid = progress >= 1
-  const remaining = Math.max(principal - paid, 0)
+  const {
+    isLent,
+    paid,
+    principal,
+    clampedProgress,
+    isPaid,
+    remaining,
+    dueDays,
+  } = getLoanProgressModel(loan, paidAmount)
 
   const accentColor = loan.colorScheme?.primary ?? theme.colors.primary
   const accentTint = loan.colorScheme?.secondary ?? `${theme.colors.primary}20`
@@ -58,12 +59,12 @@ export function LoanCard({ loan, onPress }: LoanCardProps) {
 
   const dueText = (): string => {
     if (isPaid) return t("screens.settings.loans.card.settled")
-    if (!loan.dueDate) return t("screens.settings.loans.card.noDueDate")
-    const diff = differenceInDays(loan.dueDate, new Date())
-    if (diff === 0) return t("screens.settings.loans.card.dueToday")
-    if (diff === 1) return t("screens.settings.loans.card.dueTomorrow")
-    if (diff > 1 && diff <= 14)
-      return t("screens.settings.loans.card.dueInDays", { count: diff })
+    if (dueDays === null || !loan.dueDate)
+      return t("screens.settings.loans.card.noDueDate")
+    if (dueDays === 0) return t("screens.settings.loans.card.dueToday")
+    if (dueDays === 1) return t("screens.settings.loans.card.dueTomorrow")
+    if (dueDays > 1 && dueDays <= 14)
+      return t("screens.settings.loans.card.dueInDays", { count: dueDays })
     return t("screens.settings.loans.card.dueDate", {
       date: formatShortMonthDay(loan.dueDate),
     })

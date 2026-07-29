@@ -28,6 +28,7 @@ export function RhythmInsightCard({ days }: RhythmInsightCardProps) {
     >
       <MiniBars
         bars={days.map((d) => ({
+          id: String(d.day),
           label: getWeekdayLabel(d.day, "narrow"),
           value: d.avgExpense,
           active: d.day === priciest.day,

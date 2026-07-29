@@ -4,16 +4,8 @@
  *
  * Used by both the home screen and the account detail screen.
  */
-
 import { useRouter } from "expo-router"
-import {
-  type ComponentType,
-  Fragment,
-  type ReactElement,
-  useCallback,
-  useMemo,
-  useRef,
-} from "react"
+import { type ComponentType, Fragment, type ReactElement, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { SectionList } from "react-native"
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
@@ -55,7 +47,6 @@ interface TransactionSectionListProps {
   /** Additional content rendered at the top of the list (before upcoming). */
   ListHeaderComponent?: ComponentType<unknown> | ReactElement | null
 }
-
 export function TransactionSectionList({
   transactionsFull,
   filterState,
@@ -66,19 +57,16 @@ export function TransactionSectionList({
   const { t } = useTranslation()
   const router = useRouter()
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
-
-  const list = useMemo(() => transactionsFull ?? [], [transactionsFull])
+  const list = transactionsFull ?? []
   const transferLayout = useTransfersPreferencesStore((s) => s.layout)
-
   // Pending rows live in the Upcoming section only under "all"; the "pending"
   // and "notPending" filters route them through the main list (or hide them),
   // so the Upcoming section is suppressed to avoid rendering a row twice.
   const upcomingVisible =
     showUpcoming && filterState.pendingFilter === PendingOptionsEnum.ALL
-
   // Recurring instances render in the upcoming section, never the main list.
   // Pending visibility follows the pending filter; structural filters apply on top.
-  const filtered = useMemo(() => {
+  const filtered = (() => {
     const withoutRecurring = list.filter((r) => !r.extra?.recurringId)
     const byPending = applyPendingFilter(
       withoutRecurring,
@@ -86,96 +74,60 @@ export function TransactionSectionList({
     )
     const byFilters = applyTransactionFilters(byPending, filterState)
     return applySearch(byFilters, searchState)
-  }, [list, filterState, searchState])
-
-  const listForSections = useMemo(
-    () => applyTransferLayout(filtered, transferLayout),
-    [filtered, transferLayout],
+  })()
+  const listForSections = applyTransferLayout(filtered, transferLayout)
+  const sections = buildTransactionSections(
+    listForSections,
+    filterState.groupBy,
+    t("components.filters.groupByOptions.allTime"),
   )
-
-  const sections = useMemo(
-    () =>
-      buildTransactionSections(
-        listForSections,
-        filterState.groupBy,
-        t("components.filters.groupByOptions.allTime"),
-      ),
-    [listForSections, filterState.groupBy, t],
-  )
-
-  const handleOnTransactionPress = useCallback(
-    (transactionId: string) => {
-      router.push({
-        pathname: "/transaction/[id]",
-        params: { id: transactionId },
-      })
-    },
-    [router],
-  )
-
+  const handleOnTransactionPress = (transactionId: string) => {
+    router.push({
+      pathname: "/transaction/[id]",
+      params: { id: transactionId },
+    })
+  }
   // TransactionItem handles transfer vs non-transfer delete (modal + deleteTransfer or deleteTransactionModel); we only close the swipeable.
-  const handleDeleteDone = useCallback(() => {
+  const handleDeleteDone = () => {
     openSwipeableRef.current?.close()
-  }, [])
-
-  const renderHeader = useCallback(
-    () => (
-      <>
-        {ListHeaderComponent != null &&
-          (typeof ListHeaderComponent === "function" ? (
-            <ListHeaderComponent />
-          ) : (
-            ListHeaderComponent
-          ))}
-        {upcomingVisible && (
-          <UpcomingTransactionsSection
-            transactions={transactionsFull ?? []}
-            onTransactionPress={handleOnTransactionPress}
-          />
-        )}
-      </>
-    ),
-    [
-      ListHeaderComponent,
-      upcomingVisible,
-      transactionsFull,
-      handleOnTransactionPress,
-    ],
-  )
-
-  const renderEmptyList = useCallback(
-    () => (
-      <View style={styles.emptyStateWrapper}>
-        <EmptyState
-          icon="receipt-outline"
-          title={t("screens.home.emptyState.title")}
-          description={t("components.transactionList.emptyDescription")}
+  }
+  const renderHeader = () => (
+    <>
+      {ListHeaderComponent != null &&
+        (typeof ListHeaderComponent === "function" ? (
+          <ListHeaderComponent />
+        ) : (
+          ListHeaderComponent
+        ))}
+      {upcomingVisible && (
+        <UpcomingTransactionsSection
+          transactions={transactionsFull ?? []}
+          onTransactionPress={handleOnTransactionPress}
         />
-      </View>
-    ),
-    [t],
+      )}
+    </>
   )
-
-  const renderItem = useCallback(
-    ({ item }: { item: TransactionWithRelations }) => (
-      <TransactionItem
-        transactionWithRelations={item as TransactionWithRelations}
-        onPress={() => handleOnTransactionPress(item.id)}
-        onDelete={handleDeleteDone}
-        onWillOpen={(methods) => {
-          openSwipeableRef.current?.close()
-          openSwipeableRef.current = methods
-        }}
+  const renderEmptyList = () => (
+    <View style={styles.emptyStateWrapper}>
+      <EmptyState
+        icon="receipt-outline"
+        title={t("screens.home.emptyState.title")}
+        description={t("components.transactionList.emptyDescription")}
       />
-    ),
-    [handleOnTransactionPress, handleDeleteDone],
+    </View>
   )
-
-  const keyExtractor = useCallback(
-    (item: TransactionWithRelations) => item.id,
-    [],
+  const renderItem = ({ item }: { item: TransactionWithRelations }) => (
+    <TransactionItem
+      transactionWithRelations={item as TransactionWithRelations}
+      onPress={() => handleOnTransactionPress(item.id)}
+      onDelete={handleDeleteDone}
+      onWillOpen={(methods) => {
+        openSwipeableRef.current?.close()
+        openSwipeableRef.current = methods
+      }}
+    />
   )
-
+  const keyExtractor = (item: TransactionWithRelations) => item.id
   return (
     <SectionList
       sections={sections}
@@ -232,7 +184,6 @@ export function TransactionSectionList({
     />
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   listContent: {
     paddingBottom: 120,

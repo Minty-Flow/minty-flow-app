@@ -2,7 +2,6 @@
  * Tags picker block for the transaction form: chips + inline dropdown with search.
  * Optional scroll-into-view when scroll refs are passed.
  */
-
 import { useRouter } from "expo-router"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -29,12 +28,13 @@ interface FormTagsPickerProps {
   setValue: (
     name: "tags",
     value: string[],
-    opts: { shouldDirty: boolean },
+    opts: {
+      shouldDirty: boolean
+    },
   ) => void
   addTag: (tagId: string) => void
   removeTag: (tagId: string) => void
 }
-
 export function FormTagsPicker({
   tags,
   tagIds,
@@ -48,31 +48,24 @@ export function FormTagsPicker({
   const { wrapperRef, scrollIntoView } = useScrollIntoView()
   const [tagPickerOpen, setTagPickerOpen] = useState(false)
   const [tagSearchQuery, setTagSearchQuery] = useState("")
-
+  const selectedTagIdSet = useMemo(() => new Set(tagIds ?? []), [tagIds])
   const selectedTags = useMemo(
-    () => tags.filter((t) => (tagIds ?? []).includes(t.id)),
-    [tags, tagIds],
+    () => tags.filter((tag) => selectedTagIdSet.has(tag.id)),
+    [selectedTagIdSet, tags],
   )
-
   const filteredTagsForPicker = useMemo(() => {
-    const selectedSet = new Set(tagIds ?? [])
-    const available = tags.filter((t) => !selectedSet.has(t.id))
+    const available = tags.filter((tag) => !selectedTagIdSet.has(tag.id))
     if (!tagSearchQuery.trim()) return available
     const lower = tagSearchQuery.toLowerCase()
-    return available.filter((t) => t.name.toLowerCase().includes(lower))
-  }, [tags, tagIds, tagSearchQuery])
-
+    return available.filter((tag) => tag.name.toLowerCase().includes(lower))
+  }, [selectedTagIdSet, tagSearchQuery, tags])
   const handleToggle = () => {
-    setTagPickerOpen((o) => {
-      const next = !o
-      if (next) {
-        scrollIntoView()
-        setTagSearchQuery("")
-      }
-      return next
-    })
+    if (!tagPickerOpen) {
+      scrollIntoView()
+      setTagSearchQuery("")
+    }
+    setTagPickerOpen((o) => !o)
   }
-
   return (
     <RNView ref={wrapperRef} style={transactionFormStyles.fieldBlock}>
       <View style={transactionFormStyles.sectionLabelRow}>

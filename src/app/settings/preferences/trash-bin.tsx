@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router"
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native-gesture-handler"
 import { StyleSheet } from "react-native-unistyles"
@@ -25,14 +25,12 @@ const RetentionPeriodEnum = {
   THREE_SIXTY_FIVE_DAYS: "365 days",
   FOREVER: "forever",
 } as const
-
 export default function TrashBinScreen() {
   const router = useRouter()
   const [confirmModalVisible, setConfirmModalVisible] = useState<boolean>(false)
   const retentionPeriod = useTrashBinStore((s) => s.retentionPeriod)
   const setRetentionPeriod = useTrashBinStore((s) => s.setRetentionPeriod)
   const { t } = useTranslation()
-
   const retentionMapping = Object.values(RetentionPeriodEnum).map((val) => {
     if (val === "forever") {
       return {
@@ -40,10 +38,8 @@ export default function TrashBinScreen() {
         label: t("screens.settings.trash.retention.forever"),
       }
     }
-
     // Extract the number from the string "30 days" -> 30
     const count = parseInt(val, 10)
-
     return {
       value: val,
       label:
@@ -52,17 +48,14 @@ export default function TrashBinScreen() {
           : t("screens.settings.trash.retention.daysCountPlural", { count }),
     }
   })
-
   const choiceLabels = retentionMapping.map((m) => m.label)
   const selectedLabel =
     retentionMapping.find((m) => m.value === retentionPeriod)?.label ||
     retentionPeriod
-
-  const handleView = useCallback(() => {
+  const handleView = () => {
     router.push("/settings/trash")
-  }, [router])
-
-  const handleEmptyConfirmed = useCallback(() => {
+  }
+  const handleEmptyConfirmed = () => {
     destroyAllDeletedTransactions()
       .then(() => {
         Toast.success({
@@ -78,8 +71,7 @@ export default function TrashBinScreen() {
           description: t("screens.settings.trash.empty.toast.errorDescription"),
         })
       })
-  }, [t]) // Added 't' to dependencies
-
+  } // Added 't' to dependencies
   return (
     <ScrollView style={styles.container}>
       {/* Retention Period Choices */}
@@ -157,7 +149,6 @@ export default function TrashBinScreen() {
     </ScrollView>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,

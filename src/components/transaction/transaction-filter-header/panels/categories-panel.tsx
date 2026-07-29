@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ScrollView, View } from "react-native"
+import { FlatList, View } from "react-native"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { Chip } from "~/components/ui/chips"
@@ -21,7 +21,6 @@ interface CategoriesPanelProps {
   onClear: () => void
   onDone: () => void
 }
-
 export function CategoriesPanel({
   categoriesByType,
   selectedIds,
@@ -30,20 +29,18 @@ export function CategoriesPanel({
   onDone,
 }: CategoriesPanelProps) {
   const { t } = useTranslation()
-  const initialType = useMemo(
-    () => inferInitialCategoryType(selectedIds, categoriesByType),
-    [selectedIds, categoriesByType],
-  )
+  const selectedIdSet = new Set(selectedIds)
+  const initialType = inferInitialCategoryType(selectedIds, categoriesByType)
   const [selectedType, setSelectedType] = useState<TransactionType | null>(
     () => initialType,
   )
-
   const categories =
     selectedType !== null ? (categoriesByType[selectedType] ?? []) : []
-
   const categoryRows = chunk(categories, CHIPS_PER_ROW)
-
-  const typeOptions: { id: TransactionType; label: string }[] = [
+  const typeOptions: {
+    id: TransactionType
+    label: string
+  }[] = [
     {
       id: TransactionTypeEnum.EXPENSE,
       label: t("components.categories.types.expense"),
@@ -57,20 +54,16 @@ export function CategoriesPanel({
       label: t("components.categories.types.transfer"),
     },
   ]
-
   const renderCategoryRow = (items: Category[], rowKey: string) => (
-    <ScrollView
+    <FlatList
       key={rowKey}
       horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={filterHeaderStyles.chipScrollRow}
-      style={filterHeaderStyles.categoryRow}
-    >
-      {items.map((category) => (
+      data={items}
+      keyExtractor={(category) => category.id}
+      renderItem={({ item: category }) => (
         <Chip
-          key={category.id}
           label={category.name}
-          selected={selectedIds.includes(category.id)}
+          selected={selectedIdSet.has(category.id)}
           onPress={() => onToggle(category.id)}
           leading={
             category.icon ? (
@@ -83,10 +76,12 @@ export function CategoriesPanel({
             ) : undefined
           }
         />
-      ))}
-    </ScrollView>
+      )}
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={filterHeaderStyles.chipScrollRow}
+      style={filterHeaderStyles.categoryRow}
+    />
   )
-
   return (
     <View>
       <View style={filterHeaderStyles.chipWrap}>

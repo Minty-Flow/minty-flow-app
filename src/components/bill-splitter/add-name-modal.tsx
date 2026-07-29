@@ -1,12 +1,6 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import {
-  Modal,
-  Pressable,
-  TouchableWithoutFeedback,
-  useWindowDimensions,
-  View,
-} from "react-native"
+import { Modal, Pressable, useWindowDimensions, View } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
@@ -50,12 +44,13 @@ export function AddNameModal({ visible, onAdd, onClose }: AddNameModalProps) {
       onRequestClose={handleClose}
       accessibilityViewIsModal
     >
-      <Pressable
-        style={[styles.backdrop, { width }]}
-        onPress={handleClose}
-        accessibilityLabel={t("common.actions.close")}
-      >
-        <TouchableWithoutFeedback onPress={() => {}}>
+      <View style={styles.modalRoot}>
+        <Pressable
+          style={styles.backdrop}
+          onPress={handleClose}
+          accessibilityLabel={t("common.actions.close")}
+        />
+        <View style={styles.content}>
           <View
             style={[
               styles.card,
@@ -65,7 +60,6 @@ export function AddNameModal({ visible, onAdd, onClose }: AddNameModalProps) {
                 borderRadius: theme.radius ?? 16,
               },
             ]}
-            pointerEvents="box-none"
           >
             <View style={styles.header}>
               <View
@@ -112,16 +106,26 @@ export function AddNameModal({ visible, onAdd, onClose }: AddNameModalProps) {
               </Button>
             </View>
           </View>
-        </TouchableWithoutFeedback>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   )
 }
 
 const styles = StyleSheet.create((theme) => ({
-  backdrop: {
+  modalRoot: {
     flex: 1,
+  },
+  backdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: theme.colors.shadow,
+  },
+  content: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,

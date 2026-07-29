@@ -1,7 +1,8 @@
-import { useEffect } from "react"
+import { useCallback, useEffect, useRef } from "react"
 import { AppState } from "react-native"
 
 import { synchronizeAllRecurringTransactions } from "~/database/services-sqlite/recurring-transaction-service"
+import { useDebouncedCallback } from "~/hooks/use-debounced-callback"
 import { autoConfirmationService } from "~/services/auto-confirmation-service"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { logger } from "~/utils/logger"
@@ -37,58 +38,43 @@ export function useRecurringTransactionSync(): void {
   const updateDateUponConfirmation = usePendingTransactionsStore(
     (s) => s.updateDateUponConfirmation,
   )
+  const isFirstSyncRef = useRef(true)
+
+  const sync = useCallback(async () => {
+    const runAfterSync = isFirstSyncRef.current
+    isFirstSyncRef.current = false
+
+    try {
+      await synchronizeAllRecurringTransactions()
+      if (!runAfterSync || !isHydrated) return
+
+      // Configure service with store state before running auto-confirm
+      autoConfirmationService.configure({
+        requireConfirmation,
+        updateDateUponConfirmation,
+      })
+
+      await autoConfirmationService
+        .runAutoConfirmDueOnStartup()
+        .catch((e) => logger.error("Auto-confirm failed", { error: String(e) }))
+    } catch (e) {
+      logger.error("Recurring sync failed", { error: String(e) })
+    }
+  }, [isHydrated, requireConfirmation, updateDateUponConfirmation])
+  const debouncedSync = useDebouncedCallback(() => {
+    void sync()
+  }, SYNC_DEBOUNCE_MS)
 
   useEffect(() => {
-    let cancelled = false
-    let timeoutId: ReturnType<typeof setTimeout> | undefined
-    // Track whether the initial (mount) sync has already fired so the
-    // auto-confirm step runs exactly once per mount.
-    let isFirstSync = true
-
-    const sync = () => {
-      if (cancelled) return
-      if (timeoutId) clearTimeout(timeoutId)
-      timeoutId = setTimeout(() => {
-        if (cancelled) return
-
-        const runAfterSync = isFirstSync
-        isFirstSync = false
-
-        synchronizeAllRecurringTransactions()
-          .then(() => {
-            if (cancelled) return
-            if (!runAfterSync) return
-            if (!isHydrated) return
-
-            // Configure service with store state before running auto-confirm
-            autoConfirmationService.configure({
-              requireConfirmation,
-              updateDateUponConfirmation,
-            })
-
-            return autoConfirmationService
-              .runAutoConfirmDueOnStartup()
-              .catch((e) =>
-                logger.error("Auto-confirm failed", { error: String(e) }),
-              )
-          })
-          .catch((e) =>
-            logger.error("Recurring sync failed", { error: String(e) }),
-          )
-      }, SYNC_DEBOUNCE_MS)
-    }
-
-    // Initial sync — debounced for consistency with AppState-driven syncs
-    sync()
+    // Initial sync — debounced for consistency with AppState-driven syncs.
+    debouncedSync()
 
     const sub = AppState.addEventListener("change", (state) => {
-      if (state === "active") sync()
+      if (state === "active") debouncedSync()
     })
 
     return () => {
-      cancelled = true
-      if (timeoutId) clearTimeout(timeoutId)
       sub.remove()
     }
-  }, [isHydrated, requireConfirmation, updateDateUponConfirmation])
+  }, [debouncedSync])
 }

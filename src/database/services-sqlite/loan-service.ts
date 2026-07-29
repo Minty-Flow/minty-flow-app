@@ -1,15 +1,41 @@
 import { emit } from "~/database/events"
 import { runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
+import { getBalanceDelta } from "~/database/utils/get-balance-delta"
 import type { AddLoanFormSchema } from "~/schemas/loans.schema"
+import {
+  TransactionSubTypeEnum,
+  TransactionTypeEnum,
+} from "~/types/transactions"
 import { assertMinorUnits } from "~/utils/money"
 
-export async function createLoan(data: AddLoanFormSchema): Promise<string> {
+type CreateLoanInput = AddLoanFormSchema & {
+  initialTransactionTitle: string
+  initialTransactionDate?: Date
+}
+
+export async function createLoan(data: CreateLoanInput): Promise<string> {
   assertMinorUnits(data.principalAmount)
   const id = generateId()
+  const transactionId = generateId()
   const now = new Date().toISOString()
+  const transactionDate = data.initialTransactionDate ?? new Date()
+  const transactionType =
+    data.loanType === "lent"
+      ? TransactionTypeEnum.EXPENSE
+      : TransactionTypeEnum.INCOME
+  const subtype =
+    data.loanType === "lent"
+      ? TransactionSubTypeEnum.LOAN_LENT
+      : TransactionSubTypeEnum.LOAN_BORROWED
 
   await runInTransaction("loan.create", async (db) => {
+    const account = await db.getFirstAsync<{ balance: number }>(
+      `SELECT balance FROM accounts WHERE id = ?`,
+      [data.accountId],
+    )
+    if (!account) throw new Error(`Account ${data.accountId} not found`)
+
     await db.runAsync(
       `INSERT INTO loans (id, name, description, principal_amount, loan_type, due_date,
         account_id, category_id, icon, color_scheme_name, created_at, updated_at)
@@ -29,9 +55,56 @@ export async function createLoan(data: AddLoanFormSchema): Promise<string> {
         now,
       ],
     )
+
+    await db.runAsync(
+      `INSERT INTO transactions (
+        id, account_id, category_id, amount, type, transaction_date,
+        title, description, is_deleted, deleted_at, is_pending,
+        requires_manual_confirmation,
+        account_balance_before, subtype, extra, has_attachments,
+        recurring_id, location, goal_id, budget_id, loan_id,
+        created_at, updated_at
+      ) VALUES (
+        ?, ?, ?, ?, ?, ?,
+        ?, NULL, 0, NULL, 0,
+        0,
+        ?, ?, NULL, 0,
+        NULL, NULL, NULL, NULL, ?,
+        ?, ?
+      )`,
+      [
+        transactionId,
+        data.accountId,
+        data.categoryId,
+        data.principalAmount,
+        transactionType,
+        transactionDate.toISOString(),
+        data.initialTransactionTitle,
+        account.balance,
+        subtype,
+        id,
+        now,
+        now,
+      ],
+    )
+
+    const delta = getBalanceDelta(
+      data.principalAmount,
+      transactionType,
+      subtype,
+    )
+    if (delta !== 0) {
+      await db.runAsync(
+        `UPDATE accounts SET balance = balance + ?, updated_at = ? WHERE id = ?`,
+        [delta, now, data.accountId],
+      )
+    }
   })
 
   emit("loans:dirty", undefined)
+  emit("transactions:dirty", {})
+  emit("accounts:dirty", { ids: [data.accountId] })
+  emit("categories:dirty", undefined)
   return id
 }
 

@@ -1,6 +1,6 @@
 import { Image } from "expo-image"
 import { useFocusEffect, useRouter } from "expo-router"
-import { useCallback, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { BackHandler } from "react-native"
 import PagerView from "react-native-pager-view"
@@ -14,13 +14,11 @@ import { View } from "~/components/ui/view"
 import { AppData } from "~/constants/app-data"
 
 const TOTAL_PAGES = 3
-
 interface InfoSlideProps {
   icon: React.ReactNode
   title: string
   description: string
 }
-
 function InfoSlide({ icon, title, description }: InfoSlideProps) {
   return (
     <View style={styles.infoSlide}>
@@ -32,30 +30,24 @@ function InfoSlide({ icon, title, description }: InfoSlideProps) {
     </View>
   )
 }
-
 export default function OnboardingScreen() {
   const { t } = useTranslation()
   const router = useRouter()
   const pagerRef = useRef<PagerView>(null)
   const [currentPage, setCurrentPage] = useState(0)
-
-  useFocusEffect(
-    useCallback(() => {
-      // Android hardware back button → close app
-      const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-        BackHandler.exitApp()
-        return true // consume the event
-      })
-      return () => sub.remove()
-    }, []),
-  )
-
+  useFocusEffect(() => {
+    // Android hardware back button → close app
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      BackHandler.exitApp()
+      return true // consume the event
+    })
+    return () => sub.remove()
+  })
   const goToPage = (page: number) => {
     pagerRef.current?.setPage(page)
     // State is updated via onPageSelected — not set here to avoid drift if the
     // PagerView scroll is rejected or interrupted mid-animation.
   }
-
   const goNext = () => {
     if (currentPage < TOTAL_PAGES - 1) {
       goToPage(currentPage + 1)
@@ -63,12 +55,10 @@ export default function OnboardingScreen() {
       router.push("/onboarding/start")
     }
   }
-
   const nextLabel =
     currentPage === TOTAL_PAGES - 1
       ? t("onboarding.actions.getStarted")
       : t("onboarding.actions.next")
-
   return (
     <View style={styles.container}>
       <PagerView
@@ -145,7 +135,6 @@ export default function OnboardingScreen() {
     </View>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
@@ -157,7 +146,6 @@ const styles = StyleSheet.create((theme) => ({
   page: {
     flex: 1,
   },
-
   // ── Info slides ──────────────────────────────────────
   infoSlide: {
     flex: 1,
@@ -193,7 +181,6 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSurface,
     lineHeight: 24,
   },
-
   // ── Bottom navigation ──────────────────────────────
   bottomNav: {
     flexDirection: "row",

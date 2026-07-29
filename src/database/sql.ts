@@ -1,4 +1,4 @@
-import type { SQLiteBindParams } from "expo-sqlite"
+import type { SQLiteBindParams, SQLiteDatabase } from "expo-sqlite"
 
 import { getDb } from "./db"
 
@@ -53,4 +53,20 @@ export async function queryOne<T = Record<string, unknown>>(
 ): Promise<T | null> {
   const db = getDb()
   return db.getFirstAsync<T>(sql, params)
+}
+
+export async function runPreparedBatch(
+  db: SQLiteDatabase,
+  sql: string,
+  rows: SQLiteBindParams[],
+): Promise<void> {
+  if (rows.length === 0) return
+  const statement = await db.prepareAsync(sql)
+  try {
+    for (const params of rows) {
+      await statement.executeAsync(params)
+    }
+  } finally {
+    await statement.finalizeAsync()
+  }
 }

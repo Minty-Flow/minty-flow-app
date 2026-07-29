@@ -24,30 +24,35 @@ type KeystoreConfig = {
   keyPassword: string
 }
 
-let envLoaded = false
-function loadDotEnvLocal(projectRoot: string) {
-  if (envLoaded) return
-  envLoaded = true
+function readDotEnvLocalValue(
+  projectRoot: string,
+  targetKey: string,
+): string | undefined {
   const envPath = path.join(projectRoot, ".env.local")
-  if (!fs.existsSync(envPath)) return
+  if (!fs.existsSync(envPath)) return undefined
   for (const line of fs.readFileSync(envPath, "utf8").split("\n")) {
     const trimmed = line.trim()
     if (!trimmed || trimmed.startsWith("#")) continue
     const eq = trimmed.indexOf("=")
     if (eq < 0) continue
     const key = trimmed.slice(0, eq).trim()
+    if (key !== targetKey) continue
     const value = trimmed
       .slice(eq + 1)
       .trim()
       .replace(/^["']|["']$/g, "")
-    if (!(key in process.env)) process.env[key] = value
+    return value
   }
+  return undefined
 }
 
 function loadKeystoreConfig(projectRoot: string): KeystoreConfig {
-  loadDotEnvLocal(projectRoot)
-  const storePassword = process.env.MYAPP_UPLOAD_STORE_PASSWORD
-  const keyPassword = process.env.MYAPP_UPLOAD_KEY_PASSWORD
+  const storePassword =
+    process.env.MYAPP_UPLOAD_STORE_PASSWORD ??
+    readDotEnvLocalValue(projectRoot, "MYAPP_UPLOAD_STORE_PASSWORD")
+  const keyPassword =
+    process.env.MYAPP_UPLOAD_KEY_PASSWORD ??
+    readDotEnvLocalValue(projectRoot, "MYAPP_UPLOAD_KEY_PASSWORD")
   if (!storePassword || !keyPassword) {
     throw new Error(
       "with-android-release-signing: missing MYAPP_UPLOAD_STORE_PASSWORD or MYAPP_UPLOAD_KEY_PASSWORD. " +

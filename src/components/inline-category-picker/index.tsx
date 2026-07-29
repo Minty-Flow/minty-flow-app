@@ -3,7 +3,6 @@
  * Reusable inline (no modal) multi-select category picker.
  * Trigger row toggles a wrapping grid panel — same cell style as FormCategoryPicker.
  */
-
 import { useRouter } from "expo-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -30,7 +29,6 @@ const CATEGORY_CELL_SIZE = 74
 const CATEGORY_GAP = 10
 const ROW_PADDING_V = 10
 const TRIGGER_PAD = 6
-
 interface InlineCategoryPickerProps {
   categories: Category[]
   selectedIds: string[]
@@ -38,7 +36,6 @@ interface InlineCategoryPickerProps {
   label?: string
   icon?: IconSvgName
 }
-
 export function InlineCategoryPicker({
   categories,
   selectedIds,
@@ -49,19 +46,15 @@ export function InlineCategoryPicker({
   const [open, setOpen] = useState(false)
   const { t } = useTranslation()
   const router = useRouter()
-
   const handleCreateCategory = () => {
     router.push({
       pathname: "/settings/categories/[categoryId]/modify",
       params: { categoryId: NewEnum.NEW },
     })
   }
-
   const selectedNames = selectedIds.length
-
   const allSelected =
     categories.length > 0 && categories.every((c) => selectedIds.includes(c.id))
-
   const toggleItem = (id: string) => {
     onSelectionChange(
       selectedIds.includes(id)
@@ -72,7 +65,6 @@ export function InlineCategoryPicker({
   const handleSelectAll = () => {
     onSelectionChange(allSelected ? [] : categories.map((c) => c.id))
   }
-
   return (
     <View style={styles.container}>
       {/* ---- Trigger row ---- */}
@@ -125,13 +117,12 @@ export function InlineCategoryPicker({
           </View>
         ) : (
           <ScrollView
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled
+            showsVerticalScrollIndicator={false}
             style={styles.gridScroll}
             contentContainerStyle={styles.gridContent}
-            nestedScrollEnabled
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
           >
-            {/* Select all / Deselect all */}
             <Button
               variant="ghost"
               style={styles.selectAllRow}
@@ -146,7 +137,6 @@ export function InlineCategoryPicker({
               </Text>
             </Button>
 
-            {/* Category grid */}
             <View style={styles.grid}>
               {categories.map((category) => {
                 const isSelected = selectedIds.includes(category.id)
@@ -175,10 +165,8 @@ export function InlineCategoryPicker({
     </View>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {},
-
   // ---- Trigger ----
   triggerRow: {
     justifyContent: "space-between",
@@ -208,7 +196,6 @@ const styles = StyleSheet.create((theme) => ({
   placeholder: {
     opacity: 0.5,
   },
-
   // ---- Grid panel ----
   // ScrollView must NOT have flex:1 — let content drive the height, cap with maxHeight
   gridScroll: {
@@ -245,7 +232,6 @@ const styles = StyleSheet.create((theme) => ({
     marginTop: SMALL_GAP,
     textAlign: "center",
   },
-
   // ---- Select all ----
   selectAllRow: {
     // flexDirection: "row",
@@ -258,7 +244,6 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "600",
     color: theme.colors.primary,
   },
-
   // ---- Empty state ----
   emptyPanel: {
     paddingVertical: 24,

@@ -21,9 +21,11 @@ interface HeatmapWeek {
   /** Month label shown above this column ("" when same month as previous week) */
   monthLabel: string
   /** 7 cells, index = offset from week start; null = outside range */
-  days: ({ dateKey: string; expense: number } | null)[]
+  days: ({
+    dateKey: string
+    expense: number
+  } | null)[]
 }
-
 interface SpendingHeatmapProps {
   dailyData: DailyDataPoint[]
   from: Date
@@ -31,15 +33,17 @@ interface SpendingHeatmapProps {
   /** Grid-card variant: smaller cells, no labels/legend, no scroll */
   compact?: boolean
 }
-
-function buildWeeks(from: Date, to: Date, expenseByKey: Map<string, number>) {
-  const weekStartsOn = getWeekStartsOn()
+function buildWeeks(
+  from: Date,
+  to: Date,
+  expenseByKey: Map<string, number>,
+  weekStartsOn: number,
+) {
   const days = eachDayOfInterval({ start: from, end: to })
   const weeks: HeatmapWeek[] = []
   let prevMonth = -1
-
   for (const day of days) {
-    const weekKey = formatDateKey(startOfAppWeek(day))
+    const weekKey = formatDateKey(startOfAppWeek(day, weekStartsOn))
     let week = weeks[weeks.length - 1]
     if (!week || week.key !== weekKey) {
       const month = day.getMonth()
@@ -57,7 +61,6 @@ function buildWeeks(from: Date, to: Date, expenseByKey: Map<string, number>) {
   }
   return { weeks, weekStartsOn }
 }
-
 /** Quartile thresholds of nonzero expenses → intensity bucket 0–4 */
 function buildBucketFn(expenses: number[]) {
   const nonzero = expenses.filter((e) => e > 0).sort((a, b) => a - b)
@@ -73,9 +76,7 @@ function buildBucketFn(expenses: number[]) {
     return 4
   }
 }
-
 const BUCKET_OPACITY = ["14", "40", "80", "BF", "FF"]
-
 export function SpendingHeatmap({
   dailyData,
   from,
@@ -84,37 +85,38 @@ export function SpendingHeatmap({
 }: SpendingHeatmapProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
-
-  // `buildWeeks` reads the week-start setting through `getWeekStartsOn()`, so
-  // the memo depends on store state it never receives as an argument. Subscribed
-  // here (and listed as a dep) purely to recompute when it changes; today a
-  // fresh `dailyData` happens to arrive too, but that is incidental.
-  const weekStart = useWeekStartStore((s) => s.weekStart)
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: weekStart is read indirectly by buildWeeks
-  const { weeks, weekStartsOn, bucketOf } = useMemo(() => {
+  // Subscribed so store change reruns memo; `weekStartsOn` is the explicit dep.
+  const _weekStart = useWeekStartStore((s) => s.weekStart)
+  const weekStartsOnValue = getWeekStartsOn()
+  const {
+    weeks,
+    weekStartsOn: computedWeekStartsOn,
+    bucketOf,
+  } = useMemo(() => {
     const expenseByKey = new Map(dailyData.map((d) => [d.dateKey, d.expense]))
-    const built = buildWeeks(from, to, expenseByKey)
+    const built = buildWeeks(from, to, expenseByKey, weekStartsOnValue)
     return {
       ...built,
       bucketOf: buildBucketFn(dailyData.map((d) => d.expense)),
     }
-  }, [dailyData, from, to, weekStart])
-
+  }, [dailyData, from, to, weekStartsOnValue])
+  const weekStartsOn = computedWeekStartsOn
   const cellStyle = compact ? styles.cellCompact : styles.cell
   const cellColor = (bucket: number) =>
     bucket === 0
       ? `${theme.colors.onSurface}1F`
       : `${theme.colors.primary}${BUCKET_OPACITY[bucket]}`
-
   // M/W/F row labels — offsets 1/3/5 relative to a Sunday-start week
-  const dayLabels = compact
-    ? null
-    : [1, 3, 5].map((day) => ({
-        offset: (day - weekStartsOn + 7) % 7,
-        label: getWeekdayLabel(day, "narrow"),
-      }))
-
+  const dayLabels = useMemo(
+    () =>
+      compact
+        ? null
+        : [1, 3, 5].map((day) => ({
+            offset: (day - weekStartsOn + 7) % 7,
+            label: getWeekdayLabel(day, "narrow"),
+          })),
+    [compact, weekStartsOn],
+  )
   const grid = (
     <View style={styles.gridRow}>
       {dayLabels && (
@@ -152,9 +154,7 @@ export function SpendingHeatmap({
       ))}
     </View>
   )
-
   if (compact) return grid
-
   return (
     <View style={styles.container}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -177,7 +177,6 @@ export function SpendingHeatmap({
     </View>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     gap: 10,

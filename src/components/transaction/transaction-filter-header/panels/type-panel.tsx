@@ -25,6 +25,7 @@ export function TypePanel({
   onDone,
 }: TypePanelProps) {
   const { t } = useTranslation()
+  const selectedValueSet = new Set(value)
   const options: { id: TransactionType; label: string }[] = [
     {
       id: TransactionTypeEnum.EXPENSE,
@@ -54,7 +55,7 @@ export function TypePanel({
             <Chip
               key={opt.id}
               label={opt.label}
-              selected={value.includes(opt.id)}
+              selected={selectedValueSet.has(opt.id)}
               onPress={() => onToggle(opt.id)}
             />
           ))}

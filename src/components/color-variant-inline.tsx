@@ -100,14 +100,11 @@ export function ColorVariantInline({
   const themeInfo = getCurrentThemeInfo()
 
   const handleToggle = () => {
-    setExpanded((v) => {
-      const next = !v
-      if (next) {
-        setPendingSchemeName(selectedSchemeName ?? null)
-        scrollIntoView()
-      }
-      return next
-    })
+    if (!expanded) {
+      setPendingSchemeName(selectedSchemeName ?? null)
+      scrollIntoView()
+    }
+    setExpanded((v) => !v)
   }
 
   /** Apply color immediately on select. */

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useCallback, useState } from "react"
 import { Platform } from "react-native"
 
 import { DateTimePicker } from "./date-time-picker"
@@ -33,8 +33,12 @@ export function useDateTimePicker({
     value: Date
   } | null>(null)
 
-  const onConfirmRef = useRef(onConfirm)
-  onConfirmRef.current = onConfirm
+  const confirm = useCallback(
+    (date: Date) => {
+      onConfirm(date)
+    },
+    [onConfirm],
+  )
 
   const open = (initialDate = new Date()) => {
     if (Platform.OS === "android") {
@@ -55,7 +59,7 @@ export function useDateTimePicker({
         presentation="dialog"
         onValueChange={(_, date) => {
           setAndroidPicker(null)
-          if (date) onConfirmRef.current(date)
+          if (date) confirm(date)
         }}
         onDismiss={() => setAndroidPicker(null)}
       />
@@ -71,7 +75,7 @@ export function useDateTimePicker({
       onClose: close,
       onConfirm: (date: Date) => {
         close()
-        onConfirmRef.current(date)
+        confirm(date)
       },
     },
   }

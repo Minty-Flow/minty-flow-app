@@ -1,6 +1,6 @@
 import * as DocumentPicker from "expo-document-picker"
 import * as ImagePicker from "expo-image-picker"
-import { useCallback, useReducer, useRef } from "react"
+import { useReducer, useRef } from "react"
 import { useTranslation } from "react-i18next"
 
 import type { Transaction, TransactionAttachment } from "~/types/transactions"
@@ -15,10 +15,8 @@ import { Toast } from "~/utils/toast"
 
 import { mergeReducer } from "./form-utils"
 import type { AttachmentState } from "./types"
-
 export function useFormAttachments(transaction: Transaction | null) {
   const { t } = useTranslation()
-
   const [attachmentState, setAttachmentState] = useReducer(
     mergeReducer<AttachmentState>,
     null,
@@ -51,55 +49,44 @@ export function useFormAttachments(transaction: Transaction | null) {
       addFilesExpanded: false,
     }),
   )
-
   const removedUris = useRef<string[]>([])
-
   /**
    * Copies each picked file into permanent storage, then appends them in a single
    * dispatch — `mergeReducer` has no functional form, so one dispatch per file would
    * read a stale list and keep only the last.
    */
-  const addAttachments = useCallback(
-    async (picked: TransactionAttachment[]) => {
-      try {
-        const persisted = await Promise.all(
-          picked.map(async (a) => ({
-            ...a,
-            uri: resolveAttachmentUri(await persistAttachment(a.uri, a.name)),
-          })),
-        )
-        setAttachmentState({ list: [...attachmentState.list, ...persisted] })
-      } catch (e) {
-        logger.error("Failed to save attachment", { e })
-        Toast.error({
-          title: t("components.transactionForm.toast.couldNotSelectFile"),
-        })
-      }
-    },
-    [attachmentState.list, t],
-  )
-
-  const removeAttachment = useCallback(
-    (uri: string) => {
-      removedUris.current.push(uri)
-      setAttachmentState({
-        list: attachmentState.list.filter((x) => x.uri !== uri),
+  const addAttachments = async (picked: TransactionAttachment[]) => {
+    try {
+      const persisted = await Promise.all(
+        picked.map(async (a) => ({
+          ...a,
+          uri: resolveAttachmentUri(await persistAttachment(a.uri, a.name)),
+        })),
+      )
+      setAttachmentState({ list: [...attachmentState.list, ...persisted] })
+    } catch (e) {
+      logger.error("Failed to save attachment", { e })
+      Toast.error({
+        title: t("components.transactionForm.toast.couldNotSelectFile"),
       })
-    },
-    [attachmentState.list],
-  )
-
+    }
+  }
+  const removeAttachment = (uri: string) => {
+    removedUris.current.push(uri)
+    setAttachmentState({
+      list: attachmentState.list.filter((x) => x.uri !== uri),
+    })
+  }
   /**
    * Deletes the files of attachments removed during this edit. Call only after a
    * successful save — deleting at remove-time would destroy a still-referenced file
    * if the user then discards the form.
    */
-  const flushRemovedAttachments = useCallback(() => {
+  const flushRemovedAttachments = () => {
     for (const uri of removedUris.current) deleteAttachmentFile(uri)
     removedUris.current = []
-  }, [])
-
-  const handleSelectFromFiles = useCallback(async () => {
+  }
+  const handleSelectFromFiles = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: "*/*",
@@ -123,9 +110,8 @@ export function useFormAttachments(transaction: Transaction | null) {
         title: t("components.transactionForm.toast.couldNotSelectFile"),
       })
     }
-  }, [addAttachments, t])
-
-  const handleTakePhoto = useCallback(async () => {
+  }
+  const handleTakePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync()
     if (status !== "granted") {
       Toast.error({
@@ -151,9 +137,8 @@ export function useFormAttachments(transaction: Transaction | null) {
         ext,
       },
     ])
-  }, [addAttachments])
-
-  const handleSelectMultipleMedia = useCallback(async () => {
+  }
+  const handleSelectMultipleMedia = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (status !== "granted") {
       Toast.error({
@@ -182,9 +167,8 @@ export function useFormAttachments(transaction: Transaction | null) {
         }
       }),
     )
-  }, [addAttachments])
-
-  const handleSelectSinglePhoto = useCallback(async () => {
+  }
+  const handleSelectSinglePhoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (status !== "granted") {
       Toast.error({
@@ -211,8 +195,7 @@ export function useFormAttachments(transaction: Transaction | null) {
         ext,
       },
     ])
-  }, [addAttachments])
-
+  }
   return {
     attachmentState,
     setAttachmentState,

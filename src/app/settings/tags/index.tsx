@@ -1,7 +1,7 @@
 import { useNavigation, useRouter } from "expo-router"
-import { useLayoutEffect, useState } from "react"
+import { useLayoutEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ScrollView } from "react-native"
+import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
@@ -24,10 +24,11 @@ export default function TagsScreen() {
   const navigation = useNavigation()
   const [showSearch, setShowSearch] = useState(false)
 
-  const filteredModels = tags.filter((model) => {
-    if (!searchQuery.trim()) return true
-    return model.name.toLowerCase().includes(searchQuery.toLowerCase())
-  })
+  const filteredModels = useMemo(() => {
+    if (!searchQuery.trim()) return tags
+    const lower = searchQuery.toLowerCase()
+    return tags.filter((model) => model.name.toLowerCase().includes(lower))
+  }, [searchQuery, tags])
 
   const handleAddTag = () => {
     router.push({
@@ -66,19 +67,23 @@ export default function TagsScreen() {
         </View>
       )}
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+      <FlatList
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
+        data={filteredModels}
+        keyExtractor={(tag) => tag.id}
+        renderItem={({ item: tag }) => <TagCard tag={tag} />}
         showsVerticalScrollIndicator={false}
-      >
-        <ListItem style={styles.newTagButton} onPress={handleAddTag}>
-          <IconSvg name="plus-outline" size={24} />
-          <Text variant="default" style={styles.newTagText}>
-            {t("screens.settings.tags.newTag")}
-          </Text>
-        </ListItem>
-
-        {filteredModels.length === 0 ? (
+        keyboardShouldPersistTaps="handled"
+        ListHeaderComponent={
+          <ListItem style={styles.newTagButton} onPress={handleAddTag}>
+            <IconSvg name="plus-outline" size={24} />
+            <Text variant="default" style={styles.newTagText}>
+              {t("screens.settings.tags.newTag")}
+            </Text>
+          </ListItem>
+        }
+        ListEmptyComponent={
           <View style={styles.emptyWrapper}>
             <EmptyState
               icon={searchQuery.trim() ? "search-outline" : "tags-outline"}
@@ -89,10 +94,8 @@ export default function TagsScreen() {
               }
             />
           </View>
-        ) : (
-          filteredModels.map((tag) => <TagCard key={tag.id} tag={tag} />)
-        )}
-      </ScrollView>
+        }
+      />
     </View>
   )
 }
@@ -109,10 +112,10 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
     paddingTop: 16,
   },
-  scrollView: {
+  list: {
     flex: 1,
   },
-  scrollContent: {
+  listContent: {
     paddingBottom: 40,
   },
   newTagButton: {

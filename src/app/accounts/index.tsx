@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
@@ -36,26 +36,26 @@ function AccountsScreen() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isReorderMode, setIsReorderMode] = useState(false)
   const [reorderedAccounts, setReorderedAccounts] = useState<Account[]>([])
-
   const excludeFromTotals = useTransfersPreferencesStore(
     (s) => s.excludeFromTotals,
   )
   const accounts = useActiveAccounts()
-
-  const { fromDate, toDate } = useMemo(() => {
+  const { fromDate, toDate } = (() => {
     const now = new Date()
     return getMonthRange(now.getFullYear(), now.getMonth())
-  }, [])
-
+  })()
   const { items: transactionsFull } = useTransactions({
     from: new Date(fromDate).toISOString(),
     to: new Date(toDate).toISOString(),
   })
-
-  const accountsWithMonthTotals = useMemo(() => {
+  const accountsWithMonthTotals = (() => {
     const totalsByAccount = new Map<
       string,
-      { in: number; out: number; net: number }
+      {
+        in: number
+        out: number
+        net: number
+      }
     >()
     for (const t of transactionsFull) {
       if (t.isDeleted || t.isPending) continue
@@ -107,20 +107,13 @@ function AccountsScreen() {
         monthNet: totals.net,
       }
     })
-  }, [accounts, transactionsFull, excludeFromTotals])
-
-  const filteredAccounts = useMemo(
-    () =>
-      accountsWithMonthTotals.filter(
-        (a) =>
-          !searchQuery.trim() ||
-          a.name.toLowerCase().includes(searchQuery.toLowerCase()),
-      ),
-    [accountsWithMonthTotals, searchQuery],
+  })()
+  const filteredAccounts = accountsWithMonthTotals.filter(
+    (a) =>
+      !searchQuery.trim() ||
+      a.name.toLowerCase().includes(searchQuery.toLowerCase()),
   )
-
   const displayAccounts = isReorderMode ? reorderedAccounts : filteredAccounts
-
   const balancesByCurrency = displayAccounts
     .filter((account) => !account.excludeFromBalance)
     .reduce(
@@ -138,15 +131,16 @@ function AccountsScreen() {
         }
         return acc
       },
-      [] as { currency: string; balance: number }[],
+      [] as {
+        currency: string
+        balance: number
+      }[],
     )
-
   const handleToggleReorder = () => {
     if (searchQuery.length > 0) setSearchQuery("")
     if (!isReorderMode) setReorderedAccounts(accountsWithMonthTotals)
     setIsReorderMode((prev) => !prev)
   }
-
   const handleSaveReorder = async () => {
     try {
       await updateAccountsOrder(reorderedAccounts)
@@ -156,19 +150,16 @@ function AccountsScreen() {
       logger.error("Failed to save account order", { error })
     }
   }
-
   const handleCancelReorder = () => {
     setIsReorderMode(false)
     setReorderedAccounts([])
   }
-
   const handleAddAccount = () => {
     router.push({
       pathname: "/accounts/[accountId]/modify",
       params: { accountId: NewEnum.NEW },
     })
   }
-
   return (
     <View style={styles.container}>
       <View style={styles.titleContainer}>
@@ -245,11 +236,24 @@ function AccountsScreen() {
         renderItem={({ item }) => {
           const cardProps: AccountCardProps = {
             account: item,
-            monthIn: (item as typeof item & { monthIn?: number }).monthIn ?? 0,
+            monthIn:
+              (
+                item as typeof item & {
+                  monthIn?: number
+                }
+              ).monthIn ?? 0,
             monthOut:
-              (item as typeof item & { monthOut?: number }).monthOut ?? 0,
+              (
+                item as typeof item & {
+                  monthOut?: number
+                }
+              ).monthOut ?? 0,
             monthNet:
-              (item as typeof item & { monthNet?: number }).monthNet ?? 0,
+              (
+                item as typeof item & {
+                  monthNet?: number
+                }
+              ).monthNet ?? 0,
             isReorderMode,
           }
           return <AccountCard {...cardProps} />
@@ -273,9 +277,7 @@ function AccountsScreen() {
     </View>
   )
 }
-
 export default AccountsScreen
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
@@ -291,7 +293,6 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-
     marginTop: 50,
     marginBottom: 10,
   },

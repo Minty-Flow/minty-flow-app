@@ -66,7 +66,10 @@ export function useAccounts(): Account[] {
 export function useActiveAccounts(): Account[] {
   return useAccountStore(
     useShallow((s) =>
-      s.ids.map((id) => s.byId[id]).filter((a) => !a?.isArchived),
+      s.ids.flatMap((id) => {
+        const account = s.byId[id]
+        return account && !account.isArchived ? [account] : []
+      }),
     ),
   )
 }
@@ -74,7 +77,10 @@ export function useActiveAccounts(): Account[] {
 export function useArchivedAccounts(): Account[] {
   return useAccountStore(
     useShallow((s) =>
-      s.ids.map((id) => s.byId[id]).filter((a) => a?.isArchived),
+      s.ids.flatMap((id) => {
+        const account = s.byId[id]
+        return account?.isArchived ? [account] : []
+      }),
     ),
   )
 }

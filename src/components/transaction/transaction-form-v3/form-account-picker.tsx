@@ -2,9 +2,8 @@
  * Account (from) picker block for the transaction form: trigger + inline list with search.
  * Optional scroll-into-view when scroll refs are passed.
  */
-
 import { useRouter } from "expo-router"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { View as RNView, ScrollView } from "react-native"
 import { useUnistyles } from "react-native-unistyles"
@@ -31,18 +30,19 @@ interface FormAccountPickerProps {
   setValue: (
     name: "accountId" | "toAccountId",
     value: string,
-    opts: { shouldDirty: boolean },
+    opts: {
+      shouldDirty: boolean
+    },
   ) => void
   selectedAccount: Account | null | undefined
   balanceAtTransaction: number | null
-  transaction: { id: string } | null
+  transaction: {
+    id: string
+  } | null
   accountError: string | undefined
   /** Called after the selected account changes (new id or cleared). */
   onAccountChange?: (newAccountId: string) => void
-  /** Used for styling only; can be omitted. */
-  // transactionType?: string
 }
-
 export function FormAccountPicker({
   accounts,
   accountId,
@@ -60,24 +60,18 @@ export function FormAccountPicker({
   const { wrapperRef, scrollIntoView } = useScrollIntoView()
   const [accountPickerOpen, setAccountPickerOpen] = useState(false)
   const [accountSearchQuery, setAccountSearchQuery] = useState("")
-
-  const filteredAccountsForPicker = useMemo(() => {
+  const filteredAccountsForPicker = (() => {
     if (!accountSearchQuery.trim()) return accounts
     const lower = accountSearchQuery.toLowerCase()
     return accounts.filter((a) => a.name.toLowerCase().includes(lower))
-  }, [accounts, accountSearchQuery])
-
+  })()
   const handleToggle = () => {
-    setAccountPickerOpen((o) => {
-      const next = !o
-      if (next) {
-        scrollIntoView()
-        setAccountSearchQuery("")
-      }
-      return next
-    })
+    if (!accountPickerOpen) {
+      scrollIntoView()
+      setAccountSearchQuery("")
+    }
+    setAccountPickerOpen((o) => !o)
   }
-
   return (
     <RNView ref={wrapperRef} style={transactionFormStyles.fieldBlock}>
       <View style={transactionFormStyles.sectionLabelRow}>
@@ -186,7 +180,6 @@ export function FormAccountPicker({
             style={transactionFormStyles.pickerList}
             contentContainerStyle={transactionFormStyles.pickerListContent}
             keyboardShouldPersistTaps="handled"
-            nestedScrollEnabled
             showsVerticalScrollIndicator
           >
             {filteredAccountsForPicker.map((account) => (
@@ -231,7 +224,7 @@ export function FormAccountPicker({
                 </View>
               </Pressable>
             ))}
-            {filteredAccountsForPicker.length === 0 && (
+            {filteredAccountsForPicker.length === 0 ? (
               <Pressable
                 style={transactionFormStyles.accountPickerRowAdd}
                 onPress={() => {
@@ -257,7 +250,7 @@ export function FormAccountPicker({
                   {t("screens.accounts.a11y.add")}
                 </Text>
               </Pressable>
-            )}
+            ) : null}
           </ScrollView>
         </View>
       )}

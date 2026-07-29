@@ -1,4 +1,5 @@
 import { emit } from "~/database/events"
+import { runPreparedBatch } from "~/database/sql"
 import { runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
 import type {
@@ -34,12 +35,11 @@ export async function createGoal(data: AddGoalFormSchema): Promise<string> {
       ],
     )
 
-    for (const accountId of data.accountIds) {
-      await db.runAsync(
-        `INSERT INTO goal_accounts (goal_id, account_id, created_at) VALUES (?, ?, ?)`,
-        [id, accountId, now],
-      )
-    }
+    await runPreparedBatch(
+      db,
+      `INSERT INTO goal_accounts (goal_id, account_id, created_at) VALUES (?, ?, ?)`,
+      data.accountIds.map((accountId) => [id, accountId, now]),
+    )
   })
 
   emit("goals:dirty", undefined)
@@ -88,12 +88,11 @@ export async function updateGoalById(
 
     if (data.accountIds !== undefined) {
       await db.runAsync(`DELETE FROM goal_accounts WHERE goal_id = ?`, [id])
-      for (const accountId of data.accountIds) {
-        await db.runAsync(
-          `INSERT INTO goal_accounts (goal_id, account_id, created_at) VALUES (?, ?, ?)`,
-          [id, accountId, now],
-        )
-      }
+      await runPreparedBatch(
+        db,
+        `INSERT INTO goal_accounts (goal_id, account_id, created_at) VALUES (?, ?, ?)`,
+        data.accountIds.map((accountId) => [id, accountId, now]),
+      )
     }
   })
 
