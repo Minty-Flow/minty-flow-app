@@ -19,11 +19,14 @@ const REQUIRED_TABLES = [
   "goal_accounts",
 ]
 
+// TODO(remove-after-drizzle-rollout): compatibility bootstrap for users upgrading
+// from the pre-Drizzle SQLite schema. Delete once old v3 installs are no longer supported.
+
 function tableExists(name: string): boolean {
   return (
     drizzleDb.get<{ name: string }>(
       sql`SELECT name FROM sqlite_master WHERE type = 'table' AND name = ${name}`,
-    ) !== undefined
+    ) != null
   )
 }
 
@@ -37,18 +40,24 @@ function latestMigrationMs(migrations: DrizzleMigrationBundle): number {
   return Math.max(...migrations.journal.entries.map((entry) => entry.when))
 }
 
-function hasCurrentDrizzleMarker(migrations: DrizzleMigrationBundle): boolean {
+export function isDrizzleBaselineApplied(
+  migrations: DrizzleMigrationBundle,
+): boolean {
   if (!tableExists("__drizzle_migrations")) return false
-  const row = drizzleDb.get<{ created_at: number | string | null }>(
-    sql`SELECT created_at FROM "__drizzle_migrations" ORDER BY created_at DESC LIMIT 1`,
-  )
-  return Number(row?.created_at ?? 0) >= latestMigrationMs(migrations)
+  try {
+    const row = drizzleDb.get<{ created_at: number | string | null }>(
+      sql`SELECT created_at FROM "__drizzle_migrations" ORDER BY created_at DESC LIMIT 1`,
+    )
+    return Number(row?.created_at ?? 0) >= latestMigrationMs(migrations)
+  } catch {
+    return false
+  }
 }
 
 export function needsForcedDrizzleMigration(
   migrations: DrizzleMigrationBundle,
 ): boolean {
-  if (hasCurrentDrizzleMarker(migrations)) return false
+  if (isDrizzleBaselineApplied(migrations)) return false
 
   const existingTables = REQUIRED_TABLES.filter(tableExists)
   if (existingTables.length === 0) return false
