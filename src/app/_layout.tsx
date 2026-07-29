@@ -22,11 +22,9 @@ import { View } from "~/components/ui/view"
 import { drizzleDb, expoDb } from "~/database/drizzle/db"
 import {
   exportLegacyDbForForcedMigration,
+  markLegacyDbAsDrizzleBaseline,
   needsForcedDrizzleMigration,
-  readForcedMigrationBackup,
-  resetDbForForcedMigration,
 } from "~/database/forced-migration"
-import { importBackup } from "~/database/services/data-management-service"
 import { useImportRecovery } from "~/hooks/use-import-recovery"
 import { useNotificationSync } from "~/hooks/use-notification-sync"
 import { useRecurringTransactionSync } from "~/hooks/use-recurring-transaction-sync"
@@ -54,45 +52,46 @@ function ForcedMigrationGate() {
   const setPhase = useDbMigrationStore((s) => s.setPhase)
   const markNeedsBackup = useDbMigrationStore((s) => s.markNeedsBackup)
   const markExported = useDbMigrationStore((s) => s.markExported)
+  const markComplete = useDbMigrationStore((s) => s.markComplete)
   const markFailed = useDbMigrationStore((s) => s.markFailed)
   const [checked, setChecked] = useState(false)
   const [busy, setBusy] = useState(false)
   const alertShownRef = useRef(false)
 
-  const runExportAndReset = useCallback(async () => {
+  const runInPlaceUpgrade = useCallback(async () => {
     setBusy(true)
     try {
       setPhase("exporting")
       const backup = await exportLegacyDbForForcedMigration()
       markExported(backup)
-      setPhase("resetting")
-      resetDbForForcedMigration()
       setPhase("migrating")
+      markLegacyDbAsDrizzleBaseline(migrations)
+      markComplete()
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
-      logger.error("Forced DB migration backup/reset failed", {
+      logger.error("Forced DB migration in-place upgrade failed", {
         error: message,
       })
       markFailed(message)
     } finally {
       setBusy(false)
     }
-  }, [markExported, markFailed, setPhase])
+  }, [markComplete, markExported, markFailed, setPhase])
 
-  const runResetOnly = useCallback(async () => {
+  const resumeInPlaceUpgrade = useCallback(async () => {
     setBusy(true)
     try {
-      setPhase("resetting")
-      resetDbForForcedMigration()
       setPhase("migrating")
+      markLegacyDbAsDrizzleBaseline(migrations)
+      markComplete()
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
-      logger.error("Forced DB migration reset failed", { error: message })
+      logger.error("Forced DB migration resume failed", { error: message })
       markFailed(message)
     } finally {
       setBusy(false)
     }
-  }, [markFailed, setPhase])
+  }, [markComplete, markFailed, setPhase])
 
   useEffect(() => {
     if (phase !== "idle") {
@@ -100,7 +99,7 @@ function ForcedMigrationGate() {
       return
     }
     try {
-      if (needsForcedDrizzleMigration()) {
+      if (needsForcedDrizzleMigration(migrations)) {
         markNeedsBackup()
       }
     } catch (e) {
@@ -117,11 +116,11 @@ function ForcedMigrationGate() {
     alertShownRef.current = true
     Alert.alert(
       "Database upgrade required",
-      "Minty Flow needs to safely export your current data before upgrading the local database.",
-      [{ text: "Continue", onPress: runExportAndReset }],
+      "Minty Flow will keep your data in place and create an internal backup before switching to the new database layer.",
+      [{ text: "Continue", onPress: runInPlaceUpgrade }],
       { cancelable: false },
     )
-  }, [checked, phase, runExportAndReset])
+  }, [checked, phase, runInPlaceUpgrade])
 
   useEffect(() => {
     if (!checked || busy) return
@@ -130,21 +129,25 @@ function ForcedMigrationGate() {
       markNeedsBackup()
       return
     }
-    if (phase === "exported" || phase === "resetting") {
-      runResetOnly()
+    if (phase === "exported" || phase === "migrating") {
+      resumeInPlaceUpgrade()
     }
-  }, [backupUri, busy, checked, markNeedsBackup, phase, runResetOnly])
+  }, [backupUri, busy, checked, markNeedsBackup, phase, resumeInPlaceUpgrade])
 
   if (!checked) return <MigrationState message="Checking database..." />
 
   if (phase === "idle" || phase === "complete") return <DrizzleMigratedApp />
 
-  if (
-    phase === "migrating" ||
-    phase === "ready_to_restore" ||
-    phase === "restoring"
-  ) {
-    return <ForcedMigrationSchemaGate />
+  if (phase === "exporting" || phase === "exported" || phase === "migrating") {
+    return (
+      <MigrationState
+        message={
+          phase === "exporting"
+            ? "Backing up your data..."
+            : "Switching database layer..."
+        }
+      />
+    )
   }
 
   if (phase === "failed") {
@@ -152,13 +155,10 @@ function ForcedMigrationGate() {
       <ForcedMigrationState
         message="Database upgrade paused."
         detail={error ?? "Unknown error"}
-        actionLabel={backupUri ? "Restore backup" : "Try again"}
+        actionLabel="Try again"
         onAction={() => {
-          if (backupUri) setPhase("ready_to_restore")
-          else {
-            alertShownRef.current = false
-            markNeedsBackup()
-          }
+          alertShownRef.current = false
+          markNeedsBackup()
         }}
       />
     )
@@ -173,7 +173,7 @@ function ForcedMigrationGate() {
       }
       detail="Keep Minty Flow open until this finishes."
       actionLabel={phase === "needs_backup" ? "Continue" : undefined}
-      onAction={phase === "needs_backup" ? runExportAndReset : undefined}
+      onAction={phase === "needs_backup" ? runInPlaceUpgrade : undefined}
     />
   )
 }
@@ -201,79 +201,6 @@ function DrizzleMigratedApp() {
   }
 
   return <AppRootLayout />
-}
-
-function ForcedMigrationSchemaGate() {
-  const phase = useDbMigrationStore((s) => s.phase)
-  const markReadyToRestore = useDbMigrationStore((s) => s.markReadyToRestore)
-  const markFailed = useDbMigrationStore((s) => s.markFailed)
-  const migration = useMigrations(drizzleDb, migrations)
-
-  useEffect(() => {
-    if (migration.error) {
-      const message = migration.error.message
-      logger.error("Forced DB migration schema creation failed", {
-        error: message,
-      })
-      markFailed(message)
-    }
-  }, [markFailed, migration.error])
-
-  useEffect(() => {
-    if (migration.success && phase === "migrating") {
-      markReadyToRestore()
-    }
-  }, [markReadyToRestore, migration.success, phase])
-
-  if (migration.error) {
-    return (
-      <MigrationState message="Database migration failed. Restart the app or recover from backup." />
-    )
-  }
-
-  if (!migration.success || phase === "migrating") {
-    return <MigrationState message="Preparing new database..." />
-  }
-
-  return <ForcedRestoreScreen />
-}
-
-function ForcedRestoreScreen() {
-  const backupUri = useDbMigrationStore((s) => s.backupUri)
-  const setPhase = useDbMigrationStore((s) => s.setPhase)
-  const markComplete = useDbMigrationStore((s) => s.markComplete)
-  const markFailed = useDbMigrationStore((s) => s.markFailed)
-  const [isRestoring, setIsRestoring] = useState(false)
-
-  const restore = useCallback(async () => {
-    if (!backupUri) {
-      markFailed("Migration backup file is missing.")
-      return
-    }
-    setIsRestoring(true)
-    setPhase("restoring")
-    try {
-      const backup = await readForcedMigrationBackup(backupUri)
-      const result = await importBackup(backup)
-      if (!result.success) throw new Error(result.error)
-      markComplete()
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e)
-      logger.error("Forced DB migration restore failed", { error: message })
-      markFailed(message)
-    } finally {
-      setIsRestoring(false)
-    }
-  }, [backupUri, markComplete, markFailed, setPhase])
-
-  return (
-    <ForcedMigrationState
-      message="Import backup"
-      detail="Your v3 data backup is ready. Import it to finish the Drizzle upgrade."
-      actionLabel={isRestoring ? "Importing..." : "Import backup"}
-      onAction={isRestoring ? undefined : restore}
-    />
-  )
 }
 
 function MigrationState({ message }: { message: string }) {
