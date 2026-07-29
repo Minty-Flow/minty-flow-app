@@ -7,10 +7,7 @@ export type DbMigrationPhase =
   | "needs_backup"
   | "exporting"
   | "exported"
-  | "resetting"
   | "migrating"
-  | "ready_to_restore"
-  | "restoring"
   | "complete"
   | "failed"
 
@@ -23,7 +20,6 @@ interface DbMigrationState {
   setPhase: (phase: DbMigrationPhase) => void
   markNeedsBackup: () => void
   markExported: (backup: { uri: string; fileName: string }) => void
-  markReadyToRestore: () => void
   markComplete: () => void
   markFailed: (error: string) => void
 }
@@ -52,7 +48,6 @@ export const useDbMigrationStore = create<DbMigrationState>()(
           backupFileName: fileName,
           error: null,
         }),
-      markReadyToRestore: () => set({ phase: "ready_to_restore", error: null }),
       markComplete: () =>
         set({
           phase: "complete",

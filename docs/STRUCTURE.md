@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-07-29T15:52:36.152Z
+Generated on: 2026-07-29T16:47:38.520Z
 ```
 ./
 ├── .github/
@@ -560,7 +560,6 @@ Generated on: 2026-07-29T15:52:36.152Z
 ├── app.json
 ├── babel.config.js
 ├── biome.json
-├── doctor.config.json
 ├── drizzle.config.ts
 ├── expo-env.d.ts
 ├── index.ts
@@ -571,7 +570,6 @@ Generated on: 2026-07-29T15:52:36.152Z
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml
 ├── README.md
-├── skills-lock.json
 └── tsconfig.json
 
 ```

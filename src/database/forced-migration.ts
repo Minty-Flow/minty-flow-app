@@ -1,13 +1,7 @@
-import * as FileSystem from "expo-file-system/legacy"
+import { sql } from "drizzle-orm"
 
-import { deleteDbSync, getDb } from "~/database/db"
-import { resetDrizzleDb } from "~/database/drizzle/db"
-import {
-  generateInternalJsonBackup,
-  type MintyFlowBackup,
-  readBackupJsonFromUri,
-  validateBackup,
-} from "~/database/services/data-management-service"
+import { drizzleDb } from "~/database/drizzle/db"
+import { generateInternalJsonBackup } from "~/database/services/data-management-service"
 
 const REQUIRED_TABLES = [
   "categories",
@@ -27,15 +21,34 @@ const REQUIRED_TABLES = [
 
 function tableExists(name: string): boolean {
   return (
-    getDb().getFirstSync<{ name: string }>(
-      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
-      [name],
-    ) !== null
+    drizzleDb.get<{ name: string }>(
+      sql`SELECT name FROM sqlite_master WHERE type = 'table' AND name = ${name}`,
+    ) !== undefined
   )
 }
 
-export function needsForcedDrizzleMigration(): boolean {
-  if (tableExists("__drizzle_migrations")) return false
+interface DrizzleMigrationBundle {
+  journal: {
+    entries: { when: number }[]
+  }
+}
+
+function latestMigrationMs(migrations: DrizzleMigrationBundle): number {
+  return Math.max(...migrations.journal.entries.map((entry) => entry.when))
+}
+
+function hasCurrentDrizzleMarker(migrations: DrizzleMigrationBundle): boolean {
+  if (!tableExists("__drizzle_migrations")) return false
+  const row = drizzleDb.get<{ created_at: number | string | null }>(
+    sql`SELECT created_at FROM "__drizzle_migrations" ORDER BY created_at DESC LIMIT 1`,
+  )
+  return Number(row?.created_at ?? 0) >= latestMigrationMs(migrations)
+}
+
+export function needsForcedDrizzleMigration(
+  migrations: DrizzleMigrationBundle,
+): boolean {
+  if (hasCurrentDrizzleMarker(migrations)) return false
 
   const existingTables = REQUIRED_TABLES.filter(tableExists)
   if (existingTables.length === 0) return false
@@ -52,19 +65,30 @@ export async function exportLegacyDbForForcedMigration(): Promise<{
   return generateInternalJsonBackup("minty-flow-drizzle-migration")
 }
 
-export function resetDbForForcedMigration(): void {
-  deleteDbSync()
-  resetDrizzleDb()
-}
-
-export async function readForcedMigrationBackup(
-  uri: string,
-): Promise<MintyFlowBackup> {
-  const info = await FileSystem.getInfoAsync(uri)
-  if (!info.exists) throw new Error("Migration backup file is missing.")
-
-  const json = await readBackupJsonFromUri(uri)
-  const result = validateBackup(json)
-  if (!result.success) throw new Error(result.message)
-  return result.backup
+export function markLegacyDbAsDrizzleBaseline(
+  migrations: DrizzleMigrationBundle,
+): void {
+  drizzleDb.run(
+    sql.raw(`
+    CREATE TABLE IF NOT EXISTS "__drizzle_migrations" (
+      id SERIAL PRIMARY KEY,
+      hash text NOT NULL,
+      created_at numeric
+    );
+  `),
+  )
+  drizzleDb.run(sql`
+    UPDATE loans
+    SET loan_type = lower(loan_type)
+    WHERE loan_type IN (${"LENT"}, ${"BORROWED"})
+  `)
+  for (const entry of migrations.journal.entries) {
+    drizzleDb.run(sql`
+      INSERT INTO "__drizzle_migrations" ("hash", "created_at")
+      SELECT ${""}, ${entry.when}
+      WHERE NOT EXISTS (
+        SELECT 1 FROM "__drizzle_migrations" WHERE created_at = ${entry.when}
+      )
+    `)
+  }
 }

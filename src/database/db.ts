@@ -47,8 +47,3 @@ export function closeDbSync(): void {
   DB?.closeSync()
   DB = null
 }
-
-export function deleteDbSync(): void {
-  closeDbSync()
-  SQLite.deleteDatabaseSync(DB_NAME)
-}
