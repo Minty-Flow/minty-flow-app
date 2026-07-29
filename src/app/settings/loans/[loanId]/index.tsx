@@ -15,13 +15,13 @@ import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { createTransaction } from "~/database/services/transaction-service"
-import { useAccount } from "~/stores/db/account.store"
-import { useLoan } from "~/stores/db/loan.store"
+import { useAccount } from "~/database/drizzle/read-models/account-read-model"
+import { useLoan } from "~/database/drizzle/read-models/loan-read-model"
 import {
   type TransactionWithRelations,
   useTransactions,
-} from "~/stores/db/transaction.store"
+} from "~/database/drizzle/read-models/transaction-read-model"
+import { createTransaction } from "~/database/services/ledger-service"
 import { useLanguageStore } from "~/stores/language.store"
 import {
   TransactionSubTypeEnum,
@@ -56,7 +56,9 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
     openSwipeableRef.current?.close()
   }
   const handleWillOpen = (methods: SwipeableMethods) => {
-    openSwipeableRef.current?.close()
+    if (openSwipeableRef.current !== methods) {
+      openSwipeableRef.current?.close()
+    }
     openSwipeableRef.current = methods
   }
   const renderTransactionItem = ({

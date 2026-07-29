@@ -5,12 +5,12 @@ import type { Loan, LoanType } from "~/types/loans"
 
 import { drizzleDb } from "../db"
 import { loans } from "../schema"
+import {
+  createLiveReadModelResult,
+  type LiveReadModelResult,
+} from "./entity-read-model"
 
-export function useLoansQuery(): {
-  data: Loan[]
-  error: Error | undefined
-  updatedAt: Date | undefined
-} {
+export function useLoansQuery(): LiveReadModelResult<Loan[]> {
   const result = useLiveQuery(
     drizzleDb.select().from(loans).orderBy(loans.name),
   )
@@ -42,9 +42,13 @@ export function useLoansQuery(): {
       return a.name.localeCompare(b.name)
     })
 
-  return {
-    data,
-    error: result.error,
-    updatedAt: result.updatedAt,
-  }
+  return createLiveReadModelResult(data, [result])
+}
+
+export function useAllLoans(): Loan[] {
+  return useLoansQuery().data
+}
+
+export function useLoan(id: string): Loan | undefined {
+  return useAllLoans().find((loan) => loan.id === id)
 }

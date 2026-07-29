@@ -12,7 +12,7 @@ import { EmptyState } from "~/components/ui/empty-state"
 import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useTags } from "~/stores/db/tag.store"
+import { useTags } from "~/database/drizzle/read-models/tag-read-model"
 import { NewEnum } from "~/types/new"
 
 export default function TagsScreen() {

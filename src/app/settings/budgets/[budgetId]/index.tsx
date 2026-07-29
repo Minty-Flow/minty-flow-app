@@ -14,14 +14,14 @@ import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import type { TranslationKey } from "~/i18n/config"
-import { useActiveAccounts } from "~/stores/db/account.store"
-import { useBudget } from "~/stores/db/budget.store"
-import { useCategories } from "~/stores/db/category.store"
+import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
+import { useBudget } from "~/database/drizzle/read-models/budget-read-model"
+import { useCategories } from "~/database/drizzle/read-models/category-read-model"
 import {
   type TransactionWithRelations,
   useTransactions,
-} from "~/stores/db/transaction.store"
+} from "~/database/drizzle/read-models/transaction-read-model"
+import type { TranslationKey } from "~/i18n/config"
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { useWeekStartStore } from "~/stores/week-start.store"
@@ -94,7 +94,9 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
     openSwipeableRef.current?.close()
   }
   const handleWillOpen = (methods: SwipeableMethods) => {
-    openSwipeableRef.current?.close()
+    if (openSwipeableRef.current !== methods) {
+      openSwipeableRef.current?.close()
+    }
     openSwipeableRef.current = methods
   }
   const renderTransactionItem = ({

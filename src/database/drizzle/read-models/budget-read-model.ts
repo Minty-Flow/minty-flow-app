@@ -5,12 +5,12 @@ import type { Budget, BudgetPeriod } from "~/types/budgets"
 
 import { drizzleDb } from "../db"
 import { budgetAccounts, budgetCategories, budgets } from "../schema"
+import {
+  createLiveReadModelResult,
+  type LiveReadModelResult,
+} from "./entity-read-model"
 
-export function useBudgetsQuery(): {
-  data: Budget[]
-  error: Error | undefined
-  updatedAt: Date | undefined
-} {
+export function useBudgetsQuery(): LiveReadModelResult<Budget[]> {
   const budgetsResult = useLiveQuery(
     drizzleDb.select().from(budgets).orderBy(budgets.name),
   )
@@ -59,15 +59,17 @@ export function useBudgetsQuery(): {
       return a.name.localeCompare(b.name)
     })
 
-  return {
-    data,
-    error:
-      budgetsResult.error ??
-      accountLinksResult.error ??
-      categoryLinksResult.error,
-    updatedAt:
-      budgetsResult.updatedAt ??
-      accountLinksResult.updatedAt ??
-      categoryLinksResult.updatedAt,
-  }
+  return createLiveReadModelResult(data, [
+    budgetsResult,
+    accountLinksResult,
+    categoryLinksResult,
+  ])
+}
+
+export function useAllBudgets(): Budget[] {
+  return useBudgetsQuery().data
+}
+
+export function useBudget(id: string): Budget | undefined {
+  return useAllBudgets().find((budget) => budget.id === id)
 }

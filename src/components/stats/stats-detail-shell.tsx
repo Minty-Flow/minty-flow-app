@@ -5,7 +5,10 @@ import { RefreshControl, ScrollView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { View } from "~/components/ui/view"
-import { type UseStatsInit, useStats } from "~/hooks/use-stats"
+import {
+  type UseStatsInit,
+  useStats,
+} from "~/database/drizzle/read-models/stats-read-model"
 import type {
   CurrencyStats,
   StatsDateRange,

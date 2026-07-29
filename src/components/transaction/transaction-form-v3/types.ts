@@ -1,8 +1,8 @@
+import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
 import type {
   RecurringEditPayload,
   TransactionFormValues,
 } from "~/schemas/transactions.schema"
-import type { TransactionWithRelations } from "~/stores/db/transaction.store"
 import type { Account } from "~/types/accounts"
 import type { Budget } from "~/types/budgets"
 import type { Category } from "~/types/categories"

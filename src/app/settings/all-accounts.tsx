@@ -11,7 +11,7 @@ import { View } from "~/components/ui/view"
 import {
   useActiveAccounts,
   useArchivedAccounts,
-} from "~/stores/db/account.store"
+} from "~/database/drizzle/read-models/account-read-model"
 import { NewEnum } from "~/types/new"
 
 export default function AllAccountsScreen() {

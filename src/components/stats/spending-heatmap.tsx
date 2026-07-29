@@ -18,7 +18,7 @@ import {
 
 interface HeatmapWeek {
   key: string
-  /** Month label shown above this column ("" when same month as previous week) */
+  /** Month label shown above the column containing the month's first visible day. */
   monthLabel: string
   /** 7 cells, index = offset from week start; null = outside range */
   days: ({
@@ -39,27 +39,30 @@ function buildWeeks(
   expenseByKey: Map<string, number>,
   weekStartsOn: number,
 ) {
+  if (from > to) return []
+
   const days = eachDayOfInterval({ start: from, end: to })
+  const firstDateKey = formatDateKey(from)
   const weeks: HeatmapWeek[] = []
-  let prevMonth = -1
   for (const day of days) {
     const weekKey = formatDateKey(startOfAppWeek(day, weekStartsOn))
     let week = weeks[weeks.length - 1]
     if (!week || week.key !== weekKey) {
-      const month = day.getMonth()
       week = {
         key: weekKey,
-        monthLabel: month === prevMonth ? "" : formatShortMonthName(day),
+        monthLabel: "",
         days: Array(7).fill(null),
       }
-      prevMonth = month
       weeks.push(week)
     }
     const offset = (day.getDay() - weekStartsOn + 7) % 7
     const dateKey = formatDateKey(day)
+    if (!week.monthLabel && (dateKey === firstDateKey || day.getDate() === 1)) {
+      week.monthLabel = formatShortMonthName(day).slice(0, 2)
+    }
     week.days[offset] = { dateKey, expense: expenseByKey.get(dateKey) ?? 0 }
   }
-  return { weeks, weekStartsOn }
+  return weeks
 }
 /** Quartile thresholds of nonzero expenses → intensity bucket 0–4 */
 function buildBucketFn(expenses: number[]) {
@@ -85,38 +88,34 @@ export function SpendingHeatmap({
 }: SpendingHeatmapProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
-  // Subscribed so store change reruns memo; `weekStartsOn` is the explicit dep.
-  const _weekStart = useWeekStartStore((s) => s.weekStart)
-  const weekStartsOnValue = getWeekStartsOn()
-  const {
-    weeks,
-    weekStartsOn: computedWeekStartsOn,
-    bucketOf,
-  } = useMemo(() => {
+  const weekStartsOn = useWeekStartStore(() => getWeekStartsOn())
+  const { weeks, bucketOf } = useMemo(() => {
     const expenseByKey = new Map(dailyData.map((d) => [d.dateKey, d.expense]))
-    const built = buildWeeks(from, to, expenseByKey, weekStartsOnValue)
     return {
-      ...built,
+      weeks: buildWeeks(from, to, expenseByKey, weekStartsOn),
       bucketOf: buildBucketFn(dailyData.map((d) => d.expense)),
     }
-  }, [dailyData, from, to, weekStartsOnValue])
-  const weekStartsOn = computedWeekStartsOn
+  }, [dailyData, from, to, weekStartsOn])
   const cellStyle = compact ? styles.cellCompact : styles.cell
   const cellColor = (bucket: number) =>
     bucket === 0
       ? `${theme.colors.onSurface}1F`
       : `${theme.colors.primary}${BUCKET_OPACITY[bucket]}`
-  // M/W/F row labels — offsets 1/3/5 relative to a Sunday-start week
-  const dayLabels = useMemo(
-    () =>
-      compact
-        ? null
-        : [1, 3, 5].map((day) => ({
-            offset: (day - weekStartsOn + 7) % 7,
-            label: getWeekdayLabel(day, "narrow"),
-          })),
-    [compact, weekStartsOn],
-  )
+  // Keep GitHub-style M/W/F anchors, plus S when the week visibly starts on weekend.
+  const dayLabels = useMemo(() => {
+    if (compact) return null
+    const labels = [1, 3, 5].map((day) => ({
+      offset: (day - weekStartsOn + 7) % 7,
+      label: getWeekdayLabel(day, "narrow"),
+    }))
+    if (weekStartsOn === 0 || weekStartsOn === 6) {
+      labels.unshift({
+        offset: 0,
+        label: getWeekdayLabel(weekStartsOn, "narrow"),
+      })
+    }
+    return labels
+  }, [compact, weekStartsOn])
   const grid = (
     <View style={styles.gridRow}>
       {dayLabels && (
@@ -131,7 +130,10 @@ export function SpendingHeatmap({
         </View>
       )}
       {weeks.map((week) => (
-        <View key={week.key} style={styles.weekColumn}>
+        <View
+          key={week.key}
+          style={compact ? styles.weekColumnCompact : styles.weekColumn}
+        >
           {!compact && (
             <Text variant="muted" style={styles.monthLabel} numberOfLines={1}>
               {week.monthLabel}
@@ -179,41 +181,47 @@ export function SpendingHeatmap({
 }
 const styles = StyleSheet.create((theme) => ({
   container: {
-    gap: 10,
+    gap: 12,
   },
   gridRow: {
     flexDirection: "row",
-    gap: 3,
+    gap: 5,
   },
   labelColumn: {
-    gap: 3,
-    marginTop: 16,
+    gap: 5,
+    marginTop: 23,
   },
   labelCell: {
     backgroundColor: "transparent",
     justifyContent: "center",
   },
   weekColumn: {
-    gap: 3,
+    width: 16,
+    gap: 5,
+  },
+  weekColumnCompact: {
+    width: 8,
+    gap: 5,
   },
   monthLabel: {
-    fontSize: 9,
-    height: 13,
+    fontSize: 11,
+    height: 18,
+    lineHeight: 16,
     overflow: "visible",
   },
   dayLabel: {
-    fontSize: 9,
+    fontSize: 11,
+    lineHeight: 16,
   },
   cell: {
-    width: 12,
-    height: 12,
-    borderRadius: 3,
+    width: 16,
+    height: 16,
+    borderRadius: 4,
   },
   cellCompact: {
     width: 8,
     height: 8,
     borderRadius: 2,
-    flexShrink: 1,
   },
   legend: {
     flexDirection: "row",

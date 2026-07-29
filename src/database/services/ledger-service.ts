@@ -3,32 +3,32 @@ import { and, sql as drizzleSql, eq, gte, inArray, lt, or } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
 import {
+  getTransactionById as getTransactionByIdFromReadModel,
+  type TransactionWithRelations,
+} from "~/database/drizzle/read-models/transaction-read-model"
+import {
   accounts,
   transactions,
   transactionTags,
   transfers,
 } from "~/database/drizzle/schema"
-import {
-  hydrateTransactions,
-  type TransactionWithRelations,
-} from "~/database/mappers/hydrateTransactions"
 import { runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
 import { generateId } from "~/database/utils/generate-id"
 import { getBalanceDelta } from "~/database/utils/get-balance-delta"
 import type {
+  CreateTransferParams,
+  EditTransferFields,
   RecurringEditPayload,
   TransactionFormValues,
 } from "~/schemas/transactions.schema"
 import type { TransactionType } from "~/types/transactions"
 import { logger } from "~/utils/logger"
-import { assertMinorUnits } from "~/utils/money"
-
 import {
-  deleteTransferById,
-  destroyTransferById,
-  restoreTransferById,
-} from "./transfer-service"
+  assertMinorUnits,
+  convertMinorUnits,
+  toMajorUnits,
+} from "~/utils/money"
 
 function hasAttachmentsFromExtra(
   extra: Record<string, string> | null,
@@ -90,6 +90,187 @@ function getTagIdsForTx(db: Db, txId: string): string[] {
     .where(eq(transactionTags.transactionId, txId))
     .all()
     .map((r) => r.tagId)
+}
+
+function toDateMs(v: number | Date | undefined, fallback: number): number {
+  if (v === undefined) return fallback
+  return typeof v === "number" ? v : v.getTime()
+}
+
+function getPartnerTxId(
+  txId: string,
+  db: Db,
+): { partnerId: string; isDebit: boolean } | null {
+  const row = db
+    .select({
+      fromTransactionId: transfers.fromTransactionId,
+      toTransactionId: transfers.toTransactionId,
+    })
+    .from(transfers)
+    .where(
+      or(
+        eq(transfers.fromTransactionId, txId),
+        eq(transfers.toTransactionId, txId),
+      ),
+    )
+    .get()
+  if (!row) return null
+  if (row.fromTransactionId === txId) {
+    return { partnerId: row.toTransactionId, isDebit: true }
+  }
+  return { partnerId: row.fromTransactionId, isDebit: false }
+}
+
+function getTransferRow(
+  txId: string,
+  db: Db,
+): {
+  id: string
+  fromTransactionId: string
+  toTransactionId: string
+  fromAccountId: string
+  toAccountId: string
+  conversionRate: number
+} | null {
+  return (
+    db
+      .select()
+      .from(transfers)
+      .where(
+        or(
+          eq(transfers.fromTransactionId, txId),
+          eq(transfers.toTransactionId, txId),
+        ),
+      )
+      .get() ?? null
+  )
+}
+
+function getTransferLegs(txId: string, db: Db): RowTransaction[] {
+  const tx = db
+    .select(txSelection)
+    .from(transactions)
+    .where(eq(transactions.id, txId))
+    .get()
+  if (!tx) return []
+
+  const legs: RowTransaction[] = [tx]
+  const partner = getPartnerTxId(txId, db)
+  if (!partner) return legs
+
+  const paired = db
+    .select(txSelection)
+    .from(transactions)
+    .where(eq(transactions.id, partner.partnerId))
+    .get()
+  if (paired) legs.push(paired)
+  return legs
+}
+
+function deleteTransferById(txId: string, db: Db): void {
+  const now = new Date().toISOString()
+  const legs = getTransferLegs(txId, db)
+
+  for (const leg of legs) {
+    if (!leg.is_deleted && !leg.is_pending) {
+      const delta = getBalanceDelta(
+        leg.amount,
+        leg.type as TransactionType,
+        leg.subtype,
+      )
+      db.update(accounts)
+        .set({
+          balance: drizzleSql`${accounts.balance} - ${delta}`,
+          updatedAt: now,
+        })
+        .where(eq(accounts.id, leg.account_id))
+        .run()
+    }
+    db.update(transactions)
+      .set({ isDeleted: 1, deletedAt: now, updatedAt: now })
+      .where(eq(transactions.id, leg.id))
+      .run()
+  }
+}
+
+function restoreTransferById(txId: string, db: Db): void {
+  const now = new Date().toISOString()
+  const legs = getTransferLegs(txId, db)
+
+  for (const leg of legs) {
+    if (!leg.is_deleted) continue
+
+    if (!leg.is_pending) {
+      const delta = getBalanceDelta(
+        leg.amount,
+        leg.type as TransactionType,
+        leg.subtype,
+      )
+      const acc = db
+        .select({ balance: accounts.balance })
+        .from(accounts)
+        .where(eq(accounts.id, leg.account_id))
+        .get()
+      const balanceBefore = acc?.balance ?? 0
+      db.update(accounts)
+        .set({
+          balance: drizzleSql`${accounts.balance} + ${delta}`,
+          updatedAt: now,
+        })
+        .where(eq(accounts.id, leg.account_id))
+        .run()
+      db.update(transactions)
+        .set({
+          isDeleted: 0,
+          deletedAt: null,
+          accountBalanceBefore: balanceBefore,
+          updatedAt: now,
+        })
+        .where(eq(transactions.id, leg.id))
+        .run()
+    } else {
+      db.update(transactions)
+        .set({ isDeleted: 0, deletedAt: null, updatedAt: now })
+        .where(eq(transactions.id, leg.id))
+        .run()
+    }
+  }
+}
+
+function destroyTransferById(txId: string, db: Db): void {
+  const legs = getTransferLegs(txId, db)
+
+  for (const leg of legs) {
+    if (!leg.is_deleted && !leg.is_pending) {
+      const delta = getBalanceDelta(
+        leg.amount,
+        leg.type as TransactionType,
+        leg.subtype,
+      )
+      db.update(accounts)
+        .set({
+          balance: drizzleSql`${accounts.balance} - ${delta}`,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(accounts.id, leg.account_id))
+        .run()
+    }
+  }
+
+  for (const leg of legs) {
+    db.delete(transactionTags)
+      .where(eq(transactionTags.transactionId, leg.id))
+      .run()
+    db.delete(transactions).where(eq(transactions.id, leg.id)).run()
+  }
+  db.delete(transfers)
+    .where(
+      or(
+        eq(transfers.fromTransactionId, txId),
+        eq(transfers.toTransactionId, txId),
+      ),
+    )
+    .run()
 }
 
 // ── Create ───────────────────────────────────────────────────────────────────
@@ -165,6 +346,157 @@ export async function createTransaction(
   })
 
   return txId
+}
+
+export async function createTransfer(
+  params: CreateTransferParams,
+  recurringOptions?: {
+    recurringId: string
+    isPending: boolean
+    subtype?: string | null
+    extra?: Record<string, string> | null
+  },
+): Promise<void> {
+  assertMinorUnits(params.amount)
+  if (params.fromAccountId === params.toAccountId) {
+    throw new Error("Cannot transfer to the same account.")
+  }
+  if (params.amount <= 0) {
+    throw new Error("Transfer amount must be positive.")
+  }
+
+  const debitId = generateId()
+  const creditId = generateId()
+  const now = new Date().toISOString()
+  const dateMs = toDateMs(
+    params.transactionDate as number | Date | undefined,
+    Date.now(),
+  )
+  const dateIso = new Date(dateMs).toISOString()
+  const isPending = recurringOptions?.isPending ?? false
+  const title = params.title ?? "Transfer"
+  const extraJson = recurringOptions?.extra
+    ? JSON.stringify(recurringOptions.extra)
+    : null
+
+  await runInTransaction("transfer.create", (db) => {
+    const fromAcc = db
+      .select({
+        balance: accounts.balance,
+        currencyCode: accounts.currencyCode,
+      })
+      .from(accounts)
+      .where(eq(accounts.id, params.fromAccountId))
+      .get()
+    const toAcc = db
+      .select({
+        balance: accounts.balance,
+        currencyCode: accounts.currencyCode,
+      })
+      .from(accounts)
+      .where(eq(accounts.id, params.toAccountId))
+      .get()
+
+    if (!fromAcc || !toAcc) throw new Error("One or both accounts not found.")
+
+    const creditAmount =
+      fromAcc.currencyCode !== toAcc.currencyCode &&
+      params.conversionRate != null &&
+      params.conversionRate > 0
+        ? convertMinorUnits(
+            params.amount,
+            fromAcc.currencyCode,
+            toAcc.currencyCode,
+            params.conversionRate,
+          )
+        : params.amount
+
+    db.insert(transactions)
+      .values({
+        id: debitId,
+        accountId: params.fromAccountId,
+        categoryId: null,
+        amount: -params.amount,
+        type: "transfer",
+        transactionDate: dateIso,
+        title,
+        description: params.notes ?? null,
+        isDeleted: 0,
+        deletedAt: null,
+        isPending: isPending ? 1 : 0,
+        requiresManualConfirmation: 0,
+        accountBalanceBefore: isPending ? 0 : fromAcc.balance,
+        subtype: recurringOptions?.subtype ?? null,
+        extra: extraJson,
+        hasAttachments: 0,
+        recurringId: recurringOptions?.recurringId ?? null,
+        location: null,
+        goalId: null,
+        budgetId: null,
+        loanId: null,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run()
+
+    db.insert(transactions)
+      .values({
+        id: creditId,
+        accountId: params.toAccountId,
+        categoryId: null,
+        amount: creditAmount,
+        type: "transfer",
+        transactionDate: dateIso,
+        title,
+        description: params.notes ?? null,
+        isDeleted: 0,
+        deletedAt: null,
+        isPending: isPending ? 1 : 0,
+        requiresManualConfirmation: 0,
+        accountBalanceBefore: isPending ? 0 : toAcc.balance,
+        subtype: recurringOptions?.subtype ?? null,
+        extra: extraJson,
+        hasAttachments: 0,
+        recurringId: recurringOptions?.recurringId ?? null,
+        location: null,
+        goalId: null,
+        budgetId: null,
+        loanId: null,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run()
+
+    if (!isPending) {
+      db.update(accounts)
+        .set({
+          balance: drizzleSql`${accounts.balance} - ${params.amount}`,
+          updatedAt: now,
+        })
+        .where(eq(accounts.id, params.fromAccountId))
+        .run()
+      db.update(accounts)
+        .set({
+          balance: drizzleSql`${accounts.balance} + ${creditAmount}`,
+          updatedAt: now,
+        })
+        .where(eq(accounts.id, params.toAccountId))
+        .run()
+    }
+
+    db.insert(transfers)
+      .values({
+        id: generateId(),
+        fromTransactionId: debitId,
+        toTransactionId: creditId,
+        fromAccountId: params.fromAccountId,
+        toAccountId: params.toAccountId,
+        conversionRate: params.conversionRate ?? 1,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run()
+  })
 }
 
 // ── Update ───────────────────────────────────────────────────────────────────
@@ -353,6 +685,219 @@ export async function updateTransaction(
   })
 }
 
+export async function editTransfer(
+  txId: string,
+  fields: EditTransferFields,
+): Promise<void> {
+  if (fields.amount !== undefined) assertMinorUnits(fields.amount)
+  const now = new Date().toISOString()
+
+  await runInTransaction("transfer.edit", (db) => {
+    const tx = requireTx(db, txId)
+    const partnerInfo = getPartnerTxId(txId, db)
+    if (!partnerInfo) throw new Error("Paired transfer leg not found.")
+
+    const paired = db
+      .select(txSelection)
+      .from(transactions)
+      .where(eq(transactions.id, partnerInfo.partnerId))
+      .get()
+    if (!paired) throw new Error("Paired transfer leg not found.")
+
+    const debitRow = tx.amount < 0 ? tx : paired
+    const creditRow = tx.amount > 0 ? tx : paired
+    if (debitRow === creditRow) {
+      throw new Error("Could not identify debit/credit legs.")
+    }
+
+    const newFromAccountId = fields.fromAccountId ?? debitRow.account_id
+    const newToAccountId = fields.toAccountId ?? creditRow.account_id
+    const newDateMs = toDateMs(
+      fields.transactionDate as number | Date | undefined,
+      new Date(debitRow.transaction_date).getTime(),
+    )
+    const newDateIso = new Date(newDateMs).toISOString()
+
+    const oldDebitAmount = Math.abs(debitRow.amount)
+    const oldCreditAmount = creditRow.amount
+    const newDebitAmount = fields.amount ?? oldDebitAmount
+    const newFromAccount = db
+      .select({ currencyCode: accounts.currencyCode })
+      .from(accounts)
+      .where(eq(accounts.id, newFromAccountId))
+      .get()
+    const newToAccount = db
+      .select({ currencyCode: accounts.currencyCode })
+      .from(accounts)
+      .where(eq(accounts.id, newToAccountId))
+      .get()
+    const oldFromAccount = db
+      .select({ currencyCode: accounts.currencyCode })
+      .from(accounts)
+      .where(eq(accounts.id, debitRow.account_id))
+      .get()
+    const oldToAccount = db
+      .select({ currencyCode: accounts.currencyCode })
+      .from(accounts)
+      .where(eq(accounts.id, creditRow.account_id))
+      .get()
+    if (!newFromAccount || !newToAccount || !oldFromAccount || !oldToAccount) {
+      throw new Error("One or both accounts not found.")
+    }
+
+    const oldImpliedRate =
+      oldDebitAmount > 0
+        ? toMajorUnits(oldCreditAmount, oldToAccount.currencyCode) /
+          toMajorUnits(oldDebitAmount, oldFromAccount.currencyCode)
+        : 1
+    const newConversionRate = fields.conversionRate ?? oldImpliedRate
+    const newCreditAmount =
+      newConversionRate > 0
+        ? convertMinorUnits(
+            newDebitAmount,
+            newFromAccount.currencyCode,
+            newToAccount.currencyCode,
+            newConversionRate,
+          )
+        : newDebitAmount
+
+    const fromChanged = newFromAccountId !== debitRow.account_id
+    const toChanged = newToAccountId !== creditRow.account_id
+    const currentFromBalance =
+      db
+        .select({ balance: accounts.balance })
+        .from(accounts)
+        .where(
+          eq(accounts.id, fromChanged ? newFromAccountId : debitRow.account_id),
+        )
+        .get()?.balance ?? 0
+    const fromBalanceBefore = fromChanged
+      ? currentFromBalance
+      : currentFromBalance + oldDebitAmount
+    const toBalanceBefore = toChanged
+      ? (db
+          .select({ balance: accounts.balance })
+          .from(accounts)
+          .where(eq(accounts.id, newToAccountId))
+          .get()?.balance ?? 0)
+      : (db
+          .select({ balance: accounts.balance })
+          .from(accounts)
+          .where(eq(accounts.id, creditRow.account_id))
+          .get()?.balance ?? 0) - oldCreditAmount
+
+    db.update(transactions)
+      .set({
+        amount: -newDebitAmount,
+        transactionDate: newDateIso,
+        accountId: newFromAccountId,
+        accountBalanceBefore: fromBalanceBefore,
+        ...(fields.title !== undefined ? { title: fields.title ?? null } : {}),
+        ...(fields.notes !== undefined
+          ? { description: fields.notes ?? null }
+          : {}),
+        updatedAt: now,
+      })
+      .where(eq(transactions.id, debitRow.id))
+      .run()
+
+    db.update(transactions)
+      .set({
+        amount: newCreditAmount,
+        transactionDate: newDateIso,
+        accountId: newToAccountId,
+        accountBalanceBefore: toBalanceBefore,
+        ...(fields.title !== undefined ? { title: fields.title ?? null } : {}),
+        ...(fields.notes !== undefined
+          ? { description: fields.notes ?? null }
+          : {}),
+        updatedAt: now,
+      })
+      .where(eq(transactions.id, creditRow.id))
+      .run()
+
+    if (!debitRow.is_pending) {
+      if (fromChanged) {
+        db.update(accounts)
+          .set({
+            balance: drizzleSql`${accounts.balance} + ${oldDebitAmount}`,
+            updatedAt: now,
+          })
+          .where(eq(accounts.id, debitRow.account_id))
+          .run()
+        db.update(accounts)
+          .set({
+            balance: drizzleSql`${accounts.balance} - ${newDebitAmount}`,
+            updatedAt: now,
+          })
+          .where(eq(accounts.id, newFromAccountId))
+          .run()
+      } else {
+        db.update(accounts)
+          .set({
+            balance: drizzleSql`${accounts.balance} + ${oldDebitAmount - newDebitAmount}`,
+            updatedAt: now,
+          })
+          .where(eq(accounts.id, newFromAccountId))
+          .run()
+      }
+    }
+
+    if (!creditRow.is_pending) {
+      if (toChanged) {
+        db.update(accounts)
+          .set({
+            balance: drizzleSql`${accounts.balance} - ${oldCreditAmount}`,
+            updatedAt: now,
+          })
+          .where(eq(accounts.id, creditRow.account_id))
+          .run()
+        db.update(accounts)
+          .set({
+            balance: drizzleSql`${accounts.balance} + ${newCreditAmount}`,
+            updatedAt: now,
+          })
+          .where(eq(accounts.id, newToAccountId))
+          .run()
+      } else {
+        db.update(accounts)
+          .set({
+            balance: drizzleSql`${accounts.balance} + ${newCreditAmount - oldCreditAmount}`,
+            updatedAt: now,
+          })
+          .where(eq(accounts.id, newToAccountId))
+          .run()
+      }
+    }
+
+    const transfersRow = getTransferRow(debitRow.id, db)
+    if (transfersRow) {
+      db.update(transfers)
+        .set({
+          conversionRate: newConversionRate > 0 ? newConversionRate : 1,
+          fromAccountId: newFromAccountId,
+          toAccountId: newToAccountId,
+          updatedAt: now,
+        })
+        .where(eq(transfers.id, transfersRow.id))
+        .run()
+    } else {
+      db.insert(transfers)
+        .values({
+          id: generateId(),
+          fromTransactionId: debitRow.id,
+          toTransactionId: creditRow.id,
+          fromAccountId: newFromAccountId,
+          toAccountId: newToAccountId,
+          conversionRate: newConversionRate > 0 ? newConversionRate : 1,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run()
+    }
+  })
+}
+
 // ── Soft Delete ───────────────────────────────────────────────────────────────
 
 export async function deleteTransaction(id: string): Promise<void> {
@@ -396,6 +941,13 @@ export async function deleteTransaction(id: string): Promise<void> {
       .set({ isDeleted: 1, deletedAt: now, updatedAt: now })
       .where(eq(transactions.id, id))
       .run()
+  })
+}
+
+export async function deleteTransfer(txId: string): Promise<void> {
+  await runInTransaction("transfer.delete", (db) => {
+    requireTx(db, txId)
+    deleteTransferById(txId, db)
   })
 }
 
@@ -758,14 +1310,23 @@ export async function autoPurgeTrash(retentionValue: string): Promise<void> {
 export async function getTransactionById(
   id: string,
 ): Promise<TransactionWithRelations | null> {
+  return getTransactionByIdFromReadModel(id)
+}
+
+export async function getConversionRateForTransaction(tx: {
+  id: string
+}): Promise<number | null> {
   const row = drizzleDb
-    .select(txSelection)
-    .from(transactions)
-    .where(eq(transactions.id, id))
+    .select({ conversionRate: transfers.conversionRate })
+    .from(transfers)
+    .where(
+      or(
+        eq(transfers.fromTransactionId, tx.id),
+        eq(transfers.toTransactionId, tx.id),
+      ),
+    )
     .get()
-  if (!row) return null
-  const hydrated = await hydrateTransactions([row])
-  return hydrated[0] ?? null
+  return row?.conversionRate ?? null
 }
 
 export async function getTagIdsForTransaction(txId: string): Promise<string[]> {

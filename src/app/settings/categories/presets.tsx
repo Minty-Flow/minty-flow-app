@@ -14,8 +14,8 @@ import {
   ExpensePresets,
   IncomePresets,
 } from "~/constants/pre-sets-categories"
+import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
 import { createCategory } from "~/database/services/category-service"
-import { useCategoriesByType } from "~/stores/db/category.store"
 import type { Category } from "~/types/categories"
 import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
 import { logger } from "~/utils/logger"

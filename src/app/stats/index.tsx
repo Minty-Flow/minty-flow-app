@@ -16,7 +16,7 @@ import { StatsPendingNotice } from "~/components/stats/stats-pending-notice"
 import { StatsPeriodHeader } from "~/components/stats/stats-period-header"
 import { StatsSkeleton } from "~/components/stats/stats-skeleton"
 import { View } from "~/components/ui/view"
-import { useStats } from "~/hooks/use-stats"
+import { useStats } from "~/database/drizzle/read-models/stats-read-model"
 import { formatRangeLabel } from "~/utils/stats-date-range"
 
 export default function StatsScreen() {

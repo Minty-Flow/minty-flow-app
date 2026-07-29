@@ -5,6 +5,20 @@ import * as FileSystem from "expo-file-system/legacy"
 import { Platform, Share } from "react-native"
 import { unzip, zip } from "react-native-zip-archive"
 
+import {
+  BACKUP_JSON_NAME,
+  defaultExportBaseName,
+  type ExportType,
+  type ImportResult,
+  type MintyFlowBackup,
+  type RawRow,
+  type SavedExport,
+  SCHEMA_VERSION,
+} from "~/database/backup/backup-format"
+import {
+  insertBackupData,
+  resetDatabaseForBackupImport,
+} from "~/database/backup/backup-import-plan"
 import { drizzleDb } from "~/database/drizzle/db"
 import { runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
@@ -16,228 +30,15 @@ import {
 import { attachmentsDirectory } from "~/utils/attachments"
 import { getFileExtension, getMimeTypeForExtension } from "~/utils/file-icon"
 import { logger } from "~/utils/logger"
-import {
-  assertMinorUnits,
-  getMinorUnitDigits,
-  minorUnitsToDecimalString,
-} from "~/utils/money"
+import { minorUnitsToDecimalString } from "~/utils/money"
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-interface BackupMeta {
-  version: 1
-  schemaVersion: number
-  exportedAt: string
-  appId: "minty-flow-app"
-}
-
-type RawRow = Record<string, unknown>
-
-/** Doubles as the file extension of each export format. */
-export type ExportType = "json" | "csv" | "zip"
-
-interface SavedExport {
-  uri: string
-  fileName: string
-  savedToDevice: boolean
-}
-
-export interface MintyFlowBackup {
-  meta: BackupMeta
-  data: {
-    categories: RawRow[]
-    tags: RawRow[]
-    accounts: RawRow[]
-    recurring_transactions: RawRow[]
-    budgets: RawRow[]
-    goals: RawRow[]
-    loans: RawRow[]
-    transactions: RawRow[]
-    transfers: RawRow[]
-    transaction_tags: RawRow[]
-    budget_accounts: RawRow[]
-    budget_categories: RawRow[]
-    goal_accounts: RawRow[]
-  }
-}
-
-type ImportResult =
-  | { success: true; counts: Record<string, number> }
-  | { success: false; error: string }
-
-type ValidateBackupResult =
-  | { success: true; backup: MintyFlowBackup }
-  | {
-      success: false
-      reason: "parse_error" | "validation_error"
-      message: string
-    }
-
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const SCHEMA_VERSION = 3
-
-// Columns stored as TEXT ISO dates in SQLite — used for WDB→SQLite migration
-// (WDB stores these as Unix milliseconds, so we convert on import).
-const DATE_COLUMNS = new Set([
-  "created_at",
-  "updated_at",
-  "deleted_at",
-  "transaction_date",
-  "start_date",
-  "end_date",
-  "target_date",
-  "due_date",
-  "last_generated_transaction_date",
-])
-
-// Per-table column allowlists matching the SQLite schema exactly.
-// Join tables (transaction_tags etc.) have no `id` column in SQLite.
-const ALLOWED_COLUMNS: Record<string, string[]> = {
-  categories: [
-    "id",
-    "name",
-    "type",
-    "icon",
-    "color_scheme_name",
-    "created_at",
-    "updated_at",
-  ],
-  accounts: [
-    "id",
-    "name",
-    "type",
-    "balance",
-    "currency_code",
-    "icon",
-    "color_scheme_name",
-    "is_primary",
-    "exclude_from_balance",
-    "is_archived",
-    "sort_order",
-    "created_at",
-    "updated_at",
-  ],
-  tags: [
-    "id",
-    "name",
-    "type",
-    "color_scheme_name",
-    "icon",
-    "created_at",
-    "updated_at",
-  ],
-  recurring_transactions: [
-    "id",
-    "json_transaction_template",
-    "transfer_to_account_id",
-    "range",
-    "rules",
-    "last_generated_transaction_date",
-    "disabled",
-    "created_at",
-  ],
-  budgets: [
-    "id",
-    "name",
-    "amount",
-    "currency_code",
-    "period",
-    "start_date",
-    "end_date",
-    "alert_threshold",
-    "is_active",
-    "icon",
-    "color_scheme_name",
-    "created_at",
-    "updated_at",
-  ],
-  goals: [
-    "id",
-    "name",
-    "description",
-    "target_amount",
-    "currency_code",
-    "target_date",
-    "icon",
-    "color_scheme_name",
-    "goal_type",
-    "is_archived",
-    "created_at",
-    "updated_at",
-  ],
-  loans: [
-    "id",
-    "name",
-    "description",
-    "principal_amount",
-    "loan_type",
-    "due_date",
-    "account_id",
-    "category_id",
-    "icon",
-    "color_scheme_name",
-    "created_at",
-    "updated_at",
-  ],
-  transactions: [
-    "id",
-    "account_id",
-    "category_id",
-    "amount",
-    "type",
-    "transaction_date",
-    "title",
-    "description",
-    "is_deleted",
-    "deleted_at",
-    "is_pending",
-    "requires_manual_confirmation",
-    "account_balance_before",
-    "subtype",
-    "extra",
-    "has_attachments",
-    "recurring_id",
-    "location",
-    "goal_id",
-    "budget_id",
-    "loan_id",
-    "created_at",
-    "updated_at",
-  ],
-  transfers: [
-    "id",
-    "from_transaction_id",
-    "to_transaction_id",
-    "from_account_id",
-    "to_account_id",
-    "conversion_rate",
-    "created_at",
-    "updated_at",
-  ],
-  // Join tables: no `id` in SQLite schema
-  transaction_tags: ["transaction_id", "tag_id"],
-  budget_accounts: ["budget_id", "account_id", "created_at"],
-  budget_categories: ["budget_id", "category_id", "created_at"],
-  goal_accounts: ["goal_id", "account_id", "created_at"],
-}
-
-// Delete order: children before parents to respect FK semantics.
-const RESET_ORDER = [
-  "transaction_tags",
-  "budget_accounts",
-  "budget_categories",
-  "goal_accounts",
-  "transfers",
-  "transactions",
-  "loans",
-  "budgets",
-  "goals",
-  "recurring_transactions",
-  "accounts",
-  "tags",
-  "categories",
-]
+export {
+  countBackupRecords,
+  defaultExportBaseName,
+  type ExportType,
+  type MintyFlowBackup,
+  validateBackup,
+} from "~/database/backup/backup-format"
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -246,13 +47,6 @@ async function prepareExportDir(): Promise<string> {
   const dir = `${FileSystem.documentDirectory}exports/${Date.now()}/`
   await FileSystem.makeDirectoryAsync(dir, { intermediates: true })
   return dir
-}
-
-/** Base name (no extension) suggested when the user doesn't type one. */
-export function defaultExportBaseName(type: ExportType): string {
-  const date = new Date().toISOString().slice(0, 10)
-  const stem = type === "csv" ? "minty-flow-transactions" : "minty-flow-backup"
-  return `${stem}-${date}`
 }
 
 /**
@@ -316,68 +110,6 @@ async function saveToDevice(uri: string, fileName: string): Promise<boolean> {
       message: e instanceof Error ? e.message : String(e),
     })
     return false
-  }
-}
-
-/** Convert a column value: normalize Unix-ms timestamps (WDB format) to ISO strings. */
-function normalizeColumnValue(col: string, val: unknown): unknown {
-  if (col === "loan_type" && typeof val === "string") {
-    if (val === "LENT") return "lent"
-    if (val === "BORROWED") return "borrowed"
-  }
-  if (col === "range") return normalizeRecurringRange(val)
-  if (
-    DATE_COLUMNS.has(col) &&
-    typeof val === "number" &&
-    Number.isFinite(val)
-  ) {
-    return new Date(val).toISOString()
-  }
-  return val ?? null
-}
-
-function toTimestampMs(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) return value
-  if (typeof value === "string" && value) {
-    const ms = Date.parse(value)
-    return Number.isFinite(ms) ? ms : null
-  }
-  return null
-}
-
-function normalizeRecurringRange(value: unknown): unknown {
-  if (typeof value !== "string" || !value) return value ?? null
-  try {
-    const range = JSON.parse(value) as RawRow
-    const from = toTimestampMs(
-      range.from ?? range.startDate ?? range.start_date,
-    )
-    const to =
-      toTimestampMs(range.to ?? range.endDate ?? range.end_date) ??
-      new Date(2099, 11, 31).getTime()
-    if (from === null) return value
-    return JSON.stringify({ from, to })
-  } catch {
-    return value
-  }
-}
-
-/** Re-derive `has_attachments` from the raw `extra` JSON string. */
-function deriveHasAttachments(extraJson: unknown): number {
-  if (typeof extraJson !== "string" || !extraJson) return 0
-  try {
-    const extra = JSON.parse(extraJson) as Record<string, unknown>
-    if (!extra.attachments) return 0
-    const attachments =
-      typeof extra.attachments === "string"
-        ? (JSON.parse(extra.attachments) as unknown)
-        : extra.attachments
-    if (Array.isArray(attachments)) return attachments.length > 0 ? 1 : 0
-    if (typeof attachments === "object" && attachments !== null)
-      return Object.keys(attachments).length > 0 ? 1 : 0
-    return 0
-  } catch {
-    return 0
   }
 }
 
@@ -476,9 +208,6 @@ export async function saveJsonToDevice(
   const savedToDevice = await saveToDevice(uri, fileName)
   return { uri, fileName, savedToDevice }
 }
-
-/** Name of the backup document inside a zip archive. */
-const BACKUP_JSON_NAME = "backup.json"
 
 async function generateZipBackup(
   baseName?: string,
@@ -687,250 +416,6 @@ export async function deleteExportFile(uri: string): Promise<void> {
   }
 }
 
-// ─── Validate ─────────────────────────────────────────────────────────────────
-
-export function validateBackup(json: string): ValidateBackupResult {
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(json)
-  } catch (e) {
-    return {
-      success: false,
-      reason: "parse_error",
-      message: e instanceof Error ? e.message : "Invalid JSON",
-    }
-  }
-
-  try {
-    if (
-      typeof parsed !== "object" ||
-      parsed === null ||
-      !("meta" in parsed) ||
-      !("data" in parsed)
-    ) {
-      return {
-        success: false,
-        reason: "validation_error",
-        message: "Missing required fields: meta, data",
-      }
-    }
-    const p = parsed as Record<string, unknown>
-    const meta = p.meta as Record<string, unknown> | undefined
-    if (meta?.appId !== "minty-flow-app") {
-      return {
-        success: false,
-        reason: "validation_error",
-        message: "Not a Minty Flow backup file",
-      }
-    }
-    if (meta.version !== 1) {
-      return {
-        success: false,
-        reason: "validation_error",
-        message: `Unsupported backup version: ${meta.version}`,
-      }
-    }
-    if (
-      typeof meta.schemaVersion !== "number" ||
-      meta.schemaVersion !== SCHEMA_VERSION
-    ) {
-      const schemaVersion =
-        typeof meta.schemaVersion === "number" ? meta.schemaVersion : undefined
-      const msg =
-        schemaVersion === undefined || schemaVersion < SCHEMA_VERSION
-          ? `Backup uses schema v${schemaVersion}. App is v${SCHEMA_VERSION}. Create a new backup with a current app version before restoring here.`
-          : `Backup schema version ${schemaVersion} is newer than app schema version ${SCHEMA_VERSION}. Update the app first.`
-      return {
-        success: false,
-        reason: "validation_error",
-        message: msg,
-      }
-    }
-    const data = p.data as Record<string, unknown> | undefined
-    if (!data) {
-      return {
-        success: false,
-        reason: "validation_error",
-        message: "Missing data section",
-      }
-    }
-
-    const requiredTables = [
-      "categories",
-      "accounts",
-      "tags",
-      "transactions",
-      "recurring_transactions",
-      "budgets",
-      "goals",
-      "loans",
-      "transfers",
-      "transaction_tags",
-      "budget_accounts",
-      "budget_categories",
-      "goal_accounts",
-    ]
-    for (const table of requiredTables) {
-      if (!Array.isArray((data as Record<string, unknown>)[table])) {
-        return {
-          success: false,
-          reason: "validation_error",
-          message: `Missing or invalid table: ${table}`,
-        }
-      }
-    }
-
-    const moneyColumns: Partial<Record<string, string[]>> = {
-      accounts: ["balance"],
-      budgets: ["amount"],
-      goals: ["target_amount"],
-      loans: ["principal_amount"],
-      transactions: ["amount", "account_balance_before"],
-    }
-    for (const [table, columns] of Object.entries(moneyColumns)) {
-      const rows = data[table] as RawRow[]
-      for (const [index, row] of rows.entries()) {
-        for (const column of columns ?? []) {
-          try {
-            assertMinorUnits(row[column] as number)
-          } catch {
-            return {
-              success: false,
-              reason: "validation_error",
-              message: `Invalid integer money: ${table}.${column} (row ${index})`,
-            }
-          }
-        }
-      }
-    }
-
-    for (const table of ["accounts", "budgets", "goals"]) {
-      for (const [index, row] of (data[table] as RawRow[]).entries()) {
-        try {
-          getMinorUnitDigits(String(row.currency_code))
-        } catch {
-          return {
-            success: false,
-            reason: "validation_error",
-            message: `Unknown currency: ${table} (row ${index})`,
-          }
-        }
-      }
-    }
-
-    const accountIds = new Set(
-      (data.accounts as RawRow[]).map((row) => String(row.id)),
-    )
-    for (const [index, row] of (
-      data.recurring_transactions as RawRow[]
-    ).entries()) {
-      try {
-        const template = JSON.parse(
-          String(row.json_transaction_template),
-        ) as RawRow
-        assertMinorUnits(template.amount as number)
-        if (!accountIds.has(String(template.accountId))) {
-          throw new Error("Unknown recurring account")
-        }
-      } catch {
-        return {
-          success: false,
-          reason: "validation_error",
-          message: `Invalid recurring money template (row ${index})`,
-        }
-      }
-    }
-
-    const transactions = (data as Record<string, unknown>)
-      .transactions as unknown[]
-    if (Array.isArray(transactions)) {
-      for (let i = 0; i < transactions.length; i++) {
-        const row = transactions[i] as Record<string, unknown> | undefined
-        if (!row) continue
-
-        if (typeof row.id !== "string" || !row.id.trim()) {
-          return {
-            success: false,
-            reason: "validation_error",
-            message: `Invalid row: id (row ${i})`,
-          }
-        }
-        if (typeof row.amount !== "number") {
-          return {
-            success: false,
-            reason: "validation_error",
-            message: `Invalid row: amount (row ${i})`,
-          }
-        }
-        // Accept ISO string (SQLite) or Unix ms number (WDB backup) for cross-compat
-        const txDate = row.transaction_date
-        if (
-          typeof txDate !== "string" &&
-          (typeof txDate !== "number" || !Number.isFinite(txDate as number))
-        ) {
-          return {
-            success: false,
-            reason: "validation_error",
-            message: `Invalid row: transaction_date must be an ISO string or Unix ms number (row ${i})`,
-          }
-        }
-      }
-    }
-
-    const accounts = (data as Record<string, unknown>).accounts as unknown[]
-    if (Array.isArray(accounts)) {
-      for (let i = 0; i < accounts.length; i++) {
-        const row = accounts[i] as Record<string, unknown> | undefined
-        if (!row) continue
-        if (typeof row.id !== "string" || !row.id.trim()) {
-          return {
-            success: false,
-            reason: "validation_error",
-            message: `Invalid account row: id (row ${i})`,
-          }
-        }
-        if (typeof row.name !== "string" || !row.name.trim()) {
-          return {
-            success: false,
-            reason: "validation_error",
-            message: `Invalid account row: name (row ${i})`,
-          }
-        }
-      }
-    }
-
-    const categories = (data as Record<string, unknown>).categories as unknown[]
-    if (Array.isArray(categories)) {
-      for (let i = 0; i < categories.length; i++) {
-        const row = categories[i] as Record<string, unknown> | undefined
-        if (!row) continue
-        if (typeof row.id !== "string" || !row.id.trim()) {
-          return {
-            success: false,
-            reason: "validation_error",
-            message: `Invalid category row: id (row ${i})`,
-          }
-        }
-        if (typeof row.name !== "string" || !row.name.trim()) {
-          return {
-            success: false,
-            reason: "validation_error",
-            message: `Invalid category row: name (row ${i})`,
-          }
-        }
-      }
-    }
-
-    return { success: true, backup: parsed as MintyFlowBackup }
-  } catch (e) {
-    return {
-      success: false,
-      reason: "validation_error",
-      message: e instanceof Error ? e.message : "Validation failed",
-    }
-  }
-}
-
 // ─── Pick file ────────────────────────────────────────────────────────────────
 
 export async function pickBackupFile(): Promise<{
@@ -948,23 +433,6 @@ export async function pickBackupFile(): Promise<{
   return { uri: file.uri, name: file.name ?? "backup" }
 }
 
-// ─── Count records ────────────────────────────────────────────────────────────
-
-export function countBackupRecords(backup: MintyFlowBackup): {
-  total: number
-  tableCount: number
-} {
-  let total = 0
-  let tableCount = 0
-  for (const rows of Object.values(backup.data)) {
-    if (rows.length > 0) {
-      total += rows.length
-      tableCount++
-    }
-  }
-  return { total, tableCount }
-}
-
 // ─── Import ───────────────────────────────────────────────────────────────────
 
 /**
@@ -972,82 +440,13 @@ export function countBackupRecords(backup: MintyFlowBackup): {
  * Two-transaction approach: reset (A) → insert (B) → delete snapshot.
  * Crash between A and B leaves empty DB; snapshot on disk triggers recovery on next launch.
  */
-async function resetDatabase(): Promise<void> {
-  await runInTransaction("import.reset", (db) => {
-    db.run(
-      sql.raw(RESET_ORDER.map((table) => `DELETE FROM ${table}`).join(";\n")),
-    )
-  })
-}
-
-/**
- * Insert rows into a table using parameterized INSERT OR IGNORE.
- * Unknown columns (e.g., WDB `id` in join tables) are silently dropped via ALLOWED_COLUMNS.
- * WDB Unix-ms timestamps are converted to ISO strings via normalizeColumnValue.
- * has_attachments is re-derived from extra JSON for transactions.
- */
-function insertRows(
-  db: Parameters<Parameters<typeof runInTransaction>[1]>[0],
-  tableName: string,
-  rows: RawRow[],
-): void {
-  if (rows.length === 0) return
-  const cols = ALLOWED_COLUMNS[tableName] ?? []
-  if (cols.length === 0) return
-  const isTransactions = tableName === "transactions"
-  const queryPrefix = `INSERT OR IGNORE INTO ${tableName} (${cols.join(", ")}) VALUES `
-
-  for (const row of rows) {
-    const values = cols.map((col) => {
-      if (isTransactions && col === "has_attachments") {
-        return deriveHasAttachments(row.extra)
-      }
-      return normalizeColumnValue(col, row[col])
-    })
-    db.run(
-      sql`${sql.raw(queryPrefix)}(${sql.join(
-        values.map((value) => sql`${value as string | number | null}`),
-        sql`, `,
-      )})`,
-    )
-  }
-}
-
-function insertAllTiers(
-  db: Parameters<Parameters<typeof runInTransaction>[1]>[0],
-  data: MintyFlowBackup["data"],
-): void {
-  // Tier 1: no FK dependencies
-  insertRows(db, "categories", data.categories)
-  insertRows(db, "tags", data.tags)
-  insertRows(db, "accounts", data.accounts)
-
-  // Tier 2: depend on Tier 1
-  insertRows(db, "recurring_transactions", data.recurring_transactions)
-  insertRows(db, "budgets", data.budgets)
-  insertRows(db, "goals", data.goals)
-  insertRows(db, "loans", data.loans)
-
-  // Tier 3: transactions
-  insertRows(db, "transactions", data.transactions)
-
-  // Tier 4: transfers
-  insertRows(db, "transfers", data.transfers)
-
-  // Tier 5: join tables
-  insertRows(db, "transaction_tags", data.transaction_tags)
-  insertRows(db, "budget_accounts", data.budget_accounts)
-  insertRows(db, "budget_categories", data.budget_categories)
-  insertRows(db, "goal_accounts", data.goal_accounts)
-}
-
 export async function recoverInterruptedImport(): Promise<boolean> {
   const snapshot = await readSqliteSnapshot<MintyFlowBackup>()
   if (!snapshot) return false
 
-  await resetDatabase()
+  await resetDatabaseForBackupImport()
   await runInTransaction("recover.insert", (db) => {
-    insertAllTiers(db, snapshot.data)
+    insertBackupData(db, snapshot.data)
   })
   // Delete only after confirmed success
   await deleteSqliteSnapshot()
@@ -1200,18 +599,18 @@ export async function importBackup(
     // 4️⃣ Transaction A: wipe all rows
     // 5️⃣ Transaction B: insert backup data
     try {
-      await resetDatabase()
+      await resetDatabaseForBackupImport()
       await runInTransaction("import.insert", (db) => {
-        insertAllTiers(db, data)
+        insertBackupData(db, data)
       })
       // Import succeeded — snapshot no longer needed
       await deleteSqliteSnapshot()
     } catch (importError) {
       // Attempt JS-layer restore from pre-import snapshot
       try {
-        await resetDatabase()
+        await resetDatabaseForBackupImport()
         await runInTransaction("restore.insert", (db) => {
-          insertAllTiers(db, snapshot.data)
+          insertBackupData(db, snapshot.data)
         })
         // Restore succeeded — snapshot no longer needed
         await deleteSqliteSnapshot()

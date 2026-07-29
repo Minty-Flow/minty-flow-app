@@ -5,7 +5,7 @@
 
 import { addDays, endOfMonth, startOfMonth } from "date-fns"
 
-import type { TransactionWithRelations } from "~/stores/db/transaction.store"
+import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
 import {
   TransferLayoutEnum,
   type TransferLayoutType,

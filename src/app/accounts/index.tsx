@@ -15,12 +15,12 @@ import { SearchInput } from "~/components/search-input"
 import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
+import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import {
   getMonthRange,
   updateAccountsOrder,
 } from "~/database/services/account-service"
-import { useActiveAccounts } from "~/stores/db/account.store"
-import { useTransactions } from "~/stores/db/transaction.store"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import type { Account } from "~/types/accounts"
 import { NewEnum } from "~/types/new"

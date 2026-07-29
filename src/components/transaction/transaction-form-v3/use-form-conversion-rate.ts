@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import type { UseFormSetValue } from "react-hook-form"
 
-import { getConversionRateForTransaction } from "~/database/services/transfer-service"
+import { getConversionRateForTransaction } from "~/database/services/ledger-service"
 import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import { currencyRegistryService } from "~/services/currency-registry"
 import { exchangeRatesService } from "~/services/exchange-rates"

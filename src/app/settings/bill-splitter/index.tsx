@@ -16,12 +16,12 @@ import { Input } from "~/components/ui/input"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
 import {
   getAllocatedTotal,
   getBillTotal,
   useBillSplitterStore,
 } from "~/stores/bill-splitter.store"
-import { useActiveAccounts } from "~/stores/db/account.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { BillItem } from "~/types/bill-splitter"
 export default function BillSplitterScreen() {
