@@ -21,7 +21,7 @@ export async function resetDatabaseForBackupImport(): Promise<void> {
 }
 
 /**
- * Insert rows into a table using parameterized INSERT OR IGNORE.
+ * Insert rows into a table using parameterized INSERT.
  * Unknown columns (e.g., WDB `id` in join tables) are silently dropped via ALLOWED_COLUMNS.
  * WDB Unix-ms timestamps are converted to ISO strings via normalizeColumnValue.
  * has_attachments is re-derived from extra JSON for transactions.
@@ -31,7 +31,7 @@ function insertRows(db: Db, tableName: string, rows: RawRow[]): void {
   const cols = ALLOWED_COLUMNS[tableName] ?? []
   if (cols.length === 0) return
   const isTransactions = tableName === "transactions"
-  const queryPrefix = `INSERT OR IGNORE INTO ${tableName} (${cols.join(", ")}) VALUES `
+  const queryPrefix = `INSERT INTO ${tableName} (${cols.join(", ")}) VALUES `
 
   for (const row of rows) {
     const values = cols.map((col) => {
