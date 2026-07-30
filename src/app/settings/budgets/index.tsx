@@ -5,14 +5,15 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { BudgetCard } from "~/components/budgets/budget-card"
 import { IconSvg } from "~/components/icons"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Pressable } from "~/components/ui/pressable"
 import { View } from "~/components/ui/view"
-import { useAllBudgets } from "~/database/drizzle/read-models/budget-read-model"
+import { useAllBudgetsQuery } from "~/database/drizzle/read-models/budget-read-model"
 import type { Budget } from "~/types/budgets"
 import { NewEnum } from "~/types/new"
 export default function BudgetsScreen() {
-  const budgets = useAllBudgets()
+  const { data: budgets, status } = useAllBudgetsQuery()
   const { theme } = useUnistyles()
   const { t } = useTranslation()
   const router = useRouter()
@@ -25,6 +26,7 @@ export default function BudgetsScreen() {
   const renderBudgetItem = ({ item }: { item: Budget }) => (
     <BudgetCard budget={item} onPress={() => handleEditBudget(item.id)} />
   )
+  if (status === "loading") return <RouteLoadingState />
   return (
     <View style={styles.container}>
       <FlatList

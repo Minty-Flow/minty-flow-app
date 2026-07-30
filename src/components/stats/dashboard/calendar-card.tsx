@@ -10,6 +10,7 @@ interface CalendarCardProps {
   dailyData: DailyDataPoint[]
   from: Date
   to: Date
+  currency: string
   onPress: () => void
 }
 
@@ -17,6 +18,7 @@ export function CalendarCard({
   dailyData,
   from,
   to,
+  currency,
   onPress,
 }: CalendarCardProps) {
   const { t } = useTranslation()
@@ -29,7 +31,13 @@ export function CalendarCard({
       onPress={onPress}
     >
       {hasSpending ? (
-        <SpendingHeatmap dailyData={dailyData} from={from} to={to} compact />
+        <SpendingHeatmap
+          dailyData={dailyData}
+          from={from}
+          to={to}
+          currency={currency}
+          compact
+        />
       ) : (
         <Text variant="muted">
           {t("screens.stats.dashboard.noSpendingWindow")}

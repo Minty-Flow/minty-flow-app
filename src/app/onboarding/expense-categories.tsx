@@ -5,6 +5,7 @@ import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { PresetListItem } from "~/components/preset-list-item"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { Button } from "~/components/ui/button"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -13,7 +14,7 @@ import {
   type CategoryPreset,
   ExpensePresets,
 } from "~/constants/pre-sets-categories"
-import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
+import { useCategoriesByTypeQuery } from "~/database/drizzle/read-models/category-read-model"
 import { createCategory } from "~/database/services/category-service"
 import type { TranslationKey } from "~/i18n/config"
 import { TransactionTypeEnum } from "~/types/transactions"
@@ -21,11 +22,14 @@ import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
 export default function OnboardingExpenseCategoriesScreen() {
-  const categories = useCategoriesByType(TransactionTypeEnum.EXPENSE)
+  const { data: categories, status } = useCategoriesByTypeQuery(
+    TransactionTypeEnum.EXPENSE,
+  )
   const { t } = useTranslation()
   const router = useRouter()
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
   const [saving, startTransition] = useTransition()
+  if (status === "loading") return <RouteLoadingState />
 
   const addedKeys = new Set<string>()
   for (const preset of ExpensePresets) {

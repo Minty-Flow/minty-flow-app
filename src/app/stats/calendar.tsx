@@ -37,6 +37,7 @@ export default function StatsCalendarScreen() {
             dailyData={stats.dailyData}
             from={dateRange.from}
             to={dateRange.to}
+            currency={stats.currency}
           />
 
           <RhythmInsightCard days={stats.spendingByDayOfWeek} />
