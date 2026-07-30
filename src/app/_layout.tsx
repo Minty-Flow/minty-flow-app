@@ -1,5 +1,5 @@
 import "react-native-reanimated"
-import { migrate, useMigrations } from "drizzle-orm/expo-sqlite/migrator"
+import { useMigrations } from "drizzle-orm/expo-sqlite/migrator"
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin"
 import { NavigationBar } from "expo-navigation-bar"
 import * as Notifications from "expo-notifications"
@@ -81,7 +81,6 @@ function ForcedMigrationGate() {
         }
         setPhase("migrating")
         upgradeLegacyDbToDrizzle(migrations)
-        await migrate(drizzleDb, migrations)
         markComplete()
         showUpgradeNotice()
         return true
@@ -113,7 +112,6 @@ function ForcedMigrationGate() {
         setPhase("migrating")
         upgradeLegacyDbToDrizzle(migrations)
       }
-      await migrate(drizzleDb, migrations)
       markComplete()
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
