@@ -1,5 +1,5 @@
 import "react-native-reanimated"
-import { useMigrations } from "drizzle-orm/expo-sqlite/migrator"
+import { migrate, useMigrations } from "drizzle-orm/expo-sqlite/migrator"
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin"
 import { NavigationBar } from "expo-navigation-bar"
 import * as Notifications from "expo-notifications"
@@ -22,9 +22,8 @@ import { View } from "~/components/ui/view"
 import { drizzleDb, expoDb } from "~/database/drizzle/db"
 import {
   exportLegacyDbForForcedMigration,
-  isDrizzleBaselineApplied,
-  markLegacyDbAsDrizzleBaseline,
-  needsForcedDrizzleMigration,
+  getDatabaseState,
+  upgradeLegacyDbToDrizzle,
 } from "~/database/forced-migration"
 import { useImportRecovery } from "~/hooks/use-import-recovery"
 import { useNotificationSync } from "~/hooks/use-notification-sync"
@@ -81,7 +80,8 @@ function ForcedMigrationGate() {
           markExported(backup)
         }
         setPhase("migrating")
-        markLegacyDbAsDrizzleBaseline(migrations)
+        upgradeLegacyDbToDrizzle(migrations)
+        await migrate(drizzleDb, migrations)
         markComplete()
         showUpgradeNotice()
         return true
@@ -102,8 +102,18 @@ function ForcedMigrationGate() {
   const resumeInPlaceUpgrade = useCallback(async () => {
     setBusy(true)
     try {
-      setPhase("migrating")
-      markLegacyDbAsDrizzleBaseline(migrations)
+      const state = getDatabaseState(migrations)
+      if (state === "legacy") {
+        const createBackup = phase === "exporting" && !backupUri
+        if (createBackup) {
+          setPhase("exporting")
+          const backup = await exportLegacyDbForForcedMigration()
+          markExported(backup)
+        }
+        setPhase("migrating")
+        upgradeLegacyDbToDrizzle(migrations)
+      }
+      await migrate(drizzleDb, migrations)
       markComplete()
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
@@ -114,27 +124,20 @@ function ForcedMigrationGate() {
     } finally {
       setBusy(false)
     }
-  }, [markComplete, markFailed, setPhase])
+  }, [backupUri, markComplete, markExported, markFailed, phase, setPhase])
 
   useEffect(() => {
-    if (isDrizzleBaselineApplied(migrations)) {
-      if (phase !== "complete") markComplete()
-      setChecked(true)
-      return
-    }
-    if (phase === "complete") {
-      void runInPlaceUpgrade(false).finally(() => setChecked(true))
-      return
-    }
-    if (phase !== "idle") {
+    if (phase === "failed") {
       setChecked(true)
       return
     }
     try {
-      if (needsForcedDrizzleMigration(migrations)) {
+      const state = getDatabaseState(migrations)
+      if (state === "legacy") {
         void runInPlaceUpgrade(true).finally(() => setChecked(true))
         return
       }
+      if (phase !== "complete") markComplete()
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
       logger.error("Forced DB migration detection failed", { error: message })
@@ -146,18 +149,14 @@ function ForcedMigrationGate() {
 
   useEffect(() => {
     if (!checked || busy) return
-    if (phase === "needs_backup" || (phase === "exporting" && !backupUri)) {
-      void runInPlaceUpgrade(true)
-      return
-    }
     if (
+      phase === "exporting" ||
       phase === "exported" ||
-      phase === "migrating" ||
-      (phase === "exporting" && backupUri)
+      phase === "migrating"
     ) {
       void resumeInPlaceUpgrade()
     }
-  }, [backupUri, busy, checked, phase, resumeInPlaceUpgrade, runInPlaceUpgrade])
+  }, [busy, checked, phase, resumeInPlaceUpgrade])
 
   if (!checked) return <MigrationState message="Checking database..." />
 

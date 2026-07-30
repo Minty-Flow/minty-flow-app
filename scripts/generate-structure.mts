@@ -17,6 +17,7 @@ const IGNORE: Set<string> = new Set([
   "tabler-icons",
   "unused-icons",
   ".claude",
+  ".codex",
   ".opencode",
   ".agents"
 ]);
