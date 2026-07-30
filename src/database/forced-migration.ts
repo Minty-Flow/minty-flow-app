@@ -406,7 +406,7 @@ function seedDrizzleMigrations(
     db,
     `
       CREATE TABLE IF NOT EXISTS "__drizzle_migrations" (
-        id SERIAL PRIMARY KEY,
+        id integer PRIMARY KEY NOT NULL,
         hash text NOT NULL,
         created_at numeric
       );
@@ -452,6 +452,12 @@ function renameLegacyTables(db: SQLite.SQLiteDatabase): void {
       db,
       `ALTER TABLE ${quoteIdentifier(table)} RENAME TO ${quoteIdentifier(`__legacy_${table}`)};`,
     )
+  }
+}
+
+function dropLegacyIndexes(db: SQLite.SQLiteDatabase): void {
+  for (const index of REQUIRED_INDEXES) {
+    execSync(db, `DROP INDEX IF EXISTS ${quoteIdentifier(index)};`)
   }
 }
 
@@ -502,6 +508,7 @@ export function upgradeLegacyDbToDrizzle(
   try {
     execSync(db, `DROP TABLE IF EXISTS "__drizzle_migrations";`)
     renameLegacyTables(db)
+    dropLegacyIndexes(db)
     createCurrentSchema(db, migrations)
     copyLegacyData(db)
     seedDrizzleMigrations(db, migrations)
