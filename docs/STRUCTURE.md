@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-07-30T00:07:39.381Z
+Generated on: 2026-07-30T00:21:46.892Z
 ```
 ./
 ├── .github/
@@ -409,7 +409,6 @@ Generated on: 2026-07-30T00:07:39.381Z
 │   │   │   ├── loan.mapper.ts
 │   │   │   ├── tag.mapper.ts
 │   │   │   └── transaction.mapper.ts
-│   │   ├── repos/
 │   │   ├── services/
 │   │   │   ├── account-service.ts
 │   │   │   ├── balance-service.ts
@@ -468,7 +467,6 @@ Generated on: 2026-07-30T00:07:39.381Z
 │   │   ├── exchange-rates.ts
 │   │   └── pending-transaction-notifications.ts
 │   ├── stores/
-│   │   ├── db/
 │   │   ├── android-sound.store.ts
 │   │   ├── app-lock.store.ts
 │   │   ├── bill-splitter.store.ts
