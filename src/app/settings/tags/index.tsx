@@ -5,6 +5,7 @@ import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { SearchInput } from "~/components/search-input"
 import { TagCard } from "~/components/tags/tag-card"
 import { Button } from "~/components/ui/button"
@@ -12,18 +13,17 @@ import { EmptyState } from "~/components/ui/empty-state"
 import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useTags } from "~/database/drizzle/read-models/tag-read-model"
+import { useTagsQuery } from "~/database/drizzle/read-models/tag-read-model"
 import { NewEnum } from "~/types/new"
 
 export default function TagsScreen() {
-  const tags = useTags()
+  const { data: tags, status } = useTagsQuery()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const { t } = useTranslation()
 
   const navigation = useNavigation()
   const [showSearch, setShowSearch] = useState(false)
-
   const filteredModels = useMemo(() => {
     if (!searchQuery.trim()) return tags
     const lower = searchQuery.toLowerCase()
@@ -53,6 +53,8 @@ export default function TagsScreen() {
       ),
     })
   }, [navigation, showSearch])
+
+  if (status === "loading") return <RouteLoadingState />
 
   return (
     <View style={styles.container}>

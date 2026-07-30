@@ -49,6 +49,10 @@ export function useAllLoans(): Loan[] {
   return useLoansQuery().data
 }
 
+export function useAllLoansQuery(): LiveReadModelResult<Loan[]> {
+  return useLoansQuery()
+}
+
 export function useLoan(id: string): Loan | undefined {
   return useAllLoans().find((loan) => loan.id === id)
 }

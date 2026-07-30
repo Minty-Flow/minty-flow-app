@@ -47,8 +47,18 @@ export function useAllGoals(): Goal[] {
   return useGoalsQuery().data.filter((goal) => !goal.isArchived)
 }
 
+export function useAllGoalsQuery(): LiveReadModelResult<Goal[]> {
+  const result = useGoalsQuery()
+  return { ...result, data: result.data.filter((goal) => !goal.isArchived) }
+}
+
 export function useArchivedGoals(): Goal[] {
   return useGoalsQuery().data.filter((goal) => goal.isArchived)
+}
+
+export function useArchivedGoalsQuery(): LiveReadModelResult<Goal[]> {
+  const result = useGoalsQuery()
+  return { ...result, data: result.data.filter((goal) => goal.isArchived) }
 }
 
 export function useGoal(id: string): Goal | undefined {

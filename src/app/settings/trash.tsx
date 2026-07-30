@@ -9,6 +9,7 @@ import { ConfirmModal } from "~/components/confirm-modal"
 import { IconSvg } from "~/components/icons"
 import { InfoModal } from "~/components/info-modal"
 import { MonthYearPicker } from "~/components/month-year-picker"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
@@ -69,7 +70,7 @@ export default function TrashScreen() {
   const tags = useTags()
   const transferLayout = useTransfersPreferencesStore((s) => s.layout)
   const { fromDate, toDate } = getMonthRange(selectedYear, selectedMonth)
-  const { items: allDeleted } = useTransactions({
+  const { items: allDeleted, status: transactionsStatus } = useTransactions({
     from: new Date(fromDate).toISOString(),
     to: new Date(toDate).toISOString(),
     deletedOnly: true,
@@ -109,6 +110,8 @@ export default function TrashScreen() {
       ),
     })
   }, [navigation, showFilters, t])
+  if (transactionsStatus === "loading" && allDeleted.length === 0)
+    return <RouteLoadingState />
   const handleRestore = (item: TransactionWithRelations) => async () => {
     try {
       await restoreTransaction(item.id)

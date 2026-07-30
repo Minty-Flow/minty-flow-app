@@ -4,11 +4,12 @@ import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
+import { useCategoriesByTypeQuery } from "~/database/drizzle/read-models/category-read-model"
 import type { Category } from "~/types/categories"
 import { NewEnum } from "~/types/new"
 import type { TransactionType } from "~/types/transactions"
@@ -65,7 +66,7 @@ export const CategoryList = ({
   deletedCategory,
   searchQuery = "",
 }: CategoryListProps) => {
-  const categories = useCategoriesByType(type)
+  const { data: categories, status } = useCategoriesByTypeQuery(type)
   const router = useRouter()
   const { t } = useTranslation()
   const typeLabel = t(`components.categories.types.${type}`)
@@ -115,6 +116,7 @@ export const CategoryList = ({
     <CategoryRow category={item} transactionCount={item.transactionCount} />
   )
   const keyExtractor = (item: Category) => item.id
+  if (status === "loading") return <RouteLoadingState />
   if (filteredCategories.length === 0) {
     if (searchQuery) {
       return (

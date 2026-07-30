@@ -6,12 +6,13 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { Button } from "~/components/ui/button"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { AccountPresets } from "~/constants/pre-sets-accounts"
-import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
+import { useActiveAccountsQuery } from "~/database/drizzle/read-models/account-read-model"
 import { createAccount } from "~/database/services/account-service"
 import type { TranslationKey } from "~/i18n/config"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
@@ -20,12 +21,13 @@ import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
 export default function OnboardingAccountsScreen() {
-  const accounts = useActiveAccounts()
+  const { data: accounts, status } = useActiveAccountsQuery()
   const { t } = useTranslation()
   const router = useRouter()
   const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
   const [saving, startTransition] = useTransition()
+  if (status === "loading") return <RouteLoadingState />
 
   const existingKeys = new Set(accounts.map((a) => `${a.icon}:${a.type}`))
 

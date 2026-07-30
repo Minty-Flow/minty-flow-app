@@ -11,6 +11,7 @@ import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { PrivacyEyeControl } from "~/components/privacy-eye-control"
 import { ReorderableListV2 } from "~/components/reorderable-list-v2"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { SearchInput } from "~/components/search-input"
 import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
@@ -44,10 +45,13 @@ function AccountsScreen() {
     const now = new Date()
     return getMonthRange(now.getFullYear(), now.getMonth())
   })()
-  const { items: transactionsFull } = useTransactions({
-    from: new Date(fromDate).toISOString(),
-    to: new Date(toDate).toISOString(),
-  })
+  const { items: transactionsFull, status: transactionsStatus } =
+    useTransactions({
+      from: new Date(fromDate).toISOString(),
+      to: new Date(toDate).toISOString(),
+    })
+  if (transactionsStatus === "loading" && transactionsFull.length === 0)
+    return <RouteLoadingState />
   const accountsWithMonthTotals = (() => {
     const totalsByAccount = new Map<
       string,

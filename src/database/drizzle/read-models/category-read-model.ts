@@ -55,6 +55,16 @@ export function useCategoriesByType(type: string): Category[] {
   return useCategories().filter((category) => category.type === type)
 }
 
+export function useCategoriesByTypeQuery(
+  type: string,
+): LiveReadModelResult<Category[]> {
+  const result = useCategoriesQuery()
+  return {
+    ...result,
+    data: result.data.filter((category) => category.type === type),
+  }
+}
+
 export function useCategory(id: string): Category | undefined {
   return useCategories().find((category) => category.id === id)
 }

@@ -10,13 +10,14 @@ import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { InfoModal } from "~/components/info-modal"
 import { Money } from "~/components/money"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Input } from "~/components/ui/input"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
+import { useActiveAccountsQuery } from "~/database/drizzle/read-models/account-read-model"
 import {
   getAllocatedTotal,
   getBillTotal,
@@ -25,7 +26,7 @@ import {
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { BillItem } from "~/types/bill-splitter"
 export default function BillSplitterScreen() {
-  const accounts = useActiveAccounts()
+  const { data: accounts, status } = useActiveAccountsQuery()
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const router = useRouter()
@@ -111,6 +112,7 @@ export default function BillSplitterScreen() {
     />
   )
   const hasItems = items.length > 0
+  if (status === "loading") return <RouteLoadingState />
   return (
     <View style={styles.container}>
       <FlatList

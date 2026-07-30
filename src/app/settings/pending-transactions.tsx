@@ -7,6 +7,7 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
 import { MonthYearPicker } from "~/components/month-year-picker"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
@@ -54,7 +55,7 @@ export default function PendingTransactionsScreen() {
   const categoriesTransfer = useCategoriesByType(TransactionTypeEnum.TRANSFER)
   const tags = useTags()
   const { fromDate, toDate } = getMonthRange(selectedYear, selectedMonth)
-  const { items: allPending } = useTransactions({
+  const { items: allPending, status: transactionsStatus } = useTransactions({
     from: new Date(fromDate).toISOString(),
     to: new Date(toDate).toISOString(),
     isPending: true,
@@ -84,6 +85,8 @@ export default function PendingTransactionsScreen() {
       ),
     })
   }, [navigation, showFilters])
+  if (transactionsStatus === "loading" && allPending.length === 0)
+    return <RouteLoadingState />
   const handleDeleteDone = () => {
     openSwipeableRef.current?.close()
   }

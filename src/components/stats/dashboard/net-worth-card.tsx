@@ -1,10 +1,4 @@
-import {
-  Canvas,
-  LinearGradient,
-  Path,
-  Skia,
-  vec,
-} from "@shopify/react-native-skia"
+import { Canvas, LinearGradient, Path, vec } from "@shopify/react-native-skia"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
@@ -34,23 +28,21 @@ function Sparkline({ timeline }: SparklineProps) {
     const span = max - min || 1
     const pad = 4
     const usable = CHART_HEIGHT - pad * 2
-    const line = Skia.Path.Make()
-    const area = Skia.Path.Make()
+    const line: string[] = []
+    const area: string[] = []
     timeline.forEach((point, i) => {
       const x = (i / (timeline.length - 1)) * width
       const y = pad + (1 - (point.balance - min) / span) * usable
       if (i === 0) {
-        line.moveTo(x, y)
-        area.moveTo(x, CHART_HEIGHT)
-        area.lineTo(x, y)
+        line.push(`M ${x} ${y}`)
+        area.push(`M ${x} ${CHART_HEIGHT}`, `L ${x} ${y}`)
       } else {
-        line.lineTo(x, y)
-        area.lineTo(x, y)
+        line.push(`L ${x} ${y}`)
+        area.push(`L ${x} ${y}`)
       }
     })
-    area.lineTo(width, CHART_HEIGHT)
-    area.close()
-    return { linePath: line, areaPath: area }
+    area.push(`L ${width} ${CHART_HEIGHT}`, "Z")
+    return { linePath: line.join(" "), areaPath: area.join(" ") }
   })()
   return (
     <View

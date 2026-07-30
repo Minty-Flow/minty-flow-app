@@ -6,6 +6,7 @@ import { StyleSheet } from "react-native-unistyles"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { PrivacyEyeControl } from "~/components/privacy-eye-control"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { SummarySection } from "~/components/summary-card"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionSectionList } from "~/components/transaction/transaction-section-list"
@@ -50,10 +51,11 @@ function HomeScreen() {
   const categoriesTransfer = useCategoriesByType(TransactionTypeEnum.TRANSFER)
   const tags = useTags()
   const { fromDate, toDate } = buildQueryFilters(selectedRange, homeTimeframe)
-  const { items: transactionsFull } = useTransactions({
-    from: new Date(fromDate).toISOString(),
-    to: new Date(toDate).toISOString(),
-  })
+  const { items: transactionsFull, status: transactionsStatus } =
+    useTransactions({
+      from: new Date(fromDate).toISOString(),
+      to: new Date(toDate).toISOString(),
+    })
   const categoriesByType = {
     expense: categoriesExpense,
     income: categoriesIncome,
@@ -62,6 +64,8 @@ function HomeScreen() {
   const summaryHeader = (
     <SummarySection transactionsWithRelations={transactionsFull} />
   )
+  if (transactionsStatus === "loading" && transactionsFull.length === 0)
+    return <RouteLoadingState />
   return (
     <View style={styles.container}>
       {/* Header */}

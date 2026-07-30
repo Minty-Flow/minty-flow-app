@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-07-30T14:56:07.102Z
+Generated on: 2026-07-30T19:51:52.454Z
 ```
 ./
 ├── .github/
@@ -251,8 +251,7 @@ Generated on: 2026-07-30T14:56:07.102Z
 │   │   │   ├── stats-detail-shell.tsx
 │   │   │   ├── stats-empty-state.tsx
 │   │   │   ├── stats-pending-notice.tsx
-│   │   │   ├── stats-period-header.tsx
-│   │   │   └── stats-skeleton.tsx
+│   │   │   └── stats-period-header.tsx
 │   │   ├── tag/
 │   │   │   ├── action-buttons.tsx
 │   │   │   ├── delete-section.tsx

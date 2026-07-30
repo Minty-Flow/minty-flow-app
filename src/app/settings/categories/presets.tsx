@@ -5,6 +5,7 @@ import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { PresetListItem } from "~/components/preset-list-item"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { Button } from "~/components/ui/button"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -14,7 +15,7 @@ import {
   ExpensePresets,
   IncomePresets,
 } from "~/constants/pre-sets-categories"
-import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
+import { useCategoriesByTypeQuery } from "~/database/drizzle/read-models/category-read-model"
 import { createCategory } from "~/database/services/category-service"
 import type { Category } from "~/types/categories"
 import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
@@ -50,11 +51,12 @@ interface CategoryPresetsScreenInnerProps {
 const CategoryPresetsScreenInner = ({
   type,
 }: CategoryPresetsScreenInnerProps) => {
-  const categories = useCategoriesByType(type)
+  const { data: categories, status } = useCategoriesByTypeQuery(type)
   const { t } = useTranslation()
   const router = useRouter()
   const [selectedPresets, setSelectedPresets] = useState<Set<string>>(new Set())
   const presets = PRESETS_BY_TYPE[type] ?? []
+  if (status === "loading") return <RouteLoadingState />
   const addedPresets = alreadyAddedPresetKeys(categories, presets)
   const availableKeys = presets.flatMap((p) => {
     const key = `${p.icon}:${p.type}`
