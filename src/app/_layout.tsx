@@ -64,8 +64,8 @@ function ForcedMigrationGate() {
     if (upgradeNoticeShownRef.current) return
     upgradeNoticeShownRef.current = true
     Alert.alert(
-      "Data upgrade complete",
-      "Minty Flow switched to the new local data layer. Your existing data stayed in place and an internal backup was created first.",
+      "Your data is ready",
+      "We prepared your data for the latest version of Minty Flow. Everything should look the same, and your information has been kept safely in place.",
       [{ text: "OK" }],
     )
   }, [])

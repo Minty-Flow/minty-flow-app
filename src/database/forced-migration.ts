@@ -2,7 +2,9 @@ import * as SQLite from "expo-sqlite"
 
 import { closeDbSync, getDb } from "~/database/db"
 import { resetDrizzleDb } from "~/database/drizzle/db"
+import { currencyRegistryService } from "~/services/currency-registry"
 import { logger } from "~/utils/logger"
+import { getMinorUnitDigits, roundToSafeInteger } from "~/utils/money"
 
 const REQUIRED_SCHEMA = {
   categories: [
@@ -246,6 +248,11 @@ const REQUIRED_TABLES = Object.keys(REQUIRED_SCHEMA) as Array<
   keyof typeof REQUIRED_SCHEMA
 >
 
+type RawRow = Record<string, string | number | null>
+type MoneyStorageState = "decimal" | "minor"
+
+const SQLITE_MINOR_MONEY_VERSION = 3
+
 export type DatabaseState = "fresh" | "legacy" | "drizzle"
 
 interface DrizzleMigrationBundle {
@@ -282,6 +289,16 @@ function tableColumns(table: keyof typeof REQUIRED_SCHEMA): Set<string> {
     `PRAGMA table_info(${quoteIdentifier(table)})`,
   )
   return new Set(rows.map((row) => row.name))
+}
+
+function tableColumnTypes(
+  db: SQLite.SQLiteDatabase,
+  table: keyof typeof REQUIRED_SCHEMA,
+): Map<string, string> {
+  const rows = db.getAllSync<{ name: string; type: string }>(
+    `PRAGMA table_info(${quoteIdentifier(table)})`,
+  )
+  return new Map(rows.map((row) => [row.name, row.type.trim().toUpperCase()]))
 }
 
 function missingRequiredColumns(table: keyof typeof REQUIRED_SCHEMA): string[] {
@@ -347,8 +364,7 @@ function buildLegacyBackupFileName(): string {
   return `minty-flow-drizzle-migration-${new Date().toISOString().replaceAll(":", "-")}.db`
 }
 
-// TODO(remove-after-drizzle-rollout): compatibility bootstrap for users upgrading
-// from the pre-Drizzle SQLite schema. Delete once old installs are no longer supported.
+// TODO: Remove compatibility bootstrap once old pre-Drizzle installs are no longer supported.
 export async function exportLegacyDbForForcedMigration(): Promise<{
   uri: string
   fileName: string
@@ -396,6 +412,219 @@ export async function exportLegacyDbForForcedMigration(): Promise<{
 
 function execSync(db: SQLite.SQLiteDatabase, source: string): void {
   db.execSync(source)
+}
+
+function markSqliteMinorMoneyMigrationApplied(db: SQLite.SQLiteDatabase): void {
+  execSync(db, `PRAGMA user_version = ${SQLITE_MINOR_MONEY_VERSION};`)
+}
+
+function getUserVersion(db: SQLite.SQLiteDatabase): number {
+  return (
+    db.getFirstSync<{ user_version: number }>("PRAGMA user_version")
+      ?.user_version ?? 0
+  )
+}
+
+// TODO: Remove decimal-money bridge once minimum supported DB is SQLite v3+ and Drizzle baseline adoption is complete.
+function getMoneyStorageState(db: SQLite.SQLiteDatabase): MoneyStorageState {
+  const columns = [
+    ["accounts", "balance"],
+    ["budgets", "amount"],
+    ["goals", "target_amount"],
+    ["loans", "principal_amount"],
+    ["transactions", "amount"],
+    ["transactions", "account_balance_before"],
+  ] as const
+
+  const types = columns.map(([table, column]) => ({
+    label: `${table}.${column}`,
+    type: tableColumnTypes(db, table).get(column),
+  }))
+
+  const allInteger = types.every((column) => column.type === "INTEGER")
+  if (allInteger) return "minor"
+
+  const allReal = types.every((column) => column.type === "REAL")
+  if (allReal && getUserVersion(db) < SQLITE_MINOR_MONEY_VERSION) {
+    return "decimal"
+  }
+
+  throw new Error(
+    `Existing database has inconsistent money column types: ${types
+      .map((column) => `${column.label}=${column.type ?? "missing"}`)
+      .join(", ")}`,
+  )
+}
+
+function majorNumberToMinorUnits(value: unknown, currencyCode: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`Invalid legacy money: ${value}`)
+  }
+  return roundToSafeInteger(value * 10 ** getMinorUnitDigits(currencyCode))
+}
+
+function assertKnownCurrency(code: unknown, label: string): string {
+  if (
+    typeof code !== "string" ||
+    !currencyRegistryService.isCurrencyCodeValid(code)
+  ) {
+    throw new Error(`Unknown currency for ${label}: ${code}`)
+  }
+  getMinorUnitDigits(code)
+  return code
+}
+
+function insertRow(
+  db: SQLite.SQLiteDatabase,
+  table: keyof typeof REQUIRED_SCHEMA,
+  row: RawRow,
+): void {
+  const columns = REQUIRED_SCHEMA[table]
+  const placeholders = columns.map(() => "?").join(", ")
+  db.runSync(
+    `INSERT INTO ${quoteIdentifier(table)} (${columns.join(", ")}) VALUES (${placeholders})`,
+    columns.map((column) => row[column]),
+  )
+}
+
+function legacyRows<T extends RawRow>(
+  db: SQLite.SQLiteDatabase,
+  table: keyof typeof REQUIRED_SCHEMA,
+): T[] {
+  return db.getAllSync<T>(
+    `SELECT * FROM ${quoteIdentifier(`__legacy_${table}`)}`,
+  )
+}
+
+function getLegacyAccountCurrencies(
+  db: SQLite.SQLiteDatabase,
+): Map<string, string> {
+  const currencies = new Map<string, string>()
+  for (const row of legacyRows(db, "accounts")) {
+    const id = String(row.id)
+    currencies.set(id, assertKnownCurrency(row.currency_code, `account ${id}`))
+  }
+  return currencies
+}
+
+function copyAccounts(
+  db: SQLite.SQLiteDatabase,
+  moneyState: MoneyStorageState,
+  accountCurrencies: Map<string, string>,
+): void {
+  for (const row of legacyRows(db, "accounts")) {
+    const currency = accountCurrencies.get(String(row.id))
+    if (!currency) throw new Error(`Account ${row.id} is missing currency`)
+    insertRow(db, "accounts", {
+      ...row,
+      balance:
+        moneyState === "decimal"
+          ? majorNumberToMinorUnits(row.balance, currency)
+          : row.balance,
+    })
+  }
+}
+
+function copyBudgets(
+  db: SQLite.SQLiteDatabase,
+  moneyState: MoneyStorageState,
+): void {
+  for (const row of legacyRows(db, "budgets")) {
+    const currency = assertKnownCurrency(row.currency_code, `budget ${row.id}`)
+    insertRow(db, "budgets", {
+      ...row,
+      amount:
+        moneyState === "decimal"
+          ? majorNumberToMinorUnits(row.amount, currency)
+          : row.amount,
+    })
+  }
+}
+
+function copyGoals(
+  db: SQLite.SQLiteDatabase,
+  moneyState: MoneyStorageState,
+): void {
+  for (const row of legacyRows(db, "goals")) {
+    const currency = assertKnownCurrency(row.currency_code, `goal ${row.id}`)
+    insertRow(db, "goals", {
+      ...row,
+      target_amount:
+        moneyState === "decimal"
+          ? majorNumberToMinorUnits(row.target_amount, currency)
+          : row.target_amount,
+    })
+  }
+}
+
+function copyLoans(
+  db: SQLite.SQLiteDatabase,
+  moneyState: MoneyStorageState,
+  accountCurrencies: Map<string, string>,
+): void {
+  for (const row of legacyRows(db, "loans")) {
+    const currency = accountCurrencies.get(String(row.account_id))
+    if (!currency) throw new Error(`Loan ${row.id} has no valid account`)
+    insertRow(db, "loans", {
+      ...row,
+      loan_type:
+        typeof row.loan_type === "string"
+          ? row.loan_type.toLowerCase()
+          : row.loan_type,
+      principal_amount:
+        moneyState === "decimal"
+          ? majorNumberToMinorUnits(row.principal_amount, currency)
+          : row.principal_amount,
+    })
+  }
+}
+
+function copyTransactions(
+  db: SQLite.SQLiteDatabase,
+  moneyState: MoneyStorageState,
+  accountCurrencies: Map<string, string>,
+): void {
+  for (const row of legacyRows(db, "transactions")) {
+    const currency = accountCurrencies.get(String(row.account_id))
+    if (!currency) throw new Error(`Transaction ${row.id} has no valid account`)
+    insertRow(db, "transactions", {
+      ...row,
+      amount:
+        moneyState === "decimal"
+          ? majorNumberToMinorUnits(row.amount, currency)
+          : row.amount,
+      account_balance_before:
+        moneyState === "decimal"
+          ? majorNumberToMinorUnits(row.account_balance_before, currency)
+          : row.account_balance_before,
+    })
+  }
+}
+
+function copyRecurringTransactions(
+  db: SQLite.SQLiteDatabase,
+  moneyState: MoneyStorageState,
+  accountCurrencies: Map<string, string>,
+): void {
+  for (const row of legacyRows(db, "recurring_transactions")) {
+    if (
+      moneyState === "decimal" &&
+      typeof row.json_transaction_template === "string"
+    ) {
+      const template = JSON.parse(row.json_transaction_template) as RawRow
+      const currency = accountCurrencies.get(String(template.accountId ?? ""))
+      if (!currency) {
+        throw new Error(`Recurring rule ${row.id} has no valid account`)
+      }
+      template.amount = majorNumberToMinorUnits(template.amount, currency)
+      insertRow(db, "recurring_transactions", {
+        ...row,
+        json_transaction_template: JSON.stringify(template),
+      })
+      continue
+    }
+    insertRow(db, "recurring_transactions", row)
+  }
 }
 
 function seedDrizzleMigrations(
@@ -461,8 +690,38 @@ function dropLegacyIndexes(db: SQLite.SQLiteDatabase): void {
   }
 }
 
-function copyLegacyData(db: SQLite.SQLiteDatabase): void {
+function copyLegacyData(
+  db: SQLite.SQLiteDatabase,
+  moneyState: MoneyStorageState,
+): void {
+  const accountCurrencies = getLegacyAccountCurrencies(db)
+
   for (const table of REBUILD_ORDER) {
+    if (table === "accounts") {
+      copyAccounts(db, moneyState, accountCurrencies)
+      continue
+    }
+    if (table === "recurring_transactions") {
+      copyRecurringTransactions(db, moneyState, accountCurrencies)
+      continue
+    }
+    if (table === "budgets") {
+      copyBudgets(db, moneyState)
+      continue
+    }
+    if (table === "goals") {
+      copyGoals(db, moneyState)
+      continue
+    }
+    if (table === "loans") {
+      copyLoans(db, moneyState, accountCurrencies)
+      continue
+    }
+    if (table === "transactions") {
+      copyTransactions(db, moneyState, accountCurrencies)
+      continue
+    }
+
     const columns = REQUIRED_SCHEMA[table].join(", ")
     execSync(
       db,
@@ -501,6 +760,7 @@ export function upgradeLegacyDbToDrizzle(
   migrations: DrizzleMigrationBundle,
 ): void {
   const db = getDb()
+  const moneyState = getMoneyStorageState(db)
 
   execSync(db, `PRAGMA foreign_keys = OFF;`)
   execSync(db, `BEGIN IMMEDIATE;`)
@@ -510,8 +770,9 @@ export function upgradeLegacyDbToDrizzle(
     renameLegacyTables(db)
     dropLegacyIndexes(db)
     createCurrentSchema(db, migrations)
-    copyLegacyData(db)
+    copyLegacyData(db, moneyState)
     seedDrizzleMigrations(db, migrations)
+    markSqliteMinorMoneyMigrationApplied(db)
     assertForeignKeysValid(db)
     dropLegacyTables(db)
     execSync(db, `COMMIT;`)
