@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-07-30T00:30:54.324Z
+Generated on: 2026-07-30T14:56:07.102Z
 ```
 ./
 ├── .github/
@@ -28,6 +28,7 @@ Generated on: 2026-07-30T00:30:54.324Z
 ├── .zed/
 │   └── settings.json
 ├── docs/
+│   ├── post-release-drizzle-architecture-plan.md
 │   ├── stats-recurring-spending-map-plan.md
 │   └── STRUCTURE.md
 ├── drizzle/
