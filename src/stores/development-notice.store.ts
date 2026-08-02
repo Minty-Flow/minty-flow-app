@@ -6,6 +6,16 @@ const developmentNoticeStorage = createMMKV({
   id: "development-notice-storage",
 })
 
+let developmentNoticeHiddenForSession = false
+
+export function hideDevelopmentNoticeForSession() {
+  developmentNoticeHiddenForSession = true
+}
+
+export function isDevelopmentNoticeHiddenForSession() {
+  return developmentNoticeHiddenForSession
+}
+
 interface DevelopmentNoticeStore {
   dismissed: boolean
   dismiss: () => void
@@ -17,7 +27,10 @@ export const useDevelopmentNoticeStore = create<DevelopmentNoticeStore>()(
     (set) => ({
       dismissed: false,
       dismiss: () => set({ dismissed: true }),
-      reset: () => set({ dismissed: false }),
+      reset: () => {
+        developmentNoticeHiddenForSession = false
+        set({ dismissed: false })
+      },
     }),
     {
       name: "development-notice-store",

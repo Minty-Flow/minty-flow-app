@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-02T02:21:27.927Z
+Generated on: 2026-08-02T02:54:24.129Z
 ```
 ./
 ├── .github/
@@ -561,6 +561,7 @@ Generated on: 2026-08-02T02:21:27.927Z
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml
 ├── README.md
+├── skills-lock.json
 └── tsconfig.json
 
 ```
