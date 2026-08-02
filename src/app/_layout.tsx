@@ -6,13 +6,14 @@ import * as Notifications from "expo-notifications"
 import { Stack, useRouter, useSegments } from "expo-router"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Alert, Platform } from "react-native"
+import { Alert, BackHandler, Platform } from "react-native"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import { SafeAreaProvider } from "react-native-safe-area-context"
 import { UnistylesRuntime, useUnistyles } from "react-native-unistyles"
 
 import { AppLockGate } from "~/components/app-lock-gate"
+import { ConfirmModal } from "~/components/confirm-modal"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
@@ -59,6 +60,7 @@ function ForcedMigrationGate() {
   const markFailed = useDbMigrationStore((s) => s.markFailed)
   const [checked, setChecked] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [backupPromptVisible, setBackupPromptVisible] = useState(false)
   const upgradeNoticeShownRef = useRef(false)
   const migrationRunRef = useRef(false)
 
@@ -130,6 +132,10 @@ function ForcedMigrationGate() {
     ],
   )
 
+  const exitApp = useCallback(() => {
+    BackHandler.exitApp()
+  }, [])
+
   useEffect(() => {
     if (migrationRunRef.current) return
     if (phase === "failed") {
@@ -139,9 +145,9 @@ function ForcedMigrationGate() {
     try {
       const state = getDatabaseState(migrations)
       if (state === "legacy") {
-        setPhase("exporting")
+        setPhase("needs_backup")
         setChecked(true)
-        void runInPlaceUpgrade(true)
+        setBackupPromptVisible(true)
         return
       }
       if (phase !== "complete") markComplete()
@@ -152,18 +158,41 @@ function ForcedMigrationGate() {
       markFailed(message)
       setChecked(true)
     }
-  }, [markComplete, markFailed, phase, runInPlaceUpgrade, setPhase])
+  }, [markComplete, markFailed, phase, setPhase])
 
   if (!checked) return <MigrationState message="Checking database..." />
 
   if (phase === "idle" || phase === "complete") return <DrizzleMigratedApp />
 
-  if (
-    phase === "needs_backup" ||
-    phase === "exporting" ||
-    phase === "exported" ||
-    phase === "migrating"
-  ) {
+  if (phase === "needs_backup") {
+    return (
+      <>
+        <ForcedMigrationState
+          message="Backup required before update."
+          detail="Minty Flow needs to save a ZIP backup on your phone before updating your data."
+          actionLabel="Continue"
+          busy={busy}
+          onAction={() => setBackupPromptVisible(true)}
+        />
+        <ConfirmModal
+          visible={backupPromptVisible && !busy}
+          onRequestClose={exitApp}
+          onConfirm={async () => {
+            await runInPlaceUpgrade(true)
+          }}
+          title="Save a backup first"
+          description="This update changes how Minty Flow stores your data. Before it starts, we'll ask where to save a ZIP backup on your phone so you have a recovery copy."
+          note="After the backup is saved, the update continues automatically. Keep Minty Flow open until it finishes."
+          confirmLabel="Save backup"
+          cancelLabel="Exit app"
+          icon="archive"
+          closeOnConfirm={false}
+        />
+      </>
+    )
+  }
+
+  if (phase === "exporting" || phase === "exported" || phase === "migrating") {
     return (
       <MigrationState
         message={
@@ -177,15 +206,35 @@ function ForcedMigrationGate() {
 
   if (phase === "failed") {
     return (
-      <ForcedMigrationState
-        message="Database upgrade paused."
-        detail={error ?? "Unknown error"}
-        actionLabel={userBackupUri ? "Try again" : "Save backup"}
-        busy={busy}
-        onAction={() => {
-          void runInPlaceUpgrade(true)
-        }}
-      />
+      <>
+        <ForcedMigrationState
+          message="Database upgrade paused."
+          detail={error ?? "Unknown error"}
+          actionLabel={userBackupUri ? "Try again" : "Save backup"}
+          busy={busy}
+          onAction={() => {
+            if (userBackupUri) {
+              void runInPlaceUpgrade(true)
+              return
+            }
+            setBackupPromptVisible(true)
+          }}
+        />
+        <ConfirmModal
+          visible={backupPromptVisible && !busy}
+          onRequestClose={exitApp}
+          onConfirm={async () => {
+            await runInPlaceUpgrade(true)
+          }}
+          title="Save a backup first"
+          description="This update changes how Minty Flow stores your data. Before it starts, we'll ask where to save a ZIP backup on your phone so you have a recovery copy."
+          note="After the backup is saved, the update continues automatically. Keep Minty Flow open until it finishes."
+          confirmLabel="Save backup"
+          cancelLabel="Exit app"
+          icon="archive"
+          closeOnConfirm={false}
+        />
+      </>
     )
   }
 

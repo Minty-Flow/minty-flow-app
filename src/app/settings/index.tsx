@@ -12,6 +12,7 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { AppData } from "~/constants/app-data"
 import type { TranslationKey } from "~/i18n/config"
+import { useDevelopmentNoticeStore } from "~/stores/development-notice.store"
 
 interface SettingsItem {
   titleKey: TranslationKey
@@ -89,6 +90,7 @@ const otherSettingsItems: SettingsItem[] = [
 export default function SettingsScreen() {
   const router = useRouter()
   const { t } = useTranslation()
+  const resetDevelopmentNotice = useDevelopmentNoticeStore((s) => s.reset)
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -132,6 +134,12 @@ export default function SettingsScreen() {
               onPress={() => router.push(item.route)}
             />
           ))}
+          <ActionItem
+            icon="info-circle"
+            title="Reset development notice"
+            description="Temporary test control"
+            onPress={resetDevelopmentNotice}
+          />
         </View>
       </View>
 

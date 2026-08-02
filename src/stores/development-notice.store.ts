@@ -9,6 +9,7 @@ const developmentNoticeStorage = createMMKV({
 interface DevelopmentNoticeStore {
   dismissed: boolean
   dismiss: () => void
+  reset: () => void
 }
 
 export const useDevelopmentNoticeStore = create<DevelopmentNoticeStore>()(
@@ -16,6 +17,7 @@ export const useDevelopmentNoticeStore = create<DevelopmentNoticeStore>()(
     (set) => ({
       dismissed: false,
       dismiss: () => set({ dismissed: true }),
+      reset: () => set({ dismissed: false }),
     }),
     {
       name: "development-notice-store",

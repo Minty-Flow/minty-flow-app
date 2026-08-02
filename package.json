@@ -4,7 +4,7 @@
   "version": "0.0.8",
   "scripts": {
     "android": "expo run:android",
-    "android:emu": "expo run:android --device Pixel_9_Pro",
+    "android:emu": "expo run:android --device Pixel_10",
     "ios": "expo run:ios",
     "prebuild": "expo prebuild",
     "build": "cd android && ./gradlew bundleRelease assembleRelease",

@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router"
 import { type ComponentProps, Fragment, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { View as RNView } from "react-native"
+import { Alert, View as RNView } from "react-native"
 import { usePagerView } from "react-native-pager-view"
 import Animated, {
   createAnimatedComponent,
@@ -12,12 +12,10 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { IconSvg, type IconSvgName } from "~/components/icons"
 import { Button } from "~/components/ui/button"
-import { InfoBanner } from "~/components/ui/info-banner"
 import { Pressable } from "~/components/ui/pressable"
 import { useTooltipTrigger } from "~/components/ui/tooltip"
 import { View } from "~/components/ui/view"
@@ -171,7 +169,6 @@ function useFabAnimation(isExpanded: boolean) {
 const TabLayout = () => {
   const { theme } = useUnistyles()
   const { t } = useTranslation()
-  const insets = useSafeAreaInsets()
   const {
     AnimatedPagerView,
     ref,
@@ -236,20 +233,19 @@ const TabLayout = () => {
   const fabOptions: FABOption[] = buttonOrder.map(
     (type) => fabOptionsByType[type],
   )
+  useEffect(() => {
+    if (developmentNoticeDismissed) return
+    Alert.alert("A quick note", t("common.developmentNotice.message"), [
+      {
+        text: "Don't show again",
+        onPress: dismissDevelopmentNotice,
+      },
+      { text: t("common.actions.ok") },
+    ])
+  }, [developmentNoticeDismissed, dismissDevelopmentNotice, t])
+
   return (
     <View style={styles.container}>
-      {!developmentNoticeDismissed && (
-        <View
-          style={[styles.developmentNotice, { paddingTop: insets.top + 12 }]}
-        >
-          <InfoBanner
-            text={t("common.developmentNotice.message")}
-            dismissLabel={t("common.actions.close")}
-            onDismiss={dismissDevelopmentNotice}
-          />
-        </View>
-      )}
-
       {/* PAGER */}
       <AnimatedPagerView
         collapsable={false}
@@ -355,10 +351,6 @@ export default TabLayout
 const styles = StyleSheet.create((t) => ({
   container: {
     flex: 1,
-  },
-  developmentNotice: {
-    paddingBottom: 8,
-    backgroundColor: t.colors.surface,
   },
   pager: {
     flex: 1,
