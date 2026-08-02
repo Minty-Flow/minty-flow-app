@@ -36,6 +36,8 @@ interface ConfirmModalProps {
   icon?: IconSvgName
   /** Optional note shown below the description in muted/small text. */
   note?: string
+  /** Keep the modal mounted/owned by the parent after confirm resolves. */
+  closeOnConfirm?: boolean
 }
 export function ConfirmModal({
   visible,
@@ -48,6 +50,7 @@ export function ConfirmModal({
   variant = "default",
   icon,
   note,
+  closeOnConfirm = true,
 }: ConfirmModalProps) {
   const { t } = useTranslation()
   const { width } = useWindowDimensions()
@@ -57,7 +60,7 @@ export function ConfirmModal({
     setLoading(true)
     Promise.resolve(onConfirm())
       .then(() => {
-        onRequestClose()
+        if (closeOnConfirm) onRequestClose()
       })
       .catch((e) => {
         logger.error("Error confirming modal", { error: e })
