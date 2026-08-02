@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
@@ -10,8 +10,8 @@ import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
-import { confirmTransaction } from "~/database/services-sqlite/transaction-service"
+import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
+import { confirmTransaction } from "~/database/services/ledger-service"
 import { useRecurringRule } from "~/hooks/use-recurring-rule"
 import { useMinuteTick } from "~/hooks/use-time-reactivity"
 import {
@@ -32,7 +32,6 @@ import type { UpcomingTransactionsSectionProps } from "./types"
 import { upcomingSectionStyles as sectionStyles } from "./upcoming-transactions-section.styles"
 import { useAppForeground } from "./use-app-foreground"
 import { isUpcoming } from "./utils"
-
 export function UpcomingTransactionsSection({
   transactions,
   onTransactionPress,
@@ -47,38 +46,27 @@ export function UpcomingTransactionsSection({
     (s) => s.updateDateUponConfirmation,
   )
   const transferLayout = useTransfersPreferencesStore((s) => s.layout)
-
   const tick = useMinuteTick()
   const autoConfirmVersion = useAutoConfirmVersion()
   const foregroundVersion = useAppForeground()
-
   // Start of NEXT minute so transactions created "now" (with seconds) are not
   // treated as upcoming — matches splitByPendingStatus which uses startOfNextMinute().
-  const nowMs = (tick + 1) * 60_000
-
-  const upcoming = useMemo(() => {
+  const nowMs = (tick + 1) * 60000
+  const upcoming = (() => {
     void autoConfirmVersion
     void foregroundVersion
     return transactions.filter((r) => !r.isDeleted && isUpcoming(r))
-  }, [transactions, autoConfirmVersion, foregroundVersion])
-
-  const upcomingForDisplay = useMemo(
-    () => applyTransferLayout(upcoming, transferLayout),
-    [upcoming, transferLayout],
-  )
-
-  const { recurring, pending, toAutoConfirm } = useMemo(() => {
+  })()
+  const upcomingForDisplay = applyTransferLayout(upcoming, transferLayout)
+  const { recurring, pending, toAutoConfirm } = (() => {
     void autoConfirmVersion
     void foregroundVersion
-
     const recurringList: TransactionWithRelations[] = []
     const pendingList: TransactionWithRelations[] = []
     const toAutoConfirmList: string[] = []
-
     for (const row of upcomingForDisplay) {
       const canConfirm = confirmable(row, nowMs)
       const preapproved = isPreapproved(row, requireConfirmation)
-
       if (preapproved && canConfirm) {
         toAutoConfirmList.push(row.id)
       } else {
@@ -89,20 +77,12 @@ export function UpcomingTransactionsSection({
         }
       }
     }
-
     return {
       recurring: recurringList,
       pending: pendingList,
       toAutoConfirm: toAutoConfirmList,
     }
-  }, [
-    upcomingForDisplay,
-    nowMs,
-    requireConfirmation,
-    autoConfirmVersion,
-    foregroundVersion,
-  ])
-
+  })()
   useEffect(() => {
     for (const txId of toAutoConfirm) {
       void confirmTransaction(txId, {
@@ -110,11 +90,9 @@ export function UpcomingTransactionsSection({
       })
     }
   }, [toAutoConfirm, updateDateUponConfirmation])
-
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional extra deps
   useEffect(() => {
     if (!isHydrated) return
-
     // Configure must run before start (start throws if config is null)
     autoConfirmationService.configure({
       requireConfirmation,
@@ -129,7 +107,6 @@ export function UpcomingTransactionsSection({
     autoConfirmVersion,
     isHydrated,
   ])
-
   const router = useRouter()
   const { collapsed, setCollapsed } = useUpcomingSectionStore()
   const [confirmAllModalVisible, setConfirmAllModalVisible] = useState(false)
@@ -138,22 +115,17 @@ export function UpcomingTransactionsSection({
   const recurringRule = useRecurringRule(
     recurringToDelete?.extra?.recurringId ?? null,
   )
-
-  const handleConfirm = useCallback(
-    async (transactionId: string) => {
-      const opts = { updateTransactionDate: updateDateUponConfirmation }
-      try {
-        await confirmTransaction(transactionId, opts)
-      } catch {
-        Toast.error({
-          title: t("components.transactionForm.toast.upcomingConfirmFailed"),
-        })
-      }
-    },
-    [updateDateUponConfirmation, t],
-  )
-
-  const handleConfirmAll = useCallback(async () => {
+  const handleConfirm = async (transactionId: string) => {
+    const opts = { updateTransactionDate: updateDateUponConfirmation }
+    try {
+      await confirmTransaction(transactionId, opts)
+    } catch {
+      Toast.error({
+        title: t("components.transactionForm.toast.upcomingConfirmFailed"),
+      })
+    }
+  }
+  const handleConfirmAll = async () => {
     // Use minute-aligned nowMs (same clock as the UI) so "Confirm All" only
     // confirms transactions that are already shown as confirmable — not ones
     // up to 59 seconds early via a raw Date.now() read.
@@ -168,36 +140,24 @@ export function UpcomingTransactionsSection({
         title: t("components.transactionForm.toast.upcomingConfirmAllFailed"),
       })
     }
-  }, [pending, updateDateUponConfirmation, t, nowMs])
-
-  const openConfirmAllModal = useCallback(
-    () => setConfirmAllModalVisible(true),
-    [],
-  )
-  const closeConfirmAllModal = useCallback(
-    () => setConfirmAllModalVisible(false),
-    [],
-  )
-
-  const handleBeforeDelete = useCallback((row: TransactionWithRelations) => {
+  }
+  const openConfirmAllModal = () => setConfirmAllModalVisible(true)
+  const closeConfirmAllModal = () => setConfirmAllModalVisible(false)
+  const handleBeforeDelete = (row: TransactionWithRelations) => {
     if (row.extra?.recurringId) {
       setRecurringToDelete(row)
       return true
     }
     return false
-  }, [])
-
-  const handleDeleteDone = useCallback((row: TransactionWithRelations) => {
+  }
+  const handleDeleteDone = (row: TransactionWithRelations) => {
     autoConfirmationService.cancelSchedule(row.id)
-  }, [])
-
+  }
   const totalVisible = recurring.length + pending.length
   if (totalVisible === 0) return null
-
   const manualConfirmableCount = pending.filter((r) =>
     confirmable(r, nowMs),
   ).length
-
   return (
     <View style={sectionStyles.wrapper}>
       <ConfirmModal

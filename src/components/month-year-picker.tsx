@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Keyboard } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
@@ -25,14 +25,11 @@ interface MonthYearPickerProps {
   dateRange?: StatsDateRange
   onNavigate?: (direction: "prev" | "next") => void
 }
-
 const MIN_YEAR = 1970
 const MAX_YEAR = 2100
-
 function clampYear(y: number) {
   return Math.min(MAX_YEAR, Math.max(MIN_YEAR, y))
 }
-
 export function MonthYearPicker({
   initialYear,
   initialMonth,
@@ -44,18 +41,15 @@ export function MonthYearPicker({
   onNavigate,
 }: MonthYearPickerProps) {
   const { t } = useTranslation()
-
   const [monthPickerOpen, setMonthPickerOpen] = useState(false)
   const [localYear, setLocalYear] = useState(() => initialYear)
   const [localMonth, setLocalMonth] = useState(() => initialMonth)
   const [yearInputValue, setYearInputValue] = useState(() =>
     String(initialYear),
   )
-
   // Preset-aware mode
   const isPresetMode = activePreset !== undefined && dateRange !== undefined
   const navigable = isPresetMode ? canNavigate(activePreset) : true
-
   // Compute pill label
   const pillLabel = isPresetMode
     ? activePreset === "last30"
@@ -64,14 +58,12 @@ export function MonthYearPicker({
         ? t("components.dateRange.presets.allTime")
         : formatNavigatorLabel(dateRange, activePreset)
     : getDisplayMonthTitle(localYear, localMonth)
-
   // Navigation handlers
-  const goPrev = useCallback(() => {
+  const goPrev = () => {
     if (isPresetMode && onNavigate) {
       onNavigate("prev")
       return
     }
-
     // Legacy month navigation
     if (localMonth === 0) {
       const newYear = clampYear(localYear - 1)
@@ -84,14 +76,12 @@ export function MonthYearPicker({
       setLocalMonth(newMonth)
       onSelect(localYear, newMonth)
     }
-  }, [isPresetMode, onNavigate, localMonth, localYear, onSelect])
-
-  const goNext = useCallback(() => {
+  }
+  const goNext = () => {
     if (isPresetMode && onNavigate) {
       onNavigate("next")
       return
     }
-
     // Legacy month navigation
     if (localMonth === 11) {
       const newYear = clampYear(localYear + 1)
@@ -104,44 +94,33 @@ export function MonthYearPicker({
       setLocalMonth(newMonth)
       onSelect(localYear, newMonth)
     }
-  }, [isPresetMode, onNavigate, localMonth, localYear, onSelect])
-
+  }
   // Inline picker handlers
-  const handleMonthPress = useCallback((monthIndex: number) => {
+  const handleMonthPress = (monthIndex: number) => {
     setLocalMonth(monthIndex)
-  }, [])
-
-  const handleYearChange = useCallback((year: number) => {
+  }
+  const handleYearChange = (year: number) => {
     setLocalYear(year)
     setYearInputValue(String(year))
-  }, [])
-
-  const handleNow = useCallback(() => {
+  }
+  const handleNow = () => {
     const now = new Date()
     const y = now.getFullYear()
     const m = now.getMonth()
-
     setLocalYear(y)
     setLocalMonth(m)
     setYearInputValue(String(y))
-
     onNow?.()
-  }, [onNow])
-
-  const handleDone = useCallback(() => {
+  }
+  const handleDone = () => {
     Keyboard.dismiss()
-
     const y = clampYear(parseInt(yearInputValue, 10) || localYear)
-
     setLocalYear(y)
     setYearInputValue(String(y))
-
     onSelect(y, localMonth)
     onDone?.()
-
     setMonthPickerOpen(false)
-  }, [yearInputValue, localYear, localMonth, onSelect, onDone])
-
+  }
   return (
     <>
       {/* Top row: chevrons + pill */}
@@ -186,7 +165,6 @@ export function MonthYearPicker({
     </>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   topRow: {
     flexDirection: "row",
@@ -196,7 +174,6 @@ const styles = StyleSheet.create((theme) => ({
     marginHorizontal: 20,
     marginVertical: 10,
   },
-
   pill: {
     flex: 1,
     backgroundColor: theme.colors.secondary,
@@ -206,13 +183,11 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     justifyContent: "center",
   },
-
   pillText: {
     ...theme.typography.titleSmall,
     fontWeight: "600",
     color: theme.colors.onSecondary,
   },
-
   pickerContainer: {
     marginHorizontal: 20,
     marginVertical: 8,

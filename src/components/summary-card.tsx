@@ -1,4 +1,3 @@
-import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
@@ -6,7 +5,7 @@ import { IconSvg, type IconSvgName } from "~/components/icons"
 import { Money } from "~/components/money"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
+import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import type { TransactionType } from "~/types/transactions"
@@ -16,11 +15,9 @@ import {
 } from "~/types/transactions"
 
 const EMPTY_EXTRA_BY_CURRENCY: Record<string, number> = {}
-
 interface SummarySectionProps {
   transactionsWithRelations: TransactionWithRelations[]
 }
-
 /**
  * SummarySection component provides a unified view for transaction totals.
  * Currency is derived from each transaction's account; type explains meaning.
@@ -33,31 +30,16 @@ export const SummarySection = ({
   const excludeFromTotals = useTransfersPreferencesStore(
     (s) => s.excludeFromTotals,
   )
-
-  const incomeRows = useMemo(
-    () =>
-      transactionsWithRelations.filter(
-        (row) => row.type === TransactionTypeEnum.INCOME,
-      ),
-    [transactionsWithRelations],
+  const incomeRows = transactionsWithRelations.filter(
+    (row) => row.type === TransactionTypeEnum.INCOME,
   )
-  const expenseRows = useMemo(
-    () =>
-      transactionsWithRelations.filter(
-        (row) => row.type === TransactionTypeEnum.EXPENSE,
-      ),
-    [transactionsWithRelations],
+  const expenseRows = transactionsWithRelations.filter(
+    (row) => row.type === TransactionTypeEnum.EXPENSE,
   )
-
-  const transferRows = useMemo(
-    () =>
-      transactionsWithRelations.filter(
-        (row) => row.type === TransactionTypeEnum.TRANSFER || row.isTransfer,
-      ),
-    [transactionsWithRelations],
+  const transferRows = transactionsWithRelations.filter(
+    (row) => row.type === TransactionTypeEnum.TRANSFER || row.isTransfer,
   )
-
-  const extraIncomeByCurrency = useMemo(() => {
+  const extraIncomeByCurrency = (() => {
     if (excludeFromTotals || transferRows.length === 0) return {}
     const byCurrency: Record<string, number> = {}
     transferRows.forEach((row) => {
@@ -68,9 +50,8 @@ export const SummarySection = ({
       byCurrency[currency] = (byCurrency[currency] ?? 0) + amount
     })
     return byCurrency
-  }, [excludeFromTotals, transferRows])
-
-  const extraExpenseByCurrency = useMemo(() => {
+  })()
+  const extraExpenseByCurrency = (() => {
     if (excludeFromTotals || transferRows.length === 0) return {}
     const byCurrency: Record<string, number> = {}
     transferRows.forEach((row) => {
@@ -81,8 +62,7 @@ export const SummarySection = ({
       byCurrency[currency] = (byCurrency[currency] ?? 0) + Math.abs(amount)
     })
     return byCurrency
-  }, [excludeFromTotals, transferRows])
-
+  })()
   return (
     <View style={styles.sectionContainer}>
       <Card
@@ -100,7 +80,6 @@ export const SummarySection = ({
     </View>
   )
 }
-
 interface CardProps {
   type: TransactionType
   rows: TransactionWithRelations[]
@@ -108,7 +87,6 @@ interface CardProps {
   /** Extra amounts to add per currency (e.g. transfer contributions when excludeFromTotals is false). */
   extraByCurrency?: Record<string, number>
 }
-
 const Card = ({
   type,
   rows,
@@ -124,16 +102,13 @@ const Card = ({
     ? "arrow-down-left-outline"
     : "arrow-up-right-outline"
   const colorStyle = isIncome ? styles.incomeText : styles.expenseText
-
   // Sum by currency (from account), then add extra (e.g. transfer amounts when not excluded)
-  const currencyTotals = useMemo(() => {
+  const currencyTotals = (() => {
     const totals: Record<string, number> = {}
     rows.forEach((row) => {
       const currency = row.account?.currencyCode ?? ""
       if (!currency) return
-
       let amount = row.amount || 0
-
       if (type === TransactionTypeEnum.EXPENSE) {
         if (
           row.subtype === TransactionSubTypeEnum.LOAN_REPAYMENT ||
@@ -152,15 +127,13 @@ const Card = ({
           return
         }
       }
-
       totals[currency] = (totals[currency] || 0) + amount
     })
     Object.entries(extraByCurrency).forEach(([currency, amount]) => {
       if (amount !== 0) totals[currency] = (totals[currency] ?? 0) + amount
     })
     return Object.entries(totals).sort(([a], [b]) => a.localeCompare(b))
-  }, [rows, extraByCurrency, type])
-
+  })()
   return (
     <View style={styles.card}>
       <View style={styles.cardContent}>
@@ -228,7 +201,6 @@ const Card = ({
     </View>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   sectionContainer: {
     flexDirection: "row",

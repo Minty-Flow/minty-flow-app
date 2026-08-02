@@ -7,11 +7,7 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { Fonts } from "~/styles/fonts"
 
-import {
-  buttonTextSizeStyles,
-  buttonTextStyles,
-  useButtonTextContext,
-} from "./button"
+import { useButtonTextContext } from "./button"
 
 export type TextVariant =
   | "default"
@@ -34,6 +30,47 @@ const ARIA_LEVEL: Partial<Record<TextVariant, number>> = {
   h3: 3,
   h4: 4,
 }
+
+const buttonTextStyles = StyleSheet.create((theme) => ({
+  base: {
+    ...theme.typography.labelLarge,
+    color: theme.colors.onSurface,
+  },
+  default: {
+    color: theme.colors.onPrimary,
+  },
+  destructive: {
+    color: theme.colors.onError,
+  },
+  outline: {
+    color: theme.colors.onSurface,
+  },
+  secondary: {
+    color: theme.colors.onSecondary,
+  },
+  ghost: {
+    color: theme.colors.onSurface,
+  },
+  link: {
+    color: theme.colors.primary,
+    textDecorationLine: "underline",
+  },
+}))
+
+const buttonTextSizeStyles = StyleSheet.create((theme) => ({
+  default: {
+    fontSize: theme.typography.labelLarge.fontSize,
+  },
+  sm: {
+    fontSize: theme.typography.bodyMedium.fontSize,
+  },
+  lg: {
+    fontSize: theme.typography.bodyLarge.fontSize,
+  },
+  icon: {
+    fontSize: theme.typography.labelLarge.fontSize,
+  },
+}))
 
 interface TextProps extends RNTextProps {
   variant?: TextVariant

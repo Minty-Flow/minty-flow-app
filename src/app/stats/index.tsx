@@ -14,9 +14,9 @@ import { StatsCurrencyToggle } from "~/components/stats/stats-currency-toggle"
 import { StatsEmptyState } from "~/components/stats/stats-empty-state"
 import { StatsPendingNotice } from "~/components/stats/stats-pending-notice"
 import { StatsPeriodHeader } from "~/components/stats/stats-period-header"
-import { StatsSkeleton } from "~/components/stats/stats-skeleton"
+import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { View } from "~/components/ui/view"
-import { useStats } from "~/hooks/use-stats"
+import { useStats } from "~/database/drizzle/read-models/stats-read-model"
 import { formatRangeLabel } from "~/utils/stats-date-range"
 
 export default function StatsScreen() {
@@ -89,7 +89,11 @@ export default function StatsScreen() {
         navigate={navigate}
       />
 
-      {isFirstLoad && <StatsSkeleton />}
+      {isFirstLoad && (
+        <View style={styles.loading}>
+          <ActivityIndicatorMinty />
+        </View>
+      )}
 
       {hasNoData && (
         <StatsEmptyState
@@ -173,5 +177,10 @@ const styles = StyleSheet.create((theme) => ({
   },
   bottomSpacer: {
     height: 100,
+  },
+  loading: {
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 240,
   },
 }))

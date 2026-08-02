@@ -1,13 +1,5 @@
 import { useNavigation } from "expo-router"
-import {
-  Suspense,
-  use,
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useReducer,
-  useState,
-} from "react"
+import { Suspense, use, useLayoutEffect, useReducer, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
@@ -37,14 +29,12 @@ import {
 } from "../../../hooks/exchange-rates-editor.reducer"
 
 const EXCHANGE_API_URL = "https://github.com/fawazahmed0/exchange-api"
-
 async function createRatesPromise(): Promise<{
   rates: ExchangeRates | null
   error: string | null
 }> {
   const usdCurrency = currencyRegistryService.getCurrencyByCode("USD")
   const useCode = usdCurrency?.code ?? "USD"
-
   return exchangeRatesService
     .tryFetchRates(useCode.toLowerCase())
     .then((result) => ({
@@ -56,7 +46,6 @@ async function createRatesPromise(): Promise<{
       error: e instanceof Error ? e.message : "Failed to load rates",
     }))
 }
-
 function getEffectiveRate(
   code: string,
   apiRates: Record<string, number> | null,
@@ -72,16 +61,17 @@ function getEffectiveRate(
   }
   return null
 }
-
 interface RateEntry {
   code: string
   displayCode: string
   rate: number
   isCustom: boolean
 }
-
 interface ExchangeRatesContentProps {
-  ratesPromise: Promise<{ rates: ExchangeRates | null; error: string | null }>
+  ratesPromise: Promise<{
+    rates: ExchangeRates | null
+    error: string | null
+  }>
   onRetry: () => void
   customRates: Record<string, number>
   setCustomRate: (code: string, rate: number) => void
@@ -89,7 +79,6 @@ interface ExchangeRatesContentProps {
   editorState: EditorState
   dispatch: React.Dispatch<EditorAction>
 }
-
 function ExchangeRatesContent({
   ratesPromise,
   onRetry,
@@ -103,8 +92,7 @@ function ExchangeRatesContent({
   const { searchQuery, editingCurrencyCode, draftRates } = editorState
   const { t } = useTranslation()
   const [draftRateInput, setDraftRateInput] = useState<string | null>(null)
-
-  const entries = useMemo((): RateEntry[] => {
+  const entries = ((): RateEntry[] => {
     if (!rates?.rates) return []
     const upperCustom = Object.keys(customRates).reduce<Record<string, number>>(
       (acc, k) => {
@@ -130,134 +118,96 @@ function ExchangeRatesContent({
     }
     list.sort((a, b) => a.displayCode.localeCompare(b.displayCode))
     return list
-  }, [rates, customRates])
-
-  const filteredEntries = useMemo(() => {
+  })()
+  const filteredEntries = (() => {
     if (!searchQuery.trim()) return entries
     const q = searchQuery.trim().toUpperCase()
     return entries.filter((e) => e.displayCode.includes(q))
-  }, [entries, searchQuery])
-
-  const handleSelectEntry = useCallback(
-    (code: string, currentRate: number) => {
-      setDraftRateInput(String(currentRate))
-      dispatch({ type: "SELECT_ENTRY", code, rate: currentRate })
-    },
-    [dispatch],
-  )
-
-  const handleDraftChange = useCallback(
-    (code: string, rawValue: string) => {
-      setDraftRateInput(rawValue)
-      const value = Number.parseFloat(rawValue.replace(",", "."))
-      dispatch({
-        type: "DRAFT_CHANGE",
-        code,
-        value: Number.isFinite(value) ? value : 0,
-      })
-    },
-    [dispatch],
-  )
-
-  const handleSaveRate = useCallback(
-    (code: string, value: number) => {
-      if (value <= 0) return
-      setCustomRate(code, value)
-      setDraftRateInput(null)
-      dispatch({ type: "CLEAR_DRAFT", code })
-    },
-    [setCustomRate, dispatch],
-  )
-
-  const handleResetToApiRate = useCallback(
-    (code: string) => {
-      removeCustomRate(code)
-      setDraftRateInput(null)
-      dispatch({ type: "CLEAR_DRAFT", code })
-    },
-    [removeCustomRate, dispatch],
-  )
-
-  const renderItem = useCallback(
-    ({ item }: { item: RateEntry }) => {
-      const isEditing = editingCurrencyCode === item.displayCode
-      const rate = getEffectiveRate(
-        item.code,
-        rates?.rates ?? null,
-        customRates,
-      )
-      const displayRate = rate ?? 0
-      const draftValue = draftRates[item.displayCode] ?? displayRate
-      const isInvalidRate = draftValue <= 0
-
-      return (
-        <View style={styles.entryWrapper}>
-          <ListItem
-            style={
-              isEditing || item.isCustom ? styles.entryRowSelected : undefined
-            }
-            onPress={() => handleSelectEntry(item.displayCode, displayRate)}
-          >
-            <Text style={styles.entryEquals}>=</Text>
-            <Text style={styles.entryAmount} numberOfLines={1}>
-              {formatNumber(displayRate, {
-                minimumFractionDigits: 14,
-                maximumFractionDigits: 14,
-                useGrouping: false,
-              })}
+  })()
+  const handleSelectEntry = (code: string, currentRate: number) => {
+    setDraftRateInput(String(currentRate))
+    dispatch({ type: "SELECT_ENTRY", code, rate: currentRate })
+  }
+  const handleDraftChange = (code: string, rawValue: string) => {
+    setDraftRateInput(rawValue)
+    const value = Number.parseFloat(rawValue.replace(",", "."))
+    dispatch({
+      type: "DRAFT_CHANGE",
+      code,
+      value: Number.isFinite(value) ? value : 0,
+    })
+  }
+  const handleSaveRate = (code: string, value: number) => {
+    if (value <= 0) return
+    setCustomRate(code, value)
+    setDraftRateInput(null)
+    dispatch({ type: "CLEAR_DRAFT", code })
+  }
+  const handleResetToApiRate = (code: string) => {
+    removeCustomRate(code)
+    setDraftRateInput(null)
+    dispatch({ type: "CLEAR_DRAFT", code })
+  }
+  const renderItem = ({ item }: { item: RateEntry }) => {
+    const isEditing = editingCurrencyCode === item.displayCode
+    const rate = getEffectiveRate(item.code, rates?.rates ?? null, customRates)
+    const displayRate = rate ?? 0
+    const draftValue = draftRates[item.displayCode] ?? displayRate
+    const isInvalidRate = draftValue <= 0
+    return (
+      <View style={styles.entryWrapper}>
+        <ListItem
+          style={
+            isEditing || item.isCustom ? styles.entryRowSelected : undefined
+          }
+          onPress={() => handleSelectEntry(item.displayCode, displayRate)}
+        >
+          <Text style={styles.entryEquals}>=</Text>
+          <Text style={styles.entryAmount} numberOfLines={1}>
+            {formatNumber(displayRate, {
+              minimumFractionDigits: 14,
+              maximumFractionDigits: 14,
+              useGrouping: false,
+            })}
+          </Text>
+          <Text style={styles.entryCode}>{item.displayCode}</Text>
+        </ListItem>
+        {isEditing && (
+          <View style={styles.inlineInput}>
+            <Text>
+              {`1 USD = ${formatNumber(draftValue, {
+                maximumFractionDigits: 6,
+              })} ${item.displayCode}`}
             </Text>
-            <Text style={styles.entryCode}>{item.displayCode}</Text>
-          </ListItem>
-          {isEditing && (
-            <View style={styles.inlineInput}>
-              <Text>
-                {`1 USD = ${formatNumber(draftValue, {
-                  maximumFractionDigits: 6,
-                })} ${item.displayCode}`}
-              </Text>
-              <Input
-                value={draftRateInput ?? String(draftValue || "")}
-                onChangeText={(value) =>
-                  handleDraftChange(item.displayCode, value)
-                }
-                keyboardType="decimal-pad"
-                placeholder="0"
-                error={isInvalidRate}
-              />
-              <View style={styles.saveButtonRow}>
-                <Button
-                  variant="outline"
-                  onPress={() => handleResetToApiRate(item.displayCode)}
-                >
-                  <Text>{t("common.actions.reset")}</Text>
-                </Button>
-                <Button
-                  variant="default"
-                  onPress={() => handleSaveRate(item.displayCode, draftValue)}
-                  disabled={isInvalidRate}
-                >
-                  <Text>{t("common.actions.save")}</Text>
-                </Button>
-              </View>
+            <Input
+              value={draftRateInput ?? String(draftValue || "")}
+              onChangeText={(value) =>
+                handleDraftChange(item.displayCode, value)
+              }
+              keyboardType="decimal-pad"
+              placeholder="0"
+              error={isInvalidRate}
+            />
+            <View style={styles.saveButtonRow}>
+              <Button
+                variant="outline"
+                onPress={() => handleResetToApiRate(item.displayCode)}
+              >
+                <Text>{t("common.actions.reset")}</Text>
+              </Button>
+              <Button
+                variant="default"
+                onPress={() => handleSaveRate(item.displayCode, draftValue)}
+                disabled={isInvalidRate}
+              >
+                <Text>{t("common.actions.save")}</Text>
+              </Button>
             </View>
-          )}
-        </View>
-      )
-    },
-    [
-      editingCurrencyCode,
-      draftRates,
-      rates?.rates,
-      customRates,
-      handleSelectEntry,
-      handleDraftChange,
-      draftRateInput,
-      handleSaveRate,
-      handleResetToApiRate,
-      t,
-    ],
-  )
-
+          </View>
+        )}
+      </View>
+    )
+  }
   const listHeader = (
     <View style={styles.listHeader}>
       <ExternalLink href={EXCHANGE_API_URL} pressableStyle={styles.apiCard}>
@@ -280,7 +230,6 @@ function ExchangeRatesContent({
       <Text style={styles.baseHeading}>1 USD</Text>
     </View>
   )
-
   if (error && !rates) {
     return (
       <View style={styles.centered}>
@@ -293,7 +242,6 @@ function ExchangeRatesContent({
       </View>
     )
   }
-
   return (
     <FlatList
       data={filteredEntries}
@@ -307,7 +255,6 @@ function ExchangeRatesContent({
     />
   )
 }
-
 export default function ExchangeRatesScreen() {
   const navigation = useNavigation()
   const customRates = useExchangeRatesPreferencesStore((s) => s.customRates)
@@ -316,18 +263,15 @@ export default function ExchangeRatesScreen() {
     (s) => s.removeCustomRate,
   )
   const { t } = useTranslation()
-
   const [ratesPromise, setRatesPromise] = useState(createRatesPromise)
   const [editorState, dispatch] = useReducer(
     editorReducer,
     INITIAL_EDITOR_STATE,
   )
   const [infoModalVisible, setInfoModalVisible] = useState(false)
-
-  const handleRetry = useCallback(() => {
+  const handleRetry = () => {
     setRatesPromise(createRatesPromise())
-  }, [])
-
+  }
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -341,7 +285,6 @@ export default function ExchangeRatesScreen() {
       ),
     })
   }, [navigation, t])
-
   return (
     <>
       <Suspense
@@ -371,7 +314,6 @@ export default function ExchangeRatesScreen() {
     </>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   list: {
     flex: 1,
@@ -449,7 +391,6 @@ const styles = StyleSheet.create((theme) => ({
     marginHorizontal: 20,
     marginVertical: 12,
   },
-
   centered: {
     flex: 1,
     justifyContent: "center",

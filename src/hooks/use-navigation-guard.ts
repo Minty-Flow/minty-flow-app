@@ -1,5 +1,5 @@
 import type { EventArg } from "expo-router/react-navigation"
-import { useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef } from "react"
 
 type BeforeRemoveEvent = EventArg<"beforeRemove", true, { action: unknown }>
 
@@ -22,26 +22,31 @@ type UseNavigationGuardReturn = {
   allowNavigation: () => void
 }
 
+function listenBeforeRemove(
+  navigation: NavigationWithBeforeRemove,
+  callback: (e: BeforeRemoveEvent) => void,
+): () => void {
+  return navigation.addListener("beforeRemove", callback)
+}
+
 export const useNavigationGuard = ({
   navigation,
   when,
   onBlock,
 }: UseNavigationGuardOptions): UseNavigationGuardReturn => {
   const isNavigatingRef = useRef(false)
+  const block = useCallback(() => {
+    onBlock()
+  }, [onBlock])
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener(
-      "beforeRemove",
-      (e: BeforeRemoveEvent) => {
-        if (isNavigatingRef.current || !when) return
+    return listenBeforeRemove(navigation, (e) => {
+      if (isNavigatingRef.current || !when) return
 
-        e.preventDefault()
-        onBlock()
-      },
-    )
-
-    return unsubscribe
-  }, [navigation, when, onBlock])
+      e.preventDefault()
+      block()
+    })
+  }, [block, navigation, when])
 
   return {
     allowNavigation: () => {

@@ -1,13 +1,7 @@
 import { useNavigation, useRouter } from "expo-router"
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useState,
-} from "react"
+import { useEffect, useLayoutEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FlatList, View as RNView, ScrollView } from "react-native"
+import { FlatList, View as RNView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { BillItemCard } from "~/components/bill-splitter/bill-item-card"
@@ -16,29 +10,28 @@ import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { InfoModal } from "~/components/info-modal"
 import { Money } from "~/components/money"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Input } from "~/components/ui/input"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { useActiveAccountsQuery } from "~/database/drizzle/read-models/account-read-model"
 import {
   getAllocatedTotal,
   getBillTotal,
   useBillSplitterStore,
 } from "~/stores/bill-splitter.store"
-import { useActiveAccounts } from "~/stores/db/account.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { BillItem } from "~/types/bill-splitter"
-
 export default function BillSplitterScreen() {
-  const accounts = useActiveAccounts()
+  const { data: accounts, status } = useActiveAccountsQuery()
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const router = useRouter()
   const navigation = useNavigation()
   const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
-
   const participants = useBillSplitterStore((s) => s.participants)
   const items = useBillSplitterStore((s) => s.items)
   const accountId = useBillSplitterStore((s) => s.accountId)
@@ -46,44 +39,30 @@ export default function BillSplitterScreen() {
   const removeItem = useBillSplitterStore((s) => s.removeItem)
   const clearBill = useBillSplitterStore((s) => s.clearBill)
   const setCurrencyCode = useBillSplitterStore((s) => s.setCurrencyCode)
-
   const [infoVisible, setInfoVisible] = useState(false)
   const [clearVisible, setClearVisible] = useState(false)
   const [accountPickerOpen, setAccountPickerOpen] = useState(false)
   const [accountSearchQuery, setAccountSearchQuery] = useState("")
-
   const selectedAccount = accounts.find((a) => a.id === accountId) ?? null
   const currency = selectedAccount?.currencyCode ?? preferredCurrency
-
   useEffect(() => setCurrencyCode(currency), [currency, setCurrencyCode])
-
   const total = getBillTotal(items)
   const allocated = getAllocatedTotal(items)
-
   // Progress bar fill percentage, clamped to 0–100
   const progressPercent = total > 0 ? Math.min(allocated / total, 1) * 100 : 0
-
-  const filteredAccounts = useMemo(() => {
+  const filteredAccounts = (() => {
     if (!accountSearchQuery.trim()) return accounts
     const lower = accountSearchQuery.toLowerCase()
     return accounts.filter((a) => a.name.toLowerCase().includes(lower))
-  }, [accounts, accountSearchQuery])
-
-  const handleToggleAccountPicker = useCallback(() => {
-    setAccountPickerOpen((open) => {
-      if (!open) setAccountSearchQuery("")
-      return !open
-    })
-  }, [])
-
-  const handleSelectAccount = useCallback(
-    (id: string) => {
-      setAccountId(id)
-      setAccountPickerOpen(false)
-    },
-    [setAccountId],
-  )
-
+  })()
+  const handleToggleAccountPicker = () => {
+    if (!accountPickerOpen) setAccountSearchQuery("")
+    setAccountPickerOpen((open) => !open)
+  }
+  const handleSelectAccount = (id: string) => {
+    setAccountId(id)
+    setAccountPickerOpen(false)
+  }
   // Header right: info button + trash (only when items exist)
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -119,26 +98,21 @@ export default function BillSplitterScreen() {
       ),
     })
   }, [navigation, theme, t, items.length])
-
-  const renderItem = useCallback(
-    ({ item }: { item: BillItem }) => (
-      <BillItemCard
-        item={item}
-        participants={participants}
-        onDelete={() => removeItem(item.id)}
-        onEdit={() =>
-          router.push({
-            pathname: "/settings/bill-splitter/add-item",
-            params: { itemId: item.id },
-          })
-        }
-      />
-    ),
-    [participants, removeItem, router],
+  const renderItem = ({ item }: { item: BillItem }) => (
+    <BillItemCard
+      item={item}
+      participants={participants}
+      onDelete={() => removeItem(item.id)}
+      onEdit={() =>
+        router.push({
+          pathname: "/settings/bill-splitter/add-item",
+          params: { itemId: item.id },
+        })
+      }
+    />
   )
-
   const hasItems = items.length > 0
-
+  if (status === "loading") return <RouteLoadingState />
   return (
     <View style={styles.container}>
       <FlatList
@@ -234,15 +208,15 @@ export default function BillSplitterScreen() {
                     placeholderTextColor={theme.colors.semantic.semi}
                     style={styles.pickerSearchInput}
                   />
-                  <ScrollView
+                  <FlatList
                     style={styles.pickerList}
+                    data={filteredAccounts}
+                    keyExtractor={(account) => account.id}
                     keyboardShouldPersistTaps="handled"
                     nestedScrollEnabled
                     showsVerticalScrollIndicator
-                  >
-                    {filteredAccounts.map((account) => (
+                    renderItem={({ item: account }) => (
                       <Pressable
-                        key={account.id}
                         style={[
                           styles.accountPickerRow,
                           account.id === accountId &&
@@ -270,8 +244,8 @@ export default function BillSplitterScreen() {
                           />
                         </View>
                       </Pressable>
-                    ))}
-                  </ScrollView>
+                    )}
+                  />
                 </View>
               )}
             </RNView>
@@ -382,13 +356,11 @@ export default function BillSplitterScreen() {
     </View>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.surface,
   },
-
   // Header
   headerRight: {
     flexDirection: "row",
@@ -400,7 +372,6 @@ const styles = StyleSheet.create((theme) => ({
     padding: 6,
     borderRadius: theme.radius,
   },
-
   // Account picker block (trigger + inline list)
   accountPickerBlock: {
     marginTop: 16,
@@ -448,7 +419,6 @@ const styles = StyleSheet.create((theme) => ({
     opacity: 0.7,
     alignSelf: "center",
   },
-
   // Inline account picker dropdown
   inlineAccountPicker: {
     marginTop: 8,
@@ -490,7 +460,6 @@ const styles = StyleSheet.create((theme) => ({
   accountPickerRowBalance: {
     fontSize: theme.typography.bodyMedium.fontSize,
   },
-
   // Hero total display
   heroContainer: {
     alignItems: "center",
@@ -510,7 +479,6 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSecondary,
   },
-
   // Progress bar
   progressTrack: {
     marginTop: 12,
@@ -525,7 +493,6 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 3,
     backgroundColor: theme.colors.primary,
   },
-
   // Participants chip
   participantsChip: {
     marginTop: 8,
@@ -545,7 +512,6 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "500",
     color: theme.colors.onSecondary,
   },
-
   // Items list
   listContent: {
     paddingTop: 0,
@@ -560,7 +526,6 @@ const styles = StyleSheet.create((theme) => ({
   separator: {
     height: 0,
   },
-
   // Summary bottom button
   summaryButtonContainer: {
     position: "absolute",
@@ -583,7 +548,6 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "600",
     color: theme.colors.onPrimary,
   },
-
   // FAB
   fab: {
     position: "absolute",

@@ -1,4 +1,5 @@
-import { createContext, useContext, useMemo } from "react"
+import type { ComponentRef, Ref } from "react"
+import { createContext, useContext } from "react"
 import type { PressableProps } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
@@ -9,9 +10,7 @@ const ButtonTextContext = createContext<{
   variant?: ButtonVariant
   size?: ButtonSize
 }>({})
-
 export const useButtonTextContext = () => useContext(ButtonTextContext)
-
 type ButtonVariant =
   | "default"
   | "destructive"
@@ -20,25 +19,25 @@ type ButtonVariant =
   | "ghost"
   | "link"
 type ButtonSize = "default" | "sm" | "lg" | "icon"
-
 interface ButtonProps extends PressableProps {
   variant?: ButtonVariant
   size?: ButtonSize
+  ref?: Ref<ComponentRef<typeof Pressable>>
 }
-
 export const Button = ({
   variant = "default",
   size = "default",
   disabled,
   style,
   children,
+  ref,
   ...props
 }: ButtonProps) => {
-  const contextValue = useMemo(() => ({ variant, size }), [variant, size])
-
+  const contextValue = { variant, size }
   return (
     <ButtonTextContext.Provider value={contextValue}>
       <Pressable
+        ref={ref}
         // native
         role="button"
         style={(state) => [
@@ -58,7 +57,6 @@ export const Button = ({
     </ButtonTextContext.Provider>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   base: {
     flexDirection: "row",
@@ -72,7 +70,6 @@ const styles = StyleSheet.create((theme) => ({
     opacity: 0.5,
   },
 }))
-
 const variantStyles = StyleSheet.create((theme) => ({
   default: {
     backgroundColor: theme.colors.primary,
@@ -115,7 +112,6 @@ const variantStyles = StyleSheet.create((theme) => ({
     backgroundColor: "transparent",
   },
 }))
-
 // Pressed state styles for native (non-web)
 const pressedStyles = StyleSheet.create((theme) => ({
   default: {},
@@ -127,7 +123,6 @@ const pressedStyles = StyleSheet.create((theme) => ({
   },
   link: {},
 }))
-
 const sizeStyles = StyleSheet.create((theme) => ({
   default: {
     height: 40,
@@ -152,48 +147,5 @@ const sizeStyles = StyleSheet.create((theme) => ({
     width: 40,
     paddingHorizontal: 0,
     paddingVertical: 0,
-  },
-}))
-
-// Text styles for button variants
-export const buttonTextStyles = StyleSheet.create((theme) => ({
-  base: {
-    ...theme.typography.labelLarge,
-    color: theme.colors.onSurface,
-  },
-  default: {
-    color: theme.colors.onPrimary,
-  },
-  destructive: {
-    color: theme.colors.onError,
-  },
-  outline: {
-    color: theme.colors.onSurface,
-  },
-  secondary: {
-    color: theme.colors.onSecondary,
-  },
-  ghost: {
-    color: theme.colors.onSurface,
-  },
-  link: {
-    color: theme.colors.primary,
-    textDecorationLine: "underline",
-  },
-}))
-
-// Size-specific text styles
-export const buttonTextSizeStyles = StyleSheet.create((theme) => ({
-  default: {
-    fontSize: theme.typography.labelLarge.fontSize,
-  },
-  sm: {
-    fontSize: theme.typography.bodyMedium.fontSize,
-  },
-  lg: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-  },
-  icon: {
-    fontSize: theme.typography.labelLarge.fontSize,
   },
 }))

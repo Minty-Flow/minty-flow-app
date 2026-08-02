@@ -3,8 +3,7 @@
  * Horizontal pill row + expandable inline filter panels.
  * No bottom sheets — filters are shown directly in the view.
  */
-
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView, View } from "react-native"
 import { useUnistyles } from "react-native-unistyles"
@@ -44,7 +43,6 @@ import {
   type FilterPanelKey,
   type TransactionFilterHeaderProps,
 } from "./types"
-
 export function TransactionFilterHeader({
   accounts,
   categoriesByType,
@@ -64,149 +62,94 @@ export function TransactionFilterHeader({
   )
   const [dateModalVisible, setDateModalVisible] = useState(false)
   const { theme } = useUnistyles()
-
-  const togglePanel = useCallback((key: FilterPanelKey) => {
+  const togglePanel = (key: FilterPanelKey) => {
     setExpandedPanel((prev) => (prev === key ? null : key))
-  }, [])
-
-  const handleDatePress = useCallback(() => {
+  }
+  const handleDatePress = () => {
     setExpandedPanel(null)
     setDateModalVisible(true)
-  }, [])
-
-  const handleSearchChange = useCallback(
-    (text: string) => {
-      const next = { ...searchState, query: text }
-      onSearchApply?.(next)
-    },
-    [searchState, onSearchApply],
-  )
-
-  const handleSearchMatchTypeChange = useCallback(
-    (matchType: SearchMatchType) => {
-      const next = { ...searchState, matchType }
-      onSearchApply?.(next)
-    },
-    [searchState, onSearchApply],
-  )
-
-  const handleSearchIncludeNotesChange = useCallback(
-    (includeNotes: boolean) => {
-      const next = { ...searchState, includeNotes }
-      onSearchApply?.(next)
-    },
-    [searchState, onSearchApply],
-  )
-
-  const handleSearchClear = useCallback(() => {
+  }
+  const handleSearchChange = (text: string) => {
+    const next = { ...searchState, query: text }
+    onSearchApply?.(next)
+  }
+  const handleSearchMatchTypeChange = (matchType: SearchMatchType) => {
+    const next = { ...searchState, matchType }
+    onSearchApply?.(next)
+  }
+  const handleSearchIncludeNotesChange = (includeNotes: boolean) => {
+    const next = { ...searchState, includeNotes }
+    onSearchApply?.(next)
+  }
+  const handleSearchClear = () => {
     onSearchApply?.(DEFAULT_SEARCH_STATE)
-  }, [onSearchApply])
-
-  const toggleAccount = useCallback(
-    (accountId: string) => {
-      const ids = filterState.accountIds.includes(accountId)
-        ? filterState.accountIds.filter((id) => id !== accountId)
-        : [...filterState.accountIds, accountId]
-      onFilterChange({ ...filterState, accountIds: ids })
-    },
-    [filterState, onFilterChange],
-  )
-
-  const clearAccounts = useCallback(() => {
+  }
+  const toggleAccount = (accountId: string) => {
+    const ids = filterState.accountIds.includes(accountId)
+      ? filterState.accountIds.filter((id) => id !== accountId)
+      : [...filterState.accountIds, accountId]
+    onFilterChange({ ...filterState, accountIds: ids })
+  }
+  const clearAccounts = () => {
     onFilterChange({ ...filterState, accountIds: [] })
-  }, [filterState, onFilterChange])
-
-  const toggleCurrency = useCallback(
-    (currencyCode: string) => {
-      const codes = filterState.currencyIds.includes(currencyCode)
-        ? filterState.currencyIds.filter((c) => c !== currencyCode)
-        : [...filterState.currencyIds, currencyCode]
-      onFilterChange({ ...filterState, currencyIds: codes })
-    },
-    [filterState, onFilterChange],
-  )
-
-  const clearCurrencies = useCallback(() => {
+  }
+  const toggleCurrency = (currencyCode: string) => {
+    const codes = filterState.currencyIds.includes(currencyCode)
+      ? filterState.currencyIds.filter((c) => c !== currencyCode)
+      : [...filterState.currencyIds, currencyCode]
+    onFilterChange({ ...filterState, currencyIds: codes })
+  }
+  const clearCurrencies = () => {
     onFilterChange({ ...filterState, currencyIds: [] })
-  }, [filterState, onFilterChange])
-
-  const toggleCategory = useCallback(
-    (categoryId: string) => {
-      const ids = filterState.categoryIds.includes(categoryId)
-        ? filterState.categoryIds.filter((id) => id !== categoryId)
-        : [...filterState.categoryIds, categoryId]
-      onFilterChange({ ...filterState, categoryIds: ids })
-    },
-    [filterState, onFilterChange],
-  )
-
-  const clearCategories = useCallback(() => {
+  }
+  const toggleCategory = (categoryId: string) => {
+    const ids = filterState.categoryIds.includes(categoryId)
+      ? filterState.categoryIds.filter((id) => id !== categoryId)
+      : [...filterState.categoryIds, categoryId]
+    onFilterChange({ ...filterState, categoryIds: ids })
+  }
+  const clearCategories = () => {
     onFilterChange({ ...filterState, categoryIds: [] })
-  }, [filterState, onFilterChange])
-
-  const clearTags = useCallback(() => {
+  }
+  const clearTags = () => {
     onFilterChange({ ...filterState, tagIds: [] })
-  }, [filterState, onFilterChange])
-
-  const toggleTag = useCallback(
-    (tagId: string) => {
-      const ids = filterState.tagIds.includes(tagId)
-        ? filterState.tagIds.filter((id) => id !== tagId)
-        : [...filterState.tagIds, tagId]
-      onFilterChange({ ...filterState, tagIds: ids })
-    },
-    [filterState, onFilterChange],
-  )
-
-  const toggleType = useCallback(
-    (type: TransactionType) => {
-      const types = filterState.typeFilters.includes(type)
-        ? filterState.typeFilters.filter((t) => t !== type)
-        : [...filterState.typeFilters, type]
-      onFilterChange({ ...filterState, typeFilters: types })
-    },
-    [filterState, onFilterChange],
-  )
-
-  const clearTypes = useCallback(() => {
+  }
+  const toggleTag = (tagId: string) => {
+    const ids = filterState.tagIds.includes(tagId)
+      ? filterState.tagIds.filter((id) => id !== tagId)
+      : [...filterState.tagIds, tagId]
+    onFilterChange({ ...filterState, tagIds: ids })
+  }
+  const toggleType = (type: TransactionType) => {
+    const types = filterState.typeFilters.includes(type)
+      ? filterState.typeFilters.filter((t) => t !== type)
+      : [...filterState.typeFilters, type]
+    onFilterChange({ ...filterState, typeFilters: types })
+  }
+  const clearTypes = () => {
     onFilterChange({ ...filterState, typeFilters: [] })
-  }, [filterState, onFilterChange])
-
-  const setPending = useCallback(
-    (value: PendingOptionsType) => {
-      onFilterChange({ ...filterState, pendingFilter: value })
-    },
-    [filterState, onFilterChange],
-  )
-
-  const setGroupBy = useCallback(
-    (value: GroupByOption) => {
-      onFilterChange({ ...filterState, groupBy: value })
-    },
-    [filterState, onFilterChange],
-  )
-
-  const setAttachment = useCallback(
-    (value: AttachmentsOptionsType) => {
-      onFilterChange({
-        ...filterState,
-        attachmentFilter: value,
-      })
-    },
-    [filterState, onFilterChange],
-  )
-
-  const handleClearAll = useCallback(() => {
+  }
+  const setPending = (value: PendingOptionsType) => {
+    onFilterChange({ ...filterState, pendingFilter: value })
+  }
+  const setGroupBy = (value: GroupByOption) => {
+    onFilterChange({ ...filterState, groupBy: value })
+  }
+  const setAttachment = (value: AttachmentsOptionsType) => {
+    onFilterChange({
+      ...filterState,
+      attachmentFilter: value,
+    })
+  }
+  const handleClearAll = () => {
     setExpandedPanel(null)
     onFilterChange(DEFAULT_TRANSACTION_LIST_FILTER_STATE)
     onSearchApply?.(DEFAULT_SEARCH_STATE)
     onDateRangeChange?.(null)
-  }, [onFilterChange, onSearchApply, onDateRangeChange])
-
-  const handleDone = useCallback(() => {
+  }
+  const handleDone = () => {
     setExpandedPanel(null)
-  }, [])
-
+  }
   const isSearchActive =
     searchState.query.length > 0 || searchState.matchType === "untitled"
   const isDateActive = selectedRange !== null
@@ -218,7 +161,6 @@ export function TransactionFilterHeader({
   const isGroupByActive = filterState.groupBy !== "day"
   const isAttachmentsActive = filterState.attachmentFilter !== "all"
   const isCurrencyActive = filterState.currencyIds.length > 0
-
   const hasAnyFilter =
     isSearchActive ||
     isDateActive ||
@@ -230,7 +172,6 @@ export function TransactionFilterHeader({
     isGroupByActive ||
     isAttachmentsActive ||
     isCurrencyActive
-
   const accountLabel =
     filterState.accountIds.length === 0
       ? t("components.filters.chips.accounts")
@@ -239,21 +180,18 @@ export function TransactionFilterHeader({
         : t("components.filters.chips.accountCount", {
             count: filterState.accountIds.length,
           })
-
   const categoryLabel =
     filterState.categoryIds.length === 0
       ? t("components.filters.chips.categories")
       : t("components.filters.chips.categoryCount", {
           count: filterState.categoryIds.length,
         })
-
   const tagLabel =
     filterState.tagIds.length === 0
       ? t("components.filters.chips.tags")
       : t("components.filters.chips.tagCount", {
           count: filterState.tagIds.length,
         })
-
   const typeLabel =
     filterState.typeFilters.length === 0
       ? t("components.filters.chips.type")
@@ -262,28 +200,23 @@ export function TransactionFilterHeader({
         : t("components.filters.chips.typeCount", {
             count: filterState.typeFilters.length,
           })
-
   const groupByLabel = t(
     `components.filters.groupByOptions.${filterState.groupBy}`,
   )
-
   const attachmentLabel =
     filterState.attachmentFilter === AttachmentsOptionsEnum.ALL
       ? t("components.filters.chips.attachments")
       : t(
           `components.filters.attachmentOptions.${filterState.attachmentFilter}`,
         )
-
   const pendingLabel =
     filterState.pendingFilter === PendingOptionsEnum.ALL
       ? t("components.filters.chips.pendingStatus")
       : t(`components.filters.pendingOptions.${filterState.pendingFilter}`)
-
   // Derive the unique set of currency codes that appear in the current accounts list.
   const availableCurrencies = [
     ...new Set(accounts.map((a) => a.currencyCode)),
   ].filter(Boolean)
-
   const currencyLabel =
     filterState.currencyIds.length === 0
       ? t("components.filters.chips.currency")
@@ -294,13 +227,10 @@ export function TransactionFilterHeader({
           : t("components.filters.chips.currencyCount", {
               count: filterState.currencyIds.length,
             })
-
   const dateLabel = selectedRange
     ? `${formatShortMonthDay(selectedRange.start)} – ${formatShortMonthDay(selectedRange.end)}`
     : t("components.filters.chips.thisMonth")
-
   const borderColor = theme.colors.semantic.semi
-
   const pills: {
     key: FilterPanelKey | "date"
     icon: IconSvgName
@@ -370,11 +300,10 @@ export function TransactionFilterHeader({
       active: isGroupByActive,
     },
   ]
-
+  const hiddenFilterSet = new Set(hiddenFilters)
   const visiblePills = pills.filter(
-    (p) => !hiddenFilters.includes(p.key as FilterPanelKey),
+    (p) => !hiddenFilterSet.has(p.key as FilterPanelKey),
   )
-
   return (
     <View style={filterHeaderStyles.container}>
       <ScrollView

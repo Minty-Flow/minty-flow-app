@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useNavigation, useRouter } from "expo-router"
-import { useCallback, useMemo, useState } from "react"
+import { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
@@ -29,18 +29,13 @@ import {
   createLoan,
   deleteLoanById,
   updateLoanById,
-} from "~/database/services-sqlite/loan-service"
-import { createTransaction } from "~/database/services-sqlite/transaction-service"
+} from "~/database/services/loan-service"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import type { TranslationKey } from "~/i18n/config"
 import { type AddLoanFormSchema, addLoanSchema } from "~/schemas/loans.schema"
 import { getThemeStrict } from "~/styles/theme/registry"
 import { type LoanType, LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
-import {
-  TransactionSubTypeEnum,
-  TransactionTypeEnum,
-} from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { rescaleMinorUnits } from "~/utils/money"
 import { formatShortMonthDayYear } from "~/utils/time-utils"
@@ -50,7 +45,6 @@ import { LoanFormFooter } from "./loan-form-footer"
 import { LoanFormModals } from "./loan-form-modals"
 import { loanModifyStyles } from "./loan-modify.styles"
 import type { LoanModifyContentProps } from "./types"
-
 export function LoanModifyContent({
   loanModifyId,
   loan,
@@ -61,13 +55,10 @@ export function LoanModifyContent({
   const { t } = useTranslation()
   const router = useRouter()
   const { theme } = useUnistyles()
-
   const isAddMode = loanModifyId === NewEnum.NEW || !loanModifyId
-
-  const handleGoBack = useCallback(() => {
+  const handleGoBack = () => {
     router.back()
-  }, [router])
-
+  }
   const {
     control,
     handleSubmit: handleFormSubmit,
@@ -88,7 +79,6 @@ export function LoanModifyContent({
       dueDate: loan?.dueDate ? loan.dueDate.getTime() : null,
     },
   })
-
   const formLoanType = watch("loanType")
   const formName = watch("name")
   const formIcon = watch("icon")
@@ -97,58 +87,46 @@ export function LoanModifyContent({
   const formPrincipalAmount = watch("principalAmount")
   const formCategoryId = watch("categoryId")
   const formDueDate = watch("dueDate")
-
   // Filter categories by the loan type currently selected in the form:
   // LENT loans create an expense transaction → show expense categories
   // BORROWED loans create an income transaction → show income categories
-  const filteredCategories = useMemo(
-    () =>
-      categories.filter((cat) =>
-        formLoanType === LoanTypeEnum.LENT
-          ? cat.type === "expense"
-          : cat.type === "income",
-      ),
-    [categories, formLoanType],
+  const filteredCategories = categories.filter((cat) =>
+    formLoanType === LoanTypeEnum.LENT
+      ? cat.type === "expense"
+      : cat.type === "income",
   )
-
   // Derive currency code from the selected account
-  const selectedAccount = useMemo(
-    () => accounts.find((a) => a.id === formAccountId) ?? null,
-    [accounts, formAccountId],
-  )
+  const selectedAccount = accounts.find((a) => a.id === formAccountId) ?? null
   const currencyCode = selectedAccount?.currencyCode ?? ""
-
   // Adapter: FormAccountPicker expects (name: "accountId"|"toAccountId", ...)
   // but AddLoanFormSchema has no toAccountId — just ignore that branch.
-  const setAccountPickerValue = useCallback(
-    (
-      name: "accountId" | "toAccountId",
-      value: string,
-      opts: { shouldDirty: boolean },
-    ) => {
-      if (name === "accountId") {
-        const nextAccount = accounts.find((account) => account.id === value)
-        if (
-          selectedAccount &&
-          nextAccount &&
-          selectedAccount.currencyCode !== nextAccount.currencyCode
-        ) {
-          setValue(
-            "principalAmount",
-            rescaleMinorUnits(
-              formPrincipalAmount,
-              selectedAccount.currencyCode,
-              nextAccount.currencyCode,
-            ),
-            opts,
-          )
-        }
-        setValue("accountId", value, opts)
-      }
+  const setAccountPickerValue = (
+    name: "accountId" | "toAccountId",
+    value: string,
+    opts: {
+      shouldDirty: boolean
     },
-    [accounts, formPrincipalAmount, selectedAccount, setValue],
-  )
-
+  ) => {
+    if (name === "accountId") {
+      const nextAccount = accounts.find((account) => account.id === value)
+      if (
+        selectedAccount &&
+        nextAccount &&
+        selectedAccount.currencyCode !== nextAccount.currencyCode
+      ) {
+        setValue(
+          "principalAmount",
+          rescaleMinorUnits(
+            formPrincipalAmount,
+            selectedAccount.currencyCode,
+            nextAccount.currencyCode,
+          ),
+          opts,
+        )
+      }
+      setValue("accountId", value, opts)
+    }
+  }
   const navigation = useNavigation()
   const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
@@ -156,63 +134,27 @@ export function LoanModifyContent({
     when: isDirty && !isSubmitting,
     onBlock: () => setUnsavedModalVisible(true),
   })
-
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-
   const dueDatePicker = useDateTimePicker({
     onConfirm: (date) =>
       setValue("dueDate", date.getTime(), { shouldDirty: true }),
   })
-
   const onSubmit = async (data: AddLoanFormSchema) => {
     const trimmedName = data.name.trim()
-
     try {
       if (isAddMode) {
-        const newLoanId = await createLoan({
+        await createLoan({
           ...data,
           name: trimmedName,
           description: data.description ?? null,
           dueDate: data.dueDate ?? null,
           icon: data.icon ?? null,
           colorSchemeName: data.colorSchemeName ?? null,
+          initialTransactionTitle: t(
+            "screens.settings.loans.initialTransaction.title",
+            { name: trimmedName },
+          ),
         })
-
-        try {
-          // Create the initial cash-flow transaction linked to the new loan.
-          // LENT money leaves the account (expense); BORROWED money arrives (income).
-          await createTransaction({
-            amount: data.principalAmount,
-            type:
-              data.loanType === LoanTypeEnum.LENT
-                ? TransactionTypeEnum.EXPENSE
-                : TransactionTypeEnum.INCOME,
-            subtype:
-              data.loanType === LoanTypeEnum.LENT
-                ? TransactionSubTypeEnum.LOAN_LENT
-                : TransactionSubTypeEnum.LOAN_BORROWED,
-            transactionDate: new Date(),
-            accountId: data.accountId,
-            categoryId: data.categoryId,
-            title: t("screens.settings.loans.initialTransaction.title", {
-              name: trimmedName,
-            }),
-            description: null,
-            isPending: false,
-            tags: [],
-            loanId: newLoanId,
-          })
-        } catch (txError) {
-          // The loan was created successfully — losing the starting transaction is
-          // recoverable, so log the error and show a toast but still navigate back.
-          logger.error("Error creating initial loan transaction", {
-            error: txError,
-          })
-          Toast.error({
-            title: t("common.toast.error"),
-          })
-        }
-
         allowNavigation()
         handleGoBack()
       } else {
@@ -224,7 +166,6 @@ export function LoanModifyContent({
           icon: data.icon ?? null,
           colorSchemeName: data.colorSchemeName ?? null,
         })
-
         allowNavigation()
         handleGoBack()
       }
@@ -235,9 +176,7 @@ export function LoanModifyContent({
       })
     }
   }
-
   const handleSubmit = handleFormSubmit(onSubmit)
-
   const handleDelete = async () => {
     try {
       if (!loan) {
@@ -246,9 +185,7 @@ export function LoanModifyContent({
         })
         return
       }
-
       await deleteLoanById(loanModifyId)
-
       allowNavigation()
       router.dismiss(2)
     } catch (error) {
@@ -258,29 +195,22 @@ export function LoanModifyContent({
       })
     }
   }
-
   const handleIconSelected = (icon: string | null) => {
     setValue("icon", icon, { shouldDirty: true })
   }
-
   const handleColorSelected = (schemeName: string) => {
     setValue("colorSchemeName", schemeName, { shouldDirty: true })
   }
-
   const handleColorCleared = () => {
     setValue("colorSchemeName", undefined, { shouldDirty: true })
   }
-
   const handleClearDate = () => {
     setValue("dueDate", null, { shouldDirty: true })
   }
-
   const currentColorScheme = getThemeStrict(formColorSchemeName)
-
   const formattedDueDate = formDueDate
     ? formatShortMonthDayYear(formDueDate)
     : null
-
   if (!isAddMode && !loan) {
     return (
       <View style={loanModifyStyles.container}>
@@ -290,7 +220,6 @@ export function LoanModifyContent({
       </View>
     )
   }
-
   return (
     <View style={loanModifyStyles.container}>
       <ScrollIntoViewProvider

@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useCallback, useMemo, useReducer, useState } from "react"
+import { useReducer, useState } from "react"
 import { Controller, type Resolver, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
@@ -15,19 +15,17 @@ import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
-import { createRecurringRule } from "~/database/services-sqlite/recurring-transaction-service"
 import {
   createTransaction,
+  createTransfer,
   deleteTransaction,
+  deleteTransfer,
   destroyTransaction,
+  editTransfer,
   restoreTransaction,
   updateTransaction,
-} from "~/database/services-sqlite/transaction-service"
-import {
-  createTransfer,
-  deleteTransfer,
-  editTransfer,
-} from "~/database/services-sqlite/transfer-service"
+} from "~/database/services/ledger-service"
+import { createRecurringRule } from "~/database/services/recurring-transaction-service"
 import { useBalanceAtTransaction } from "~/hooks/use-balance-before"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import { useRecurringRule } from "~/hooks/use-recurring-rule"
@@ -82,7 +80,6 @@ import { useFormAttachments } from "./use-form-attachments"
 import { useFormConversionRate } from "./use-form-conversion-rate"
 import { useFormDatePicker } from "./use-form-date-picker"
 import { useFormLocation } from "./use-form-location"
-
 export function TransactionFormV3({
   transaction,
   accounts,
@@ -101,17 +98,17 @@ export function TransactionFormV3({
   const navigation = useNavigation()
   const { t } = useTranslation()
   const { theme } = useUnistyles()
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const { id } = useLocalSearchParams<{
+    id: string
+  }>()
   const isNew = id === NewEnum.NEW
   const requireConfirmation = usePendingTransactionsStore(
     (s) => s.requireConfirmation,
   )
   const { isEnabled: locationEnabled, autoAttach } =
     useTransactionLocationStore()
-
   const usdCurrency = currencyRegistryService.getCurrencyByCode("USD")
   const usdCode = usdCurrency?.code ?? "USD"
-
   const [modals, setModals] = useReducer(mergeReducer<ModalState>, {
     unsavedModalVisible: false,
     editRecurringModalVisible: false,
@@ -121,29 +118,15 @@ export function TransactionFormV3({
     locationPickerVisible: false,
     pendingEditPayload: null,
   })
-
   const recurringRule = useRecurringRule(transaction?.recurringId ?? null)
-
-  const defaultValues = useMemo(
-    () =>
-      getDefaultValues(
-        transaction,
-        accounts,
-        transactionType,
-        initialTagIds,
-        prefill,
-        initialSubtype,
-      ),
-    [
-      transaction,
-      accounts,
-      transactionType,
-      initialTagIds,
-      prefill,
-      initialSubtype,
-    ],
+  const defaultValues = getDefaultValues(
+    transaction,
+    accounts,
+    transactionType,
+    initialTagIds,
+    prefill,
+    initialSubtype,
   )
-
   const {
     control,
     handleSubmit,
@@ -154,7 +137,6 @@ export function TransactionFormV3({
     resolver: zodResolver(transactionSchema) as Resolver<TransactionFormValues>,
     defaultValues,
   })
-
   // Recurring toggle states
   const amount = watch("amount")
   const accountId = watch("accountId")
@@ -177,119 +159,85 @@ export function TransactionFormV3({
           }
         })()
       : null
-
   const isRefund = watch("subtype") === TransactionSubTypeEnum.REFUND
-
   const selectedAccount = accounts.find((a) => a.id === accountId)
-
   // Filter goals to only those linked to the selected account
-  const accountGoals = useMemo(
-    () =>
-      accountId ? goals.filter((g) => g.accountIds.includes(accountId)) : [],
-    [goals, accountId],
-  )
-
+  const accountGoals = accountId
+    ? goals.filter((g) => g.accountIds.includes(accountId))
+    : []
   // Filter loans to only those matching both the selected account AND category
-  const accountLoans = useMemo(
-    () =>
-      accountId && categoryId
-        ? loans.filter(
-            (l) => l.accountId === accountId && l.categoryId === categoryId,
-          )
-        : [],
-    [loans, accountId, categoryId],
-  )
-
-  // Filter budgets by selected account AND category
-  const accountBudgets = useMemo(
-    () =>
-      accountId
-        ? budgets.filter(
-            (b) =>
-              b.accountIds.includes(accountId) &&
-              (b.categoryIds.length === 0 ||
-                (categoryId && b.categoryIds.includes(categoryId))),
-          )
-        : [],
-    [budgets, accountId, categoryId],
-  )
-
-  // Clear goalId/budgetId/loanId when account changes and current selection is no longer valid
-  const handleAccountChange = useCallback(
-    (newAccountId: string) => {
-      const nextAccount = accounts.find(
-        (account) => account.id === newAccountId,
-      )
-      if (
-        selectedAccount &&
-        nextAccount &&
-        selectedAccount.currencyCode !== nextAccount.currencyCode
-      ) {
-        setValue(
-          "amount",
-          rescaleMinorUnits(
-            amount ?? 0,
-            selectedAccount.currencyCode,
-            nextAccount.currencyCode,
-          ),
-          { shouldDirty: true },
+  const accountLoans =
+    accountId && categoryId
+      ? loans.filter(
+          (l) => l.accountId === accountId && l.categoryId === categoryId,
         )
+      : []
+  // Filter budgets by selected account AND category
+  const accountBudgets = accountId
+    ? budgets.filter(
+        (b) =>
+          b.accountIds.includes(accountId) &&
+          (b.categoryIds.length === 0 ||
+            (categoryId && b.categoryIds.includes(categoryId))),
+      )
+    : []
+  // Clear goalId/budgetId/loanId when account changes and current selection is no longer valid
+  const handleAccountChange = (newAccountId: string) => {
+    const nextAccount = accounts.find((account) => account.id === newAccountId)
+    if (
+      selectedAccount &&
+      nextAccount &&
+      selectedAccount.currencyCode !== nextAccount.currencyCode
+    ) {
+      setValue(
+        "amount",
+        rescaleMinorUnits(
+          amount ?? 0,
+          selectedAccount.currencyCode,
+          nextAccount.currencyCode,
+        ),
+        { shouldDirty: true },
+      )
+    }
+    if (goalId) {
+      const newGoals = newAccountId
+        ? goals.filter((g) => g.accountIds.includes(newAccountId))
+        : []
+      if (!newGoals.some((g) => g.id === goalId)) {
+        setValue("goalId", null, { shouldDirty: false })
       }
-      if (goalId) {
-        const newGoals = newAccountId
-          ? goals.filter((g) => g.accountIds.includes(newAccountId))
+    }
+    if (budgetId) {
+      const newBudgets = newAccountId
+        ? budgets.filter((b) => b.accountIds.includes(newAccountId))
+        : []
+      if (!newBudgets.some((b) => b.id === budgetId)) {
+        setValue("budgetId", null, { shouldDirty: false })
+      }
+    }
+    if (loanId) {
+      const newLoans =
+        newAccountId && categoryId
+          ? loans.filter(
+              (l) =>
+                l.accountId === newAccountId && l.categoryId === categoryId,
+            )
           : []
-        if (!newGoals.some((g) => g.id === goalId)) {
-          setValue("goalId", null, { shouldDirty: false })
-        }
+      if (!newLoans.some((l) => l.id === loanId)) {
+        setValue("loanId", null, { shouldDirty: false })
       }
-      if (budgetId) {
-        const newBudgets = newAccountId
-          ? budgets.filter((b) => b.accountIds.includes(newAccountId))
-          : []
-        if (!newBudgets.some((b) => b.id === budgetId)) {
-          setValue("budgetId", null, { shouldDirty: false })
-        }
-      }
-      if (loanId) {
-        const newLoans =
-          newAccountId && categoryId
-            ? loans.filter(
-                (l) =>
-                  l.accountId === newAccountId && l.categoryId === categoryId,
-              )
-            : []
-        if (!newLoans.some((l) => l.id === loanId)) {
-          setValue("loanId", null, { shouldDirty: false })
-        }
-      }
-    },
-    [
-      accounts,
-      selectedAccount,
-      amount,
-      goalId,
-      goals,
-      budgetId,
-      budgets,
-      loanId,
-      loans,
-      categoryId,
-      setValue,
-    ],
-  )
+    }
+  }
   const selectedToAccount =
     transactionType === TransactionTypeEnum.TRANSFER && toAccountId
       ? accounts.find((a) => a.id === toAccountId)
       : null
-
   const [isSaving, setIsSaving] = useState(false)
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSaving,
     onBlock: () => setModals({ unsavedModalVisible: true }),
   })
-
   const [recurring, setRecurring] = useReducer(mergeReducer<RecurringState>, {
     enabled: false,
     frequency: "daily" as RecurringFrequency,
@@ -298,7 +246,6 @@ export function TransactionFormV3({
     endAfterOccurrences: null,
     endsOnPickerExpanded: false,
   })
-
   const { conversionRate, setConversionRate } = useFormConversionRate(
     transactionType,
     selectedAccount,
@@ -306,7 +253,6 @@ export function TransactionFormV3({
     transaction,
     setValue,
   )
-
   const {
     attachmentState,
     setAttachmentState,
@@ -317,7 +263,6 @@ export function TransactionFormV3({
     handleSelectMultipleMedia,
     handleSelectSinglePhoto,
   } = useFormAttachments(transaction)
-
   const {
     datePicker,
     setDatePicker,
@@ -326,15 +271,12 @@ export function TransactionFormV3({
     handleSetNow,
     pickerElement: datePickerAndroidElement,
   } = useFormDatePicker(recurring, setRecurring, watch, setValue)
-
   const { isCapturingLocation, handleLocationConfirm, handleClearLocation } =
     useFormLocation(isNew, locationEnabled, autoAttach, setValue, () =>
       setModals({ locationPickerVisible: false }),
     )
-
   const balanceAtTransaction = useBalanceAtTransaction(transaction)
-
-  const derivedTransferTitle = useMemo(() => {
+  const derivedTransferTitle = (() => {
     if (
       transactionType !== TransactionTypeEnum.TRANSFER ||
       !selectedAccount ||
@@ -345,16 +287,14 @@ export function TransactionFormV3({
       from: selectedAccount.name,
       to: selectedToAccount.name,
     })
-  }, [transactionType, selectedAccount, selectedToAccount, t])
-
+  })()
   const endsOnType: RecurringEndType =
     recurring.endAfterOccurrences !== null
       ? RecurringEndEnum.OCCURRENCES
       : recurring.endDate !== null
         ? RecurringEndEnum.DATE
         : RecurringEndEnum.NEVER
-
-  const recurringEndDateOccurrenceCount = useMemo(() => {
+  const recurringEndDateOccurrenceCount = (() => {
     if (
       endsOnType !== RecurringEndEnum.DATE ||
       !recurring.endDate ||
@@ -366,23 +306,17 @@ export function TransactionFormV3({
       recurring.endDate,
       recurring.frequency,
     )
-  }, [endsOnType, recurring.endDate, recurring.frequency, recurring.startDate])
-
-  const handleRecurringToggle = useCallback(
-    (next: boolean) => {
-      setRecurring({
-        enabled: next,
-        ...(next ? { startDate: watch("transactionDate") } : {}),
-      })
-    },
-    [watch],
-  )
-
-  const handleConfirmExit = useCallback(() => {
+  })()
+  const handleRecurringToggle = (next: boolean) => {
+    setRecurring({
+      enabled: next,
+      ...(next ? { startDate: watch("transactionDate") } : {}),
+    })
+  }
+  const handleConfirmExit = () => {
     allowNavigation()
     router.back()
-  }, [allowNavigation, router])
-
+  }
   const onSubmit = async (data: TransactionFormValues) => {
     if (isSaving) return
     setIsSaving(true)
@@ -395,14 +329,12 @@ export function TransactionFormV3({
           Toast.error({
             title: t("components.transactionForm.toast.selectDestination"),
           })
-          setIsSaving(false)
           return
         }
         if (fromId === toId) {
           Toast.error({
             title: t("components.transactionForm.toast.fromToDifferent"),
           })
-          setIsSaving(false)
           return
         }
         const fromAccount = accounts.find((a) => a.id === fromId)
@@ -425,7 +357,6 @@ export function TransactionFormV3({
                       "components.transactionForm.toast.setDifferentCurrencies",
                     ),
             })
-            setIsSaving(false)
             return
           }
         }
@@ -468,7 +399,6 @@ export function TransactionFormV3({
         router.back()
         return
       }
-
       // Build extra
       const builtExtra: Record<string, string> = isNew
         ? {}
@@ -480,7 +410,6 @@ export function TransactionFormV3({
       } else {
         delete builtExtra.attachments
       }
-
       const effectiveDate = recurring.enabled
         ? recurring.startDate
         : data.transactionDate
@@ -494,7 +423,6 @@ export function TransactionFormV3({
           : effectiveIsPending
             ? requireConfirmation
             : undefined
-
       const payload = {
         amount: data.amount,
         currency: selectedAccount?.currencyCode ?? usdCode,
@@ -514,7 +442,6 @@ export function TransactionFormV3({
         extra: Object.keys(builtExtra).length > 0 ? builtExtra : undefined,
         subtype: data.subtype ?? undefined,
       }
-
       if (isNew) {
         if (recurring.enabled && recurring.frequency) {
           try {
@@ -554,7 +481,6 @@ export function TransactionFormV3({
                 "components.transactionForm.toast.recurringCreateFailed",
               ),
             })
-            setIsSaving(false)
             return
           }
         } else {
@@ -583,7 +509,6 @@ export function TransactionFormV3({
             },
             editRecurringModalVisible: true,
           })
-          setIsSaving(false)
           return
         }
         await updateTransaction(transaction.id, payload)
@@ -600,20 +525,19 @@ export function TransactionFormV3({
         message: error instanceof Error ? error.message : String(error),
       })
       Toast.error({ title: t("components.transactionForm.toast.saveFailed") })
+    } finally {
+      setIsSaving(false)
     }
-    setIsSaving(false)
   }
-
-  const handleCancelPress = useCallback(() => {
+  const handleCancelPress = () => {
     if (isDirty) {
       setModals({ unsavedModalVisible: true })
     } else {
       allowNavigation()
       router.back()
     }
-  }, [isDirty, allowNavigation, router])
-
-  const handleDeleteConfirm = useCallback(() => {
+  }
+  const handleDeleteConfirm = () => {
     if (!transaction) return
     if (transaction.recurringId && recurringRule) {
       setModals({ deleteRecurringModalVisible: true })
@@ -638,9 +562,8 @@ export function TransactionFormV3({
           title: t("components.transactionForm.toast.moveToTrashFailed"),
         })
       })
-  }, [transaction, recurringRule, router, allowNavigation, t])
-
-  const handleRestore = useCallback(async () => {
+  }
+  const handleRestore = async () => {
     if (!transaction?.isDeleted) return
     try {
       await restoreTransaction(transaction.id)
@@ -656,14 +579,12 @@ export function TransactionFormV3({
         title: t("components.transactionForm.toast.restoreFailed"),
       })
     }
-  }, [transaction, router, allowNavigation, t])
-
-  const handleDestroy = useCallback(() => {
+  }
+  const handleDestroy = () => {
     if (!transaction) return
     setModals({ destroyModalVisible: true })
-  }, [transaction])
-
-  const handleDestroyConfirm = useCallback(async () => {
+  }
+  const handleDestroyConfirm = async () => {
     if (!transaction) return
     setModals({ destroyModalVisible: false })
     try {
@@ -680,28 +601,19 @@ export function TransactionFormV3({
         description: t("components.transactionForm.toast.deleteFailed"),
       })
     }
-  }, [transaction, router, allowNavigation, t])
-
-  const addTag = useCallback(
-    (tagId: string) => {
-      const current = tagIds ?? []
-      if (current.includes(tagId)) return
-      setValue("tags", [...current, tagId], { shouldDirty: true })
-    },
-    [tagIds, setValue],
-  )
-
-  const removeTag = useCallback(
-    (tagId: string) => {
-      setValue(
-        "tags",
-        (tagIds ?? []).filter((id) => id !== tagId),
-        { shouldDirty: true },
-      )
-    },
-    [tagIds, setValue],
-  )
-
+  }
+  const addTag = (tagId: string) => {
+    const current = tagIds ?? []
+    if (current.includes(tagId)) return
+    setValue("tags", [...current, tagId], { shouldDirty: true })
+  }
+  const removeTag = (tagId: string) => {
+    setValue(
+      "tags",
+      (tagIds ?? []).filter((id) => id !== tagId),
+      { shouldDirty: true },
+    )
+  }
   const amountErrorKey = errors.amount?.message
   const accountErrorKey = errors.accountId?.message
   const titleErrorKey = errors.title?.message
@@ -712,7 +624,6 @@ export function TransactionFormV3({
   const accountError = accountErrorKey
     ? t(accountErrorKey as TranslationKey)
     : undefined
-
   return (
     <View style={transactionFormStyles.container}>
       <View style={transactionFormStyles.header}>

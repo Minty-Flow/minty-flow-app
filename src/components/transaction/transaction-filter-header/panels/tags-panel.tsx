@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
-import { ScrollView, View } from "react-native"
+import { FlatList, View } from "react-native"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
@@ -33,22 +33,20 @@ export function TagsPanel({
 }: TagsPanelProps) {
   const { t } = useTranslation()
   const router = useRouter()
+  const selectedIdSet = new Set(selectedIds)
 
   return (
     <View>
       {chunk(tags, CHIPS_PER_ROW).map((row) => (
-        <ScrollView
+        <FlatList
           key={row.map((tag) => tag.id).join(",")}
           horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={filterHeaderStyles.chipScrollRow}
-          style={filterHeaderStyles.categoryRow}
-        >
-          {row.map((tag) => (
+          data={row}
+          keyExtractor={(tag) => tag.id}
+          renderItem={({ item: tag }) => (
             <Chip
-              key={tag.id}
               label={tag.name}
-              selected={selectedIds.includes(tag.id)}
+              selected={selectedIdSet.has(tag.id)}
               onPress={() => onToggle(tag.id)}
               leading={
                 tag.icon ? (
@@ -63,8 +61,11 @@ export function TagsPanel({
                 )
               }
             />
-          ))}
-        </ScrollView>
+          )}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={filterHeaderStyles.chipScrollRow}
+          style={filterHeaderStyles.categoryRow}
+        />
       ))}
       <View style={filterHeaderStyles.panelHeader}>
         <Button

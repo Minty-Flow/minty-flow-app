@@ -12,7 +12,6 @@ const addAccountsSchema = z
     type: z.enum(AccountTypeEnum),
     balance: z
       .number({ error: "validation.amount.invalid" })
-      .safe()
       .int("validation.amount.invalid"),
     currencyCode: z
       .string()

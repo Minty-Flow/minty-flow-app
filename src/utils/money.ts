@@ -59,16 +59,6 @@ export function normalizeMajorUnitInput(input: string): string | null {
   return parts.join("")
 }
 
-/** Legacy migration boundary only. Runtime input must use parseMajorUnits. */
-export function majorNumberToMinorUnits(
-  value: number,
-  currencyCode: string,
-): number {
-  if (!Number.isFinite(value)) throw new Error(`Invalid legacy money: ${value}`)
-  const scale = 10 ** getMinorUnitDigits(currencyCode)
-  return roundToSafeInteger(value * scale)
-}
-
 export function toMajorUnits(minorUnits: number, currencyCode: string): number {
   return assertMinorUnits(minorUnits) / 10 ** getMinorUnitDigits(currencyCode)
 }

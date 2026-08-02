@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { KeyboardAvoidingView, Modal, Platform, Pressable } from "react-native"
 import {
@@ -21,7 +21,6 @@ interface NotesModalProps {
   onSave: (notes: string) => void
   onRequestClose: () => void
 }
-
 function NotesModalContent({
   initialValue,
   onSave,
@@ -38,19 +37,16 @@ function NotesModalContent({
   const [activeStyles, setActiveStyles] = useState<OnChangeStateEvent | null>(
     null,
   )
-
-  const handleSave = useCallback(async () => {
+  const handleSave = async () => {
     const html = (await editorRef.current?.getHTML()) ?? initialValue
     onSave(html)
     onRequestClose()
-  }, [initialValue, onSave, onRequestClose])
-
+  }
   const isBold = activeStyles?.bold.isActive ?? false
   const isItalic = activeStyles?.italic.isActive ?? false
   const isUL = activeStyles?.unorderedList.isActive ?? false
   const isOL = activeStyles?.orderedList.isActive ?? false
   const isChecklist = activeStyles?.checkboxList.isActive ?? false
-
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.colors.surface }]}
@@ -202,7 +198,6 @@ function NotesModalContent({
     </KeyboardAvoidingView>
   )
 }
-
 export function NotesModal({
   visible,
   initialValue,
@@ -227,7 +222,6 @@ export function NotesModal({
     </Modal>
   )
 }
-
 const styles = UnistylesSheet.create((theme) => ({
   container: {
     flex: 1,

@@ -1,9 +1,8 @@
-import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { Money } from "~/components/money"
-import { getCategoryColor } from "~/components/stats/stats-category-pie"
+import { getCategoryColor } from "~/components/stats/get-category-color"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { getThemeVariantPalette, shuffleArray } from "~/styles/theme/utils"
@@ -16,7 +15,6 @@ interface TopCategoriesCardProps {
   currency: string
   onPress: () => void
 }
-
 export function TopCategoriesCard({
   breakdown,
   currency,
@@ -24,15 +22,9 @@ export function TopCategoriesCard({
 }: TopCategoriesCardProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
-
   const top = breakdown.filter((b) => b.totalExpense > 0).slice(0, 3)
   const maxExpense = top[0]?.totalExpense ?? 0
-
-  const fallbackPalette = useMemo(
-    () => shuffleArray(getThemeVariantPalette(theme.name)),
-    [theme.name],
-  )
-
+  const fallbackPalette = shuffleArray(getThemeVariantPalette(theme.name))
   return (
     <StatCard
       title={t("screens.stats.dashboard.topCategories")}
@@ -82,7 +74,6 @@ export function TopCategoriesCard({
     </StatCard>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   list: {
     gap: 12,

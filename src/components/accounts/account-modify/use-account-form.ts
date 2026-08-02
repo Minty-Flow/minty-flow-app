@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useNavigation, useRouter } from "expo-router"
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
@@ -10,7 +10,7 @@ import {
   destroyAccount,
   unarchiveAccount,
   updateAccount,
-} from "~/database/services-sqlite/account-service"
+} from "~/database/services/account-service"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import {
   type AddAccountsFormSchema,
@@ -30,19 +30,15 @@ type UseAccountFormProps = Pick<
   AccountModifyContentProps,
   "accountId" | "account"
 >
-
 export function useAccountForm({ accountId, account }: UseAccountFormProps) {
   const { t } = useTranslation()
   const router = useRouter()
   const isAddMode = accountId === NewEnum.NEW || !accountId
-
-  const handleGoBack = useCallback(() => {
+  const handleGoBack = () => {
     router.back()
-  }, [router])
-
+  }
   const usdCurrency = currencyRegistryService.getCurrencyByCode("USD")
   const useCode = usdCurrency?.code ?? "USD"
-
   const {
     control,
     handleSubmit: handleFormSubmit,
@@ -62,7 +58,6 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
       excludeFromBalance: account?.excludeFromBalance || false,
     },
   })
-
   const formName = watch("name")
   const formIcon = watch("icon")
   const formColorSchemeName = watch("colorSchemeName")
@@ -70,7 +65,6 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
   const formCurrencyCode = watch("currencyCode")
   const formBalance = watch("balance")
   const formIsPrimary = watch("isPrimary")
-
   const navigation = useNavigation()
   const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
@@ -78,10 +72,8 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
     when: isDirty && !isSubmitting,
     onBlock: () => setUnsavedModalVisible(true),
   })
-
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
   const [archiveModalVisible, setArchiveModalVisible] = useState(false)
-
   const onSubmit = async (data: AddAccountsFormSchema) => {
     try {
       if (isAddMode) {
@@ -95,7 +87,6 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
           isPrimary: false,
           excludeFromBalance: data.excludeFromBalance,
         })
-
         allowNavigation()
         handleGoBack()
       } else {
@@ -109,7 +100,6 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
           isPrimary: data.isPrimary,
           excludeFromBalance: data.excludeFromBalance,
         })
-
         allowNavigation()
         handleGoBack()
       }
@@ -123,9 +113,7 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
       })
     }
   }
-
   const handleSubmit = handleFormSubmit(onSubmit)
-
   const handleArchive = async () => {
     try {
       if (!account) return
@@ -143,11 +131,9 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
       Toast.error({ title: t("common.toast.error") })
     }
   }
-
   const handleDelete = async () => {
     try {
       await destroyAccount(accountId)
-
       allowNavigation()
       router.dismiss(2)
     } catch (error) {
@@ -158,19 +144,15 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
       })
     }
   }
-
   const handleIconSelected = (icon: string | null) => {
     setValue("icon", icon, { shouldDirty: true })
   }
-
   const handleColorSelected = (schemeName: string) => {
     setValue("colorSchemeName", schemeName, { shouldDirty: true })
   }
-
   const handleColorCleared = () => {
     setValue("colorSchemeName", undefined, { shouldDirty: true })
   }
-
   const handleCurrencySelected = (code: string) => {
     if (code !== formCurrencyCode) {
       setValue(
@@ -181,9 +163,7 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
     }
     setValue("currencyCode", code, { shouldDirty: true })
   }
-
   const currentColorScheme = getThemeStrict(formColorSchemeName)
-
   return {
     isAddMode,
     control,

@@ -1,4 +1,3 @@
-import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
@@ -6,8 +5,8 @@ import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { InOutRow } from "~/components/stats/dashboard/cash-flow-card"
 import { DeltaBadge } from "~/components/stats/delta-badge"
+import { getCategoryColor } from "~/components/stats/get-category-color"
 import { SankeyFlow, type SankeyNode } from "~/components/stats/sankey-flow"
-import { getCategoryColor } from "~/components/stats/stats-category-pie"
 import { StatsDetailShell } from "~/components/stats/stats-detail-shell"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -22,27 +21,25 @@ interface SankeyLabels {
   saved: string
   uncategorized: string
 }
-
 interface SankeyColors {
   income: string
   neutral: string
 }
-
 const MAX_EXPENSE_NODES = 6
-
 function buildSankeyNodes(
   stats: CurrencyStats,
   labels: SankeyLabels,
   colors: SankeyColors,
   fallbackPalette: string[],
-): { left: SankeyNode[]; right: SankeyNode[] } {
+): {
+  left: SankeyNode[]
+  right: SankeyNode[]
+} {
   const { totalIncome, totalExpense } = stats.current
   const total = Math.max(totalIncome, totalExpense)
   if (total <= 0) return { left: [], right: [] }
-
   const categoryLabel = (name: string, categoryId: string | null) =>
     categoryId === null ? labels.uncategorized : name
-
   const left: SankeyNode[] = stats.categoryBreakdown
     .filter((b) => b.totalIncome > 0)
     .sort((a, b) => b.totalIncome - a.totalIncome)
@@ -65,7 +62,6 @@ function buildSankeyNodes(
       value: totalExpense - totalIncome,
     })
   }
-
   const expenseItems = stats.categoryBreakdown
     .filter((b) => b.totalExpense > 0)
     .sort((a, b) => b.totalExpense - a.totalExpense)
@@ -73,7 +69,6 @@ function buildSankeyNodes(
   const otherTotal = expenseItems
     .slice(MAX_EXPENSE_NODES)
     .reduce((s, b) => s + b.totalExpense, 0)
-
   const right: SankeyNode[] = topExpense.map((b, i) => ({
     label: categoryLabel(b.categoryName, b.categoryId),
     color: getCategoryColor(b, i, fallbackPalette),
@@ -93,10 +88,8 @@ function buildSankeyNodes(
       value: totalIncome - totalExpense,
     })
   }
-
   return { left, right }
 }
-
 function LegendList({
   title,
   nodes,
@@ -109,7 +102,6 @@ function LegendList({
   currency: string
 }) {
   if (nodes.length === 0) return null
-
   return (
     <View style={styles.card}>
       <Text variant="muted" style={styles.sectionTitle}>
@@ -136,7 +128,6 @@ function LegendList({
     </View>
   )
 }
-
 function AverageCard({
   label,
   value,
@@ -174,7 +165,6 @@ function AverageCard({
     </View>
   )
 }
-
 function AveragesByDay({
   current,
   previous,
@@ -185,7 +175,6 @@ function AveragesByDay({
   currency: string
 }) {
   const { t } = useTranslation()
-
   return (
     <>
       <Text variant="muted" style={styles.sectionTitle}>
@@ -217,15 +206,10 @@ function AveragesByDay({
     </>
   )
 }
-
 export default function StatsCashFlowScreen() {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
-  const fallbackPalette = useMemo(
-    () => shuffleArray(getThemeVariantPalette(theme.name)),
-    [theme.name],
-  )
-
+  const fallbackPalette = shuffleArray(getThemeVariantPalette(theme.name))
   return (
     <StatsDetailShell>
       {({ stats }) => {
@@ -246,7 +230,6 @@ export default function StatsCashFlowScreen() {
           fallbackPalette,
         )
         const total = left.reduce((s, n) => s + n.value, 0)
-
         return (
           <>
             <View style={styles.card}>
@@ -311,7 +294,6 @@ export default function StatsCashFlowScreen() {
     </StatsDetailShell>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   card: {
     backgroundColor: theme.colors.secondary,

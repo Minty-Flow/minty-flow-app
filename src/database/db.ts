@@ -1,6 +1,6 @@
 import * as SQLite from "expo-sqlite"
 
-import { runSqliteMigrationsSync } from "./migrations/sqlite-runner"
+export const DB_NAME = "minty_flow_db_v2"
 
 /**
  * Module-level singleton. `null` until first {@link getDb} call.
@@ -18,21 +18,19 @@ let DB: SQLite.SQLiteDatabase | null = null
  * - `busy_timeout=5000` — retries for up to 5 s before throwing `SQLITE_BUSY`,
  *   giving the write-queue time to drain under contention.
  *
- * **Migrations** run synchronously before the instance is returned, so callers
- * always see a fully up-to-date schema.
- *
  * @returns The open {@link SQLite.SQLiteDatabase} instance.
  *
  * @example
  * ```ts
- * const db = getDb()
- * const rows = await db.getAllAsync<RowAccount>("SELECT * FROM accounts")
+ * const rows = drizzleDb.select().from(accounts).all()
  * ```
  */
 export function getDb(): SQLite.SQLiteDatabase {
   if (DB) return DB
 
-  const db = SQLite.openDatabaseSync("minty_flow_db_v2")
+  const db = SQLite.openDatabaseSync(DB_NAME, {
+    enableChangeListener: true,
+  })
 
   db.execSync(`
     PRAGMA journal_mode=WAL;
@@ -40,8 +38,12 @@ export function getDb(): SQLite.SQLiteDatabase {
     PRAGMA busy_timeout=5000;
   `)
 
-  runSqliteMigrationsSync(db)
   DB = db
 
   return db
+}
+
+export function closeDbSync(): void {
+  DB?.closeSync()
+  DB = null
 }

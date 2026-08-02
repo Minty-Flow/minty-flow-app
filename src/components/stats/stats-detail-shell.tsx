@@ -4,8 +4,12 @@ import { type ReactNode, useState } from "react"
 import { RefreshControl, ScrollView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { View } from "~/components/ui/view"
-import { type UseStatsInit, useStats } from "~/hooks/use-stats"
+import {
+  type UseStatsInit,
+  useStats,
+} from "~/database/drizzle/read-models/stats-read-model"
 import type {
   CurrencyStats,
   StatsDateRange,
@@ -17,7 +21,6 @@ import type { DateRangePresetId } from "~/utils/time-utils"
 import { StatsCurrencyToggle } from "./stats-currency-toggle"
 import { StatsEmptyState } from "./stats-empty-state"
 import { StatsPeriodHeader } from "./stats-period-header"
-import { StatsSkeleton } from "./stats-skeleton"
 
 interface StatsDetailContext {
   stats: CurrencyStats
@@ -142,7 +145,11 @@ export function StatsDetailShell({
         />
       ) : null}
 
-      {isFirstLoad && <StatsSkeleton />}
+      {isFirstLoad && (
+        <View style={styles.loading}>
+          <ActivityIndicatorMinty />
+        </View>
+      )}
 
       {hasNoData && (
         <StatsEmptyState rangeLabel={formatRangeLabel(dateRange)} />
@@ -193,5 +200,10 @@ const styles = StyleSheet.create((theme) => ({
   },
   bottomSpacer: {
     height: 40,
+  },
+  loading: {
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 240,
   },
 }))

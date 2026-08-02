@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useNavigation, useRouter } from "expo-router"
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
@@ -19,7 +19,7 @@ import {
   createCategory,
   deleteCategoryById,
   updateCategoryById,
-} from "~/database/services-sqlite/category-service"
+} from "~/database/services/category-service"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import type { TranslationKey } from "~/i18n/config"
 import {
@@ -36,7 +36,6 @@ import { CategoryFormFooter } from "./category-form-footer"
 import { CategoryFormModals } from "./category-form-modals"
 import { categoryModifyStyles } from "./category-modify.styles"
 import type { CategoryModifyContentProps } from "./types"
-
 export function CategoryModifyContent({
   categoryModifyId,
   initialType,
@@ -44,17 +43,13 @@ export function CategoryModifyContent({
 }: CategoryModifyContentProps) {
   const { t } = useTranslation()
   const router = useRouter()
-
   const isAddMode = categoryModifyId === NewEnum.NEW || !categoryModifyId
-
-  const handleGoBack = useCallback(() => {
+  const handleGoBack = () => {
     router.back()
-  }, [router])
-
+  }
   const TransactionType = isAddMode
     ? initialType || category?.type || TransactionTypeEnum.EXPENSE
     : category?.type || TransactionTypeEnum.EXPENSE
-
   const {
     control,
     handleSubmit: handleFormSubmit,
@@ -70,12 +65,10 @@ export function CategoryModifyContent({
       colorSchemeName: category?.colorSchemeName || undefined,
     },
   })
-
   const formName = watch("name")
   const formIcon = watch("icon")
   const formColorSchemeName = watch("colorSchemeName")
   const formType = watch("type")
-
   const navigation = useNavigation()
   const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
@@ -83,12 +76,9 @@ export function CategoryModifyContent({
     when: isDirty && !isSubmitting,
     onBlock: () => setUnsavedModalVisible(true),
   })
-
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-
   const onSubmit = async (data: AddCategoriesFormSchema) => {
     const trimmedName = data.name.trim()
-
     try {
       if (isAddMode) {
         await createCategory({
@@ -97,7 +87,6 @@ export function CategoryModifyContent({
           icon: data.icon,
           colorSchemeName: data.colorSchemeName,
         })
-
         allowNavigation()
         handleGoBack()
       } else {
@@ -106,7 +95,6 @@ export function CategoryModifyContent({
           icon: data.icon,
           colorSchemeName: data.colorSchemeName,
         })
-
         allowNavigation()
         handleGoBack()
       }
@@ -120,9 +108,7 @@ export function CategoryModifyContent({
       })
     }
   }
-
   const handleSubmit = handleFormSubmit(onSubmit)
-
   const handleDelete = async () => {
     try {
       if (!category) {
@@ -132,7 +118,6 @@ export function CategoryModifyContent({
         })
         return
       }
-
       if (category.transactionCount > 0) {
         Toast.error({
           title: t("components.categories.form.toast.cannotDelete"),
@@ -143,9 +128,7 @@ export function CategoryModifyContent({
         })
         return
       }
-
       await deleteCategoryById(categoryModifyId)
-
       allowNavigation()
       // This is cleaner than replace because it actually removes the screens from history rather than stacking a new one on top. The number 2 matches exactly how deep you pushed from /settings/categories.
       router.dismiss(2)
@@ -157,21 +140,16 @@ export function CategoryModifyContent({
       })
     }
   }
-
   const handleIconSelected = (icon: string | null) => {
     setValue("icon", icon, { shouldDirty: true })
   }
-
   const handleColorSelected = (schemeName: string) => {
     setValue("colorSchemeName", schemeName, { shouldDirty: true })
   }
-
   const handleColorCleared = () => {
     setValue("colorSchemeName", undefined, { shouldDirty: true })
   }
-
   const currentColorScheme = getThemeStrict(formColorSchemeName)
-
   if (!isAddMode && !category) {
     return (
       <View style={categoryModifyStyles.container}>
@@ -181,7 +159,6 @@ export function CategoryModifyContent({
       </View>
     )
   }
-
   return (
     <View style={categoryModifyStyles.container}>
       <ScrollIntoViewProvider

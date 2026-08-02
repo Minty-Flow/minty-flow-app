@@ -156,12 +156,12 @@ export const ChoiceChips = <T extends string>({
       </View>
 
       <View style={styles.chipsWrapper}>
-        {choices.map((item, index) => {
+        {choices.map((item) => {
           const isSelected = selectedValue === item
 
           return (
             <Chip
-              key={`${item}-${index.toString()}`}
+              key={item}
               label={item}
               selected={isSelected}
               onPress={() => onSelect(item)}

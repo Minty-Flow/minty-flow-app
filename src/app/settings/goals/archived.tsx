@@ -1,34 +1,25 @@
 import { useRouter } from "expo-router"
-import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { GoalCard } from "~/components/goals/goal-card"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { EmptyState } from "~/components/ui/empty-state"
 import { View } from "~/components/ui/view"
-import { useArchivedGoals } from "~/stores/db/goal.store"
+import { useArchivedGoalsQuery } from "~/database/drizzle/read-models/goal-read-model"
 import type { Goal } from "~/types/goals"
-
 export default function ArchivedGoalsScreen() {
-  const goals = useArchivedGoals()
+  const { data: goals, status } = useArchivedGoalsQuery()
   const { t } = useTranslation()
   const router = useRouter()
-
-  const handleGoalPress = useCallback(
-    (goalId: string) => {
-      router.push(`/settings/goals/${goalId}`)
-    },
-    [router],
+  const handleGoalPress = (goalId: string) => {
+    router.push(`/settings/goals/${goalId}`)
+  }
+  const renderGoalItem = ({ item }: { item: Goal }) => (
+    <GoalCard goal={item} onPress={() => handleGoalPress(item.id)} />
   )
-
-  const renderGoalItem = useCallback(
-    ({ item }: { item: Goal }) => (
-      <GoalCard goal={item} onPress={() => handleGoalPress(item.id)} />
-    ),
-    [handleGoalPress],
-  )
-
+  if (status === "loading") return <RouteLoadingState />
   return (
     <View style={styles.container}>
       <FlatList
@@ -47,7 +38,6 @@ export default function ArchivedGoalsScreen() {
     </View>
   )
 }
-
 const styles = StyleSheet.create((t) => ({
   container: {
     flex: 1,

@@ -1,21 +1,22 @@
 import { useRouter } from "expo-router"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { PrivacyEyeControl } from "~/components/privacy-eye-control"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { SummarySection } from "~/components/summary-card"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionSectionList } from "~/components/transaction/transaction-section-list"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useActiveAccounts } from "~/stores/db/account.store"
-import { useCategoriesByType } from "~/stores/db/category.store"
-import { useTags } from "~/stores/db/tag.store"
-import { useTransactions } from "~/stores/db/transaction.store"
+import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
+import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
+import { useTags } from "~/database/drizzle/read-models/tag-read-model"
+import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { useProfileStore } from "~/stores/profile.store"
 import type {
@@ -39,44 +40,32 @@ function HomeScreen() {
   } | null>(null)
   const [searchState, setSearchState] =
     useState<SearchState>(DEFAULT_SEARCH_STATE)
-
   const homeTimeframe = usePendingTransactionsStore((s) => s.homeTimeframe)
   const { t } = useTranslation()
   const router = useRouter()
-
   const profileName = useProfileStore((s) => s.name)
   const image = useProfileStore((s) => s.imageUri)
-
   const accounts = useActiveAccounts()
   const categoriesExpense = useCategoriesByType(TransactionTypeEnum.EXPENSE)
   const categoriesIncome = useCategoriesByType(TransactionTypeEnum.INCOME)
   const categoriesTransfer = useCategoriesByType(TransactionTypeEnum.TRANSFER)
   const tags = useTags()
-
-  const { fromDate, toDate } = useMemo(
-    () => buildQueryFilters(selectedRange, homeTimeframe),
-    [selectedRange, homeTimeframe],
+  const { fromDate, toDate } = buildQueryFilters(selectedRange, homeTimeframe)
+  const { items: transactionsFull, status: transactionsStatus } =
+    useTransactions({
+      from: new Date(fromDate).toISOString(),
+      to: new Date(toDate).toISOString(),
+    })
+  const categoriesByType = {
+    expense: categoriesExpense,
+    income: categoriesIncome,
+    transfer: categoriesTransfer,
+  }
+  const summaryHeader = (
+    <SummarySection transactionsWithRelations={transactionsFull} />
   )
-
-  const { items: transactionsFull } = useTransactions({
-    from: new Date(fromDate).toISOString(),
-    to: new Date(toDate).toISOString(),
-  })
-
-  const categoriesByType = useMemo(
-    () => ({
-      expense: categoriesExpense,
-      income: categoriesIncome,
-      transfer: categoriesTransfer,
-    }),
-    [categoriesExpense, categoriesIncome, categoriesTransfer],
-  )
-
-  const summaryHeader = useMemo(
-    () => <SummarySection transactionsWithRelations={transactionsFull} />,
-    [transactionsFull],
-  )
-
+  if (transactionsStatus === "loading" && transactionsFull.length === 0)
+    return <RouteLoadingState />
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -122,9 +111,7 @@ function HomeScreen() {
     </View>
   )
 }
-
 export default HomeScreen
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,

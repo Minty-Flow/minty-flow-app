@@ -2,15 +2,9 @@
  * Reusable confirm modal centered on the screen.
  * Use for delete confirmations or other destructive/important actions.
  */
-
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import {
-  Modal,
-  TouchableWithoutFeedback,
-  useWindowDimensions,
-  View,
-} from "react-native"
+import { Modal, useWindowDimensions, View } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg, type IconSvgName } from "~/components/icons"
@@ -42,8 +36,9 @@ interface ConfirmModalProps {
   icon?: IconSvgName
   /** Optional note shown below the description in muted/small text. */
   note?: string
+  /** Keep the modal mounted/owned by the parent after confirm resolves. */
+  closeOnConfirm?: boolean
 }
-
 export function ConfirmModal({
   visible,
   onRequestClose,
@@ -55,18 +50,17 @@ export function ConfirmModal({
   variant = "default",
   icon,
   note,
+  closeOnConfirm = true,
 }: ConfirmModalProps) {
   const { t } = useTranslation()
   const { width } = useWindowDimensions()
   const maxCardWidth = Math.min(width - 48, 400)
   const [loading, setLoading] = useState(false)
-
-  const handleConfirm = useCallback(() => {
+  const handleConfirm = () => {
     setLoading(true)
-
     Promise.resolve(onConfirm())
       .then(() => {
-        onRequestClose()
+        if (closeOnConfirm) onRequestClose()
       })
       .catch((e) => {
         logger.error("Error confirming modal", { error: e })
@@ -74,8 +68,7 @@ export function ConfirmModal({
       .finally(() => {
         setLoading(false)
       })
-  }, [onConfirm, onRequestClose])
-
+  }
   return (
     <Modal
       visible={visible}
@@ -85,14 +78,15 @@ export function ConfirmModal({
       statusBarTranslucent
       accessibilityViewIsModal
     >
-      <Pressable
-        style={[styles.backdrop, { width }]}
-        onPress={onRequestClose}
-        accessibilityLabel={t("common.actions.close")}
-        native
-        disableRipple
-      >
-        <TouchableWithoutFeedback onPress={() => {}}>
+      <View style={styles.modalRoot}>
+        <Pressable
+          style={styles.backdrop}
+          onPress={onRequestClose}
+          accessibilityLabel={t("common.actions.close")}
+          native
+          disableRipple
+        />
+        <View style={styles.content}>
           <View
             style={[styles.card, { maxWidth: maxCardWidth }]}
             accessibilityLabel={title}
@@ -153,16 +147,25 @@ export function ConfirmModal({
               </Button>
             </View>
           </View>
-        </TouchableWithoutFeedback>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
-  backdrop: {
+  modalRoot: {
     flex: 1,
+  },
+  backdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: theme.colors.shadow,
+  },
+  content: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,

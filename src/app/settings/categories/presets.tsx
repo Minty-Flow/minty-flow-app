@@ -1,10 +1,11 @@
 import { useLocalSearchParams, useRouter } from "expo-router"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { PresetListItem } from "~/components/preset-list-item"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { Button } from "~/components/ui/button"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -14,8 +15,8 @@ import {
   ExpensePresets,
   IncomePresets,
 } from "~/constants/pre-sets-categories"
-import { createCategory } from "~/database/services-sqlite/category-service"
-import { useCategoriesByType } from "~/stores/db/category.store"
+import { useCategoriesByTypeQuery } from "~/database/drizzle/read-models/category-read-model"
+import { createCategory } from "~/database/services/category-service"
 import type { Category } from "~/types/categories"
 import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
 import { logger } from "~/utils/logger"
@@ -26,7 +27,6 @@ const PRESETS_BY_TYPE: Record<TransactionType, readonly CategoryPreset[]> = {
   income: IncomePresets,
   transfer: [],
 }
-
 function alreadyAddedPresetKeys(
   categories: Category[],
   presets: readonly CategoryPreset[],
@@ -40,41 +40,31 @@ function alreadyAddedPresetKeys(
   }
   return added
 }
-
 async function createCategories(
   toCreate: Parameters<typeof createCategory>[0][],
 ) {
-  for (const payload of toCreate) {
-    await createCategory(payload)
-  }
+  await Promise.all(toCreate.map((payload) => createCategory(payload)))
 }
-
 interface CategoryPresetsScreenInnerProps {
   type: TransactionType
 }
-
 const CategoryPresetsScreenInner = ({
   type,
 }: CategoryPresetsScreenInnerProps) => {
-  const categories = useCategoriesByType(type)
+  const { data: categories, status } = useCategoriesByTypeQuery(type)
   const { t } = useTranslation()
   const router = useRouter()
   const [selectedPresets, setSelectedPresets] = useState<Set<string>>(new Set())
-
   const presets = PRESETS_BY_TYPE[type] ?? []
-  const addedPresets = useMemo(
-    () => alreadyAddedPresetKeys(categories, presets),
-    [categories, presets],
-  )
-
-  const availableKeys = presets
-    .filter((p) => !addedPresets.has(`${p.icon}:${p.type}`))
-    .map((p) => `${p.icon}:${p.type}`)
-
+  if (status === "loading") return <RouteLoadingState />
+  const addedPresets = alreadyAddedPresetKeys(categories, presets)
+  const availableKeys = presets.flatMap((p) => {
+    const key = `${p.icon}:${p.type}`
+    return addedPresets.has(key) ? [] : [key]
+  })
   const allSelected =
     availableKeys.length > 0 &&
     availableKeys.every((k) => selectedPresets.has(k))
-
   const toggleSelectAll = () => {
     if (allSelected) {
       setSelectedPresets(new Set())
@@ -82,7 +72,6 @@ const CategoryPresetsScreenInner = ({
       setSelectedPresets(new Set(availableKeys))
     }
   }
-
   const togglePreset = (presetKey: string) => {
     setSelectedPresets((prev) => {
       const next = new Set(prev)
@@ -94,20 +83,17 @@ const CategoryPresetsScreenInner = ({
       return next
     })
   }
-
   const handleAddSelected = async () => {
     const selected = presets.filter((preset) =>
       selectedPresets.has(`${preset.icon}:${preset.type}`),
     )
     if (selected.length === 0) return
-
     const toCreate = selected.map((preset) => ({
       name: t(preset.name),
       type: preset.type,
       icon: preset.icon,
       colorSchemeName: preset.colorSchemeName,
     }))
-
     try {
       await createCategories(toCreate)
       setSelectedPresets(new Set())
@@ -120,7 +106,6 @@ const CategoryPresetsScreenInner = ({
       })
     }
   }
-
   const renderPresetItem = ({ item }: { item: (typeof presets)[0] }) => {
     const presetKey = `${item.icon}:${item.type}`
     return (
@@ -133,7 +118,6 @@ const CategoryPresetsScreenInner = ({
       />
     )
   }
-
   return (
     <View style={styles.container}>
       <View style={styles.selectionBar}>
@@ -185,13 +169,13 @@ const CategoryPresetsScreenInner = ({
     </View>
   )
 }
-
 export default function CategoryPresetsScreen() {
-  const params = useLocalSearchParams<{ type: TransactionType }>()
+  const params = useLocalSearchParams<{
+    type: TransactionType
+  }>()
   const type = params.type || TransactionTypeEnum.EXPENSE
   return <CategoryPresetsScreenInner type={type} />
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,

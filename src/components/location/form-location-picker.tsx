@@ -1,4 +1,3 @@
-import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native"
 import {
@@ -17,7 +16,6 @@ import type { TransactionLocation } from "~/types/transactions"
 
 const H_PAD = 20
 const CARD_HEIGHT = 200
-
 /** Static, non-interactive Leaflet map for the inline preview card. */
 function buildPreviewHtml(lat: number, lng: number, pinColor: string): string {
   const safeLat = Number(lat)
@@ -62,14 +60,12 @@ function buildPreviewHtml(lat: number, lng: number, pinColor: string): string {
 </body>
 </html>`
 }
-
 interface FormLocationPickerProps {
   location: TransactionLocation | null
   isCapturingLocation: boolean
   onPress: () => void
   onClear: () => void
 }
-
 export function FormLocationPicker({
   location,
   isCapturingLocation,
@@ -78,16 +74,14 @@ export function FormLocationPicker({
 }: FormLocationPickerProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
-
-  const previewHtml = useMemo(() => {
+  const previewHtml = (() => {
     if (!location) return null
     return buildPreviewHtml(
       location.latitude,
       location.longitude,
       theme.colors.primary,
     )
-  }, [location?.latitude, location?.longitude, theme.colors.primary, location])
-
+  })()
   // ── Location set: map preview card ─────────────────────────────────────
   if (location && previewHtml) {
     return (
@@ -137,7 +131,6 @@ export function FormLocationPicker({
       </View>
     )
   }
-
   // ── No location: placeholder card ──────────────────────────────────────
   return (
     <Pressable
@@ -165,7 +158,6 @@ export function FormLocationPicker({
     </Pressable>
   )
 }
-
 const styles = UnistylesSheet.create((theme) => ({
   // ── Map preview card ───────────────────────────────────────────────────
   card: {
@@ -215,7 +207,6 @@ const styles = UnistylesSheet.create((theme) => ({
   clearIcon: {
     color: "white",
   },
-
   // ── Placeholder card ───────────────────────────────────────────────────
   placeholder: {
     marginHorizontal: H_PAD,

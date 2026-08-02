@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
@@ -10,15 +9,12 @@ import { StatsDetailShell } from "~/components/stats/stats-detail-shell"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { on } from "~/database/events"
-import { fetchWrappedInsights } from "~/database/services-sqlite/stats-service"
-import { useDebouncedCallback } from "~/hooks/use-debounced-callback"
+import { useWrappedInsights } from "~/database/drizzle/read-models/stats-read-model"
 import type {
   CurrencyStats,
   StatsDateRange,
   WrappedInsights,
 } from "~/types/stats"
-import { logger } from "~/utils/logger"
 import { formatNumber } from "~/utils/number-format"
 
 function CategoryTrendCard({
@@ -30,14 +26,13 @@ function CategoryTrendCard({
 }) {
   const { t } = useTranslation()
   if (trend.trailingAvg <= 0) return null
-
   const percent = formatNumber(
     (Math.abs(trend.currentTotal - trend.trailingAvg) / trend.trailingAvg) *
       100,
     { maximumFractionDigits: 0 },
   )
   const above = trend.currentTotal >= trend.trailingAvg
-
+  const lastMonthLabel = trend.months[trend.months.length - 1]?.label
   return (
     <InsightCard
       icon="chart-donut"
@@ -61,17 +56,16 @@ function CategoryTrendCard({
       </View>
 
       <MiniBars
-        bars={trend.months.map((month, i) => ({
+        bars={trend.months.map((month) => ({
+          id: month.label,
           label: month.label,
           value: month.total,
-          // The current range is the last bar — the one the sentence compares.
-          active: i === trend.months.length - 1,
+          active: month.label === lastMonthLabel,
         }))}
       />
     </InsightCard>
   )
 }
-
 function WrappedContent({
   stats,
   dateRange,
@@ -80,45 +74,8 @@ function WrappedContent({
   dateRange: StatsDateRange
 }) {
   const { t } = useTranslation()
-  const [insights, setInsights] = useState<WrappedInsights[]>([])
-  const [isInsightsLoading, setIsInsightsLoading] = useState(true)
-  const fetchIdRef = useRef(0)
-
-  const fetchInsights = useCallback((range: StatsDateRange) => {
-    const fetchId = ++fetchIdRef.current
-    setIsInsightsLoading(true)
-    fetchWrappedInsights(range)
-      .then((result) => {
-        if (fetchIdRef.current === fetchId) setInsights(result)
-      })
-      .catch((error) => logger.error("wrapped insights fetch failed", error))
-      .finally(() => {
-        if (fetchIdRef.current === fetchId) setIsInsightsLoading(false)
-      })
-  }, [])
-
-  useEffect(() => {
-    fetchInsights(dateRange)
-  }, [dateRange, fetchInsights])
-
-  const debouncedFetchInsights = useDebouncedCallback(fetchInsights, 300)
-
-  // These cards read straight from SQLite rather than `useStats`, so nothing
-  // else re-runs them when a transaction changes.
-  useEffect(() => {
-    const unsub1 = on("transactions:dirty", () =>
-      debouncedFetchInsights(dateRange),
-    )
-    const unsub2 = on("categories:dirty", () =>
-      debouncedFetchInsights(dateRange),
-    )
-    return () => {
-      fetchIdRef.current++
-      unsub1()
-      unsub2()
-    }
-  }, [dateRange, debouncedFetchInsights])
-
+  const { insights, isLoading: isInsightsLoading } =
+    useWrappedInsights(dateRange)
   const insight = insights.find((i) => i.currency === stats.currency)
   const hasRhythm = stats.spendingByDayOfWeek.some((day) => day.avgExpense > 0)
   const hasAnyInsight = Boolean(
@@ -127,7 +84,6 @@ function WrappedContent({
       insight?.medianPurchase != null ||
       hasRhythm,
   )
-
   if (!isInsightsLoading && !hasAnyInsight) {
     return (
       <EmptyState
@@ -136,7 +92,6 @@ function WrappedContent({
       />
     )
   }
-
   return (
     <>
       {insight?.topCategoryTrend && (
@@ -181,7 +136,6 @@ function WrappedContent({
     </>
   )
 }
-
 export default function StatsWrappedScreen() {
   return (
     <StatsDetailShell>
@@ -191,7 +145,6 @@ export default function StatsWrappedScreen() {
     </StatsDetailShell>
   )
 }
-
 const styles = StyleSheet.create(() => ({
   supportRow: {
     flexDirection: "row",
