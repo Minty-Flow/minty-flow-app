@@ -1,15 +1,15 @@
 import { useFocusEffect, useRouter } from "expo-router"
-import { useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useCategoriesByType } from "~/stores/db/category.store"
+import { useCategoriesByTypeQuery } from "~/database/drizzle/read-models/category-read-model"
 import type { Category } from "~/types/categories"
 import { NewEnum } from "~/types/new"
 import type { TransactionType } from "~/types/transactions"
@@ -23,18 +23,15 @@ interface CategoryListProps {
   deletedCategory?: string
   searchQuery?: string
 }
-
 interface CategoryListHeaderProps {
   onAddCategory: () => void
   onAddFromPresets: () => void
 }
-
 function CategoryListHeader({
   onAddCategory,
   onAddFromPresets,
 }: CategoryListHeaderProps) {
   const { t } = useTranslation()
-
   return (
     <View style={styles.headerContainer}>
       <Button
@@ -62,7 +59,6 @@ function CategoryListHeader({
     </View>
   )
 }
-
 export const CategoryList = ({
   type,
   createdCategory,
@@ -70,27 +66,23 @@ export const CategoryList = ({
   deletedCategory,
   searchQuery = "",
 }: CategoryListProps) => {
-  const categories = useCategoriesByType(type)
+  const { data: categories, status } = useCategoriesByTypeQuery(type)
   const router = useRouter()
   const { t } = useTranslation()
   const typeLabel = t(`components.categories.types.${type}`)
-
   // Clear URL params when screen comes into focus
   // The reactive observe will automatically update the list
-  useFocusEffect(
-    useCallback(() => {
-      if (createdCategory) {
-        router.setParams({ createdCategory: undefined })
-      }
-      if (updatedCategory) {
-        router.setParams({ updatedCategory: undefined })
-      }
-      if (deletedCategory) {
-        router.setParams({ deletedCategory: undefined })
-      }
-    }, [createdCategory, updatedCategory, deletedCategory, router]),
-  )
-
+  useFocusEffect(() => {
+    if (createdCategory) {
+      router.setParams({ createdCategory: undefined })
+    }
+    if (updatedCategory) {
+      router.setParams({ updatedCategory: undefined })
+    }
+    if (deletedCategory) {
+      router.setParams({ deletedCategory: undefined })
+    }
+  })
   const handleAddCategory = () => {
     router.push({
       pathname: "/settings/categories/[categoryId]/modify",
@@ -100,7 +92,6 @@ export const CategoryList = ({
       },
     })
   }
-
   const handleAddFromPresets = () => {
     router.push({
       pathname: "/settings/categories/presets",
@@ -109,34 +100,23 @@ export const CategoryList = ({
       },
     })
   }
-
   const header = (
     <CategoryListHeader
       onAddCategory={handleAddCategory}
       onAddFromPresets={handleAddFromPresets}
     />
   )
-
-  const filteredCategories = useMemo(
-    () =>
-      categories.filter((category) => {
-        if (searchQuery.trim().length === 0) return true
-        return category.name
-          .toLowerCase()
-          .includes(searchQuery.trim().toLowerCase())
-      }),
-    [categories, searchQuery],
+  const filteredCategories = categories.filter((category) => {
+    if (searchQuery.trim().length === 0) return true
+    return category.name
+      .toLowerCase()
+      .includes(searchQuery.trim().toLowerCase())
+  })
+  const renderItem = ({ item }: { item: Category }) => (
+    <CategoryRow category={item} transactionCount={item.transactionCount} />
   )
-
-  const renderItem = useCallback(
-    ({ item }: { item: Category }) => (
-      <CategoryRow category={item} transactionCount={item.transactionCount} />
-    ),
-    [],
-  )
-
-  const keyExtractor = useCallback((item: Category) => item.id, [])
-
+  const keyExtractor = (item: Category) => item.id
+  if (status === "loading") return <RouteLoadingState />
   if (filteredCategories.length === 0) {
     if (searchQuery) {
       return (
@@ -151,7 +131,6 @@ export const CategoryList = ({
         </View>
       )
     }
-
     return (
       <View style={styles.emptyWrapper}>
         {header}
@@ -167,7 +146,6 @@ export const CategoryList = ({
       </View>
     )
   }
-
   return (
     <FlatList
       data={filteredCategories}
@@ -178,7 +156,6 @@ export const CategoryList = ({
     />
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   listContent: {
     paddingBottom: 100,

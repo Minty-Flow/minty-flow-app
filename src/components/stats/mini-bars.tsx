@@ -8,6 +8,7 @@ const BAR_MAX_HEIGHT = 56
 const BAR_MIN_HEIGHT = 4
 
 export interface MiniBar {
+  id: string
   label: string
   value: number
   /** Highlights this bar — the one the surrounding sentence is about. */
@@ -25,11 +26,8 @@ export function MiniBars({ bars }: MiniBarsProps) {
 
   return (
     <View style={styles.row}>
-      {bars.map((bar, i) => (
-        // Positional key: narrow weekday labels repeat (T/T, S/S), so the label
-        // is not unique. Order is stable per render.
-        // biome-ignore lint/suspicious/noArrayIndexKey: labels are not unique
-        <View key={i} style={styles.column}>
+      {bars.map((bar) => (
+        <View key={bar.id} style={styles.column}>
           <View
             style={[
               styles.bar,

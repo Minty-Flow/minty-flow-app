@@ -1,11 +1,5 @@
-import {
-  Canvas,
-  LinearGradient,
-  Path,
-  Skia,
-  vec,
-} from "@shopify/react-native-skia"
-import { useMemo, useState } from "react"
+import { Canvas, LinearGradient, Path, vec } from "@shopify/react-native-skia"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
@@ -18,16 +12,13 @@ import type { BalanceTimelinePoint } from "~/types/stats"
 import { StatCard } from "./stat-card"
 
 const CHART_HEIGHT = 64
-
 interface SparklineProps {
   timeline: BalanceTimelinePoint[]
 }
-
 function Sparkline({ timeline }: SparklineProps) {
   const { theme } = useUnistyles()
   const [width, setWidth] = useState(0)
-
-  const { linePath, areaPath } = useMemo(() => {
+  const { linePath, areaPath } = (() => {
     if (width === 0 || timeline.length < 2) {
       return { linePath: null, areaPath: null }
     }
@@ -37,26 +28,22 @@ function Sparkline({ timeline }: SparklineProps) {
     const span = max - min || 1
     const pad = 4
     const usable = CHART_HEIGHT - pad * 2
-
-    const line = Skia.Path.Make()
-    const area = Skia.Path.Make()
+    const line: string[] = []
+    const area: string[] = []
     timeline.forEach((point, i) => {
       const x = (i / (timeline.length - 1)) * width
       const y = pad + (1 - (point.balance - min) / span) * usable
       if (i === 0) {
-        line.moveTo(x, y)
-        area.moveTo(x, CHART_HEIGHT)
-        area.lineTo(x, y)
+        line.push(`M ${x} ${y}`)
+        area.push(`M ${x} ${CHART_HEIGHT}`, `L ${x} ${y}`)
       } else {
-        line.lineTo(x, y)
-        area.lineTo(x, y)
+        line.push(`L ${x} ${y}`)
+        area.push(`L ${x} ${y}`)
       }
     })
-    area.lineTo(width, CHART_HEIGHT)
-    area.close()
-    return { linePath: line, areaPath: area }
-  }, [timeline, width])
-
+    area.push(`L ${width} ${CHART_HEIGHT}`, "Z")
+    return { linePath: line.join(" "), areaPath: area.join(" ") }
+  })()
   return (
     <View
       style={styles.chartWrap}
@@ -87,7 +74,6 @@ function Sparkline({ timeline }: SparklineProps) {
     </View>
   )
 }
-
 interface NetWorthCardProps {
   netBalance: number
   balanceDelta: number
@@ -96,7 +82,6 @@ interface NetWorthCardProps {
   currency: string
   onPress: () => void
 }
-
 export function NetWorthCard({
   netBalance,
   balanceDelta,
@@ -108,7 +93,6 @@ export function NetWorthCard({
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const deltaUp = balanceDelta >= 0
-
   return (
     <StatCard
       title={t("screens.stats.dashboard.netWorth")}
@@ -151,7 +135,6 @@ export function NetWorthCard({
     </StatCard>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   total: {
     fontWeight: "700",

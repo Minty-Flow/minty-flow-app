@@ -113,3 +113,5 @@ skills-lock.json
 
 # tabler-icons source clone (own .git, pulled independently)
 tabler-icons/
+
+doctor.config.json

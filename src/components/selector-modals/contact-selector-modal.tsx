@@ -3,10 +3,9 @@
  * search and FlatList. Tap a contact to select and close. Uses Suspense +
  * contacts promise so the modal opens instantly and the list loads asynchronously.
  */
-
 import * as Contacts from "expo-contacts/legacy"
 import i18n from "i18next"
-import { Suspense, use, useCallback, useMemo, useState } from "react"
+import { Suspense, use, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList, Modal, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -24,9 +23,10 @@ import { Toast } from "~/utils/toast"
 
 import { modalStyles, triggerStyles } from "./styles"
 
-function createContactsPromise(
-  onPermissionDenied?: () => void,
-): Promise<{ contacts: Contacts.Contact[]; hasPermission: boolean }> {
+function createContactsPromise(onPermissionDenied?: () => void): Promise<{
+  contacts: Contacts.Contact[]
+  hasPermission: boolean
+}> {
   return (async () => {
     try {
       const { status } = await Contacts.requestPermissionsAsync()
@@ -55,13 +55,11 @@ function createContactsPromise(
     }
   })()
 }
-
 interface ContactSelectorModalProps {
   onContactSelected: (contact: Contacts.Contact) => void
   onPermissionDenied?: () => void
   editable?: boolean
 }
-
 interface ContactListContentProps {
   contactsPromise: Promise<{
     contacts: Contacts.Contact[]
@@ -70,7 +68,6 @@ interface ContactListContentProps {
   searchQuery: string
   onSelectContact: (contact: Contacts.Contact) => void
 }
-
 function ContactListContent({
   contactsPromise,
   searchQuery,
@@ -78,8 +75,7 @@ function ContactListContent({
 }: ContactListContentProps) {
   const { t } = useTranslation()
   const { contacts, hasPermission } = use(contactsPromise)
-
-  const filtered = useMemo(() => {
+  const filtered = (() => {
     if (!searchQuery.trim()) return contacts
     const q = searchQuery.toLowerCase().trim()
     return contacts.filter(
@@ -88,36 +84,23 @@ function ContactListContent({
         c.phoneNumbers?.some((p) => p.number?.toLowerCase().includes(q)) ||
         c.emails?.some((e) => e.email?.toLowerCase().includes(q)),
     )
-  }, [contacts, searchQuery])
-
-  const renderItem = useCallback(
-    ({ item }: { item: Contacts.Contact }) => (
-      <ContactItem contact={item} onPress={onSelectContact} />
-    ),
-    [onSelectContact],
+  })()
+  const renderItem = ({ item }: { item: Contacts.Contact }) => (
+    <ContactItem contact={item} onPress={onSelectContact} />
   )
-
-  const keyExtractor = useCallback(
-    (item: Contacts.Contact, index: number) =>
-      `${item.firstName ?? ""}-${item.phoneNumbers?.[0]?.number ?? ""}-${index}`,
-    [],
+  const keyExtractor = (item: Contacts.Contact, index: number) =>
+    `${item.firstName ?? ""}-${item.phoneNumbers?.[0]?.number ?? ""}-${index}`
+  const ListEmpty = (
+    <EmptyState
+      variant="compact"
+      icon={!hasPermission ? "shield-lock" : "user-question-outline"}
+      title={
+        !hasPermission
+          ? t("components.selectors.contacts.permissionDenied")
+          : t("components.selectors.contacts.noContacts")
+      }
+    />
   )
-
-  const ListEmpty = useMemo(
-    () => (
-      <EmptyState
-        variant="compact"
-        icon={!hasPermission ? "shield-lock" : "user-question-outline"}
-        title={
-          !hasPermission
-            ? t("components.selectors.contacts.permissionDenied")
-            : t("components.selectors.contacts.noContacts")
-        }
-      />
-    ),
-    [hasPermission, t],
-  )
-
   return (
     <FlatList
       data={filtered}
@@ -134,7 +117,6 @@ function ContactListContent({
     />
   )
 }
-
 function ContactItem({
   contact,
   onPress,
@@ -151,7 +133,6 @@ function ContactItem({
         .slice(0, 2)
         .toUpperCase()
     : "?"
-
   return (
     <ListItem
       style={({ pressed }: { pressed: boolean }) => [
@@ -177,7 +158,6 @@ function ContactItem({
     </ListItem>
   )
 }
-
 const contactItemStyles = StyleSheet.create((theme) => ({
   itemGap: {
     gap: 12,
@@ -206,7 +186,6 @@ const contactItemStyles = StyleSheet.create((theme) => ({
     ...theme.typography.titleSmall,
   },
 }))
-
 export function ContactSelectorModal({
   onContactSelected,
   onPermissionDenied,
@@ -219,28 +198,20 @@ export function ContactSelectorModal({
     hasPermission: boolean
   }> | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
-
-  const open = useCallback(() => {
+  const open = () => {
     if (!editable) return
-
     setSearchQuery("")
     setContactsPromise(createContactsPromise(onPermissionDenied))
     setVisible(true)
-  }, [editable, onPermissionDenied])
-
-  const close = useCallback(() => {
+  }
+  const close = () => {
     setVisible(false)
     setContactsPromise(null)
-  }, [])
-
-  const handleSelectContact = useCallback(
-    (contact: Contacts.Contact) => {
-      onContactSelected(contact)
-      close()
-    },
-    [onContactSelected, close],
-  )
-
+  }
+  const handleSelectContact = (contact: Contacts.Contact) => {
+    onContactSelected(contact)
+    close()
+  }
   return (
     <>
       <View style={triggerStyles.wrapper}>

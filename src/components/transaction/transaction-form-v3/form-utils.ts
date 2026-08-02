@@ -1,4 +1,4 @@
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
+import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
 import i18n from "~/i18n/config"
 import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import type { Account } from "~/types/accounts"

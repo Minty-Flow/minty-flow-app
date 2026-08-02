@@ -1,11 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
 import type { IconSvgName } from "~/components/icons"
+import {
+  RouteLoadingState,
+  RouteNotFoundState,
+} from "~/components/route-load-state"
 import { ActionButtons } from "~/components/tag/action-buttons"
 import { DeleteSection } from "~/components/tag/delete-section"
 import { FormTagFields } from "~/components/tag/form-tag-fields"
@@ -14,14 +18,15 @@ import { TypeTabs } from "~/components/tag/type-tabs"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
+import { useTagsQuery } from "~/database/drizzle/read-models/tag-read-model"
 import {
   createTag,
   deleteTagById,
   updateTagById,
-} from "~/database/services-sqlite/tag-service"
+} from "~/database/services/tag-service"
+import { useModifyRouteLoader } from "~/hooks/use-modify-route-loader"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import { type AddTagsFormSchema, addTagsSchema } from "~/schemas/tags.schema"
-import { useTag } from "~/stores/db/tag.store"
 import { getThemeStrict } from "~/styles/theme/registry"
 import { NewEnum } from "~/types/new"
 import { type Tag, TagKindEnum, type TagKindType } from "~/types/tags"
@@ -32,15 +37,12 @@ interface EditTagScreenInnerProps {
   tagId: string
   tag?: Tag
 }
-
 function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
   const { t } = useTranslation()
   const router = useRouter()
   const navigation = useNavigation()
   const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
-
   const isAddMode = tagId === NewEnum.NEW || !tagId
-
   const {
     control,
     handleSubmit: handleFormSubmit,
@@ -56,34 +58,27 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
       colorSchemeName: tag?.colorSchemeName || undefined,
     },
   })
-
   const formName = watch("name")
   const formIcon = watch("icon")
   const formColorSchemeName = watch("colorSchemeName")
   const formType = watch("type")
-
   const iconBasedType = (type?: TagKindType): IconSvgName => {
     if (type === TagKindEnum.CONTACT) return "address-book-outline"
     if (type === TagKindEnum.LOCATION) return "map-outline"
     return "tag"
   }
-
-  const handleConfirm = useCallback(() => {
+  const handleConfirm = () => {
     router.back()
-  }, [router])
-
-  const handleBlock = useCallback(() => {
+  }
+  const handleBlock = () => {
     setUnsavedModalVisible(true)
-  }, [])
-
+  }
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSubmitting,
     onBlock: handleBlock,
   })
-
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-
   const onSubmit = async (data: AddTagsFormSchema) => {
     try {
       if (isAddMode) {
@@ -103,7 +98,6 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
       })
     }
   }
-
   const handleDelete = async () => {
     try {
       await deleteTagById(tagId)
@@ -117,9 +111,7 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
       })
     }
   }
-
   const currentColorScheme = getThemeStrict(formColorSchemeName)
-
   if (!isAddMode && !tag) {
     return (
       <View style={styles.container}>
@@ -129,7 +121,6 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
       </View>
     )
   }
-
   return (
     <View style={styles.container}>
       <ScrollIntoViewProvider
@@ -183,18 +174,29 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
     </View>
   )
 }
-
 export default function EditTagScreen() {
-  const { tagId } = useLocalSearchParams<{ tagId: string }>()
-  const tag = useTag(tagId ?? "")
+  const { tagId } = useLocalSearchParams<{
+    tagId: string
+  }>()
+  const tagsQuery = useTagsQuery()
+  const loadState = useModifyRouteLoader({
+    id: tagId,
+    data: tagsQuery.data,
+    updatedAt: tagsQuery.updatedAt,
+    find: (item, id) => item.id === id,
+    notFoundMessage: "Tag not found.",
+  })
 
-  if (tagId === NewEnum.NEW || !tagId) {
+  if (loadState.mode === "new") {
     return <EditTagScreenInner tagId={NewEnum.NEW} />
   }
+  if (loadState.mode === "loading") return <RouteLoadingState />
+  if (loadState.mode === "not-found") {
+    return <RouteNotFoundState message={loadState.message} />
+  }
 
-  return <EditTagScreenInner key={tagId} tagId={tagId} tag={tag} />
+  return <EditTagScreenInner key={tagId} tagId={tagId} tag={loadState.entity} />
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,

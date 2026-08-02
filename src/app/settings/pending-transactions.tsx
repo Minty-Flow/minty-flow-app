@@ -1,5 +1,5 @@
 import { useNavigation, useRouter } from "expo-router"
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
@@ -7,16 +7,19 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
 import { MonthYearPicker } from "~/components/month-year-picker"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { View } from "~/components/ui/view"
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
-import { getMonthRange } from "~/database/services-sqlite/account-service"
-import { useCategoriesByType } from "~/stores/db/category.store"
-import { useTags } from "~/stores/db/tag.store"
-import { useTransactions } from "~/stores/db/transaction.store"
+import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
+import { useTags } from "~/database/drizzle/read-models/tag-read-model"
+import {
+  type TransactionWithRelations,
+  useTransactions,
+} from "~/database/drizzle/read-models/transaction-read-model"
+import { getMonthRange } from "~/database/services/account-service"
 import type {
   SearchState,
   TransactionListFilterState,
@@ -30,13 +33,11 @@ import {
   applySearch,
   applyTransactionFilters,
 } from "~/utils/transaction-list-utils"
-
 export default function PendingTransactionsScreen() {
   const { t } = useTranslation()
   const router = useRouter()
   const navigation = useNavigation()
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
-
   const [selectedYear, setSelectedYear] = useState(() =>
     new Date().getFullYear(),
   )
@@ -49,41 +50,25 @@ export default function PendingTransactionsScreen() {
   const [searchState, setSearchState] =
     useState<SearchState>(DEFAULT_SEARCH_STATE)
   const [showFilters, setShowFilters] = useState(false)
-
   const categoriesExpense = useCategoriesByType(TransactionTypeEnum.EXPENSE)
   const categoriesIncome = useCategoriesByType(TransactionTypeEnum.INCOME)
   const categoriesTransfer = useCategoriesByType(TransactionTypeEnum.TRANSFER)
   const tags = useTags()
-
-  const { fromDate, toDate } = useMemo(
-    () => getMonthRange(selectedYear, selectedMonth),
-    [selectedYear, selectedMonth],
-  )
-
-  const { items: allPending } = useTransactions({
+  const { fromDate, toDate } = getMonthRange(selectedYear, selectedMonth)
+  const { items: allPending, status: transactionsStatus } = useTransactions({
     from: new Date(fromDate).toISOString(),
     to: new Date(toDate).toISOString(),
     isPending: true,
   })
-
-  const transactionsFull = useMemo(
-    () =>
-      applySearch(
-        applyTransactionFilters(allPending, filterState),
-        searchState,
-      ),
-    [allPending, filterState, searchState],
+  const transactionsFull = applySearch(
+    applyTransactionFilters(allPending, filterState),
+    searchState,
   )
-
-  const categoriesByType = useMemo(
-    () => ({
-      expense: categoriesExpense,
-      income: categoriesIncome,
-      transfer: categoriesTransfer,
-    }),
-    [categoriesExpense, categoriesIncome, categoriesTransfer],
-  )
-
+  const categoriesByType = {
+    expense: categoriesExpense,
+    income: categoriesIncome,
+    transfer: categoriesTransfer,
+  }
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -100,31 +85,25 @@ export default function PendingTransactionsScreen() {
       ),
     })
   }, [navigation, showFilters])
-
-  const handleDeleteDone = useCallback(() => {
+  if (transactionsStatus === "loading" && allPending.length === 0)
+    return <RouteLoadingState />
+  const handleDeleteDone = () => {
     openSwipeableRef.current?.close()
-  }, [])
-
-  const renderItem = useCallback(
-    ({ item }: { item: TransactionWithRelations }) => (
-      <TransactionItem
-        transactionWithRelations={item}
-        onPress={() => router.push(`/transaction/${item.id}`)}
-        onDelete={handleDeleteDone}
-        onWillOpen={(methods) => {
+  }
+  const renderItem = ({ item }: { item: TransactionWithRelations }) => (
+    <TransactionItem
+      transactionWithRelations={item}
+      onPress={() => router.push(`/transaction/${item.id}`)}
+      onDelete={handleDeleteDone}
+      onWillOpen={(methods) => {
+        if (openSwipeableRef.current !== methods) {
           openSwipeableRef.current?.close()
-          openSwipeableRef.current = methods
-        }}
-      />
-    ),
-    [router, handleDeleteDone],
+        }
+        openSwipeableRef.current = methods
+      }}
+    />
   )
-
-  const keyExtractor = useCallback(
-    (item: TransactionWithRelations) => item.id,
-    [],
-  )
-
+  const keyExtractor = (item: TransactionWithRelations) => item.id
   return (
     <View style={styles.container}>
       <MonthYearPicker
@@ -169,7 +148,6 @@ export default function PendingTransactionsScreen() {
     </View>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,

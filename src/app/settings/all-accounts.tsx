@@ -1,25 +1,29 @@
 import { useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
-import { ScrollView } from "react-native"
+import { FlatList } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { AccountCard } from "~/components/accounts/account-card"
 import { IconSvg } from "~/components/icons"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import {
-  useActiveAccounts,
-  useArchivedAccounts,
-} from "~/stores/db/account.store"
+import { useAccountsQuery } from "~/database/drizzle/read-models/account-read-model"
 import { NewEnum } from "~/types/new"
 
 export default function AllAccountsScreen() {
-  const accounts = useActiveAccounts()
-  const archivedAccounts = useArchivedAccounts()
+  const accountsResult = useAccountsQuery()
+  const accounts = accountsResult.data.filter((account) => !account.isArchived)
+  const archivedAccounts = accountsResult.data.filter(
+    (account) => account.isArchived,
+  )
   const router = useRouter()
   const { theme } = useUnistyles()
   const { t } = useTranslation()
+  if (accountsResult.status === "loading") {
+    return <RouteLoadingState />
+  }
 
   const handleAddAccount = () => {
     router.push({
@@ -30,46 +34,45 @@ export default function AllAccountsScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView
+      <FlatList
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <Pressable style={styles.newAccountButton} onPress={handleAddAccount}>
-          <IconSvg
-            name="plus-outline"
-            size={32}
-            color={theme.colors.onSecondary}
-          />
-          <Text variant="default" style={styles.newAccountText}>
-            {t("screens.accounts.addNew")}
-          </Text>
-        </Pressable>
-
-        {accounts.map((account) => (
-          <AccountCard
-            key={account.id}
-            account={account}
-            isReorderMode={false}
-          />
-        ))}
-
-        {archivedAccounts.length > 0 && (
-          <>
-            <Text variant="small" style={styles.archivedSectionLabel}>
-              {t("screens.accounts.archivedSection")}
-            </Text>
-            {archivedAccounts.map((account) => (
-              <AccountCard
-                key={account.id}
-                account={account}
-                isReorderMode={false}
-                isArchived
-              />
-            ))}
-          </>
+        data={accounts}
+        keyExtractor={(account) => account.id}
+        renderItem={({ item: account }) => (
+          <AccountCard account={account} isReorderMode={false} />
         )}
-      </ScrollView>
+        ListHeaderComponent={
+          <Pressable style={styles.newAccountButton} onPress={handleAddAccount}>
+            <IconSvg
+              name="plus-outline"
+              size={32}
+              color={theme.colors.onSecondary}
+            />
+            <Text variant="default" style={styles.newAccountText}>
+              {t("screens.accounts.addNew")}
+            </Text>
+          </Pressable>
+        }
+        ListFooterComponent={
+          archivedAccounts.length > 0 ? (
+            <>
+              <Text variant="small" style={styles.archivedSectionLabel}>
+                {t("screens.accounts.archivedSection")}
+              </Text>
+              {archivedAccounts.map((account) => (
+                <AccountCard
+                  key={account.id}
+                  account={account}
+                  isReorderMode={false}
+                  isArchived
+                />
+              ))}
+            </>
+          ) : null
+        }
+        showsVerticalScrollIndicator={false}
+      />
     </View>
   )
 }

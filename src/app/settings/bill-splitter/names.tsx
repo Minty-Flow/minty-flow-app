@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
@@ -11,39 +11,31 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useBillSplitterStore } from "~/stores/bill-splitter.store"
 import type { Participant } from "~/types/bill-splitter"
-
 export default function NamesScreen() {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
-
   const participants = useBillSplitterStore((s) => s.participants)
   const addParticipant = useBillSplitterStore((s) => s.addParticipant)
   const removeParticipant = useBillSplitterStore((s) => s.removeParticipant)
-
   const [addModalVisible, setAddModalVisible] = useState(false)
-
-  const renderItem = useCallback(
-    ({ item }: { item: Participant }) => (
-      <View style={styles.nameRow}>
-        <Text style={styles.nameText} numberOfLines={1}>
-          {item.name}
-        </Text>
-        <Pressable
-          onPress={() => removeParticipant(item.id)}
-          style={styles.deleteButton}
-          accessibilityLabel={t("common.actions.delete")}
-        >
-          <IconSvg
-            name="trash-outline"
-            size={20}
-            color={theme.colors.onSecondary}
-          />
-        </Pressable>
-      </View>
-    ),
-    [removeParticipant, theme, t],
+  const renderItem = ({ item }: { item: Participant }) => (
+    <View style={styles.nameRow}>
+      <Text style={styles.nameText} numberOfLines={1}>
+        {item.name}
+      </Text>
+      <Pressable
+        onPress={() => removeParticipant(item.id)}
+        style={styles.deleteButton}
+        accessibilityLabel={t("common.actions.delete")}
+      >
+        <IconSvg
+          name="trash-outline"
+          size={20}
+          color={theme.colors.onSecondary}
+        />
+      </Pressable>
+    </View>
   )
-
   return (
     <View style={styles.container}>
       <FlatList
@@ -80,7 +72,6 @@ export default function NamesScreen() {
     </View>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,

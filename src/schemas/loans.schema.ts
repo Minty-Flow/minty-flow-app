@@ -13,7 +13,6 @@ const addLoanSchema = z.object({
   categoryId: z.string().min(1, "validation.required.category"),
   principalAmount: z
     .number()
-    .safe()
     .int("validation.amount.invalid")
     .positive("validation.amount.positive"),
   description: z.string().max(1000).nullable().optional(),

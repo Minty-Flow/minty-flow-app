@@ -1,4 +1,4 @@
-import { ScrollView, View } from "react-native"
+import { FlatList, View } from "react-native"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
@@ -26,21 +26,20 @@ export function AccountsPanel({
   onClear,
   onDone,
 }: AccountsPanelProps) {
+  const selectedIdSet = new Set(selectedIds)
+
   return (
     <View>
       {chunk(accounts, CHIPS_PER_ROW).map((row) => (
-        <ScrollView
+        <FlatList
           key={row.map((a) => a.id).join(",")}
           horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={filterHeaderStyles.chipScrollRow}
-          style={filterHeaderStyles.categoryRow}
-        >
-          {row.map((account) => (
+          data={row}
+          keyExtractor={(account) => account.id}
+          renderItem={({ item: account }) => (
             <Chip
-              key={account.id}
               label={account.name}
-              selected={selectedIds.includes(account.id)}
+              selected={selectedIdSet.has(account.id)}
               onPress={() => onToggle(account.id)}
               leading={
                 account.icon ? (
@@ -55,8 +54,11 @@ export function AccountsPanel({
                 )
               }
             />
-          ))}
-        </ScrollView>
+          )}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={filterHeaderStyles.chipScrollRow}
+          style={filterHeaderStyles.categoryRow}
+        />
       ))}
 
       <View style={filterHeaderStyles.panelHeader}>

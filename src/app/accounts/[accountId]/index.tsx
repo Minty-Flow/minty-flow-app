@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useCallback, useLayoutEffect, useMemo, useState } from "react"
+import { useLayoutEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
@@ -14,15 +14,15 @@ import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty
 import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { useAccount } from "~/database/drizzle/read-models/account-read-model"
+import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
+import { useTags } from "~/database/drizzle/read-models/tag-read-model"
+import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import {
   destroyAccount,
   getMonthRange,
   unarchiveAccount,
-} from "~/database/services-sqlite/account-service"
-import { useAccount } from "~/stores/db/account.store"
-import { useCategoriesByType } from "~/stores/db/category.store"
-import { useTags } from "~/stores/db/tag.store"
-import { useTransactions } from "~/stores/db/transaction.store"
+} from "~/database/services/account-service"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import type {
   SearchState,
@@ -38,14 +38,14 @@ import {
 } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
-
 export default function AccountDetailsScreen() {
-  const { accountId } = useLocalSearchParams<{ accountId: string }>()
+  const { accountId } = useLocalSearchParams<{
+    accountId: string
+  }>()
   const { t } = useTranslation()
   const router = useRouter()
   const navigation = useNavigation()
   const { theme } = useUnistyles()
-
   const [selectedYear, setSelectedYear] = useState(() =>
     new Date().getFullYear(),
   )
@@ -60,7 +60,6 @@ export default function AccountDetailsScreen() {
   const [showFilters, setShowFilters] = useState(false)
   const [unarchiveModalVisible, setUnarchiveModalVisible] = useState(false)
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-
   const account = useAccount(accountId ?? "")
   const categoriesExpense = useCategoriesByType(TransactionTypeEnum.EXPENSE)
   const categoriesIncome = useCategoriesByType(TransactionTypeEnum.INCOME)
@@ -69,12 +68,7 @@ export default function AccountDetailsScreen() {
   const excludeFromTotals = useTransfersPreferencesStore(
     (s) => s.excludeFromTotals,
   )
-
-  const { fromDate, toDate } = useMemo(
-    () => getMonthRange(selectedYear, selectedMonth),
-    [selectedYear, selectedMonth],
-  )
-
+  const { fromDate, toDate } = getMonthRange(selectedYear, selectedMonth)
   const { items: transactionsFull } = useTransactions(
     accountId
       ? {
@@ -84,8 +78,7 @@ export default function AccountDetailsScreen() {
         }
       : {},
   )
-
-  const { monthIn, monthOut, monthNet } = useMemo(() => {
+  const { monthIn, monthOut, monthNet } = (() => {
     let in_ = 0
     let out = 0
     for (const t of transactionsFull) {
@@ -116,20 +109,14 @@ export default function AccountDetailsScreen() {
       }
     }
     return { monthIn: in_, monthOut: out, monthNet: in_ - out }
-  }, [transactionsFull, excludeFromTotals])
-
-  const categoriesByType = useMemo(
-    () => ({
-      expense: categoriesExpense,
-      income: categoriesIncome,
-      transfer: categoriesTransfer,
-    }),
-    [categoriesExpense, categoriesIncome, categoriesTransfer],
-  )
-
+  })()
+  const categoriesByType = {
+    expense: categoriesExpense,
+    income: categoriesIncome,
+    transfer: categoriesTransfer,
+  }
   const isArchived = account?.isArchived ?? false
-
-  const handleDelete = useCallback(async () => {
+  const handleDelete = async () => {
     if (!accountId) return
     try {
       await destroyAccount(accountId)
@@ -141,9 +128,8 @@ export default function AccountDetailsScreen() {
         description: t("screens.accounts.form.toast.deleteFailed"),
       })
     }
-  }, [accountId, t, router])
-
-  const handleUnarchive = useCallback(async () => {
+  }
+  const handleUnarchive = async () => {
     if (!accountId) return
     try {
       await unarchiveAccount(accountId)
@@ -152,8 +138,7 @@ export default function AccountDetailsScreen() {
       logger.error("Error unarchiving account", { error })
       Toast.error({ title: t("common.toast.error") })
     }
-  }, [accountId, t])
-
+  }
   useLayoutEffect(() => {
     navigation.setOptions({
       title: account?.name ?? "",
@@ -204,7 +189,6 @@ export default function AccountDetailsScreen() {
       ),
     })
   }, [navigation, router, account?.id, account?.name, showFilters, isArchived])
-
   if (!account) {
     return (
       <View style={styles.container}>
@@ -214,9 +198,7 @@ export default function AccountDetailsScreen() {
       </View>
     )
   }
-
   const typeLabel = account.type.charAt(0).toUpperCase() + account.type.slice(1)
-
   const headerContent = (
     <>
       {/* Account Header Card */}
@@ -314,7 +296,6 @@ export default function AccountDetailsScreen() {
       </View>
     </>
   )
-
   return (
     <View style={styles.container}>
       <MonthYearPicker
@@ -375,7 +356,6 @@ export default function AccountDetailsScreen() {
     </View>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
@@ -386,7 +366,6 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
     alignItems: "center",
   },
-
   // ── Header Card ──────────────────────────────────────────────
   headerCard: {
     backgroundColor: theme.colors.secondary,
@@ -472,7 +451,6 @@ const styles = StyleSheet.create((theme) => ({
     ...theme.typography.titleSmall,
     color: theme.colors.semantic.semi,
   },
-
   // ── Summary: Income & Expense pills + Net card ─────────────────
   summaryRow: {
     flexDirection: "row",

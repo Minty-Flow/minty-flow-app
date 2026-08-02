@@ -113,7 +113,10 @@ class ExchangeRatesService {
    * @param baseCurrency - Base currency code (e.g., "USD")
    * @returns Exchange rates object or null if fetch fails
    */
-  async fetchRates(baseCurrency: string): Promise<ExchangeRates | null> {
+  async fetchRates(
+    baseCurrency: string,
+    signal?: AbortSignal,
+  ): Promise<ExchangeRates | null> {
     const normalizedCurrency = normalizeCurrencyCode(baseCurrency)
 
     // Use registry service for validation
@@ -147,6 +150,7 @@ class ExchangeRatesService {
         headers: {
           Accept: "application/json",
         },
+        signal,
       })
 
       if (!response.ok) {
@@ -163,6 +167,7 @@ class ExchangeRatesService {
       })
       apiResponse = data
     } catch (error) {
+      if (signal?.aborted) return null
       logger.warn("Failed to fetch exchange rates from main source", {
         baseCurrency,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -180,6 +185,7 @@ class ExchangeRatesService {
           headers: {
             Accept: "application/json",
           },
+          signal,
         })
 
         if (!response.ok) {
@@ -196,6 +202,7 @@ class ExchangeRatesService {
         })
         apiResponse = data
       } catch (error) {
+        if (signal?.aborted) return null
         logger.warn("Failed to fetch exchange rates from fallback source", {
           baseCurrency,
           error: error instanceof Error ? error.message : "Unknown error",
@@ -261,9 +268,12 @@ class ExchangeRatesService {
    * @param baseCurrency - Base currency code
    * @returns Exchange rates or null if unavailable
    */
-  async tryFetchRates(baseCurrency: string): Promise<ExchangeRates | null> {
+  async tryFetchRates(
+    baseCurrency: string,
+    signal?: AbortSignal,
+  ): Promise<ExchangeRates | null> {
     logger.debug("Fetching exchange rates", { baseCurrency })
-    const rates = await this.fetchRates(baseCurrency)
+    const rates = await this.fetchRates(baseCurrency, signal)
 
     // If fetch failed, try to return cached value
     if (!rates) {
@@ -295,6 +305,7 @@ class ExchangeRatesService {
   async getRate(
     fromCurrency: string,
     toCurrency: string,
+    signal?: AbortSignal,
   ): Promise<number | null> {
     // Validate both currencies
     if (!currencyRegistryService.isCurrencyCodeValid(fromCurrency)) {
@@ -326,7 +337,7 @@ class ExchangeRatesService {
       return 1
     }
 
-    let rates = await this.tryFetchRates(fromCurrency)
+    let rates = await this.tryFetchRates(fromCurrency, signal)
     const fromCurrencyLower = normalizeCurrencyCode(fromCurrency)
     const toCurrencyLower = normalizeCurrencyCode(toCurrency)
 
@@ -335,15 +346,15 @@ class ExchangeRatesService {
     }
 
     // Fallback: many APIs only support USD (or a few bases). Try fetching with toCurrency as base and invert.
-    rates = await this.tryFetchRates(toCurrency)
+    rates = await this.tryFetchRates(toCurrency, signal)
     if (rates?.rates && typeof rates.rates[fromCurrencyLower] === "number") {
       const inverse = rates.rates[fromCurrencyLower]
       if (inverse !== 0) return 1 / inverse
     }
 
     const errorMessage = `Exchange rate not found for ${fromCurrency} to ${toCurrency}. Please try again or set a custom rate in Settings.`
-    this.showToast("screens.settings.exchangeRates.errors.rateNotFound")
-    logger.error("Exchange rate not found", {
+    this.showToast("screens.settings.exchangeRates.errors.rateNotFound", "warn")
+    logger.warn("Exchange rate not found", {
       fromCurrency,
       toCurrency,
       error: errorMessage,

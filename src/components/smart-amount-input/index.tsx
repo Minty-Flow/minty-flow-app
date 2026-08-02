@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Keyboard, type TextInput } from "react-native"
 
@@ -14,7 +14,7 @@ import {
 import { formatEditableNumber, formatMoney } from "~/utils/number-format"
 import {
   exceedsFractionDigits,
-  type ParseResult,
+  type MathErrorCode,
   parseScaledMathExpression,
   sanitizeAmountInput,
 } from "~/utils/parse-math-expression"
@@ -45,7 +45,6 @@ interface SmartAmountInputProps {
   /** Transaction type (affects currency color) */
   type?: TransactionType
 }
-
 export const SmartAmountInput = ({
   valueMinor,
   onChangeMinor,
@@ -64,7 +63,6 @@ export const SmartAmountInput = ({
   const maximumFractionDigits = getMinorUnitDigits(currencyCode)
   const resolvedLabel =
     label ?? t("components.transactionForm.fields.amountLabel")
-
   const currencySymbol =
     currencyRegistryService.getCurrencySymbol(currencyCode) ?? currencyCode
   const displayValue = isEditing
@@ -75,27 +73,32 @@ export const SmartAmountInput = ({
           hideSign: true,
           hideSymbol: true,
         })
-
-  const previewResult = useMemo<ParseResult | null>(() => {
+  const previewResult = (() => {
     if (!hasMathOperation(displayValue)) return null
     const normalized = normalizeMajorUnitInput(displayValue)
     return normalized === null
       ? { error: "invalidExpression" }
       : parseScaledMathExpression(normalized, maximumFractionDigits)
-  }, [displayValue, maximumFractionDigits])
-
+  })()
   const isInMathOperation = hasMathOperation(displayValue)
   const previewMinor =
     previewResult && "value" in previewResult ? previewResult.value : null
   const previewErrorCode =
-    previewResult && "error" in previewResult ? previewResult.error : null
+    previewResult && "error" in previewResult
+      ? (previewResult.error as MathErrorCode)
+      : null
+  const previewErrorKeys = {
+    invalidExpression:
+      "components.transactionForm.amountInput.errors.invalidExpression",
+    divisionByZero:
+      "components.transactionForm.amountInput.errors.divisionByZero",
+    invalidResult:
+      "components.transactionForm.amountInput.errors.invalidResult",
+  } as const satisfies Record<MathErrorCode, string>
   const previewError = previewErrorCode
-    ? t(
-        `components.transactionForm.amountInput.errors.${previewErrorCode}` as const,
-      )
+    ? t(previewErrorKeys[previewErrorCode])
     : null
-
-  const handleFocus = useCallback(() => {
+  const handleFocus = () => {
     if (!isEditing) {
       setIsEditing(true)
       setInputValue(
@@ -104,50 +107,43 @@ export const SmartAmountInput = ({
           : minorUnitsToDecimalString(valueMinor, currencyCode),
       )
     }
-  }, [isEditing, valueMinor, currencyCode])
-
-  const handleTextChange = useCallback(
-    (text: string) => {
-      const normalized = normalizeMajorUnitInput(text)
-      if (normalized === null) return
-      const sanitized = sanitizeAmountInput(normalized)
-      if (exceedsFractionDigits(sanitized, maximumFractionDigits)) return
-      if (sanitized.length <= MAX_AMOUNT_INPUT_LENGTH) {
-        setIsEditing(true)
-        setInputValue(sanitized)
-        if (!showMathToolbar) {
-          try {
-            onChangeMinor(
-              sanitized ? parseMajorUnits(sanitized, currencyCode) : 0,
-            )
-          } catch {
-            // Keep the incomplete editing value until it becomes valid.
-          }
+  }
+  const handleTextChange = (text: string) => {
+    const normalized = normalizeMajorUnitInput(text)
+    if (normalized === null) return
+    const sanitized = sanitizeAmountInput(normalized)
+    if (exceedsFractionDigits(sanitized, maximumFractionDigits)) return
+    if (sanitized.length <= MAX_AMOUNT_INPUT_LENGTH) {
+      setIsEditing(true)
+      setInputValue(sanitized)
+      if (!showMathToolbar) {
+        try {
+          onChangeMinor(
+            sanitized ? parseMajorUnits(sanitized, currencyCode) : 0,
+          )
+        } catch {
+          // Keep the incomplete editing value until it becomes valid.
         }
       }
-    },
-    [showMathToolbar, onChangeMinor, currencyCode, maximumFractionDigits],
-  )
-
-  const handleOperatorPress = useCallback(
-    (op: string) => {
-      setIsEditing(true)
-      setInputValue((prev) => {
-        const cur = isEditing
-          ? prev
-          : valueMinor === 0
-            ? ""
-            : minorUnitsToDecimalString(valueMinor, currencyCode)
-        if (cur.length === 0) return op === "-" ? "-" : ""
-        const last = cur.slice(-1)
-        if (isOperator(last)) return cur.slice(0, -1) + op
-        return cur + op
-      })
-    },
-    [isEditing, valueMinor, currencyCode],
-  )
-
-  const commitValue = useCallback((): boolean => {
+    }
+  }
+  const handleOperatorPress = (op: string) => {
+    setIsEditing(true)
+    const currentValue = isEditing
+      ? inputValue
+      : valueMinor === 0
+        ? ""
+        : minorUnitsToDecimalString(valueMinor, currencyCode)
+    if (currentValue.length === 0) {
+      setInputValue(op === "-" ? "-" : "")
+      return
+    }
+    const last = currentValue.slice(-1)
+    setInputValue(
+      isOperator(last) ? currentValue.slice(0, -1) + op : currentValue + op,
+    )
+  }
+  const commitValue = (): boolean => {
     if (previewError) return false
     let finalValue = previewMinor ?? 0
     try {
@@ -161,45 +157,39 @@ export const SmartAmountInput = ({
     setIsEditing(false)
     setInputValue("")
     return true
-  }, [displayValue, previewMinor, previewError, onChangeMinor, currencyCode])
-
-  const handleSubmit = useCallback(() => {
+  }
+  const handleSubmit = () => {
     if (!commitValue()) return
     if (!isInMathOperation) {
       setShowMathToolbar(false)
     }
     Keyboard.dismiss()
-  }, [commitValue, isInMathOperation])
-
-  const handleBackspace = useCallback(() => {
+  }
+  const handleBackspace = () => {
     setIsEditing(true)
-    setInputValue((prev) => {
-      const cur = isEditing
-        ? prev
-        : valueMinor === 0
-          ? ""
-          : minorUnitsToDecimalString(valueMinor, currencyCode)
-      const newValue = cur.slice(0, -1)
-      if (!showMathToolbar) {
-        try {
-          onChangeMinor(newValue ? parseMajorUnits(newValue, currencyCode) : 0)
-        } catch {
-          // Keep the incomplete editing value until it becomes valid.
-        }
+    const currentValue = isEditing
+      ? inputValue
+      : valueMinor === 0
+        ? ""
+        : minorUnitsToDecimalString(valueMinor, currencyCode)
+    const newValue = currentValue.slice(0, -1)
+    setInputValue(newValue)
+    if (!showMathToolbar) {
+      try {
+        onChangeMinor(newValue ? parseMajorUnits(newValue, currencyCode) : 0)
+      } catch {
+        // Keep the incomplete editing value until it becomes valid.
       }
-      return newValue
-    })
-  }, [isEditing, valueMinor, showMathToolbar, onChangeMinor, currencyCode])
-
-  const handleClear = useCallback(() => {
+    }
+  }
+  const handleClear = () => {
     setIsEditing(true)
     setInputValue("")
     if (!showMathToolbar) {
       onChangeMinor(0)
     }
-  }, [showMathToolbar, onChangeMinor])
-
-  const handleBlur = useCallback(() => {
+  }
+  const handleBlur = () => {
     if (
       !showMathToolbar &&
       previewMinor !== null &&
@@ -210,28 +200,24 @@ export const SmartAmountInput = ({
       setIsEditing(false)
       setInputValue("")
     }
-  }, [showMathToolbar, previewMinor, previewError, isEditing, onChangeMinor])
-
-  const handleToggleMathToolbar = useCallback(() => {
+  }
+  const handleToggleMathToolbar = () => {
     if (showMathToolbar) {
       if (!commitValue()) return
       setInputValue("")
       setShowMathToolbar(false)
       return
     }
-
     setShowMathToolbar(true)
     scrollIntoView()
-  }, [showMathToolbar, commitValue, scrollIntoView])
-
+  }
   const displayPreview =
     previewMinor !== null
       ? formatMoney(previewMinor, currencyCode, {
           hideSign: true,
         })
       : null
-
-  const formattedExpression = useMemo(() => {
+  const formattedExpression = (() => {
     if (!isEditing || displayValue.trim() === "") return null
     return displayValue
       .replace(/\d+(?:\.\d*)?/g, formatEditableNumber)
@@ -241,8 +227,7 @@ export const SmartAmountInput = ({
       .replaceAll("-", " − ")
       .replace(/\s+/g, " ")
       .trim()
-  }, [displayValue, isEditing])
-
+  })()
   return (
     <View ref={wrapperRef} style={smartInputStyles.container}>
       <AmountLabelRow

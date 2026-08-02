@@ -4,7 +4,6 @@ import type { UseFormSetValue } from "react-hook-form"
 
 import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import type { TransactionLocation } from "~/types/transactions"
-
 export function useFormLocation(
   isNew: boolean,
   locationEnabled: boolean,
@@ -14,7 +13,6 @@ export function useFormLocation(
 ) {
   const [isCapturingLocation, setIsCapturingLocation] = useState(false)
   const hasAutoAttachedRef = useRef(false)
-
   const autoAttachLocation = useCallback(async () => {
     try {
       const { status } = await Location.getForegroundPermissionsAsync()
@@ -31,31 +29,24 @@ export function useFormLocation(
         }),
         { shouldDirty: true },
       )
+      setIsCapturingLocation(false)
     } catch {
       // Silent failure — user can still add location manually
-    } finally {
       setIsCapturingLocation(false)
     }
   }, [setValue])
-
   useEffect(() => {
     if (!isNew || !locationEnabled || !autoAttach || hasAutoAttachedRef.current)
       return
     hasAutoAttachedRef.current = true
     autoAttachLocation()
   }, [isNew, locationEnabled, autoAttach, autoAttachLocation])
-
-  const handleLocationConfirm = useCallback(
-    (loc: TransactionLocation) => {
-      setValue("location", JSON.stringify(loc), { shouldDirty: true })
-      closeLocationPicker()
-    },
-    [setValue, closeLocationPicker],
-  )
-
-  const handleClearLocation = useCallback(() => {
+  const handleLocationConfirm = (loc: TransactionLocation) => {
+    setValue("location", JSON.stringify(loc), { shouldDirty: true })
+    closeLocationPicker()
+  }
+  const handleClearLocation = () => {
     setValue("location", undefined, { shouldDirty: true })
-  }, [setValue])
-
+  }
   return { isCapturingLocation, handleLocationConfirm, handleClearLocation }
 }

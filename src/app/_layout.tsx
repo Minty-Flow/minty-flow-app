@@ -1,32 +1,357 @@
 import "react-native-reanimated"
+import { useMigrations } from "drizzle-orm/expo-sqlite/migrator"
+import { useDrizzleStudio } from "expo-drizzle-studio-plugin"
 import { NavigationBar } from "expo-navigation-bar"
 import * as Notifications from "expo-notifications"
 import { Stack, useRouter, useSegments } from "expo-router"
-import { useEffect } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Platform } from "react-native"
+import { Alert, BackHandler, Platform } from "react-native"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import { SafeAreaProvider } from "react-native-safe-area-context"
 import { UnistylesRuntime, useUnistyles } from "react-native-unistyles"
 
 import { AppLockGate } from "~/components/app-lock-gate"
+import { ConfirmModal } from "~/components/confirm-modal"
+import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
+import { Button } from "~/components/ui/button"
+import { Text } from "~/components/ui/text"
 import { ToastManager } from "~/components/ui/toast"
 import { TooltipProvider } from "~/components/ui/tooltip"
-import { useBootHydration } from "~/hooks/use-boot-hydration"
+import { View } from "~/components/ui/view"
+import { drizzleDb, expoDb } from "~/database/drizzle/db"
+import {
+  exportLegacyDbForForcedMigration,
+  generateLegacyZipBackupForForcedMigration,
+  getDatabaseState,
+  upgradeLegacyDbToDrizzle,
+} from "~/database/forced-migration"
+import { saveExistingFileToDevice } from "~/database/services/data-management-service"
 import { useImportRecovery } from "~/hooks/use-import-recovery"
 import { useNotificationSync } from "~/hooks/use-notification-sync"
 import { useRecurringTransactionSync } from "~/hooks/use-recurring-transaction-sync"
 import { useRetentionCleanup } from "~/hooks/use-retention-cleanup"
 import { useShakeListener } from "~/hooks/use-shake-listener"
 import { DirectionEnum } from "~/i18n/language.constants"
+import { useDbMigrationStore } from "~/stores/db-migration.store"
+import {
+  hideDevelopmentNoticeForSession,
+  useDevelopmentNoticeStore,
+} from "~/stores/development-notice.store"
 import { useLanguageStore } from "~/stores/language.store"
 import { useOnboardingStore } from "~/stores/onboarding.store"
 import { NewEnum } from "~/types/new"
+import { logger } from "~/utils/logger"
+
+import migrations from "../../drizzle/migrations"
 
 // TODO: code of conduct to be added alongside contributions rules
 
 export default function RootLayout() {
+  return <ForcedMigrationGate />
+}
+
+function ForcedMigrationGate() {
+  const { t } = useTranslation()
+  const phase = useDbMigrationStore((s) => s.phase)
+  const backupUri = useDbMigrationStore((s) => s.backupUri)
+  const userBackupUri = useDbMigrationStore((s) => s.userBackupUri)
+  const error = useDbMigrationStore((s) => s.error)
+  const setPhase = useDbMigrationStore((s) => s.setPhase)
+  const markUserBackupSaved = useDbMigrationStore((s) => s.markUserBackupSaved)
+  const markExported = useDbMigrationStore((s) => s.markExported)
+  const markComplete = useDbMigrationStore((s) => s.markComplete)
+  const markFailed = useDbMigrationStore((s) => s.markFailed)
+  const [checked, setChecked] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [backupPromptVisible, setBackupPromptVisible] = useState(false)
+  const upgradeNoticeShownRef = useRef(false)
+  const migrationRunRef = useRef(false)
+
+  // TODO(remove-after-drizzle-rollout): old SQLite -> Drizzle compatibility gate.
+  // Once every supported install has this marker, delete this wrapper and render AppRootLayout directly.
+
+  const showUpgradeNotice = useCallback(() => {
+    if (upgradeNoticeShownRef.current) return
+    upgradeNoticeShownRef.current = true
+    const developmentNotice = useDevelopmentNoticeStore.getState()
+    if (!developmentNotice.dismissed) {
+      hideDevelopmentNoticeForSession()
+      Alert.alert(
+        "Your data is ready",
+        `Your backup is saved and your data is ready.\n\n${t("common.developmentNotice.message")}`,
+        [
+          {
+            text: "Don't show again",
+            onPress: developmentNotice.dismiss,
+          },
+          { text: t("common.actions.ok") },
+        ],
+      )
+      return
+    }
+    Alert.alert(
+      "Your data is ready",
+      "Your backup is saved and your data is ready.",
+      [{ text: "OK" }],
+    )
+  }, [t])
+
+  const runInPlaceUpgrade = useCallback(
+    async (createBackup: boolean): Promise<boolean> => {
+      setBusy(true)
+      migrationRunRef.current = true
+      try {
+        if (createBackup) {
+          if (!userBackupUri) {
+            setPhase("exporting")
+            const userBackup = await generateLegacyZipBackupForForcedMigration()
+            const saved = await saveExistingFileToDevice(
+              userBackup.uri,
+              userBackup.fileName,
+            )
+            if (!saved) {
+              markFailed(
+                "Please save the backup first. The update will continue right after it's safely stored.",
+              )
+              return false
+            }
+            markUserBackupSaved(userBackup)
+          }
+          if (!backupUri) {
+            const backup = await exportLegacyDbForForcedMigration()
+            markExported(backup)
+          }
+        }
+        setPhase("migrating")
+        upgradeLegacyDbToDrizzle(migrations)
+        markComplete()
+        showUpgradeNotice()
+        return true
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e)
+        logger.error("Forced DB migration in-place upgrade failed", {
+          error: message,
+        })
+        markFailed(message)
+        return false
+      } finally {
+        migrationRunRef.current = false
+        setBusy(false)
+      }
+    },
+    [
+      backupUri,
+      markComplete,
+      markExported,
+      markFailed,
+      markUserBackupSaved,
+      setPhase,
+      showUpgradeNotice,
+      userBackupUri,
+    ],
+  )
+
+  const exitApp = useCallback(() => {
+    BackHandler.exitApp()
+  }, [])
+
+  useEffect(() => {
+    if (migrationRunRef.current) return
+    if (phase === "failed") {
+      setChecked(true)
+      return
+    }
+    try {
+      const state = getDatabaseState(migrations)
+      if (state === "legacy") {
+        setPhase("needs_backup")
+        setChecked(true)
+        setBackupPromptVisible(true)
+        return
+      }
+      if (phase !== "complete") markComplete()
+      setChecked(true)
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e)
+      logger.error("Forced DB migration detection failed", { error: message })
+      markFailed(message)
+      setChecked(true)
+    }
+  }, [markComplete, markFailed, phase, setPhase])
+
+  if (!checked) return <MigrationState message="Checking database..." />
+
+  if (phase === "idle" || phase === "complete") return <DrizzleMigratedApp />
+
+  if (phase === "needs_backup") {
+    return (
+      <>
+        <ForcedMigrationState
+          message="Backup required before update."
+          detail="Minty Flow needs to save a ZIP backup on your phone before updating your data."
+          actionLabel="Continue"
+          busy={busy}
+          onAction={() => setBackupPromptVisible(true)}
+        />
+        <ConfirmModal
+          visible={backupPromptVisible && !busy}
+          onRequestClose={exitApp}
+          onConfirm={async () => {
+            await runInPlaceUpgrade(true)
+          }}
+          title="Save a backup first"
+          description="This update changes how Minty Flow stores your data. Before it starts, we'll ask where to save a ZIP backup on your phone so you have a recovery copy."
+          note="After the backup is saved, the update continues automatically. Keep Minty Flow open until it finishes."
+          confirmLabel="Save backup"
+          cancelLabel="Exit app"
+          icon="archive"
+          closeOnConfirm={false}
+        />
+      </>
+    )
+  }
+
+  if (phase === "exporting" || phase === "exported" || phase === "migrating") {
+    return (
+      <MigrationState
+        message={
+          phase === "exporting"
+            ? "Before updating your data, Minty Flow needs to save a backup ZIP on your phone."
+            : "Backup saved. Updating your data now..."
+        }
+      />
+    )
+  }
+
+  if (phase === "failed") {
+    return (
+      <>
+        <ForcedMigrationState
+          message="Database upgrade paused."
+          detail={error ?? "Unknown error"}
+          actionLabel={userBackupUri ? "Try again" : "Save backup"}
+          busy={busy}
+          onAction={() => {
+            if (userBackupUri) {
+              void runInPlaceUpgrade(true)
+              return
+            }
+            setBackupPromptVisible(true)
+          }}
+        />
+        <ConfirmModal
+          visible={backupPromptVisible && !busy}
+          onRequestClose={exitApp}
+          onConfirm={async () => {
+            await runInPlaceUpgrade(true)
+          }}
+          title="Save a backup first"
+          description="This update changes how Minty Flow stores your data. Before it starts, we'll ask where to save a ZIP backup on your phone so you have a recovery copy."
+          note="After the backup is saved, the update continues automatically. Keep Minty Flow open until it finishes."
+          confirmLabel="Save backup"
+          cancelLabel="Exit app"
+          icon="archive"
+          closeOnConfirm={false}
+        />
+      </>
+    )
+  }
+
+  return (
+    <ForcedMigrationState
+      message={
+        phase === "needs_backup"
+          ? "Waiting to start database upgrade..."
+          : "Before updating your data, Minty Flow needs to save a backup ZIP on your phone."
+      }
+      detail="Keep Minty Flow open until this finishes."
+    />
+  )
+}
+
+function DrizzleMigratedApp() {
+  const migration = useMigrations(drizzleDb, migrations)
+  useDrizzleStudio(__DEV__ && Platform.OS !== "web" ? expoDb : null)
+
+  useEffect(() => {
+    if (migration.error) {
+      logger.error("Database migration failed", {
+        error: migration.error.message,
+      })
+    }
+  }, [migration.error])
+
+  if (migration.error) {
+    return (
+      <MigrationState message="Database migration failed. Restart the app or recover from backup." />
+    )
+  }
+
+  if (!migration.success) {
+    return <MigrationState message="Preparing database..." />
+  }
+
+  return <AppRootLayout />
+}
+
+function MigrationState({ message }: { message: string }) {
+  return (
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <ActivityIndicatorMinty />
+      <Text>{message}</Text>
+    </View>
+  )
+}
+
+function ForcedMigrationState({
+  message,
+  detail,
+  actionLabel,
+  onAction,
+  busy,
+}: {
+  message: string
+  detail?: string
+  actionLabel?: string
+  onAction?: () => void
+  busy?: boolean
+}) {
+  const { theme } = useUnistyles()
+  return (
+    <View
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 14,
+        padding: 24,
+        backgroundColor: theme.colors.surface,
+      }}
+    >
+      {(!onAction || busy) && <ActivityIndicatorMinty />}
+      <Text variant="h4" style={{ textAlign: "center" }}>
+        {message}
+      </Text>
+      {detail && (
+        <Text
+          variant="small"
+          style={{ color: theme.colors.semantic.semi, textAlign: "center" }}
+        >
+          {detail}
+        </Text>
+      )}
+      {actionLabel && (
+        <Button disabled={!onAction || busy} onPress={onAction}>
+          <Text>{actionLabel}</Text>
+        </Button>
+      )}
+    </View>
+  )
+}
+
+function AppRootLayout() {
   const { theme } = useUnistyles()
   const { t } = useTranslation()
 
@@ -52,7 +377,6 @@ export default function RootLayout() {
     }
   }, [])
 
-  useBootHydration()
   useShakeListener()
   useRetentionCleanup()
   useRecurringTransactionSync()

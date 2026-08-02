@@ -1,26 +1,25 @@
 import { useNavigation, useRouter } from "expo-router"
-import { useCallback, useLayoutEffect } from "react"
+import { useLayoutEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { GoalCard } from "~/components/goals/goal-card"
 import { IconSvg } from "~/components/icons"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Pressable } from "~/components/ui/pressable"
 import { View } from "~/components/ui/view"
-import { useAllGoals } from "~/stores/db/goal.store"
+import { useAllGoalsQuery } from "~/database/drizzle/read-models/goal-read-model"
 import type { Goal } from "~/types/goals"
 import { NewEnum } from "~/types/new"
-
 export default function GoalsScreen() {
-  const goals = useAllGoals()
+  const { data: goals, status } = useAllGoalsQuery()
   const { theme } = useUnistyles()
   const { t } = useTranslation()
   const router = useRouter()
   const navigation = useNavigation()
-
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -35,25 +34,16 @@ export default function GoalsScreen() {
       ),
     })
   }, [navigation, router, t])
-
-  const handleAddGoal = useCallback(() => {
+  const handleAddGoal = () => {
     router.push(`/settings/goals/${NewEnum.NEW}/modify`)
-  }, [router])
-
-  const handleGoalPress = useCallback(
-    (goalId: string) => {
-      router.push(`/settings/goals/${goalId}`)
-    },
-    [router],
+  }
+  const handleGoalPress = (goalId: string) => {
+    router.push(`/settings/goals/${goalId}`)
+  }
+  const renderGoalItem = ({ item }: { item: Goal }) => (
+    <GoalCard goal={item} onPress={() => handleGoalPress(item.id)} />
   )
-
-  const renderGoalItem = useCallback(
-    ({ item }: { item: Goal }) => (
-      <GoalCard goal={item} onPress={() => handleGoalPress(item.id)} />
-    ),
-    [handleGoalPress],
-  )
-
+  if (status === "loading") return <RouteLoadingState />
   return (
     <View style={styles.container}>
       <FlatList
@@ -79,7 +69,6 @@ export default function GoalsScreen() {
     </View>
   )
 }
-
 const styles = StyleSheet.create((t) => ({
   container: {
     flex: 1,
@@ -100,7 +89,6 @@ const styles = StyleSheet.create((t) => ({
     width: 56,
     height: 56,
     borderRadius: t.radius,
-
     backgroundColor: t.colors.primary,
     alignItems: "center",
     justifyContent: "center",

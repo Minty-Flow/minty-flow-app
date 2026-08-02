@@ -8,11 +8,10 @@
  * Accounts section: multi-select list filtered to accounts matching
  * the selected currency — appears immediately below once a currency is picked.
  */
-
 import { useRouter } from "expo-router"
-import { memo, useCallback, useMemo, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ScrollView } from "react-native"
+import { FlatList } from "react-native"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
@@ -34,23 +33,19 @@ import type { CurrencyAccountSelectorProps } from "./types"
 // ---------------------------------------------------------------------------
 // Sub-types
 // ---------------------------------------------------------------------------
-
 interface CurrencyItem {
   code: string
   accountCount: number
 }
-
 // ---------------------------------------------------------------------------
 // Currency row inside the inline panel
 // ---------------------------------------------------------------------------
-
 interface CurrencyPanelRowProps {
   item: CurrencyItem
   isSelected: boolean
   onSelect: (code: string) => void
 }
-
-const CurrencyPanelRow = memo(function CurrencyPanelRow({
+const CurrencyPanelRow = function CurrencyPanelRow({
   item,
   isSelected,
   onSelect,
@@ -75,25 +70,21 @@ const CurrencyPanelRow = memo(function CurrencyPanelRow({
       )}
     </ListItem>
   )
-})
-
+}
 // ---------------------------------------------------------------------------
 // Account row
 // ---------------------------------------------------------------------------
-
 interface AccountRowProps {
   account: Account
   isSelected: boolean
   onToggle: (id: string) => void
 }
-
-const AccountRow = memo(function AccountRow({
+const AccountRow = function AccountRow({
   account,
   isSelected,
   onToggle,
 }: AccountRowProps) {
   const { theme } = useUnistyles()
-
   return (
     <ListItem
       style={currencyAccountStyles.accountRow}
@@ -122,12 +113,10 @@ const AccountRow = memo(function AccountRow({
       />
     </ListItem>
   )
-})
-
+}
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
-
 export function CurrencyAccountSelector({
   accounts,
   selectedCurrency,
@@ -139,16 +128,14 @@ export function CurrencyAccountSelector({
   const router = useRouter()
   const [currencyPanelOpen, setCurrencyPanelOpen] = useState(false)
   const [accountPanelOpen, setAccountPanelOpen] = useState(false)
-
-  const handleCreateAccount = useCallback(() => {
+  const handleCreateAccount = () => {
     router.push({
       pathname: "/accounts/[accountId]/modify",
       params: { accountId: NewEnum.NEW },
     })
-  }, [router])
-
+  }
   // Derive unique currencies from accounts, sorted alphabetically
-  const currencyItems: CurrencyItem[] = useMemo(() => {
+  const currencyItems: CurrencyItem[] = (() => {
     const map = new Map<string, number>()
     for (const account of accounts) {
       map.set(account.currencyCode, (map.get(account.currencyCode) ?? 0) + 1)
@@ -156,93 +143,62 @@ export function CurrencyAccountSelector({
     return Array.from(map.entries())
       .map(([code, accountCount]) => ({ code, accountCount }))
       .sort((a, b) => a.code.localeCompare(b.code))
-  }, [accounts])
-
+  })()
   // Accounts matching the selected currency
-  const matchingAccounts = useMemo(
-    () =>
-      selectedCurrency
-        ? accounts.filter((a) => a.currencyCode === selectedCurrency)
-        : [],
-    [accounts, selectedCurrency],
-  )
-
+  const matchingAccounts = selectedCurrency
+    ? accounts.filter((a) => a.currencyCode === selectedCurrency)
+    : []
   // ---------------------------------------------------------------------------
   // Currency panel handlers
   // ---------------------------------------------------------------------------
-
-  const handleToggleCurrencyPanel = useCallback(() => {
+  const handleToggleCurrencyPanel = () => {
     setCurrencyPanelOpen((prev) => !prev)
-  }, [])
-
-  const handleCurrencySelect = useCallback(
-    (code: string) => {
-      setCurrencyPanelOpen(false)
-
-      if (code === selectedCurrency) return
-
-      // Clear account selections that belong to the old currency
-      const hasStaleAccounts = selectedAccountIds.some((id) => {
-        const account = accounts.find((a) => a.id === id)
-        return account && account.currencyCode !== code
+  }
+  const handleCurrencySelect = (code: string) => {
+    setCurrencyPanelOpen(false)
+    if (code === selectedCurrency) return
+    // Clear account selections that belong to the old currency
+    const hasStaleAccounts = selectedAccountIds.some((id) => {
+      const account = accounts.find((a) => a.id === id)
+      return account && account.currencyCode !== code
+    })
+    if (hasStaleAccounts) {
+      onAccountIdsChange([])
+      setAccountPanelOpen(false)
+      Toast.info({
+        title: t("components.currencyAccountSelector.accountsClearedTitle"),
+        description: t(
+          "components.currencyAccountSelector.accountsClearedDescription",
+          { currency: code },
+        ),
       })
-
-      if (hasStaleAccounts) {
-        onAccountIdsChange([])
-        setAccountPanelOpen(false)
-        Toast.info({
-          title: t("components.currencyAccountSelector.accountsClearedTitle"),
-          description: t(
-            "components.currencyAccountSelector.accountsClearedDescription",
-            { currency: code },
-          ),
-        })
-      }
-
-      onCurrencyChange(code)
-    },
-    [
-      selectedCurrency,
-      selectedAccountIds,
-      accounts,
-      onCurrencyChange,
-      onAccountIdsChange,
-      t,
-    ],
-  )
-
+    }
+    onCurrencyChange(code)
+  }
   // ---------------------------------------------------------------------------
   // Account list handlers
   // ---------------------------------------------------------------------------
-
-  const handleAccountToggle = useCallback(
-    (id: string) => {
-      const next = selectedAccountIds.includes(id)
-        ? selectedAccountIds.filter((existing) => existing !== id)
-        : [...selectedAccountIds, id]
-      onAccountIdsChange(next)
-    },
-    [selectedAccountIds, onAccountIdsChange],
-  )
-
+  const selectedAccountIdSet = new Set(selectedAccountIds)
+  const handleAccountToggle = (id: string) => {
+    const next = selectedAccountIds.includes(id)
+      ? selectedAccountIds.filter((existing) => existing !== id)
+      : [...selectedAccountIds, id]
+    onAccountIdsChange(next)
+  }
   const allSelected =
     matchingAccounts.length > 0 &&
-    matchingAccounts.every((a) => selectedAccountIds.includes(a.id))
-
+    matchingAccounts.every((a) => selectedAccountIdSet.has(a.id))
   // Comma-separated names for the accounts trigger label
-  const selectedAccountNames = useMemo(() => {
+  const selectedAccountNames = (() => {
     if (selectedAccountIds.length === 0) return null
     return matchingAccounts
-      .filter((a) => selectedAccountIds.includes(a.id))
-      .map((a) => a.name)
+      .flatMap((a) => (selectedAccountIdSet.has(a.id) ? [a.name] : []))
       .join(", ")
-  }, [matchingAccounts, selectedAccountIds])
-
-  const handleToggleAccountPanel = useCallback(() => {
+  })()
+  const handleToggleAccountPanel = () => {
     setAccountPanelOpen((prev) => !prev)
-  }, [])
-
-  const handleSelectAll = useCallback(() => {
+  }
+  const handleSelectAll = () => {
     if (allSelected) {
       const matchingIds = new Set(matchingAccounts.map((a) => a.id))
       onAccountIdsChange(
@@ -255,12 +211,10 @@ export function CurrencyAccountSelector({
       }
       onAccountIdsChange(Array.from(existing))
     }
-  }, [allSelected, matchingAccounts, selectedAccountIds, onAccountIdsChange])
-
+  }
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
-
   return (
     <View style={currencyAccountStyles.container}>
       {/* ---- CURRENCY SECTION ---- */}
@@ -297,13 +251,21 @@ export function CurrencyAccountSelector({
         {/* Inline currency panel */}
         {currencyPanelOpen && (
           <View style={currencyAccountStyles.inlinePanel}>
-            <ScrollView
+            <FlatList
               style={currencyAccountStyles.inlinePanelList}
+              data={currencyItems}
+              keyExtractor={(item) => item.code}
               nestedScrollEnabled
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
-            >
-              {currencyItems.length === 0 ? (
+              renderItem={({ item }) => (
+                <CurrencyPanelRow
+                  item={item}
+                  isSelected={item.code === selectedCurrency}
+                  onSelect={handleCurrencySelect}
+                />
+              )}
+              ListEmptyComponent={
                 <View style={currencyAccountStyles.emptyPanel}>
                   <Text style={currencyAccountStyles.emptyText}>
                     {t("components.currencyAccountSelector.noAccounts")}
@@ -322,17 +284,8 @@ export function CurrencyAccountSelector({
                     </Text>
                   </Pressable>
                 </View>
-              ) : (
-                currencyItems.map((item) => (
-                  <CurrencyPanelRow
-                    key={item.code}
-                    item={item}
-                    isSelected={item.code === selectedCurrency}
-                    onSelect={handleCurrencySelect}
-                  />
-                ))
-              )}
-            </ScrollView>
+              }
+            />
           </View>
         )}
       </View>
@@ -391,42 +344,42 @@ export function CurrencyAccountSelector({
                     )}
                   />
                 ) : (
-                  <ScrollView
+                  <FlatList
                     style={currencyAccountStyles.inlinePanelList}
+                    data={matchingAccounts}
+                    keyExtractor={(account) => account.id}
                     nestedScrollEnabled
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
-                  >
-                    {/* Select all toggle — only when 2+ accounts share the currency */}
-                    {matchingAccounts.length >= 2 && (
-                      <ListItem
-                        style={[
-                          currencyAccountStyles.panelRow,
-                          currencyAccountStyles.selectAllRow,
-                        ]}
-                        onPress={handleSelectAll}
-                      >
-                        <Text style={currencyAccountStyles.selectAllText}>
-                          {t("components.currencyAccountSelector.selectAll", {
-                            currency: selectedCurrency,
-                          })}
-                        </Text>
-                        <IconSvg
-                          name={allSelected ? "checks-outline" : "check"}
-                          size={20}
-                        />
-                      </ListItem>
-                    )}
-
-                    {matchingAccounts.map((account) => (
+                    ListHeaderComponent={
+                      matchingAccounts.length >= 2 ? (
+                        <ListItem
+                          style={[
+                            currencyAccountStyles.panelRow,
+                            currencyAccountStyles.selectAllRow,
+                          ]}
+                          onPress={handleSelectAll}
+                        >
+                          <Text style={currencyAccountStyles.selectAllText}>
+                            {t("components.currencyAccountSelector.selectAll", {
+                              currency: selectedCurrency,
+                            })}
+                          </Text>
+                          <IconSvg
+                            name={allSelected ? "checks-outline" : "check"}
+                            size={20}
+                          />
+                        </ListItem>
+                      ) : null
+                    }
+                    renderItem={({ item: account }) => (
                       <AccountRow
-                        key={account.id}
                         account={account}
-                        isSelected={selectedAccountIds.includes(account.id)}
+                        isSelected={selectedAccountIdSet.has(account.id)}
                         onToggle={handleAccountToggle}
                       />
-                    ))}
-                  </ScrollView>
+                    )}
+                  />
                 )}
               </View>
             )}

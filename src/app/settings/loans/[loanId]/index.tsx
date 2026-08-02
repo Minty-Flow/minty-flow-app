@@ -1,12 +1,5 @@
-import { differenceInDays } from "date-fns"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { type DimensionValue, FlatList, View as RNView } from "react-native"
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
@@ -22,27 +15,27 @@ import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { on } from "~/database/events"
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
-import { getLoanProgress } from "~/database/repos/loan-repo"
-import { createTransaction } from "~/database/services-sqlite/transaction-service"
-import { useAccount } from "~/stores/db/account.store"
-import { useLoan } from "~/stores/db/loan.store"
-import { useTransactions } from "~/stores/db/transaction.store"
+import { useAccount } from "~/database/drizzle/read-models/account-read-model"
+import { useLoan } from "~/database/drizzle/read-models/loan-read-model"
+import {
+  type TransactionWithRelations,
+  useTransactions,
+} from "~/database/drizzle/read-models/transaction-read-model"
+import { createTransaction } from "~/database/services/ledger-service"
 import { useLanguageStore } from "~/stores/language.store"
-import { LoanTypeEnum } from "~/types/loans"
 import {
   TransactionSubTypeEnum,
   TransactionTypeEnum,
 } from "~/types/transactions"
+import { getLiveLoanProgress } from "~/utils/live-progress"
 import { logger } from "~/utils/logger"
+import { getLoanProgressModel } from "~/utils/planning-progress"
 import { formatShortMonthDay } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
 /* ------------------------------------------------------------------ */
 /* Detail screen                                                      */
 /* ------------------------------------------------------------------ */
-
 function LoanDetailInner({ loanId }: { loanId: string }) {
   const { t } = useTranslation()
   const router = useRouter()
@@ -51,55 +44,35 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
   const isRTL = useLanguageStore((s) => s.isRTL)
   const [actionModalVisible, setActionModalVisible] = useState(false)
   const [isCreatingTransaction, setIsCreatingTransaction] = useState(false)
-  const [paidAmount, setPaidAmount] = useState(0)
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
-
   const loan = useLoan(loanId)
   const account = useAccount(loan?.accountId ?? "")
   const { items: transactionsFull } = useTransactions(loan ? { loanId } : {})
-
-  useEffect(() => {
-    if (!loan) return
-    let cancelled = false
-    const fetch = () =>
-      getLoanProgress(loanId, loan.loanType).then((v) => {
-        if (!cancelled) setPaidAmount(v)
-      })
-    fetch()
-    const unsub = on("transactions:dirty", fetch)
-    return () => {
-      cancelled = true
-      unsub()
+  const paidAmount = loan ? getLiveLoanProgress(loan, transactionsFull) : 0
+  const handleTransactionPress = (id: string) => {
+    router.push({ pathname: "/transaction/[id]", params: { id } })
+  }
+  const handleDeleteDone = () => {
+    openSwipeableRef.current?.close()
+  }
+  const handleWillOpen = (methods: SwipeableMethods) => {
+    if (openSwipeableRef.current !== methods) {
+      openSwipeableRef.current?.close()
     }
-  }, [loanId, loan])
-
-  const handleTransactionPress = useCallback(
-    (id: string) => {
-      router.push({ pathname: "/transaction/[id]", params: { id } })
-    },
-    [router],
-  )
-  const handleDeleteDone = useCallback(() => {
-    openSwipeableRef.current?.close()
-  }, [])
-
-  const handleWillOpen = useCallback((methods: SwipeableMethods) => {
-    openSwipeableRef.current?.close()
     openSwipeableRef.current = methods
-  }, [])
-
-  const renderTransactionItem = useCallback(
-    ({ item }: { item: TransactionWithRelations }) => (
-      <TransactionItem
-        transactionWithRelations={item}
-        onPress={() => handleTransactionPress(item.id)}
-        onDelete={handleDeleteDone}
-        onWillOpen={handleWillOpen}
-      />
-    ),
-    [handleTransactionPress, handleDeleteDone, handleWillOpen],
+  }
+  const renderTransactionItem = ({
+    item,
+  }: {
+    item: TransactionWithRelations
+  }) => (
+    <TransactionItem
+      transactionWithRelations={item}
+      onPress={() => handleTransactionPress(item.id)}
+      onDelete={handleDeleteDone}
+      onWillOpen={handleWillOpen}
+    />
   )
-
   useLayoutEffect(() => {
     navigation.setOptions({
       title: t("screens.settings.loans.detail.title"),
@@ -119,7 +92,6 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
       ),
     })
   }, [navigation, router, loanId, t])
-
   if (!loan) {
     return (
       <View style={styles.container}>
@@ -129,38 +101,34 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
       </View>
     )
   }
-
-  const isLent = loan.loanType === LoanTypeEnum.LENT
-  const paid = paidAmount
-  const principal = loan.principalAmount
-  const progress = principal > 0 ? paid / principal : 0
-  const clampedProgress = Math.min(progress, 1)
-  const isPaid = progress >= 1
-  const remaining = Math.max(principal - paid, 0)
-
+  const {
+    isLent,
+    paid,
+    principal,
+    clampedProgress,
+    isPaid,
+    remaining,
+    dueDays,
+  } = getLoanProgressModel(loan, paidAmount)
   const accentColor = loan.colorScheme?.primary ?? theme.colors.primary
   const accentTint = loan.colorScheme?.secondary ?? `${theme.colors.primary}20`
   const mutedColor = theme.colors.onSecondary
-
   const progressBarColor = isPaid ? mutedColor : accentColor
-
   const dueText = (): string => {
     if (isPaid) return t("screens.settings.loans.card.settled")
-    if (!loan.dueDate) return t("screens.settings.loans.card.noDueDate")
-    const diff = differenceInDays(loan.dueDate, new Date())
-    if (diff === 0) return t("screens.settings.loans.card.dueToday")
-    if (diff === 1) return t("screens.settings.loans.card.dueTomorrow")
-    if (diff > 1 && diff <= 14)
-      return t("screens.settings.loans.card.dueInDays", { count: diff })
+    if (dueDays === null || !loan.dueDate)
+      return t("screens.settings.loans.card.noDueDate")
+    if (dueDays === 0) return t("screens.settings.loans.card.dueToday")
+    if (dueDays === 1) return t("screens.settings.loans.card.dueTomorrow")
+    if (dueDays > 1 && dueDays <= 14)
+      return t("screens.settings.loans.card.dueInDays", { count: dueDays })
     return t("screens.settings.loans.card.dueDate", {
       date: formatShortMonthDay(loan.dueDate),
     })
   }
-
   const subtitleParts = [account?.name, dueText()].filter(Boolean)
   const subtitleColor =
     loan.isOverdue && !isPaid ? theme.colors.semantic.expense : mutedColor
-
   const badgeLabel = isPaid
     ? t("screens.settings.loans.card.statusPaid")
     : isLent
@@ -170,26 +138,19 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
     isLent || isPaid ? "arrow-up-right-outline" : "arrow-down-left-outline"
   const badgeColor = isPaid ? mutedColor : accentColor
   const badgeBg = isPaid ? theme.colors.secondary : accentTint
-
   const currencyCode = account?.currencyCode ?? ""
-
   const handleFullAction = () => {
     if (!loan || remaining <= 0) return
-
     const transactionType = isLent
       ? TransactionTypeEnum.INCOME
       : TransactionTypeEnum.EXPENSE
-
     const transactionTitle = isLent
       ? `${t("screens.settings.loans.actions.collect")}: ${loan.name}`
       : `${t("screens.settings.loans.actions.settle")}: ${loan.name}`
-
     const successTitle = isLent
       ? t("screens.settings.loans.actions.collectSuccess")
       : t("screens.settings.loans.actions.settleSuccess")
-
     setIsCreatingTransaction(true)
-
     Promise.resolve(
       createTransaction({
         amount: remaining,
@@ -219,7 +180,6 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
         setIsCreatingTransaction(false)
       })
   }
-
   const handlePartialAction = () => {
     if (!loan) return
     setActionModalVisible(false)
@@ -234,7 +194,6 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
       },
     })
   }
-
   const headerContent = (
     <View style={styles.headerCard}>
       <View style={styles.headerTopRow}>
@@ -353,7 +312,6 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
       </Text>
     </View>
   )
-
   return (
     <View style={styles.container}>
       <FlatList
@@ -382,21 +340,19 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
     </View>
   )
 }
-
 /* ------------------------------------------------------------------ */
 /* Route component                                                    */
 /* ------------------------------------------------------------------ */
-
 export default function LoanDetailScreen() {
-  const { loanId } = useLocalSearchParams<{ loanId: string }>()
+  const { loanId } = useLocalSearchParams<{
+    loanId: string
+  }>()
   if (!loanId) return null
   return <LoanDetailInner loanId={loanId} />
 }
-
 /* ------------------------------------------------------------------ */
 /* Styles                                                             */
 /* ------------------------------------------------------------------ */
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
@@ -410,7 +366,6 @@ const styles = StyleSheet.create((theme) => ({
   listContent: {
     paddingBottom: 40,
   },
-
   // Header card
   headerCard: {
     padding: 20,
@@ -460,7 +415,6 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSecondary,
     lineHeight: 20,
   },
-
   // Progress
   progressSection: {
     gap: 8,
@@ -491,7 +445,6 @@ const styles = StyleSheet.create((theme) => ({
     flexShrink: 0,
     fontWeight: "600",
   },
-
   // Transactions
   transactionsLabel: {
     fontSize: theme.typography.bodyLarge.fontSize,
@@ -503,7 +456,6 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
     paddingVertical: 40,
   },
-
   // Collect / Settle button
   collectSettleButton: {
     flexDirection: "row",

@@ -1,3 +1,4 @@
+import { TouchableOpacity } from "react-native-gesture-handler"
 import Animated, {
   interpolate,
   type SharedValue,
@@ -6,14 +7,11 @@ import Animated, {
 import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
-import { Pressable } from "~/components/ui/pressable"
-import { View } from "~/components/ui/view"
 
-const RESTORE_ACTION_WIDTH = 100
+const RESTORE_ACTION_WIDTH = 128
 
 type LeftActionProps = {
   progress: SharedValue<number>
-  translation: SharedValue<number>
   onRestorePress: () => void
   accessibilityLabel?: string
 }
@@ -35,36 +33,32 @@ export const LeftAction = ({
   })
 
   return (
-    <View style={leftActionStyles.container}>
-      <Pressable
-        style={leftActionStyles.pressable}
-        onPress={onRestorePress}
-        accessibilityLabel={accessibilityLabel}
-      >
-        <Animated.View style={iconStyle}>
-          <IconSvg
-            name="restore-outline"
-            size={24}
-            color={leftActionStyles.restoreIcon.color}
-          />
-        </Animated.View>
-      </Pressable>
-    </View>
+    <TouchableOpacity
+      style={leftActionStyles.container}
+      onPress={onRestorePress}
+      activeOpacity={1}
+      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+    >
+      <Animated.View style={iconStyle}>
+        <IconSvg
+          name="restore-outline"
+          size={24}
+          color={leftActionStyles.restoreIcon.color}
+        />
+      </Animated.View>
+    </TouchableOpacity>
   )
 }
 
 const leftActionStyles = StyleSheet.create((theme) => ({
   container: {
     width: RESTORE_ACTION_WIDTH,
+    height: "100%",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: theme.colors.semantic.success,
-  },
-  pressable: {
-    flex: 1,
-    width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
   },
   restoreIcon: {
     color: theme.colors.onError,

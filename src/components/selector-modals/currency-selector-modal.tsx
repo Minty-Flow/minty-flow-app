@@ -3,8 +3,7 @@
  * with search and FlatList. Currencies are local/static — no async, no Suspense.
  * FlatList virtualization handles performance; search auto-focuses when modal opens.
  */
-
-import { memo, useCallback, useMemo, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList, Modal, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -27,14 +26,12 @@ interface CurrencySelectorModalProps {
   onCurrencySelected: (code: string) => void
   editable?: boolean
 }
-
 interface CurrencyRowProps {
   item: Currency
   isSelected: boolean
   onSelect: (code: string) => void
 }
-
-const CurrencyRow = memo(function CurrencyRow({
+const CurrencyRow = function CurrencyRow({
   item,
   isSelected,
   onSelect,
@@ -67,8 +64,7 @@ const CurrencyRow = memo(function CurrencyRow({
       </View>
     </ListItem>
   )
-})
-
+}
 const currencyItemStyles = StyleSheet.create((theme) => ({
   currencyName: {
     ...theme.typography.headlineSmall,
@@ -82,7 +78,6 @@ const currencyItemStyles = StyleSheet.create((theme) => ({
     color: theme.colors.onSurface,
   },
 }))
-
 export function CurrencySelectorModal({
   selectedCurrencyCode,
   onCurrencySelected,
@@ -91,13 +86,8 @@ export function CurrencySelectorModal({
   const { t } = useTranslation()
   const [visible, setVisible] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-
-  const currencies = useMemo(
-    () => Object.values(currencyRegistryService.groupedCurrencies),
-    [],
-  )
-
-  const filteredCurrencies = useMemo(() => {
+  const currencies = Object.values(currencyRegistryService.groupedCurrencies)
+  const filteredCurrencies = (() => {
     if (!searchQuery.trim()) return currencies
     const q = searchQuery.toLowerCase().trim()
     return currencies.filter(
@@ -106,50 +96,34 @@ export function CurrencySelectorModal({
         c.code?.toLowerCase().includes(q) ||
         c.country?.toLowerCase().includes(q),
     )
-  }, [currencies, searchQuery])
-
-  const open = useCallback(() => {
+  })()
+  const open = () => {
     if (!editable) return
     setSearchQuery("")
     setVisible(true)
-  }, [editable])
-
-  const close = useCallback(() => {
+  }
+  const close = () => {
     setVisible(false)
-  }, [])
-
-  const handleSelect = useCallback(
-    (code: string) => {
-      onCurrencySelected(code)
-      close()
-    },
-    [onCurrencySelected, close],
+  }
+  const handleSelect = (code: string) => {
+    onCurrencySelected(code)
+    close()
+  }
+  const renderItem = ({ item }: { item: Currency }) => (
+    <CurrencyRow
+      item={item}
+      isSelected={selectedCurrencyCode === item.code}
+      onSelect={handleSelect}
+    />
   )
-
-  const renderItem = useCallback(
-    ({ item }: { item: Currency }) => (
-      <CurrencyRow
-        item={item}
-        isSelected={selectedCurrencyCode === item.code}
-        onSelect={handleSelect}
-      />
-    ),
-    [selectedCurrencyCode, handleSelect],
+  const keyExtractor = (item: Currency) => item.code
+  const listEmptyComponent = (
+    <EmptyState
+      variant="compact"
+      icon="search-outline"
+      title={t("components.selectors.currency.noCurrenciesFound")}
+    />
   )
-
-  const keyExtractor = useCallback((item: Currency) => item.code, [])
-
-  const listEmptyComponent = useMemo(
-    () => (
-      <EmptyState
-        variant="compact"
-        icon="search-outline"
-        title={t("components.selectors.currency.noCurrenciesFound")}
-      />
-    ),
-    [t],
-  )
-
   return (
     <>
       <View style={triggerStyles.wrapper}>

@@ -7,17 +7,9 @@
  *
  * Past confirmed transactions are never retroactively changed.
  */
-
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import {
-  Modal,
-  Pressable,
-  Text,
-  TouchableWithoutFeedback,
-  useWindowDimensions,
-  View,
-} from "react-native"
+import { Modal, Pressable, Text, useWindowDimensions, View } from "react-native"
 import {
   StyleSheet as UnistylesSheet,
   useUnistyles,
@@ -27,14 +19,9 @@ import { IconSvg } from "~/components/icons"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { ListItem } from "~/components/ui/list-item"
 import {
+  applyRecurringEditScope,
   type RecurringTransactionTemplate,
-  updateRecurringRuleTemplate,
-} from "~/database/services-sqlite/recurring-transaction-service"
-import {
-  detachFromRule,
-  updateFutureRecurringInstances,
-  updateTransaction,
-} from "~/database/services-sqlite/transaction-service"
+} from "~/database/services/recurring-transaction-service"
 import type { RecurringEditPayload } from "~/schemas/transactions.schema"
 import type { Transaction } from "~/types/transactions"
 import { logger } from "~/utils/logger"
@@ -43,7 +30,6 @@ import { Toast } from "~/utils/toast"
 import { ChevronIcon } from "../ui/chevron-icon"
 
 type EditScope = "this" | "this_and_future"
-
 interface EditRecurringModalProps {
   visible: boolean
   transaction: Transaction
@@ -52,7 +38,6 @@ interface EditRecurringModalProps {
   onRequestClose: () => void
   onSaved: () => void
 }
-
 interface OptionRowProps {
   label: string
   sublabel: string
@@ -60,7 +45,6 @@ interface OptionRowProps {
   loading: boolean
   isLast?: boolean
 }
-
 function OptionRow({
   label,
   sublabel,
@@ -97,7 +81,6 @@ function OptionRow({
     </ListItem>
   )
 }
-
 export function EditRecurringModal({
   visible,
   transaction,
@@ -111,72 +94,37 @@ export function EditRecurringModal({
   const { width } = useWindowDimensions()
   const maxCardWidth = Math.min(width - 48, 400)
   const { theme } = useUnistyles()
-
-  const handleEdit = useCallback(
-    async (scope: EditScope) => {
-      if (loadingScope || !pendingPayload) return
-      setLoadingScope(scope)
-
-      try {
-        switch (scope) {
-          case "this": {
-            await detachFromRule(transaction.id)
-            await updateTransaction(transaction.id, pendingPayload)
-            Toast.success({
-              title: t("components.transactionForm.toast.editRecurringSuccess"),
-            })
-            break
-          }
-
-          case "this_and_future": {
-            await Promise.all([
-              updateFutureRecurringInstances(
-                recurringRule.id,
-                transaction.transactionDate,
-                pendingPayload,
-              ),
-              updateRecurringRuleTemplate(recurringRule.id, {
-                amount: pendingPayload.amount,
-                title: pendingPayload.title,
-                categoryId: pendingPayload.categoryId,
-                accountId: pendingPayload.accountId,
-                type: pendingPayload.type,
-              }),
-              updateTransaction(transaction.id, pendingPayload),
-            ])
-            Toast.success({
-              title: t(
-                "components.transactionForm.toast.editRecurringFutureSuccess",
-              ),
-            })
-            break
-          }
-        }
-
-        onRequestClose()
-        onSaved()
-      } catch (error) {
-        logger.error("EditRecurringModal: failed to save", {
-          scope,
-          error: error instanceof Error ? error.message : String(error),
-        })
-        Toast.error({
-          title: t("components.transactionForm.toast.editRecurringFailed"),
-        })
-      }
-      setLoadingScope(null)
-    },
-    [
-      loadingScope,
-      pendingPayload,
-      transaction,
-      recurringRule,
-      onRequestClose,
-      onSaved,
-      t,
-    ],
-  )
-
+  const handleEdit = async (scope: EditScope) => {
+    if (loadingScope || !pendingPayload) return
+    setLoadingScope(scope)
+    try {
+      await applyRecurringEditScope({
+        scope,
+        transactionId: transaction.id,
+        transactionDate: transaction.transactionDate,
+        ruleId: recurringRule.id,
+        payload: pendingPayload,
+      })
+      Toast.success({
+        title: t(
+          scope === "this"
+            ? "components.transactionForm.toast.editRecurringSuccess"
+            : "components.transactionForm.toast.editRecurringFutureSuccess",
+        ),
+      })
+      onRequestClose()
+      onSaved()
+    } catch (error) {
+      logger.error("EditRecurringModal: failed to save", {
+        scope,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      Toast.error({
+        title: t("components.transactionForm.toast.editRecurringFailed"),
+      })
+    }
+    setLoadingScope(null)
+  }
   return (
     <Modal
       visible={visible}
@@ -186,12 +134,13 @@ export function EditRecurringModal({
       onRequestClose={onRequestClose}
       accessibilityViewIsModal
     >
-      <Pressable
-        style={[styles.backdrop, { width }]}
-        onPress={onRequestClose}
-        accessibilityLabel={t("common.actions.close")}
-      >
-        <TouchableWithoutFeedback onPress={() => {}}>
+      <View style={styles.modalRoot}>
+        <Pressable
+          style={styles.backdrop}
+          onPress={onRequestClose}
+          accessibilityLabel={t("common.actions.close")}
+        />
+        <View style={styles.content}>
           <View
             style={[
               styles.card,
@@ -201,7 +150,6 @@ export function EditRecurringModal({
                 borderRadius: theme.radius ?? 16,
               },
             ]}
-            pointerEvents="box-none"
           >
             <View style={styles.header}>
               <View
@@ -259,16 +207,25 @@ export function EditRecurringModal({
               </Text>
             </Pressable>
           </View>
-        </TouchableWithoutFeedback>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   )
 }
-
 const styles = UnistylesSheet.create((theme) => ({
-  backdrop: {
+  modalRoot: {
     flex: 1,
+  },
+  backdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: theme.colors.shadow,
+  },
+  content: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,

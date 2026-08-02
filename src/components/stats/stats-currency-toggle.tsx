@@ -1,4 +1,3 @@
-import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { Pressable } from "react-native"
 import Animated, {
@@ -20,7 +19,6 @@ interface StatsCurrencyToggleProps {
   value: string
   onChange: (currency: string) => void
 }
-
 export function StatsCurrencyToggle({
   currencies,
   value,
@@ -30,32 +28,30 @@ export function StatsCurrencyToggle({
   const { theme } = useUnistyles()
   const opacity = useSharedValue(1)
   const scale = useSharedValue(1)
-
   const animStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
     transform: [{ scale: scale.value }],
   }))
-
-  const handlePress = useCallback(() => {
+  const handlePress = () => {
     const nextIdx = (currencies.indexOf(value) + 1) % currencies.length
     onChange(currencies[nextIdx])
-
     // ponytail: subtle fade-dip + gentle spring; tweak if feels sluggish
-    opacity.value = withSequence(
-      withTiming(0.6, { duration: 50 }),
-      withTiming(1, { duration: 100 }),
+    opacity.set(
+      withSequence(
+        withTiming(0.6, { duration: 50 }),
+        withTiming(1, { duration: 100 }),
+      ),
     )
-    scale.value = withSequence(
-      withSpring(0.95, { damping: 18 }),
-      withSpring(1, { damping: 14 }),
+    scale.set(
+      withSequence(
+        withSpring(0.95, { damping: 18 }),
+        withSpring(1, { damping: 14 }),
+      ),
     )
-  }, [currencies, value, onChange, opacity, scale])
-
+  }
   if (currencies.length <= 1) return null
-
   const symbol = currencyRegistryService.getCurrencySymbol(value)
   const moreThan2 = currencies.length > 2
-
   return (
     <Pressable onPress={handlePress} hitSlop={12}>
       <View style={styles.wrap}>
@@ -82,7 +78,6 @@ export function StatsCurrencyToggle({
     </Pressable>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   wrap: {
     alignItems: "center",
@@ -97,7 +92,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: theme.colors.primary + "33",
+    borderColor: `${theme.colors.primary}33`,
   },
   symbol: {
     fontSize: 15,

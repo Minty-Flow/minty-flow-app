@@ -1,5 +1,4 @@
-import { useCallback } from "react"
-import { Platform, TouchableOpacity } from "react-native"
+import { Platform } from "react-native"
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -20,12 +19,10 @@ import { Text } from "./text"
 import { View } from "./view"
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
-
 type ToastItemProps = {
   toast: Toast
   onHide: (id: string) => void
 }
-
 const ToastItem = ({ toast, onHide }: ToastItemProps) => {
   // Capture toast properties for use in worklets
   const toastPosition = toast.position
@@ -33,7 +30,6 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
   const toastShowProgressBar = toast.showProgressBar
   const toastVisibilityTime = toast.visibilityTime
   const toastId = toast.id
-
   // Animated values for custom animations with withSequence
   const translateY = useSharedValue(toastPosition === "top" ? -100 : 100)
   const opacity = useSharedValue(0)
@@ -41,12 +37,10 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
   const progressWidth = useSharedValue(100)
   const autoHideTimer = useSharedValue(0)
   const hasAnimated = useSharedValue(false)
-
-  const handleHide = useCallback(() => {
+  const handleHide = () => {
     onHide(toastId)
-  }, [onHide, toastId])
-
-  const triggerHide = useCallback(() => {
+  }
+  const triggerHide = () => {
     // Exit animation sequence: scale down slightly → fade and slide out
     scale.value = withTiming(0.95, { duration: 100 })
     opacity.value = withDelay(
@@ -60,7 +54,6 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
         easing: Easing.in(Easing.ease),
       }),
     )
-
     // Wait for animation to complete before hiding
     progressWidth.value = withDelay(
       300,
@@ -68,17 +61,14 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
         scheduleOnRN(handleHide)
       }),
     )
-  }, [handleHide, toastPosition, opacity, scale, translateY, progressWidth])
-
+  }
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }, { scale: scale.value }],
     opacity: opacity.value,
   }))
-
   const progressStyle = useAnimatedStyle(() => ({
     width: `${progressWidth.value}%`,
   }))
-
   const handlePress = () => {
     if (toast.onPress) {
       toast.onPress()
@@ -86,7 +76,6 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
       triggerHide()
     }
   }
-
   const getIconName = (): IconSvgName => {
     switch (toast.type) {
       case "success":
@@ -101,7 +90,6 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
         return "bell"
     }
   }
-
   const getIconColor = () => {
     switch (toast.type) {
       case "success":
@@ -130,13 +118,11 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
         return toastItemStyles.progressBarDefault
     }
   }
-
-  const handleLayout = useCallback(() => {
+  const handleLayout = () => {
     scheduleOnUI(() => {
       "worklet"
       if (hasAnimated.value) return
       hasAnimated.value = true
-
       // Enter animation sequence: slide in → small bounce → settle
       translateY.value = withSequence(
         withTiming(toastPosition === "top" ? 8 : -8, {
@@ -145,15 +131,12 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
         }),
         withTiming(0, { duration: 150, easing: Easing.inOut(Easing.ease) }),
       )
-
       // Fade and scale in sequence
       opacity.value = withTiming(1, { duration: 300 })
-
       scale.value = withSequence(
         withTiming(1.05, { duration: 200, easing: Easing.out(Easing.ease) }),
         withTiming(1, { duration: 150, easing: Easing.inOut(Easing.ease) }),
       )
-
       // Progress bar animation
       if (toastShowProgressBar && toastAutoHide) {
         progressWidth.value = withTiming(0, {
@@ -161,7 +144,6 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
           easing: Easing.linear,
         })
       }
-
       // Auto-hide with exit animation
       if (toastAutoHide) {
         // Use a dedicated timer for auto-hide
@@ -173,20 +155,7 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
         )
       }
     })
-  }, [
-    hasAnimated,
-    translateY,
-    opacity,
-    scale,
-    progressWidth,
-    autoHideTimer,
-    toastShowProgressBar,
-    toastAutoHide,
-    toastVisibilityTime,
-    triggerHide,
-    toastPosition,
-  ])
-
+  }
   return (
     <AnimatedPressable
       style={[toastStyles.container, animatedStyle]}
@@ -202,7 +171,7 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
           )}
         </View>
         {toast.showCloseIcon && (
-          <TouchableOpacity
+          <Pressable
             onPress={triggerHide}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={toastStyles.closeButton}
@@ -214,11 +183,15 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
                 toastItemStyles.closeIcon &&
                 typeof toastItemStyles.closeIcon === "object" &&
                 "color" in toastItemStyles.closeIcon
-                  ? (toastItemStyles.closeIcon as { color: string }).color
+                  ? (
+                      toastItemStyles.closeIcon as {
+                        color: string
+                      }
+                    ).color
                   : undefined
               }
             />
-          </TouchableOpacity>
+          </Pressable>
         )}
       </View>
       {toast.showProgressBar && (
@@ -235,17 +208,13 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
     </AnimatedPressable>
   )
 }
-
 export const ToastManager = () => {
   const { toasts, hide } = useToastStore()
-
   if (toasts.length === 0) {
     return null
   }
-
   const topToasts = toasts.filter((t) => t.position === "top")
   const bottomToasts = toasts.filter((t) => t.position === "bottom")
-
   return (
     <View native style={toastStyles.overlay} pointerEvents="box-none">
       {topToasts.length > 0 && (
@@ -269,7 +238,6 @@ export const ToastManager = () => {
     </View>
   )
 }
-
 const toastItemStyles = StyleSheet.create((theme) => ({
   iconSuccess: {
     color: theme.colors.semantic.success,
@@ -305,7 +273,6 @@ const toastItemStyles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.primary,
   },
 }))
-
 const toastStyles = StyleSheet.create((theme) => ({
   overlay: {
     position: "absolute",

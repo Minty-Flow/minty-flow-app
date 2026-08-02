@@ -1,5 +1,5 @@
 import { useNavigation, useRouter } from "expo-router"
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
@@ -9,20 +9,24 @@ import { ConfirmModal } from "~/components/confirm-modal"
 import { IconSvg } from "~/components/icons"
 import { InfoModal } from "~/components/info-modal"
 import { MonthYearPicker } from "~/components/month-year-picker"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { View } from "~/components/ui/view"
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
-import { getMonthRange } from "~/database/services-sqlite/account-service"
+import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
+import { useTags } from "~/database/drizzle/read-models/tag-read-model"
+import {
+  type TransactionWithRelations,
+  useTransactions,
+} from "~/database/drizzle/read-models/transaction-read-model"
+import { getMonthRange } from "~/database/services/account-service"
 import {
   destroyTransaction,
   restoreTransaction,
-} from "~/database/services-sqlite/transaction-service"
-import { useCategoriesByType } from "~/stores/db/category.store"
-import { useTags } from "~/stores/db/tag.store"
-import { useTransactions } from "~/stores/db/transaction.store"
+} from "~/database/services/ledger-service"
+import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import type {
   SearchState,
   TransactionListFilterState,
@@ -37,6 +41,7 @@ import { Toast } from "~/utils/toast"
 import {
   applySearch,
   applyTransactionFilters,
+  applyTransferLayout,
 } from "~/utils/transaction-list-utils"
 
 export default function TrashScreen() {
@@ -44,7 +49,6 @@ export default function TrashScreen() {
   const router = useRouter()
   const navigation = useNavigation()
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
-
   const [selectedYear, setSelectedYear] = useState(() =>
     new Date().getFullYear(),
   )
@@ -60,41 +64,26 @@ export default function TrashScreen() {
   const [pendingDestroyItem, setPendingDestroyItem] =
     useState<TransactionWithRelations | null>(null)
   const [showSwipeInfo, setShowSwipeInfo] = useState(false)
-
   const categoriesExpense = useCategoriesByType(TransactionTypeEnum.EXPENSE)
   const categoriesIncome = useCategoriesByType(TransactionTypeEnum.INCOME)
   const categoriesTransfer = useCategoriesByType(TransactionTypeEnum.TRANSFER)
   const tags = useTags()
-
-  const { fromDate, toDate } = useMemo(
-    () => getMonthRange(selectedYear, selectedMonth),
-    [selectedYear, selectedMonth],
-  )
-
-  const { items: allDeleted } = useTransactions({
+  const transferLayout = useTransfersPreferencesStore((s) => s.layout)
+  const { fromDate, toDate } = getMonthRange(selectedYear, selectedMonth)
+  const { items: allDeleted, status: transactionsStatus } = useTransactions({
     from: new Date(fromDate).toISOString(),
     to: new Date(toDate).toISOString(),
     deletedOnly: true,
   })
-
-  const transactionsFull = useMemo(
-    () =>
-      applySearch(
-        applyTransactionFilters(allDeleted, filterState),
-        searchState,
-      ),
-    [allDeleted, filterState, searchState],
+  const transactionsFull = applyTransferLayout(
+    applySearch(applyTransactionFilters(allDeleted, filterState), searchState),
+    transferLayout,
   )
-
-  const categoriesByType = useMemo(
-    () => ({
-      expense: categoriesExpense,
-      income: categoriesIncome,
-      transfer: categoriesTransfer,
-    }),
-    [categoriesExpense, categoriesIncome, categoriesTransfer],
-  )
-
+  const categoriesByType = {
+    expense: categoriesExpense,
+    income: categoriesIncome,
+    transfer: categoriesTransfer,
+  }
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -121,29 +110,24 @@ export default function TrashScreen() {
       ),
     })
   }, [navigation, showFilters, t])
-
-  const handleRestore = useCallback(
-    (item: TransactionWithRelations) => async () => {
-      try {
-        await restoreTransaction(item.id)
-        Toast.success({
-          title: t("components.transactionForm.toast.restored"),
-          description: t(
-            "components.transactionForm.toast.restoredDescription",
-          ),
-        })
-      } catch (e) {
-        logger.error("Failed to restore transaction", { error: String(e) })
-        Toast.error({
-          title: t("common.toast.error"),
-          description: t("components.transactionForm.toast.restoreFailed"),
-        })
-      }
-    },
-    [t],
-  )
-
-  const handleConfirmDestroy = useCallback(async () => {
+  if (transactionsStatus === "loading" && allDeleted.length === 0)
+    return <RouteLoadingState />
+  const handleRestore = (item: TransactionWithRelations) => async () => {
+    try {
+      await restoreTransaction(item.id)
+      Toast.success({
+        title: t("components.transactionForm.toast.restored"),
+        description: t("components.transactionForm.toast.restoredDescription"),
+      })
+    } catch (e) {
+      logger.error("Failed to restore transaction", { error: String(e) })
+      Toast.error({
+        title: t("common.toast.error"),
+        description: t("components.transactionForm.toast.restoreFailed"),
+      })
+    }
+  }
+  const handleConfirmDestroy = async () => {
     if (!pendingDestroyItem) return
     const item = pendingDestroyItem
     try {
@@ -160,33 +144,26 @@ export default function TrashScreen() {
         description: t("components.transactionForm.toast.deleteFailed"),
       })
     }
-  }, [pendingDestroyItem, t])
-
-  const renderItem = useCallback(
-    ({ item }: { item: TransactionWithRelations }) => (
-      <TransactionItem
-        transactionWithRelations={item}
-        onPress={() => router.push(`/transaction/${item.id}`)}
-        onDelete={() => setPendingDestroyItem(item)}
-        onRestore={handleRestore(item)}
-        onWillOpen={(methods) => {
+  }
+  const renderItem = ({ item }: { item: TransactionWithRelations }) => (
+    <TransactionItem
+      transactionWithRelations={item}
+      onPress={() => router.push(`/transaction/${item.id}`)}
+      onDelete={() => setPendingDestroyItem(item)}
+      onRestore={handleRestore(item)}
+      onWillOpen={(methods) => {
+        if (openSwipeableRef.current !== methods) {
           openSwipeableRef.current?.close()
-          openSwipeableRef.current = methods
-        }}
-        rightActionAccessibilityLabel={t(
-          "screens.settings.trash.a11y.moveToTrash",
-        )}
-        leftActionAccessibilityLabel={t("screens.settings.trash.a11y.restore")}
-      />
-    ),
-    [router, handleRestore, t],
+        }
+        openSwipeableRef.current = methods
+      }}
+      rightActionAccessibilityLabel={t(
+        "screens.settings.trash.a11y.moveToTrash",
+      )}
+      leftActionAccessibilityLabel={t("screens.settings.trash.a11y.restore")}
+    />
   )
-
-  const keyExtractor = useCallback(
-    (item: TransactionWithRelations) => item.id,
-    [],
-  )
-
+  const keyExtractor = (item: TransactionWithRelations) => item.id
   return (
     <View style={styles.container}>
       <MonthYearPicker
@@ -248,7 +225,6 @@ export default function TrashScreen() {
     </View>
   )
 }
-
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,

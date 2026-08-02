@@ -17,6 +17,7 @@ const IGNORE: Set<string> = new Set([
   "tabler-icons",
   "unused-icons",
   ".claude",
+  ".codex",
   ".opencode",
   ".agents"
 ]);
@@ -26,14 +27,11 @@ const IGNORE_PATHS: string[] = [
   "CLAUDE.md",
   "AGENTS.md",
   "RELEASE_NOTES.md",
-  ".oac.json"
+  ".oac.json",
+  "src/components/icons"
 ];
 
-// Dirs listed but not recursed into — contents are generated, not hand-authored
-const COLLAPSE_PATHS: Record<string, string> = {
-  "src/components/icons/filled": "tabler-icons, generated via `pnpm icons:sync` — not enumerated",
-  "src/components/icons/outline": "tabler-icons, generated via `pnpm icons:sync` — not enumerated"
-};
+const COLLAPSE_PATHS: Record<string, string> = {};
 
 const MAX_DEPTH = 8;
 

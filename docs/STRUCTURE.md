@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-07-28T11:52:42.618Z
+Generated on: 2026-08-02T02:54:24.129Z
 ```
 ./
 ├── .github/
@@ -28,9 +28,16 @@ Generated on: 2026-07-28T11:52:42.618Z
 ├── .zed/
 │   └── settings.json
 ├── docs/
-│   ├── money-architecture.md
+│   ├── post-release-drizzle-architecture-plan.md
 │   ├── stats-recurring-spending-map-plan.md
 │   └── STRUCTURE.md
+├── drizzle/
+│   ├── meta/
+│   │   ├── _journal.json
+│   │   └── 0000_snapshot.json
+│   ├── 0000_safe_maximus.sql
+│   ├── migrations.d.ts
+│   └── migrations.js
 ├── plugins/
 │   └── with-android-release-signing.mts
 ├── scripts/
@@ -192,12 +199,6 @@ Generated on: 2026-07-28T11:52:42.618Z
 │   │   │   │   ├── goal-modify.styles.ts
 │   │   │   │   └── types.ts
 │   │   │   └── goal-card.tsx
-│   │   ├── icons/
-│   │   │   ├── filled/ /* tabler-icons, generated via `pnpm icons:sync` — not enumerated */
-│   │   │   ├── outline/ /* tabler-icons, generated via `pnpm icons:sync` — not enumerated */
-│   │   │   ├── icon-map.ts
-│   │   │   ├── icon-svg.tsx
-│   │   │   └── index.ts
 │   │   ├── inline-category-picker/
 │   │   │   └── index.tsx
 │   │   ├── loans/
@@ -238,6 +239,7 @@ Generated on: 2026-07-28T11:52:42.618Z
 │   │   │   ├── chart-crosshair.tsx
 │   │   │   ├── currency-switcher.tsx
 │   │   │   ├── delta-badge.tsx
+│   │   │   ├── get-category-color.ts
 │   │   │   ├── insight-card.tsx
 │   │   │   ├── mini-bars.tsx
 │   │   │   ├── net-worth-chart.tsx
@@ -249,8 +251,7 @@ Generated on: 2026-07-28T11:52:42.618Z
 │   │   │   ├── stats-detail-shell.tsx
 │   │   │   ├── stats-empty-state.tsx
 │   │   │   ├── stats-pending-notice.tsx
-│   │   │   ├── stats-period-header.tsx
-│   │   │   └── stats-skeleton.tsx
+│   │   │   └── stats-period-header.tsx
 │   │   ├── tag/
 │   │   │   ├── action-buttons.tsx
 │   │   │   ├── delete-section.tsx
@@ -368,6 +369,7 @@ Generated on: 2026-07-28T11:52:42.618Z
 │   │   ├── preset-list-item.tsx
 │   │   ├── privacy-eye-control.tsx
 │   │   ├── reorderable-list-v2.tsx
+│   │   ├── route-load-state.tsx
 │   │   ├── search-input.tsx
 │   │   ├── summary-card.tsx
 │   │   ├── tabs-minty.tsx
@@ -381,41 +383,43 @@ Generated on: 2026-07-28T11:52:42.618Z
 │   ├── contexts/
 │   │   └── scroll-into-view-context.tsx
 │   ├── database/
+│   │   ├── backup/
+│   │   │   ├── backup-format.ts
+│   │   │   └── backup-import-plan.ts
+│   │   ├── drizzle/
+│   │   │   ├── hooks/
+│   │   │   ├── read-models/
+│   │   │   │   ├── account-read-model.ts
+│   │   │   │   ├── budget-read-model.ts
+│   │   │   │   ├── category-read-model.ts
+│   │   │   │   ├── entity-read-model.ts
+│   │   │   │   ├── goal-read-model.ts
+│   │   │   │   ├── loan-read-model.ts
+│   │   │   │   ├── stats-data.ts
+│   │   │   │   ├── stats-read-model.ts
+│   │   │   │   ├── tag-read-model.ts
+│   │   │   │   └── transaction-read-model.ts
+│   │   │   ├── db.ts
+│   │   │   └── schema.ts
 │   │   ├── mappers/
 │   │   │   ├── account.mapper.ts
 │   │   │   ├── budget.mapper.ts
 │   │   │   ├── category.mapper.ts
 │   │   │   ├── goal.mapper.ts
-│   │   │   ├── hydrateTransactions.ts
 │   │   │   ├── loan.mapper.ts
 │   │   │   ├── tag.mapper.ts
 │   │   │   └── transaction.mapper.ts
-│   │   ├── migrations/
-│   │   │   ├── sqlite-runner.ts
-│   │   │   ├── sqlite-v1.ts
-│   │   │   ├── sqlite-v2.ts
-│   │   │   └── sqlite-v3.ts
-│   │   ├── repos/
-│   │   │   ├── account-repo.ts
-│   │   │   ├── budget-repo.ts
-│   │   │   ├── category-repo.ts
-│   │   │   ├── goal-repo.ts
-│   │   │   ├── loan-repo.ts
-│   │   │   ├── transaction-repo.ts
-│   │   │   └── transaction-tag-repo.ts
-│   │   ├── services-sqlite/
+│   │   ├── services/
 │   │   │   ├── account-service.ts
 │   │   │   ├── balance-service.ts
 │   │   │   ├── budget-service.ts
 │   │   │   ├── category-service.ts
 │   │   │   ├── data-management-service.ts
 │   │   │   ├── goal-service.ts
+│   │   │   ├── ledger-service.ts
 │   │   │   ├── loan-service.ts
 │   │   │   ├── recurring-transaction-service.ts
-│   │   │   ├── stats-service.ts
-│   │   │   ├── tag-service.ts
-│   │   │   ├── transaction-service.ts
-│   │   │   └── transfer-service.ts
+│   │   │   └── tag-service.ts
 │   │   ├── types/
 │   │   │   └── rows.ts
 │   │   ├── utils/
@@ -423,18 +427,17 @@ Generated on: 2026-07-28T11:52:42.618Z
 │   │   │   ├── get-balance-delta.ts
 │   │   │   └── import-snapshot.ts
 │   │   ├── db.ts
-│   │   ├── events.ts
-│   │   ├── sql.ts
+│   │   ├── forced-migration.ts
 │   │   ├── transaction.ts
 │   │   └── write-queue.ts
 │   ├── hooks/
 │   │   ├── exchange-rates-editor.reducer.ts
 │   │   ├── use-balance-before.ts
-│   │   ├── use-boot-hydration.ts
 │   │   ├── use-chart-font.ts
 │   │   ├── use-debounced-callback.ts
 │   │   ├── use-import-recovery.ts
 │   │   ├── use-location-permission-status.ts
+│   │   ├── use-modify-route-loader.ts
 │   │   ├── use-navigation-guard.ts
 │   │   ├── use-notification-permission-status.ts
 │   │   ├── use-notification-sync.ts
@@ -443,7 +446,6 @@ Generated on: 2026-07-28T11:52:42.618Z
 │   │   ├── use-retention-cleanup.ts
 │   │   ├── use-scroll-into-view.ts
 │   │   ├── use-shake-listener.ts
-│   │   ├── use-stats.ts
 │   │   └── use-time-reactivity.ts
 │   ├── i18n/
 │   │   ├── translation/
@@ -465,18 +467,12 @@ Generated on: 2026-07-28T11:52:42.618Z
 │   │   ├── exchange-rates.ts
 │   │   └── pending-transaction-notifications.ts
 │   ├── stores/
-│   │   ├── db/
-│   │   │   ├── account.store.ts
-│   │   │   ├── budget.store.ts
-│   │   │   ├── category.store.ts
-│   │   │   ├── goal.store.ts
-│   │   │   ├── loan.store.ts
-│   │   │   ├── tag.store.ts
-│   │   │   └── transaction.store.ts
 │   │   ├── android-sound.store.ts
 │   │   ├── app-lock.store.ts
 │   │   ├── bill-splitter.store.ts
 │   │   ├── button-placement.store.ts
+│   │   ├── db-migration.store.ts
+│   │   ├── development-notice.store.ts
 │   │   ├── exchange-rates-preferences.store.ts
 │   │   ├── export-history.store.ts
 │   │   ├── language.store.ts
@@ -533,12 +529,14 @@ Generated on: 2026-07-28T11:52:42.618Z
 │       ├── get-week-start-on.ts
 │       ├── is-image-url.ts
 │       ├── is-single-emoji-or-letter.ts
+│       ├── live-progress.ts
 │       ├── logger.ts
 │       ├── money.ts
 │       ├── number-format.ts
 │       ├── open-file.ts
 │       ├── parse-math-expression.ts
 │       ├── pending-transactions.ts
+│       ├── planning-progress.ts
 │       ├── recurrence.ts
 │       ├── stats-date-range.ts
 │       ├── string-utils.ts
@@ -553,6 +551,7 @@ Generated on: 2026-07-28T11:52:42.618Z
 ├── app.json
 ├── babel.config.js
 ├── biome.json
+├── drizzle.config.ts
 ├── expo-env.d.ts
 ├── index.ts
 ├── LICENSE
