@@ -22,9 +22,11 @@ import { View } from "~/components/ui/view"
 import { drizzleDb, expoDb } from "~/database/drizzle/db"
 import {
   exportLegacyDbForForcedMigration,
+  generateLegacyZipBackupForForcedMigration,
   getDatabaseState,
   upgradeLegacyDbToDrizzle,
 } from "~/database/forced-migration"
+import { saveExistingFileToDevice } from "~/database/services/data-management-service"
 import { useImportRecovery } from "~/hooks/use-import-recovery"
 import { useNotificationSync } from "~/hooks/use-notification-sync"
 import { useRecurringTransactionSync } from "~/hooks/use-recurring-transaction-sync"
@@ -48,14 +50,17 @@ export default function RootLayout() {
 function ForcedMigrationGate() {
   const phase = useDbMigrationStore((s) => s.phase)
   const backupUri = useDbMigrationStore((s) => s.backupUri)
+  const userBackupUri = useDbMigrationStore((s) => s.userBackupUri)
   const error = useDbMigrationStore((s) => s.error)
   const setPhase = useDbMigrationStore((s) => s.setPhase)
+  const markUserBackupSaved = useDbMigrationStore((s) => s.markUserBackupSaved)
   const markExported = useDbMigrationStore((s) => s.markExported)
   const markComplete = useDbMigrationStore((s) => s.markComplete)
   const markFailed = useDbMigrationStore((s) => s.markFailed)
   const [checked, setChecked] = useState(false)
   const [busy, setBusy] = useState(false)
   const upgradeNoticeShownRef = useRef(false)
+  const migrationRunRef = useRef(false)
 
   // TODO(remove-after-drizzle-rollout): old SQLite -> Drizzle compatibility gate.
   // Once every supported install has this marker, delete this wrapper and render AppRootLayout directly.
@@ -65,7 +70,7 @@ function ForcedMigrationGate() {
     upgradeNoticeShownRef.current = true
     Alert.alert(
       "Your data is ready",
-      "We prepared your data for the latest version of Minty Flow. Everything should look the same, and your information has been kept safely in place.",
+      "Your backup is saved and your data is ready.",
       [{ text: "OK" }],
     )
   }, [])
@@ -73,11 +78,28 @@ function ForcedMigrationGate() {
   const runInPlaceUpgrade = useCallback(
     async (createBackup: boolean): Promise<boolean> => {
       setBusy(true)
+      migrationRunRef.current = true
       try {
         if (createBackup) {
-          setPhase("exporting")
-          const backup = await exportLegacyDbForForcedMigration()
-          markExported(backup)
+          if (!userBackupUri) {
+            setPhase("exporting")
+            const userBackup = await generateLegacyZipBackupForForcedMigration()
+            const saved = await saveExistingFileToDevice(
+              userBackup.uri,
+              userBackup.fileName,
+            )
+            if (!saved) {
+              markFailed(
+                "Please save the backup first. The update will continue right after it's safely stored.",
+              )
+              return false
+            }
+            markUserBackupSaved(userBackup)
+          }
+          if (!backupUri) {
+            const backup = await exportLegacyDbForForcedMigration()
+            markExported(backup)
+          }
         }
         setPhase("migrating")
         upgradeLegacyDbToDrizzle(migrations)
@@ -92,39 +114,24 @@ function ForcedMigrationGate() {
         markFailed(message)
         return false
       } finally {
+        migrationRunRef.current = false
         setBusy(false)
       }
     },
-    [markComplete, markExported, markFailed, setPhase, showUpgradeNotice],
+    [
+      backupUri,
+      markComplete,
+      markExported,
+      markFailed,
+      markUserBackupSaved,
+      setPhase,
+      showUpgradeNotice,
+      userBackupUri,
+    ],
   )
 
-  const resumeInPlaceUpgrade = useCallback(async () => {
-    setBusy(true)
-    try {
-      const state = getDatabaseState(migrations)
-      if (state === "legacy") {
-        const createBackup = phase === "exporting" && !backupUri
-        if (createBackup) {
-          setPhase("exporting")
-          const backup = await exportLegacyDbForForcedMigration()
-          markExported(backup)
-        }
-        setPhase("migrating")
-        upgradeLegacyDbToDrizzle(migrations)
-      }
-      markComplete()
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e)
-      logger.error("Forced DB migration in-place upgrade failed", {
-        error: message,
-      })
-      markFailed(message)
-    } finally {
-      setBusy(false)
-    }
-  }, [backupUri, markComplete, markExported, markFailed, phase, setPhase])
-
   useEffect(() => {
+    if (migrationRunRef.current) return
     if (phase === "failed") {
       setChecked(true)
       return
@@ -132,29 +139,20 @@ function ForcedMigrationGate() {
     try {
       const state = getDatabaseState(migrations)
       if (state === "legacy") {
-        void runInPlaceUpgrade(true).finally(() => setChecked(true))
+        setPhase("exporting")
+        setChecked(true)
+        void runInPlaceUpgrade(true)
         return
       }
       if (phase !== "complete") markComplete()
+      setChecked(true)
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
       logger.error("Forced DB migration detection failed", { error: message })
       markFailed(message)
-    } finally {
       setChecked(true)
     }
-  }, [markComplete, markFailed, phase, runInPlaceUpgrade])
-
-  useEffect(() => {
-    if (!checked || busy) return
-    if (
-      phase === "exporting" ||
-      phase === "exported" ||
-      phase === "migrating"
-    ) {
-      void resumeInPlaceUpgrade()
-    }
-  }, [busy, checked, phase, resumeInPlaceUpgrade])
+  }, [markComplete, markFailed, phase, runInPlaceUpgrade, setPhase])
 
   if (!checked) return <MigrationState message="Checking database..." />
 
@@ -170,8 +168,8 @@ function ForcedMigrationGate() {
       <MigrationState
         message={
           phase === "exporting"
-            ? "Backing up your data..."
-            : "Switching database layer..."
+            ? "Before updating your data, Minty Flow needs to save a backup ZIP on your phone."
+            : "Backup saved. Updating your data now..."
         }
       />
     )
@@ -182,7 +180,8 @@ function ForcedMigrationGate() {
       <ForcedMigrationState
         message="Database upgrade paused."
         detail={error ?? "Unknown error"}
-        actionLabel="Try again"
+        actionLabel={userBackupUri ? "Try again" : "Save backup"}
+        busy={busy}
         onAction={() => {
           void runInPlaceUpgrade(true)
         }}
@@ -195,7 +194,7 @@ function ForcedMigrationGate() {
       message={
         phase === "needs_backup"
           ? "Waiting to start database upgrade..."
-          : "Backing up your data..."
+          : "Before updating your data, Minty Flow needs to save a backup ZIP on your phone."
       }
       detail="Keep Minty Flow open until this finishes."
     />
@@ -241,27 +240,40 @@ function ForcedMigrationState({
   detail,
   actionLabel,
   onAction,
+  busy,
 }: {
   message: string
   detail?: string
   actionLabel?: string
   onAction?: () => void
+  busy?: boolean
 }) {
+  const { theme } = useUnistyles()
   return (
     <View
       style={{
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
-        gap: 12,
+        gap: 14,
         padding: 24,
+        backgroundColor: theme.colors.surface,
       }}
     >
-      {!onAction && <ActivityIndicatorMinty />}
-      <Text>{message}</Text>
-      {detail && <Text variant="small">{detail}</Text>}
+      {(!onAction || busy) && <ActivityIndicatorMinty />}
+      <Text variant="h4" style={{ textAlign: "center" }}>
+        {message}
+      </Text>
+      {detail && (
+        <Text
+          variant="small"
+          style={{ color: theme.colors.semantic.semi, textAlign: "center" }}
+        >
+          {detail}
+        </Text>
+      )}
       {actionLabel && (
-        <Button disabled={!onAction} onPress={onAction}>
+        <Button disabled={!onAction || busy} onPress={onAction}>
           <Text>{actionLabel}</Text>
         </Button>
       )}

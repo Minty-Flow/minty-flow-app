@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-07-30T19:51:52.454Z
+Generated on: 2026-08-02T01:52:43.170Z
 ```
 ./
 ├── .github/
@@ -472,6 +472,7 @@ Generated on: 2026-07-30T19:51:52.454Z
 │   │   ├── bill-splitter.store.ts
 │   │   ├── button-placement.store.ts
 │   │   ├── db-migration.store.ts
+│   │   ├── development-notice.store.ts
 │   │   ├── exchange-rates-preferences.store.ts
 │   │   ├── export-history.store.ts
 │   │   ├── language.store.ts
