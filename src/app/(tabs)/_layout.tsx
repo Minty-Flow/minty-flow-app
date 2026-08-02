@@ -22,7 +22,10 @@ import { View } from "~/components/ui/view"
 import { FAB_BUTTON_STYLE } from "~/constants/fab-button"
 import { DirectionEnum } from "~/i18n/language.constants"
 import { useButtonPlacementStore } from "~/stores/button-placement.store"
-import { useDevelopmentNoticeStore } from "~/stores/development-notice.store"
+import {
+  isDevelopmentNoticeHiddenForSession,
+  useDevelopmentNoticeStore,
+} from "~/stores/development-notice.store"
 import { useLanguageStore } from "~/stores/language.store"
 import { NewEnum } from "~/types/new"
 import { TransactionTypeEnum } from "~/types/transactions"
@@ -234,7 +237,9 @@ const TabLayout = () => {
     (type) => fabOptionsByType[type],
   )
   useEffect(() => {
-    if (developmentNoticeDismissed) return
+    if (developmentNoticeDismissed || isDevelopmentNoticeHiddenForSession()) {
+      return
+    }
     Alert.alert("A quick note", t("common.developmentNotice.message"), [
       {
         text: "Don't show again",

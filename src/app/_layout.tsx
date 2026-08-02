@@ -35,6 +35,10 @@ import { useRetentionCleanup } from "~/hooks/use-retention-cleanup"
 import { useShakeListener } from "~/hooks/use-shake-listener"
 import { DirectionEnum } from "~/i18n/language.constants"
 import { useDbMigrationStore } from "~/stores/db-migration.store"
+import {
+  hideDevelopmentNoticeForSession,
+  useDevelopmentNoticeStore,
+} from "~/stores/development-notice.store"
 import { useLanguageStore } from "~/stores/language.store"
 import { useOnboardingStore } from "~/stores/onboarding.store"
 import { NewEnum } from "~/types/new"
@@ -49,6 +53,7 @@ export default function RootLayout() {
 }
 
 function ForcedMigrationGate() {
+  const { t } = useTranslation()
   const phase = useDbMigrationStore((s) => s.phase)
   const backupUri = useDbMigrationStore((s) => s.backupUri)
   const userBackupUri = useDbMigrationStore((s) => s.userBackupUri)
@@ -70,12 +75,28 @@ function ForcedMigrationGate() {
   const showUpgradeNotice = useCallback(() => {
     if (upgradeNoticeShownRef.current) return
     upgradeNoticeShownRef.current = true
+    const developmentNotice = useDevelopmentNoticeStore.getState()
+    if (!developmentNotice.dismissed) {
+      hideDevelopmentNoticeForSession()
+      Alert.alert(
+        "Your data is ready",
+        `Your backup is saved and your data is ready.\n\n${t("common.developmentNotice.message")}`,
+        [
+          {
+            text: "Don't show again",
+            onPress: developmentNotice.dismiss,
+          },
+          { text: t("common.actions.ok") },
+        ],
+      )
+      return
+    }
     Alert.alert(
       "Your data is ready",
       "Your backup is saved and your data is ready.",
       [{ text: "OK" }],
     )
-  }, [])
+  }, [t])
 
   const runInPlaceUpgrade = useCallback(
     async (createBackup: boolean): Promise<boolean> => {
