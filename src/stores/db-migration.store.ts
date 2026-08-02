@@ -15,7 +15,11 @@ interface DbMigrationState {
   phase: DbMigrationPhase
   backupUri: string | null
   backupFileName: string | null
+  userBackupUri: string | null
+  userBackupFileName: string | null
+  userBackupSavedAt: string | null
   error: string | null
+  markUserBackupSaved: (backup: { uri: string; fileName: string }) => void
   setPhase: (phase: DbMigrationPhase) => void
   markExported: (backup: { uri: string; fileName: string }) => void
   markComplete: () => void
@@ -30,7 +34,18 @@ export const useDbMigrationStore = create<DbMigrationState>()(
       phase: "idle",
       backupUri: null,
       backupFileName: null,
+      userBackupUri: null,
+      userBackupFileName: null,
+      userBackupSavedAt: null,
       error: null,
+      markUserBackupSaved: ({ uri, fileName }) =>
+        set({
+          phase: "exported",
+          userBackupUri: uri,
+          userBackupFileName: fileName,
+          userBackupSavedAt: new Date().toISOString(),
+          error: null,
+        }),
       setPhase: (phase) => set({ phase, error: null }),
       markExported: ({ uri, fileName }) =>
         set({
@@ -42,8 +57,6 @@ export const useDbMigrationStore = create<DbMigrationState>()(
       markComplete: () =>
         set({
           phase: "complete",
-          backupUri: null,
-          backupFileName: null,
           error: null,
         }),
       markFailed: (error) => set({ phase: "failed", error }),

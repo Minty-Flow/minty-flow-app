@@ -1,8 +1,19 @@
+import { File } from "expo-file-system"
+import * as FileSystem from "expo-file-system/legacy"
 import * as SQLite from "expo-sqlite"
+import { unzip, zip } from "react-native-zip-archive"
 
+import {
+  BACKUP_JSON_NAME,
+  type RawRow as BackupRawRow,
+  type MintyFlowBackup,
+  SCHEMA_VERSION,
+  validateBackup,
+} from "~/database/backup/backup-format"
 import { closeDbSync, getDb } from "~/database/db"
 import { resetDrizzleDb } from "~/database/drizzle/db"
 import { currencyRegistryService } from "~/services/currency-registry"
+import { attachmentsDirectory } from "~/utils/attachments"
 import { logger } from "~/utils/logger"
 import { getMinorUnitDigits, roundToSafeInteger } from "~/utils/money"
 
@@ -252,6 +263,7 @@ type RawRow = Record<string, string | number | null>
 type MoneyStorageState = "decimal" | "minor"
 
 const SQLITE_MINOR_MONEY_VERSION = 3
+const MIGRATION_BACKUP_DIR = "migration-exports"
 
 export type DatabaseState = "fresh" | "legacy" | "drizzle"
 
@@ -364,6 +376,16 @@ function buildLegacyBackupFileName(): string {
   return `minty-flow-drizzle-migration-${new Date().toISOString().replaceAll(":", "-")}.db`
 }
 
+function buildLegacyZipBackupFileName(): string {
+  return `minty-flow-backup-before-update-${new Date().toISOString().replaceAll(":", "-")}.zip`
+}
+
+async function prepareMigrationBackupDir(): Promise<string> {
+  const dir = `${FileSystem.documentDirectory}${MIGRATION_BACKUP_DIR}/${Date.now()}/`
+  await FileSystem.makeDirectoryAsync(dir, { intermediates: true })
+  return dir
+}
+
 // TODO: Remove compatibility bootstrap once old pre-Drizzle installs are no longer supported.
 export async function exportLegacyDbForForcedMigration(): Promise<{
   uri: string
@@ -408,6 +430,235 @@ export async function exportLegacyDbForForcedMigration(): Promise<{
   } finally {
     verifiedBackup.closeSync()
   }
+}
+
+function normalizeBackupRow(
+  table: keyof typeof REQUIRED_SCHEMA,
+  row: RawRow,
+  moneyState: MoneyStorageState,
+  accountCurrencies: Map<string, string>,
+): BackupRawRow {
+  if (table === "accounts") {
+    const currency = accountCurrencies.get(String(row.id))
+    if (!currency) throw new Error(`Account ${row.id} is missing currency`)
+    return {
+      ...row,
+      balance:
+        moneyState === "decimal"
+          ? majorNumberToMinorUnits(row.balance, currency)
+          : row.balance,
+    }
+  }
+  if (table === "budgets") {
+    const currency = assertKnownCurrency(row.currency_code, `budget ${row.id}`)
+    return {
+      ...row,
+      amount:
+        moneyState === "decimal"
+          ? majorNumberToMinorUnits(row.amount, currency)
+          : row.amount,
+    }
+  }
+  if (table === "goals") {
+    const currency = assertKnownCurrency(row.currency_code, `goal ${row.id}`)
+    return {
+      ...row,
+      target_amount:
+        moneyState === "decimal"
+          ? majorNumberToMinorUnits(row.target_amount, currency)
+          : row.target_amount,
+    }
+  }
+  if (table === "loans") {
+    const currency = accountCurrencies.get(String(row.account_id))
+    if (!currency) throw new Error(`Loan ${row.id} has no valid account`)
+    return {
+      ...row,
+      loan_type:
+        typeof row.loan_type === "string"
+          ? row.loan_type.toLowerCase()
+          : row.loan_type,
+      principal_amount:
+        moneyState === "decimal"
+          ? majorNumberToMinorUnits(row.principal_amount, currency)
+          : row.principal_amount,
+    }
+  }
+  if (table === "transactions") {
+    const currency = accountCurrencies.get(String(row.account_id))
+    if (!currency) throw new Error(`Transaction ${row.id} has no valid account`)
+    return {
+      ...row,
+      amount:
+        moneyState === "decimal"
+          ? majorNumberToMinorUnits(row.amount, currency)
+          : row.amount,
+      account_balance_before:
+        moneyState === "decimal"
+          ? majorNumberToMinorUnits(row.account_balance_before, currency)
+          : row.account_balance_before,
+    }
+  }
+  if (
+    table === "recurring_transactions" &&
+    moneyState === "decimal" &&
+    typeof row.json_transaction_template === "string"
+  ) {
+    const template = JSON.parse(row.json_transaction_template) as RawRow
+    const currency = accountCurrencies.get(String(template.accountId ?? ""))
+    if (!currency) {
+      throw new Error(`Recurring rule ${row.id} has no valid account`)
+    }
+    template.amount = majorNumberToMinorUnits(template.amount, currency)
+    return {
+      ...row,
+      json_transaction_template: JSON.stringify(template),
+    }
+  }
+
+  return row
+}
+
+function legacyBackupRows(
+  db: SQLite.SQLiteDatabase,
+  table: keyof typeof REQUIRED_SCHEMA,
+  moneyState: MoneyStorageState,
+  accountCurrencies: Map<string, string>,
+): BackupRawRow[] {
+  return db
+    .getAllSync<RawRow>(`SELECT * FROM ${quoteIdentifier(table)}`)
+    .map((row) => normalizeBackupRow(table, row, moneyState, accountCurrencies))
+}
+
+function getAccountCurrencies(
+  db: SQLite.SQLiteDatabase,
+  table: "accounts" | "__legacy_accounts",
+): Map<string, string> {
+  const currencies = new Map<string, string>()
+  for (const row of db.getAllSync<RawRow>(
+    `SELECT * FROM ${quoteIdentifier(table)}`,
+  )) {
+    const id = String(row.id)
+    currencies.set(id, assertKnownCurrency(row.currency_code, `account ${id}`))
+  }
+  return currencies
+}
+
+function buildLegacyBackupInMemory(db: SQLite.SQLiteDatabase): MintyFlowBackup {
+  const moneyState = getMoneyStorageState(db)
+  const accountCurrencies = getAccountCurrencies(db, "accounts")
+
+  return {
+    meta: {
+      version: 1,
+      schemaVersion: SCHEMA_VERSION,
+      exportedAt: new Date().toISOString(),
+      appId: "minty-flow-app",
+    },
+    data: {
+      categories: legacyBackupRows(
+        db,
+        "categories",
+        moneyState,
+        accountCurrencies,
+      ),
+      tags: legacyBackupRows(db, "tags", moneyState, accountCurrencies),
+      accounts: legacyBackupRows(db, "accounts", moneyState, accountCurrencies),
+      recurring_transactions: legacyBackupRows(
+        db,
+        "recurring_transactions",
+        moneyState,
+        accountCurrencies,
+      ),
+      budgets: legacyBackupRows(db, "budgets", moneyState, accountCurrencies),
+      goals: legacyBackupRows(db, "goals", moneyState, accountCurrencies),
+      loans: legacyBackupRows(db, "loans", moneyState, accountCurrencies),
+      transactions: legacyBackupRows(
+        db,
+        "transactions",
+        moneyState,
+        accountCurrencies,
+      ),
+      transfers: legacyBackupRows(
+        db,
+        "transfers",
+        moneyState,
+        accountCurrencies,
+      ),
+      transaction_tags: legacyBackupRows(
+        db,
+        "transaction_tags",
+        moneyState,
+        accountCurrencies,
+      ),
+      budget_accounts: legacyBackupRows(
+        db,
+        "budget_accounts",
+        moneyState,
+        accountCurrencies,
+      ),
+      budget_categories: legacyBackupRows(
+        db,
+        "budget_categories",
+        moneyState,
+        accountCurrencies,
+      ),
+      goal_accounts: legacyBackupRows(
+        db,
+        "goal_accounts",
+        moneyState,
+        accountCurrencies,
+      ),
+    },
+  }
+}
+
+async function assertZipBackupValid(uri: string): Promise<void> {
+  const staging = `${FileSystem.cacheDirectory}migration-backup-${Date.now()}/`
+  try {
+    await FileSystem.makeDirectoryAsync(staging, { intermediates: true })
+    await unzip(uri, staging)
+    const json = await FileSystem.readAsStringAsync(
+      `${staging}${BACKUP_JSON_NAME}`,
+    )
+    const result = validateBackup(json)
+    if (!result.success) throw new Error(result.message)
+  } finally {
+    await FileSystem.deleteAsync(staging, { idempotent: true })
+  }
+}
+
+export async function generateLegacyZipBackupForForcedMigration(): Promise<{
+  uri: string
+  fileName: string
+}> {
+  const db = getDb()
+  const dir = await prepareMigrationBackupDir()
+  const jsonUri = `${dir}${BACKUP_JSON_NAME}`
+  const backup = buildLegacyBackupInMemory(db)
+  const json = JSON.stringify(backup, null, 2)
+  const validBackup = validateBackup(json)
+  if (!validBackup.success) throw new Error(validBackup.message)
+
+  await FileSystem.writeAsStringAsync(jsonUri, json, {
+    encoding: FileSystem.EncodingType.UTF8,
+  })
+
+  const fileName = buildLegacyZipBackupFileName()
+  const uri = `${dir}${fileName}`
+  const attachments = attachmentsDirectory()
+    .list()
+    .filter((entry): entry is File => entry instanceof File)
+    .map((file) => file.uri)
+
+  try {
+    await zip([jsonUri, ...attachments], uri)
+    await assertZipBackupValid(uri)
+  } finally {
+    await FileSystem.deleteAsync(jsonUri, { idempotent: true })
+  }
+
+  return { uri, fileName }
 }
 
 function execSync(db: SQLite.SQLiteDatabase, source: string): void {
@@ -499,12 +750,7 @@ function legacyRows<T extends RawRow>(
 function getLegacyAccountCurrencies(
   db: SQLite.SQLiteDatabase,
 ): Map<string, string> {
-  const currencies = new Map<string, string>()
-  for (const row of legacyRows(db, "accounts")) {
-    const id = String(row.id)
-    currencies.set(id, assertKnownCurrency(row.currency_code, `account ${id}`))
-  }
-  return currencies
+  return getAccountCurrencies(db, "__legacy_accounts")
 }
 
 function copyAccounts(
