@@ -7,16 +7,19 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
 import { MonthYearPicker } from "~/components/month-year-picker"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { View } from "~/components/ui/view"
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
-import { getMonthRange } from "~/database/services-sqlite/account-service"
-import { useCategoriesByType } from "~/stores/db/category.store"
-import { useTags } from "~/stores/db/tag.store"
-import { useTransactions } from "~/stores/db/transaction.store"
+import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
+import { useTags } from "~/database/drizzle/read-models/tag-read-model"
+import {
+  type TransactionWithRelations,
+  useTransactions,
+} from "~/database/drizzle/read-models/transaction-read-model"
+import { getMonthRange } from "~/database/services/account-service"
 import type {
   SearchState,
   TransactionListFilterState,
@@ -52,7 +55,7 @@ export default function PendingTransactionsScreen() {
   const categoriesTransfer = useCategoriesByType(TransactionTypeEnum.TRANSFER)
   const tags = useTags()
   const { fromDate, toDate } = getMonthRange(selectedYear, selectedMonth)
-  const { items: allPending } = useTransactions({
+  const { items: allPending, status: transactionsStatus } = useTransactions({
     from: new Date(fromDate).toISOString(),
     to: new Date(toDate).toISOString(),
     isPending: true,
@@ -82,6 +85,8 @@ export default function PendingTransactionsScreen() {
       ),
     })
   }, [navigation, showFilters])
+  if (transactionsStatus === "loading" && allPending.length === 0)
+    return <RouteLoadingState />
   const handleDeleteDone = () => {
     openSwipeableRef.current?.close()
   }
@@ -91,7 +96,9 @@ export default function PendingTransactionsScreen() {
       onPress={() => router.push(`/transaction/${item.id}`)}
       onDelete={handleDeleteDone}
       onWillOpen={(methods) => {
-        openSwipeableRef.current?.close()
+        if (openSwipeableRef.current !== methods) {
+          openSwipeableRef.current?.close()
+        }
         openSwipeableRef.current = methods
       }}
     />

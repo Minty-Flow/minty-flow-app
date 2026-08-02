@@ -23,6 +23,9 @@
     "states": {
       "soon": "Soon"
     },
+    "developmentNotice": {
+      "message": "Minty Flow is still in development, so data loss may happen. I'm sorry for that. Starting with this release, I'm focused on stability and safer backups for future updates."
+    },
     "modals": {
       "unsavedDescription": "All changes will be lost.",
       "closeWithoutSaving": "Close without saving?",

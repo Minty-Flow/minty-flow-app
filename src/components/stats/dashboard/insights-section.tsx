@@ -65,6 +65,7 @@ export function StatsInsightsSection({
           dailyData={stats.dailyData}
           from={dateRange.from}
           to={dateRange.to}
+          currency={stats.currency}
           onPress={() => onNavigate("/stats/calendar")}
         />
         <StatCard

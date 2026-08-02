@@ -25,7 +25,7 @@ import {
   saveJsonToDevice,
   saveZipToDevice,
   validateBackup,
-} from "~/database/services-sqlite/data-management-service"
+} from "~/database/services/data-management-service"
 import {
   type ExportRecord,
   useExportHistoryStore,

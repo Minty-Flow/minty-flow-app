@@ -17,7 +17,7 @@ import { UpcomingTransactionsSection } from "~/components/transaction/upcoming-t
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
+import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import type {
   SearchState,
@@ -122,7 +122,9 @@ export function TransactionSectionList({
       onPress={() => handleOnTransactionPress(item.id)}
       onDelete={handleDeleteDone}
       onWillOpen={(methods) => {
-        openSwipeableRef.current?.close()
+        if (openSwipeableRef.current !== methods) {
+          openSwipeableRef.current?.close()
+        }
         openSwipeableRef.current = methods
       }}
     />
@@ -214,7 +216,6 @@ const styles = StyleSheet.create((theme) => ({
   sectionTotalsContainer: {
     flexDirection: "row",
     alignItems: "center",
-    flexWrap: "wrap",
     gap: 4,
     marginTop: 5,
   },
@@ -222,10 +223,11 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
-    flexWrap: "wrap",
+    flexShrink: 1,
     gap: 8,
   },
   sectionTotal: {
+    flexShrink: 0,
     fontWeight: "700",
     color: theme.colors.onSecondary,
     fontSize: theme.typography.labelMedium.fontSize,

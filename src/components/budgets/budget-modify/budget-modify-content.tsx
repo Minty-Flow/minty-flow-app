@@ -29,7 +29,7 @@ import {
   deleteBudgetById,
   duplicateBudgetById,
   updateBudgetById,
-} from "~/database/services-sqlite/budget-service"
+} from "~/database/services/budget-service"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import type { TranslationKey } from "~/i18n/config"
 import {

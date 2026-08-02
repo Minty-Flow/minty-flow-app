@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { type DimensionValue, FlatList, View as RNView } from "react-native"
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
@@ -15,18 +15,19 @@ import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { on } from "~/database/events"
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
-import { getLoanProgress } from "~/database/repos/loan-repo"
-import { createTransaction } from "~/database/services-sqlite/transaction-service"
-import { useAccount } from "~/stores/db/account.store"
-import { useLoan } from "~/stores/db/loan.store"
-import { useTransactions } from "~/stores/db/transaction.store"
+import { useAccount } from "~/database/drizzle/read-models/account-read-model"
+import { useLoan } from "~/database/drizzle/read-models/loan-read-model"
+import {
+  type TransactionWithRelations,
+  useTransactions,
+} from "~/database/drizzle/read-models/transaction-read-model"
+import { createTransaction } from "~/database/services/ledger-service"
 import { useLanguageStore } from "~/stores/language.store"
 import {
   TransactionSubTypeEnum,
   TransactionTypeEnum,
 } from "~/types/transactions"
+import { getLiveLoanProgress } from "~/utils/live-progress"
 import { logger } from "~/utils/logger"
 import { getLoanProgressModel } from "~/utils/planning-progress"
 import { formatShortMonthDay } from "~/utils/time-utils"
@@ -43,25 +44,11 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
   const isRTL = useLanguageStore((s) => s.isRTL)
   const [actionModalVisible, setActionModalVisible] = useState(false)
   const [isCreatingTransaction, setIsCreatingTransaction] = useState(false)
-  const [paidAmount, setPaidAmount] = useState(0)
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
   const loan = useLoan(loanId)
   const account = useAccount(loan?.accountId ?? "")
   const { items: transactionsFull } = useTransactions(loan ? { loanId } : {})
-  useEffect(() => {
-    if (!loan) return
-    let cancelled = false
-    const fetch = () =>
-      getLoanProgress(loanId, loan.loanType).then((v) => {
-        if (!cancelled) setPaidAmount(v)
-      })
-    fetch()
-    const unsub = on("transactions:dirty", fetch)
-    return () => {
-      cancelled = true
-      unsub()
-    }
-  }, [loanId, loan])
+  const paidAmount = loan ? getLiveLoanProgress(loan, transactionsFull) : 0
   const handleTransactionPress = (id: string) => {
     router.push({ pathname: "/transaction/[id]", params: { id } })
   }
@@ -69,7 +56,9 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
     openSwipeableRef.current?.close()
   }
   const handleWillOpen = (methods: SwipeableMethods) => {
-    openSwipeableRef.current?.close()
+    if (openSwipeableRef.current !== methods) {
+      openSwipeableRef.current?.close()
+    }
     openSwipeableRef.current = methods
   }
   const renderTransactionItem = ({

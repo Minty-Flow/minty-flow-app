@@ -16,7 +16,7 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useChartFont } from "~/hooks/use-chart-font"
 import type { BalanceTimelinePoint, StatsDateRange } from "~/types/stats"
-import { getMinorUnitDigits } from "~/utils/money"
+import { toMajorUnits } from "~/utils/money"
 import { formatNumber } from "~/utils/number-format"
 import {
   formatDayOfMonth,
@@ -116,7 +116,7 @@ export function NetWorthChart({
               lineColor: `${theme.colors.semantic.semi}30`,
               lineWidth: 1,
               formatYLabel: (v) => {
-                const n = (v as number) / 10 ** getMinorUnitDigits(currency)
+                const n = toMajorUnits(v as number, currency)
                 return formatNumber(n, {
                   maximumFractionDigits: Math.abs(n) >= 1000 ? 1 : 0,
                   notation: Math.abs(n) >= 1000 ? "compact" : "standard",

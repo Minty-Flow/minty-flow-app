@@ -12,10 +12,13 @@ import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty
 import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { getMonthRange } from "~/database/services-sqlite/account-service"
-import { useCategoriesByType, useCategory } from "~/stores/db/category.store"
-import { useTags } from "~/stores/db/tag.store"
-import { useTransactions } from "~/stores/db/transaction.store"
+import {
+  useCategoriesByType,
+  useCategory,
+} from "~/database/drizzle/read-models/category-read-model"
+import { useTags } from "~/database/drizzle/read-models/tag-read-model"
+import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
+import { getMonthRange } from "~/database/services/account-service"
 import { getThemeStrict } from "~/styles/theme/registry"
 import type {
   SearchState,

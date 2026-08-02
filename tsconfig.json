@@ -2,8 +2,7 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
+
     "useDefineForClassFields": false,
     "types": ["node"],
     "paths": {

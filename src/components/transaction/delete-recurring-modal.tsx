@@ -27,7 +27,7 @@ import { ListItem } from "~/components/ui/list-item"
 import {
   applyRecurringDeleteScope,
   type RecurringTransactionTemplate,
-} from "~/database/services-sqlite/recurring-transaction-service"
+} from "~/database/services/recurring-transaction-service"
 import { autoConfirmationService } from "~/services/auto-confirmation-service"
 import type { Transaction } from "~/types/transactions"
 import { logger } from "~/utils/logger"

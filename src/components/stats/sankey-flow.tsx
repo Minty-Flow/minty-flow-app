@@ -59,13 +59,13 @@ function buildRibbon(
   c1 = 0.4,
 ) {
   const dx = x1 - x0
-  const path = Skia.Path.Make()
-  path.moveTo(x0, y0Top)
-  path.cubicTo(x0 + dx * c0, y0Top, x1 - dx * c1, y1Top, x1, y1Top)
-  path.lineTo(x1, y1Bottom)
-  path.cubicTo(x1 - dx * c1, y1Bottom, x0 + dx * c0, y0Bottom, x0, y0Bottom)
-  path.close()
-  return path
+  return Skia.PathBuilder.Make()
+    .moveTo(x0, y0Top)
+    .cubicTo(x0 + dx * c0, y0Top, x1 - dx * c1, y1Top, x1, y1Top)
+    .lineTo(x1, y1Bottom)
+    .cubicTo(x1 - dx * c1, y1Bottom, x0 + dx * c0, y0Bottom, x0, y0Bottom)
+    .close()
+    .build()
 }
 export function SankeyFlow({
   left,

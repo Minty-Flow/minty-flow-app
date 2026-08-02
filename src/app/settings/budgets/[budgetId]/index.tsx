@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useLayoutEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { type DimensionValue, FlatList, View as RNView } from "react-native"
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
@@ -14,20 +14,21 @@ import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { on } from "~/database/events"
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
+import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
+import { useBudget } from "~/database/drizzle/read-models/budget-read-model"
+import { useCategories } from "~/database/drizzle/read-models/category-read-model"
 import {
-  getBudgetPeriodRange,
-  getBudgetSpent,
-  getBudgetSpentByCategory,
-} from "~/database/repos/budget-repo"
+  type TransactionWithRelations,
+  useTransactions,
+} from "~/database/drizzle/read-models/transaction-read-model"
 import type { TranslationKey } from "~/i18n/config"
-import { useActiveAccounts } from "~/stores/db/account.store"
-import { useBudget } from "~/stores/db/budget.store"
-import { useCategories } from "~/stores/db/category.store"
-import { useTransactions } from "~/stores/db/transaction.store"
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
+import { useWeekStartStore } from "~/stores/week-start.store"
+import {
+  getLiveBudgetSpent,
+  getLiveBudgetSpentByCategory,
+} from "~/utils/live-progress"
 import { roundToSafeInteger } from "~/utils/money"
 import { formatMoney } from "~/utils/number-format"
 import { getBudgetProgressModel } from "~/utils/planning-progress"
@@ -46,12 +47,9 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
   const budget = useBudget(budgetId)
+  const weekStart = useWeekStartStore((s) => s.weekStart)
   const allAccounts = useActiveAccounts()
   const allCategories = useCategories()
-  const [spentAmount, setSpentAmount] = useState(0)
-  const [spentByCategory, setSpentByCategory] = useState<
-    Record<string, number>
-  >({})
   const accountNames = (() => {
     const accountNameById = new Map(allAccounts.map((a) => [a.id, a.name]))
     return (budget?.accountIds ?? []).flatMap((id) => {
@@ -68,54 +66,27 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
   })()
   const periodRange = (() => {
     if (!budget) return null
-    return getBudgetPeriodRange(
-      budget.period,
-      budget.startDate.toISOString(),
-      budget.endDate?.toISOString() ?? null,
-    )
+    void weekStart
+    const progress = getBudgetProgressModel(budget, 0)
+    return {
+      periodStart: progress.periodStart.toISOString(),
+      periodEnd: progress.periodEnd.toISOString(),
+    }
   })()
   const { items: transactionsFull } = useTransactions(
     periodRange && budget
       ? {
-          accountIds: budget.accountIds,
-          categoryIds: budget.categoryIds,
+          accountIds:
+            budget.accountIds.length > 0 ? budget.accountIds : ["__none__"],
           from: periodRange.periodStart,
           to: periodRange.periodEnd,
         }
-      : {},
+      : { accountIds: ["__none__"] },
   )
-  useEffect(() => {
-    if (!budget) return
-    let cancelled = false
-    const fetch = () => {
-      getBudgetSpent(
-        budget.accountIds,
-        budget.categoryIds,
-        budget.currencyCode,
-        budget.period,
-        budget.startDate.toISOString(),
-        budget.endDate?.toISOString() ?? null,
-      ).then((v) => {
-        if (!cancelled) setSpentAmount(v)
-      })
-      getBudgetSpentByCategory(
-        budget.accountIds,
-        budget.categoryIds,
-        budget.currencyCode,
-        budget.period,
-        budget.startDate.toISOString(),
-        budget.endDate?.toISOString() ?? null,
-      ).then((v) => {
-        if (!cancelled) setSpentByCategory(v)
-      })
-    }
-    fetch()
-    const unsub = on("transactions:dirty", fetch)
-    return () => {
-      cancelled = true
-      unsub()
-    }
-  }, [budget])
+  const spentAmount = budget ? getLiveBudgetSpent(budget, transactionsFull) : 0
+  const spentByCategory = budget
+    ? getLiveBudgetSpentByCategory(budget, transactionsFull)
+    : {}
   const handleTransactionPress = (id: string) => {
     router.push({ pathname: "/transaction/[id]", params: { id } })
   }
@@ -123,7 +94,9 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
     openSwipeableRef.current?.close()
   }
   const handleWillOpen = (methods: SwipeableMethods) => {
-    openSwipeableRef.current?.close()
+    if (openSwipeableRef.current !== methods) {
+      openSwipeableRef.current?.close()
+    }
     openSwipeableRef.current = methods
   }
   const renderTransactionItem = ({

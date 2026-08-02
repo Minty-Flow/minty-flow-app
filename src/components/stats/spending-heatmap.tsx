@@ -1,4 +1,4 @@
-import { eachDayOfInterval } from "date-fns"
+import { eachDayOfInterval, isValid } from "date-fns"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
@@ -9,8 +9,10 @@ import { View } from "~/components/ui/view"
 import { useWeekStartStore } from "~/stores/week-start.store"
 import type { DailyDataPoint } from "~/types/stats"
 import { getWeekStartsOn } from "~/utils/get-week-start-on"
+import { formatMoney } from "~/utils/number-format"
 import {
   formatDateKey,
+  formatShortMonthDayYear,
   formatShortMonthName,
   getWeekdayLabel,
   startOfAppWeek,
@@ -18,7 +20,7 @@ import {
 
 interface HeatmapWeek {
   key: string
-  /** Month label shown above this column ("" when same month as previous week) */
+  /** Month label shown above the column containing the month's first visible day. */
   monthLabel: string
   /** 7 cells, index = offset from week start; null = outside range */
   days: ({
@@ -30,40 +32,67 @@ interface SpendingHeatmapProps {
   dailyData: DailyDataPoint[]
   from: Date
   to: Date
+  currency: string
   /** Grid-card variant: smaller cells, no labels/legend, no scroll */
   compact?: boolean
 }
+
+function isValidRange(from: Date, to: Date): boolean {
+  return isValid(from) && isValid(to) && from <= to
+}
+
+function buildExpenseByKey(dailyData: DailyDataPoint[]): Map<string, number> {
+  const expenseByKey = new Map<string, number>()
+  for (const point of dailyData) {
+    const expense = Number.isFinite(point.expense) ? point.expense : 0
+    expenseByKey.set(
+      point.dateKey,
+      (expenseByKey.get(point.dateKey) ?? 0) + expense,
+    )
+  }
+  return expenseByKey
+}
+
 function buildWeeks(
   from: Date,
   to: Date,
   expenseByKey: Map<string, number>,
   weekStartsOn: number,
 ) {
+  if (!isValidRange(from, to)) return []
+
   const days = eachDayOfInterval({ start: from, end: to })
+  const firstDateKey = formatDateKey(from)
   const weeks: HeatmapWeek[] = []
-  let prevMonth = -1
   for (const day of days) {
     const weekKey = formatDateKey(startOfAppWeek(day, weekStartsOn))
     let week = weeks[weeks.length - 1]
     if (!week || week.key !== weekKey) {
-      const month = day.getMonth()
       week = {
         key: weekKey,
-        monthLabel: month === prevMonth ? "" : formatShortMonthName(day),
+        monthLabel: "",
         days: Array(7).fill(null),
       }
-      prevMonth = month
       weeks.push(week)
     }
     const offset = (day.getDay() - weekStartsOn + 7) % 7
     const dateKey = formatDateKey(day)
-    week.days[offset] = { dateKey, expense: expenseByKey.get(dateKey) ?? 0 }
+    if (!week.monthLabel && (dateKey === firstDateKey || day.getDate() === 1)) {
+      week.monthLabel = formatShortMonthName(day)
+    }
+    week.days[offset] = {
+      dateKey,
+      expense: Math.max(expenseByKey.get(dateKey) ?? 0, 0),
+    }
   }
-  return { weeks, weekStartsOn }
+  return weeks
 }
+
 /** Quartile thresholds of nonzero expenses → intensity bucket 0–4 */
 function buildBucketFn(expenses: number[]) {
-  const nonzero = expenses.filter((e) => e > 0).sort((a, b) => a - b)
+  const nonzero = expenses
+    .filter((expense) => Number.isFinite(expense) && expense > 0)
+    .sort((a, b) => a - b)
   if (nonzero.length === 0) return () => 0
   const q = (p: number) =>
     nonzero[Math.min(nonzero.length - 1, Math.floor(nonzero.length * p))]
@@ -81,44 +110,56 @@ export function SpendingHeatmap({
   dailyData,
   from,
   to,
+  currency,
   compact,
 }: SpendingHeatmapProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
-  // Subscribed so store change reruns memo; `weekStartsOn` is the explicit dep.
-  const _weekStart = useWeekStartStore((s) => s.weekStart)
-  const weekStartsOnValue = getWeekStartsOn()
-  const {
-    weeks,
-    weekStartsOn: computedWeekStartsOn,
-    bucketOf,
-  } = useMemo(() => {
-    const expenseByKey = new Map(dailyData.map((d) => [d.dateKey, d.expense]))
-    const built = buildWeeks(from, to, expenseByKey, weekStartsOnValue)
+  const weekStartsOn = useWeekStartStore(() => getWeekStartsOn())
+  const { weeks, bucketOf } = useMemo(() => {
+    const expenseByKey = buildExpenseByKey(dailyData)
+    const weeks = buildWeeks(from, to, expenseByKey, weekStartsOn)
     return {
-      ...built,
-      bucketOf: buildBucketFn(dailyData.map((d) => d.expense)),
+      weeks,
+      bucketOf: buildBucketFn(
+        weeks.flatMap((week) =>
+          week.days.flatMap((day) => (day ? [day.expense] : [])),
+        ),
+      ),
     }
-  }, [dailyData, from, to, weekStartsOnValue])
-  const weekStartsOn = computedWeekStartsOn
+  }, [dailyData, from, to, weekStartsOn])
   const cellStyle = compact ? styles.cellCompact : styles.cell
   const cellColor = (bucket: number) =>
     bucket === 0
       ? `${theme.colors.onSurface}1F`
       : `${theme.colors.primary}${BUCKET_OPACITY[bucket]}`
-  // M/W/F row labels — offsets 1/3/5 relative to a Sunday-start week
-  const dayLabels = useMemo(
-    () =>
-      compact
-        ? null
-        : [1, 3, 5].map((day) => ({
-            offset: (day - weekStartsOn + 7) % 7,
-            label: getWeekdayLabel(day, "narrow"),
-          })),
-    [compact, weekStartsOn],
-  )
+  const cellLabel = (day: NonNullable<HeatmapWeek["days"][number]>) =>
+    `${formatShortMonthDayYear(day.dateKey)}: ${formatMoney(
+      day.expense,
+      currency,
+      { compact: true, hideSign: true },
+    )}`
+
+  // Keep GitHub-style M/W/F anchors, plus S when the week visibly starts on weekend.
+  const dayLabels = useMemo(() => {
+    if (compact) return null
+    const labels = [1, 3, 5].map((day) => ({
+      offset: (day - weekStartsOn + 7) % 7,
+      label: getWeekdayLabel(day, "narrow"),
+    }))
+    if (weekStartsOn === 0 || weekStartsOn === 6) {
+      labels.unshift({
+        offset: 0,
+        label: getWeekdayLabel(weekStartsOn, "narrow"),
+      })
+    }
+    return labels
+  }, [compact, weekStartsOn])
   const grid = (
-    <View style={styles.gridRow}>
+    <View
+      style={styles.gridRow}
+      accessibilityRole={compact ? undefined : "image"}
+    >
       {dayLabels && (
         <View style={styles.labelColumn}>
           {Array.from({ length: 7 }, (_, offset) => (
@@ -131,7 +172,10 @@ export function SpendingHeatmap({
         </View>
       )}
       {weeks.map((week) => (
-        <View key={week.key} style={styles.weekColumn}>
+        <View
+          key={week.key}
+          style={compact ? styles.weekColumnCompact : styles.weekColumn}
+        >
           {!compact && (
             <Text variant="muted" style={styles.monthLabel} numberOfLines={1}>
               {week.monthLabel}
@@ -140,6 +184,8 @@ export function SpendingHeatmap({
           {week.days.map((day, offset) => (
             <View
               key={day?.dateKey ?? `empty-${offset}`}
+              accessible={!compact && day != null}
+              accessibilityLabel={day ? cellLabel(day) : undefined}
               style={[
                 cellStyle,
                 {
@@ -154,10 +200,21 @@ export function SpendingHeatmap({
       ))}
     </View>
   )
+  if (weeks.length === 0) {
+    return (
+      <Text variant="muted">
+        {t("screens.stats.dashboard.noSpendingWindow")}
+      </Text>
+    )
+  }
   if (compact) return grid
   return (
     <View style={styles.container}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.scroller}
+      >
         {grid}
       </ScrollView>
       <View style={styles.legend}>
@@ -179,41 +236,51 @@ export function SpendingHeatmap({
 }
 const styles = StyleSheet.create((theme) => ({
   container: {
-    gap: 10,
+    gap: 12,
+  },
+  scroller: {
+    paddingEnd: 2,
   },
   gridRow: {
     flexDirection: "row",
-    gap: 3,
+    gap: 5,
   },
   labelColumn: {
-    gap: 3,
-    marginTop: 16,
+    gap: 5,
+    marginTop: 23,
   },
   labelCell: {
     backgroundColor: "transparent",
     justifyContent: "center",
   },
   weekColumn: {
-    gap: 3,
+    width: 16,
+    gap: 5,
+  },
+  weekColumnCompact: {
+    width: 8,
+    gap: 5,
   },
   monthLabel: {
-    fontSize: 9,
-    height: 13,
+    fontSize: 11,
+    height: 18,
+    lineHeight: 16,
+    minWidth: 28,
     overflow: "visible",
   },
   dayLabel: {
-    fontSize: 9,
+    fontSize: 11,
+    lineHeight: 16,
   },
   cell: {
-    width: 12,
-    height: 12,
-    borderRadius: 3,
+    width: 16,
+    height: 16,
+    borderRadius: 4,
   },
   cellCompact: {
     width: 8,
     height: 8,
     borderRadius: 2,
-    flexShrink: 1,
   },
   legend: {
     flexDirection: "row",

@@ -14,15 +14,15 @@ import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty
 import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { useAccount } from "~/database/drizzle/read-models/account-read-model"
+import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
+import { useTags } from "~/database/drizzle/read-models/tag-read-model"
+import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import {
   destroyAccount,
   getMonthRange,
   unarchiveAccount,
-} from "~/database/services-sqlite/account-service"
-import { useAccount } from "~/stores/db/account.store"
-import { useCategoriesByType } from "~/stores/db/category.store"
-import { useTags } from "~/stores/db/tag.store"
-import { useTransactions } from "~/stores/db/transaction.store"
+} from "~/database/services/account-service"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import type {
   SearchState,

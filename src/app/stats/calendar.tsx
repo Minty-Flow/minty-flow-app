@@ -33,13 +33,12 @@ export default function StatsCalendarScreen() {
             />
           </View>
 
-          <View style={styles.heatmapCard}>
-            <SpendingHeatmap
-              dailyData={stats.dailyData}
-              from={dateRange.from}
-              to={dateRange.to}
-            />
-          </View>
+          <SpendingHeatmap
+            dailyData={stats.dailyData}
+            from={dateRange.from}
+            to={dateRange.to}
+            currency={stats.currency}
+          />
 
           <RhythmInsightCard days={stats.spendingByDayOfWeek} />
         </>
@@ -48,17 +47,12 @@ export default function StatsCalendarScreen() {
   )
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create(() => ({
   header: {
     gap: 4,
     paddingVertical: 8,
   },
   total: {
     fontWeight: "700",
-  },
-  heatmapCard: {
-    backgroundColor: theme.colors.secondary,
-    borderRadius: theme.radius,
-    padding: 16,
   },
 }))

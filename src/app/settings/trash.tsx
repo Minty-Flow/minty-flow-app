@@ -9,20 +9,23 @@ import { ConfirmModal } from "~/components/confirm-modal"
 import { IconSvg } from "~/components/icons"
 import { InfoModal } from "~/components/info-modal"
 import { MonthYearPicker } from "~/components/month-year-picker"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { View } from "~/components/ui/view"
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
-import { getMonthRange } from "~/database/services-sqlite/account-service"
+import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
+import { useTags } from "~/database/drizzle/read-models/tag-read-model"
+import {
+  type TransactionWithRelations,
+  useTransactions,
+} from "~/database/drizzle/read-models/transaction-read-model"
+import { getMonthRange } from "~/database/services/account-service"
 import {
   destroyTransaction,
   restoreTransaction,
-} from "~/database/services-sqlite/transaction-service"
-import { useCategoriesByType } from "~/stores/db/category.store"
-import { useTags } from "~/stores/db/tag.store"
-import { useTransactions } from "~/stores/db/transaction.store"
+} from "~/database/services/ledger-service"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import type {
   SearchState,
@@ -41,7 +44,6 @@ import {
   applyTransferLayout,
 } from "~/utils/transaction-list-utils"
 
-//TODO: transfer txns are still shown as separate they dont respect the preferences settings and the restore swipe button is broken not being able to press
 export default function TrashScreen() {
   const { t } = useTranslation()
   const router = useRouter()
@@ -68,7 +70,7 @@ export default function TrashScreen() {
   const tags = useTags()
   const transferLayout = useTransfersPreferencesStore((s) => s.layout)
   const { fromDate, toDate } = getMonthRange(selectedYear, selectedMonth)
-  const { items: allDeleted } = useTransactions({
+  const { items: allDeleted, status: transactionsStatus } = useTransactions({
     from: new Date(fromDate).toISOString(),
     to: new Date(toDate).toISOString(),
     deletedOnly: true,
@@ -108,6 +110,8 @@ export default function TrashScreen() {
       ),
     })
   }, [navigation, showFilters, t])
+  if (transactionsStatus === "loading" && allDeleted.length === 0)
+    return <RouteLoadingState />
   const handleRestore = (item: TransactionWithRelations) => async () => {
     try {
       await restoreTransaction(item.id)
@@ -148,7 +152,9 @@ export default function TrashScreen() {
       onDelete={() => setPendingDestroyItem(item)}
       onRestore={handleRestore(item)}
       onWillOpen={(methods) => {
-        openSwipeableRef.current?.close()
+        if (openSwipeableRef.current !== methods) {
+          openSwipeableRef.current?.close()
+        }
         openSwipeableRef.current = methods
       }}
       rightActionAccessibilityLabel={t(

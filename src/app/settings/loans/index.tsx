@@ -6,18 +6,19 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
 import { LoanCard } from "~/components/loans/loan-card"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { Chip } from "~/components/ui/chips"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Pressable } from "~/components/ui/pressable"
 import { View } from "~/components/ui/view"
-import { useAllLoans } from "~/stores/db/loan.store"
+import { useAllLoansQuery } from "~/database/drizzle/read-models/loan-read-model"
 import type { Loan } from "~/types/loans"
 import { LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
 
 type LoanTypeFilter = "all" | "lent" | "borrowed"
 export default function LoansScreen() {
-  const loans = useAllLoans()
+  const { data: loans, status } = useAllLoansQuery()
   const { theme } = useUnistyles()
   const { t } = useTranslation()
   const router = useRouter()
@@ -71,6 +72,7 @@ export default function LoansScreen() {
     { key: "lent", label: t("screens.settings.loans.type.lent") },
     { key: "borrowed", label: t("screens.settings.loans.type.borrowed") },
   ]
+  if (status === "loading") return <RouteLoadingState />
   return (
     <View style={styles.container}>
       {filterVisible ? (

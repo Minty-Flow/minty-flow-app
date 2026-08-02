@@ -6,15 +6,16 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { GoalCard } from "~/components/goals/goal-card"
 import { IconSvg } from "~/components/icons"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Pressable } from "~/components/ui/pressable"
 import { View } from "~/components/ui/view"
-import { useAllGoals } from "~/stores/db/goal.store"
+import { useAllGoalsQuery } from "~/database/drizzle/read-models/goal-read-model"
 import type { Goal } from "~/types/goals"
 import { NewEnum } from "~/types/new"
 export default function GoalsScreen() {
-  const goals = useAllGoals()
+  const { data: goals, status } = useAllGoalsQuery()
   const { theme } = useUnistyles()
   const { t } = useTranslation()
   const router = useRouter()
@@ -42,6 +43,7 @@ export default function GoalsScreen() {
   const renderGoalItem = ({ item }: { item: Goal }) => (
     <GoalCard goal={item} onPress={() => handleGoalPress(item.id)} />
   )
+  if (status === "loading") return <RouteLoadingState />
   return (
     <View style={styles.container}>
       <FlatList
