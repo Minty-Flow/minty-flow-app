@@ -1,9 +1,14 @@
 import { useLocalSearchParams } from "expo-router"
 
 import { LoanModifyContent } from "~/components/loans/loan-modify/loan-modify-content"
-import { useActiveAccounts } from "~/stores/db/account.store"
-import { useCategories } from "~/stores/db/category.store"
-import { useLoan } from "~/stores/db/loan.store"
+import {
+  RouteLoadingState,
+  RouteNotFoundState,
+} from "~/components/route-load-state"
+import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
+import { useCategories } from "~/database/drizzle/read-models/category-read-model"
+import { useLoansQuery } from "~/database/drizzle/read-models/loan-read-model"
+import { useModifyRouteLoader } from "~/hooks/use-modify-route-loader"
 import { type LoanType, LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
 export default function LoanModifyScreen() {
@@ -16,8 +21,14 @@ export default function LoanModifyScreen() {
     prefillLoanType?: string
   }>()
   const loanId = params.loanId ?? NewEnum.NEW
-  const isAddMode = loanId === NewEnum.NEW || !loanId
-  const loan = useLoan(loanId)
+  const loansQuery = useLoansQuery()
+  const loadState = useModifyRouteLoader({
+    id: loanId,
+    data: loansQuery.data,
+    updatedAt: loansQuery.updatedAt,
+    find: (item, id) => item.id === id,
+    notFoundMessage: "Loan not found.",
+  })
   const accounts = useActiveAccounts()
   const categories = useCategories()
   const prefill = (() => {
@@ -43,7 +54,7 @@ export default function LoanModifyScreen() {
         : undefined,
     }
   })()
-  if (isAddMode) {
+  if (loadState.mode === "new") {
     return (
       <LoanModifyContent
         loanModifyId={NewEnum.NEW}
@@ -53,11 +64,16 @@ export default function LoanModifyScreen() {
       />
     )
   }
+  if (loadState.mode === "loading") return <RouteLoadingState />
+  if (loadState.mode === "not-found") {
+    return <RouteNotFoundState message={loadState.message} />
+  }
+
   return (
     <LoanModifyContent
       key={loanId}
       loanModifyId={loanId}
-      loan={loan}
+      loan={loadState.entity}
       accounts={accounts}
       categories={categories}
     />

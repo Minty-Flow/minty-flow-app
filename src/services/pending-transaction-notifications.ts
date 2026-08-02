@@ -1,7 +1,9 @@
 import * as Notifications from "expo-notifications"
 
-import { getPendingTransactions } from "~/database/repos/transaction-repo"
-import type { RowTransaction } from "~/database/types/rows"
+import {
+  getPendingTransactions,
+  type TransactionWithRelations,
+} from "~/database/drizzle/read-models/transaction-read-model"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { startOfNextMinute } from "~/utils/pending-transactions"
 
@@ -37,11 +39,11 @@ async function clearPlannedTransactionNotifications(): Promise<void> {
  * transactionDate - earlyReminderSeconds.
  */
 async function scheduleForPlannedTransaction(
-  transaction: RowTransaction,
+  transaction: TransactionWithRelations,
   earlyReminderSeconds: number,
 ): Promise<void> {
   const now = Date.now()
-  const transactionDate = new Date(transaction.transaction_date)
+  const transactionDate = transaction.transactionDate
   const dueMs = transactionDate.getTime()
   const title = transaction.title || "Pending Transaction"
   const data: TransactionReminderPayload = {
@@ -100,7 +102,7 @@ export async function synchronizePlannedTransactionNotifications(): Promise<void
 
   await Promise.all(
     pending.flatMap((t) =>
-      new Date(t.transaction_date).getTime() <= now.getTime()
+      t.transactionDate.getTime() <= now.getTime()
         ? []
         : [scheduleForPlannedTransaction(t, earlyReminderInSeconds)],
     ),

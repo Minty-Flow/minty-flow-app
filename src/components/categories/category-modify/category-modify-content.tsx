@@ -19,7 +19,7 @@ import {
   createCategory,
   deleteCategoryById,
   updateCategoryById,
-} from "~/database/services-sqlite/category-service"
+} from "~/database/services/category-service"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import type { TranslationKey } from "~/i18n/config"
 import {

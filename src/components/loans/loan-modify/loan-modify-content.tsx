@@ -29,7 +29,7 @@ import {
   createLoan,
   deleteLoanById,
   updateLoanById,
-} from "~/database/services-sqlite/loan-service"
+} from "~/database/services/loan-service"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import type { TranslationKey } from "~/i18n/config"
 import { type AddLoanFormSchema, addLoanSchema } from "~/schemas/loans.schema"

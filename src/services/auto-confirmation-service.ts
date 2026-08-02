@@ -1,10 +1,11 @@
 import { useSyncExternalStore } from "react"
 import { AppState } from "react-native"
 
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
-import { hydrateTransactions } from "~/database/mappers/hydrateTransactions"
-import { getPendingTransactions } from "~/database/repos/transaction-repo"
-import { confirmTransaction } from "~/database/services-sqlite/transaction-service"
+import {
+  getPendingTransactions,
+  type TransactionWithRelations,
+} from "~/database/drizzle/read-models/transaction-read-model"
+import { confirmTransaction } from "~/database/services/ledger-service"
 import { logger } from "~/utils/logger"
 
 /**
@@ -149,9 +150,7 @@ class AutoConfirmationService {
       return
     }
 
-    const rawRows = await getPendingTransactions()
-    const rows = await hydrateTransactions(rawRows)
-    await this.confirmPastDue(rows)
+    await this.confirmPastDue(await getPendingTransactions())
   }
 
   /**

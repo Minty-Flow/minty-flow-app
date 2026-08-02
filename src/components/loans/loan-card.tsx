@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { type DimensionValue, View as RNView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
@@ -9,11 +8,11 @@ import { Money } from "~/components/money"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { on } from "~/database/events"
-import { getLoanProgress } from "~/database/repos/loan-repo"
-import { useAccount } from "~/stores/db/account.store"
+import { useAccount } from "~/database/drizzle/read-models/account-read-model"
+import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import { useLanguageStore } from "~/stores/language.store"
 import type { Loan } from "~/types/loans"
+import { getLiveLoanProgress } from "~/utils/live-progress"
 import { getLoanProgressModel } from "~/utils/planning-progress"
 import { formatShortMonthDay } from "~/utils/time-utils"
 
@@ -23,25 +22,12 @@ interface LoanCardProps {
 }
 
 export function LoanCard({ loan, onPress }: LoanCardProps) {
-  const [paidAmount, setPaidAmount] = useState(0)
   const account = useAccount(loan.accountId)
+  const { items: progressTransactions } = useTransactions({ loanId: loan.id })
+  const paidAmount = getLiveLoanProgress(loan, progressTransactions)
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const isRTL = useLanguageStore((s) => s.isRTL)
-
-  useEffect(() => {
-    let cancelled = false
-    const fetch = () =>
-      getLoanProgress(loan.id, loan.loanType).then((v) => {
-        if (!cancelled) setPaidAmount(v)
-      })
-    fetch()
-    const unsub = on("transactions:dirty", fetch)
-    return () => {
-      cancelled = true
-      unsub()
-    }
-  }, [loan.id, loan.loanType])
 
   const {
     isLent,

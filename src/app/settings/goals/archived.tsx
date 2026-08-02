@@ -4,12 +4,13 @@ import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { GoalCard } from "~/components/goals/goal-card"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { EmptyState } from "~/components/ui/empty-state"
 import { View } from "~/components/ui/view"
-import { useArchivedGoals } from "~/stores/db/goal.store"
+import { useArchivedGoalsQuery } from "~/database/drizzle/read-models/goal-read-model"
 import type { Goal } from "~/types/goals"
 export default function ArchivedGoalsScreen() {
-  const goals = useArchivedGoals()
+  const { data: goals, status } = useArchivedGoalsQuery()
   const { t } = useTranslation()
   const router = useRouter()
   const handleGoalPress = (goalId: string) => {
@@ -18,6 +19,7 @@ export default function ArchivedGoalsScreen() {
   const renderGoalItem = ({ item }: { item: Goal }) => (
     <GoalCard goal={item} onPress={() => handleGoalPress(item.id)} />
   )
+  if (status === "loading") return <RouteLoadingState />
   return (
     <View style={styles.container}>
       <FlatList

@@ -53,7 +53,10 @@ const allowed = new Set([
 
 for (const directory of ["src/app", "src/components"]) {
   const files = fs
-    .globSync(`${directory}/**/*.{ts,tsx}`, { cwd: root })
+    .globSync(`${directory}/**/*.{ts,tsx}`, {
+      cwd: root,
+      exclude: ["src/components/icons/**"],
+    })
     .map((file) => path.join(root, file))
   for (const file of files) {
     if (allowed.has(file)) continue

@@ -10,6 +10,7 @@ module.exports = (api) => {
 
     // other config
     plugins: [
+      ["inline-import", { extensions: [".sql"] }],
       "react-native-worklets/plugin",
       [
         "react-native-unistyles/plugin",

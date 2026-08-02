@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { type DimensionValue, FlatList, View as RNView } from "react-native"
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
@@ -15,16 +15,17 @@ import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { on } from "~/database/events"
-import type { TransactionWithRelations } from "~/database/mappers/hydrateTransactions"
-import { getGoalProgress } from "~/database/repos/goal-repo"
-import { unarchiveGoalById } from "~/database/services-sqlite/goal-service"
+import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
+import { useGoal } from "~/database/drizzle/read-models/goal-read-model"
+import {
+  type TransactionWithRelations,
+  useTransactions,
+} from "~/database/drizzle/read-models/transaction-read-model"
+import { unarchiveGoalById } from "~/database/services/goal-service"
 import type { TranslationKey } from "~/i18n/config"
-import { useActiveAccounts } from "~/stores/db/account.store"
-import { useGoal } from "~/stores/db/goal.store"
-import { useTransactions } from "~/stores/db/transaction.store"
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
+import { getLiveGoalProgress } from "~/utils/live-progress"
 import { logger } from "~/utils/logger"
 import { roundToSafeInteger } from "~/utils/money"
 import { formatMoney } from "~/utils/number-format"
@@ -49,8 +50,8 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
   const [unarchiveModalVisible, setUnarchiveModalVisible] = useState(false)
   const goal = useGoal(goalId)
   const allAccounts = useActiveAccounts()
-  const [currentAmount, setCurrentAmount] = useState(0)
   const { items: transactionsFull } = useTransactions({ goalId })
+  const currentAmount = goal ? getLiveGoalProgress(goal, transactionsFull) : 0
   const accountNames = (() => {
     const accountNameById = new Map(allAccounts.map((a) => [a.id, a.name]))
     return (goal?.accountIds ?? []).flatMap((id) => {
@@ -58,20 +59,6 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
       return name ? [name] : []
     })
   })()
-  useEffect(() => {
-    if (!goal) return
-    let cancelled = false
-    const fetch = () =>
-      getGoalProgress(goalId, goal.goalType || "savings").then((v) => {
-        if (!cancelled) setCurrentAmount(v)
-      })
-    fetch()
-    const unsub = on("transactions:dirty", fetch)
-    return () => {
-      cancelled = true
-      unsub()
-    }
-  }, [goalId, goal])
   const handleTransactionPress = (id: string) => {
     router.push({ pathname: "/transaction/[id]", params: { id } })
   }
@@ -79,7 +66,9 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
     openSwipeableRef.current?.close()
   }
   const handleWillOpen = (methods: SwipeableMethods) => {
-    openSwipeableRef.current?.close()
+    if (openSwipeableRef.current !== methods) {
+      openSwipeableRef.current?.close()
+    }
     openSwipeableRef.current = methods
   }
   const handleUnarchive = async () => {
