@@ -23,6 +23,9 @@
     "states": {
       "soon": "Soon"
     },
+    "errorBoundary": {
+      "title": "Something went wrong"
+    },
     "developmentNotice": {
       "message": "Minty Flow is still in development, so data loss may happen. I'm sorry for that. Starting with this release, I'm focused on stability and safer backups for future updates."
     },
@@ -1180,8 +1183,7 @@
       },
       "types": {
         "expense": "Expense",
-        "income": "Income",
-        "transfer": "Transfer"
+        "income": "Income"
       },
       "actions": {
         "addNew": "Add New Category",

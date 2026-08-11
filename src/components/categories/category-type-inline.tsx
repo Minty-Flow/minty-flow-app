@@ -13,15 +13,15 @@ import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { useScrollIntoView } from "~/hooks/use-scroll-into-view"
-import type { TransactionType } from "~/types/transactions"
+import type { CategoryType } from "~/types/categories"
 
 import { ChevronIcon } from "../ui/chevron-icon"
 
 interface CategoryTypeInlineProps {
   /** Currently selected type. */
-  selectedType: TransactionType
+  selectedType: CategoryType
   /** Called when user selects a type (select and close). */
-  onTypeSelected: (type: TransactionType) => void
+  onTypeSelected: (type: CategoryType) => void
   /** When false, the row is not tappable and no chevron is shown (e.g. edit mode). */
   editable?: boolean
 }
@@ -34,16 +34,12 @@ export function CategoryTypeInline({
   const { t } = useTranslation()
   const typeOptions = [
     {
-      type: "expense" as TransactionType,
+      type: "expense" as CategoryType,
       label: t("components.categories.types.expense"),
     },
     {
-      type: "income" as TransactionType,
+      type: "income" as CategoryType,
       label: t("components.categories.types.income"),
-    },
-    {
-      type: "transfer" as TransactionType,
-      label: t("components.categories.types.transfer"),
     },
   ]
   const { wrapperRef, scrollIntoView } = useScrollIntoView()
@@ -59,7 +55,7 @@ export function CategoryTypeInline({
     })
   }
 
-  const handleSelect = (type: TransactionType) => {
+  const handleSelect = (type: CategoryType) => {
     onTypeSelected(type)
 
     setExpanded(false)
