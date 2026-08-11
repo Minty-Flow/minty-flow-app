@@ -17,13 +17,13 @@ import {
 import { useCategoriesByTypeQuery } from "~/database/drizzle/read-models/category-read-model"
 import { createCategory } from "~/database/services/category-service"
 import type { TranslationKey } from "~/i18n/config"
-import { TransactionTypeEnum } from "~/types/transactions"
+import { CategoryTypeEnum } from "~/types/categories"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
 export default function OnboardingExpenseCategoriesScreen() {
   const { data: categories, status } = useCategoriesByTypeQuery(
-    TransactionTypeEnum.EXPENSE,
+    CategoryTypeEnum.EXPENSE,
   )
   const { t } = useTranslation()
   const router = useRouter()

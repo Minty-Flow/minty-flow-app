@@ -60,7 +60,18 @@ export const SmartAmountInput = ({
   const [showMathToolbar, setShowMathToolbar] = useState(false)
   const inputRef = useRef<TextInput>(null)
   const { t } = useTranslation()
-  const maximumFractionDigits = getMinorUnitDigits(currencyCode)
+  // Budget/goal/loan create screens render this before a currency is
+  // chosen. getMinorUnitDigits throws on an unknown/empty code — that
+  // throw is load-bearing elsewhere (backup/import validation), so it
+  // can't be softened at the source; guard it here instead and fall back
+  // to the common 2-decimal default until a real currency is selected.
+  const maximumFractionDigits = (() => {
+    try {
+      return getMinorUnitDigits(currencyCode)
+    } catch {
+      return 2
+    }
+  })()
   const resolvedLabel =
     label ?? t("components.transactionForm.fields.amountLabel")
   const currencySymbol =

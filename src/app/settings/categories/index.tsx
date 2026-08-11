@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from "expo-router"
 
-import type { TransactionType } from "~/types/transactions"
+import type { CategoryType } from "~/types/categories"
 
 import { CategoryScreenContent } from "../../../components/categories/category-screen-content"
 
@@ -9,7 +9,7 @@ export default function CategoriesIndexScreen() {
     createdCategory?: string
     updatedCategory?: string
     deletedCategory?: string
-    type?: TransactionType
+    type?: CategoryType
   }>()
 
   // Assuming activeTab and searchQuery would be defined elsewhere if needed for CategoryList

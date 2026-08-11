@@ -10,14 +10,13 @@ import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useCategoriesByTypeQuery } from "~/database/drizzle/read-models/category-read-model"
-import type { Category } from "~/types/categories"
+import type { Category, CategoryType } from "~/types/categories"
 import { NewEnum } from "~/types/new"
-import type { TransactionType } from "~/types/transactions"
 
 import { CategoryRow } from "./category-row"
 
 interface CategoryListProps {
-  type: TransactionType
+  type: CategoryType
   createdCategory?: string
   updatedCategory?: string
   deletedCategory?: string
