@@ -10,7 +10,7 @@ import { formatMoney } from "~/utils/number-format"
 
 interface MoneyProps {
   value: number
-  currency: string
+  currency?: string
   compact?: boolean
   hideSign?: boolean
   showSign?: boolean
@@ -43,6 +43,15 @@ export const Money: FC<MoneyProps> = ({
   // Preferences
   const privacyModeActive = useMoneyFormattingStore((s) => s.privacyMode)
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
+  // Currency can be transiently empty while a related live query (e.g. an
+  // account) is still loading — render a placeholder instead of crashing.
+  if (!currency) {
+    return (
+      <Text variant={variant} style={style} native={native}>
+        {"..."}
+      </Text>
+    )
+  }
   // Numeric value (used only for inference)
   const numericValue = assertMinorUnits(value)
   // Sign behavior: tone controls + / - / no sign
