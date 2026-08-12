@@ -17,15 +17,17 @@ import {
 } from "~/constants/pre-sets-categories"
 import { useCategoriesByTypeQuery } from "~/database/drizzle/read-models/category-read-model"
 import { createCategory } from "~/database/services/category-service"
-import type { Category } from "~/types/categories"
-import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
+import {
+  type Category,
+  type CategoryType,
+  CategoryTypeEnum,
+} from "~/types/categories"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
-const PRESETS_BY_TYPE: Record<TransactionType, readonly CategoryPreset[]> = {
+const PRESETS_BY_TYPE: Record<CategoryType, readonly CategoryPreset[]> = {
   expense: ExpensePresets,
   income: IncomePresets,
-  transfer: [],
 }
 function alreadyAddedPresetKeys(
   categories: Category[],
@@ -46,7 +48,7 @@ async function createCategories(
   await Promise.all(toCreate.map((payload) => createCategory(payload)))
 }
 interface CategoryPresetsScreenInnerProps {
-  type: TransactionType
+  type: CategoryType
 }
 const CategoryPresetsScreenInner = ({
   type,
@@ -171,9 +173,9 @@ const CategoryPresetsScreenInner = ({
 }
 export default function CategoryPresetsScreen() {
   const params = useLocalSearchParams<{
-    type: TransactionType
+    type: CategoryType
   }>()
-  const type = params.type || TransactionTypeEnum.EXPENSE
+  const type = params.type || CategoryTypeEnum.EXPENSE
   return <CategoryPresetsScreenInner type={type} />
 }
 const styles = StyleSheet.create((theme) => ({

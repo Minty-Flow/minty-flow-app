@@ -787,6 +787,26 @@ class CurrencyRegistryService {
   }
 
   /**
+   * Searches currencies by code, name, symbol, or country (case-insensitive, partial).
+   *
+   * @param query - Search text; an empty/whitespace query returns the full
+   * grouped list unfiltered.
+   * @returns Matching currencies (ISO 4217 + crypto + custom)
+   */
+  searchCurrencies(query: string): Currency[] {
+    const currencies = Object.values(this.groupedCurrencies)
+    const trimmed = query.trim().toLowerCase()
+    if (!trimmed) return currencies
+    return currencies.filter(
+      (currency) =>
+        currency.code.toLowerCase().includes(trimmed) ||
+        currency.name.toLowerCase().includes(trimmed) ||
+        (currency.symbol?.toLowerCase().includes(trimmed) ?? false) ||
+        (currency.country?.toLowerCase().includes(trimmed) ?? false),
+    )
+  }
+
+  /**
    * Registers a custom currency.
    *
    * @param currency - Custom currency data

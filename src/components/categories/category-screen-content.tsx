@@ -7,14 +7,14 @@ import { IconSvg } from "~/components/icons"
 import { SearchInput } from "~/components/search-input"
 import { View } from "~/components/ui/view"
 import type { TranslationKey } from "~/i18n/config"
-import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
+import { type CategoryType, CategoryTypeEnum } from "~/types/categories"
 
 import { TabsMinty } from "../tabs-minty"
 import { Button } from "../ui/button"
 import { CategoryList } from "./category-list"
 
 interface CategoryScreenContentProps {
-  initialType?: TransactionType
+  initialType?: CategoryType
   searchPlaceholder?: string
   extraListProps?: {
     createdCategory?: string
@@ -28,8 +28,8 @@ export function CategoryScreenContent({
   searchPlaceholder,
   extraListProps,
 }: CategoryScreenContentProps) {
-  const [activeTab, setActiveTab] = useState<TransactionType>(
-    initialType || TransactionTypeEnum.EXPENSE,
+  const [activeTab, setActiveTab] = useState<CategoryType>(
+    initialType || CategoryTypeEnum.EXPENSE,
   )
   const navigation = useNavigation()
   const { t } = useTranslation()
@@ -70,15 +70,15 @@ export function CategoryScreenContent({
   return (
     <View style={styles.container}>
       {/* Tabs */}
-      <TabsMinty<TransactionType>
+      <TabsMinty<CategoryType>
         items={[
           {
-            value: TransactionTypeEnum.EXPENSE,
+            value: CategoryTypeEnum.EXPENSE,
             label: t("components.categories.types.expense"),
             icon: "chevrons-up-outline",
           },
           {
-            value: TransactionTypeEnum.INCOME,
+            value: CategoryTypeEnum.INCOME,
             label: t("components.categories.types.income"),
             icon: "chevrons-down-outline",
           },
