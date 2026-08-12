@@ -29,15 +29,15 @@ export function TypePanel({
   const options: { id: TransactionType; label: string }[] = [
     {
       id: TransactionTypeEnum.EXPENSE,
-      label: t("components.categories.types.expense"),
+      label: t("common.transaction.types.expense"),
     },
     {
       id: TransactionTypeEnum.INCOME,
-      label: t("components.categories.types.income"),
+      label: t("common.transaction.types.income"),
     },
     {
       id: TransactionTypeEnum.TRANSFER,
-      label: t("components.categories.types.transfer"),
+      label: t("common.transaction.types.transfer"),
     },
   ]
 

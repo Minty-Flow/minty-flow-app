@@ -86,17 +86,8 @@ export function CurrencySelectorModal({
   const { t } = useTranslation()
   const [visible, setVisible] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const currencies = Object.values(currencyRegistryService.groupedCurrencies)
-  const filteredCurrencies = (() => {
-    if (!searchQuery.trim()) return currencies
-    const q = searchQuery.toLowerCase().trim()
-    return currencies.filter(
-      (c) =>
-        c.name?.toLowerCase().includes(q) ||
-        c.code?.toLowerCase().includes(q) ||
-        c.country?.toLowerCase().includes(q),
-    )
-  })()
+  const filteredCurrencies =
+    currencyRegistryService.searchCurrencies(searchQuery)
   const open = () => {
     if (!editable) return
     setSearchQuery("")

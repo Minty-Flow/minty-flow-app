@@ -1,8 +1,7 @@
-import type { Category } from "~/types/categories"
-import type { TransactionType } from "~/types/transactions"
+import type { Category, CategoryType } from "~/types/categories"
 
 export interface CategoryModifyContentProps {
   categoryModifyId: string
-  initialType?: TransactionType
+  initialType?: CategoryType
   category?: Category
 }

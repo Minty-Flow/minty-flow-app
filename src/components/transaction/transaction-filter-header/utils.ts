@@ -1,6 +1,6 @@
 import type { Category } from "~/types/categories"
+import { type CategoryType, CategoryTypeEnum } from "~/types/categories"
 import type { TransactionType } from "~/types/transactions"
-import { TransactionTypeEnum } from "~/types/transactions"
 
 export function chunk<T>(arr: T[], size: number): T[][] {
   const result: T[][] = []
@@ -14,13 +14,12 @@ export function chunk<T>(arr: T[], size: number): T[][] {
 export function inferInitialCategoryType(
   selectedIds: string[],
   categoriesByType: Record<TransactionType, Category[]>,
-): TransactionType | null {
+): CategoryType | null {
   if (selectedIds.length === 0) return null
   const selectedIdSet = new Set(selectedIds)
-  const types: TransactionType[] = [
-    TransactionTypeEnum.EXPENSE,
-    TransactionTypeEnum.INCOME,
-    TransactionTypeEnum.TRANSFER,
+  const types: CategoryType[] = [
+    CategoryTypeEnum.EXPENSE,
+    CategoryTypeEnum.INCOME,
   ]
   for (const type of types) {
     const cats = categoriesByType[type] ?? []

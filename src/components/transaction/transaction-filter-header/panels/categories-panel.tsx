@@ -5,8 +5,9 @@ import { FlatList, View } from "react-native"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { Chip } from "~/components/ui/chips"
 import { EmptyState } from "~/components/ui/empty-state"
-import type { Category } from "~/types/categories"
-import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
+import type { Category, CategoryType } from "~/types/categories"
+import { CategoryTypeEnum } from "~/types/categories"
+import type { TransactionType } from "~/types/transactions"
 
 import { filterHeaderStyles } from "../filter-header.styles"
 import { PanelClearButton } from "../panel-clear-button"
@@ -31,27 +32,23 @@ export function CategoriesPanel({
   const { t } = useTranslation()
   const selectedIdSet = new Set(selectedIds)
   const initialType = inferInitialCategoryType(selectedIds, categoriesByType)
-  const [selectedType, setSelectedType] = useState<TransactionType | null>(
+  const [selectedType, setSelectedType] = useState<CategoryType | null>(
     () => initialType,
   )
   const categories =
     selectedType !== null ? (categoriesByType[selectedType] ?? []) : []
   const categoryRows = chunk(categories, CHIPS_PER_ROW)
   const typeOptions: {
-    id: TransactionType
+    id: CategoryType
     label: string
   }[] = [
     {
-      id: TransactionTypeEnum.EXPENSE,
+      id: CategoryTypeEnum.EXPENSE,
       label: t("components.categories.types.expense"),
     },
     {
-      id: TransactionTypeEnum.INCOME,
+      id: CategoryTypeEnum.INCOME,
       label: t("components.categories.types.income"),
-    },
-    {
-      id: TransactionTypeEnum.TRANSFER,
-      label: t("components.categories.types.transfer"),
     },
   ]
   const renderCategoryRow = (items: Category[], rowKey: string) => (
