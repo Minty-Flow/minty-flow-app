@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { TransactionTypeEnum } from "~/types/transactions"
+import { CategoryTypeEnum } from "~/types/categories"
 
 const addCategoriesSchema = z.object({
   name: z
@@ -10,7 +10,7 @@ const addCategoriesSchema = z.object({
     .max(50, "validation.tooLong.name"),
   icon: z.string().max(100).nullable().optional(),
   colorSchemeName: z.string().max(50).nullable().optional(),
-  type: z.enum(TransactionTypeEnum),
+  type: z.enum(CategoryTypeEnum),
 })
 
 export { addCategoriesSchema }

@@ -7,7 +7,17 @@
 
 import type { MintyColorScheme } from "~/styles/theme/types"
 
-import type { TransactionType } from "./transactions"
+/**
+ * Category type: unlike transactions, categories can only be expense or
+ * income — transfers move money between accounts and are never categorized.
+ */
+export const CategoryTypeEnum = {
+  EXPENSE: "expense",
+  INCOME: "income",
+} as const
+
+export type CategoryType =
+  (typeof CategoryTypeEnum)[keyof typeof CategoryTypeEnum]
 
 /**
  * Category domain type for UI/API usage.
@@ -26,7 +36,7 @@ import type { TransactionType } from "./transactions"
 export interface Category {
   id: string
   name: string
-  type: TransactionType
+  type: CategoryType
   icon: string | null
   colorSchemeName: string | null
   colorScheme: MintyColorScheme | null // Computed from colorSchemeName via registry
