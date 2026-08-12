@@ -1,6 +1,6 @@
 {
   "expo": {
-    "version": "0.0.9",
+    "version": "0.0.10",
     "name": "Minty Flow",
     "slug": "minty-flow-app",
     "extra": {
@@ -18,7 +18,7 @@
       }
     },
     "android": {
-      "versionCode": 38,
+      "versionCode": 39,
       "permissions": [
         "READ_CONTACTS",
         "WRITE_CONTACTS",
