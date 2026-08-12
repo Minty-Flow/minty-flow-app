@@ -84,6 +84,10 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
   inlinePanelList: {
     flexGrow: 0,
   },
+  searchInput: {
+    margin: 8,
+    marginBottom: 0,
+  },
   emptyPanel: {
     paddingVertical: 24,
     alignItems: "center",

@@ -16,12 +16,14 @@ import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
+import { SearchInput } from "~/components/search-input"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { EmptyState } from "~/components/ui/empty-state"
 import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { currencyRegistryService } from "~/services/currency-registry"
 import type { Account } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
 import { Toast } from "~/utils/toast"
@@ -128,6 +130,7 @@ export function CurrencyAccountSelector({
   const router = useRouter()
   const [currencyPanelOpen, setCurrencyPanelOpen] = useState(false)
   const [accountPanelOpen, setAccountPanelOpen] = useState(false)
+  const [currencySearchQuery, setCurrencySearchQuery] = useState("")
   const handleCreateAccount = () => {
     router.push({
       pathname: "/accounts/[accountId]/modify",
@@ -144,6 +147,17 @@ export function CurrencyAccountSelector({
       .map(([code, accountCount]) => ({ code, accountCount }))
       .sort((a, b) => a.code.localeCompare(b.code))
   })()
+  // Filter by the shared registry search (code/name/symbol/country), scoped
+  // to currencies actually present on the user's accounts.
+  const filteredCurrencyItems = (() => {
+    if (!currencySearchQuery.trim()) return currencyItems
+    const matchedCodes = new Set(
+      currencyRegistryService
+        .searchCurrencies(currencySearchQuery)
+        .map((c) => c.code),
+    )
+    return currencyItems.filter((item) => matchedCodes.has(item.code))
+  })()
   // Accounts matching the selected currency
   const matchingAccounts = selectedCurrency
     ? accounts.filter((a) => a.currencyCode === selectedCurrency)
@@ -152,10 +166,14 @@ export function CurrencyAccountSelector({
   // Currency panel handlers
   // ---------------------------------------------------------------------------
   const handleToggleCurrencyPanel = () => {
-    setCurrencyPanelOpen((prev) => !prev)
+    setCurrencyPanelOpen((prev) => {
+      if (!prev) setCurrencySearchQuery("")
+      return !prev
+    })
   }
   const handleCurrencySelect = (code: string) => {
     setCurrencyPanelOpen(false)
+    setCurrencySearchQuery("")
     if (code === selectedCurrency) return
     // Clear account selections that belong to the old currency
     const hasStaleAccounts = selectedAccountIds.some((id) => {
@@ -251,9 +269,20 @@ export function CurrencyAccountSelector({
         {/* Inline currency panel */}
         {currencyPanelOpen && (
           <View style={currencyAccountStyles.inlinePanel}>
+            {currencyItems.length > 1 && (
+              <SearchInput
+                value={currencySearchQuery}
+                onChangeText={setCurrencySearchQuery}
+                onClear={() => setCurrencySearchQuery("")}
+                placeholder={t(
+                  "components.selectors.currency.searchPlaceholderEx",
+                )}
+                style={currencyAccountStyles.searchInput}
+              />
+            )}
             <FlatList
               style={currencyAccountStyles.inlinePanelList}
-              data={currencyItems}
+              data={filteredCurrencyItems}
               keyExtractor={(item) => item.code}
               nestedScrollEnabled
               keyboardShouldPersistTaps="handled"
@@ -266,24 +295,32 @@ export function CurrencyAccountSelector({
                 />
               )}
               ListEmptyComponent={
-                <View style={currencyAccountStyles.emptyPanel}>
-                  <Text style={currencyAccountStyles.emptyText}>
-                    {t("components.currencyAccountSelector.noAccounts")}
-                  </Text>
-                  <Pressable
-                    style={currencyAccountStyles.createButton}
-                    onPress={handleCreateAccount}
-                  >
-                    <IconSvg
-                      name="plus-outline"
-                      size={16}
-                      color={currencyAccountStyles.createButtonIcon.color}
-                    />
-                    <Text style={currencyAccountStyles.createButtonText}>
-                      {t("components.currencyAccountSelector.createAccount")}
+                currencyItems.length === 0 ? (
+                  <View style={currencyAccountStyles.emptyPanel}>
+                    <Text style={currencyAccountStyles.emptyText}>
+                      {t("components.currencyAccountSelector.noAccounts")}
                     </Text>
-                  </Pressable>
-                </View>
+                    <Pressable
+                      style={currencyAccountStyles.createButton}
+                      onPress={handleCreateAccount}
+                    >
+                      <IconSvg
+                        name="plus-outline"
+                        size={16}
+                        color={currencyAccountStyles.createButtonIcon.color}
+                      />
+                      <Text style={currencyAccountStyles.createButtonText}>
+                        {t("components.currencyAccountSelector.createAccount")}
+                      </Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <EmptyState
+                    variant="compact"
+                    icon="search-outline"
+                    title={t("components.selectors.currency.noCurrenciesFound")}
+                  />
+                )
               }
             />
           </View>

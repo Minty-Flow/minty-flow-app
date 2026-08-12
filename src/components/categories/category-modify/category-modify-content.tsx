@@ -27,8 +27,8 @@ import {
   addCategoriesSchema,
 } from "~/schemas/categories.schema"
 import { getThemeStrict } from "~/styles/theme/registry"
+import { CategoryTypeEnum } from "~/types/categories"
 import { NewEnum } from "~/types/new"
-import { TransactionTypeEnum } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
@@ -47,9 +47,9 @@ export function CategoryModifyContent({
   const handleGoBack = () => {
     router.back()
   }
-  const TransactionType = isAddMode
-    ? initialType || category?.type || TransactionTypeEnum.EXPENSE
-    : category?.type || TransactionTypeEnum.EXPENSE
+  const categoryType = isAddMode
+    ? initialType || category?.type || CategoryTypeEnum.EXPENSE
+    : category?.type || CategoryTypeEnum.EXPENSE
   const {
     control,
     handleSubmit: handleFormSubmit,
@@ -61,7 +61,7 @@ export function CategoryModifyContent({
     defaultValues: {
       name: category?.name || "",
       icon: category?.icon || "category-outline",
-      type: TransactionType,
+      type: categoryType,
       colorSchemeName: category?.colorSchemeName || undefined,
     },
   })

@@ -12,13 +12,19 @@ export function useScrollIntoView() {
   const wrapperRef = useRef<View>(null)
   const scrollIntoView = useCallback(() => {
     if (!ctx || !wrapperRef.current) return
+    // Two frames: the caller triggers this alongside a state update (e.g.
+    // opening a picker) that changes this element's layout. Measuring on the
+    // very next frame can race the native layout pass and scroll to a
+    // pre-expansion position, fighting the user's own scroll gesture.
     requestAnimationFrame(() => {
-      wrapperRef.current?.measureInWindow((_, wy: number) => {
-        ctx.scrollContainerRef.current?.measureInWindow((_, sy: number) => {
-          const targetY = ctx.scrollYRef.current + (wy - sy)
-          ctx.scrollRef.current?.scrollTo({
-            y: Math.max(0, targetY),
-            animated: true,
+      requestAnimationFrame(() => {
+        wrapperRef.current?.measureInWindow((_, wy: number) => {
+          ctx.scrollContainerRef.current?.measureInWindow((_, sy: number) => {
+            const targetY = ctx.scrollYRef.current + (wy - sy)
+            ctx.scrollRef.current?.scrollTo({
+              y: Math.max(0, targetY),
+              animated: true,
+            })
           })
         })
       })

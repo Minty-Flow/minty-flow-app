@@ -2,8 +2,7 @@ import { count, sql } from "drizzle-orm"
 import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 
 import { getThemeStrict } from "~/styles/theme/registry"
-import type { Category } from "~/types/categories"
-import type { TransactionType } from "~/types/transactions"
+import type { Category, CategoryType } from "~/types/categories"
 
 import { drizzleDb } from "../db"
 import { categories, transactions } from "../schema"
@@ -35,7 +34,7 @@ export function useCategoriesQuery(): LiveReadModelResult<Category[]> {
   const data = categoriesResult.data.map((row) => ({
     id: row.id,
     name: row.name,
-    type: row.type as TransactionType,
+    type: row.type as CategoryType,
     icon: row.icon,
     colorSchemeName: row.colorSchemeName,
     colorScheme: getThemeStrict(row.colorSchemeName),

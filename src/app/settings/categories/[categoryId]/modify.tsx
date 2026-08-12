@@ -7,13 +7,13 @@ import {
 } from "~/components/route-load-state"
 import { useCategoriesQuery } from "~/database/drizzle/read-models/category-read-model"
 import { useModifyRouteLoader } from "~/hooks/use-modify-route-loader"
+import type { CategoryType } from "~/types/categories"
 import { NewEnum } from "~/types/new"
-import type { TransactionType } from "~/types/transactions"
 
 export default function EditCategoryScreen() {
   const params = useLocalSearchParams<{
     categoryId: string
-    initialType: TransactionType
+    initialType: CategoryType
   }>()
 
   const categoriesQuery = useCategoriesQuery()

@@ -181,6 +181,7 @@ export function FormAccountPicker({
             contentContainerStyle={transactionFormStyles.pickerListContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator
+            nestedScrollEnabled
           >
             {filteredAccountsForPicker.map((account) => (
               <Pressable
