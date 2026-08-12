@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-02T02:54:24.129Z
+Generated on: 2026-08-12T00:29:35.870Z
 ```
 ./
 ├── .github/
@@ -23,6 +23,30 @@ Generated on: 2026-08-02T02:54:24.129Z
 │   │   ├── pre-rebase
 │   │   └── prepare-commit-msg
 │   └── pre-commit
+├── .scratch/
+│   ├── issue-1-account-select-scroll/
+│   │   └── issues/
+│   │       ├── 01-fix-account-select-scroll.md
+│   │       ├── 02-nested-scroll-fix-option-list.md
+│   │       └── 03-scroll-into-view-race.md
+│   ├── issue-2-category-transfer-cleanup/
+│   │   └── issues/
+│   │       ├── 01-remove-transfer-from-categories.md
+│   │       └── 02-purge-transfer-end-to-end.md
+│   ├── issue-3-currency-selector-search/
+│   │   └── issues/
+│   │       ├── 01-currency-search-parent.md
+│   │       ├── 02-registry-search-function.md
+│   │       ├── 03-modal-selector-search.md
+│   │       └── 04-inline-selector-search.md
+│   ├── issue-4-create-crash/
+│   │   └── issues/
+│   │       ├── 01-fix-create-crash.md
+│   │       ├── 02-empty-currency-crash-fix.md
+│   │       └── 03-route-error-boundary.md
+│   └── issue-5-precommit-reenable/
+│       └── issues/
+│           └── 01-reenable-precommit.md
 ├── .vscode/
 │   └── settings.json
 ├── .zed/
@@ -369,6 +393,7 @@ Generated on: 2026-08-02T02:54:24.129Z
 │   │   ├── preset-list-item.tsx
 │   │   ├── privacy-eye-control.tsx
 │   │   ├── reorderable-list-v2.tsx
+│   │   ├── route-error-boundary.tsx
 │   │   ├── route-load-state.tsx
 │   │   ├── search-input.tsx
 │   │   ├── summary-card.tsx
