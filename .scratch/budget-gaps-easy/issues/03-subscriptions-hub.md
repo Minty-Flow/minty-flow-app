@@ -7,7 +7,18 @@ data that already exists.
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** in-progress
+
+## Progress
+
+- Done: `occurrencesInWindow` helper in `recurrence.ts`;
+  `useSubscriptionsQuery` read-model; `settings/subscriptions.tsx` screen
+  (per-currency month/year totals, group-by date/account/category, paused
+  section, price-up chip, row → latest instance); Settings entry + route
+  registered; en + ar strings. Empty state verified on the emulator.
+- Deferred (follow-ups): link from the Insights screen; single-total FX
+  conversion (v1 shows per-currency subtotals, matching `SummarySection`);
+  populated-state QA needs a recurring expense in the DB; RTL spot-check.
 
 ## Behaviour
 

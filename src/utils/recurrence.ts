@@ -91,6 +91,24 @@ export function countOccurrencesBetween(
 }
 
 /**
+ * Count occurrences of a stored RRULE string between two dates (inclusive).
+ * Used to normalise a recurring amount to a per-window cost — e.g. how many
+ * times a subscription charges over the next 12 months.
+ */
+export function occurrencesInWindow(
+  ruleString: string,
+  from: Date,
+  to: Date,
+): number {
+  if (!ruleString || to.getTime() < from.getTime()) return 0
+  try {
+    return parseRRule(ruleString).between(from, to, true).length
+  } catch {
+    return 0
+  }
+}
+
+/**
  * Get the next occurrence **strictly after** `anchor` that falls within
  * the given range.  Returns null if no next occurrence exists in range.
  *

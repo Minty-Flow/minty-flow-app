@@ -166,7 +166,6 @@
         "archivedBannerText": "This account is archived. Restore it to make changes.",
         "deleteLabel": "Permanently delete account",
         "typeLabel": "Account type",
-
         "archiveModal": {
           "archiveTitle": "Archive this account?",
           "archiveConfirm": "Archive",
@@ -587,7 +586,6 @@
           "deleteLabel": "Delete Goal",
           "archiveLabel": "Archive Goal",
           "unarchiveLabel": "Restore Goal",
-
           "archiveModal": {
             "archiveTitle": "Archive this goal?",
             "archiveConfirm": "Archive",
@@ -665,7 +663,6 @@
           "duplicateLabel": "Duplicate Budget",
           "duplicateSuccess": "Budget duplicated",
           "deleteLabel": "Delete Budget",
-
           "toast": {
             "notFound": "Budget not found.",
             "createFailed": "Failed to create budget.",
@@ -747,7 +744,6 @@
           "placeholderGeneric": "Work, Shopping...",
           "placeholderContact": "John Doe",
           "deleteLabel": "Permanently delete",
-
           "deleteModal": {
             "title": "Permanently delete {{name}}?",
             "descriptionWithCount_one": "This tag is used by {{count}} transaction. Permanently deleting the tag will unlink it and remove it permanently. This cannot be undone.",
@@ -952,6 +948,22 @@
             "label": "Exclude from totals",
             "description": "Don't count towards total expense or income"
           }
+        }
+      },
+      "subscriptions": {
+        "title": "Subscriptions",
+        "empty": "No recurring expenses yet",
+        "monthly": "Per month",
+        "yearly": "Per year",
+        "nextCharge": "Next {{date}}",
+        "increased": "Price up",
+        "paused": "Paused",
+        "showPaused": "Show",
+        "hidePaused": "Hide",
+        "groupBy": {
+          "date": "By date",
+          "account": "By account",
+          "category": "By category"
         }
       }
     }
@@ -1198,7 +1210,6 @@
         "namePlaceholder": "Groceries, Dining out, etc.",
         "typeLabel": "Type",
         "deleteLabel": "Permanently delete",
-
         "deleteModal": {
           "title": "Delete {{name}}?",
           "descriptionWithCount_one": "This category is used by {{count}} transaction. Deleting will unlink it. This cannot be undone.",

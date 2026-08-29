@@ -67,6 +67,11 @@ const moneyManagementItems: SettingsItem[] = [
     icon: "history-toggle-outline",
   },
   {
+    titleKey: "screens.settings.subscriptions.title",
+    route: "/settings/subscriptions",
+    icon: "repeat-outline",
+  },
+  {
     titleKey: "screens.settings.billSplitter.title",
     route: "/settings/bill-splitter",
     icon: "page-break-outline",

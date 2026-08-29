@@ -561,6 +561,12 @@ function AppRootLayout() {
                   options={{ title: t("screens.settings.pending.title") }}
                 />
                 <Stack.Screen
+                  name="settings/subscriptions"
+                  options={{
+                    title: t("screens.settings.subscriptions.title"),
+                  }}
+                />
+                <Stack.Screen
                   name="settings/bill-splitter/index"
                   options={{ title: t("screens.settings.billSplitter.title") }}
                 />

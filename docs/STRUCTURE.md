@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-29T19:58:53.715Z
+Generated on: 2026-08-29T20:07:44.401Z
 ```
 ./
 ├── .github/
@@ -117,6 +117,7 @@ Generated on: 2026-08-29T19:58:53.715Z
 │   │   │   ├── edit-profile.tsx
 │   │   │   ├── index.tsx
 │   │   │   ├── pending-transactions.tsx
+│   │   │   ├── subscriptions.tsx
 │   │   │   └── trash.tsx
 │   │   ├── stats/
 │   │   │   ├── calendar.tsx
@@ -396,6 +397,7 @@ Generated on: 2026-08-29T19:58:53.715Z
 │   │   │   │   ├── entity-read-model.ts
 │   │   │   │   ├── goal-read-model.ts
 │   │   │   │   ├── loan-read-model.ts
+│   │   │   │   ├── recurring-read-model.ts
 │   │   │   │   ├── stats-data.ts
 │   │   │   │   ├── stats-read-model.ts
 │   │   │   │   ├── tag-read-model.ts
