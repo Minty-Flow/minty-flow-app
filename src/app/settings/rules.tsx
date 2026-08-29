@@ -128,7 +128,10 @@ export default function RulesScreen() {
   return (
     <View style={styles.container}>
       {rules.length === 0 ? (
-        <EmptyState icon="sparkles" title={t("screens.settings.rules.empty")} />
+        <EmptyState
+          icon="wand-outline"
+          title={t("screens.settings.rules.empty")}
+        />
       ) : (
         <ReorderableListV2
           data={rules}

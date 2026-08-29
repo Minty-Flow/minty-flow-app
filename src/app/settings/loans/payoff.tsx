@@ -6,6 +6,7 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { ConfirmModal } from "~/components/confirm-modal"
 import { IconSvg } from "~/components/icons"
+import { PayoffChart } from "~/components/loans/payoff-chart"
 import { Money } from "~/components/money"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { Button } from "~/components/ui/button"
@@ -287,6 +288,7 @@ export default function DebtPayoffScreen() {
   )
 
   const showToggle = payoffLoans.length > 1
+  const totalOwedMinor = payoffLoans.reduce((s, l) => s + l.balanceMinor, 0)
 
   const active = debtPayoff({
     loans: payoffLoans,
@@ -377,6 +379,14 @@ export default function DebtPayoffScreen() {
               : t("screens.settings.loans.payoff.never")}
           </Text>
         </View>
+
+        {planCurrency && active.schedule.length > 0 && (
+          <PayoffChart
+            schedule={active.schedule}
+            startBalanceMinor={totalOwedMinor}
+            currency={planCurrency}
+          />
+        )}
 
         <View style={styles.interestBlock}>
           <View style={styles.interestRow}>

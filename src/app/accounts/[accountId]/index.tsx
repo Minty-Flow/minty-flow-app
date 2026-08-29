@@ -3,6 +3,7 @@ import { useLayoutEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { ProjectedBalanceChart } from "~/components/accounts/projected-balance-chart"
 import { ConfirmModal } from "~/components/confirm-modal"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
@@ -294,6 +295,11 @@ export default function AccountDetailsScreen() {
           style={styles.summaryNetAmount}
         />
       </View>
+
+      <ProjectedBalanceChart
+        accountIds={[account.id]}
+        currencyCode={account.currencyCode}
+      />
     </>
   )
   return (

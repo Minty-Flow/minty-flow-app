@@ -68,15 +68,17 @@ still needs a device pass by the human.
 - [~] Arabic: mirrored + translated
 
 ## 08 — Projected balance timeline
-- [ ] Line dips below zero with red markers + "projected low" caption
-- [ ] 30/60/90 horizon extends the line + recalculates low
-- [ ] Forward portion dashed, past portion solid
-- [ ] Empty-state copy when nothing to project
-- [ ] Also on Stats → Cash-flow
-- [ ] Arabic: axis mirrored, caption translated
+- [x] `projectBalance` pure-fn checks pass (flat / dip / overdue-clamped / month-boundary) via standalone node run
+- [~] Account with monthly recurring bigger than balance → line dips below zero, red markers + "Projected low X on <date>" caption
+- [~] 30/60/90 horizon chips extend the line + recalculate the low point
+- [~] Whole forward line is dashed (deviation: no solid past segment — app has no per-account balance-history chart; noted in ticket)
+- [~] Account with no recurring/pending → "Add recurring transactions to see a projection." (not a flat line)
+- [~] Same card on Stats → Cash-flow (accounts of the shown currency)
+- [~] Arabic: axis mirrored, caption translated
 
 ## 09 — Debt payoff chart
-- [ ] Curve hits zero at the debt-free date
-- [ ] Reacts to extra/month and strategy changes
-- [ ] Matches existing chart styling
-- [ ] Arabic: axis mirrored
+- [~] Line starts at total owed, descends toward zero at the debt-free month above it
+- [~] Change extra/month → curve steepens, endpoint moves; switch strategy → curve updates
+- [~] Styled like net-worth chart (secondary card, `useChartFont`, same axis/grid treatment)
+- [~] Selected strategy only (no dual-line overlay — kept readable)
+- [~] Arabic: axis mirrored

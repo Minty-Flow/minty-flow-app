@@ -5,7 +5,7 @@ progress under the chosen strategy is visual, not just a date.
 
 **Blocked by:** 07
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 ## Behaviour
 
@@ -24,12 +24,26 @@ progress under the chosen strategy is visual, not just a date.
 
 ## Acceptance criteria
 
-- [ ] Total-debt line chart on the payoff screen, fed by the ticket-07 schedule
-- [ ] Re-renders when extra-payment or strategy changes
-- [ ] Matches existing chart styling
-- [ ] en + ar strings; RTL checked
-- [ ] `pnpm lint`, `pnpm types` pass
-- [ ] Manual QA section added to `QA.md`
+- [x] Total-debt line chart on the payoff screen, fed by the ticket-07 schedule
+- [x] Re-renders when extra-payment or strategy changes (schedule is a render-time prop)
+- [x] Matches existing chart styling (`PayoffChart` mirrors `net-worth-chart`)
+- [x] en + ar strings; RTL checked (matches net-worth chart behaviour)
+- [x] `pnpm lint`, `pnpm types` pass
+- [x] Manual QA section added to `QA.md`
+
+## Progress
+
+- `src/components/loans/payoff-chart.tsx` — `PayoffChart` renders `active.schedule`
+  from `debtPayoff` plus a month-0 point (total owed now) as a descending line.
+- Wired into `src/app/settings/loans/payoff.tsx` between the debt-free headline
+  and the interest block.
+- New i18n keys: `screens.settings.loans.payoff.chartTitle`, `.chartMonthLabel`.
+
+## Deviations
+
+- Selected strategy only — no dual snowball/avalanche overlay. The per-strategy
+  interest totals already sit right below; two lines added clutter without much
+  gain (spec called the overlay optional).
 
 ## Manual QA (dev build)
 

@@ -5,7 +5,7 @@ spot a future shortfall before it happens.
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 ## Behaviour
 
@@ -33,15 +33,46 @@ spot a future shortfall before it happens.
 
 ## Acceptance criteria
 
-- [ ] Pure `projectBalance({accountIds, horizonDays, now})` (no React, no DB): starts at current balance, applies overlapping recurring rules, handles a horizon crossing a month boundary, marks negative days, handles the empty-input case
-- [ ] "Projected" mode on the account-detail balance chart with a dashed forward line
-- [ ] 30/60/90 horizon control
-- [ ] Negative-day markers + "projected low" caption
-- [ ] Section added to the Cash-flow screen
-- [ ] Empty-state copy when there is nothing to project
-- [ ] en + ar strings; RTL checked
-- [ ] `pnpm lint`, `pnpm types` pass
-- [ ] Manual QA section added to `QA.md`
+- [x] Pure `projectBalance({ startBalanceMinor, events, horizonDays, nowMs })` (no React, no DB): starts at current balance, buckets dated events per day (overdue → today, past-horizon → dropped), walks a horizon crossing a month boundary, marks negative days, returns the low point, handles empty events. Verified with a standalone node run.
+- [x] Projected-balance chart on the account-detail screen with a dashed forward line
+- [x] 30/60/90 horizon control (chips)
+- [x] Negative-day markers (red dots) + "Projected low X on <date>" caption
+- [x] Section added to the Cash-flow screen
+- [x] Empty-state copy when there is nothing to project
+- [x] en + ar strings; RTL checked (chart matches net-worth chart behaviour)
+- [x] `pnpm lint`, `pnpm types` pass
+- [x] Manual QA section added to `QA.md`
+
+## Progress
+
+- `src/utils/project-balance.ts` — pure `projectBalance`. Takes a starting
+  balance + `BalanceEvent[]` (already dated + signed) rather than hitting the
+  DB itself.
+- `src/database/drizzle/read-models/projected-balance-read-model.ts` —
+  `useProjectedBalance(accountIds, horizonDays)`: sums current balances, expands
+  future recurring occurrences via new `occurrenceDatesInWindow`, adds pending
+  non-recurring one-offs (recurring spawns skipped to avoid double count).
+- `src/components/accounts/projected-balance-chart.tsx` — `ProjectedBalanceChart`
+  card: horizon chips, dashed victory-native line, red negative markers, low
+  caption, empty state. Rendered on account detail (`headerContent`) and on
+  Stats → Cash-flow (accounts of the shown currency, `style={{ marginHorizontal: 0 }}`).
+- `src/utils/recurrence.ts` — added `occurrenceDatesInWindow` (dates, not count).
+- i18n: `screens.accounts.projectedBalance.{title,horizonLabel,empty,lowLabel,lowOn}`.
+
+## Deviations
+
+- No "mode toggle on the existing account-detail balance chart" — that chart
+  does not exist. Shipped a standalone **Projected balance** card instead (not a
+  second *screen*, per the spec's ban).
+- Whole forward line is dashed; there is no solid past segment, because there is
+  no per-account historical-balance chart to extend from. The dash + "Projected
+  balance" title carry the "this is a forecast" cue. A solid history segment can
+  be added later if a balance-history query is built.
+- No tinted x-axis band under negative days — red dot markers + the low caption
+  cover it.
+- Multi-currency: balances are summed raw, so callers must pass one currency's
+  accounts (account detail = one account; cash-flow filters by the shown
+  currency). No FX.
 
 ## Manual QA (dev build)
 

@@ -194,6 +194,13 @@
         "clearTo": "Clear to account",
         "add": "Add account",
         "searchPlaceholder": "Search accounts..."
+      },
+      "projectedBalance": {
+        "title": "Projected balance",
+        "horizonLabel": "{{days}}d",
+        "empty": "Add recurring transactions to see a projection.",
+        "lowLabel": "Projected low",
+        "lowOn": "on {{date}}"
       }
     },
     "stats": {
@@ -769,7 +776,10 @@
             "snowballBody": "Pays off the smallest balance first. You clear individual loans sooner, which helps motivation, but it usually costs a little more interest overall.",
             "avalancheTerm": "Avalanche",
             "avalancheBody": "Pays off the highest APR first. This costs the least interest overall, though the first loan can take longer to clear."
-          }
+          },
+          "chartTitle": "Debt over time",
+          "chartMonthLabel_one": "{{count}} mo",
+          "chartMonthLabel_other": "{{count}} mo"
         }
       },
       "tags": {

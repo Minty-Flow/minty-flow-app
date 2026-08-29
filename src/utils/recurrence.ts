@@ -109,6 +109,24 @@ export function occurrencesInWindow(
 }
 
 /**
+ * Actual occurrence dates of a stored RRULE string between two dates
+ * (inclusive). Same as `occurrencesInWindow` but returns the dates, for
+ * callers that need to place each charge on a timeline.
+ */
+export function occurrenceDatesInWindow(
+  ruleString: string,
+  from: Date,
+  to: Date,
+): Date[] {
+  if (!ruleString || to.getTime() < from.getTime()) return []
+  try {
+    return parseRRule(ruleString).between(from, to, true)
+  } catch {
+    return []
+  }
+}
+
+/**
  * Get the next occurrence **strictly after** `anchor` that falls within
  * the given range.  Returns null if no next occurrence exists in range.
  *

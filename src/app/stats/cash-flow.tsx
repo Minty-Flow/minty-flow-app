@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { ProjectedBalanceChart } from "~/components/accounts/projected-balance-chart"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { InOutRow } from "~/components/stats/dashboard/cash-flow-card"
@@ -10,6 +11,7 @@ import { SankeyFlow, type SankeyNode } from "~/components/stats/sankey-flow"
 import { StatsDetailShell } from "~/components/stats/stats-detail-shell"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { useAccounts } from "~/database/drizzle/read-models/account-read-model"
 import { getThemeVariantPalette, shuffleArray } from "~/styles/theme/utils"
 import type { CurrencyPeriodStats, CurrencyStats } from "~/types/stats"
 import { formatPercent } from "~/utils/number-format"
@@ -209,10 +211,19 @@ function AveragesByDay({
 export default function StatsCashFlowScreen() {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
+  const accounts = useAccounts()
   const fallbackPalette = shuffleArray(getThemeVariantPalette(theme.name))
   return (
     <StatsDetailShell>
       {({ stats }) => {
+        const projectedAccountIds = accounts
+          .filter(
+            (a) =>
+              a.currencyCode === stats.currency &&
+              !a.excludeFromBalance &&
+              !a.isArchived,
+          )
+          .map((a) => a.id)
         const overspent = stats.current.net < 0
         const { left, right } = buildSankeyNodes(
           stats,
@@ -288,6 +299,14 @@ export default function StatsCashFlowScreen() {
               previous={stats.previous}
               currency={stats.currency}
             />
+
+            {projectedAccountIds.length > 0 && (
+              <ProjectedBalanceChart
+                accountIds={projectedAccountIds}
+                currencyCode={stats.currency}
+                style={styles.flushCard}
+              />
+            )}
           </>
         )
       }}
@@ -300,6 +319,9 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
     padding: 16,
     gap: 12,
+  },
+  flushCard: {
+    marginHorizontal: 0,
   },
   headline: {
     flexDirection: "row",

@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-29T23:14:36.624Z
+Generated on: 2026-08-29T23:34:29.297Z
 ```
 ./
 ├── .github/
@@ -24,10 +24,6 @@ Generated on: 2026-08-29T23:14:36.624Z
 │   │   └── prepare-commit-msg
 │   └── pre-commit
 ├── docs/
-│   ├── agents/
-│   │   ├── domain.md
-│   │   ├── issue-tracker.md
-│   │   └── triage-labels.md
 │   ├── post-release-drizzle-architecture-plan.md
 │   ├── stats-recurring-spending-map-plan.md
 │   └── STRUCTURE.md
@@ -156,7 +152,8 @@ Generated on: 2026-08-29T23:14:36.624Z
 │   │   │   │   ├── types.ts
 │   │   │   │   └── use-account-form.ts
 │   │   │   ├── account-card.tsx
-│   │   │   └── account-type-inline.tsx
+│   │   │   ├── account-type-inline.tsx
+│   │   │   └── projected-balance-chart.tsx
 │   │   ├── bill-splitter/
 │   │   │   ├── add-name-modal.tsx
 │   │   │   └── bill-item-card.tsx
@@ -215,7 +212,8 @@ Generated on: 2026-08-29T23:14:36.624Z
 │   │   │   │   ├── loan-modify.styles.ts
 │   │   │   │   └── types.ts
 │   │   │   ├── loan-action-modal.tsx
-│   │   │   └── loan-card.tsx
+│   │   │   ├── loan-card.tsx
+│   │   │   └── payoff-chart.tsx
 │   │   ├── location/
 │   │   │   └── form-location-picker.tsx
 │   │   ├── profile/
@@ -403,6 +401,7 @@ Generated on: 2026-08-29T23:14:36.624Z
 │   │   │   │   ├── entity-read-model.ts
 │   │   │   │   ├── goal-read-model.ts
 │   │   │   │   ├── loan-read-model.ts
+│   │   │   │   ├── projected-balance-read-model.ts
 │   │   │   │   ├── recurring-read-model.ts
 │   │   │   │   ├── safe-to-spend-read-model.ts
 │   │   │   │   ├── stats-data.ts
@@ -556,6 +555,7 @@ Generated on: 2026-08-29T23:14:36.624Z
 │       ├── parse-math-expression.ts
 │       ├── pending-transactions.ts
 │       ├── planning-progress.ts
+│       ├── project-balance.ts
 │       ├── recurrence.ts
 │       ├── safe-to-spend.ts
 │       ├── stats-date-range.ts
