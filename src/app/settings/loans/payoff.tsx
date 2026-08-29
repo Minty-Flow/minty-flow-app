@@ -1,13 +1,14 @@
 import { useNavigation } from "expo-router"
 import { useLayoutEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ScrollView } from "react-native"
+import { Modal, ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
+import { ConfirmModal } from "~/components/confirm-modal"
 import { IconSvg } from "~/components/icons"
-import { InfoModal } from "~/components/info-modal"
 import { Money } from "~/components/money"
 import { SmartAmountInput } from "~/components/smart-amount-input"
+import { Button } from "~/components/ui/button"
 import { Chip } from "~/components/ui/chips"
 import { EmptyState } from "~/components/ui/empty-state"
 import { InfoBanner } from "~/components/ui/info-banner"
@@ -18,6 +19,7 @@ import { View } from "~/components/ui/view"
 import { useAccounts } from "~/database/drizzle/read-models/account-read-model"
 import { useAllLoans } from "~/database/drizzle/read-models/loan-read-model"
 import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
+import type { TranslationKey } from "~/i18n/config"
 import {
   type LoanPlannerInput,
   useDebtPayoffStore,
@@ -31,6 +33,97 @@ import { formatMonthTitle } from "~/utils/time-utils"
 function parseAprPercent(text: string): number {
   const n = Number.parseFloat(text.replace(",", "."))
   return Number.isFinite(n) && n >= 0 ? n : 0
+}
+
+const HELP_TERMS: { term: TranslationKey; body: TranslationKey }[] = [
+  {
+    term: "screens.settings.loans.payoff.help.aprTerm",
+    body: "screens.settings.loans.payoff.help.aprBody",
+  },
+  {
+    term: "screens.settings.loans.payoff.help.minTerm",
+    body: "screens.settings.loans.payoff.help.minBody",
+  },
+  {
+    term: "screens.settings.loans.payoff.help.snowballTerm",
+    body: "screens.settings.loans.payoff.help.snowballBody",
+  },
+  {
+    term: "screens.settings.loans.payoff.help.avalancheTerm",
+    body: "screens.settings.loans.payoff.help.avalancheBody",
+  },
+]
+
+function PayoffHelpModal({
+  visible,
+  onClose,
+}: {
+  visible: boolean
+  onClose: () => void
+}) {
+  const { t } = useTranslation()
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      <View style={styles.modalRoot}>
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={onClose}
+          native
+          disableRipple
+        />
+        <View style={styles.modalContent}>
+          <View style={styles.modalCard}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text variant="h3" style={styles.helpTitle}>
+                {t("screens.settings.loans.payoff.helpTitle")}
+              </Text>
+
+              <Text variant="default" style={styles.helpSection}>
+                {t("screens.settings.loans.payoff.help.purposeTitle")}
+              </Text>
+              <Text variant="p" style={styles.helpBody}>
+                {t("screens.settings.loans.payoff.help.purposeBody")}
+              </Text>
+
+              <Text variant="default" style={styles.helpSection}>
+                {t("screens.settings.loans.payoff.help.stepsTitle")}
+              </Text>
+              <Text variant="p" style={styles.helpBody}>
+                {t("screens.settings.loans.payoff.help.stepsBody")}
+              </Text>
+
+              <Text variant="default" style={styles.helpSection}>
+                {t("screens.settings.loans.payoff.help.termsTitle")}
+              </Text>
+              {HELP_TERMS.map(({ term, body }) => (
+                <View key={term} style={styles.termRow}>
+                  <Text variant="default" style={styles.termName}>
+                    {t(term)}
+                  </Text>
+                  <Text variant="small" style={styles.helpBody}>
+                    {t(body)}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+            <Button
+              variant="default"
+              onPress={onClose}
+              style={styles.helpOkButton}
+            >
+              <Text variant="default">{t("common.actions.ok")}</Text>
+            </Button>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  )
 }
 
 interface PayoffLoanRowProps {
@@ -106,7 +199,17 @@ export default function DebtPayoffScreen() {
   const strategy = useDebtPayoffStore((s) => s.strategy)
   const setExtraPerMonth = useDebtPayoffStore((s) => s.setExtraPerMonth)
   const setStrategy = useDebtPayoffStore((s) => s.setStrategy)
+  const resetStore = useDebtPayoffStore((s) => s.reset)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [resetOpen, setResetOpen] = useState(false)
+  // Bumped on reset so each PayoffLoanRow remounts and re-seeds its local
+  // APR text buffer from the (now-cleared) store.
+  const [resetNonce, setResetNonce] = useState(0)
+
+  const handleReset = () => {
+    resetStore()
+    setResetNonce((n) => n + 1)
+  }
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -202,12 +305,7 @@ export default function DebtPayoffScreen() {
   })
 
   const helpModal = (
-    <InfoModal
-      visible={helpOpen}
-      onRequestClose={() => setHelpOpen(false)}
-      title={t("screens.settings.loans.payoff.helpTitle")}
-      description={t("screens.settings.loans.payoff.helpBody")}
-    />
+    <PayoffHelpModal visible={helpOpen} onClose={() => setHelpOpen(false)} />
   )
 
   if (outstanding.length === 0 || planCurrency === null) {
@@ -230,7 +328,7 @@ export default function DebtPayoffScreen() {
       >
         {included.map(({ loan, balanceMinor, currencyCode }) => (
           <PayoffLoanRow
-            key={loan.id}
+            key={`${loan.id}:${resetNonce}`}
             loanId={loan.id}
             name={loan.name}
             balanceMinor={balanceMinor}
@@ -244,6 +342,7 @@ export default function DebtPayoffScreen() {
 
         <View style={styles.extraWrap}>
           <SmartAmountInput
+            key={`extra:${resetNonce}`}
             label={t("screens.settings.loans.payoff.extraLabel")}
             valueMinor={extraPerMonthMinor}
             onChangeMinor={setExtraPerMonth}
@@ -318,9 +417,29 @@ export default function DebtPayoffScreen() {
             })}
           </Text>
         )}
+
+        <Button
+          variant="ghost"
+          onPress={() => setResetOpen(true)}
+          style={styles.resetButton}
+        >
+          <Text variant="default" style={styles.resetText}>
+            {t("screens.settings.loans.payoff.reset")}
+          </Text>
+        </Button>
       </ScrollView>
 
       {helpModal}
+
+      <ConfirmModal
+        visible={resetOpen}
+        onRequestClose={() => setResetOpen(false)}
+        onConfirm={handleReset}
+        title={t("screens.settings.loans.payoff.resetConfirmTitle")}
+        description={t("screens.settings.loans.payoff.resetConfirmBody")}
+        confirmLabel={t("screens.settings.loans.payoff.reset")}
+        variant="destructive"
+      />
     </View>
   )
 }
@@ -386,4 +505,44 @@ const styles = StyleSheet.create((theme) => ({
     marginTop: 2,
   },
   excludedNote: { color: theme.colors.onSurface, opacity: 0.6 },
+  resetButton: { marginTop: 4 },
+  resetText: { color: theme.colors.semantic.expense, fontWeight: "600" },
+  modalRoot: { flex: 1 },
+  modalBackdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: theme.colors.shadow,
+  },
+  modalContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 420,
+    maxHeight: "85%",
+    padding: 20,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius ?? 16,
+  },
+  helpTitle: { fontWeight: "700", marginBottom: 8 },
+  helpSection: {
+    fontWeight: "700",
+    marginTop: 16,
+    marginBottom: 4,
+    color: theme.colors.onSurface,
+  },
+  helpBody: {
+    color: theme.colors.onSurface,
+    opacity: 0.8,
+    lineHeight: 20,
+  },
+  termRow: { marginTop: 10, gap: 2 },
+  termName: { fontWeight: "700", color: theme.colors.primary },
+  helpOkButton: { marginTop: 16 },
 }))

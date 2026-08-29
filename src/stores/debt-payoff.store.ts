@@ -23,6 +23,14 @@ interface DebtPayoffStore {
   setLoanInput: (loanId: string, patch: Partial<LoanPlannerInput>) => void
   setExtraPerMonth: (valueMinor: number) => void
   setStrategy: (strategy: PayoffStrategy) => void
+  /** Wipe every planner input back to defaults. Does not touch loans. */
+  reset: () => void
+}
+
+const DEFAULTS = {
+  byLoanId: {} as Record<string, LoanPlannerInput>,
+  extraPerMonthMinor: 0,
+  strategy: "avalanche" as PayoffStrategy,
 }
 
 const storage = createMMKV({ id: "debt-payoff-storage" })
@@ -30,9 +38,7 @@ const storage = createMMKV({ id: "debt-payoff-storage" })
 export const useDebtPayoffStore = create<DebtPayoffStore>()(
   persist(
     (set) => ({
-      byLoanId: {},
-      extraPerMonthMinor: 0,
-      strategy: "avalanche",
+      ...DEFAULTS,
       setLoanInput: (loanId, patch) =>
         set((state) => {
           const prev = state.byLoanId[loanId] ?? {
@@ -45,6 +51,7 @@ export const useDebtPayoffStore = create<DebtPayoffStore>()(
         }),
       setExtraPerMonth: (valueMinor) => set({ extraPerMonthMinor: valueMinor }),
       setStrategy: (strategy) => set({ strategy }),
+      reset: () => set({ ...DEFAULTS }),
     }),
     {
       name: "debt-payoff-store",

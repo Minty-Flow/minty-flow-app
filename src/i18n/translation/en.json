@@ -752,7 +752,24 @@
           "excludedNote_one": "{{count}} loan in another currency is not included.",
           "excludedNote_other": "{{count}} loans in other currencies are not included.",
           "helpTitle": "How the payoff plan works",
-          "helpBody": "For each loan, enter its APR and the minimum you must pay each month. Then add any spare amount you can put toward debt monthly.\n\nAPR is the Annual Percentage Rate — the yearly interest your lender charges, shown on your loan statement. Leave it at 0 for an interest-free loan.\n\nSnowball clears the smallest balance first for quick wins. Avalanche targets the highest APR first for the least total interest.\n\nThese numbers are used only on this screen and never change your loans."
+          "reset": "Reset planner",
+          "resetConfirmTitle": "Clear all planner inputs?",
+          "resetConfirmBody": "APR, minimum payments, the extra amount and the method go back to defaults. Your loans are not affected.",
+          "help": {
+            "purposeTitle": "What it is for",
+            "purposeBody": "See when your borrowed loans will be paid off and how much interest you pay getting there, so you can compare payoff methods and decide how much extra to put toward debt each month.",
+            "stepsTitle": "How to use it",
+            "stepsBody": "1. For each loan, enter its APR and the minimum you must pay every month.\n2. Enter any extra amount you can put toward debt across all loans each month.\n3. Choose a method. The debt-free month and the interest totals update as you type.",
+            "termsTitle": "Terms you may not know",
+            "aprTerm": "APR",
+            "aprBody": "Annual Percentage Rate — the yearly interest a lender charges, shown on your statement or loan agreement. Enter 0 for an interest-free loan.",
+            "minTerm": "Minimum payment",
+            "minBody": "The smallest amount your lender requires each month. The plan always pays at least this on every loan before adding anything extra.",
+            "snowballTerm": "Snowball",
+            "snowballBody": "Pays off the smallest balance first. You clear individual loans sooner, which helps motivation, but it usually costs a little more interest overall.",
+            "avalancheTerm": "Avalanche",
+            "avalancheBody": "Pays off the highest APR first. This costs the least interest overall, though the first loan can take longer to clear."
+          }
         }
       },
       "tags": {
