@@ -19,7 +19,10 @@ const IGNORE: Set<string> = new Set([
   ".claude",
   ".codex",
   ".opencode",
-  ".agents"
+  ".agents",
+  ".scratch",
+  ".vscode",
+  ".zed"
 ]);
 
 // Ignored by path segment match (relative to ROOT)
