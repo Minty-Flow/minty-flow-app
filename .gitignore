@@ -111,6 +111,13 @@ skills-lock.json
 # Agent skills
 .agents/
 
+# local planning / ticket scratchpad
+.scratch/
+
+# editor config (local only)
+.vscode/
+.zed/
+
 # tabler-icons source clone (own .git, pulled independently)
 tabler-icons/
 
