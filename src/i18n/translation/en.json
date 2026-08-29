@@ -734,6 +734,23 @@
         },
         "initialTransaction": {
           "title": "Loan: {{name}}"
+        },
+        "payoff": {
+          "title": "Payoff plan",
+          "entry": "Plan",
+          "empty": "No borrowed loans to plan.",
+          "aprLabel": "APR %",
+          "minLabel": "Min / month",
+          "ratesNote": "Rates are only used here for the projection.",
+          "extraLabel": "Extra per month",
+          "snowball": "Snowball",
+          "avalanche": "Avalanche",
+          "debtFreeBy": "Debt-free by",
+          "never": "Not on this plan",
+          "interestCaption": "Total interest paid, by method",
+          "addRatesNote": "Add APRs above for interest estimates.",
+          "excludedNote_one": "{{count}} loan in another currency is not included.",
+          "excludedNote_other": "{{count}} loans in other currencies are not included."
         }
       },
       "tags": {

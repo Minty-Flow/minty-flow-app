@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-29T22:40:17.441Z
+Generated on: 2026-08-29T22:54:27.039Z
 ```
 ./
 ├── .github/
@@ -95,7 +95,8 @@ Generated on: 2026-08-29T22:40:17.441Z
 │   │   │   │   ├── [loanId]/
 │   │   │   │   │   ├── index.tsx
 │   │   │   │   │   └── modify.tsx
-│   │   │   │   └── index.tsx
+│   │   │   │   ├── index.tsx
+│   │   │   │   └── payoff.tsx
 │   │   │   ├── preferences/
 │   │   │   │   ├── button-placement.tsx
 │   │   │   │   ├── exchange-rates.tsx
@@ -484,6 +485,7 @@ Generated on: 2026-08-29T22:40:17.441Z
 │   │   ├── bill-splitter.store.ts
 │   │   ├── button-placement.store.ts
 │   │   ├── db-migration.store.ts
+│   │   ├── debt-payoff.store.ts
 │   │   ├── development-notice.store.ts
 │   │   ├── exchange-rates-preferences.store.ts
 │   │   ├── export-history.store.ts
@@ -538,6 +540,7 @@ Generated on: 2026-08-29T22:40:17.441Z
 │   └── utils/
 │       ├── account-types-list.ts
 │       ├── attachments.ts
+│       ├── debt-payoff.ts
 │       ├── file-icon.ts
 │       ├── format-file-size.ts
 │       ├── get-week-start-on.ts

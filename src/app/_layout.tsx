@@ -481,6 +481,10 @@ function AppRootLayout() {
                   options={{ title: t("screens.settings.loans.title") }}
                 />
                 <Stack.Screen
+                  name="settings/loans/payoff"
+                  options={{ title: t("screens.settings.loans.payoff.title") }}
+                />
+                <Stack.Screen
                   name="settings/loans/[loanId]/index"
                   options={{ title: t("screens.settings.loans.detail.title") }}
                 />

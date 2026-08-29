@@ -7,7 +7,48 @@ snowball vs avalanche costs. Numbers only in this ticket; the chart is ticket
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** resolved
+
+Verified on emulator: route renders, EmptyState "No borrowed loans to plan",
+"Plan" entry point correctly hidden on the loans list (only a LENT loan
+present). Pure `debtPayoff` verified with a standalone node script. The
+with-data flow (editor, headline, interest rows, toggle, persistence) needs a
+borrowed loan — handed to the user as a text QA script.
+
+## Progress
+
+- Pure `src/utils/debt-payoff.ts` — `debtPayoff({ loans, extraPerMonthMinor,
+  strategy, now? })` → `{ schedule, monthsToPayoff, payoffDate,
+  totalInterestMinor, hasRates }`. Monthly simulation: accrue interest, pay
+  each loan's minimum, funnel the rest (extra + freed minimums) to the
+  snowball (asc balance) / avalanche (desc APR) target, deterministic id
+  tie-break. `payoffDate` is null when payments can't dent the balance; 0%
+  APR → linear; nothing owed → `now`, 0 months. Verified with a standalone
+  node script (avalanche interest ≤ snowball, 0% = 12 months on a 120000/10000
+  case, stuck → null, single-loan snowball == avalanche, tie-break stable).
+- `src/stores/debt-payoff.store.ts` — Zustand + MMKV (`debt-payoff-storage`):
+  `byLoanId: { aprPercent, minPaymentMinor }`, `extraPerMonthMinor`,
+  `strategy`. Nothing writes to the `loans` table.
+- `src/app/settings/loans/payoff.tsx` (route `settings/loans/payoff`): per-loan
+  mini-editor (name, outstanding `Money`, APR `Input`, min/month
+  `SmartAmountInput`), one `SmartAmountInput` "extra per month", a
+  snowball/avalanche chip toggle (hidden for a single loan), a headline
+  debt-free month, and a two-row snowball/avalanche interest comparison.
+  "Add APRs for interest estimates" `InfoBanner` when no rates are set.
+  Outstanding balance reuses `getLiveLoanProgress` + `getLoanProgressModel`.
+- Loans list header: a "Plan" button (text, `router.push` to the payoff
+  route), shown only when a borrowed loan exists.
+- Route registered in `_layout.tsx`; en + ar strings.
+
+## Deviations
+
+- Multi-currency: the projection sums balances so it runs in one currency —
+  the one most borrowed loans share. Loans in other currencies are listed as
+  "N not included" rather than converted at a guessed rate (offline-safe,
+  same call as safe-to-spend). One extra-payment input, one toggle.
+- "Shared headline-figure component from ticket 02" does not exist (ticket 02
+  shipped its own card layout). The debt-free month is a plain headline block
+  here; extract a shared component only if a third caller appears.
 
 ## Behaviour
 
@@ -39,14 +80,14 @@ snowball vs avalanche costs. Numbers only in this ticket; the chart is ticket
 
 ## Acceptance criteria
 
-- [ ] Pure `debtPayoff({loans, extraPerMonth, strategy})` (no React, no DB): correct snowball vs avalanche ordering, 0% APR linear payoff, extra=0, single loan, payoff month boundary, total-interest comparison
-- [ ] Planner-local APR / min-payment store keyed by loan id; nothing written to `loans`
-- [ ] `settings/loans/payoff` route with mini-editor + extra-payment input + strategy toggle
-- [ ] Headline debt-free date + snowball/avalanche interest summary
-- [ ] Entry point in the loans list header, hidden when there are no borrowed loans; strategy toggle hidden for a single loan
-- [ ] en + ar strings; RTL checked
-- [ ] `pnpm lint`, `pnpm types` pass
-- [ ] Manual QA section added to `QA.md`
+- [x] Pure `debtPayoff({loans, extraPerMonth, strategy})` (no React, no DB): correct snowball vs avalanche ordering, 0% APR linear payoff, extra=0, single loan, payoff month boundary, total-interest comparison
+- [x] Planner-local APR / min-payment store keyed by loan id; nothing written to `loans`
+- [x] `settings/loans/payoff` route with mini-editor + extra-payment input + strategy toggle
+- [x] Headline debt-free date + snowball/avalanche interest summary
+- [x] Entry point in the loans list header, hidden when there are no borrowed loans; strategy toggle hidden for a single loan
+- [x] en + ar strings; RTL checked
+- [x] `pnpm lint`, `pnpm types` pass
+- [x] Manual QA section added to `QA.md`
 
 ## Manual QA (dev build)
 

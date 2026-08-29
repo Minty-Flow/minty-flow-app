@@ -10,6 +10,7 @@ import { RouteLoadingState } from "~/components/route-load-state"
 import { Chip } from "~/components/ui/chips"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Pressable } from "~/components/ui/pressable"
+import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useAllLoansQuery } from "~/database/drizzle/read-models/loan-read-model"
 import type { Loan } from "~/types/loans"
@@ -26,29 +27,54 @@ export default function LoansScreen() {
   const [filterVisible, setFilterVisible] = useState(false)
   const [activeFilter, setActiveFilter] = useState<LoanTypeFilter>("all")
   const isFiltered = activeFilter !== "all"
+  const hasBorrowed = (loans ?? []).some(
+    (l) => l.loanType === LoanTypeEnum.BORROWED,
+  )
   const toggleFilter = useCallback(() => {
     setFilterVisible((v) => !v)
   }, [])
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <Pressable
-          onPress={toggleFilter}
-          style={[
-            styles.headerFilterButton,
-            isFiltered && { backgroundColor: `${theme.colors.primary}20` },
-          ]}
-          accessibilityLabel={t("components.filters.clearAll")}
-        >
-          <IconSvg
-            name={filterVisible ? "filter-2-x-outline" : "filter-2-outline"}
-            size={20}
-            color={isFiltered ? theme.colors.primary : theme.colors.onSurface}
-          />
-        </Pressable>
+        <View style={styles.headerActions}>
+          {hasBorrowed && (
+            <Pressable
+              onPress={() => router.push("/settings/loans/payoff")}
+              style={styles.headerPlanButton}
+              accessibilityLabel={t("screens.settings.loans.payoff.title")}
+            >
+              <Text variant="small" style={styles.headerPlanText}>
+                {t("screens.settings.loans.payoff.entry")}
+              </Text>
+            </Pressable>
+          )}
+          <Pressable
+            onPress={toggleFilter}
+            style={[
+              styles.headerFilterButton,
+              isFiltered && { backgroundColor: `${theme.colors.primary}20` },
+            ]}
+            accessibilityLabel={t("components.filters.clearAll")}
+          >
+            <IconSvg
+              name={filterVisible ? "filter-2-x-outline" : "filter-2-outline"}
+              size={20}
+              color={isFiltered ? theme.colors.primary : theme.colors.onSurface}
+            />
+          </Pressable>
+        </View>
       ),
     })
-  }, [navigation, toggleFilter, isFiltered, theme, t, filterVisible])
+  }, [
+    navigation,
+    toggleFilter,
+    isFiltered,
+    theme,
+    t,
+    filterVisible,
+    hasBorrowed,
+    router,
+  ])
   const handleAddLoan = () => {
     router.push(`/settings/loans/${NewEnum.NEW}/modify`)
   }
@@ -142,6 +168,20 @@ const styles = StyleSheet.create((t) => ({
   },
   separator: {
     height: 0,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  headerPlanButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: t.radius,
+  },
+  headerPlanText: {
+    color: t.colors.primary,
+    fontWeight: "700",
   },
   headerFilterButton: {
     padding: 6,

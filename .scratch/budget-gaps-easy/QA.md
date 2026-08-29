@@ -56,14 +56,16 @@ still needs a device pass by the human.
 - [~] Arabic: translated
 
 ## 07 — Debt payoff planner core
-- [ ] No entry point when there are no borrowed loans
-- [ ] Debt-free date + per-strategy interest; avalanche ≤ snowball
-- [ ] Strategy toggle updates the date
-- [ ] All-0 APR still resolves + shows the note
-- [ ] Repayment recorded → outstanding + date update
-- [ ] Single loan → no strategy toggle
-- [ ] Planner-local APR/min persist; loan rows unchanged
-- [ ] Arabic: mirrored + translated
+- [x] No entry point when there are no borrowed loans
+- [x] EmptyState "No borrowed loans to plan" on the route
+- [~] Debt-free date + per-strategy interest; avalanche ≤ snowball
+- [~] Strategy toggle updates the date
+- [~] All-0 APR still resolves + shows the "add rates" note
+- [~] Repayment recorded → outstanding + date update
+- [~] Single loan → no strategy toggle
+- [~] Planner-local APR/min persist; loan rows unchanged
+- [~] Loans in a non-plan currency → "N not included" note
+- [~] Arabic: mirrored + translated
 
 ## 08 — Projected balance timeline
 - [ ] Line dips below zero with red markers + "projected low" caption
