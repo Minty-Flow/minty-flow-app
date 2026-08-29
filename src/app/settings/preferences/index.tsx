@@ -50,6 +50,11 @@ const appearanceItems: PreferenceItem[] = [
 
 const otherPreferenceItems: PreferenceItem[] = [
   {
+    titleKey: "screens.settings.preferences.safeToSpend.title",
+    route: "/settings/preferences/safe-to-spend",
+    icon: "wallet-outline",
+  },
+  {
     titleKey: "screens.settings.preferences.language.title",
     route: "/settings/preferences/language",
     icon: "language-outline",

@@ -627,6 +627,12 @@ function AppRootLayout() {
 
                 {/* settings screens preferences */}
                 <Stack.Screen
+                  name="settings/preferences/safe-to-spend"
+                  options={{
+                    title: t("screens.settings.preferences.safeToSpend.title"),
+                  }}
+                />
+                <Stack.Screen
                   name="settings/preferences/language"
                   options={{
                     title: t("screens.settings.preferences.language.title"),

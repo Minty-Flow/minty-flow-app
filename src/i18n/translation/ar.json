@@ -458,6 +458,16 @@
             "description": "إرفاق الموقع دون طلب تأكيد"
           },
           "footerCaption": "عند التمكين، يمكن إرفاق موقعك الحالي بالمعاملات الجديدة. يمكنك إضافته أو إزالته يدوياً في كل معاملة."
+        },
+        "safeToSpend": {
+          "title": "الآمن إنفاقه",
+          "showOnHome": "إظهار في الرئيسية",
+          "cadence": "العرض كـ",
+          "daily": "يومي",
+          "weekly": "أسبوعي",
+          "accounts": "الحسابات",
+          "allAccounts": "كل الحسابات المؤهلة",
+          "allAccountsHint": "كل حساب يُحتسب ضمن رصيدك"
         }
       },
       "insights": {
@@ -1391,6 +1401,26 @@
       "noAccountsForCurrency": "لا توجد حسابات لهذه العملة",
       "accountsClearedTitle": "تم مسح الحسابات",
       "accountsClearedDescription": "تم إزالة الحسابات المحددة لأنها لا تتطابق مع {{currency}}."
+    },
+    "safeToSpend": {
+      "captionDaily": "الآمن إنفاقه اليوم",
+      "captionWeekly": "الآمن إنفاقه هذا الأسبوع",
+      "emptyHint": "أضف دخلاً متكرراً لعرض هذا",
+      "emptyCta": "إعداد الآمن إنفاقه",
+      "overBy": "لقد تجاوزت الميزانية",
+      "daysLeft_one": "بقي {{count}} يوم",
+      "daysLeft_other": "بقي {{count}} يوم",
+      "weeksLeft_one": "بقي {{count}} أسبوع",
+      "weeksLeft_other": "بقي {{count}} أسبوع",
+      "breakdownTitle": "كيف يُحتسب هذا",
+      "balance": "الرصيد",
+      "upcomingIncome": "دخل قادم",
+      "upcomingBills": "فواتير قادمة",
+      "goalContributions": "مساهمات الأهداف",
+      "pot": "المتاح",
+      "perDay": "لكل يوم",
+      "perWeek": "لكل أسبوع",
+      "adjust": "تعديل"
     }
   },
   "validation": {

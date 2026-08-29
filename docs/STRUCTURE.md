@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-29T20:25:44.671Z
+Generated on: 2026-08-29T20:38:48.798Z
 ```
 ./
 ├── .github/
@@ -103,6 +103,7 @@ Generated on: 2026-08-29T20:25:44.671Z
 │   │   │   │   ├── pending-transactions.tsx
 │   │   │   │   ├── privacy.tsx
 │   │   │   │   ├── reminder.tsx
+│   │   │   │   ├── safe-to-spend.tsx
 │   │   │   │   ├── theme.tsx
 │   │   │   │   ├── toast-style.tsx
 │   │   │   │   ├── transaction-appearance.tsx
@@ -372,6 +373,7 @@ Generated on: 2026-08-29T20:25:44.671Z
 │   │   ├── reorderable-list-v2.tsx
 │   │   ├── route-error-boundary.tsx
 │   │   ├── route-load-state.tsx
+│   │   ├── safe-to-spend-card.tsx
 │   │   ├── search-input.tsx
 │   │   ├── summary-card.tsx
 │   │   ├── tabs-minty.tsx
@@ -398,6 +400,7 @@ Generated on: 2026-08-29T20:25:44.671Z
 │   │   │   │   ├── goal-read-model.ts
 │   │   │   │   ├── loan-read-model.ts
 │   │   │   │   ├── recurring-read-model.ts
+│   │   │   │   ├── safe-to-spend-read-model.ts
 │   │   │   │   ├── stats-data.ts
 │   │   │   │   ├── stats-read-model.ts
 │   │   │   │   ├── tag-read-model.ts
@@ -484,6 +487,7 @@ Generated on: 2026-08-29T20:25:44.671Z
 │   │   ├── onboarding.store.ts
 │   │   ├── pending-transactions.store.ts
 │   │   ├── profile.store.ts
+│   │   ├── safe-to-spend.store.ts
 │   │   ├── theme.store.ts
 │   │   ├── toast-style.store.ts
 │   │   ├── toast.store.ts
@@ -541,6 +545,7 @@ Generated on: 2026-08-29T20:25:44.671Z
 │       ├── pending-transactions.ts
 │       ├── planning-progress.ts
 │       ├── recurrence.ts
+│       ├── safe-to-spend.ts
 │       ├── stats-date-range.ts
 │       ├── string-utils.ts
 │       ├── time-utils.ts

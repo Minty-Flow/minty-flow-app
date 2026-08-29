@@ -36,13 +36,31 @@ export interface RecurringExpense {
   latestInstanceId: string | null
 }
 
-interface ParsedTemplate {
+export interface ParsedRecurringTemplate {
   amount: number
   type: string
   accountId: string
   categoryId: string | null
   title: string | null
 }
+
+export function parseRecurringTemplate(
+  json: string,
+): ParsedRecurringTemplate | null {
+  return parseTemplate(json)
+}
+
+export function parseRecurringRange(
+  json: string,
+): { from: number; to: number } | null {
+  return parseRange(json)
+}
+
+export function parseRecurringRules(json: string): string[] {
+  return parseRules(json)
+}
+
+type ParsedTemplate = ParsedRecurringTemplate
 
 function parseTemplate(json: string): ParsedTemplate | null {
   try {

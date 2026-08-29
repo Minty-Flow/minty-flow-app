@@ -7,7 +7,32 @@ cadence, which accounts count, and whether goal contributions are subtracted.
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** in-progress
+
+## Progress / decisions
+
+- **Model changed to balance-based** (deviation from the spec's income-first
+  wording, which double-counts): `pot = balance + upcomingIncome −
+  upcomingBills − goalContributions`, `perUnit = pot / remainingUnits`.
+  Money already received sits in the balance, so there is no "already spent"
+  term. Period = current calendar month; cadence only changes the divisor
+  (days left, or weeks = ceil(days/7)).
+- Shipped: `src/utils/safe-to-spend.ts` (pure `computeSafeToSpend`,
+  `remainingUnitsInMonth`, `currentMonthBounds`); `safe-to-spend.store.ts`
+  (enabled / cadence / includedAccountIds / includeGoals);
+  `safe-to-spend-read-model.ts` (`useSafeToSpend`, per-currency, preferred =
+  headline); `safe-to-spend-card.tsx` (Home card above the summary cards +
+  breakdown modal with `<Money>` rows, privacy-safe); pref screen at
+  `settings/preferences/safe-to-spend`; route + Preferences entry; en + ar.
+- Verified on emulator: card ("SAFE TO SPEND TODAY / $170.08 / 3 days left"),
+  breakdown modal (Balance 550.25 − Bills 40 = 510.25 ÷ 3 = 170.08), pref
+  screen.
+- **Deferred:** goal-contributions term (`goalContributionsMinor` is wired
+  through as 0; needs goal-progress aggregation — follow-up). `includeGoals`
+  store field + toggle hidden until then. Multi-currency shows the preferred
+  currency as headline; other currencies not yet surfaced in the card.
+  Shared "headline figure" component not extracted yet (do it when 07/08 need
+  it). RTL spot-check pending.
 
 ## Behaviour
 

@@ -458,6 +458,16 @@
             "description": "Attach location without prompting"
           },
           "footerCaption": "When enabled, your current location can be attached to new transactions. You can still add or remove it manually on each transaction."
+        },
+        "safeToSpend": {
+          "title": "Safe to spend",
+          "showOnHome": "Show on home",
+          "cadence": "Show as",
+          "daily": "Daily",
+          "weekly": "Weekly",
+          "accounts": "Accounts",
+          "allAccounts": "All eligible accounts",
+          "allAccountsHint": "Every account that counts toward your balance"
         }
       },
       "insights": {
@@ -1391,6 +1401,26 @@
       "noAccountsForCurrency": "No accounts for this currency",
       "accountsClearedTitle": "Accounts cleared",
       "accountsClearedDescription": "Selected accounts were removed because they don't match {{currency}}."
+    },
+    "safeToSpend": {
+      "captionDaily": "Safe to spend today",
+      "captionWeekly": "Safe to spend this week",
+      "emptyHint": "Add a recurring income to see this",
+      "emptyCta": "Set up safe to spend",
+      "overBy": "You are over budget",
+      "daysLeft_one": "{{count}} day left",
+      "daysLeft_other": "{{count}} days left",
+      "weeksLeft_one": "{{count}} week left",
+      "weeksLeft_other": "{{count}} weeks left",
+      "breakdownTitle": "How this is calculated",
+      "balance": "Balance",
+      "upcomingIncome": "Upcoming income",
+      "upcomingBills": "Upcoming bills",
+      "goalContributions": "Goal contributions",
+      "pot": "Available",
+      "perDay": "Per day",
+      "perWeek": "Per week",
+      "adjust": "Adjust"
     }
   },
   "validation": {

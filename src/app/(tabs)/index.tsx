@@ -7,6 +7,7 @@ import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { PrivacyEyeControl } from "~/components/privacy-eye-control"
 import { RouteLoadingState } from "~/components/route-load-state"
+import { SafeToSpendCard } from "~/components/safe-to-spend-card"
 import { SummarySection } from "~/components/summary-card"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionSectionList } from "~/components/transaction/transaction-section-list"
@@ -62,7 +63,10 @@ function HomeScreen() {
     transfer: categoriesTransfer,
   }
   const summaryHeader = (
-    <SummarySection transactionsWithRelations={transactionsFull} />
+    <>
+      <SafeToSpendCard />
+      <SummarySection transactionsWithRelations={transactionsFull} />
+    </>
   )
   if (transactionsStatus === "loading" && transactionsFull.length === 0)
     return <RouteLoadingState />
