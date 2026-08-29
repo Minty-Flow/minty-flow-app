@@ -750,7 +750,9 @@
           "interestCaption": "Total interest paid, by method",
           "addRatesNote": "Add APRs above for interest estimates.",
           "excludedNote_one": "{{count}} loan in another currency is not included.",
-          "excludedNote_other": "{{count}} loans in other currencies are not included."
+          "excludedNote_other": "{{count}} loans in other currencies are not included.",
+          "helpTitle": "How the payoff plan works",
+          "helpBody": "For each loan, enter its APR and the minimum you must pay each month. Then add any spare amount you can put toward debt monthly.\n\nAPR is the Annual Percentage Rate — the yearly interest your lender charges, shown on your loan statement. Leave it at 0 for an interest-free loan.\n\nSnowball clears the smallest balance first for quick wins. Avalanche targets the highest APR first for the least total interest.\n\nThese numbers are used only on this screen and never change your loans."
         }
       },
       "tags": {
