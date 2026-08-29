@@ -110,9 +110,7 @@ skills-lock.json
 
 # Agent skills
 .agents/
-
-# local planning / ticket scratchpad
-.scratch/
+docs/agents/
 
 # editor config (local only)
 .vscode/
