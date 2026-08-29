@@ -567,6 +567,12 @@ function AppRootLayout() {
                   }}
                 />
                 <Stack.Screen
+                  name="settings/rules"
+                  options={{
+                    title: t("screens.settings.rules.title"),
+                  }}
+                />
+                <Stack.Screen
                   name="settings/bill-splitter/index"
                   options={{ title: t("screens.settings.billSplitter.title") }}
                 />

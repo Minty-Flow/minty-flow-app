@@ -975,6 +975,32 @@
           "account": "حسب الحساب",
           "category": "حسب الفئة"
         }
+      },
+      "rules": {
+        "title": "التصنيف التلقائي",
+        "empty": "لا توجد قواعد بعد — فعّل واحدة من معاملة، أو أضف واحدة هنا",
+        "add": "إضافة قاعدة",
+        "addTitle": "قاعدة جديدة",
+        "editTitle": "تعديل القاعدة",
+        "fieldLabel": "المطابقة على",
+        "typeLabel": "نوع المطابقة",
+        "valueLabel": "النص للمطابقة",
+        "valuePlaceholder": "مثال: Netflix",
+        "field": {
+          "title": "العنوان",
+          "description": "الملاحظات"
+        },
+        "type": {
+          "contains": "يحتوي",
+          "equals": "يساوي",
+          "starts_with": "يبدأ بـ"
+        },
+        "applyBacklog": "تطبيق على {{count}} غير مصنّفة",
+        "applyConfirmTitle": "تطبيق القواعد؟",
+        "applyConfirmBody": "يعيّن فئة لما يصل إلى {{count}} معاملة سابقة. يمكنك تغيير أي منها لاحقًا.",
+        "appliedToast_one": "تم تصنيف {{count}} معاملة",
+        "appliedToast_other": "تم تصنيف {{count}} معاملة",
+        "deleteConfirmTitle": "حذف هذه القاعدة؟"
       }
     }
   },

@@ -37,6 +37,11 @@ const moneyManagementItems: SettingsItem[] = [
     icon: "category-2-outline",
   },
   {
+    titleKey: "screens.settings.rules.title",
+    route: "/settings/rules",
+    icon: "sparkles",
+  },
+  {
     titleKey: "screens.settings.tags.title",
     route: "/settings/tags",
     icon: "tags-outline",

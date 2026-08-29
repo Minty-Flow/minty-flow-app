@@ -1,7 +1,7 @@
-import { asc, eq } from "drizzle-orm"
+import { and, asc, eq, isNull, ne } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
-import { transactionRules } from "~/database/drizzle/schema"
+import { transactionRules, transactions } from "~/database/drizzle/schema"
 import { runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
 import type {
@@ -9,6 +9,7 @@ import type {
   RuleMatchType,
   TransactionRule,
 } from "~/types/transaction-rules"
+import { applyRules } from "~/utils/transaction-rules"
 
 function parseTagIds(raw: string | null): string[] | null {
   if (!raw) return null
@@ -163,4 +164,85 @@ export async function reorderTransactionRules(
         .run()
     })
   })
+}
+
+/** Non-transfer, non-deleted transactions that have no category yet. */
+export function countUncategorisedTransactions(): number {
+  return drizzleDb
+    .select({ id: transactions.id })
+    .from(transactions)
+    .where(
+      and(
+        isNull(transactions.categoryId),
+        eq(transactions.isDeleted, 0),
+        ne(transactions.type, "transfer"),
+      ),
+    )
+    .all().length
+}
+
+/**
+ * Run the active rules over existing uncategorised transactions. Fills
+ * category (and subtype) only — never tags, never a transfer, never an
+ * already-categorised row. Explicit and user-triggered. Returns the count
+ * of rows changed.
+ */
+export async function applyRulesToBacklog(): Promise<number> {
+  const rules = listTransactionRules()
+  if (rules.length === 0) return 0
+
+  const candidates = drizzleDb
+    .select({
+      id: transactions.id,
+      title: transactions.title,
+      description: transactions.description,
+      subtype: transactions.subtype,
+    })
+    .from(transactions)
+    .where(
+      and(
+        isNull(transactions.categoryId),
+        eq(transactions.isDeleted, 0),
+        ne(transactions.type, "transfer"),
+      ),
+    )
+    .all()
+
+  const updates = candidates
+    .map((row) => {
+      const patch = applyRules(
+        {
+          title: row.title,
+          description: row.description,
+          categoryId: null,
+          subtype: row.subtype,
+          tags: [],
+          isTransfer: false,
+        },
+        rules,
+      )
+      return patch.categoryId
+        ? { id: row.id, categoryId: patch.categoryId, subtype: patch.subtype }
+        : null
+    })
+    .filter((u): u is NonNullable<typeof u> => u !== null)
+
+  if (updates.length === 0) return 0
+
+  const now = new Date().toISOString()
+  await runInTransaction("transactionRule.applyBacklog", (db) => {
+    for (const u of updates) {
+      db.update(transactions)
+        .set({
+          categoryId: u.categoryId,
+          categorySource: "rule",
+          ...(u.subtype ? { subtype: u.subtype } : {}),
+          updatedAt: now,
+        })
+        .where(eq(transactions.id, u.id))
+        .run()
+    }
+  })
+
+  return updates.length
 }

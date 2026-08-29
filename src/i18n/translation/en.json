@@ -975,6 +975,32 @@
           "account": "By account",
           "category": "By category"
         }
+      },
+      "rules": {
+        "title": "Auto-categorise",
+        "empty": "No rules yet — turn one on from a transaction, or add one here",
+        "add": "Add rule",
+        "addTitle": "New rule",
+        "editTitle": "Edit rule",
+        "fieldLabel": "Match on",
+        "typeLabel": "Match type",
+        "valueLabel": "Text to match",
+        "valuePlaceholder": "e.g. Netflix",
+        "field": {
+          "title": "Title",
+          "description": "Notes"
+        },
+        "type": {
+          "contains": "contains",
+          "equals": "equals",
+          "starts_with": "starts with"
+        },
+        "applyBacklog": "Apply to {{count}} uncategorised",
+        "applyConfirmTitle": "Apply rules?",
+        "applyConfirmBody": "This sets a category on up to {{count}} past transactions. You can change any of them afterwards.",
+        "appliedToast_one": "{{count}} transaction categorised",
+        "appliedToast_other": "{{count}} transactions categorised",
+        "deleteConfirmTitle": "Delete this rule?"
       }
     }
   },

