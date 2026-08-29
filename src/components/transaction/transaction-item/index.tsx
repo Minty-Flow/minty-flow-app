@@ -47,6 +47,12 @@ interface TransactionItemProps {
   rightActionAccessibilityLabel?: string
   leftActionAccessibilityLabel?: string
   variant?: TransactionItemVariant
+  /**
+   * Show the "Recurring" status badge even outside the upcoming variant — used
+   * by the Pending Transactions screen so a recurring spawn is distinguishable
+   * from a manually planned one.
+   */
+  showRecurringBadgeAlways?: boolean
 }
 export const TransactionItem = ({
   transactionWithRelations,
@@ -59,6 +65,7 @@ export const TransactionItem = ({
   rightActionAccessibilityLabel,
   leftActionAccessibilityLabel,
   variant = "default",
+  showRecurringBadgeAlways = false,
 }: TransactionItemProps) => {
   const swipeableRef = useRef<SwipeableMethods | null>(null)
   const { t } = useTranslation()
@@ -161,7 +168,8 @@ export const TransactionItem = ({
     ? ` • ${formatFriendlyDate(transactionDate)}, ${formatReadableTime(transactionDate)}`
     : ` • ${formatReadableTime(transactionDate)}`
   const subtitleText = `${accountLabel}${categorySegment}${timeSegment}`
-  const showRecurringBadge = isUpcoming && isAutoRecurring
+  const showRecurringBadge =
+    (isUpcoming || showRecurringBadgeAlways) && isAutoRecurring
   const showPendingBadge = isUpcoming && !isAutoRecurring
   const handleRestorePress = async (closeSwipe: () => void) => {
     closeSwipe()

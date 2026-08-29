@@ -93,6 +93,7 @@ export default function PendingTransactionsScreen() {
   const renderItem = ({ item }: { item: TransactionWithRelations }) => (
     <TransactionItem
       transactionWithRelations={item}
+      showRecurringBadgeAlways
       onPress={() => router.push(`/transaction/${item.id}`)}
       onDelete={handleDeleteDone}
       onWillOpen={(methods) => {
