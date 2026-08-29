@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-29T21:08:10.669Z
+Generated on: 2026-08-29T21:31:55.846Z
 ```
 ./
 ├── .github/
@@ -34,8 +34,10 @@ Generated on: 2026-08-29T21:08:10.669Z
 ├── drizzle/
 │   ├── meta/
 │   │   ├── _journal.json
-│   │   └── 0000_snapshot.json
+│   │   ├── 0000_snapshot.json
+│   │   └── 0001_snapshot.json
 │   ├── 0000_safe_maximus.sql
+│   ├── 0001_add_transaction_rules.sql
 │   ├── migrations.d.ts
 │   └── migrations.js
 ├── plugins/
@@ -404,7 +406,8 @@ Generated on: 2026-08-29T21:08:10.669Z
 │   │   │   │   ├── stats-data.ts
 │   │   │   │   ├── stats-read-model.ts
 │   │   │   │   ├── tag-read-model.ts
-│   │   │   │   └── transaction-read-model.ts
+│   │   │   │   ├── transaction-read-model.ts
+│   │   │   │   └── transaction-rules-read-model.ts
 │   │   │   ├── db.ts
 │   │   │   └── schema.ts
 │   │   ├── mappers/
@@ -425,7 +428,8 @@ Generated on: 2026-08-29T21:08:10.669Z
 │   │   │   ├── ledger-service.ts
 │   │   │   ├── loan-service.ts
 │   │   │   ├── recurring-transaction-service.ts
-│   │   │   └── tag-service.ts
+│   │   │   ├── tag-service.ts
+│   │   │   └── transaction-rules-service.ts
 │   │   ├── types/
 │   │   │   └── rows.ts
 │   │   ├── utils/
@@ -527,6 +531,7 @@ Generated on: 2026-08-29T21:08:10.669Z
 │   │   ├── stats.ts
 │   │   ├── tags.ts
 │   │   ├── transaction-filters.ts
+│   │   ├── transaction-rules.ts
 │   │   └── transactions.ts
 │   └── utils/
 │       ├── account-types-list.ts
@@ -550,7 +555,8 @@ Generated on: 2026-08-29T21:08:10.669Z
 │       ├── string-utils.ts
 │       ├── time-utils.ts
 │       ├── toast.ts
-│       └── transaction-list-utils.ts
+│       ├── transaction-list-utils.ts
+│       └── transaction-rules.ts
 ├── .env.local
 ├── .env.local.example
 ├── .gitignore

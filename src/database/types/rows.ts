@@ -47,6 +47,7 @@ export interface RowTransaction {
   goal_id: string | null
   budget_id: string | null
   loan_id: string | null
+  category_source?: string | null // 'manual' | 'rule' | null
   created_at: string // UTC ISO
   updated_at: string // UTC ISO
 }

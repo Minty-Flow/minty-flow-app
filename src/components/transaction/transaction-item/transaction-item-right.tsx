@@ -20,6 +20,7 @@ type TransactionItemRightProps = {
   relatedAccountCurrencyCode?: string
   showRecurringBadge: boolean
   showPendingBadge: boolean
+  showAutoCategoryBadge: boolean
 }
 
 export const TransactionItemRight = ({
@@ -33,6 +34,7 @@ export const TransactionItemRight = ({
   relatedAccountCurrencyCode,
   showRecurringBadge,
   showPendingBadge,
+  showAutoCategoryBadge,
 }: TransactionItemRightProps) => {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
@@ -94,6 +96,20 @@ export const TransactionItemRight = ({
             ]}
           >
             {t("components.transactionItem.pending")}
+          </Text>
+        </View>
+      )}
+
+      {showAutoCategoryBadge && (
+        <View style={transactionItemStyles.statusBadge}>
+          <IconSvg name="sparkles" size={12} color={theme.colors.onSurface} />
+          <Text
+            style={[
+              transactionItemStyles.statusBadgeText,
+              { color: theme.colors.onSurface, opacity: 0.6 },
+            ]}
+          >
+            {t("components.transactionItem.autoCategory")}
           </Text>
         </View>
       )}

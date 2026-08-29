@@ -1,3 +1,4 @@
+import type { CategorySource } from "~/types/transaction-rules"
 import type {
   Transaction,
   TransactionSubType,
@@ -43,6 +44,7 @@ export function mapTransaction(row: RowTransaction): Transaction {
     loanId: row.loan_id,
     location: row.location,
     recurringId: row.recurring_id,
+    categorySource: (row.category_source as CategorySource | null) ?? null,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   }

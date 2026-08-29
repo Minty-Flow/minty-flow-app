@@ -26,6 +26,7 @@ import {
   updateTransaction,
 } from "~/database/services/ledger-service"
 import { createRecurringRule } from "~/database/services/recurring-transaction-service"
+import { createTransactionRule } from "~/database/services/transaction-rules-service"
 import { useBalanceAtTransaction } from "~/hooks/use-balance-before"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import { useRecurringRule } from "~/hooks/use-recurring-rule"
@@ -142,6 +143,7 @@ export function TransactionFormV3({
   const accountId = watch("accountId")
   const toAccountId = watch("toAccountId")
   const categoryId = watch("categoryId")
+  const titleValue = watch("title")
   const date = watch("transactionDate")
   const description = watch("description")
   const tagIds = watch("tags")
@@ -233,6 +235,7 @@ export function TransactionFormV3({
       ? accounts.find((a) => a.id === toAccountId)
       : null
   const [isSaving, setIsSaving] = useState(false)
+  const [rememberRule, setRememberRule] = useState(false)
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSaving,
@@ -491,6 +494,18 @@ export function TransactionFormV3({
         } else {
           await createTransaction(payload)
           synchronizePlannedTransactionNotifications().catch(() => {})
+          if (rememberRule && payload.title?.trim() && data.categoryId) {
+            await createTransactionRule({
+              matchField: "title",
+              matchType: "contains",
+              matchValue: payload.title.trim(),
+              setCategoryId: data.categoryId,
+            }).catch((e) =>
+              logger.error("Failed to create rule from transaction", {
+                error: String(e),
+              }),
+            )
+          }
           Toast.success({
             title: t("components.transactionForm.toast.transactionCreated"),
           })
@@ -808,9 +823,38 @@ export function TransactionFormV3({
                 if (loanId) {
                   setValue("loanId", null, { shouldDirty: false })
                 }
+                setRememberRule(false)
               }}
             />
           )}
+
+          {isNew &&
+            transactionType !== TransactionTypeEnum.TRANSFER &&
+            categoryId &&
+            titleValue?.trim() && (
+              <ListItem
+                style={transactionFormStyles.recurringSwitchRow}
+                onPress={() => setRememberRule((v) => !v)}
+              >
+                <View style={transactionFormStyles.switchLeft}>
+                  <DynamicIcon
+                    icon="repeat-outline"
+                    size={20}
+                    color={theme.colors.primary}
+                    variant="badge"
+                  />
+                  <Text
+                    variant="default"
+                    style={transactionFormStyles.switchLabel}
+                  >
+                    {t("components.transactionForm.rememberRule.label", {
+                      title: titleValue.trim(),
+                    })}
+                  </Text>
+                </View>
+                <Switch value={rememberRule} onValueChange={setRememberRule} />
+              </ListItem>
+            )}
 
           {/* Goal: hidden for transfers, filtered by selected account */}
           {transactionType !== TransactionTypeEnum.TRANSFER && (

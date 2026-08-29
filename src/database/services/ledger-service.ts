@@ -12,6 +12,7 @@ import {
   transactionTags,
   transfers,
 } from "~/database/drizzle/schema"
+import { listTransactionRules } from "~/database/services/transaction-rules-service"
 import { runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
 import { generateId } from "~/database/utils/generate-id"
@@ -22,6 +23,7 @@ import type {
   RecurringEditPayload,
   TransactionFormValues,
 } from "~/schemas/transactions.schema"
+import type { CategorySource } from "~/types/transaction-rules"
 import type { TransactionType } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import {
@@ -29,6 +31,7 @@ import {
   convertMinorUnits,
   toMajorUnits,
 } from "~/utils/money"
+import { applyRules } from "~/utils/transaction-rules"
 
 function hasAttachmentsFromExtra(
   extra: Record<string, string> | null,
@@ -285,6 +288,31 @@ export async function createTransaction(
   const extraJson = extra ? JSON.stringify(extra) : null
   const hasAttachments = hasAttachmentsFromExtra(extra) ? 1 : 0
 
+  // Auto-categorisation: fill empty fields from the first matching rule.
+  const rulePatch =
+    data.type === "transfer" ||
+    (data.categoryId && data.subtype && data.tags?.length)
+      ? {}
+      : applyRules(
+          {
+            title: data.title ?? null,
+            description: data.description ?? null,
+            categoryId: data.categoryId ?? null,
+            subtype: data.subtype ?? null,
+            tags: data.tags ?? [],
+            isTransfer: false,
+          },
+          listTransactionRules(),
+        )
+  const effectiveCategoryId = data.categoryId ?? rulePatch.categoryId ?? null
+  const effectiveSubtype = data.subtype ?? rulePatch.subtype ?? null
+  const effectiveTags = data.tags?.length ? data.tags : (rulePatch.tags ?? [])
+  const categorySource: CategorySource | null = data.categoryId
+    ? "manual"
+    : rulePatch.categoryId
+      ? "rule"
+      : null
+
   const txId = await runInTransaction("transaction.create", (db) => {
     const balanceBefore = data.isPending
       ? 0
@@ -298,7 +326,7 @@ export async function createTransaction(
       .values({
         id,
         accountId: data.accountId,
-        categoryId: data.categoryId ?? null,
+        categoryId: effectiveCategoryId,
         amount: data.amount,
         type: data.type,
         transactionDate: data.transactionDate.toISOString(),
@@ -309,7 +337,7 @@ export async function createTransaction(
         isPending: data.isPending ? 1 : 0,
         requiresManualConfirmation: data.requiresManualConfirmation ? 1 : 0,
         accountBalanceBefore: balanceBefore,
-        subtype: data.subtype ?? null,
+        subtype: effectiveSubtype,
         extra: extraJson,
         hasAttachments,
         recurringId: data.recurringId ?? null,
@@ -317,13 +345,14 @@ export async function createTransaction(
         goalId: data.goalId ?? null,
         budgetId: data.budgetId ?? null,
         loanId: data.loanId ?? null,
+        categorySource,
         createdAt: now,
         updatedAt: now,
       })
       .run()
 
     if (!data.isPending) {
-      const delta = getBalanceDelta(data.amount, data.type, data.subtype)
+      const delta = getBalanceDelta(data.amount, data.type, effectiveSubtype)
       if (delta !== 0) {
         db.update(accounts)
           .set({
@@ -335,9 +364,9 @@ export async function createTransaction(
       }
     }
 
-    if (data.tags?.length) {
+    if (effectiveTags.length) {
       db.insert(transactionTags)
-        .values(data.tags.map((tagId) => ({ transactionId: id, tagId })))
+        .values(effectiveTags.map((tagId) => ({ transactionId: id, tagId })))
         .onConflictDoNothing()
         .run()
     }
@@ -652,7 +681,11 @@ export async function updateTransaction(
             }
           : {}),
         ...(data.categoryId !== undefined
-          ? { categoryId: newCategoryId ?? null }
+          ? {
+              categoryId: newCategoryId ?? null,
+              // A manual edit-save is an explicit choice; clear the rule marker.
+              categorySource: newCategoryId ? ("manual" as const) : null,
+            }
           : {}),
         ...(data.accountId !== undefined ? { accountId: data.accountId } : {}),
         accountBalanceBefore: newBalanceBefore,

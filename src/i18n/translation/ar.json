@@ -1119,7 +1119,10 @@
         "allTagsSelected": "تم تحديد جميع الوسوم",
         "amountInput": "إدخال المبلغ"
       },
-      "notFoundTransaction": "لم يتم العثور على المعاملة."
+      "notFoundTransaction": "لم يتم العثور على المعاملة.",
+      "rememberRule": {
+        "label": "صنّف “{{title}}” هكذا دائمًا"
+      }
     },
     "recurring": {
       "frequency": {
@@ -1375,7 +1378,8 @@
       "recurring": "متكررة",
       "pending": "معلقة",
       "canceled": "تم إلغاء المعاملة",
-      "failedToDelete": "فشل الحذف"
+      "failedToDelete": "فشل الحذف",
+      "autoCategory": "تلقائي"
     },
     "transactionList": {
       "emptyDescription": "ستظهر معاملات هذه الفترة هنا",

@@ -7,7 +7,37 @@ auto-applied so the user can tell it apart from manual choices.
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** in-progress
+
+## Progress
+
+- Schema: `transaction_rules` table + `transactions.category_source` column.
+  Migration `drizzle/0001_add_transaction_rules.sql` (plain CREATE TABLE +
+  ADD COLUMN — no `category_source` CHECK on purpose, to avoid a full
+  transactions-table rebuild). `drizzle/migrations.js` updated. Verified: app
+  boots and renders after the migration on the emulator.
+- Types: `src/types/transaction-rules.ts`; `Transaction.categorySource`
+  (optional).
+- Pure `applyRules(target, rules)` in `src/utils/transaction-rules.ts` —
+  ascending priority + id tie-break; only fills empty fields; skips
+  transfers; first rule that matches *and* contributes wins.
+- Service `transaction-rules-service.ts` — `listTransactionRules` (sync, for
+  the ledger), create/update/delete/setActive/reorder.
+- Read-model `transaction-rules-read-model.ts` — `useTransactionRules`.
+- Wired into `createTransaction` (auto-apply on create) and `updateTransaction`
+  (a manual edit-save sets `category_source = 'manual'`).
+- Form: "Always categorise "{title}" like this" toggle appears after the
+  category picker once a title + category are set; on save it creates a
+  `title contains {title}` rule. Verified rendering on the emulator.
+- Transaction item: "Auto" badge (sparkles) when `category_source = 'rule'`.
+- en + ar strings.
+
+## Pending
+
+- Full end-to-end QA on device: create rule → create a matching uncategorised
+  transaction → confirm auto-category + "Auto" badge; confirm a transfer is
+  never touched; confirm a manual category change clears the badge.
+- Rule management screen + backlog apply = ticket 05.
 
 ## Behaviour
 

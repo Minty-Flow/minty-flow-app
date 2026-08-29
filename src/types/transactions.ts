@@ -1,3 +1,5 @@
+import type { CategorySource } from "~/types/transaction-rules"
+
 export type RecurringFrequency =
   | "daily"
   | "weekly"
@@ -93,6 +95,8 @@ export interface Transaction {
   loanId: string | null
   location: string | null
   recurringId: string | null
+  /** How `categoryId` was set: 'manual' | 'rule' | null. */
+  categorySource?: CategorySource | null
   createdAt: Date
   updatedAt: Date
 }

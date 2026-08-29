@@ -83,6 +83,7 @@ const txSelection = {
   goal_id: transactions.goalId,
   budget_id: transactions.budgetId,
   loan_id: transactions.loanId,
+  category_source: transactions.categorySource,
   created_at: transactions.createdAt,
   updated_at: transactions.updatedAt,
 }

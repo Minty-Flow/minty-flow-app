@@ -86,6 +86,7 @@ export const TransactionItem = ({
     isDeleted,
     transferId,
     subtype,
+    categorySource,
   } = transactionWithRelations
   const isTransfer = txIsTransfer || type === TransactionTypeEnum.TRANSFER
   const transferLayout = useTransfersPreferencesStore((s) => s.layout)
@@ -171,6 +172,7 @@ export const TransactionItem = ({
   const showRecurringBadge =
     (isUpcoming || showRecurringBadgeAlways) && isAutoRecurring
   const showPendingBadge = isUpcoming && !isAutoRecurring
+  const showAutoCategoryBadge = categorySource === "rule"
   const handleRestorePress = async (closeSwipe: () => void) => {
     closeSwipe()
     await Promise.resolve(onRestore?.())
@@ -268,6 +270,7 @@ export const TransactionItem = ({
           relatedAccountCurrencyCode={relatedAccount?.currencyCode}
           showRecurringBadge={showRecurringBadge}
           showPendingBadge={showPendingBadge}
+          showAutoCategoryBadge={showAutoCategoryBadge}
         />
       </Pressable>
 

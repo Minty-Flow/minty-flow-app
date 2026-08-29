@@ -117,6 +117,10 @@ export const transactions = sqliteTable(
     loanId: text("loan_id").references(() => loans.id, {
       onDelete: "set null",
     }),
+    /** 'manual' | 'rule' | null — how the category was set (see transaction_rules).
+     * No CHECK constraint on purpose: keeps this a plain ADD COLUMN migration
+     * instead of a full transactions-table rebuild. Only our code writes it. */
+    categorySource: text("category_source"),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
   },
@@ -385,5 +389,46 @@ export const budgetCategories = sqliteTable(
     primaryKey({ columns: [table.budgetId, table.categoryId] }),
     index("idx_bc_budget").on(table.budgetId),
     index("idx_bc_category").on(table.categoryId),
+  ],
+)
+
+/**
+ * User-defined auto-categorisation rules. When a new transaction's target
+ * field is empty and it is not a transfer, the first active rule (ascending
+ * priority) whose match succeeds fills in category / subtype / tags.
+ */
+export const transactionRules = sqliteTable(
+  "transaction_rules",
+  {
+    id: text("id").primaryKey().notNull(),
+    matchField: text("match_field").notNull(),
+    matchType: text("match_type").notNull(),
+    matchValue: text("match_value").notNull(),
+    setCategoryId: text("set_category_id").references(() => categories.id, {
+      onDelete: "cascade",
+    }),
+    setSubtype: text("set_subtype"),
+    /** JSON array of tag ids. */
+    setTagIds: text("set_tag_ids"),
+    priority: integer("priority").notNull().default(0),
+    isActive: integer("is_active").notNull().default(1).$type<0 | 1>(),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [
+    check(
+      "transaction_rules_match_field_check",
+      sql`${table.matchField} IN ('title', 'description')`,
+    ),
+    check(
+      "transaction_rules_match_type_check",
+      sql`${table.matchType} IN ('contains', 'equals', 'starts_with')`,
+    ),
+    check(
+      "transaction_rules_is_active_check",
+      sql`${table.isActive} IN (0, 1)`,
+    ),
+    index("idx_txrule_priority").on(table.priority),
+    index("idx_txrule_active").on(table.isActive),
   ],
 )

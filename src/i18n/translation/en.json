@@ -1119,6 +1119,9 @@
         "noTagsFound": "No tags found",
         "allTagsSelected": "All tags selected",
         "amountInput": "Amount input"
+      },
+      "rememberRule": {
+        "label": "Always categorise “{{title}}” like this"
       }
     },
     "recurring": {
@@ -1375,7 +1378,8 @@
       "recurring": "Recurring",
       "pending": "Pending",
       "canceled": "Transaction canceled",
-      "failedToDelete": "Failed to delete"
+      "failedToDelete": "Failed to delete",
+      "autoCategory": "Auto"
     },
     "transactionList": {
       "emptyDescription": "Transactions for this period will appear here",
