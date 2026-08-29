@@ -39,10 +39,22 @@ snowball vs avalanche costs. Numbers only in this ticket; the chart is ticket
 
 ## Acceptance criteria
 
-- [ ] Pure `debtPayoff` with tests: snowball vs avalanche ordering, 0% APR linear payoff, extra=0, single loan, payoff month boundary, total-interest comparison
+- [ ] Pure `debtPayoff({loans, extraPerMonth, strategy})` (no React, no DB): correct snowball vs avalanche ordering, 0% APR linear payoff, extra=0, single loan, payoff month boundary, total-interest comparison
 - [ ] Planner-local APR / min-payment store keyed by loan id; nothing written to `loans`
 - [ ] `settings/loans/payoff` route with mini-editor + extra-payment input + strategy toggle
 - [ ] Headline debt-free date + snowball/avalanche interest summary
 - [ ] Entry point in the loans list header, hidden when there are no borrowed loans; strategy toggle hidden for a single loan
 - [ ] en + ar strings; RTL checked
-- [ ] `pnpm lint`, `pnpm types`, `pnpm test` pass
+- [ ] `pnpm lint`, `pnpm types` pass
+- [ ] Manual QA section added to `QA.md`
+
+## Manual QA (dev build)
+
+- No borrowed loans → no "Payoff plan" entry point.
+- Two borrowed loans, enter APRs + an extra/month → debt-free date and per-strategy interest appear; avalanche interest ≤ snowball.
+- Toggle snowball/avalanche → debt-free date updates.
+- Set all APRs to 0 → still resolves to a date; "add rates for interest estimates" note shown.
+- Record a repayment against one loan, reopen the planner → outstanding balance and date reflect it.
+- Single borrowed loan → strategy toggle hidden.
+- Reopen the app → planner-local APR/min values persist; loan rows unchanged.
+- Arabic → mirrored, translated.

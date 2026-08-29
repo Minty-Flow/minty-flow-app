@@ -158,6 +158,12 @@ Three escalating answers:
 
 ## Testing Decisions
 
+> Note: the automated test framework was declined for the Easy tier (see
+> `budget-gaps-easy/spec.md`). If it stays declined, the crypto and sync-merge
+> logic here still MUST be pure, deterministic modules verified by a written
+> QA procedure — this is the tier where "verified by hand" is weakest, so
+> revisiting the framework decision before building 2/3 is advised.
+
 - **What a good test is here:** exercises the sync/merge engine and the
   encryption boundary as pure units — feed two divergent change sets, assert
   the converged result and that tombstones win; encrypt then decrypt a

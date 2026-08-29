@@ -41,9 +41,19 @@ auto-applied so the user can tell it apart from manual choices.
 ## Acceptance criteria
 
 - [ ] `transaction_rules` + `category_source` migrations; schema types updated
-- [ ] Pure `applyRules` with tests: empty-field-only, never on transfers, priority order + ties, contains/equals/starts_with, optional subtype/tags applied
+- [ ] Pure `applyRules(draft, rules)` (no DB handle): applies only to an empty target field, never when `is_transfer = 1`, first match by ascending `priority` (deterministic on ties), supports contains/equals/starts_with, applies optional subtype/tags
 - [ ] Auto-apply runs on transaction create and on manual edit-save
 - [ ] Form toggle "Always categorise …" creates an active rule
 - [ ] "auto" badge shown for rule-set categories; cleared on manual category change
 - [ ] en + ar strings; RTL checked
-- [ ] `pnpm lint`, `pnpm types`, `pnpm test` pass
+- [ ] `pnpm lint`, `pnpm types` pass
+- [ ] Manual QA section added to `QA.md`
+
+## Manual QA (dev build)
+
+- Add expense titled "Tesco", pick Groceries, enable the "Always categorise" toggle → a rule exists.
+- Add another expense titled "Tesco Metro" (contains match) with no category → saves as Groceries, shows the "auto" badge.
+- Add a transfer whose title contains "Tesco" → stays uncategorised.
+- Add "Tesco" expense and manually pick Dining → rule does not override; badge absent.
+- Change a rule-set category by hand → badge clears.
+- Arabic → toggle row + badge translated, mirrored.

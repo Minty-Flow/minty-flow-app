@@ -199,29 +199,20 @@ stores:
 
 ## Testing Decisions
 
-- **What a good test is here:** exercises a service/calculation module through
-  its public function with a seeded set of rows and asserts the returned
-  numbers/series/flags — never reaches into private helpers or React internals.
-- The repo currently has **no test framework**. This tier introduces one at a
-  single seam: the **database service layer**, run under `vitest` against an
-  in-memory SQLite instance created from the Drizzle schema + migrations. This
-  is the highest seam that covers all six features and adds exactly one new
-  seam to the codebase.
-- Modules under test: `safe-to-spend`, `transaction_rules` evaluation +
-  bulk-apply, budget `projectedSpend` / on-pace predicate, subscriptions
-  selector (next date, monthly/annual totals, increase flag), `debt-payoff`
-  strategy schedules, `projectBalance` series.
-- Representative cases: period boundaries (first/last day), zero remaining
-  days, negative safe-to-spend, multi-currency totals, rule priority ties,
-  rule non-application to transfers, loan with missing apr, projection with
-  overlapping recurring rules, horizon crossing a month boundary.
-- **Prior art:** none in-repo; this spec establishes the pattern. Closest
-  existing reference points are the pure aggregation functions already in
-  `budget-service` and `balance-service`, which are written in a testable
-  style and should be the template for new modules.
-- If adopting a test framework is rejected, the fallback is a written manual QA
-  checklist per feature; the service modules must still be pure and
-  independently callable.
+- **No automated test framework** — declined. The repo has none today and this
+  tier does not add one.
+- Instead: every new calculation (`computeSafeToSpend`, `debtPayoff`,
+  `projectBalance`, the subscriptions selector, `applyRules`, the budget
+  `projectedSpend` predicate) is written as a **pure function** in the
+  util/service layer — no React, no direct DB handle. This is a structural
+  requirement, not a testing one: it keeps the logic simple to reason about
+  and re-uses the existing pure helpers (`live-progress.ts`,
+  `planning-progress.ts`).
+- Verification is **manual QA on a dev build**. Each ticket carries a "Manual
+  QA" section with concrete steps and expected results; `QA.md` in this folder
+  aggregates them and is ticked off on device.
+- If an automated framework is adopted later, these pure functions are already
+  in the right shape to test directly.
 
 ## Out of Scope
 
@@ -251,18 +242,18 @@ stores:
 
 Broken into `issues/01`–`09`. Dependency graph:
 
-- `01` test seam + shared helpers — prefactor, blocks the calc-heavy tickets.
-- `02` safe-to-spend ← 01
+- `01` shared helpers + QA convention — prefactor, advisory only, blocks nothing.
+- `02` safe-to-spend ← none
 - `03` subscriptions hub ← none
 - `04` payee rule engine + create-from-form ← none
 - `05` rules management + backlog apply ← 04
-- `06` budget pace alerts ← 01
-- `07` debt payoff planner core ← 01
-- `08` projected balance timeline ← 01
+- `06` budget pace alerts ← none
+- `07` debt payoff planner core ← none
+- `08` projected balance timeline ← none
 - `09` debt payoff chart ← 07
 
-Frontier at start: `01`, `03`, `04` in parallel. Placement calls (made
-UX-first): safe-to-spend stays on Home only (not duplicated on Insights);
-subscriptions hub nested in Settings → Money Management + linked from Insights;
-debt planner is its own route off the loans-list header, not an inline
-section.
+Only real edges: `05 ← 04` and `09 ← 07`. Everything else can start in
+parallel. Placement calls (made UX-first): safe-to-spend stays on Home only
+(not duplicated on Insights); subscriptions hub nested in Settings → Money
+Management + linked from Insights; debt planner is its own route off the
+loans-list header, not an inline section.

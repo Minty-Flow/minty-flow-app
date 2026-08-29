@@ -29,3 +29,11 @@ progress under the chosen strategy is visual, not just a date.
 - [ ] Matches existing chart styling
 - [ ] en + ar strings; RTL checked
 - [ ] `pnpm lint`, `pnpm types` pass
+- [ ] Manual QA section added to `QA.md`
+
+## Manual QA (dev build)
+
+- Chart descends to zero at the debt-free date shown above it.
+- Change extra/month → curve steepens, endpoint moves.
+- Switch strategy → curve updates.
+- Arabic → axis direction mirrored.

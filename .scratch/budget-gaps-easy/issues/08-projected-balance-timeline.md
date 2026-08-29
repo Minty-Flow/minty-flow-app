@@ -33,11 +33,21 @@ spot a future shortfall before it happens.
 
 ## Acceptance criteria
 
-- [ ] Pure `projectBalance` with tests: starts at current balance, applies overlapping recurring rules, horizon crossing a month boundary, marks negative days, empty-input case
+- [ ] Pure `projectBalance({accountIds, horizonDays, now})` (no React, no DB): starts at current balance, applies overlapping recurring rules, handles a horizon crossing a month boundary, marks negative days, handles the empty-input case
 - [ ] "Projected" mode on the account-detail balance chart with a dashed forward line
 - [ ] 30/60/90 horizon control
 - [ ] Negative-day markers + "projected low" caption
 - [ ] Section added to the Cash-flow screen
 - [ ] Empty-state copy when there is nothing to project
 - [ ] en + ar strings; RTL checked
-- [ ] `pnpm lint`, `pnpm types`, `pnpm test` pass
+- [ ] `pnpm lint`, `pnpm types` pass
+- [ ] Manual QA section added to `QA.md`
+
+## Manual QA (dev build)
+
+- Account with a monthly recurring rent bigger than the balance → projected line dips below zero; red markers + "projected low {amount} on {date}" caption.
+- Switch horizon 30→60→90 → line extends, low-point recalculates.
+- Forward portion of the line is visually dashed; the past portion is solid.
+- Account with no recurring/pending items → empty-state copy, not a flat line.
+- Same section visible on Stats → Cash-flow.
+- Arabic → axis direction mirrored, caption translated.

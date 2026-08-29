@@ -37,8 +37,18 @@ uncategorised transactions.
 - [ ] Rules list with inline enable/disable and delete
 - [ ] Add / edit rule sheet covering all rule fields
 - [ ] Drag-to-reorder writes `priority`
-- [ ] `applyRulesToBacklog()` service fn, tested: skips transfers, skips already-categorised, respects priority, returns an accurate count
+- [ ] `applyRulesToBacklog()` service fn: skips transfers, skips already-categorised, respects priority, returns an accurate count
 - [ ] Backlog apply behind a `ConfirmModal`, result surfaced in a toast
 - [ ] `EmptyState` with an add path
 - [ ] en + ar strings; RTL checked
-- [ ] `pnpm lint`, `pnpm types`, `pnpm test` pass
+- [ ] `pnpm lint`, `pnpm types` pass
+- [ ] Manual QA section added to `QA.md`
+
+## Manual QA (dev build)
+
+- Create 3 uncategorised "Tesco" expenses, then a Tesco→Groceries rule, then "Apply to N uncategorised" → confirm dialog shows count 3 → all become Groceries with the "auto" badge; toast shows the count.
+- Backlog apply again → count 0, nothing changes.
+- Disable a rule → new matching transactions no longer auto-categorise.
+- Reorder two overlapping rules → the now-first one wins on the next match.
+- Delete a rule → gone from the list; existing categorisations untouched.
+- No rules → `EmptyState` with a working add button.

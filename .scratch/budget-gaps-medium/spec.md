@@ -285,6 +285,11 @@ Ten features, each closing one structural gap:
 
 ## Testing Decisions
 
+> Note: the automated test framework was declined for the Easy tier (see
+> `budget-gaps-easy/spec.md`). Until that decision is revisited, verification
+> here is also manual QA + pure functions. The seam described below applies if
+> a framework is later adopted.
+
 - **What a good test is here:** drives a service/parser module by its public
   function with seeded rows or sample input (a CSV string, a block of OCR
   text, an utterance) and asserts the committed rows or returned draft. No

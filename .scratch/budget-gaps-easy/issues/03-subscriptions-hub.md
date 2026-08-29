@@ -41,7 +41,7 @@ data that already exists.
 
 ## Acceptance criteria
 
-- [ ] `subscriptions` service selector: next date, monthly + annual cost per row, list totals, `amountIncreased` flag — tested (monthly/weekly/yearly normalisation, multi-currency totals, increase detection, paused excluded from totals)
+- [ ] Pure `subscriptions` selector: next date, monthly + annual cost per row, list totals, `amountIncreased` flag — correct for monthly/weekly/yearly normalisation, multi-currency totals, increase detection, paused excluded from totals
 - [ ] New screen with month/year total strip and grouped list
 - [ ] Group-by control (date / account / category)
 - [ ] Price-increase chip on rows where the amount rose
@@ -50,4 +50,15 @@ data that already exists.
 - [ ] Settings entry added; linked from Insights
 - [ ] `EmptyState` when there are no recurring expenses
 - [ ] en + ar strings; RTL checked
-- [ ] `pnpm lint`, `pnpm types`, `pnpm test` pass
+- [ ] `pnpm lint`, `pnpm types` pass
+- [ ] Manual QA section added to `QA.md`
+
+## Manual QA (dev build)
+
+- Create weekly, monthly and yearly recurring expenses → each shows the right next date; /month total = sum of normalised amounts; /year = ×12.
+- Recurring in a non-preferred currency → totals still add up in preferred currency.
+- Edit a template to a higher amount after one instance exists → "↑" chip appears.
+- Disable a template → moves to the collapsed Paused section, drops out of totals.
+- Tap a row → lands in the recurring-template editor.
+- No recurring expenses → `EmptyState`.
+- Arabic → mirrored layout, translated strings, dates.

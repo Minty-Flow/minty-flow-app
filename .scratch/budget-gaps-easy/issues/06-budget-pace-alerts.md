@@ -38,10 +38,22 @@ so the user can adjust in time instead of finding out after the fact.
 
 ## Acceptance criteria
 
-- [ ] `projectedSpend` + on-pace predicate in `budget-service`, tested: first/last day of period, sensitivity thresholds, under-pace not firing
+- [ ] Pure `projectedSpend` + on-pace predicate (util or `budget-service`, no React): correct at first/last day of period, across sensitivity thresholds, and does not fire when under pace
 - [ ] Local notification fires at most once per budget per period (keyed store), respects notify/quiet-hours prefs, deep-links to budget detail
 - [ ] In-app `InfoBanner` on budget list card and detail when on pace to exceed
 - [ ] Global switch + sensitivity in the notification preference screen; per-budget override on the budget form
 - [ ] Re-evaluated after adding/editing a transaction
 - [ ] en + ar strings; RTL checked
-- [ ] `pnpm lint`, `pnpm types`, `pnpm test` pass
+- [ ] `pnpm lint`, `pnpm types` pass
+- [ ] Manual QA section added to `QA.md`
+
+## Manual QA (dev build)
+
+- Monthly budget of 300; on day 10 spend 150 (projects to ~450) → one notification, InfoBanner on the card + detail.
+- Add another transaction same period → no second notification.
+- Kill and relaunch the app → still no repeat for that period.
+- Turn pace alerts off globally → banner and notification stop; turn the per-budget switch off → same for that budget only.
+- Raise sensitivity to 25% → a borderline budget stops firing.
+- Disable notifications at OS level → InfoBanner still shows in-app.
+- New period rolls over → alerting re-arms.
+- Arabic → notification copy + banner translated.

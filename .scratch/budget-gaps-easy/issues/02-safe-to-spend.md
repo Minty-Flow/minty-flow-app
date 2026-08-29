@@ -44,7 +44,7 @@ cadence, which accounts count, and whether goal contributions are subtracted.
 
 ## Acceptance criteria
 
-- [ ] `safe-to-spend` service module with a pure `computeSafeToSpend(...)` function, tested (period boundaries, zero remaining days, negative result, multi-currency, goals on/off)
+- [ ] `safe-to-spend` service module exposing a pure `computeSafeToSpend(...)` (no React, no DB handle) that correctly handles period boundaries, zero remaining days, negative result, multi-currency, goals on/off
 - [ ] Headline-figure component created and used on Home
 - [ ] Tap opens a breakdown sheet listing every term
 - [ ] Preference screen under `settings/preferences/` with cadence / included accounts / include-goals; reachable from the sheet
@@ -52,4 +52,15 @@ cadence, which accounts count, and whether goal contributions are subtracted.
 - [ ] Respects privacy masking; all money via `<Money>`
 - [ ] Zero-state hint shown when there is no usable data
 - [ ] en + ar strings; RTL checked
-- [ ] `pnpm lint`, `pnpm types`, `pnpm test` pass
+- [ ] `pnpm lint`, `pnpm types` pass
+- [ ] Manual QA section added to `QA.md`
+
+## Manual QA (dev build)
+
+- Fresh account with one recurring income + a few expenses → number ≈ (income − bills − spent) ÷ days left; matches the breakdown sheet sum.
+- Add an expense → number drops immediately.
+- Overspend the period → "over by X" state, expense colour.
+- Toggle cadence daily↔weekly in prefs → caption + divisor change.
+- Exclude the only included account → zero-state hint, not "0".
+- Privacy mask on → number hidden.
+- Switch app language to Arabic → layout mirrors, strings translated.
