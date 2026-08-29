@@ -7,7 +7,7 @@ cadence, which accounts count, and whether goal contributions are subtracted.
 
 **Blocked by:** 01
 
-**Status:** in-progress
+**Status:** resolved
 
 ## Progress / decisions
 
@@ -82,16 +82,16 @@ cadence, which accounts count, and whether goal contributions are subtracted.
 
 ## Acceptance criteria
 
-- [ ] `safe-to-spend` service module exposing a pure `computeSafeToSpend(...)` (no React, no DB handle) that correctly handles period boundaries, zero remaining days, negative result, multi-currency, goals on/off
-- [ ] Headline-figure component created and used on Home
-- [ ] Tap opens a breakdown sheet listing every term
-- [ ] Preference screen under `settings/preferences/` with cadence / included accounts / include-goals; reachable from the sheet
-- [ ] Updates immediately after adding a transaction; recomputes on the day boundary
-- [ ] Respects privacy masking; all money via `<Money>`
-- [ ] Zero-state hint shown when there is no usable data
-- [ ] en + ar strings; RTL checked
-- [ ] `pnpm lint`, `pnpm types` pass
-- [ ] Manual QA section added to `QA.md`
+- [x] `safe-to-spend` service module exposing a pure `computeSafeToSpend(...)` (no React, no DB handle) that correctly handles period boundaries, zero remaining days, negative result, multi-currency, goals on/off
+- [x] Headline-figure component created and used on Home
+- [x] Tap opens a breakdown sheet listing every term
+- [x] Preference screen under `settings/preferences/` with cadence / included accounts / include-goals; reachable from the sheet
+- [x] Updates immediately after adding a transaction; recomputes on the day boundary
+- [x] Respects privacy masking; all money via `<Money>`
+- [x] Zero-state hint shown when there is no usable data
+- [x] en + ar strings; RTL checked
+- [x] `pnpm lint`, `pnpm types` pass
+- [x] Manual QA section added to `QA.md`
 
 ## Manual QA (dev build)
 

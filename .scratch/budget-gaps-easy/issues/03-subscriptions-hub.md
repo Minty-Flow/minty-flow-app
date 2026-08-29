@@ -30,7 +30,7 @@ data that already exists.
 
 **Blocked by:** None (can start immediately).
 
-**Status:** in-progress
+**Status:** resolved
 
 ## Progress
 
@@ -75,17 +75,17 @@ data that already exists.
 
 ## Acceptance criteria
 
-- [ ] Pure `subscriptions` selector: next date, monthly + annual cost per row, list totals, `amountIncreased` flag — correct for monthly/weekly/yearly normalisation, multi-currency totals, increase detection, paused excluded from totals
-- [ ] New screen with month/year total strip and grouped list
-- [ ] Group-by control (date / account / category)
-- [ ] Price-increase chip on rows where the amount rose
-- [ ] Collapsed paused section
-- [ ] Row tap opens the recurring-template editor
-- [ ] Settings entry added; linked from Insights
-- [ ] `EmptyState` when there are no recurring expenses
-- [ ] en + ar strings; RTL checked
-- [ ] `pnpm lint`, `pnpm types` pass
-- [ ] Manual QA section added to `QA.md`
+- [x] Pure `subscriptions` selector: next date, monthly + annual cost per row, list totals, `amountIncreased` flag — correct for monthly/weekly/yearly normalisation, multi-currency totals, increase detection, paused excluded from totals
+- [x] New screen with month/year total strip and grouped list
+- [x] Group-by control (date / account / category)
+- [x] Price-increase chip on rows where the amount rose
+- [x] Collapsed paused section
+- [x] Row tap opens the recurring-template editor
+- [x] Settings entry added; linked from Insights
+- [x] `EmptyState` when there are no recurring expenses
+- [x] en + ar strings; RTL checked
+- [x] `pnpm lint`, `pnpm types` pass
+- [x] Manual QA section added to `QA.md`
 
 ## Manual QA (dev build)
 

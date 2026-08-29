@@ -6,7 +6,7 @@ so the user can adjust in time instead of finding out after the fact.
 
 **Blocked by:** 01
 
-**Status:** in-progress
+**Status:** resolved
 
 ## Progress
 
@@ -73,14 +73,14 @@ so the user can adjust in time instead of finding out after the fact.
 
 ## Acceptance criteria
 
-- [ ] Pure `projectedSpend` + on-pace predicate (util or `budget-service`, no React): correct at first/last day of period, across sensitivity thresholds, and does not fire when under pace
-- [ ] Local notification fires at most once per budget per period (keyed store), respects notify/quiet-hours prefs, deep-links to budget detail
-- [ ] In-app `InfoBanner` on budget list card and detail when on pace to exceed
-- [ ] Global switch + sensitivity in the notification preference screen; per-budget override on the budget form
-- [ ] Re-evaluated after adding/editing a transaction
-- [ ] en + ar strings; RTL checked
-- [ ] `pnpm lint`, `pnpm types` pass
-- [ ] Manual QA section added to `QA.md`
+- [x] Pure `projectedSpend` + on-pace predicate (util or `budget-service`, no React): correct at first/last day of period, across sensitivity thresholds, and does not fire when under pace
+- [x] Local notification fires at most once per budget per period (keyed store), respects notify/quiet-hours prefs, deep-links to budget detail
+- [x] In-app `InfoBanner` on budget list card and detail when on pace to exceed
+- [x] Global switch + sensitivity in the notification preference screen; per-budget override on the budget form
+- [x] Re-evaluated after adding/editing a transaction
+- [x] en + ar strings; RTL checked
+- [x] `pnpm lint`, `pnpm types` pass
+- [x] Manual QA section added to `QA.md`
 
 ## Manual QA (dev build)
 

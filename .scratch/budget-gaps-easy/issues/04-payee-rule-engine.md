@@ -7,7 +7,7 @@ auto-applied so the user can tell it apart from manual choices.
 
 **Blocked by:** None (can start immediately).
 
-**Status:** in-progress
+**Status:** resolved
 
 ## Progress
 
@@ -70,14 +70,14 @@ auto-applied so the user can tell it apart from manual choices.
 
 ## Acceptance criteria
 
-- [ ] `transaction_rules` + `category_source` migrations; schema types updated
-- [ ] Pure `applyRules(draft, rules)` (no DB handle): applies only to an empty target field, never when `is_transfer = 1`, first match by ascending `priority` (deterministic on ties), supports contains/equals/starts_with, applies optional subtype/tags
-- [ ] Auto-apply runs on transaction create and on manual edit-save
-- [ ] Form toggle "Always categorise …" creates an active rule
-- [ ] "auto" badge shown for rule-set categories; cleared on manual category change
-- [ ] en + ar strings; RTL checked
-- [ ] `pnpm lint`, `pnpm types` pass
-- [ ] Manual QA section added to `QA.md`
+- [x] `transaction_rules` + `category_source` migrations; schema types updated
+- [x] Pure `applyRules(draft, rules)` (no DB handle): applies only to an empty target field, never when `is_transfer = 1`, first match by ascending `priority` (deterministic on ties), supports contains/equals/starts_with, applies optional subtype/tags
+- [x] Auto-apply runs on transaction create and on manual edit-save
+- [x] Form toggle "Always categorise …" creates an active rule
+- [x] "auto" badge shown for rule-set categories; cleared on manual category change
+- [x] en + ar strings; RTL checked
+- [x] `pnpm lint`, `pnpm types` pass
+- [x] Manual QA section added to `QA.md`
 
 ## Manual QA (dev build)
 

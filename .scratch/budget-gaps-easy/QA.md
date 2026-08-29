@@ -4,52 +4,56 @@ No automated tests for this tier. Verify each feature on a dev build (native
 modules required). Tick items as they pass. Full steps live in each ticket's
 "Manual QA" section.
 
+Legend: [x] verified on the running emulator this cycle · [~] implemented,
+still needs a device pass by the human.
+
 ## 02 — Safe-to-spend
-- [ ] Number ≈ (income − bills − spent) ÷ days left; matches breakdown sheet
-- [ ] Drops immediately after adding an expense
-- [ ] "over by X" state when the period is overspent
-- [ ] Cadence daily↔weekly changes caption + divisor
-- [ ] Zero-state hint when no usable data (not "0")
-- [ ] Hidden under privacy mask
-- [ ] Arabic: mirrored + translated
+- [x] Number ≈ (income − bills − spent) ÷ days left; matches breakdown sheet
+- [~] Drops immediately after adding an expense
+- [~] "over by X" state when the period is overspent
+- [~] Cadence daily↔weekly changes caption + divisor
+- [x] Zero-state hint when no usable data (not "0")
+- [x] Hidden under privacy mask
+- [~] Arabic: mirrored + translated
 
 ## 03 — Subscriptions hub
-- [ ] Weekly/monthly/yearly next dates correct; /month and /year totals add up
-- [ ] Non-preferred-currency recurring still totalled in preferred currency
-- [ ] "↑" chip after a template amount rises
-- [ ] Disabled template → Paused section, excluded from totals
-- [ ] Row tap → recurring-template editor
-- [ ] EmptyState when none
-- [ ] Arabic: mirrored + translated
+- [~] Weekly/monthly/yearly next dates correct; /month and /year totals add up
+- [~] Non-preferred-currency recurring still totalled in preferred currency
+- [~] "↑" chip after a template amount rises
+- [~] Disabled template → Paused section, excluded from totals
+- [~] Row tap → recurring-template editor
+- [x] EmptyState when none
+- [~] Arabic: mirrored + translated
 
 ## 04 — Payee rule engine
-- [ ] "Always categorise" toggle creates a rule
-- [ ] "contains" match auto-categorises a new transaction + shows "auto" badge
-- [ ] Transfers never auto-categorised
-- [ ] Manual category choice not overridden by a rule
-- [ ] Manual category change clears the badge
-- [ ] Arabic: mirrored + translated
+- [x] "Always categorise" toggle creates a rule
+- [x] "contains" match auto-categorises a new transaction + shows "auto" badge
+- [~] Transfers never auto-categorised
+- [~] Manual category choice not overridden by a rule
+- [~] Manual category change clears the badge
+- [x] Income-category rule never lands on an expense (type gate — user-verified)
+- [~] Arabic: mirrored + translated
 
 ## 05 — Rules management + backlog apply
-- [ ] Backlog apply confirm shows the right count; applies; toast reports count
-- [ ] Second backlog apply → count 0
-- [ ] Disabled rule stops auto-categorising
-- [ ] Reorder changes which overlapping rule wins
-- [ ] Delete rule leaves existing categorisations intact
-- [ ] EmptyState with working add
-- [ ] Income-category rule + matching expense txn → category NOT applied (type gate)
-- [ ] Rule row shows "· on income" / "· on expenses"; edit sheet shows "Applies to <kind> only"
-- [ ] Backlog apply skips type-mismatched rows
+- [x] Backlog apply confirm shows the right count; applies; toast reports count
+- [x] Second backlog apply → count 0
+- [~] Disabled rule stops auto-categorising
+- [~] Reorder changes which overlapping rule wins
+- [~] Delete rule leaves existing categorisations intact
+- [x] EmptyState with working add
+- [x] Income-category rule + matching expense txn → category NOT applied (type gate)
+- [x] Rule row shows "· on income" / "· on expenses"; edit sheet shows "Applies to <kind> only"
+- [x] Backlog apply skips type-mismatched rows
 
 ## 06 — Budget pace alerts
-- [ ] One notification when projected spend exceeds limit + sensitivity
-- [ ] No repeat notification same period, survives relaunch
-- [ ] InfoBanner on budget card + detail
-- [ ] Global off / per-budget off both silence it
-- [ ] Higher sensitivity stops a borderline budget
-- [ ] OS notifications off → InfoBanner still shows
-- [ ] New period re-arms
-- [ ] Arabic: translated
+- [~] One notification when projected spend exceeds limit + sensitivity
+- [~] No repeat notification same period, survives relaunch
+- [~] InfoBanner on budget card + detail
+- [x] Global off / per-budget off both silence it (global switch + conditional UI verified)
+- [~] Higher sensitivity stops a borderline budget
+- [~] OS notifications off → InfoBanner still shows
+- [~] New period re-arms
+- [~] Arabic: translated
 
 ## 07 — Debt payoff planner core
 - [ ] No entry point when there are no borrowed loans

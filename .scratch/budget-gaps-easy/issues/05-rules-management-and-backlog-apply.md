@@ -6,7 +6,7 @@ uncategorised transactions.
 
 **Blocked by:** 04
 
-**Status:** in-progress
+**Status:** resolved
 
 ## Progress
 
@@ -72,15 +72,15 @@ uncategorised transactions.
 
 ## Acceptance criteria
 
-- [ ] Rules list with inline enable/disable and delete
-- [ ] Add / edit rule sheet covering all rule fields
-- [ ] Drag-to-reorder writes `priority`
-- [ ] `applyRulesToBacklog()` service fn: skips transfers, skips already-categorised, respects priority, returns an accurate count
-- [ ] Backlog apply behind a `ConfirmModal`, result surfaced in a toast
-- [ ] `EmptyState` with an add path
-- [ ] en + ar strings; RTL checked
-- [ ] `pnpm lint`, `pnpm types` pass
-- [ ] Manual QA section added to `QA.md`
+- [x] Rules list with inline enable/disable and delete
+- [x] Add / edit rule sheet covering all rule fields
+- [x] Drag-to-reorder writes `priority`
+- [x] `applyRulesToBacklog()` service fn: skips transfers, skips already-categorised, respects priority, returns an accurate count
+- [x] Backlog apply behind a `ConfirmModal`, result surfaced in a toast
+- [x] `EmptyState` with an add path
+- [x] en + ar strings; RTL checked
+- [x] `pnpm lint`, `pnpm types` pass
+- [x] Manual QA section added to `QA.md`
 
 ## Manual QA (dev build)
 
