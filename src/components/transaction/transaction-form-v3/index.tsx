@@ -414,7 +414,12 @@ export function TransactionFormV3({
         ? recurring.startDate
         : data.transactionDate
       const isFuture = effectiveDate.getTime() > Date.now()
-      const effectiveIsPending = data.isPending ?? false
+      // Recurring templates never carry a pending flag; the isPending switch is
+      // hidden while recurring is on, but RHF keeps a stale value if it was
+      // toggled before enabling recurring. Enforce the invariant here.
+      const effectiveIsPending = recurring.enabled
+        ? false
+        : (data.isPending ?? false)
       const requiresManualConfirmation = recurring.enabled
         ? undefined
         : transaction
