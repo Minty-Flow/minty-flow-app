@@ -27,12 +27,25 @@ cadence, which accounts count, and whether goal contributions are subtracted.
 - Verified on emulator: card ("SAFE TO SPEND TODAY / $170.08 / 3 days left"),
   breakdown modal (Balance 550.25 − Bills 40 = 510.25 ÷ 3 = 170.08), pref
   screen.
-- **Deferred:** goal-contributions term (`goalContributionsMinor` is wired
-  through as 0; needs goal-progress aggregation — follow-up). `includeGoals`
-  store field + toggle hidden until then. Multi-currency shows the preferred
-  currency as headline; other currencies not yet surfaced in the card.
-  Shared "headline figure" component not extracted yet (do it when 07/08 need
-  it). RTL spot-check pending.
+- **Multi-currency (reworked):** no headline / no "primary currency" / no FX.
+  The card lists **one row per currency** that has an included account
+  (`USD  $4` … `EUR  €12`), exactly like the Home income/expense summary; one
+  "N days left" caption shared across rows; a currency that is individually
+  negative styles its own row. Breakdown modal shows a full block per
+  currency. Read-model returns `rows` + `remainingUnits`.
+- **Rename** (requested): `money-formatting.store` `currencyLook` →
+  `currencyDisplayFormat` (+ `setCurrencyLook` → `setCurrencyDisplayFormat`),
+  `preferredCurrency` → `fallbackCurrency` (it was never settable, always
+  "USD", and is only a "no currency in context" fallback). ~13 call sites
+  updated. `preferredCurrency` no longer referenced anywhere in
+  safe-to-spend.
+- **Deferred:** goal-contributions term (`goalContributionsMinor` wired as 0;
+  needs goal-progress aggregation). `includeGoals` store field + toggle
+  hidden until then. Shared "headline figure" component not extracted (do it
+  when 07/08 need it). RTL spot-check pending.
+- **Follow-up idea:** a real user-facing primary-currency setting would fix
+  several lingering USD assumptions (Money fallback, summary empty state,
+  bill-splitter, onboarding) — its own ticket, out of scope here.
 
 ## Behaviour
 

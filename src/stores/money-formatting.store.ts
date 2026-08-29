@@ -16,8 +16,15 @@ export type MoneyFormatType =
   (typeof MoneyFormatEnum)[keyof typeof MoneyFormatEnum]
 
 interface MoneyFormattingStore {
-  preferredCurrency: string
-  currencyLook: MoneyFormatType
+  /**
+   * Currency assumed only when context provides none (Money component
+   * fallback, empty-state placeholders, the first onboarding account, a
+   * bill-splitter bill with no account). The app is multi-currency by
+   * design — this is NOT a user-facing "primary currency".
+   */
+  fallbackCurrency: string
+  /** How an amount renders: currency symbol, ISO code, or full name. */
+  currencyDisplayFormat: MoneyFormatType
 
   // 1. THIS IS THE UI STATE (The eye toggle)
   privacyMode: boolean
@@ -29,7 +36,7 @@ interface MoneyFormattingStore {
   maskOnShake: boolean
 
   setCurrency: (currency: string) => void
-  setCurrencyLook: (value: MoneyFormatType) => void
+  setCurrencyDisplayFormat: (value: MoneyFormatType) => void
 
   // Controls the eye toggle (Session only)
   togglePrivacyMode: () => void
@@ -46,8 +53,8 @@ interface MoneyFormattingStore {
 export const useMoneyFormattingStore = create<MoneyFormattingStore>()(
   persist(
     (set) => ({
-      preferredCurrency: "USD",
-      currencyLook: MoneyFormatEnum.SYMBOL,
+      fallbackCurrency: "USD",
+      currencyDisplayFormat: MoneyFormatEnum.SYMBOL,
 
       // Default UI state
       privacyMode: false,
@@ -57,8 +64,9 @@ export const useMoneyFormattingStore = create<MoneyFormattingStore>()(
 
       maskOnShake: false,
 
-      setCurrency: (currency) => set({ preferredCurrency: currency }),
-      setCurrencyLook: (currencyLook) => set({ currencyLook }),
+      setCurrency: (currency) => set({ fallbackCurrency: currency }),
+      setCurrencyDisplayFormat: (currencyDisplayFormat) =>
+        set({ currencyDisplayFormat }),
 
       // The "Eye" toggle action: Just flips the UI state
       togglePrivacyMode: () =>
@@ -80,8 +88,8 @@ export const useMoneyFormattingStore = create<MoneyFormattingStore>()(
         removeItem: (name) => moneyFormattingStorage.remove(name),
       })),
 
-      /* THE MAGIC PART: 
-            As soon as the store rehydrates (synchronously with MMKV), 
+      /* THE MAGIC PART:
+            As soon as the store rehydrates (synchronously with MMKV),
             we force 'privacyMode' to match 'hideOnStartup'.
         */
       onRehydrateStorage: () => (state) => {
@@ -93,8 +101,8 @@ export const useMoneyFormattingStore = create<MoneyFormattingStore>()(
       // Optimization: We don't need to save 'privacyMode' to MMKV
       // since it's just a session-based UI toggle.
       partialize: (state) => ({
-        preferredCurrency: state.preferredCurrency,
-        currencyLook: state.currencyLook,
+        fallbackCurrency: state.fallbackCurrency,
+        currencyDisplayFormat: state.currencyDisplayFormat,
         hideOnStartup: state.hideOnStartup,
         maskOnShake: state.maskOnShake,
       }),

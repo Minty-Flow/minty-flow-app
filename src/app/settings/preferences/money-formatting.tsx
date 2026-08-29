@@ -37,9 +37,13 @@ const formatOptions: Array<{
 
 export default function MoneyFormattingScreen() {
   const { theme } = useUnistyles()
-  const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
-  const setCurrencyLook = useMoneyFormattingStore((s) => s.setCurrencyLook)
-  const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
+  const fallbackCurrency = useMoneyFormattingStore((s) => s.fallbackCurrency)
+  const setCurrencyDisplayFormat = useMoneyFormattingStore(
+    (s) => s.setCurrencyDisplayFormat,
+  )
+  const currencyDisplayFormat = useMoneyFormattingStore(
+    (s) => s.currencyDisplayFormat,
+  )
   const exampleAmount = 123_456
   const { t } = useTranslation()
 
@@ -56,11 +60,7 @@ export default function MoneyFormattingScreen() {
             "screens.settings.preferences.appearance.moneyFormatting.previewLabel",
           )}
         </Text>
-        <Money
-          value={exampleAmount}
-          variant="h2"
-          currency={preferredCurrency}
-        />
+        <Money value={exampleAmount} variant="h2" currency={fallbackCurrency} />
       </View>
 
       <View native style={styles.sectionLabel}>
@@ -72,13 +72,13 @@ export default function MoneyFormattingScreen() {
       </View>
       <View native style={styles.card}>
         {formatOptions.map((option, index) => {
-          const isSelected = currencyLook === option.value
+          const isSelected = currencyDisplayFormat === option.value
           const isLast = index === formatOptions.length - 1
           return (
             <View key={option.value} native>
               <ListItem
                 style={styles.row}
-                onPress={() => setCurrencyLook(option.value)}
+                onPress={() => setCurrencyDisplayFormat(option.value)}
               >
                 <View native style={styles.rowContent}>
                   <Text style={styles.rowLabel}>

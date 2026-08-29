@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Modal, View as RNView } from "react-native"
+import { Modal, View as RNView, ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { Money } from "~/components/money"
@@ -21,7 +21,7 @@ export function SafeToSpendCard() {
   const router = useRouter()
   const enabled = useSafeToSpendStore((s) => s.enabled)
   const cadence = useSafeToSpendStore((s) => s.cadence)
-  const { hasData, headline } = useSafeToSpend()
+  const { hasData, rows, remainingUnits } = useSafeToSpend()
   const [breakdownOpen, setBreakdownOpen] = useState(false)
 
   if (!enabled) return null
@@ -31,18 +31,26 @@ export function SafeToSpendCard() {
       ? t("components.safeToSpend.captionWeekly")
       : t("components.safeToSpend.captionDaily")
 
+  const unitsLeft =
+    cadence === "weekly"
+      ? t("components.safeToSpend.weeksLeft", { count: remainingUnits })
+      : t("components.safeToSpend.daysLeft", { count: remainingUnits })
+
+  const showEmpty = !hasData || rows.length === 0
+
   return (
     <View style={styles.wrapper}>
       <Pressable
         style={styles.card}
-        onPress={() => headline && setBreakdownOpen(true)}
-        disabled={!headline}
+        onPress={() => !showEmpty && setBreakdownOpen(true)}
+        disabled={showEmpty}
       >
-        {!hasData || !headline ? (
+        <Text variant="small" style={styles.caption}>
+          {caption}
+        </Text>
+
+        {showEmpty ? (
           <>
-            <Text variant="small" style={styles.caption}>
-              {caption}
-            </Text>
             <Text variant="p" style={styles.hint}>
               {t("components.safeToSpend.emptyHint")}
             </Text>
@@ -56,34 +64,32 @@ export function SafeToSpendCard() {
           </>
         ) : (
           <>
-            <Text variant="small" style={styles.caption}>
-              {caption}
-            </Text>
-            <Money
-              value={headline.perUnitMinor}
-              currency={headline.currencyCode}
-              variant="large"
-              style={headline.isOver ? styles.over : styles.amount}
-            />
+            {rows.map((row) => (
+              <View key={row.currencyCode} style={styles.currencyRow}>
+                <Text variant="small" style={styles.currencyCode}>
+                  {row.currencyCode}
+                </Text>
+                <Money
+                  value={row.perUnitMinor}
+                  currency={row.currencyCode}
+                  variant="large"
+                  style={row.isOver ? styles.over : styles.amount}
+                />
+              </View>
+            ))}
             <Text variant="small" style={styles.secondary}>
-              {headline.isOver
-                ? t("components.safeToSpend.overBy")
-                : cadence === "weekly"
-                  ? t("components.safeToSpend.weeksLeft", {
-                      count: headline.breakdown.remainingUnits,
-                    })
-                  : t("components.safeToSpend.daysLeft", {
-                      count: headline.breakdown.remainingUnits,
-                    })}
+              {rows.some((r) => r.isOver)
+                ? t("components.safeToSpend.someOver")
+                : unitsLeft}
             </Text>
           </>
         )}
       </Pressable>
 
-      {headline && (
+      {!showEmpty && (
         <BreakdownModal
           visible={breakdownOpen}
-          row={headline}
+          rows={rows}
           cadence={cadence}
           onClose={() => setBreakdownOpen(false)}
           onOpenSettings={() => {
@@ -98,28 +104,18 @@ export function SafeToSpendCard() {
 
 function BreakdownModal({
   visible,
-  row,
+  rows,
   cadence,
   onClose,
   onOpenSettings,
 }: {
   visible: boolean
-  row: SafeToSpendCurrencyRow
+  rows: SafeToSpendCurrencyRow[]
   cadence: "daily" | "weekly"
   onClose: () => void
   onOpenSettings: () => void
 }) {
   const { t } = useTranslation()
-  const { breakdown, currencyCode, potMinor, perUnitMinor } = row
-
-  const line = (labelKey: TranslationKey, value: number, tone?: "expense") => (
-    <View style={styles.breakdownRow}>
-      <Text variant="p" style={styles.breakdownLabel}>
-        {t(labelKey)}
-      </Text>
-      <Money value={value} currency={currencyCode} tone={tone} />
-    </View>
-  )
 
   return (
     <Modal
@@ -142,33 +138,17 @@ function BreakdownModal({
               {t("components.safeToSpend.breakdownTitle")}
             </Text>
 
-            {line("components.safeToSpend.balance", breakdown.balanceMinor)}
-            {line(
-              "components.safeToSpend.upcomingIncome",
-              breakdown.upcomingIncomeMinor,
-            )}
-            {line(
-              "components.safeToSpend.upcomingBills",
-              breakdown.upcomingBillsMinor,
-              "expense",
-            )}
-            {breakdown.goalContributionsMinor > 0 &&
-              line(
-                "components.safeToSpend.goalContributions",
-                breakdown.goalContributionsMinor,
-                "expense",
-              )}
-
-            <View style={styles.breakdownDivider} />
-            {line("components.safeToSpend.pot", potMinor)}
-            <View style={styles.breakdownRow}>
-              <Text variant="p" style={styles.breakdownLabel}>
-                {cadence === "weekly"
-                  ? t("components.safeToSpend.perWeek")
-                  : t("components.safeToSpend.perDay")}
-              </Text>
-              <Money value={perUnitMinor} currency={currencyCode} />
-            </View>
+            <ScrollView style={styles.modalScroll}>
+              {rows.map((row, index) => (
+                <CurrencyBreakdown
+                  key={row.currencyCode}
+                  row={row}
+                  cadence={cadence}
+                  showHeader={rows.length > 1}
+                  isLast={index === rows.length - 1}
+                />
+              ))}
+            </ScrollView>
 
             <Button
               variant="ghost"
@@ -189,6 +169,66 @@ function BreakdownModal({
   )
 }
 
+function CurrencyBreakdown({
+  row,
+  cadence,
+  showHeader,
+  isLast,
+}: {
+  row: SafeToSpendCurrencyRow
+  cadence: "daily" | "weekly"
+  showHeader: boolean
+  isLast: boolean
+}) {
+  const { t } = useTranslation()
+  const { breakdown, currencyCode, potMinor, perUnitMinor } = row
+
+  const money = (labelKey: TranslationKey, value: number, tone?: "expense") => (
+    <View style={styles.breakdownRow}>
+      <Text variant="p" style={styles.breakdownLabel}>
+        {t(labelKey)}
+      </Text>
+      <Money value={value} currency={currencyCode} tone={tone} />
+    </View>
+  )
+
+  return (
+    <View style={[styles.currencyBlock, !isLast && styles.currencyBlockGap]}>
+      {showHeader && (
+        <Text variant="small" style={styles.currencyBlockTitle}>
+          {currencyCode}
+        </Text>
+      )}
+      {money("components.safeToSpend.balance", breakdown.balanceMinor)}
+      {money(
+        "components.safeToSpend.upcomingIncome",
+        breakdown.upcomingIncomeMinor,
+      )}
+      {money(
+        "components.safeToSpend.upcomingBills",
+        breakdown.upcomingBillsMinor,
+        "expense",
+      )}
+      {breakdown.goalContributionsMinor > 0 &&
+        money(
+          "components.safeToSpend.goalContributions",
+          breakdown.goalContributionsMinor,
+          "expense",
+        )}
+      <View style={styles.breakdownDivider} />
+      {money("components.safeToSpend.pot", potMinor)}
+      <View style={styles.breakdownRow}>
+        <Text variant="p" style={styles.breakdownLabel}>
+          {cadence === "weekly"
+            ? t("components.safeToSpend.perWeek")
+            : t("components.safeToSpend.perDay")}
+        </Text>
+        <Money value={perUnitMinor} currency={currencyCode} />
+      </View>
+    </View>
+  )
+}
+
 const styles = StyleSheet.create((theme) => ({
   wrapper: {
     marginHorizontal: 20,
@@ -200,8 +240,8 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
     paddingVertical: 16,
     paddingHorizontal: 20,
-    gap: 4,
-    alignItems: "center",
+    gap: 6,
+    alignItems: "stretch",
     backgroundColor: theme.colors.surface,
   },
   caption: {
@@ -210,6 +250,17 @@ const styles = StyleSheet.create((theme) => ({
     textTransform: "uppercase",
     letterSpacing: 0.5,
     opacity: 0.8,
+    textAlign: "center",
+  },
+  currencyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  currencyCode: {
+    color: theme.colors.onSurface,
+    fontWeight: "700",
+    opacity: 0.55,
   },
   amount: {
     color: theme.colors.onSurface,
@@ -222,6 +273,8 @@ const styles = StyleSheet.create((theme) => ({
   secondary: {
     color: theme.colors.onSurface,
     opacity: 0.6,
+    textAlign: "center",
+    marginTop: 2,
   },
   hint: {
     color: theme.colors.onSurface,
@@ -230,6 +283,7 @@ const styles = StyleSheet.create((theme) => ({
   link: {
     color: theme.colors.primary,
     fontWeight: "600",
+    textAlign: "center",
   },
   modalRoot: {
     flex: 1,
@@ -251,6 +305,7 @@ const styles = StyleSheet.create((theme) => ({
   modalCard: {
     width: "100%",
     maxWidth: 400,
+    maxHeight: "80%",
     padding: 20,
     gap: 12,
     backgroundColor: theme.colors.surface,
@@ -259,6 +314,24 @@ const styles = StyleSheet.create((theme) => ({
   modalTitle: {
     fontWeight: "600",
     marginBottom: 4,
+  },
+  modalScroll: {
+    flexGrow: 0,
+  },
+  currencyBlock: {
+    gap: 8,
+  },
+  currencyBlockGap: {
+    marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.semantic.semi,
+  },
+  currencyBlockTitle: {
+    color: theme.colors.onSecondary,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    opacity: 0.7,
   },
   breakdownRow: {
     flexDirection: "row",

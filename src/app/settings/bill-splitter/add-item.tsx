@@ -34,9 +34,9 @@ export default function AddItemScreen() {
   const params = useLocalSearchParams<{
     itemId?: string
   }>()
-  const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
+  const fallbackCurrency = useMoneyFormattingStore((s) => s.fallbackCurrency)
   const billCurrency = useBillSplitterStore((s) => s.currencyCode)
-  const currency = billCurrency ?? preferredCurrency
+  const currency = billCurrency ?? fallbackCurrency
   const setCurrencyCode = useBillSplitterStore((s) => s.setCurrencyCode)
   useEffect(() => {
     if (!billCurrency) setCurrencyCode(currency)

@@ -45,7 +45,9 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
   const { theme } = useUnistyles()
   const isRTL = useLanguageStore((s) => s.isRTL)
   const privacyMode = useMoneyFormattingStore((s) => s.privacyMode)
-  const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
+  const currencyDisplayFormat = useMoneyFormattingStore(
+    (s) => s.currencyDisplayFormat,
+  )
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
   const [unarchiveModalVisible, setUnarchiveModalVisible] = useState(false)
   const goal = useGoal(goalId)
@@ -191,7 +193,7 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
     if (daysLeft === null) return t("screens.settings.goals.card.noDeadline")
     const daily = remaining / Math.max(daysLeft, 1)
     const raw = formatMoney(roundToSafeInteger(daily), goal.currencyCode, {
-      currencyDisplay: currencyLook,
+      currencyDisplay: currencyDisplayFormat,
       hideSign: true,
     })
     const amount = privacyMode ? raw.replace(/[\d٠-٩۰-۹]/gu, "⁕") : raw

@@ -63,7 +63,9 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
   const { theme } = useUnistyles()
   const isRTL = useLanguageStore((s) => s.isRTL)
   const privacyMode = useMoneyFormattingStore((s) => s.privacyMode)
-  const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
+  const currencyDisplayFormat = useMoneyFormattingStore(
+    (s) => s.currencyDisplayFormat,
+  )
   const weekStart = useWeekStartStore((s) => s.weekStart)
   const linkedCategories = budget.categoryIds
     .map((id) => allCategories.find((c) => c.id === id))
@@ -141,7 +143,7 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
   const insight = (() => {
     const formatAmt = (n: number) => {
       const raw = formatMoney(roundToSafeInteger(n), budget.currencyCode, {
-        currencyDisplay: currencyLook,
+        currencyDisplay: currencyDisplayFormat,
         hideSign: true,
       })
       return privacyMode ? raw.replace(/[\d٠-٩۰-۹]/gu, "⁕") : raw

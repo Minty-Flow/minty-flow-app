@@ -44,7 +44,9 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
   const { theme } = useUnistyles()
   const isRTL = useLanguageStore((s) => s.isRTL)
   const privacyMode = useMoneyFormattingStore((s) => s.privacyMode)
-  const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
+  const currencyDisplayFormat = useMoneyFormattingStore(
+    (s) => s.currencyDisplayFormat,
+  )
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
   const budget = useBudget(budgetId)
   const weekStart = useWeekStartStore((s) => s.weekStart)
@@ -163,7 +165,7 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
       : t(`screens.settings.budgets.periods.${budget.period}` as TranslationKey)
   const formatAmt = (n: number) => {
     const raw = formatMoney(roundToSafeInteger(n), budget.currencyCode, {
-      currencyDisplay: currencyLook,
+      currencyDisplay: currencyDisplayFormat,
       hideSign: true,
     })
     return privacyMode ? raw.replace(/[\d٠-٩۰-۹]/gu, "⁕") : raw

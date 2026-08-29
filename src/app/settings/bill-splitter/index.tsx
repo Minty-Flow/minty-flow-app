@@ -31,7 +31,7 @@ export default function BillSplitterScreen() {
   const { theme } = useUnistyles()
   const router = useRouter()
   const navigation = useNavigation()
-  const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
+  const fallbackCurrency = useMoneyFormattingStore((s) => s.fallbackCurrency)
   const participants = useBillSplitterStore((s) => s.participants)
   const items = useBillSplitterStore((s) => s.items)
   const accountId = useBillSplitterStore((s) => s.accountId)
@@ -44,7 +44,7 @@ export default function BillSplitterScreen() {
   const [accountPickerOpen, setAccountPickerOpen] = useState(false)
   const [accountSearchQuery, setAccountSearchQuery] = useState("")
   const selectedAccount = accounts.find((a) => a.id === accountId) ?? null
-  const currency = selectedAccount?.currencyCode ?? preferredCurrency
+  const currency = selectedAccount?.currencyCode ?? fallbackCurrency
   useEffect(() => setCurrencyCode(currency), [currency, setCurrencyCode])
   const total = getBillTotal(items)
   const allocated = getAllocatedTotal(items)

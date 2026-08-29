@@ -25,9 +25,9 @@ export default function SummaryScreen() {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const router = useRouter()
-  const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
+  const fallbackCurrency = useMoneyFormattingStore((s) => s.fallbackCurrency)
   const billCurrency = useBillSplitterStore((s) => s.currencyCode)
-  const currency = billCurrency ?? preferredCurrency
+  const currency = billCurrency ?? fallbackCurrency
   const participants = useBillSplitterStore((s) => s.participants)
   const items = useBillSplitterStore((s) => s.items)
   const payerId = useBillSplitterStore((s) => s.payerId)

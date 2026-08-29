@@ -26,7 +26,7 @@ export function BillItemCard({
 }: BillItemCardProps) {
   const { theme } = useUnistyles()
   const { t } = useTranslation()
-  const currency = useMoneyFormattingStore((s) => s.preferredCurrency)
+  const currency = useMoneyFormattingStore((s) => s.fallbackCurrency)
 
   const itemTotal = roundToSafeInteger(item.price * item.quantity)
   const allocations = getItemAllocations(item)

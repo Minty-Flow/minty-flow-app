@@ -94,8 +94,8 @@ const Card = ({
   extraByCurrency = EMPTY_EXTRA_BY_CURRENCY,
 }: CardProps) => {
   const { theme } = useUnistyles()
-  const preferredCurrency = useMoneyFormattingStore(
-    (state) => state.preferredCurrency,
+  const fallbackCurrency = useMoneyFormattingStore(
+    (state) => state.fallbackCurrency,
   )
   const isIncome = type === TransactionTypeEnum.INCOME
   const icon: IconSvgName = isIncome
@@ -182,7 +182,7 @@ const Card = ({
               </Text>
               <Money
                 value={0}
-                currency={preferredCurrency}
+                currency={fallbackCurrency}
                 style={colorStyle}
                 variant="small"
               />

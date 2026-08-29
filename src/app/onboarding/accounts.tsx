@@ -24,7 +24,7 @@ export default function OnboardingAccountsScreen() {
   const { data: accounts, status } = useActiveAccountsQuery()
   const { t } = useTranslation()
   const router = useRouter()
-  const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
+  const fallbackCurrency = useMoneyFormattingStore((s) => s.fallbackCurrency)
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
   const [saving, startTransition] = useTransition()
   if (status === "loading") return <RouteLoadingState />
@@ -60,7 +60,7 @@ export default function OnboardingAccountsScreen() {
                 type: preset.type,
                 icon: preset.icon,
                 balance: 0,
-                currencyCode: preferredCurrency,
+                currencyCode: fallbackCurrency,
                 colorSchemeName: "",
                 isPrimary: false,
                 excludeFromBalance: false,

@@ -1420,7 +1420,8 @@
       "pot": "Available",
       "perDay": "Per day",
       "perWeek": "Per week",
-      "adjust": "Adjust"
+      "adjust": "Adjust",
+      "someOver": "Some currencies are over"
     }
   },
   "validation": {

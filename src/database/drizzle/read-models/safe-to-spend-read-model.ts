@@ -1,6 +1,5 @@
 import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 
-import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { useSafeToSpendStore } from "~/stores/safe-to-spend.store"
 import { TransactionTypeEnum } from "~/types/transactions"
 import { occurrencesInWindow } from "~/utils/recurrence"
@@ -36,16 +35,19 @@ export interface SafeToSpendCurrencyRow extends SafeToSpendResult {
 export interface SafeToSpendData {
   /** At least one included account exists. */
   hasData: boolean
-  /** Preferred-currency row, or the first available when none matches. */
-  headline: SafeToSpendCurrencyRow | null
-  /** Other currencies with an included account. */
-  others: SafeToSpendCurrencyRow[]
+  /**
+   * One row per currency that has an included account, sorted by code. The
+   * app is multi-currency and does no FX — currencies are never summed; the
+   * UI lists them the way the Home income/expense summary does.
+   */
+  rows: SafeToSpendCurrencyRow[]
+  /** Days (or weeks) left in the month — the same divisor for every row. */
+  remainingUnits: number
 }
 
 export function useSafeToSpend(): SafeToSpendData {
   const cadence = useSafeToSpendStore((s) => s.cadence)
   const includedAccountIds = useSafeToSpendStore((s) => s.includedAccountIds)
-  const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
 
   const accounts = useAccounts()
   const rulesResult = useLiveQuery(
@@ -64,7 +66,6 @@ export function useSafeToSpend(): SafeToSpendData {
     accounts.map((a) => [a.id, a.currencyCode]),
   )
 
-  // Balance per currency.
   const byCurrency = new Map<
     string,
     { balance: number; income: number; bills: number }
@@ -102,8 +103,8 @@ export function useSafeToSpend(): SafeToSpendData {
     }
   }
 
-  const rows: SafeToSpendCurrencyRow[] = [...byCurrency.entries()].map(
-    ([currencyCode, agg]) => {
+  const rows: SafeToSpendCurrencyRow[] = [...byCurrency.entries()]
+    .map(([currencyCode, agg]) => {
       const breakdown: SafeToSpendBreakdown = {
         balanceMinor: agg.balance,
         upcomingIncomeMinor: agg.income,
@@ -122,13 +123,8 @@ export function useSafeToSpend(): SafeToSpendData {
           remainingUnits,
         }),
       }
-    },
-  )
+    })
+    .sort((a, b) => a.currencyCode.localeCompare(b.currencyCode))
 
-  rows.sort((a, b) => a.currencyCode.localeCompare(b.currencyCode))
-  const headline =
-    rows.find((r) => r.currencyCode === preferredCurrency) ?? rows[0] ?? null
-  const others = rows.filter((r) => r !== headline)
-
-  return { hasData: included.length > 0, headline, others }
+  return { hasData: included.length > 0, rows, remainingUnits }
 }

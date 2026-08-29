@@ -42,7 +42,9 @@ export const Money: FC<MoneyProps> = ({
 }) => {
   // Preferences
   const privacyModeActive = useMoneyFormattingStore((s) => s.privacyMode)
-  const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
+  const currencyDisplayFormat = useMoneyFormattingStore(
+    (s) => s.currencyDisplayFormat,
+  )
   // Currency can be transiently empty while a related live query (e.g. an
   // account) is still loading — render a placeholder instead of crashing.
   if (!currency) {
@@ -85,7 +87,7 @@ export const Money: FC<MoneyProps> = ({
   })()
   // Format
   const formatted = formatMoney(signedValue, currency, {
-    currencyDisplay: currencyLook,
+    currencyDisplay: currencyDisplayFormat,
     compact,
     hideSign: resolvedSignTone === TransactionTypeEnum.TRANSFER || hideSign,
     showSign: resolvedSignTone !== TransactionTypeEnum.TRANSFER && showSign,
