@@ -1,7 +1,11 @@
 import { and, asc, eq, isNull, ne } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
-import { transactionRules, transactions } from "~/database/drizzle/schema"
+import {
+  categories,
+  transactionRules,
+  transactions,
+} from "~/database/drizzle/schema"
 import { runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
 import type {
@@ -35,6 +39,15 @@ function mapRow(row: typeof transactionRules.$inferSelect): TransactionRule {
     createdAt: new Date(row.createdAt),
     updatedAt: new Date(row.updatedAt),
   }
+}
+
+/** category id → type, so rules only apply a category to a matching txn kind. */
+export function categoryTypeMap(): Map<string, "expense" | "income"> {
+  const rows = drizzleDb
+    .select({ id: categories.id, type: categories.type })
+    .from(categories)
+    .all()
+  return new Map(rows.map((r) => [r.id, r.type as "expense" | "income"]))
 }
 
 /** Synchronous read for the ledger service to consult at transaction time. */
@@ -191,12 +204,14 @@ export async function applyRulesToBacklog(): Promise<number> {
   const rules = listTransactionRules()
   if (rules.length === 0) return 0
 
+  const catTypes = categoryTypeMap()
   const candidates = drizzleDb
     .select({
       id: transactions.id,
       title: transactions.title,
       description: transactions.description,
       subtype: transactions.subtype,
+      type: transactions.type,
     })
     .from(transactions)
     .where(
@@ -218,8 +233,10 @@ export async function applyRulesToBacklog(): Promise<number> {
           subtype: row.subtype,
           tags: [],
           isTransfer: false,
+          type: row.type as "expense" | "income",
         },
         rules,
+        catTypes,
       )
       return patch.categoryId
         ? { id: row.id, categoryId: patch.categoryId, subtype: patch.subtype }

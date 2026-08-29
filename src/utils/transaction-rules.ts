@@ -8,6 +8,8 @@ export interface RuleTarget {
   subtype: string | null
   tags: string[]
   isTransfer: boolean
+  /** Transaction kind — a rule's category must match this to apply. */
+  type: "expense" | "income"
 }
 
 export interface RulePatch {
@@ -39,6 +41,7 @@ function fieldMatches(
 export function applyRules(
   target: RuleTarget,
   rules: TransactionRule[],
+  categoryTypeById: Map<string, "expense" | "income">,
 ): RulePatch {
   if (target.isTransfer) return {}
 
@@ -51,6 +54,16 @@ export function applyRules(
       rule.matchField === "title" ? target.title : target.description
     if (!field) continue
     if (!fieldMatches(field, rule.matchType, rule.matchValue)) continue
+
+    // A rule that assigns a category only applies to transactions of that
+    // category's type. An income-category rule must never land on an expense
+    // (or vice versa) — that produces a nonsensical income-category expense.
+    if (
+      rule.setCategoryId &&
+      categoryTypeById.get(rule.setCategoryId) !== target.type
+    ) {
+      continue
+    }
 
     const patch: RulePatch = {}
     if (rule.setCategoryId && !target.categoryId) {

@@ -37,8 +37,13 @@ uncategorised transactions.
   here via adb; shares the exact `applyRules` path the backlog just exercised.
 - Subtype / tags editing in the rule sheet is deferred (schema supports them;
   neither the create-from-form path nor the common case needs them).
-- `FormCategoryPicker` shows all categories (income + expense) — acceptable
-  since a rule may target either; could filter later if noisy.
+- `FormCategoryPicker` shows all categories (income + expense) on purpose — a
+  rule may target either. **Type gate added:** `applyRules` now takes a
+  `categoryTypeById` map and skips any rule whose category type ≠ the
+  transaction type, so an income-category rule can never land on an expense
+  (and vice versa). The rule row shows "· on income / on expenses" and the
+  edit sheet shows "Applies to <kind> transactions only" once a category is
+  picked. Both `createTransaction` and `applyRulesToBacklog` pass the map.
 - Reorder handle is visually heavy (existing `ReorderableListV2` design).
 
 ## Behaviour

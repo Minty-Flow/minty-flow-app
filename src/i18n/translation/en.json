@@ -1000,7 +1000,15 @@
         "applyConfirmBody": "This sets a category on up to {{count}} past transactions. You can change any of them afterwards.",
         "appliedToast_one": "{{count}} transaction categorised",
         "appliedToast_other": "{{count}} transactions categorised",
-        "deleteConfirmTitle": "Delete this rule?"
+        "deleteConfirmTitle": "Delete this rule?",
+        "appliesTag": {
+          "income": "on income",
+          "expense": "on expenses"
+        },
+        "appliesHint": {
+          "income": "Applies to income transactions only.",
+          "expense": "Applies to expense transactions only."
+        }
       }
     }
   },

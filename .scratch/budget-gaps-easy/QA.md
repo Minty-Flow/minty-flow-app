@@ -37,6 +37,9 @@ modules required). Tick items as they pass. Full steps live in each ticket's
 - [ ] Reorder changes which overlapping rule wins
 - [ ] Delete rule leaves existing categorisations intact
 - [ ] EmptyState with working add
+- [ ] Income-category rule + matching expense txn → category NOT applied (type gate)
+- [ ] Rule row shows "· on income" / "· on expenses"; edit sheet shows "Applies to <kind> only"
+- [ ] Backlog apply skips type-mismatched rows
 
 ## 06 — Budget pace alerts
 - [ ] One notification when projected spend exceeds limit + sensitivity

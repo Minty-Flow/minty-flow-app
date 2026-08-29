@@ -1000,7 +1000,15 @@
         "applyConfirmBody": "يعيّن فئة لما يصل إلى {{count}} معاملة سابقة. يمكنك تغيير أي منها لاحقًا.",
         "appliedToast_one": "تم تصنيف {{count}} معاملة",
         "appliedToast_other": "تم تصنيف {{count}} معاملة",
-        "deleteConfirmTitle": "حذف هذه القاعدة؟"
+        "deleteConfirmTitle": "حذف هذه القاعدة؟",
+        "appliesTag": {
+          "income": "على الدخل",
+          "expense": "على المصروفات"
+        },
+        "appliesHint": {
+          "income": "تُطبَّق على معاملات الدخل فقط.",
+          "expense": "تُطبَّق على معاملات المصروفات فقط."
+        }
       }
     }
   },

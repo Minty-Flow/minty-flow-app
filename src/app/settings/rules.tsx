@@ -47,6 +47,14 @@ const TYPE_KEY: Record<RuleMatchType, TranslationKey> = {
   starts_with: "screens.settings.rules.type.starts_with",
 }
 const MATCH_TYPES: RuleMatchType[] = ["contains", "equals", "starts_with"]
+const APPLIES_TAG_KEY: Record<"expense" | "income", TranslationKey> = {
+  expense: "screens.settings.rules.appliesTag.expense",
+  income: "screens.settings.rules.appliesTag.income",
+}
+const APPLIES_HINT_KEY: Record<"expense" | "income", TranslationKey> = {
+  expense: "screens.settings.rules.appliesHint.expense",
+  income: "screens.settings.rules.appliesHint.income",
+}
 
 export default function RulesScreen() {
   const { t } = useTranslation()
@@ -102,6 +110,7 @@ export default function RulesScreen() {
           <Text variant="small" style={styles.muted} numberOfLines={1}>
             {"→ "}
             {category?.name ?? t("common.transaction.uncategorized")}
+            {category ? ` · ${t(APPLIES_TAG_KEY[category.type])}` : ""}
           </Text>
         </View>
         <Switch
@@ -243,6 +252,10 @@ function RuleForm({
   )
   const [deleteOpen, setDeleteOpen] = useState(false)
 
+  const selectedType = categoryId
+    ? categories.find((c) => c.id === categoryId)?.type
+    : undefined
+
   const canSave = matchValue.trim().length > 0 && categoryId != null
 
   const save = async () => {
@@ -321,6 +334,11 @@ function RuleForm({
             onSelect={setCategoryId}
             onClear={() => setCategoryId(null)}
           />
+          {selectedType && (
+            <Text variant="small" style={styles.appliesHint}>
+              {t(APPLIES_HINT_KEY[selectedType])}
+            </Text>
+          )}
         </View>
 
         <Button
@@ -424,6 +442,11 @@ const styles = StyleSheet.create((theme) => ({
   },
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   pickerWrap: { marginTop: 8 },
+  appliesHint: {
+    color: theme.colors.onSurface,
+    opacity: 0.6,
+    marginTop: 6,
+  },
   saveButton: { marginTop: 16 },
   deleteButton: { marginTop: 4 },
   deleteText: { color: theme.colors.semantic.expense },

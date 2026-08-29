@@ -12,7 +12,10 @@ import {
   transactionTags,
   transfers,
 } from "~/database/drizzle/schema"
-import { listTransactionRules } from "~/database/services/transaction-rules-service"
+import {
+  categoryTypeMap,
+  listTransactionRules,
+} from "~/database/services/transaction-rules-service"
 import { runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
 import { generateId } from "~/database/utils/generate-id"
@@ -301,8 +304,10 @@ export async function createTransaction(
             subtype: data.subtype ?? null,
             tags: data.tags ?? [],
             isTransfer: false,
+            type: data.type === "income" ? "income" : "expense",
           },
           listTransactionRules(),
+          categoryTypeMap(),
         )
   const effectiveCategoryId = data.categoryId ?? rulePatch.categoryId ?? null
   const effectiveSubtype = data.subtype ?? rulePatch.subtype ?? null
