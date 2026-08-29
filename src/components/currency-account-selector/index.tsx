@@ -11,7 +11,7 @@
 import { useRouter } from "expo-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FlatList } from "react-native"
+import { ScrollView } from "react-native"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
@@ -280,21 +280,13 @@ export function CurrencyAccountSelector({
                 style={currencyAccountStyles.searchInput}
               />
             )}
-            <FlatList
+            <ScrollView
               style={currencyAccountStyles.inlinePanelList}
-              data={filteredCurrencyItems}
-              keyExtractor={(item) => item.code}
               nestedScrollEnabled
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
-              renderItem={({ item }) => (
-                <CurrencyPanelRow
-                  item={item}
-                  isSelected={item.code === selectedCurrency}
-                  onSelect={handleCurrencySelect}
-                />
-              )}
-              ListEmptyComponent={
+            >
+              {filteredCurrencyItems.length === 0 ? (
                 currencyItems.length === 0 ? (
                   <View style={currencyAccountStyles.emptyPanel}>
                     <Text style={currencyAccountStyles.emptyText}>
@@ -321,8 +313,17 @@ export function CurrencyAccountSelector({
                     title={t("components.selectors.currency.noCurrenciesFound")}
                   />
                 )
-              }
-            />
+              ) : (
+                filteredCurrencyItems.map((item) => (
+                  <CurrencyPanelRow
+                    key={item.code}
+                    item={item}
+                    isSelected={item.code === selectedCurrency}
+                    onSelect={handleCurrencySelect}
+                  />
+                ))
+              )}
+            </ScrollView>
           </View>
         )}
       </View>
@@ -381,42 +382,40 @@ export function CurrencyAccountSelector({
                     )}
                   />
                 ) : (
-                  <FlatList
+                  <ScrollView
                     style={currencyAccountStyles.inlinePanelList}
-                    data={matchingAccounts}
-                    keyExtractor={(account) => account.id}
                     nestedScrollEnabled
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
-                    ListHeaderComponent={
-                      matchingAccounts.length >= 2 ? (
-                        <ListItem
-                          style={[
-                            currencyAccountStyles.panelRow,
-                            currencyAccountStyles.selectAllRow,
-                          ]}
-                          onPress={handleSelectAll}
-                        >
-                          <Text style={currencyAccountStyles.selectAllText}>
-                            {t("components.currencyAccountSelector.selectAll", {
-                              currency: selectedCurrency,
-                            })}
-                          </Text>
-                          <IconSvg
-                            name={allSelected ? "checks-outline" : "check"}
-                            size={20}
-                          />
-                        </ListItem>
-                      ) : null
-                    }
-                    renderItem={({ item: account }) => (
+                  >
+                    {matchingAccounts.length >= 2 && (
+                      <ListItem
+                        style={[
+                          currencyAccountStyles.panelRow,
+                          currencyAccountStyles.selectAllRow,
+                        ]}
+                        onPress={handleSelectAll}
+                      >
+                        <Text style={currencyAccountStyles.selectAllText}>
+                          {t("components.currencyAccountSelector.selectAll", {
+                            currency: selectedCurrency,
+                          })}
+                        </Text>
+                        <IconSvg
+                          name={allSelected ? "checks-outline" : "check"}
+                          size={20}
+                        />
+                      </ListItem>
+                    )}
+                    {matchingAccounts.map((account) => (
                       <AccountRow
+                        key={account.id}
                         account={account}
                         isSelected={selectedAccountIdSet.has(account.id)}
                         onToggle={handleAccountToggle}
                       />
-                    )}
-                  />
+                    ))}
+                  </ScrollView>
                 )}
               </View>
             )}
