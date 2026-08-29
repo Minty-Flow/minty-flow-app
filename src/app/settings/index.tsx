@@ -67,8 +67,8 @@ const moneyManagementItems: SettingsItem[] = [
     icon: "history-toggle-outline",
   },
   {
-    titleKey: "screens.settings.subscriptions.title",
-    route: "/settings/subscriptions",
+    titleKey: "screens.settings.recurring.title",
+    route: "/settings/recurring",
     icon: "repeat-outline",
   },
   {

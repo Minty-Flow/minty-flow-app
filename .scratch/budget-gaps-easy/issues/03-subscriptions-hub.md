@@ -1,4 +1,27 @@
-# 03: Subscriptions & bills hub
+# 03: Recurring Expenses hub (was "Subscriptions & bills")
+
+## Naming decision
+
+Renamed **Subscriptions → "Recurring Expenses"**. The app already teaches the
+user the word "recurring" (transaction form, stats, home upcoming, item
+badge); a second noun for the same mechanic causes confusion, and
+"Subscriptions" wrongly implies rent / loan payments / gym are excluded — and
+it already exists as a spending *category* preset. One consistent word.
+Route/file/keys: `settings/recurring`, `screens.settings.recurring.*`,
+`useRecurringExpensesQuery`, `RecurringExpense`.
+
+## Overlap with Pending Transactions
+
+Decision: keep the two screens **independent**.
+- Recurring Expenses = forecast / cost view. One row per rule, next date from
+  the RRULE, per-month/year cost.
+- Pending Transactions = action queue for spawned, unconfirmed instances.
+- Linking or de-duping them adds noise for little value — different jobs.
+- One real bug fixed: price-increase detection now compares the template
+  amount against the last *past, confirmed, non-deleted* instance. Future /
+  pending spawns already carry the new amount, so they are excluded from that
+  baseline (they would have masked genuine rises).
+
 
 **What to build:** One screen that lists every recurring expense with its next
 charge date and normalised monthly / yearly cost, so the user can see all

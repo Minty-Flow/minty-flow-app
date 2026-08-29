@@ -13,7 +13,7 @@ import {
 } from "./entity-read-model"
 
 /** One recurring expense, with its cost normalised to month / year. */
-export interface Subscription {
+export interface RecurringExpense {
   id: string
   title: string
   amountMinor: number
@@ -25,10 +25,14 @@ export interface Subscription {
   nextChargeAt: Date | null
   monthlyMinor: number
   yearlyMinor: number
-  /** Template amount is higher than the most recent charged instance. */
+  /**
+   * Template amount is higher than the last *actually charged* instance
+   * (past, confirmed, not deleted). Future/pending spawns already carry the
+   * new amount, so they are excluded from this baseline.
+   */
   amountIncreased: boolean
   isPaused: boolean
-  /** Most recent charged instance, for jumping to an editable transaction. */
+  /** Most recent non-deleted instance, for jumping to an editable transaction. */
   latestInstanceId: string | null
 }
 
@@ -74,11 +78,17 @@ function parseRules(json: string): string[] {
 const YEAR_MS = 365 * 24 * 60 * 60 * 1000
 
 /**
- * Every recurring expense as a subscription row. Read-only aggregation over
+ * Every recurring expense as a normalised row. Read-only aggregation over
  * `recurring_transactions` — no schema of its own. Transfers are excluded;
  * disabled rules surface as `isPaused`.
+ *
+ * This is a forecast/cost view. The individual spawned instances (including
+ * pending ones awaiting confirmation) belong to the Pending Transactions
+ * screen — the two are deliberately independent.
  */
-export function useSubscriptionsQuery(): LiveReadModelResult<Subscription[]> {
+export function useRecurringExpensesQuery(): LiveReadModelResult<
+  RecurringExpense[]
+> {
   const rulesResult = useLiveQuery(
     drizzleDb.select().from(recurringTransactions),
   )
@@ -89,6 +99,8 @@ export function useSubscriptionsQuery(): LiveReadModelResult<Subscription[]> {
         recurringId: transactions.recurringId,
         amount: transactions.amount,
         transactionDate: transactions.transactionDate,
+        isPending: transactions.isPending,
+        isDeleted: transactions.isDeleted,
       })
       .from(transactions),
   )
@@ -98,24 +110,35 @@ export function useSubscriptionsQuery(): LiveReadModelResult<Subscription[]> {
   const accountById = new Map(accounts.map((a) => [a.id, a]))
   const categoryById = new Map(categories.map((c) => [c.id, c]))
 
-  // Most recent charged amount per rule, for price-increase detection.
-  const latestByRule = new Map<
-    string,
-    { amount: number; at: number; id: string }
-  >()
+  const now = new Date()
+  const nowMs = now.getTime()
+
+  // Two per-rule cursors:
+  //  - lastCharged: latest past, confirmed, non-deleted instance — the
+  //    baseline for price-increase detection.
+  //  - latestInstance: latest non-deleted instance of any kind — the row's
+  //    tap target.
+  const lastChargedByRule = new Map<string, { amount: number; at: number }>()
+  const latestInstanceByRule = new Map<string, { id: string; at: number }>()
   for (const row of instancesResult.data) {
-    if (!row.recurringId) continue
+    if (!row.recurringId || row.isDeleted) continue
     const at = new Date(row.transactionDate).getTime()
-    const prev = latestByRule.get(row.recurringId)
-    if (!prev || at > prev.at) {
-      latestByRule.set(row.recurringId, { amount: row.amount, at, id: row.id })
+
+    const latest = latestInstanceByRule.get(row.recurringId)
+    if (!latest || at > latest.at) {
+      latestInstanceByRule.set(row.recurringId, { id: row.id, at })
+    }
+
+    if (row.isPending || at > nowMs) continue
+    const charged = lastChargedByRule.get(row.recurringId)
+    if (!charged || at > charged.at) {
+      lastChargedByRule.set(row.recurringId, { amount: row.amount, at })
     }
   }
 
-  const now = new Date()
-  const windowEnd = new Date(now.getTime() + YEAR_MS)
+  const windowEnd = new Date(nowMs + YEAR_MS)
 
-  const data: Subscription[] = []
+  const data: RecurringExpense[] = []
   for (const row of rulesResult.data) {
     if (row.transferToAccountId) continue
     const template = parseTemplate(row.jsonTransactionTemplate)
@@ -135,7 +158,7 @@ export function useSubscriptionsQuery(): LiveReadModelResult<Subscription[]> {
     const yearlyMinor = template.amount * perYear
     const monthlyMinor = Math.round(yearlyMinor / 12)
 
-    const latest = latestByRule.get(row.id)
+    const lastCharged = lastChargedByRule.get(row.id)
 
     data.push({
       id: row.id,
@@ -152,9 +175,10 @@ export function useSubscriptionsQuery(): LiveReadModelResult<Subscription[]> {
           : null,
       monthlyMinor,
       yearlyMinor,
-      amountIncreased: latest != null && template.amount > latest.amount,
+      amountIncreased:
+        lastCharged != null && template.amount > lastCharged.amount,
       isPaused: !!row.disabled,
-      latestInstanceId: latest?.id ?? null,
+      latestInstanceId: latestInstanceByRule.get(row.id)?.id ?? null,
     })
   }
 

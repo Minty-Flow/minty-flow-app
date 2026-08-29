@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-29T20:07:44.401Z
+Generated on: 2026-08-29T20:22:42.070Z
 ```
 ./
 ├── .github/
@@ -117,7 +117,7 @@ Generated on: 2026-08-29T20:07:44.401Z
 │   │   │   ├── edit-profile.tsx
 │   │   │   ├── index.tsx
 │   │   │   ├── pending-transactions.tsx
-│   │   │   ├── subscriptions.tsx
+│   │   │   ├── recurring.tsx
 │   │   │   └── trash.tsx
 │   │   ├── stats/
 │   │   │   ├── calendar.tsx

@@ -950,8 +950,8 @@
           }
         }
       },
-      "subscriptions": {
-        "title": "Subscriptions",
+      "recurring": {
+        "title": "Recurring Expenses",
         "empty": "No recurring expenses yet",
         "monthly": "Per month",
         "yearly": "Per year",

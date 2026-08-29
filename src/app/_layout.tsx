@@ -561,9 +561,9 @@ function AppRootLayout() {
                   options={{ title: t("screens.settings.pending.title") }}
                 />
                 <Stack.Screen
-                  name="settings/subscriptions"
+                  name="settings/recurring"
                   options={{
-                    title: t("screens.settings.subscriptions.title"),
+                    title: t("screens.settings.recurring.title"),
                   }}
                 />
                 <Stack.Screen

@@ -13,28 +13,22 @@ import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import {
-  type Subscription,
-  useSubscriptionsQuery,
+  type RecurringExpense,
+  useRecurringExpensesQuery,
 } from "~/database/drizzle/read-models/recurring-read-model"
 import { formatShortMonthDay } from "~/utils/time-utils"
 
 type GroupBy = "date" | "account" | "category"
 
-export default function SubscriptionsScreen() {
+export default function RecurringExpensesScreen() {
   const { t } = useTranslation()
   const router = useRouter()
-  const { data: subscriptions, status } = useSubscriptionsQuery()
+  const { data: items, status } = useRecurringExpensesQuery()
   const [groupBy, setGroupBy] = useState<GroupBy>("date")
   const [showPaused, setShowPaused] = useState(false)
 
-  const active = useMemo(
-    () => subscriptions.filter((s) => !s.isPaused),
-    [subscriptions],
-  )
-  const paused = useMemo(
-    () => subscriptions.filter((s) => s.isPaused),
-    [subscriptions],
-  )
+  const active = useMemo(() => items.filter((s) => !s.isPaused), [items])
+  const paused = useMemo(() => items.filter((s) => s.isPaused), [items])
 
   const totalsByCurrency = useMemo(() => {
     const map = new Map<string, { monthly: number; yearly: number }>()
@@ -50,28 +44,28 @@ export default function SubscriptionsScreen() {
 
   const uncategorisedLabel = t("common.transaction.uncategorized")
   const groups = useMemo(
-    () => groupSubscriptions(active, groupBy, uncategorisedLabel),
+    () => groupItems(active, groupBy, uncategorisedLabel),
     [active, groupBy, uncategorisedLabel],
   )
 
-  if (status === "loading" && subscriptions.length === 0) {
+  if (status === "loading" && items.length === 0) {
     return <RouteLoadingState />
   }
 
-  if (subscriptions.length === 0) {
+  if (items.length === 0) {
     return (
       <View style={styles.container}>
         <EmptyState
           icon="repeat-outline"
-          title={t("screens.settings.subscriptions.empty")}
+          title={t("screens.settings.recurring.empty")}
         />
       </View>
     )
   }
 
-  const openSubscription = (sub: Subscription) => {
-    if (sub.latestInstanceId) {
-      router.push(`/transaction/${sub.latestInstanceId}`)
+  const openItem = (item: RecurringExpense) => {
+    if (item.latestInstanceId) {
+      router.push(`/transaction/${item.latestInstanceId}`)
     }
   }
 
@@ -80,7 +74,7 @@ export default function SubscriptionsScreen() {
       <View style={styles.totalsCard}>
         {totalsByCurrency.length === 0 ? (
           <Text variant="small" style={styles.muted}>
-            {t("screens.settings.subscriptions.empty")}
+            {t("screens.settings.recurring.empty")}
           </Text>
         ) : (
           totalsByCurrency.map(([currency, totals]) => (
@@ -91,7 +85,7 @@ export default function SubscriptionsScreen() {
               <View style={styles.totalsFigures}>
                 <View style={styles.totalsFigure}>
                   <Text variant="small" style={styles.muted}>
-                    {t("screens.settings.subscriptions.monthly")}
+                    {t("screens.settings.recurring.monthly")}
                   </Text>
                   <Money
                     value={totals.monthly}
@@ -101,7 +95,7 @@ export default function SubscriptionsScreen() {
                 </View>
                 <View style={styles.totalsFigure}>
                   <Text variant="small" style={styles.muted}>
-                    {t("screens.settings.subscriptions.yearly")}
+                    {t("screens.settings.recurring.yearly")}
                   </Text>
                   <Money
                     value={totals.yearly}
@@ -117,17 +111,17 @@ export default function SubscriptionsScreen() {
 
       <View style={styles.groupByRow}>
         <Chip
-          label={t("screens.settings.subscriptions.groupBy.date")}
+          label={t("screens.settings.recurring.groupBy.date")}
           selected={groupBy === "date"}
           onPress={() => setGroupBy("date")}
         />
         <Chip
-          label={t("screens.settings.subscriptions.groupBy.account")}
+          label={t("screens.settings.recurring.groupBy.account")}
           selected={groupBy === "account"}
           onPress={() => setGroupBy("account")}
         />
         <Chip
-          label={t("screens.settings.subscriptions.groupBy.category")}
+          label={t("screens.settings.recurring.groupBy.category")}
           selected={groupBy === "category"}
           onPress={() => setGroupBy("category")}
         />
@@ -140,11 +134,11 @@ export default function SubscriptionsScreen() {
               {group.title}
             </Text>
           )}
-          {group.items.map((sub) => (
-            <SubscriptionRow
-              key={sub.id}
-              sub={sub}
-              onPress={() => openSubscription(sub)}
+          {group.items.map((item) => (
+            <RecurringRow
+              key={item.id}
+              item={item}
+              onPress={() => openItem(item)}
             />
           ))}
         </View>
@@ -157,20 +151,20 @@ export default function SubscriptionsScreen() {
             onPress={() => setShowPaused((v) => !v)}
           >
             <Text variant="small" style={styles.groupTitle}>
-              {t("screens.settings.subscriptions.paused")} ({paused.length})
+              {t("screens.settings.recurring.paused")} ({paused.length})
             </Text>
             <Text variant="small" style={styles.muted}>
               {showPaused
-                ? t("screens.settings.subscriptions.hidePaused")
-                : t("screens.settings.subscriptions.showPaused")}
+                ? t("screens.settings.recurring.hidePaused")
+                : t("screens.settings.recurring.showPaused")}
             </Text>
           </Pressable>
           {showPaused &&
-            paused.map((sub) => (
-              <SubscriptionRow
-                key={sub.id}
-                sub={sub}
-                onPress={() => openSubscription(sub)}
+            paused.map((item) => (
+              <RecurringRow
+                key={item.id}
+                item={item}
+                onPress={() => openItem(item)}
               />
             ))}
         </View>
@@ -179,11 +173,11 @@ export default function SubscriptionsScreen() {
   )
 }
 
-function SubscriptionRow({
-  sub,
+function RecurringRow({
+  item,
   onPress,
 }: {
-  sub: Subscription
+  item: RecurringExpense
   onPress: () => void
 }) {
   const { t } = useTranslation()
@@ -191,32 +185,32 @@ function SubscriptionRow({
     <Pressable
       style={styles.row}
       onPress={onPress}
-      disabled={!sub.latestInstanceId}
+      disabled={!item.latestInstanceId}
     >
       <View style={styles.rowMain}>
         <Text variant="p" numberOfLines={1} style={styles.rowTitle}>
-          {sub.title}
+          {item.title}
         </Text>
         <Text variant="small" style={styles.muted}>
-          {sub.nextChargeAt
-            ? t("screens.settings.subscriptions.nextCharge", {
-                date: formatShortMonthDay(sub.nextChargeAt),
+          {item.nextChargeAt
+            ? t("screens.settings.recurring.nextCharge", {
+                date: formatShortMonthDay(item.nextChargeAt),
               })
-            : (sub.categoryName ?? sub.accountName)}
+            : (item.categoryName ?? item.accountName)}
         </Text>
       </View>
       <View style={styles.rowRight}>
-        {sub.amountIncreased && (
+        {item.amountIncreased && (
           <View style={styles.increasedChip}>
             <IconSvg name="arrow-up-right-outline" size={12} />
             <Text variant="small" style={styles.increasedText}>
-              {t("screens.settings.subscriptions.increased")}
+              {t("screens.settings.recurring.increased")}
             </Text>
           </View>
         )}
         <Money
-          value={sub.amountMinor}
-          currency={sub.currencyCode}
+          value={item.amountMinor}
+          currency={item.currencyCode}
           tone="expense"
         />
       </View>
@@ -227,29 +221,29 @@ function SubscriptionRow({
 interface Group {
   key: string
   title: string
-  items: Subscription[]
+  items: RecurringExpense[]
 }
 
-function groupSubscriptions(
-  subs: Subscription[],
+function groupItems(
+  items: RecurringExpense[],
   groupBy: GroupBy,
   uncategorisedLabel: string,
 ): Group[] {
   if (groupBy === "date") {
-    return [{ key: "all", title: "", items: subs }]
+    return [{ key: "all", title: "", items }]
   }
   const map = new Map<string, Group>()
-  for (const sub of subs) {
+  for (const item of items) {
     const key =
       groupBy === "account"
-        ? sub.accountId
-        : (sub.categoryId ?? "uncategorised")
+        ? item.accountId
+        : (item.categoryId ?? "uncategorised")
     const title =
       groupBy === "account"
-        ? sub.accountName
-        : (sub.categoryName ?? uncategorisedLabel)
+        ? item.accountName
+        : (item.categoryName ?? uncategorisedLabel)
     const group = map.get(key) ?? { key, title, items: [] }
-    group.items.push(sub)
+    group.items.push(item)
     map.set(key, group)
   }
   return [...map.values()].sort((a, b) => a.title.localeCompare(b.title))
