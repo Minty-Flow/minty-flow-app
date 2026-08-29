@@ -649,7 +649,8 @@
             },
             "dailyPace_one": "{{amount}}/يوم لمدة يوم واحد",
             "dailyPace_other": "{{amount}}/يوم لمدة {{count}} يوم"
-          }
+          },
+          "paceWarning": "في طريقك لتجاوز الحد بمقدار {{amount}} قبل نهاية الفترة."
         },
         "detail": {
           "title": "ميزانية",
@@ -678,7 +679,11 @@
             "createFailed": "فشل إنشاء الميزانية.",
             "updateFailed": "فشل تحديث الميزانية.",
             "deleteFailed": "فشل حذف الميزانية."
-          }
+          },
+          "paceAlertLabel": "تنبيهات وتيرة الإنفاق"
+        },
+        "paceNotification": {
+          "body": "في طريقك لتجاوز الحد بمقدار {{amount}} قبل نهاية فترة هذه الميزانية."
         }
       },
       "loans": {
@@ -934,6 +939,12 @@
         "a11y": {
           "grantNotifications": "منح إذن الإشعارات",
           "permissionWarning": "لم يتم منح إذن الإشعارات"
+        },
+        "paceAlerts": {
+          "label": "تنبيهات وتيرة الميزانية",
+          "description": "نبّهني عندما تتّجه ميزانية إلى تجاوز الحد قبل نهاية فترتها",
+          "sensitivityLabel": "الحساسية",
+          "sensitivityValue": "{{percent}}% تجاوز"
         }
       },
       "transfers": {

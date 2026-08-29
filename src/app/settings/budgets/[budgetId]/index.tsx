@@ -12,6 +12,7 @@ import { TransactionItem } from "~/components/transaction/transaction-item"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
+import { InfoBanner } from "~/components/ui/info-banner"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
@@ -24,6 +25,7 @@ import {
 import type { TranslationKey } from "~/i18n/config"
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
+import { useNotificationStore } from "~/stores/notification.store"
 import { useWeekStartStore } from "~/stores/week-start.store"
 import {
   getLiveBudgetSpent,
@@ -31,6 +33,8 @@ import {
 } from "~/utils/live-progress"
 import { roundToSafeInteger } from "~/utils/money"
 import { formatMoney } from "~/utils/number-format"
+import { isOnPaceToExceed, paceOverageMinor } from "~/utils/pace-alert"
+import { isPaceAlertDisabledForBudget } from "~/utils/pace-alert-storage"
 import { getBudgetProgressModel } from "~/utils/planning-progress"
 import { formatCustomPeriodRange } from "~/utils/time-utils"
 
@@ -47,6 +51,8 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
   const currencyDisplayFormat = useMoneyFormattingStore(
     (s) => s.currencyDisplayFormat,
   )
+  const paceAlertsEnabled = useNotificationStore((s) => s.isPaceAlertEnabled)
+  const paceSensitivity = useNotificationStore((s) => s.paceSensitivity)
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
   const budget = useBudget(budgetId)
   const weekStart = useWeekStartStore((s) => s.weekStart)
@@ -170,6 +176,18 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
     })
     return privacyMode ? raw.replace(/[\d٠-٩۰-۹]/gu, "⁕") : raw
   }
+  const paceInput = {
+    spentMinor: spent,
+    limitMinor: limit,
+    elapsedDays,
+    totalDays,
+  }
+  const showPaceWarning =
+    budget.isActive &&
+    paceAlertsEnabled &&
+    !isOverBudget &&
+    !isPaceAlertDisabledForBudget(budget.id) &&
+    isOnPaceToExceed(paceInput, paceSensitivity)
   const insight = isOverBudget
     ? t(
         `screens.settings.budgets.card.insight.over.${budget.period}` as TranslationKey,
@@ -340,6 +358,14 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
             </View>
           )}
         </View>
+      )}
+
+      {showPaceWarning && (
+        <InfoBanner
+          text={t("screens.settings.budgets.card.paceWarning", {
+            amount: formatAmt(paceOverageMinor(paceInput)),
+          })}
+        />
       )}
 
       {insight && <Text style={styles.insight}>{insight}</Text>}

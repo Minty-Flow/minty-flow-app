@@ -29,6 +29,7 @@ import {
   upgradeLegacyDbToDrizzle,
 } from "~/database/forced-migration"
 import { saveExistingFileToDevice } from "~/database/services/data-management-service"
+import { useBudgetPaceAlertSync } from "~/hooks/use-budget-pace-alert-sync"
 import { useImportRecovery } from "~/hooks/use-import-recovery"
 import { useNotificationSync } from "~/hooks/use-notification-sync"
 import { useRecurringTransactionSync } from "~/hooks/use-recurring-transaction-sync"
@@ -382,7 +383,26 @@ function AppRootLayout() {
   useRetentionCleanup()
   useRecurringTransactionSync()
   useNotificationSync()
+  useBudgetPaceAlertSync()
   useImportRecovery()
+
+  // Tapping a budget pace notification opens that budget.
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener(
+      (resp) => {
+        const data = resp.notification.request.content.data as
+          | { itemType?: string; id?: string }
+          | undefined
+        if (data?.itemType === "budget" && data.id) {
+          router.push({
+            pathname: "/settings/budgets/[budgetId]",
+            params: { budgetId: data.id },
+          })
+        }
+      },
+    )
+    return () => sub.remove()
+  }, [router])
 
   return (
     <GestureHandlerRootView

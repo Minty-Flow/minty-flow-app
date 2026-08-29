@@ -6,7 +6,42 @@ so the user can adjust in time instead of finding out after the fact.
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** in-progress
+
+## Progress
+
+- Pure calc `src/utils/pace-alert.ts` — `projectedSpendMinor`,
+  `isOnPaceToExceed(input, sensitivity)` (false when already over, or on the
+  last day), `paceOverageMinor`. No React, no DB.
+- `src/utils/pace-alert-storage.ts` — MMKV: `alertedByBudget` (budgetId →
+  periodKey, one notification per budget per period) + `disabledBudgetIds`
+  (per-budget opt-out). No new `budgets` column, no migration.
+- Globals in `notification.store.ts`: `isPaceAlertEnabled` (default true),
+  `paceSensitivity` (default 0.1) + setters.
+- `src/hooks/use-budget-pace-alert-sync.ts` — mounted in `_layout.tsx` beside
+  `useNotificationSync`. Reads active budgets + a live transaction window,
+  reuses `getLiveBudgetSpent` (no SQL drift), evaluates the predicate, fires
+  one `expo-notifications` local notification per outstanding (budget, period)
+  with `data { itemType: "budget", id }`, then marks the dedupe key.
+  Re-evaluates whenever the live queries push (covers add/edit transaction).
+  No-op while global/per-budget off or OS permission not granted.
+- Deep link: `addNotificationResponseReceivedListener` in `_layout.tsx` routes
+  `itemType === "budget"` → `/settings/budgets/[budgetId]`.
+- In-app: `BudgetCard` shows a warning line (semantic.warning) and the detail
+  screen an `InfoBanner`, same copy, when on pace to exceed and not disabled.
+- Budget modify form (edit mode only): "Pace alerts" `Switch` bound to the
+  per-budget opt-out store.
+- Reminder preference screen: "Budget pace alerts" `Switch` + "Sensitivity"
+  chips (10% / 25%), chips hidden when the switch is off.
+- en + ar strings. Verified on emulator: app boots with the new hook, reminder
+  prefs toggle + sensitivity + conditional hide all work, budgets list renders.
+
+## Notes
+
+- Live pace warning on the card/detail + the notification firing still want a
+  manual budget-plus-transactions scenario on device to see end to end; the
+  predicate reuses `getBudgetProgressModel` values already proven in-app and
+  the emulator has no notification permission (which does confirm the gate).
 
 ## Behaviour
 

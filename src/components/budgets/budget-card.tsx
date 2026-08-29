@@ -15,11 +15,14 @@ import { useMinuteTick } from "~/hooks/use-time-reactivity"
 import type { TranslationKey } from "~/i18n/config"
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
+import { useNotificationStore } from "~/stores/notification.store"
 import { useWeekStartStore } from "~/stores/week-start.store"
 import type { Budget } from "~/types/budgets"
 import { getLiveBudgetSpent } from "~/utils/live-progress"
 import { roundToSafeInteger } from "~/utils/money"
 import { formatMoney, formatPercent } from "~/utils/number-format"
+import { isOnPaceToExceed, paceOverageMinor } from "~/utils/pace-alert"
+import { isPaceAlertDisabledForBudget } from "~/utils/pace-alert-storage"
 import {
   getBudgetPeriodKey,
   getBudgetProgressModel,
@@ -67,6 +70,8 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
     (s) => s.currencyDisplayFormat,
   )
   const weekStart = useWeekStartStore((s) => s.weekStart)
+  const paceAlertsEnabled = useNotificationStore((s) => s.isPaceAlertEnabled)
+  const paceSensitivity = useNotificationStore((s) => s.paceSensitivity)
   const linkedCategories = budget.categoryIds
     .map((id) => allCategories.find((c) => c.id === id))
     .filter((c): c is NonNullable<typeof c> => Boolean(c))
@@ -139,15 +144,27 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
   }[status]
   const statusBg = `${statusColor}20`
   const progressColor = statusColor
+  const formatAmt = (n: number) => {
+    const raw = formatMoney(roundToSafeInteger(n), budget.currencyCode, {
+      currencyDisplay: currencyDisplayFormat,
+      hideSign: true,
+    })
+    return privacyMode ? raw.replace(/[\d٠-٩۰-۹]/gu, "⁕") : raw
+  }
+  const paceInput = {
+    spentMinor: spent,
+    limitMinor: limit,
+    elapsedDays,
+    totalDays,
+  }
+  const showPaceWarning =
+    budget.isActive &&
+    paceAlertsEnabled &&
+    !isOverBudget &&
+    !isPaceAlertDisabledForBudget(budget.id) &&
+    isOnPaceToExceed(paceInput, paceSensitivity)
   // Insight line: per-day pace remaining, or over-budget summary.
   const insight = (() => {
-    const formatAmt = (n: number) => {
-      const raw = formatMoney(roundToSafeInteger(n), budget.currencyCode, {
-        currencyDisplay: currencyDisplayFormat,
-        hideSign: true,
-      })
-      return privacyMode ? raw.replace(/[\d٠-٩۰-۹]/gu, "⁕") : raw
-    }
     if (isOverBudget) {
       return t(
         `screens.settings.budgets.card.insight.over.${budget.period}` as TranslationKey,
@@ -354,6 +371,14 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
         </Text>
       </View>
 
+      {showPaceWarning && (
+        <Text variant="small" style={styles.paceWarning}>
+          {t("screens.settings.budgets.card.paceWarning", {
+            amount: formatAmt(paceOverageMinor(paceInput)),
+          })}
+        </Text>
+      )}
+
       {insight && (
         <Text variant="small" style={styles.insight}>
           {insight}
@@ -497,5 +522,10 @@ const styles = StyleSheet.create((t) => ({
     fontSize: t.typography.labelSmall.fontSize,
     color: t.colors.onSecondary,
     fontStyle: "italic",
+  },
+  paceWarning: {
+    fontSize: t.typography.labelSmall.fontSize,
+    color: t.colors.semantic.warning,
+    fontWeight: "600",
   },
 }))

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 import { Linking, Platform, ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
+import { Chip } from "~/components/ui/chips"
 import {
   DateTimePickerModal,
   useDateTimePicker,
@@ -38,7 +39,13 @@ export default function ReminderScreen() {
     dailyReminderTime,
     setDailyReminderEnabled,
     setDailyReminderTime,
+    isPaceAlertEnabled,
+    paceSensitivity,
+    setPaceAlertEnabled,
+    setPaceSensitivity,
   } = useNotificationStore()
+
+  const PACE_SENSITIVITY_OPTIONS = [0.1, 0.25] as const
 
   const { t } = useTranslation()
 
@@ -139,6 +146,46 @@ export default function ReminderScreen() {
         />
       </ListItem>
 
+      <ListItem
+        style={styles.settingRow}
+        onPress={() => setPaceAlertEnabled(!isPaceAlertEnabled)}
+      >
+        <View style={styles.labelContainer}>
+          <Text variant="p" style={styles.settingLabel}>
+            {t("screens.settings.reminders.paceAlerts.label")}
+          </Text>
+          <Text variant="small" style={styles.settingLabelDescription}>
+            {t("screens.settings.reminders.paceAlerts.description")}
+          </Text>
+        </View>
+        <Switch
+          value={isPaceAlertEnabled === true}
+          onValueChange={setPaceAlertEnabled}
+        />
+      </ListItem>
+
+      {isPaceAlertEnabled && (
+        <View style={styles.section}>
+          <Text style={styles.headerLabel}>
+            {t("screens.settings.reminders.paceAlerts.sensitivityLabel")}
+          </Text>
+          <View style={styles.chipRow}>
+            {PACE_SENSITIVITY_OPTIONS.map((opt) => (
+              <Chip
+                key={opt}
+                label={t(
+                  "screens.settings.reminders.paceAlerts.sensitivityValue",
+                  { percent: Math.round(opt * 100) },
+                )}
+                selected={paceSensitivity === opt}
+                hideCheck
+                onPress={() => setPaceSensitivity(opt)}
+              />
+            ))}
+          </View>
+        </View>
+      )}
+
       {isDailyReminderEnabled && (
         <>
           <View style={styles.section}>
@@ -210,6 +257,11 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.headlineSmall.fontSize,
     fontWeight: "bold",
     marginBottom: 6,
+  },
+  chipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
   },
   timeCard: {
     backgroundColor: theme.colors.boxShadow,

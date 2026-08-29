@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-29T22:13:18.582Z
+Generated on: 2026-08-29T22:28:30.967Z
 ```
 ./
 ├── .github/
@@ -444,6 +444,7 @@ Generated on: 2026-08-29T22:13:18.582Z
 │   ├── hooks/
 │   │   ├── exchange-rates-editor.reducer.ts
 │   │   ├── use-balance-before.ts
+│   │   ├── use-budget-pace-alert-sync.ts
 │   │   ├── use-chart-font.ts
 │   │   ├── use-debounced-callback.ts
 │   │   ├── use-import-recovery.ts
@@ -547,6 +548,8 @@ Generated on: 2026-08-29T22:13:18.582Z
 │       ├── money.ts
 │       ├── number-format.ts
 │       ├── open-file.ts
+│       ├── pace-alert-storage.ts
+│       ├── pace-alert.ts
 │       ├── parse-math-expression.ts
 │       ├── pending-transactions.ts
 │       ├── planning-progress.ts

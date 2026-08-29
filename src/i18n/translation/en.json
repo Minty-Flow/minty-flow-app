@@ -649,7 +649,8 @@
             },
             "dailyPace_one": "{{amount}}/day for {{count}} day",
             "dailyPace_other": "{{amount}}/day for {{count}} days"
-          }
+          },
+          "paceWarning": "On track to overspend by {{amount}} before the period ends."
         },
         "detail": {
           "title": "Budget",
@@ -678,7 +679,11 @@
             "createFailed": "Failed to create budget.",
             "updateFailed": "Failed to update budget.",
             "deleteFailed": "Failed to delete budget."
-          }
+          },
+          "paceAlertLabel": "Pace alerts"
+        },
+        "paceNotification": {
+          "body": "On track to go {{amount}} over before this budget’s period ends."
         }
       },
       "loans": {
@@ -934,6 +939,12 @@
         "a11y": {
           "grantNotifications": "Grant notifications permission",
           "permissionWarning": "Notifications permission not granted"
+        },
+        "paceAlerts": {
+          "label": "Budget pace alerts",
+          "description": "Warn me when a budget is trending to overspend before its period ends",
+          "sensitivityLabel": "Sensitivity",
+          "sensitivityValue": "{{percent}}% over"
         }
       },
       "transfers": {

@@ -41,6 +41,10 @@ import { BudgetPeriodEnum } from "~/types/budgets"
 import { NewEnum } from "~/types/new"
 import { logger } from "~/utils/logger"
 import { rescaleMinorUnits } from "~/utils/money"
+import {
+  isPaceAlertDisabledForBudget,
+  setPaceAlertDisabledForBudget,
+} from "~/utils/pace-alert-storage"
 import { formatShortMonthDayYear } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
@@ -112,6 +116,14 @@ export function BudgetModifyContent({
     onBlock: () => setUnsavedModalVisible(true),
   })
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  const [paceAlertOn, setPaceAlertOn] = useState(
+    budget ? !isPaceAlertDisabledForBudget(budget.id) : true,
+  )
+  const togglePaceAlert = (next: boolean) => {
+    if (!budget) return
+    setPaceAlertOn(next)
+    setPaceAlertDisabledForBudget(budget.id, !next)
+  }
   const startDatePicker = useDateTimePicker({
     onConfirm: (date) =>
       setValue("startDate", date.getTime(), { shouldDirty: true }),
@@ -450,6 +462,24 @@ export function BudgetModifyContent({
                 </ListItem>
               )}
             />
+
+            {!isAddMode && budget && (
+              <ListItem
+                style={budgetModifyStyles.switchRow}
+                onPress={() => togglePaceAlert(!paceAlertOn)}
+              >
+                <View style={budgetModifyStyles.switchLeft}>
+                  <IconSvg name="circle-dot-outline" size={24} />
+                  <Text
+                    variant="default"
+                    style={budgetModifyStyles.switchLabel}
+                  >
+                    {t("screens.settings.budgets.form.paceAlertLabel")}
+                  </Text>
+                </View>
+                <Switch value={paceAlertOn} onValueChange={togglePaceAlert} />
+              </ListItem>
+            )}
           </View>
 
           {!isAddMode && <Separator />}

@@ -17,6 +17,12 @@ interface NotificationStore {
   dailyReminderTime: string // Format: "HH:mm"
   setDailyReminderEnabled: (enabled: boolean) => void
   setDailyReminderTime: (time: string) => void
+  /** Global switch for "budget on pace to overspend" notifications. */
+  isPaceAlertEnabled: boolean
+  /** Headroom before a pace alert fires: 0.1 = 10% over projected. */
+  paceSensitivity: number
+  setPaceAlertEnabled: (enabled: boolean) => void
+  setPaceSensitivity: (value: number) => void
 }
 
 /**
@@ -27,10 +33,14 @@ export const useNotificationStore = create<NotificationStore>()(
     (set) => ({
       isDailyReminderEnabled: false,
       dailyReminderTime: "20:22",
+      isPaceAlertEnabled: true,
+      paceSensitivity: 0.1,
 
       setDailyReminderEnabled: (enabled) =>
         set({ isDailyReminderEnabled: enabled }),
       setDailyReminderTime: (time) => set({ dailyReminderTime: time }),
+      setPaceAlertEnabled: (enabled) => set({ isPaceAlertEnabled: enabled }),
+      setPaceSensitivity: (value) => set({ paceSensitivity: value }),
     }),
     {
       name: "notification-preferences-store",
