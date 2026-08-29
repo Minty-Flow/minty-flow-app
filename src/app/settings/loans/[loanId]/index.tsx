@@ -47,7 +47,11 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
   const loan = useLoan(loanId)
   const account = useAccount(loan?.accountId ?? "")
-  const { items: transactionsFull } = useTransactions(loan ? { loanId } : {})
+  // Always filter by loanId. Passing {} while the loan row loads returns every
+  // transaction, which getLiveLoanProgress then miscounts as repayments —
+  // flashing a wrong "received" figure and an unrelated transaction list.
+  const { items: transactionsFull, status: transactionsStatus } =
+    useTransactions({ loanId })
   const paidAmount = loan ? getLiveLoanProgress(loan, transactionsFull) : 0
   const handleTransactionPress = (id: string) => {
     router.push({ pathname: "/transaction/[id]", params: { id } })
@@ -92,7 +96,9 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
       ),
     })
   }, [navigation, router, loanId, t])
-  if (!loan) {
+  const transactionsPending =
+    transactionsStatus !== "ready" && transactionsStatus !== "error"
+  if (!loan || transactionsPending) {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
