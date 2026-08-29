@@ -40,6 +40,21 @@ borrowed loan — handed to the user as a text QA script.
   route), shown only when a borrowed loan exists.
 - Route registered in `_layout.tsx`; en + ar strings.
 
+## Post-review follow-ups (verified on emulator)
+
+- Reshaped the per-loan editor: APR and Min/month stack full-width instead of
+  two cramped half-columns.
+- Header info button opens a **sectioned** help modal — "What it is for",
+  "How to use it", and a glossary (APR, minimum payment, snowball, avalanche)
+  — not the earlier single paragraph.
+- "Reset planner" button → `ConfirmModal` → `useDebtPayoffStore.reset()` wipes
+  every planner input back to defaults (loans untouched). Rows keyed by a
+  reset nonce so their local APR buffers re-seed.
+- Unrelated fix in `settings/loans/[loanId]/index.tsx`: it queried
+  `useTransactions({})` while the loan row loaded, briefly showing every
+  transaction and a wrong "received" figure. Now always filters by `loanId`
+  and shows the spinner until the transaction query is `ready`.
+
 ## Deviations
 
 - Multi-currency: the projection sums balances so it runs in one currency —
