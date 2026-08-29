@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-12T17:15:27.013Z
+Generated on: 2026-08-29T17:47:29.411Z
 ```
 ./
 ├── .github/
@@ -23,34 +23,6 @@ Generated on: 2026-08-12T17:15:27.013Z
 │   │   ├── pre-rebase
 │   │   └── prepare-commit-msg
 │   └── pre-commit
-├── .scratch/
-│   ├── issue-1-account-select-scroll/
-│   │   └── issues/
-│   │       ├── 01-fix-account-select-scroll.md
-│   │       ├── 02-nested-scroll-fix-option-list.md
-│   │       └── 03-scroll-into-view-race.md
-│   ├── issue-2-category-transfer-cleanup/
-│   │   └── issues/
-│   │       ├── 01-remove-transfer-from-categories.md
-│   │       └── 02-purge-transfer-end-to-end.md
-│   ├── issue-3-currency-selector-search/
-│   │   └── issues/
-│   │       ├── 01-currency-search-parent.md
-│   │       ├── 02-registry-search-function.md
-│   │       ├── 03-modal-selector-search.md
-│   │       └── 04-inline-selector-search.md
-│   ├── issue-4-create-crash/
-│   │   └── issues/
-│   │       ├── 01-fix-create-crash.md
-│   │       ├── 02-empty-currency-crash-fix.md
-│   │       └── 03-route-error-boundary.md
-│   └── issue-5-precommit-reenable/
-│       └── issues/
-│           └── 01-reenable-precommit.md
-├── .vscode/
-│   └── settings.json
-├── .zed/
-│   └── settings.json
 ├── docs/
 │   ├── post-release-drizzle-architecture-plan.md
 │   ├── stats-recurring-spending-map-plan.md
@@ -576,6 +548,8 @@ Generated on: 2026-08-12T17:15:27.013Z
 ├── app.json
 ├── babel.config.js
 ├── biome.json
+├── CODE_OF_CONDUCT.md
+├── CONTRIBUTING.md
 ├── drizzle.config.ts
 ├── expo-env.d.ts
 ├── index.ts
