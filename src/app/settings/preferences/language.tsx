@@ -1,7 +1,7 @@
-import * as Updates from "expo-updates"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
+import RNRestart from "react-native-restart"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { ConfirmModal } from "~/components/confirm-modal"
@@ -62,7 +62,7 @@ export default function LanguageOptionsScreen() {
       setLanguageCode(pendingLang)
 
       try {
-        await Updates.reloadAsync()
+        RNRestart.restart()
       } catch {
         logger.warn("this wont work in development")
       }
