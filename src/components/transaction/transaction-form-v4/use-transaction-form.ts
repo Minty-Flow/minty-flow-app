@@ -5,6 +5,7 @@ import { useEffect, useReducer, useRef, useState } from "react"
 import { type Resolver, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
+import type { IconSvgName } from "~/components/icons"
 import {
   createTransaction,
   createTransfer,
@@ -52,6 +53,7 @@ import { Toast } from "~/utils/toast"
 
 import { EMPTY_TAG_IDS } from "./constants"
 import { getDefaultValues, mergeReducer } from "./form-utils"
+import { KIND_ICONS } from "./kind-info"
 import { onKindChange } from "./on-kind-change"
 import type {
   ModalState,
@@ -154,6 +156,10 @@ export function useTransactionForm({
           t("common.transaction.types.income"),
           t("common.transaction.types.transfer"),
         ]
+  const tabIcons: [IconSvgName, IconSvgName, IconSvgName] | undefined =
+    kind === "lent" || kind === "borrowed"
+      ? [KIND_ICONS.lent, KIND_ICONS.borrowed, "arrows-right-left-outline"]
+      : undefined
   const tabHiddenSlots: number[] =
     kind === "lent" || kind === "borrowed"
       ? [2]
@@ -821,6 +827,7 @@ export function useTransactionForm({
 
     // top-tab state machine
     tabLabels,
+    tabIcons,
     tabHiddenSlots,
     topTabType,
     onTopTabChange,

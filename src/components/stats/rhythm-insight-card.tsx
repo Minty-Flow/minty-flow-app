@@ -20,7 +20,7 @@ export function RhythmInsightCard({ days }: RhythmInsightCardProps) {
 
   return (
     <InsightCard
-      icon="calendar-outline"
+      icon="calendar-month"
       badge={t("screens.stats.wrapped.badgeRhythm")}
       sentence={t("screens.stats.wrapped.rhythmSentence", {
         day: getWeekdayLabel(priciest.day),
