@@ -324,9 +324,6 @@
       }
     },
     "settings": {
-      "sections": {
-        "other": "Other"
-      },
       "about": {
         "version": "v{{version}}",
         "tagline": "Made to help your money make cents.",

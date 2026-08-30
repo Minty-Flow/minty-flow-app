@@ -324,9 +324,6 @@
       }
     },
     "settings": {
-      "sections": {
-        "other": "أخرى"
-      },
       "about": {
         "version": "v{{version}}",
         "tagline": "صُنع ليمنح أموالك معنى.",
