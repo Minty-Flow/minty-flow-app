@@ -308,12 +308,12 @@
       "emptyState": {
         "title": "No data for this period",
         "description": "Add transactions to see your stats",
-        "allPending": "All transactions are pending",
+        "allPending": "All transactions are scheduled",
         "allTransfers": "All transactions are transfers",
         "noTransactionsEver": "No transactions yet",
         "addFirst": "Add your first transaction"
       },
-      "pendingNotice": "{{count}} pending transactions excluded from stats",
+      "pendingNotice": "{{count}} scheduled transactions excluded from stats",
       "balance": {
         "title": "Net Balance",
         "opening": "Opening",
@@ -515,9 +515,9 @@
         }
       },
       "pending": {
-        "title": "Pending Transactions",
-        "empty": "No pending transactions",
-        "caption": "Pending transactions will not be counted towards income, expenses, and account balance.",
+        "title": "Scheduled Transactions",
+        "empty": "No scheduled transactions",
+        "caption": "Scheduled transactions will not be counted towards income, expenses, and account balance.",
         "settings": {
           "showOnHome": "Show on home",
           "autoPaySubscriptions": {
@@ -584,7 +584,7 @@
           "title": "Goal",
           "transactions": "Transactions",
           "noTransactions": "No transactions linked to this goal yet",
-          "pendingNotice": "Pending transactions are not included in progress"
+          "pendingNotice": "Scheduled transactions are not included in progress"
         },
         "form": {
           "title": {
@@ -983,7 +983,17 @@
       },
       "notFoundTransaction": "Transaction not found.",
       "kind": {
-        "label": "Kind"
+        "label": "Kind",
+        "info": {
+          "a11yOpen": "About transaction types",
+          "title": "Transaction types",
+          "default": "A normal transaction. Counts toward your totals straight away.",
+          "upcoming": "A one-off you have not paid yet. Stays out of your totals until you mark it paid or received.",
+          "subscription": "A recurring entry that also appears on the Scheduled screen. Each one stays out of your totals until marked paid or received; clearing the current entry queues the next.",
+          "repetitive": "A recurring entry. Each one stays out of your totals until marked paid or received; clearing the current entry queues the next.",
+          "lent": "Money you lent out. Counts as negative cash flow until you mark it collected.",
+          "borrowed": "Money you borrowed. Counts as positive cash flow until you mark it settled."
+        }
       },
       "upcoming": {
         "banner": "Upcoming — not counted in your balance or stats yet.",
