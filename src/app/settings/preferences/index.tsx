@@ -5,11 +5,8 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { ActionItem } from "~/components/action-item"
 import type { IconSvgName } from "~/components/icons"
-import { ToggleItem } from "~/components/toggle-item"
-import { InfoBanner } from "~/components/ui/info-banner"
 import { View } from "~/components/ui/view"
 import type { TranslationKey } from "~/i18n/config"
-import { useAndroidSoundStore } from "~/stores/android-sound.store"
 import { useWeekStartStore } from "~/stores/week-start.store"
 import { getWeekStartsOn } from "~/utils/get-week-start-on"
 
@@ -103,8 +100,6 @@ const customizationItems: PreferenceItem[] = [
 export default function PreferencesScreen() {
   const router = useRouter()
   const { t } = useTranslation()
-  const setSoundEnabled = useAndroidSoundStore((s) => s.setSoundEnabled)
-  const disableSound = useAndroidSoundStore((s) => s.disableSound)
   const weekStart = useWeekStartStore((s) => s.weekStart)
 
   const weekStartTitle = (() => {
@@ -143,27 +138,11 @@ export default function PreferencesScreen() {
       <View style={[styles.group, styles.groupGap]}>
         {behaviorItems.map(renderItem)}
         {Platform.OS === "android" && (
-          <>
-            <ToggleItem
-              icon={
-                disableSound
-                  ? "device-mobile-off-outline"
-                  : "device-mobile-vibration-outline"
-              }
-              title={t(
-                "screens.settings.preferences.buttonFeedback.soundHaptic.title",
-              )}
-              value={!disableSound}
-              onValueChange={(enabled) => setSoundEnabled(enabled)}
-            />
-            {!disableSound && (
-              <InfoBanner
-                text={t(
-                  "screens.settings.preferences.buttonFeedback.systemInfo",
-                )}
-              />
-            )}
-          </>
+          <ActionItem
+            icon="device-mobile-vibration-outline"
+            title={t("screens.settings.preferences.sound.title")}
+            onPress={() => router.push("/settings/preferences/sound")}
+          />
         )}
       </View>
 
