@@ -18,11 +18,7 @@ import {
 } from "~/domain/transaction-kind"
 import type { AddLoanFormSchema } from "~/schemas/loans.schema"
 import type { Loan, LoanTerm, LoanType } from "~/types/loans"
-import type { Transaction } from "~/types/transactions"
-import {
-  TransactionSubTypeEnum,
-  TransactionTypeEnum,
-} from "~/types/transactions"
+import { type Transaction, TransactionTypeEnum } from "~/types/transactions"
 import { assertMinorUnits } from "~/utils/money"
 
 type CreateLoanInput = AddLoanFormSchema & {
@@ -45,10 +41,6 @@ export async function createLoan(data: CreateLoanInput): Promise<string> {
     data.loanType === "lent"
       ? TransactionTypeEnum.EXPENSE
       : TransactionTypeEnum.INCOME
-  const subtype =
-    data.loanType === "lent"
-      ? TransactionSubTypeEnum.LOAN_LENT
-      : TransactionSubTypeEnum.LOAN_BORROWED
 
   await runInTransaction("loan.create", (db) => {
     const account = db
@@ -94,7 +86,8 @@ export async function createLoan(data: CreateLoanInput): Promise<string> {
         isPending: 0,
         requiresManualConfirmation: 0,
         accountBalanceBefore: account.balance,
-        subtype,
+        subtype: null,
+        kind: getKindForLoanType(data.loanType),
         extra: null,
         hasAttachments: 0,
         recurringId: null,
@@ -107,11 +100,7 @@ export async function createLoan(data: CreateLoanInput): Promise<string> {
       })
       .run()
 
-    const delta = getBalanceDelta(
-      data.principalAmount,
-      transactionType,
-      subtype,
-    )
+    const delta = getBalanceDelta(data.principalAmount, transactionType)
     if (delta !== 0) {
       db.update(accounts)
         .set({ balance: sql`${accounts.balance} + ${delta}`, updatedAt: now })

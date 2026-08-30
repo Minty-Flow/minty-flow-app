@@ -83,21 +83,11 @@ export default function AccountDetailsScreen() {
     let out = 0
     for (const t of transactionsFull) {
       if (t.isPending || t.isDeleted) continue
+      // Loan cash flows (opening entry + repayments) are not generic income/expense.
+      if (t.loanId != null) continue
       if (t.type === TransactionTypeEnum.INCOME) {
-        if (
-          t.subtype === TransactionSubTypeEnum.LOAN_BORROWED ||
-          t.subtype === TransactionSubTypeEnum.LOAN_RECEIVED
-        ) {
-          continue
-        }
         in_ += t.amount
       } else if (t.type === TransactionTypeEnum.EXPENSE) {
-        if (
-          t.subtype === TransactionSubTypeEnum.LOAN_REPAYMENT ||
-          t.subtype === TransactionSubTypeEnum.LOAN_LENT
-        ) {
-          continue
-        }
         if (t.subtype === TransactionSubTypeEnum.REFUND) {
           out -= t.amount
         } else {
