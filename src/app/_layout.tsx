@@ -31,9 +31,9 @@ import {
 import { saveExistingFileToDevice } from "~/database/services/data-management-service"
 import { useImportRecovery } from "~/hooks/use-import-recovery"
 import { useNotificationSync } from "~/hooks/use-notification-sync"
-import { useRecurringTransactionSync } from "~/hooks/use-recurring-transaction-sync"
 import { useRetentionCleanup } from "~/hooks/use-retention-cleanup"
 import { useShakeListener } from "~/hooks/use-shake-listener"
+import { useTransactionLifecycleSync } from "~/hooks/use-transaction-lifecycle-sync"
 import { DirectionEnum } from "~/i18n/language.constants"
 import { useDbMigrationStore } from "~/stores/db-migration.store"
 import {
@@ -380,7 +380,7 @@ function AppRootLayout() {
 
   useShakeListener()
   useRetentionCleanup()
-  useRecurringTransactionSync()
+  useTransactionLifecycleSync()
   useNotificationSync()
   useImportRecovery()
 

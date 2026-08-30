@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T23:00:56.412Z
+Generated on: 2026-08-30T23:06:14.927Z
 ```
 ./
 ├── .github/
@@ -537,11 +537,11 @@ Generated on: 2026-08-30T23:00:56.412Z
 │   │   ├── use-notification-permission-status.ts
 │   │   ├── use-notification-sync.ts
 │   │   ├── use-recurring-rule.ts
-│   │   ├── use-recurring-transaction-sync.ts
 │   │   ├── use-retention-cleanup.ts
 │   │   ├── use-scroll-into-view.ts
 │   │   ├── use-shake-listener.ts
-│   │   └── use-time-reactivity.ts
+│   │   ├── use-time-reactivity.ts
+│   │   └── use-transaction-lifecycle-sync.ts
 │   ├── i18n/
 │   │   ├── translation/
 │   │   │   ├── ar.json

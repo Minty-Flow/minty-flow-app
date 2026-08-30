@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
@@ -16,7 +16,6 @@ import { useRecurringRule } from "~/hooks/use-recurring-rule"
 import { useMinuteTick } from "~/hooks/use-time-reactivity"
 import {
   autoConfirmationService,
-  isPreapproved,
   useAutoConfirmVersion,
 } from "~/services/auto-confirmation-service"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
@@ -38,14 +37,6 @@ export function UpcomingTransactionsSection({
 }: UpcomingTransactionsSectionProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
-  const isHydrated = usePendingTransactionsStore((s) => s.isHydrated)
-  const autoPaySubscriptions = usePendingTransactionsStore(
-    (s) => s.autoPaySubscriptions,
-  )
-  const autoPayRepetitive = usePendingTransactionsStore(
-    (s) => s.autoPayRepetitive,
-  )
-  const autoPayUpcoming = usePendingTransactionsStore((s) => s.autoPayUpcoming)
   const updateDateUponConfirmation = usePendingTransactionsStore(
     (s) => s.updateDateUponConfirmation,
   )
@@ -62,63 +53,23 @@ export function UpcomingTransactionsSection({
     return transactions.filter((r) => !r.isDeleted && isUpcoming(r))
   })()
   const upcomingForDisplay = applyTransferLayout(upcoming, transferLayout)
-  const { recurring, pending, toAutoConfirm } = (() => {
+  // Pure split for display. Auto-confirmation is owned entirely by
+  // autoConfirmationService (driven from useTransactionLifecycleSync); a
+  // confirmed row leaves this list via the live query, no effect here.
+  const { recurring, pending } = (() => {
     void autoConfirmVersion
     void foregroundVersion
     const recurringList: TransactionWithRelations[] = []
     const pendingList: TransactionWithRelations[] = []
-    const toAutoConfirmList: string[] = []
     for (const row of upcomingForDisplay) {
-      const canConfirm = confirmable(row, nowMs)
-      const preapproved = isPreapproved(row, {
-        autoPaySubscriptions,
-        autoPayRepetitive,
-        autoPayUpcoming,
-      })
-      if (preapproved && canConfirm) {
-        toAutoConfirmList.push(row.id)
+      if (row.extra?.recurringId) {
+        recurringList.push(row)
       } else {
-        if (row.extra?.recurringId) {
-          recurringList.push(row)
-        } else {
-          pendingList.push(row)
-        }
+        pendingList.push(row)
       }
     }
-    return {
-      recurring: recurringList,
-      pending: pendingList,
-      toAutoConfirm: toAutoConfirmList,
-    }
+    return { recurring: recurringList, pending: pendingList }
   })()
-  useEffect(() => {
-    for (const txId of toAutoConfirm) {
-      void confirmTransaction(txId, {
-        updateTransactionDate: updateDateUponConfirmation,
-      })
-    }
-  }, [toAutoConfirm, updateDateUponConfirmation])
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional extra deps
-  useEffect(() => {
-    if (!isHydrated) return
-    // Configure must run before start (start throws if config is null)
-    autoConfirmationService.configure({
-      autoPaySubscriptions,
-      autoPayRepetitive,
-      autoPayUpcoming,
-      updateDateUponConfirmation,
-    })
-    autoConfirmationService.start()
-    autoConfirmationService.scheduleTransactions(upcoming)
-  }, [
-    upcoming,
-    autoPaySubscriptions,
-    autoPayRepetitive,
-    autoPayUpcoming,
-    updateDateUponConfirmation,
-    autoConfirmVersion,
-    isHydrated,
-  ])
   const router = useRouter()
   const { collapsed, setCollapsed } = useUpcomingSectionStore()
   const [confirmAllModalVisible, setConfirmAllModalVisible] = useState(false)

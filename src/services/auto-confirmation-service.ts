@@ -1,5 +1,4 @@
 import { useSyncExternalStore } from "react"
-import { AppState } from "react-native"
 
 import {
   getPendingTransactions,
@@ -19,13 +18,15 @@ import { logger } from "~/utils/logger"
  * never linger in an "auto-confirming" state.
  *
  * Architecture:
- * - One singleton. `sweep()` is the single resilient entry point: it reads
- *   every pending row, confirms the past-due pre-approved ones, and schedules
- *   an exact-time timeout for those due within the 24 h cap.
+ * - One singleton, owned by `useTransactionLifecycleSync`. `sweep()` is the
+ *   single resilient entry point: it reads every pending row, confirms the
+ *   past-due pre-approved ones, and schedules an exact-time timeout for those
+ *   due within the 24 h cap.
  * - Exposes a `version` counter so React can subscribe via
  *   useSyncExternalStore (no useEffect needed in consumers).
- * - The owning lifecycle hook calls `sweep()` on startup and on app foreground;
- *   `handleAppStateChange` here only nudges a re-render.
+ * - `sweep()` runs on: startup + every app foreground (from the owning hook),
+ *   a 60 s self-interval while active (long foreground sessions), and each
+ *   scheduled per-row timeout.
  *
  * Hydration-aware:
  * - Requires explicit configure() call with store config after hydration.
@@ -41,9 +42,9 @@ import { logger } from "~/utils/logger"
  *   pending set. `write-queue.ts` already retries SQLITE_BUSY/LOCKED beneath us.
  */
 
-type ConfirmCallback = (transactionId: string) => void
-
 const MAX_CONFIRM_FAILURES = 3
+/** Self-tick so a long foreground session confirms rows as they come due. */
+const SWEEP_INTERVAL_MS = 60_000
 
 interface AutoConfirmConfig {
   autoPaySubscriptions: boolean
@@ -55,8 +56,7 @@ interface AutoConfirmConfig {
 class AutoConfirmationService {
   /* ---- internal state ---- */
   private scheduledTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
-  private appStateSubscription: { remove: () => void } | null = null
-  private onConfirmedCallbacks = new Set<ConfirmCallback>()
+  private sweepInterval: ReturnType<typeof setInterval> | null = null
   private isActive = false
   private config: AutoConfirmConfig | null = null
   private sweeping = false
@@ -98,10 +98,12 @@ class AutoConfirmationService {
       )
     }
     this.isActive = true
-    this.appStateSubscription = AppState.addEventListener(
-      "change",
-      this.handleAppStateChange,
-    )
+    // Long foreground session: a row whose due time was > 24 h out (so no exact
+    // timeout) still confirms within a minute of coming due. RN timers freeze in
+    // the background, so this costs nothing while suspended.
+    this.sweepInterval = setInterval(() => {
+      void this.sweep().catch(() => {})
+    }, SWEEP_INTERVAL_MS)
   }
 
   stop() {
@@ -109,17 +111,10 @@ class AutoConfirmationService {
     this.clearAllSchedules()
     this.failCounts.clear()
     this.sweeping = false
-    if (this.appStateSubscription) {
-      this.appStateSubscription.remove()
-      this.appStateSubscription = null
+    if (this.sweepInterval) {
+      clearInterval(this.sweepInterval)
+      this.sweepInterval = null
     }
-  }
-
-  /* ---- public API ---- */
-
-  onConfirmed(callback: ConfirmCallback): () => void {
-    this.onConfirmedCallbacks.add(callback)
-    return () => this.onConfirmedCallbacks.delete(callback)
   }
 
   /**
@@ -176,44 +171,6 @@ class AutoConfirmationService {
       })
     } finally {
       this.sweeping = false
-    }
-  }
-
-  /** Compatibility shim for existing callers; delegates to {@link sweep}. */
-  async runAutoConfirmDueOnStartup(): Promise<void> {
-    await this.sweep()
-  }
-
-  /**
-   * Schedule from a caller-provided list (the upcoming section). Same rules as
-   * {@link sweep} but bounded to the rows passed in.
-   */
-  scheduleTransactions(transactions: TransactionWithRelations[]) {
-    if (!this.config) return
-
-    const { updateDateUponConfirmation } = this.config
-    const now = Date.now()
-    const scheduled = new Set<string>()
-
-    for (const row of transactions) {
-      const txId = row.id
-      if (!this.shouldAutoConfirm(row) || this.isCapped(txId)) continue
-
-      const msUntil = row.transactionDate.getTime() - now
-      if (msUntil <= 0) {
-        void this.confirmTransaction(txId, updateDateUponConfirmation).then(
-          (ok) => {
-            if (ok) this.bump()
-          },
-        )
-      } else {
-        this.scheduleTimeout(txId, msUntil, updateDateUponConfirmation)
-      }
-      scheduled.add(txId)
-    }
-
-    for (const [txId] of this.scheduledTimeouts) {
-      if (!scheduled.has(txId)) this.clearTimeout(txId)
     }
   }
 
@@ -281,9 +238,6 @@ class AutoConfirmationService {
         updateTransactionDate: updateDate,
       })
       this.failCounts.delete(transactionId)
-      for (const callback of this.onConfirmedCallbacks) {
-        callback(transactionId)
-      }
       return true
     } catch (e) {
       const failures = (this.failCounts.get(transactionId) ?? 0) + 1
@@ -308,12 +262,6 @@ class AutoConfirmationService {
     if (timeout) {
       clearTimeout(timeout)
       this.scheduledTimeouts.delete(transactionId)
-    }
-  }
-
-  private handleAppStateChange = (state: string) => {
-    if (state === "active" && this.isActive) {
-      this.bump() // Trigger re-render so grouping re-runs
     }
   }
 }
