@@ -8,7 +8,7 @@ import type {
   RecurringEditPayload,
   TransactionFormValues,
 } from "~/schemas/transactions.schema"
-import type { TransactionSubType } from "~/types/transactions"
+import type { TransactionKind, TransactionSubType } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { assertMinorUnits } from "~/utils/money"
 import { nextAbsoluteOccurrence } from "~/utils/recurrence"
@@ -54,6 +54,7 @@ export interface RecurringTransactionTemplate {
   subtype: TransactionSubType | null
   tags: string[] | null
   extra: Record<string, string> | null
+  kind: TransactionKind
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -64,7 +65,7 @@ function parseTemplate(row: RowRecurring): RecurringTransactionTemplate {
       RecurringTransactionTemplate,
       "id"
     >
-    return { id: row.id, ...template }
+    return { id: row.id, ...template, kind: template.kind ?? "repetitive" }
   } catch {
     return {
       id: row.id,
@@ -77,6 +78,7 @@ function parseTemplate(row: RowRecurring): RecurringTransactionTemplate {
       subtype: null,
       tags: null,
       extra: null,
+      kind: "repetitive",
     }
   }
 }
@@ -136,6 +138,7 @@ interface CreateRecurringRuleInput {
   range: { from: number; to: number }
   rules: string[]
   transferToAccountId?: string | null
+  kind: TransactionKind
 }
 
 export async function createRecurringRule(
@@ -155,6 +158,7 @@ export async function createRecurringRule(
     subtype: data.subtype,
     tags: data.tags,
     extra: null,
+    kind: data.kind,
   }
 
   await runInTransaction("recurring.create", (db) => {
@@ -468,6 +472,7 @@ async function synchronizeRecurringTransaction(
           recurringId: ruleId,
           extra,
           isPending,
+          kind: template.kind,
         }
 
         const { createTransaction } = await import("./ledger-service")
@@ -496,6 +501,7 @@ async function synchronizeRecurringTransaction(
             isPending,
             subtype: template.subtype ?? null,
             extra,
+            kind: template.kind,
           },
         )
       }

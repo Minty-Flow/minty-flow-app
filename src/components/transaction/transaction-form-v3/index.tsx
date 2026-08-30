@@ -462,6 +462,7 @@ export function TransactionFormV3({
               description: data.description?.trim() ?? null,
               subtype: data.subtype ?? null,
               tags: data.tags ?? [],
+              kind: "repetitive",
               range: {
                 from: recurring.startDate.getTime(),
                 to: rangeEnd,
