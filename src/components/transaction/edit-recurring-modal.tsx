@@ -23,7 +23,7 @@ import {
   type RecurringTransactionTemplate,
 } from "~/database/services/recurring-transaction-service"
 import type { RecurringEditPayload } from "~/schemas/transactions.schema"
-import type { Transaction } from "~/types/transactions"
+import type { Recurrence, Transaction } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
@@ -35,6 +35,9 @@ interface EditRecurringModalProps {
   transaction: Transaction
   recurringRule: RecurringTransactionTemplate
   pendingPayload: RecurringEditPayload | null
+  /** Current recurrence-card values; only applied on "this and future". */
+  recurrence?: Recurrence
+  until?: Date | null
   onRequestClose: () => void
   onSaved: () => void
 }
@@ -86,6 +89,8 @@ export function EditRecurringModal({
   transaction,
   recurringRule,
   pendingPayload,
+  recurrence,
+  until,
   onRequestClose,
   onSaved,
 }: EditRecurringModalProps) {
@@ -104,6 +109,8 @@ export function EditRecurringModal({
         transactionDate: transaction.transactionDate,
         ruleId: recurringRule.id,
         payload: pendingPayload,
+        recurrence,
+        until,
       })
       Toast.success({
         title: t(
