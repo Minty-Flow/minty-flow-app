@@ -31,8 +31,8 @@ export interface TransactionFormV4Props {
   initialTagIds?: string[]
   initialKind?: TransactionKind
   prefill?: Partial<TransactionFormValues>
-  /** Show the free-text title field. Off by default — title derives from category. */
-  showTitle?: boolean
+  /** Show the per-field section labels ("Category", "Account", …). Off by default. */
+  showFieldLabels?: boolean
 }
 
 export type ModalState = {

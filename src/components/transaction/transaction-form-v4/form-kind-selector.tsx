@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next"
 
 import { Chip } from "~/components/ui/chips"
-import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TranslationKey } from "~/i18n/config"
 import type { TransactionKind } from "~/types/transactions"
 
+import { FieldLabel } from "./field-label"
 import { transactionFormStyles } from "./form.styles"
 
 const KIND_LABEL_KEYS: Record<TransactionKind, TranslationKey> = {
@@ -37,9 +37,9 @@ export function FormKindSelector({ kind, onSelect, disabled = false }: Props) {
 
   return (
     <View style={transactionFormStyles.fieldBlock}>
-      <Text variant="small" style={transactionFormStyles.sectionLabel}>
+      <FieldLabel style={transactionFormStyles.sectionLabel}>
         {t("components.transactionForm.kind.label")}
-      </Text>
+      </FieldLabel>
       <View style={transactionFormStyles.tagsWrapGrid}>
         {KINDS.map((k) => (
           <Chip
