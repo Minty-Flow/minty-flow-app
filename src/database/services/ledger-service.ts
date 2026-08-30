@@ -45,6 +45,21 @@ function hasAttachmentsFromExtra(
   }
 }
 
+// CSI-2: a pending transaction may only carry a kind that represents a
+// legitimately un-applied state. Anything else is a form/caller bug.
+function assertPendingKindAllowed(isPending: boolean, kind: string): void {
+  if (
+    isPending &&
+    kind !== "upcoming" &&
+    kind !== "subscription" &&
+    kind !== "repetitive"
+  ) {
+    const msg = `Refusing to persist pending transaction with kind='${kind}'`
+    if (__DEV__) throw new Error(msg)
+    logger.error(msg, { kind })
+  }
+}
+
 type Db = Parameters<Parameters<typeof runInTransaction>[1]>[0]
 
 const txSelection = {
@@ -286,6 +301,9 @@ export async function createTransaction(
   const extraJson = extra ? JSON.stringify(extra) : null
   const hasAttachments = hasAttachmentsFromExtra(extra) ? 1 : 0
 
+  const kind = data.kind ?? "default"
+  assertPendingKindAllowed(!!data.isPending, kind)
+
   const txId = await runInTransaction("transaction.create", (db) => {
     const balanceBefore = data.isPending
       ? 0
@@ -311,6 +329,7 @@ export async function createTransaction(
         requiresManualConfirmation: data.requiresManualConfirmation ? 1 : 0,
         accountBalanceBefore: balanceBefore,
         subtype: data.subtype ?? null,
+        kind,
         extra: extraJson,
         hasAttachments,
         recurringId: data.recurringId ?? null,
@@ -519,16 +538,30 @@ export async function updateTransaction(
     const oldAccountId = tx.account_id
     const oldCategoryId = tx.category_id
 
+    // ES-5: a loan-linked row's kind / type / account / loan link are locked.
+    // The form disables these fields; this is defence in depth — silently keep
+    // the stored value rather than throwing.
+    const isLoanLinked = tx.loan_id != null
+    const nextKind =
+      data.kind !== undefined && !isLoanLinked
+        ? data.kind
+        : (tx.kind ?? "default")
+
     const newPending =
       data.isPending !== undefined ? data.isPending : oldPending
     const newAmount = data.amount !== undefined ? data.amount : oldAmount
-    const newType = data.type !== undefined ? data.type : oldType
+    const newType =
+      data.type !== undefined && !isLoanLinked ? data.type : oldType
     const newSubtype =
       data.subtype !== undefined ? (data.subtype ?? null) : oldSubtype
     const newAccountId =
-      data.accountId !== undefined ? data.accountId : oldAccountId
+      data.accountId !== undefined && !isLoanLinked
+        ? data.accountId
+        : oldAccountId
     const newCategoryId =
       data.categoryId !== undefined ? data.categoryId : oldCategoryId
+
+    assertPendingKindAllowed(newPending, nextKind)
 
     // -- Balance reconciliation --
     const oldDelta = !oldPending
@@ -634,7 +667,10 @@ export async function updateTransaction(
     db.update(transactions)
       .set({
         ...(data.amount !== undefined ? { amount: data.amount } : {}),
-        ...(data.type !== undefined ? { type: data.type } : {}),
+        ...(data.type !== undefined && !isLoanLinked
+          ? { type: data.type }
+          : {}),
+        kind: nextKind,
         ...(data.transactionDate !== undefined
           ? { transactionDate: data.transactionDate.toISOString() }
           : {}),
@@ -655,7 +691,9 @@ export async function updateTransaction(
         ...(data.categoryId !== undefined
           ? { categoryId: newCategoryId ?? null }
           : {}),
-        ...(data.accountId !== undefined ? { accountId: data.accountId } : {}),
+        ...(data.accountId !== undefined && !isLoanLinked
+          ? { accountId: data.accountId }
+          : {}),
         accountBalanceBefore: newBalanceBefore,
         ...(data.extra !== undefined
           ? {
@@ -678,7 +716,9 @@ export async function updateTransaction(
         ...(data.budgetId !== undefined
           ? { budgetId: data.budgetId ?? null }
           : {}),
-        ...(data.loanId !== undefined ? { loanId: data.loanId ?? null } : {}),
+        ...(data.loanId !== undefined && !isLoanLinked
+          ? { loanId: data.loanId ?? null }
+          : {}),
         updatedAt: now,
       })
       .where(eq(transactions.id, id))
@@ -1153,6 +1193,7 @@ export async function confirmTransaction(
         db.update(transactions)
           .set({
             isPending: 0,
+            kind: leg.kind === "upcoming" ? "default" : leg.kind,
             accountBalanceBefore: balanceByAccountId.get(leg.account_id) ?? 0,
             ...(options.updateTransactionDate ? { transactionDate: now } : {}),
             updatedAt: now,
