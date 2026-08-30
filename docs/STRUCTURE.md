@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T02:10:11.292Z
+Generated on: 2026-08-30T02:16:10.354Z
 ```
 ./
 ├── .github/
@@ -23,6 +23,12 @@ Generated on: 2026-08-30T02:10:11.292Z
 │   │   ├── pre-rebase
 │   │   └── prepare-commit-msg
 │   └── pre-commit
+├── .superpowers/
+│   └── sdd/
+│       ├── 2026-08-30-transaction-kind-slice-1/
+│       │   ├── progress.md
+│       │   └── task-1-brief.md
+│       └── .gitignore
 ├── docs/
 │   ├── adr/
 │   │   └── 0001-transaction-kind-axis.md
@@ -41,13 +47,17 @@ Generated on: 2026-08-30T02:10:11.292Z
 ├── drizzle/
 │   ├── meta/
 │   │   ├── _journal.json
-│   │   └── 0000_snapshot.json
+│   │   ├── 0000_snapshot.json
+│   │   └── 0001_snapshot.json
 │   ├── 0000_safe_maximus.sql
+│   ├── 0001_deep_daredevil.sql
 │   ├── migrations.d.ts
 │   └── migrations.js
 ├── plugins/
 │   └── with-android-release-signing.mts
 ├── scripts/
+│   ├── checks/
+│   │   └── verify-migration-0001.mts
 │   ├── check-missing-i18n-keys.mts
 │   ├── check-number-formatting.mts
 │   ├── find-unused-styles.mts
