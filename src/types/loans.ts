@@ -14,6 +14,15 @@ export const LoanTypeEnum = {
 
 export type LoanType = (typeof LoanTypeEnum)[keyof typeof LoanTypeEnum]
 
+export const LoanTermEnum = {
+  /** Lent/borrowed lump created and closed from the transaction form. */
+  ONE_TIME: "one_time",
+  /** Progress-tracked loan (the pre-Slice-4 behaviour). */
+  LONG_TERM: "long_term",
+} as const
+
+export type LoanTerm = (typeof LoanTermEnum)[keyof typeof LoanTermEnum]
+
 /**
  * Loan domain type for UI/API usage.
  *
@@ -25,6 +34,7 @@ export interface Loan {
   description: string | null
   principalAmount: number
   loanType: LoanType
+  term: LoanTerm
   dueDate: Date | null
   accountId: string
   categoryId: string

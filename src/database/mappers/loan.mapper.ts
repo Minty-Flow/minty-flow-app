@@ -1,5 +1,5 @@
 import { getThemeStrict } from "~/styles/theme/registry"
-import type { Loan, LoanType } from "~/types/loans"
+import type { Loan, LoanTerm, LoanType } from "~/types/loans"
 
 import type { RowLoan } from "../types/rows"
 
@@ -10,6 +10,7 @@ export function mapLoan(row: RowLoan): Loan {
     description: row.description,
     principalAmount: row.principal_amount,
     loanType: row.loan_type as LoanType,
+    term: (row.term as LoanTerm) ?? "one_time",
     dueDate: row.due_date != null ? new Date(row.due_date) : null,
     accountId: row.account_id,
     categoryId: row.category_id,

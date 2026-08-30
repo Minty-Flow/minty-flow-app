@@ -188,6 +188,7 @@ export interface RowLoan {
   description: string | null
   principal_amount: number
   loan_type: string
+  term: string
   due_date: string | null // UTC ISO
   account_id: string
   category_id: string

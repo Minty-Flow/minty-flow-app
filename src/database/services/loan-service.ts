@@ -46,6 +46,9 @@ export async function createLoan(data: CreateLoanInput): Promise<string> {
         description: data.description ?? null,
         principalAmount: data.principalAmount,
         loanType: data.loanType,
+        // Screen-created loans are progress-tracked; the form path (Slice 4)
+        // overrides this to 'one_time' via createLoanWithOpeningEntry.
+        term: "long_term",
         dueDate:
           data.dueDate != null ? new Date(data.dueDate).toISOString() : null,
         accountId: data.accountId,

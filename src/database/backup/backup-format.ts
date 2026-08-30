@@ -51,7 +51,10 @@ export type ValidateBackupResult =
 
 // v4: transactions carry `kind` (DM-1). A `kind`-less transaction row (older or
 // hand-edited snapshot) is backfilled on import via deriveKind.
-export const SCHEMA_VERSION = 4
+// v5: loans carry `term` (one_time | long_term). A `term`-less loan row (v4 or
+// earlier snapshot) is backfilled to `long_term` on import — every loan created
+// before Slice 4 was a screen-created progress loan.
+export const SCHEMA_VERSION = 5
 
 // v3 is accepted for one release so users can still restore a backup taken
 // before the `kind` migration (local-first: no server copy to fall back on).
@@ -152,6 +155,7 @@ export const ALLOWED_COLUMNS: Record<string, string[]> = {
     "description",
     "principal_amount",
     "loan_type",
+    "term",
     "due_date",
     "account_id",
     "category_id",
