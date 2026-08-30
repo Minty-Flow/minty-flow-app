@@ -243,7 +243,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   accountPickerRowBalance: {
     fontSize: theme.typography.bodyMedium.fontSize,
   },
-  pickerSearchInput: {
+  searchFieldWrap: {
     marginBottom: CARD_PAD,
   },
   categoryScrollContent: {
@@ -323,21 +323,10 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.secondary,
     padding: CARD_PAD,
   },
-  tagPickerClearAllRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: SMALL_GAP,
-    paddingVertical: SMALL_GAP,
-    marginBottom: SMALL_GAP,
-  },
   tagPickerClearAllText: {
     ...theme.typography.labelLarge,
     fontWeight: "500",
     color: theme.colors.semantic.semi,
-  },
-  tagSearchInput: {
-    marginBottom: CARD_PAD,
   },
   tagPickerChipGrid: {
     flexDirection: "row",
@@ -349,13 +338,13 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     color: theme.colors.semantic.semi,
     paddingVertical: SECTION_GAP,
   },
-  createTagRow: {
+  tagPickerFooterRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: ROW_GAP,
     paddingVertical: ROW_PADDING_V,
     paddingHorizontal: SECTION_GAP,
-    marginTop: FORM_GAP,
+    marginTop: SECTION_GAP,
     borderRadius: theme.radius,
   },
   createTagRowText: {
