@@ -39,6 +39,7 @@ export type ModalState = {
   unsavedModalVisible: boolean
   editRecurringModalVisible: boolean
   deleteRecurringModalVisible: boolean
+  deleteLoanModalVisible: boolean
   destroyModalVisible: boolean
   notesModalVisible: boolean
   locationPickerVisible: boolean

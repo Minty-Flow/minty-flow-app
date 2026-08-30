@@ -25,6 +25,7 @@ interface FormModalsProps {
   untilForEdit?: Date | null
   onConfirmExit: () => void
   onDestroyConfirm: () => void
+  onDeleteLoanConfirm: () => void
   onLocationConfirm: (loc: TransactionLocation) => void
   onIosDateConfirm: (date: Date) => void
   onDatePickerClose: () => void
@@ -41,6 +42,7 @@ export function FormModals({
   untilForEdit,
   onConfirmExit,
   onDestroyConfirm,
+  onDeleteLoanConfirm,
   onLocationConfirm,
   onIosDateConfirm,
   onDatePickerClose,
@@ -81,6 +83,20 @@ export function FormModals({
         confirmLabel={t("common.actions.discard")}
         cancelLabel={t("common.actions.cancel")}
         variant="default"
+      />
+
+      <ConfirmModal
+        visible={modals.deleteLoanModalVisible}
+        onRequestClose={() => setModals({ deleteLoanModalVisible: false })}
+        onConfirm={onDeleteLoanConfirm}
+        title={t("components.transactionForm.deleteLoanModal.title")}
+        description={t(
+          "components.transactionForm.deleteLoanModal.description",
+        )}
+        confirmLabel={t("common.actions.delete")}
+        cancelLabel={t("common.actions.cancel")}
+        variant="destructive"
+        icon="trash-outline"
       />
 
       <ConfirmModal

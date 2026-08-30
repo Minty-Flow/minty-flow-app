@@ -331,6 +331,7 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
               <FormDeleteActions
                 transaction={transaction}
                 isSaving={f.isSaving}
+                isLoanOpeningEntry={f.isLoanOpeningEntry}
                 onRestore={f.handleRestore}
                 onDelete={f.handleDeleteConfirm}
                 onDestroy={f.handleDestroy}
@@ -360,6 +361,7 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
           untilForEdit={f.recurring.until}
           onConfirmExit={f.handleConfirmExit}
           onDestroyConfirm={f.handleDestroyConfirm}
+          onDeleteLoanConfirm={f.handleDeleteLoanConfirm}
           onLocationConfirm={f.handleLocationConfirm}
           onIosDateConfirm={f.confirmIosDate}
           onDatePickerClose={() => f.setDatePicker({ visible: false })}
