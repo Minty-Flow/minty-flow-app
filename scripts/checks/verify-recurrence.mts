@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict"
+import { endOfDay } from "date-fns"
+import RRulePkg from "rrule"
+const { RRule } = RRulePkg
 
 import {
   buildRRuleString,
@@ -72,5 +75,24 @@ assert.equal(
   countOccurrencesBetween(dayStart, dayEnd, { interval: 1, unit: "day" }),
   1,
 )
+
+// count==spawn: countOccurrencesBetween should equal the number of rrule.between entries
+// this pins the contract with the recurring synchroniser
+const from = new Date(2026, 2, 1, 8, 0, 0)
+const untilEod = endOfDay(new Date(2026, 5, 1))
+for (const rec of [
+  { interval: 1, unit: "week" },
+  { interval: 2, unit: "week" },
+  { interval: 1, unit: "month" },
+] as const) {
+  const n = countOccurrencesBetween(from, untilEod, rec)
+  const spawned = new RRule({
+    freq: { day: RRule.DAILY, week: RRule.WEEKLY, month: RRule.MONTHLY, year: RRule.YEARLY }[rec.unit],
+    interval: rec.interval,
+    dtstart: from,
+    until: untilEod,
+  }).between(from, untilEod, true).length
+  assert.equal(n, spawned, `count==spawn for ${rec.interval} ${rec.unit}`)
+}
 
 console.log("recurrence: OK")
