@@ -446,6 +446,9 @@
           },
           "systemInfo": "This depends on your phone's system settings. Make sure \"Touch interactions\" is enabled in Sound settings."
         },
+        "sound": {
+          "title": "Sound"
+        },
         "language": {
           "title": "Language",
           "sectionLabel": "change language",

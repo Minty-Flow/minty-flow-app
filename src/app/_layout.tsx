@@ -655,6 +655,12 @@ function AppRootLayout() {
                   options={{ title: t("screens.settings.reminders.title") }}
                 />
                 <Stack.Screen
+                  name="settings/preferences/sound"
+                  options={{
+                    title: t("screens.settings.preferences.sound.title"),
+                  }}
+                />
+                <Stack.Screen
                   name="settings/preferences/pending-transactions"
                   options={{ title: t("screens.settings.pending.title") }}
                 />
