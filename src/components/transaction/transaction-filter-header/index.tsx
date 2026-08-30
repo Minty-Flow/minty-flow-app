@@ -247,7 +247,7 @@ export function TransactionFilterHeader({
     },
     {
       key: "date",
-      icon: "calendar-outline",
+      icon: "calendar-month",
       label: dateLabel,
       active: isDateActive,
     },

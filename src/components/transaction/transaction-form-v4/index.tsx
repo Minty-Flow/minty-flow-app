@@ -72,6 +72,7 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
         <View style={transactionFormStyles.header}>
           <TransactionTopTabs
             labels={f.tabLabels}
+            icons={f.tabIcons}
             value={f.topTabType}
             onChange={f.onTopTabChange}
             hiddenSlots={f.tabHiddenSlots}

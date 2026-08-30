@@ -342,7 +342,7 @@ export function BudgetModifyContent({
                   }
                 >
                   <View style={budgetModifyStyles.switchLeft}>
-                    <IconSvg name="calendar-outline" size={24} />
+                    <IconSvg name="calendar-month" size={24} />
                     <Text
                       variant="default"
                       style={budgetModifyStyles.switchLabel}
@@ -368,7 +368,7 @@ export function BudgetModifyContent({
                   }
                 >
                   <View style={budgetModifyStyles.switchLeft}>
-                    <IconSvg name="calendar-outline" size={24} />
+                    <IconSvg name="calendar-month" size={24} />
                     <Text
                       variant="default"
                       style={budgetModifyStyles.switchLabel}

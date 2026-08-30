@@ -8,6 +8,8 @@ import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
 
 interface TransactionTopTabsProps {
   labels: [string, string, string]
+  /** Per-slot icon override (e.g. lent/borrowed kinds); falls back to SLOT_ICONS. */
+  icons?: [IconSvgName, IconSvgName, IconSvgName]
   value: TransactionType
   onChange: (type: TransactionType) => void
   hiddenSlots?: number[]
@@ -30,6 +32,7 @@ const SLOT_ICONS: [IconSvgName, IconSvgName, IconSvgName] = [
 
 export const TransactionTopTabs = ({
   labels,
+  icons = SLOT_ICONS,
   value,
   onChange,
   hiddenSlots = [],
@@ -53,7 +56,7 @@ export const TransactionTopTabs = ({
             style={[styles.segment, isSelected && styles.active]}
           >
             <IconSvg
-              name={SLOT_ICONS[slot]}
+              name={icons[slot]}
               color={isSelected ? styles.activeText.color : undefined}
               size={18}
             />

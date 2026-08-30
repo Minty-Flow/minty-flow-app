@@ -331,7 +331,7 @@ export function GoalModifyContent({
             }
           >
             <View style={goalModifyStyles.targetDateLeft}>
-              <IconSvg name="calendar-outline" size={24} />
+              <IconSvg name="calendar-month" size={24} />
               <Text variant="default" style={goalModifyStyles.switchLabel}>
                 {t("screens.settings.goals.form.targetDateLabel")}
               </Text>

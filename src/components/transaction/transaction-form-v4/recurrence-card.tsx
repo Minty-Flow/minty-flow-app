@@ -123,7 +123,7 @@ export function RecurrenceCard({
         onPress={onUntilPress}
       >
         <DynamicIcon
-          icon="calendar-outline"
+          icon="calendar-month"
           size={20}
           color={theme.colors.primary}
           variant="badge"

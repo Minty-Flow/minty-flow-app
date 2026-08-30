@@ -1,8 +1,6 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { IconSvg } from "~/components/icons"
-import { Button } from "~/components/ui/button"
 import { Chip } from "~/components/ui/chips"
 import { View } from "~/components/ui/view"
 import type { TransactionKind } from "~/types/transactions"
@@ -24,22 +22,9 @@ export function FormKindSelector({ kind, onSelect, disabled = false }: Props) {
 
   return (
     <View style={transactionFormStyles.fieldBlock}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-        <FieldLabel style={transactionFormStyles.sectionLabel}>
-          {t("components.transactionForm.kind.label")}
-        </FieldLabel>
-        <Button
-          variant="ghost"
-          size="icon"
-          onPress={() => setInfoVisible(true)}
-          accessibilityLabel={t(
-            "components.transactionForm.kind.info.a11yOpen",
-          )}
-          hitSlop={8}
-        >
-          <IconSvg name="info-circle" size={18} />
-        </Button>
-      </View>
+      <FieldLabel style={transactionFormStyles.sectionLabel}>
+        {t("components.transactionForm.kind.label")}
+      </FieldLabel>
       <View style={transactionFormStyles.tagsWrapGrid}>
         {KIND_ORDER.map((k) => (
           <Chip
@@ -50,6 +35,14 @@ export function FormKindSelector({ kind, onSelect, disabled = false }: Props) {
             onPress={() => !disabled && k !== kind && onSelect(k)}
           />
         ))}
+        <Chip
+          leading="info-circle"
+          hideCheck
+          onPress={() => setInfoVisible(true)}
+          accessibilityLabel={t(
+            "components.transactionForm.kind.info.a11yOpen",
+          )}
+        />
       </View>
 
       <KindInfoModal

@@ -23,7 +23,7 @@ export const KIND_LABEL_KEYS: Record<TransactionKind, TranslationKey> = {
 /** Shared kind glyphs — the info modal is the source of truth; reuse elsewhere. */
 export const KIND_ICONS: Record<TransactionKind, IconSvgName> = {
   default: "check-outline",
-  upcoming: "calendar-outline",
+  upcoming: "calendar-month",
   subscription: "calendar-repeat-outline",
   repetitive: "repeat-outline",
   lent: "arrow-up-circle-outline",
