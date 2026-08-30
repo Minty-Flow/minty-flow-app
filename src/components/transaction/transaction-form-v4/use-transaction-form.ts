@@ -319,6 +319,8 @@ export function useTransactionForm({
   const linkedLoanId: string | null = null // Slice 4 populates this
   const setKind = (next: TransactionKind) => {
     if (!canEditKind || next === kind) return
+    // ES-4: an existing transaction may not gain a loan link on edit.
+    if (!isNew && (next === "lent" || next === "borrowed")) return
     const partials = onKindChange(kind, next, {
       recurring,
       loanDraft,
@@ -469,6 +471,7 @@ export function useTransactionForm({
               description: data.description?.trim() ?? null,
               subtype: data.subtype ?? null,
               tags: data.tags ?? [],
+              // Slice 2: replace with data.kind once subscription/repetitive are selectable
               kind: "repetitive",
               range: {
                 from: recurring.startDate.getTime(),

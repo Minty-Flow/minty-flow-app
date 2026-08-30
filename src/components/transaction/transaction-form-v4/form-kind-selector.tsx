@@ -10,7 +10,7 @@ import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TranslationKey } from "~/i18n/config"
-import { type TransactionKind, TransactionKindEnum } from "~/types/transactions"
+import type { TransactionKind } from "~/types/transactions"
 
 import { transactionFormStyles } from "./form.styles"
 
@@ -23,7 +23,10 @@ const KIND_LABEL_KEYS: Record<TransactionKind, TranslationKey> = {
   borrowed: "common.transaction.kinds.borrowed",
 }
 
-const KINDS: TransactionKind[] = Object.values(TransactionKindEnum)
+// Slice 1 wires only `default` and `upcoming`. `subscription`/`repetitive` (Slice 2)
+// and `lent`/`borrowed` (Slice 4) stay defined in the enum + onKindChange/KT
+// matrix, but must not be user-selectable until their submit paths exist.
+const KINDS: TransactionKind[] = ["default", "upcoming"]
 
 type Props = {
   kind: TransactionKind
