@@ -1,12 +1,20 @@
 import { endOfDay } from "date-fns"
-import type { RRule, RRuleSet } from "rrule"
-import rrulePkg from "rrule"
+import type { RRuleSet } from "rrule"
+import * as rruleNs from "rrule"
 
 import type { Recurrence, RecurrenceUnit } from "~/types/transactions"
 
-// rrule's ESM export wraps CommonJS; extract typed constructors from default
-const RRuleConstructor = rrulePkg.RRule as typeof RRule
-const rrulestr = rrulePkg.rrulestr as (ruleStr: string) => RRule | RRuleSet
+// rrule publishes a CJS bundle flagged `__esModule` with no genuine default
+// export. Metro surfaces its members on the namespace object; Node's ESM loader
+// (used by scripts/checks/verify-recurrence.mts) nests them under `.default`.
+// Normalise to one shape so both runtimes work.
+type RRuleModule = typeof import("rrule")
+const rrulePkg: RRuleModule =
+  "RRule" in rruleNs
+    ? (rruleNs as RRuleModule)
+    : (rruleNs as unknown as { default: RRuleModule }).default
+const { RRule, rrulestr } = rrulePkg
+type RRule = InstanceType<typeof RRule>
 
 interface TimeRange {
   from: number // Unix ms
@@ -14,17 +22,17 @@ interface TimeRange {
 }
 
 const FREQ_BY_UNIT: Record<RecurrenceUnit, number> = {
-  day: RRuleConstructor.DAILY,
-  week: RRuleConstructor.WEEKLY,
-  month: RRuleConstructor.MONTHLY,
-  year: RRuleConstructor.YEARLY,
+  day: RRule.DAILY,
+  week: RRule.WEEKLY,
+  month: RRule.MONTHLY,
+  year: RRule.YEARLY,
 }
 
 const UNIT_BY_FREQ: Record<number, RecurrenceUnit> = {
-  [RRuleConstructor.DAILY]: "day",
-  [RRuleConstructor.WEEKLY]: "week",
-  [RRuleConstructor.MONTHLY]: "month",
-  [RRuleConstructor.YEARLY]: "year",
+  [RRule.DAILY]: "day",
+  [RRule.WEEKLY]: "week",
+  [RRule.MONTHLY]: "month",
+  [RRule.YEARLY]: "year",
 }
 
 /** Clamp any number to an integer in 1..999. */
@@ -46,7 +54,7 @@ export function buildRRuleString(opts: {
   startDate: Date
   until?: Date | null
 }): string {
-  const rule = new RRuleConstructor({
+  const rule = new RRule({
     freq: FREQ_BY_UNIT[opts.unit],
     interval: clampInterval(opts.interval),
     dtstart: opts.startDate,
@@ -57,17 +65,17 @@ export function buildRRuleString(opts: {
 
 /**
  * Safely parse an RRULE string that may contain a DTSTART line.
- * `rrulestr` handles the full RFC format; fall back to `RRuleConstructor.fromString`.
+ * `rrulestr` handles the full RFC format; fall back to `RRule.fromString`.
  */
 function parseRRule(ruleString: string): RRule {
   try {
     const result = rrulestr(ruleString)
-    if (result instanceof RRuleConstructor) return result
+    if (result instanceof RRule) return result
     const rules = (result as unknown as RRuleSet).rrules()
     if (rules.length > 0) return rules[0]
     throw new Error(`rrulestr produced empty RRuleSet for: ${ruleString}`)
   } catch {
-    return RRuleConstructor.fromString(ruleString)
+    return RRule.fromString(ruleString)
   }
 }
 
@@ -82,7 +90,7 @@ export function countOccurrencesBetween(
   recurrence: Recurrence,
 ): number {
   if (endDate.getTime() < startDate.getTime()) return 0
-  const rule = new RRuleConstructor({
+  const rule = new RRule({
     freq: FREQ_BY_UNIT[recurrence.unit],
     interval: clampInterval(recurrence.interval),
     dtstart: startDate,
