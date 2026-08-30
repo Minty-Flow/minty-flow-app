@@ -313,7 +313,7 @@ export async function createTransaction(
   const effectiveSubtype = data.subtype ?? rulePatch.subtype ?? null
   const effectiveTags = data.tags?.length ? data.tags : (rulePatch.tags ?? [])
   const categorySource: CategorySource | null = data.categoryId
-    ? "manual"
+    ? (data.categorySource ?? "manual")
     : rulePatch.categoryId
       ? "rule"
       : null

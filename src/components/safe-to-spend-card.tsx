@@ -2,8 +2,9 @@ import { useRouter } from "expo-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Modal, View as RNView, ScrollView } from "react-native"
-import { StyleSheet } from "react-native-unistyles"
+import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { Button } from "~/components/ui/button"
 import { Pressable } from "~/components/ui/pressable"
@@ -18,6 +19,7 @@ import { useSafeToSpendStore } from "~/stores/safe-to-spend.store"
 
 export function SafeToSpendCard() {
   const { t } = useTranslation()
+  const { theme } = useUnistyles()
   const router = useRouter()
   const enabled = useSafeToSpendStore((s) => s.enabled)
   const cadence = useSafeToSpendStore((s) => s.cadence)
@@ -45,9 +47,18 @@ export function SafeToSpendCard() {
         onPress={() => !showEmpty && setBreakdownOpen(true)}
         disabled={showEmpty}
       >
-        <Text variant="small" style={styles.caption}>
-          {caption}
-        </Text>
+        <View style={styles.headerRow}>
+          <View style={styles.iconWrap}>
+            <IconSvg
+              name="wallet-outline"
+              size={12}
+              color={theme.colors.primary}
+            />
+          </View>
+          <Text variant="small" style={styles.label}>
+            {caption}
+          </Text>
+        </View>
 
         {showEmpty ? (
           <>
@@ -82,6 +93,7 @@ export function SafeToSpendCard() {
                 ? t("components.safeToSpend.someOver")
                 : unitsLeft}
             </Text>
+            <View style={styles.indicator} />
           </>
         )}
       </Pressable>
@@ -238,29 +250,41 @@ const styles = StyleSheet.create((theme) => ({
     borderWidth: 1,
     borderColor: theme.colors.semantic.semi,
     borderRadius: theme.radius,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    gap: 6,
-    alignItems: "stretch",
+    padding: 16,
+    gap: 10,
     backgroundColor: theme.colors.surface,
   },
-  caption: {
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  iconWrap: {
+    width: 20,
+    height: 20,
+    borderRadius: theme.radius / 2,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: `${theme.colors.primary}20`,
+  },
+  label: {
     color: theme.colors.onSecondary,
     fontWeight: "700",
+    fontSize: theme.typography.labelXSmall.fontSize,
     textTransform: "uppercase",
     letterSpacing: 0.5,
     opacity: 0.8,
-    textAlign: "center",
   },
   currencyRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "baseline",
     justifyContent: "space-between",
   },
   currencyCode: {
-    color: theme.colors.onSurface,
-    fontWeight: "700",
-    opacity: 0.55,
+    color: theme.colors.onSecondary,
+    fontWeight: "600",
+    fontSize: theme.typography.labelMedium.fontSize,
+    opacity: 0.6,
   },
   amount: {
     color: theme.colors.onSurface,
@@ -273,17 +297,20 @@ const styles = StyleSheet.create((theme) => ({
   secondary: {
     color: theme.colors.onSurface,
     opacity: 0.6,
-    textAlign: "center",
+  },
+  indicator: {
+    height: 2,
+    width: "20%",
+    borderRadius: 1,
+    backgroundColor: theme.colors.primary,
     marginTop: 2,
   },
   hint: {
     color: theme.colors.onSurface,
-    textAlign: "center",
   },
   link: {
     color: theme.colors.primary,
     fontWeight: "600",
-    textAlign: "center",
   },
   modalRoot: {
     flex: 1,

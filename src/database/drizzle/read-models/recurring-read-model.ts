@@ -1,7 +1,9 @@
 import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 
+import type { MintyColorScheme } from "~/styles/theme/types"
 import { TransactionTypeEnum } from "~/types/transactions"
 import { nextAbsoluteOccurrence, occurrencesInWindow } from "~/utils/recurrence"
+import { applyRules } from "~/utils/transaction-rules"
 
 import { drizzleDb } from "../db"
 import { recurringTransactions, transactions } from "../schema"
@@ -11,6 +13,7 @@ import {
   createLiveReadModelResult,
   type LiveReadModelResult,
 } from "./entity-read-model"
+import { useTransactionRules } from "./transaction-rules-read-model"
 
 /** One recurring expense, with its cost normalised to month / year. */
 export interface RecurringExpense {
@@ -22,6 +25,10 @@ export interface RecurringExpense {
   accountName: string
   categoryId: string | null
   categoryName: string | null
+  categoryIcon: string | null
+  categoryColorScheme: MintyColorScheme | null
+  /** categoryId/name resolved from a payee rule, not set on the template itself. */
+  categoryFromRule: boolean
   nextChargeAt: Date | null
   monthlyMinor: number
   yearlyMinor: number
@@ -124,9 +131,13 @@ export function useRecurringExpensesQuery(): LiveReadModelResult<
   )
   const accounts = useAccounts()
   const categories = useCategories()
+  const payeeRules = useTransactionRules()
 
   const accountById = new Map(accounts.map((a) => [a.id, a]))
   const categoryById = new Map(categories.map((c) => [c.id, c]))
+  const categoryTypeById = new Map(
+    categories.map((c) => [c.id, c.type as "expense" | "income"]),
+  )
 
   const now = new Date()
   const nowMs = now.getTime()
@@ -165,8 +176,33 @@ export function useRecurringExpensesQuery(): LiveReadModelResult<
     const range = parseRange(row.range)
     const rules = parseRules(row.rules)
     const account = accountById.get(template.accountId)
-    const category = template.categoryId
-      ? categoryById.get(template.categoryId)
+
+    // Effective category: the template's own, or — when it has none — the one
+    // a payee rule would assign to its spawned transactions, so the hub shows
+    // what the user actually sees on the ledger.
+    let effectiveCategoryId = template.categoryId
+    let categoryFromRule = false
+    if (!effectiveCategoryId) {
+      const patch = applyRules(
+        {
+          title: template.title?.trim() || null,
+          description: null,
+          categoryId: null,
+          subtype: null,
+          tags: [],
+          isTransfer: false,
+          type: "expense",
+        },
+        payeeRules,
+        categoryTypeById,
+      )
+      if (patch.categoryId) {
+        effectiveCategoryId = patch.categoryId
+        categoryFromRule = true
+      }
+    }
+    const category = effectiveCategoryId
+      ? categoryById.get(effectiveCategoryId)
       : undefined
 
     const perYear =
@@ -185,8 +221,11 @@ export function useRecurringExpensesQuery(): LiveReadModelResult<
       currencyCode: account?.currencyCode ?? "",
       accountId: template.accountId,
       accountName: account?.name ?? "—",
-      categoryId: template.categoryId,
+      categoryId: effectiveCategoryId,
       categoryName: category?.name ?? null,
+      categoryIcon: category?.icon ?? null,
+      categoryColorScheme: category?.colorScheme ?? null,
+      categoryFromRule,
       nextChargeAt:
         range && rules.length > 0
           ? nextAbsoluteOccurrence(rules, range, now)

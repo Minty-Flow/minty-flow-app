@@ -102,7 +102,11 @@ export const TransactionItemRight = ({
 
       {showAutoCategoryBadge && (
         <View style={transactionItemStyles.statusBadge}>
-          <IconSvg name="sparkles" size={12} color={theme.colors.onSurface} />
+          <IconSvg
+            name="wand-outline"
+            size={12}
+            color={theme.colors.onSurface}
+          />
           <Text
             style={[
               transactionItemStyles.statusBadgeText,

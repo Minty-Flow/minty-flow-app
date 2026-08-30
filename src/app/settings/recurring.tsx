@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
+import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { RouteLoadingState } from "~/components/route-load-state"
@@ -181,23 +182,41 @@ function RecurringRow({
   onPress: () => void
 }) {
   const { t } = useTranslation()
+  const subtitle = item.nextChargeAt
+    ? t("screens.settings.recurring.nextCharge", {
+        date: formatShortMonthDay(item.nextChargeAt),
+      })
+    : (item.categoryName ?? item.accountName)
+
   return (
     <Pressable
       style={styles.row}
       onPress={onPress}
       disabled={!item.latestInstanceId}
     >
+      <DynamicIcon
+        icon={item.categoryIcon || "repeat-outline"}
+        size={26}
+        variant="badge"
+        colorScheme={item.categoryColorScheme}
+      />
       <View style={styles.rowMain}>
         <Text variant="p" numberOfLines={1} style={styles.rowTitle}>
           {item.title}
         </Text>
-        <Text variant="small" style={styles.muted}>
-          {item.nextChargeAt
-            ? t("screens.settings.recurring.nextCharge", {
-                date: formatShortMonthDay(item.nextChargeAt),
-              })
-            : (item.categoryName ?? item.accountName)}
-        </Text>
+        <View style={styles.rowMeta}>
+          <Text variant="small" style={styles.muted} numberOfLines={1}>
+            {subtitle}
+          </Text>
+          {item.categoryFromRule && (
+            <View style={styles.ruleTag}>
+              <IconSvg name="wand-outline" size={12} />
+              <Text variant="small" style={styles.ruleTagText}>
+                {item.categoryName}
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
       <View style={styles.rowRight}>
         {item.amountIncreased && (
@@ -279,7 +298,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   totalsFigures: {
     flexDirection: "row",
-    gap: 24,
+    justifyContent: "space-between",
   },
   totalsFigure: {
     gap: 2,
@@ -319,6 +338,22 @@ const styles = StyleSheet.create((theme) => ({
   },
   rowTitle: {
     color: theme.colors.onSurface,
+  },
+  rowMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  ruleTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    opacity: 0.6,
+  },
+  ruleTagText: {
+    color: theme.colors.onSurface,
+    fontWeight: "600",
   },
   rowRight: {
     alignItems: "flex-end",

@@ -29,6 +29,9 @@ export const transactionSchema = z
     location: z.string().max(255).nullable().optional(),
     extra: z.record(z.string(), z.string()).nullable().optional(),
     subtype: z.enum(TransactionSubTypeEnum).nullable().optional(),
+    // How categoryId was chosen: "manual" (user pick) or "rule" (payee rule
+    // pre-filled it in the form). Drives the "Auto" badge on the ledger.
+    categorySource: z.enum(["manual", "rule"]).optional(),
     // Not registered with RHF — exists solely to enable dirty tracking for conversion rate edits
     conversionRate: z.number().positive().nullable().optional(),
   })

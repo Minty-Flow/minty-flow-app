@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useReducer, useState } from "react"
+import { useEffect, useReducer, useState } from "react"
 import { Controller, type Resolver, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
@@ -15,6 +15,7 @@ import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
+import { useTransactionRules } from "~/database/drizzle/read-models/transaction-rules-read-model"
 import {
   createTransaction,
   createTransfer,
@@ -53,6 +54,7 @@ import { logger } from "~/utils/logger"
 import { rescaleMinorUnits } from "~/utils/money"
 import { buildRRuleString, countOccurrencesBetween } from "~/utils/recurrence"
 import { Toast } from "~/utils/toast"
+import { applyRules } from "~/utils/transaction-rules"
 
 import { EMPTY_TAG_IDS } from "./constants"
 import { transactionFormStyles } from "./form.styles"
@@ -120,6 +122,10 @@ export function TransactionFormV3({
     pendingEditPayload: null,
   })
   const recurringRule = useRecurringRule(transaction?.recurringId ?? null)
+  const payeeRules = useTransactionRules()
+  // True while the category field holds a value a payee rule auto-filled from
+  // the typed title. Cleared the moment the user picks a category themselves.
+  const [ruleCategoryActive, setRuleCategoryActive] = useState(false)
   const defaultValues = getDefaultValues(
     transaction,
     accounts,
@@ -162,6 +168,51 @@ export function TransactionFormV3({
         })()
       : null
   const isRefund = watch("subtype") === TransactionSubTypeEnum.REFUND
+
+  // Live payee-rule categorisation on new transactions: as the title is typed,
+  // fill the category from the first matching rule. Only ever touches a field
+  // that is empty or that a rule filled — a manual pick wins and is left alone.
+  useEffect(() => {
+    if (!isNew || transactionType === TransactionTypeEnum.TRANSFER) return
+    if (categoryId && !ruleCategoryActive) return
+
+    const typeById = new Map(
+      categories.map((c) => [c.id, c.type as "expense" | "income"]),
+    )
+    const { categoryId: ruleCategoryId } = applyRules(
+      {
+        title: titleValue ?? null,
+        description: description ?? null,
+        categoryId: null,
+        subtype: null,
+        tags: [],
+        isTransfer: false,
+        type:
+          transactionType === TransactionTypeEnum.INCOME ? "income" : "expense",
+      },
+      payeeRules,
+      typeById,
+    )
+
+    if (ruleCategoryId && ruleCategoryId !== categoryId) {
+      setValue("categoryId", ruleCategoryId, { shouldDirty: true })
+      setRuleCategoryActive(true)
+    } else if (!ruleCategoryId && ruleCategoryActive) {
+      setValue("categoryId", null, { shouldDirty: true })
+      setRuleCategoryActive(false)
+    }
+  }, [
+    isNew,
+    transactionType,
+    titleValue,
+    description,
+    categoryId,
+    ruleCategoryActive,
+    payeeRules,
+    categories,
+    setValue,
+  ])
+
   const selectedAccount = accounts.find((a) => a.id === accountId)
   // Filter goals to only those linked to the selected account
   const accountGoals = accountId
@@ -449,6 +500,11 @@ export function TransactionFormV3({
         location: data.location,
         extra: Object.keys(builtExtra).length > 0 ? builtExtra : undefined,
         subtype: data.subtype ?? undefined,
+        categorySource: ruleCategoryActive
+          ? ("rule" as const)
+          : data.categoryId
+            ? ("manual" as const)
+            : undefined,
       }
       if (isNew) {
         if (recurring.enabled && recurring.frequency) {
@@ -786,6 +842,8 @@ export function TransactionFormV3({
               categoryId={categoryId}
               onSelect={(id) => {
                 setValue("categoryId", id, { shouldDirty: true })
+                // Manual pick — stop the payee-rule effect from overriding it.
+                setRuleCategoryActive(false)
                 // Clear budget if it no longer matches the new category
                 if (budgetId) {
                   const valid = budgets.some(
@@ -824,6 +882,7 @@ export function TransactionFormV3({
                   setValue("loanId", null, { shouldDirty: false })
                 }
                 setRememberRule(false)
+                setRuleCategoryActive(false)
               }}
             />
           )}
