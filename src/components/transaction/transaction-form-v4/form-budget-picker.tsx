@@ -8,7 +8,7 @@ import { View } from "~/components/ui/view"
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Budget } from "~/types/budgets"
 
-import { FieldLabel } from "./field-label"
+import { FieldLabel, FieldLabelRow } from "./field-label"
 import { transactionFormStyles } from "./form.styles"
 
 type Props = {
@@ -32,7 +32,7 @@ export function FormBudgetPicker({
 
   return (
     <View style={transactionFormStyles.fieldBlock}>
-      <View style={transactionFormStyles.sectionLabelRow}>
+      <FieldLabelRow style={transactionFormStyles.sectionLabelRow}>
         <FieldLabel style={transactionFormStyles.sectionLabelInRow}>
           {t("components.transactionForm.fields.budget")}
         </FieldLabel>
@@ -50,7 +50,7 @@ export function FormBudgetPicker({
             {t("components.transactionForm.fields.clear")}
           </Text>
         </Pressable>
-      </View>
+      </FieldLabelRow>
       <View style={transactionFormStyles.tagsWrapGrid}>
         {budgets.map((budget) => {
           const isSelected = budget.id === budgetId

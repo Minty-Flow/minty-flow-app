@@ -21,7 +21,7 @@ import { getThemeStrict } from "~/styles/theme/registry"
 import type { Account } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
 
-import { FieldLabel } from "./field-label"
+import { FieldLabel, FieldLabelRow } from "./field-label"
 import { transactionFormStyles } from "./form.styles"
 
 interface FormAccountPickerProps {
@@ -75,7 +75,7 @@ export function FormAccountPicker({
   }
   return (
     <RNView ref={wrapperRef} style={transactionFormStyles.fieldBlock}>
-      <View style={transactionFormStyles.sectionLabelRow}>
+      <FieldLabelRow style={transactionFormStyles.sectionLabelRow}>
         <FieldLabel style={transactionFormStyles.sectionLabelInRow}>
           {t("components.transactionForm.fields.account")}
         </FieldLabel>
@@ -97,7 +97,7 @@ export function FormAccountPicker({
             {t("common.actions.clear")}
           </Text>
         </Pressable>
-      </View>
+      </FieldLabelRow>
       <Pressable
         style={[
           transactionFormStyles.accountTrigger,

@@ -8,7 +8,7 @@ import { View } from "~/components/ui/view"
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Loan } from "~/types/loans"
 
-import { FieldLabel } from "./field-label"
+import { FieldLabel, FieldLabelRow } from "./field-label"
 import { transactionFormStyles } from "./form.styles"
 
 type Props = {
@@ -27,7 +27,7 @@ export function FormLoanPicker({ loans, loanId, onSelect, onClear }: Props) {
 
   return (
     <View style={transactionFormStyles.fieldBlock}>
-      <View style={transactionFormStyles.sectionLabelRow}>
+      <FieldLabelRow style={transactionFormStyles.sectionLabelRow}>
         <FieldLabel style={transactionFormStyles.sectionLabelInRow}>
           {t("components.transactionForm.fields.loan")}
         </FieldLabel>
@@ -45,7 +45,7 @@ export function FormLoanPicker({ loans, loanId, onSelect, onClear }: Props) {
             {t("components.transactionForm.fields.clear")}
           </Text>
         </Pressable>
-      </View>
+      </FieldLabelRow>
       <View style={transactionFormStyles.tagsWrapGrid}>
         {loans.map((loan) => {
           const isSelected = loan.id === loanId

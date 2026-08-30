@@ -10,7 +10,7 @@ import { View } from "~/components/ui/view"
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Category } from "~/types/categories"
 
-import { FieldLabel } from "./field-label"
+import { FieldLabel, FieldLabelRow } from "./field-label"
 import {
   CATEGORY_CELL_SIZE,
   CATEGORY_GAP,
@@ -38,7 +38,7 @@ export function FormCategoryPicker({
 
   return (
     <View style={transactionFormStyles.fieldBlock}>
-      <View style={transactionFormStyles.sectionLabelRow}>
+      <FieldLabelRow style={transactionFormStyles.sectionLabelRow}>
         <FieldLabel style={transactionFormStyles.sectionLabelInRow}>
           {t("components.transactionForm.fields.category")}
         </FieldLabel>
@@ -58,7 +58,7 @@ export function FormCategoryPicker({
             {t("components.transactionForm.fields.clear")}
           </Text>
         </Pressable>
-      </View>
+      </FieldLabelRow>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
