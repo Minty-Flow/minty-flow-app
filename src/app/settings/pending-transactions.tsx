@@ -8,6 +8,7 @@ import { StyleSheet } from "react-native-unistyles"
 import { IconSvg } from "~/components/icons"
 import { MonthYearPicker } from "~/components/month-year-picker"
 import { RouteLoadingState } from "~/components/route-load-state"
+import { DeleteRecurringModal } from "~/components/transaction/delete-recurring-modal"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
@@ -20,6 +21,7 @@ import {
   useTransactions,
 } from "~/database/drizzle/read-models/transaction-read-model"
 import { getMonthRange } from "~/database/services/account-service"
+import { useRecurringRule } from "~/hooks/use-recurring-rule"
 import type {
   SearchState,
   TransactionListFilterState,
@@ -50,6 +52,11 @@ export default function PendingTransactionsScreen() {
   const [searchState, setSearchState] =
     useState<SearchState>(DEFAULT_SEARCH_STATE)
   const [showFilters, setShowFilters] = useState(false)
+  const [recurringToDelete, setRecurringToDelete] =
+    useState<TransactionWithRelations | null>(null)
+  const recurringRule = useRecurringRule(
+    recurringToDelete?.extra?.recurringId ?? null,
+  )
   const categoriesExpense = useCategoriesByType(TransactionTypeEnum.EXPENSE)
   const categoriesIncome = useCategoriesByType(TransactionTypeEnum.INCOME)
   const categoriesTransfer = useCategoriesByType(TransactionTypeEnum.TRANSFER)
@@ -90,11 +97,21 @@ export default function PendingTransactionsScreen() {
   const handleDeleteDone = () => {
     openSwipeableRef.current?.close()
   }
+  // Recurring spawns must route through the 3-option scope modal, not a plain
+  // soft-delete — same guard the transaction form and Upcoming section use.
+  const handleBeforeDelete = (row: TransactionWithRelations) => {
+    if (row.extra?.recurringId) {
+      setRecurringToDelete(row)
+      return true
+    }
+    return false
+  }
   const renderItem = ({ item }: { item: TransactionWithRelations }) => (
     <TransactionItem
       transactionWithRelations={item}
       showRecurringBadgeAlways
       onPress={() => router.push(`/transaction/${item.id}`)}
+      onBeforeDelete={handleBeforeDelete}
       onDelete={handleDeleteDone}
       onWillOpen={(methods) => {
         if (openSwipeableRef.current !== methods) {
@@ -146,6 +163,19 @@ export default function PendingTransactionsScreen() {
         keyExtractor={keyExtractor}
         renderItem={renderItem}
       />
+
+      {recurringToDelete && recurringRule && (
+        <DeleteRecurringModal
+          visible
+          transaction={recurringToDelete}
+          recurringRule={recurringRule}
+          onRequestClose={() => setRecurringToDelete(null)}
+          onDeleted={() => {
+            setRecurringToDelete(null)
+            openSwipeableRef.current?.close()
+          }}
+        />
+      )}
     </View>
   )
 }
