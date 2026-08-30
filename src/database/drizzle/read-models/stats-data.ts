@@ -19,7 +19,6 @@ import type {
   CurrencyStats,
   DailyDataPoint,
   DayOfWeekPoint,
-  ExpenseBySubtype,
   ForecastSummary,
   IntervalDataPoint,
   PendingSummary,
@@ -600,20 +599,6 @@ function computeForecast(
   }
 }
 
-function computeExpenseBySubtype(rows: StatsRawRow[]): ExpenseBySubtype {
-  const result: ExpenseBySubtype = { recurring: 0, oneTime: 0, unclassified: 0 }
-  for (const row of rows) {
-    const contrib = expenseContribution(row)
-    if (contrib === 0) continue
-    if (row.subtype === TransactionSubTypeEnum.RECURRING)
-      result.recurring += contrib
-    else if (row.subtype === TransactionSubTypeEnum.ONE_TIME)
-      result.oneTime += contrib
-    else result.unclassified += contrib
-  }
-  return result
-}
-
 async function computeTopTags(rows: StatsRawRow[]): Promise<TopTagItem[]> {
   const expenseRows = rows.filter(isRealExpense)
   if (expenseRows.length === 0) return []
@@ -850,7 +835,6 @@ async function computeCurrencyStats(
       )
       const forecast =
         prevRows.length > 0 ? computeForecast(currRows, range) : null
-      const expenseBySubtype = computeExpenseBySubtype(currRows)
       const topTags = await computeTopTags(currRows)
       const byAccount = computeByAccount(currRows, accountMap)
       const topTransactions = computeTopTransactions(currRows)
@@ -869,7 +853,6 @@ async function computeCurrencyStats(
         balanceDelta: closing - opening,
         spendingByDayOfWeek,
         forecast,
-        expenseBySubtype,
         topTags,
         byAccount,
         topTransactions,
