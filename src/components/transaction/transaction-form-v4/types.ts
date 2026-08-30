@@ -31,8 +31,6 @@ export interface TransactionFormV4Props {
   initialTagIds?: string[]
   initialKind?: TransactionKind
   prefill?: Partial<TransactionFormValues>
-  /** Show the per-field section labels ("Category", "Account", …). Off by default. */
-  showFieldLabels?: boolean
 }
 
 export type ModalState = {

@@ -45,15 +45,6 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   fieldBlock: {
     marginBottom: FORM_GAP,
   },
-  sectionLabel: {
-    ...theme.typography.labelMedium,
-    fontWeight: "600",
-    color: theme.colors.semantic.semi,
-    textTransform: "capitalize",
-    letterSpacing: 0.5,
-    marginBottom: SECTION_GAP,
-    marginHorizontal: H_PAD,
-  },
   sectionLabelRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -72,9 +63,6 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
     paddingVertical: SMALL_GAP,
     paddingHorizontal: SECTION_GAP,
-  },
-  clearButtonDisabled: {
-    opacity: 0.4,
   },
   clearButtonText: {
     ...theme.typography.labelMedium,

@@ -10,7 +10,6 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TranslationKey } from "~/i18n/config"
 
-import { FieldLabel } from "./field-label"
 import { transactionFormStyles } from "./form.styles"
 
 type Props = {
@@ -35,9 +34,6 @@ export function FormNotesSection({
 
   return (
     <View style={transactionFormStyles.fieldBlock}>
-      <FieldLabel style={transactionFormStyles.sectionLabel}>
-        {t("components.transactionForm.fields.notes")}
-      </FieldLabel>
       <Pressable
         style={transactionFormStyles.notesPressable}
         onPress={onOpenModal}

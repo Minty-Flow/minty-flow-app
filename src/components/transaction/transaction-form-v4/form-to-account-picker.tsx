@@ -21,7 +21,6 @@ import { getThemeStrict } from "~/styles/theme/registry"
 import type { Account } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
 
-import { FieldLabel, FieldLabelRow } from "./field-label"
 import { transactionFormStyles } from "./form.styles"
 
 interface FormToAccountPickerProps {
@@ -70,27 +69,6 @@ export function FormToAccountPicker({
   if (transactionType !== "transfer") return null
   return (
     <View native ref={wrapperRef} style={transactionFormStyles.fieldBlock}>
-      <FieldLabelRow style={transactionFormStyles.sectionLabelRow}>
-        <FieldLabel style={transactionFormStyles.sectionLabelInRow}>
-          {t("components.transactionForm.fields.toAccount")}
-        </FieldLabel>
-        <Pressable
-          onPress={() =>
-            toAccountId && setValue("toAccountId", "", { shouldDirty: true })
-          }
-          style={[
-            transactionFormStyles.clearButton,
-            !toAccountId && transactionFormStyles.clearButtonDisabled,
-          ]}
-          pointerEvents={toAccountId ? "auto" : "none"}
-          accessibilityLabel={t("screens.accounts.a11y.clearTo")}
-          accessibilityState={{ disabled: !toAccountId }}
-        >
-          <Text variant="small" style={transactionFormStyles.clearButtonText}>
-            {t("common.actions.clear")}
-          </Text>
-        </Pressable>
-      </FieldLabelRow>
       <Pressable
         style={[
           transactionFormStyles.accountTrigger,

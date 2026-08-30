@@ -10,7 +10,6 @@ import { View } from "~/components/ui/view"
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Category } from "~/types/categories"
 
-import { FieldLabel, FieldLabelRow } from "./field-label"
 import {
   CATEGORY_CELL_SIZE,
   CATEGORY_GAP,
@@ -38,27 +37,6 @@ export function FormCategoryPicker({
 
   return (
     <View style={transactionFormStyles.fieldBlock}>
-      <FieldLabelRow style={transactionFormStyles.sectionLabelRow}>
-        <FieldLabel style={transactionFormStyles.sectionLabelInRow}>
-          {t("components.transactionForm.fields.category")}
-        </FieldLabel>
-        <Pressable
-          onPress={() => categoryId && onClear()}
-          style={[
-            transactionFormStyles.clearButton,
-            !categoryId && transactionFormStyles.clearButtonDisabled,
-          ]}
-          pointerEvents={categoryId ? "auto" : "none"}
-          accessibilityLabel={t(
-            "components.transactionForm.a11y.clearCategory",
-          )}
-          accessibilityState={{ disabled: !categoryId }}
-        >
-          <Text variant="small" style={transactionFormStyles.clearButtonText}>
-            {t("components.transactionForm.fields.clear")}
-          </Text>
-        </Pressable>
-      </FieldLabelRow>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -116,7 +94,9 @@ export function FormCategoryPicker({
                     transactionFormStyles.categoryCell,
                     isSelected && transactionFormStyles.categoryCellSelected,
                   ]}
-                  onPress={() => onSelect(category.id)}
+                  onPress={() =>
+                    isSelected ? onClear() : onSelect(category.id)
+                  }
                   accessibilityLabel={t(
                     "components.transactionForm.a11y.selectCategory",
                     { name: category.name },

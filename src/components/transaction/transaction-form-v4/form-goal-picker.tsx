@@ -1,14 +1,9 @@
-import { useTranslation } from "react-i18next"
-
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { Chip } from "~/components/ui/chips"
-import { Pressable } from "~/components/ui/pressable"
-import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Goal } from "~/types/goals"
 
-import { FieldLabel, FieldLabelRow } from "./field-label"
 import { transactionFormStyles } from "./form.styles"
 
 type Props = {
@@ -19,33 +14,12 @@ type Props = {
 }
 
 export function FormGoalPicker({ goals, goalId, onSelect, onClear }: Props) {
-  const { t } = useTranslation()
-
   if (goals.length === 0) {
     return null
   }
 
   return (
     <View style={transactionFormStyles.fieldBlock}>
-      <FieldLabelRow style={transactionFormStyles.sectionLabelRow}>
-        <FieldLabel style={transactionFormStyles.sectionLabelInRow}>
-          {t("components.transactionForm.fields.goal")}
-        </FieldLabel>
-        <Pressable
-          onPress={() => goalId && onClear()}
-          style={[
-            transactionFormStyles.clearButton,
-            !goalId && transactionFormStyles.clearButtonDisabled,
-          ]}
-          pointerEvents={goalId ? "auto" : "none"}
-          accessibilityLabel={t("components.transactionForm.a11y.clearGoal")}
-          accessibilityState={{ disabled: !goalId }}
-        >
-          <Text variant="small" style={transactionFormStyles.clearButtonText}>
-            {t("components.transactionForm.fields.clear")}
-          </Text>
-        </Pressable>
-      </FieldLabelRow>
       <View style={transactionFormStyles.tagsWrapGrid}>
         {goals.map((goal) => {
           const isSelected = goal.id === goalId
