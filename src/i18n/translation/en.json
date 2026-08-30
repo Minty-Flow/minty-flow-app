@@ -1406,6 +1406,9 @@
     },
     "endDate": {
       "requiredForCustom": "End date is required for custom period"
+    },
+    "transaction": {
+      "kindTypeMismatch": "This type is not allowed for the selected kind"
     }
   },
   "onboarding": {
