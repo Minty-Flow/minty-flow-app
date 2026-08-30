@@ -107,6 +107,31 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
             onAccountChange={f.handleAccountChange}
           />
 
+          {/* Transfer: to-account sits right under from-account, then the
+              conversion rate. FormToAccountPicker renders null otherwise. */}
+          <FormToAccountPicker
+            accounts={accounts}
+            toAccountId={f.toAccountId}
+            accountId={f.accountId}
+            setValue={f.setValue}
+            selectedToAccount={f.selectedToAccount}
+            transactionType={transactionType}
+          />
+
+          {transactionType === TransactionTypeEnum.TRANSFER &&
+            f.selectedAccount &&
+            f.selectedToAccount &&
+            f.selectedAccount.currencyCode !==
+              f.selectedToAccount.currencyCode && (
+              <FormConversionSection
+                amount={f.amount ?? 0}
+                conversionRate={f.conversionRate}
+                onConversionRateChange={f.setConversionRate}
+                selectedAccount={f.selectedAccount}
+                selectedToAccount={f.selectedToAccount}
+              />
+            )}
+
           {/* Category: hidden for transfers */}
           {transactionType !== TransactionTypeEnum.TRANSFER && (
             <FormCategoryPicker
@@ -207,30 +232,6 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
             onSelectMultipleMedia={f.handleSelectMultipleMedia}
             onSelectSinglePhoto={f.handleSelectSinglePhoto}
           />
-
-          <FormToAccountPicker
-            accounts={accounts}
-            toAccountId={f.toAccountId}
-            accountId={f.accountId}
-            setValue={f.setValue}
-            selectedToAccount={f.selectedToAccount}
-            transactionType={transactionType}
-          />
-
-          {/* Conversion: only when transfer + different currencies */}
-          {transactionType === TransactionTypeEnum.TRANSFER &&
-            f.selectedAccount &&
-            f.selectedToAccount &&
-            f.selectedAccount.currencyCode !==
-              f.selectedToAccount.currencyCode && (
-              <FormConversionSection
-                amount={f.amount ?? 0}
-                conversionRate={f.conversionRate}
-                onConversionRateChange={f.setConversionRate}
-                selectedAccount={f.selectedAccount}
-                selectedToAccount={f.selectedToAccount}
-              />
-            )}
 
           {/* Goal: hidden for transfers, filtered by selected account */}
           {transactionType !== TransactionTypeEnum.TRANSFER && (
