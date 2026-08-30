@@ -31,4 +31,10 @@ assert.equal(getOpeningTypeForLoan("borrowed"), "income")
 assert.equal(getRepaymentTypeForLoan("lent"), "income")
 assert.equal(getRepaymentTypeForLoan("borrowed"), "expense")
 
+// CSI-2: which kinds may be pending (enforced in ledger-service createTransaction /
+// updateTransaction; confirmTransaction resets an `upcoming` kind to `default`).
+const PENDING_OK = new Set(["upcoming", "subscription", "repetitive"])
+assert.equal(PENDING_OK.has("default"), false)
+assert.equal(PENDING_OK.has("upcoming"), true)
+
 console.log("transaction-kind: OK")
