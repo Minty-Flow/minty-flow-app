@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T21:18:32.763Z
+Generated on: 2026-08-30T21:39:54.262Z
 ```
 ./
 ├── .github/
@@ -368,7 +368,6 @@ Generated on: 2026-08-30T21:18:32.763Z
 │   │   │   │   └── utils.ts
 │   │   │   ├── transaction-form-v4/
 │   │   │   │   ├── constants.ts
-│   │   │   │   ├── field-label.tsx
 │   │   │   │   ├── form-account-picker.tsx
 │   │   │   │   ├── form-attachments-section.tsx
 │   │   │   │   ├── form-budget-picker.tsx
@@ -378,7 +377,6 @@ Generated on: 2026-08-30T21:18:32.763Z
 │   │   │   │   ├── form-delete-actions.tsx
 │   │   │   │   ├── form-footer.tsx
 │   │   │   │   ├── form-goal-picker.tsx
-│   │   │   │   ├── form-kind-card.styles.ts
 │   │   │   │   ├── form-kind-card.tsx
 │   │   │   │   ├── form-kind-selector.tsx
 │   │   │   │   ├── form-loan-picker.tsx

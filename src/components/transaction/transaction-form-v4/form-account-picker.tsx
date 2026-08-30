@@ -21,7 +21,6 @@ import { getThemeStrict } from "~/styles/theme/registry"
 import type { Account } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
 
-import { FieldLabel, FieldLabelRow } from "./field-label"
 import { transactionFormStyles } from "./form.styles"
 
 interface FormAccountPickerProps {
@@ -75,29 +74,6 @@ export function FormAccountPicker({
   }
   return (
     <RNView ref={wrapperRef} style={transactionFormStyles.fieldBlock}>
-      <FieldLabelRow style={transactionFormStyles.sectionLabelRow}>
-        <FieldLabel style={transactionFormStyles.sectionLabelInRow}>
-          {t("components.transactionForm.fields.account")}
-        </FieldLabel>
-        <Pressable
-          onPress={() => {
-            if (!accountId) return
-            setValue("accountId", "", { shouldDirty: true })
-            onAccountChange?.("")
-          }}
-          style={[
-            transactionFormStyles.clearButton,
-            !accountId && transactionFormStyles.clearButtonDisabled,
-          ]}
-          pointerEvents={accountId ? "auto" : "none"}
-          accessibilityLabel={t("screens.accounts.a11y.clear")}
-          accessibilityState={{ disabled: !accountId }}
-        >
-          <Text variant="small" style={transactionFormStyles.clearButtonText}>
-            {t("common.actions.clear")}
-          </Text>
-        </Pressable>
-      </FieldLabelRow>
       <Pressable
         style={[
           transactionFormStyles.accountTrigger,

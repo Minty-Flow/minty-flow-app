@@ -20,19 +20,11 @@ import { getThemeStrict } from "~/styles/theme/registry"
 import { NewEnum } from "~/types/new"
 import type { Tag } from "~/types/tags"
 
-import { FieldLabel, FieldLabelRow } from "./field-label"
 import { transactionFormStyles } from "./form.styles"
 
 interface FormTagsPickerProps {
   tags: Tag[]
   tagIds: string[] | undefined
-  setValue: (
-    name: "tags",
-    value: string[],
-    opts: {
-      shouldDirty: boolean
-    },
-  ) => void
   addTag: (tagId: string) => void
   removeTag: (tagId: string) => void
 }
@@ -41,7 +33,6 @@ export function FormTagsPicker({
   tagIds,
   addTag,
   removeTag,
-  setValue,
 }: FormTagsPickerProps) {
   const router = useRouter()
   const { t } = useTranslation()
@@ -69,31 +60,6 @@ export function FormTagsPicker({
   }
   return (
     <RNView ref={wrapperRef} style={transactionFormStyles.fieldBlock}>
-      <FieldLabelRow style={transactionFormStyles.sectionLabelRow}>
-        <FieldLabel style={transactionFormStyles.sectionLabelInRow}>
-          {t("components.transactionForm.fields.tags")}
-        </FieldLabel>
-        <Pressable
-          onPress={() =>
-            (tagIds ?? []).length > 0 &&
-            setValue("tags", [], { shouldDirty: true })
-          }
-          style={[
-            transactionFormStyles.clearButton,
-            (tagIds ?? []).length === 0 &&
-              transactionFormStyles.clearButtonDisabled,
-          ]}
-          pointerEvents={(tagIds ?? []).length > 0 ? "auto" : "none"}
-          accessibilityLabel={t("components.transactionForm.a11y.clearAllTags")}
-          accessibilityState={{
-            disabled: (tagIds ?? []).length === 0,
-          }}
-        >
-          <Text variant="small" style={transactionFormStyles.clearButtonText}>
-            {t("common.actions.clear")}
-          </Text>
-        </Pressable>
-      </FieldLabelRow>
       <View style={transactionFormStyles.tagsWrapGrid}>
         <Pressable
           style={[

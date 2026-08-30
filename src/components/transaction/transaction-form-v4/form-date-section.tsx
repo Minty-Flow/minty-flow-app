@@ -14,7 +14,6 @@ import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import { startOfNextMinute } from "~/utils/pending-transactions"
 import { formatTransactionDateTime } from "~/utils/time-utils"
 
-import { FieldLabel } from "./field-label"
 import { transactionFormStyles } from "./form.styles"
 
 type Props = {
@@ -43,11 +42,6 @@ export function FormDateSection({
   return (
     <>
       <View style={transactionFormStyles.fieldBlock}>
-        <FieldLabel style={transactionFormStyles.sectionLabel}>
-          {dueDateMode
-            ? t("components.transactionForm.loan.dueDateLabel")
-            : t("components.transactionForm.fields.transactionDate")}
-        </FieldLabel>
         <ListItem
           style={transactionFormStyles.inlineDateRow}
           onPress={onDatePress}

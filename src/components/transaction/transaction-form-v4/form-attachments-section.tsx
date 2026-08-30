@@ -16,7 +16,6 @@ import { formatFileSize } from "~/utils/format-file-size"
 import { openFileInExternalApp } from "~/utils/open-file"
 import { formatCreatedAt } from "~/utils/time-utils"
 
-import { FieldLabel } from "./field-label"
 import { transactionFormStyles } from "./form.styles"
 
 type AttachmentCallbacks = {
@@ -67,10 +66,6 @@ export function FormAttachmentsSection({
   return (
     <>
       <View style={transactionFormStyles.fieldBlock}>
-        <FieldLabel style={transactionFormStyles.sectionLabel}>
-          {t("components.transactionForm.fields.fileAttachments")}
-        </FieldLabel>
-
         {list.length > 0 && (
           <View style={transactionFormStyles.attachmentsList}>
             {list.map((a) => (

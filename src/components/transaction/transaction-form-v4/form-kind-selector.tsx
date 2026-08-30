@@ -5,7 +5,6 @@ import { Chip } from "~/components/ui/chips"
 import { View } from "~/components/ui/view"
 import type { TransactionKind } from "~/types/transactions"
 
-import { FieldLabel } from "./field-label"
 import { transactionFormStyles } from "./form.styles"
 import { KIND_LABEL_KEYS, KIND_ORDER } from "./kind-info"
 import { KindInfoModal } from "./kind-info-modal"
@@ -22,9 +21,6 @@ export function FormKindSelector({ kind, onSelect, disabled = false }: Props) {
 
   return (
     <View style={transactionFormStyles.fieldBlock}>
-      <FieldLabel style={transactionFormStyles.sectionLabel}>
-        {t("components.transactionForm.kind.label")}
-      </FieldLabel>
       <View style={transactionFormStyles.tagsWrapGrid}>
         {KIND_ORDER.map((k) => (
           <Chip

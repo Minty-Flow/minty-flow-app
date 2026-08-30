@@ -14,7 +14,6 @@ import {
 } from "~/utils/money"
 import { formatNumber } from "~/utils/number-format"
 
-import { FieldLabel, FieldLabelRow } from "./field-label"
 import { transactionFormStyles } from "./form.styles"
 
 type Props = {
@@ -48,12 +47,6 @@ export function FormConversionSection({
 
   return (
     <View style={transactionFormStyles.fieldBlock}>
-      <FieldLabelRow style={transactionFormStyles.sectionLabelRow}>
-        <FieldLabel style={transactionFormStyles.sectionLabelInRow}>
-          {t("components.transactionForm.fields.conversion")}
-        </FieldLabel>
-      </FieldLabelRow>
-
       {/* Toggle row: amount = converted amount */}
       <Pressable
         style={[
