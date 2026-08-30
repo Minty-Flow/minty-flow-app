@@ -121,6 +121,13 @@ export async function updateLoanById(
   const now = new Date().toISOString()
 
   await runInTransaction("loan.update", (db) => {
+    const current = db
+      .select({ loanType: loans.loanType })
+      .from(loans)
+      .where(eq(loans.id, id))
+      .get()
+    if (!current) throw new Error(`Loan ${id} not found`)
+
     db.update(loans)
       .set({
         ...(data.name !== undefined ? { name: data.name } : {}),
@@ -150,6 +157,71 @@ export async function updateLoanById(
         updatedAt: now,
       })
       .where(eq(loans.id, id))
+      .run()
+
+    // ES-6: the opening cash-flow entry mirrors the loan's defining fields.
+    // Editing name / due date / icon / colour leaves it untouched.
+    const touchesOpening =
+      data.principalAmount !== undefined ||
+      data.accountId !== undefined ||
+      data.categoryId !== undefined ||
+      data.loanType !== undefined
+    if (!touchesOpening) return
+
+    const oldOpeningType = getOpeningTypeForLoan(current.loanType as LoanType)
+    const opening = db
+      .select()
+      .from(transactions)
+      .where(
+        and(
+          eq(transactions.loanId, id),
+          eq(transactions.type, oldOpeningType),
+          eq(transactions.isDeleted, 0),
+        ),
+      )
+      .get()
+    if (!opening) return
+
+    const newOpeningType = getOpeningTypeForLoan(
+      (data.loanType ?? current.loanType) as LoanType,
+    )
+    const newAmount = data.principalAmount ?? opening.amount
+    const newAccountId = data.accountId ?? opening.accountId
+    const newCategoryId =
+      data.categoryId !== undefined ? data.categoryId : opening.categoryId
+
+    // Back out the entry's current effect, then apply the new one — accounts
+    // stay exact even when the account or direction changes.
+    const reverseDelta = -getBalanceDelta(opening.amount, oldOpeningType)
+    if (reverseDelta !== 0) {
+      db.update(accounts)
+        .set({
+          balance: sql`${accounts.balance} + ${reverseDelta}`,
+          updatedAt: now,
+        })
+        .where(eq(accounts.id, opening.accountId))
+        .run()
+    }
+    const applyDelta = getBalanceDelta(newAmount, newOpeningType)
+    if (applyDelta !== 0) {
+      db.update(accounts)
+        .set({
+          balance: sql`${accounts.balance} + ${applyDelta}`,
+          updatedAt: now,
+        })
+        .where(eq(accounts.id, newAccountId))
+        .run()
+    }
+
+    db.update(transactions)
+      .set({
+        accountId: newAccountId,
+        categoryId: newCategoryId,
+        amount: newAmount,
+        type: newOpeningType,
+        updatedAt: now,
+      })
+      .where(eq(transactions.id, opening.id))
       .run()
   })
 }

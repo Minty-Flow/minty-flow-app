@@ -7,24 +7,28 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles"
 import { IconSvg } from "~/components/icons"
 import { LoanCard } from "~/components/loans/loan-card"
 import { RouteLoadingState } from "~/components/route-load-state"
+import { TabsMinty } from "~/components/tabs-minty"
 import { Chip } from "~/components/ui/chips"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Pressable } from "~/components/ui/pressable"
 import { View } from "~/components/ui/view"
 import { useAllLoansQuery } from "~/database/drizzle/read-models/loan-read-model"
-import type { Loan } from "~/types/loans"
+import { useLoanTermReconcile } from "~/hooks/use-loan-term-reconcile"
+import type { Loan, LoanTerm } from "~/types/loans"
 import { LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
 
 type LoanTypeFilter = "all" | "lent" | "borrowed"
 export default function LoansScreen() {
   const { data: loans, status } = useAllLoansQuery()
+  useLoanTermReconcile(loans)
   const { theme } = useUnistyles()
   const { t } = useTranslation()
   const router = useRouter()
   const navigation = useNavigation()
   const [filterVisible, setFilterVisible] = useState(false)
   const [activeFilter, setActiveFilter] = useState<LoanTypeFilter>("all")
+  const [activeTerm, setActiveTerm] = useState<LoanTerm>("long_term")
   const isFiltered = activeFilter !== "all"
   const toggleFilter = useCallback(() => {
     setFilterVisible((v) => !v)
@@ -50,7 +54,10 @@ export default function LoansScreen() {
     })
   }, [navigation, toggleFilter, isFiltered, theme, t, filterVisible])
   const handleAddLoan = () => {
-    router.push(`/settings/loans/${NewEnum.NEW}/modify`)
+    router.push({
+      pathname: "/settings/loans/[loanId]/modify",
+      params: { loanId: NewEnum.NEW, prefillTerm: activeTerm },
+    })
   }
   const handleLoanPress = (loanId: string) => {
     router.push(`/settings/loans/${loanId}`)
@@ -59,10 +66,11 @@ export default function LoansScreen() {
     <LoanCard loan={item} onPress={() => handleLoanPress(item.id)} />
   )
   const filteredLoans = (() => {
-    if (activeFilter === "all") return loans
+    const byTerm = loans.filter((l) => l.term === activeTerm)
+    if (activeFilter === "all") return byTerm
     if (activeFilter === "lent")
-      return loans.filter((l) => l.loanType === LoanTypeEnum.LENT)
-    return loans.filter((l) => l.loanType === LoanTypeEnum.BORROWED)
+      return byTerm.filter((l) => l.loanType === LoanTypeEnum.LENT)
+    return byTerm.filter((l) => l.loanType === LoanTypeEnum.BORROWED)
   })()
   const chips: {
     key: LoanTypeFilter
@@ -75,6 +83,24 @@ export default function LoansScreen() {
   if (status === "loading") return <RouteLoadingState />
   return (
     <View style={styles.container}>
+      <View style={styles.termTabs}>
+        <TabsMinty<LoanTerm>
+          items={[
+            {
+              value: "long_term",
+              label: t("screens.settings.loans.term.longTerm"),
+            },
+            {
+              value: "one_time",
+              label: t("screens.settings.loans.term.oneTime"),
+            },
+          ]}
+          activeValue={activeTerm}
+          onValueChange={setActiveTerm}
+          variant="segmented"
+        />
+      </View>
+
       {filterVisible ? (
         <View style={styles.filterContainer}>
           <ScrollView
@@ -123,6 +149,11 @@ const styles = StyleSheet.create((t) => ({
   container: {
     flex: 1,
     backgroundColor: t.colors.surface,
+  },
+  termTabs: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 4,
   },
   filterContainer: {
     justifyContent: "center",

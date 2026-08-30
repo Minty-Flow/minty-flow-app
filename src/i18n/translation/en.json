@@ -699,6 +699,7 @@
           "borrowed": "Borrowed"
         },
         "term": {
+          "label": "Term",
           "oneTime": "One-time",
           "longTerm": "Long-term"
         },
