@@ -39,9 +39,10 @@ export function UpcomingTransactionsSection({
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const isHydrated = usePendingTransactionsStore((s) => s.isHydrated)
-  const requireConfirmation = usePendingTransactionsStore(
-    (s) => s.requireConfirmation,
+  const autoPaySubscriptions = usePendingTransactionsStore(
+    (s) => s.autoPaySubscriptions,
   )
+  const autoPayUpcoming = usePendingTransactionsStore((s) => s.autoPayUpcoming)
   const updateDateUponConfirmation = usePendingTransactionsStore(
     (s) => s.updateDateUponConfirmation,
   )
@@ -66,7 +67,10 @@ export function UpcomingTransactionsSection({
     const toAutoConfirmList: string[] = []
     for (const row of upcomingForDisplay) {
       const canConfirm = confirmable(row, nowMs)
-      const preapproved = isPreapproved(row, requireConfirmation)
+      const preapproved = isPreapproved(row, {
+        autoPaySubscriptions,
+        autoPayUpcoming,
+      })
       if (preapproved && canConfirm) {
         toAutoConfirmList.push(row.id)
       } else {
@@ -95,14 +99,16 @@ export function UpcomingTransactionsSection({
     if (!isHydrated) return
     // Configure must run before start (start throws if config is null)
     autoConfirmationService.configure({
-      requireConfirmation,
+      autoPaySubscriptions,
+      autoPayUpcoming,
       updateDateUponConfirmation,
     })
     autoConfirmationService.start()
     autoConfirmationService.scheduleTransactions(upcoming)
   }, [
     upcoming,
-    requireConfirmation,
+    autoPaySubscriptions,
+    autoPayUpcoming,
     updateDateUponConfirmation,
     autoConfirmVersion,
     isHydrated,

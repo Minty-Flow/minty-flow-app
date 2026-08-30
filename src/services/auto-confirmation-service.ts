@@ -6,15 +6,17 @@ import {
   type TransactionWithRelations,
 } from "~/database/drizzle/read-models/transaction-read-model"
 import { confirmTransaction } from "~/database/services/ledger-service"
+import { TransactionKindEnum } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 
 /**
  * Auto-Confirmation Service
  *
- * When requireConfirmation is false, transactions are "pre-approved":
- * they just wait for their scheduled time. The moment transactionDate
- * passes, the service confirms them immediately so they never linger
- * in an "auto-confirming" state.
+ * A pending row is "pre-approved" when its kind's auto-pay switch is on
+ * (`autoPaySubscriptions` for subscription/repetitive, `autoPayUpcoming` for
+ * `upcoming`) and it carries no explicit `requiresManualConfirmation` opt-out.
+ * The moment transactionDate passes, pre-approved rows are confirmed so they
+ * never linger in an "auto-confirming" state.
  *
  * Architecture:
  * - One singleton that schedules per-transaction timeouts.
@@ -31,7 +33,8 @@ import { logger } from "~/utils/logger"
 type ConfirmCallback = (transactionId: string) => void
 
 interface AutoConfirmConfig {
-  requireConfirmation: boolean
+  autoPaySubscriptions: boolean
+  autoPayUpcoming: boolean
   updateDateUponConfirmation: boolean
 }
 
@@ -196,16 +199,9 @@ class AutoConfirmationService {
     if (!this.config) {
       return false
     }
-
-    const { requireConfirmation } = this.config
-    const needsManualConfirm =
-      row.requiresManualConfirmation ?? requireConfirmation
-
-    if (needsManualConfirm) return false
-    if (!row.isPending) return false
     if (row.isDeleted) return false
-
-    return true
+    if (!row.isPending) return false
+    return isPreapproved(row, this.config)
   }
 
   private scheduleTimeout(
@@ -277,17 +273,24 @@ export function useAutoConfirmVersion(): number {
   )
 }
 
+/** Per-kind auto-pay resolution: which switch governs this row. */
+type AutoPayConfig = {
+  autoPaySubscriptions: boolean
+  autoPayUpcoming: boolean
+}
+
 /**
  * Check if a transaction should be auto-confirmed (for use in grouping).
- * True = this transaction is pre-approved and will auto-confirm at its time.
- * Follows the same logic for all transactions (manual and recurring):
- * pre-approved when the per-transaction or global requireConfirmation is off.
+ * True = this row's kind switch is on and it has no explicit
+ * `requiresManualConfirmation` opt-out, so it auto-confirms once due.
  */
 export function isPreapproved(
   row: TransactionWithRelations,
-  globalRequireConfirmation: boolean,
+  cfg: AutoPayConfig,
 ): boolean {
-  const needsManualConfirm =
-    row.requiresManualConfirmation ?? globalRequireConfirmation
-  return !needsManualConfirm
+  // A row created in a "require confirmation" mode keeps that opt-out for life.
+  if (row.requiresManualConfirmation) return false
+  if (row.kind === TransactionKindEnum.UPCOMING) return cfg.autoPayUpcoming
+  // subscription / repetitive recurring instances (and any legacy pending row).
+  return cfg.autoPaySubscriptions
 }

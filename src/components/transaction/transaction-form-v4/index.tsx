@@ -34,6 +34,7 @@ import { FormTagsPicker } from "./form-tags-picker"
 import { FormToAccountPicker } from "./form-to-account-picker"
 import { TransactionTopTabs } from "./transaction-top-tabs"
 import type { TransactionFormV4Props } from "./types"
+import { UpcomingBanner } from "./upcoming-banner"
 import { useTransactionForm } from "./use-transaction-form"
 
 export function TransactionFormV4(props: TransactionFormV4Props) {
@@ -61,6 +62,8 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
             lockedTo={f.tabLockedTo}
           />
         </View>
+
+        <UpcomingBanner transaction={transaction} />
 
         <ScrollIntoViewProvider
           contentContainerStyle={transactionFormStyles.content}

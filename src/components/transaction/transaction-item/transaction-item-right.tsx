@@ -19,7 +19,7 @@ type TransactionItemRightProps = {
   otherCurrencyAmount: number | null
   relatedAccountCurrencyCode?: string
   showRecurringBadge: boolean
-  showPendingBadge: boolean
+  showUpcomingBadge: boolean
 }
 
 export const TransactionItemRight = ({
@@ -32,7 +32,7 @@ export const TransactionItemRight = ({
   otherCurrencyAmount,
   relatedAccountCurrencyCode,
   showRecurringBadge,
-  showPendingBadge,
+  showUpcomingBadge,
 }: TransactionItemRightProps) => {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
@@ -80,7 +80,7 @@ export const TransactionItemRight = ({
         </View>
       )}
 
-      {showPendingBadge && (
+      {showUpcomingBadge && (
         <View style={transactionItemStyles.statusBadge}>
           <IconSvg
             name="history-toggle-outline"
@@ -93,7 +93,7 @@ export const TransactionItemRight = ({
               { color: theme.colors.semantic.warning },
             ]}
           >
-            {t("components.transactionItem.pending")}
+            {t("components.transactionItem.upcoming")}
           </Text>
         </View>
       )}

@@ -26,7 +26,6 @@ import {
 } from "~/schemas/transactions.schema"
 import { currencyRegistryService } from "~/services/currency-registry"
 import { synchronizePlannedTransactionNotifications } from "~/services/pending-transaction-notifications"
-import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { useTransactionLocationStore } from "~/stores/transaction-location.store"
 import { NewEnum } from "~/types/new"
 import {
@@ -78,9 +77,6 @@ export function useTransactionForm({
     id: string
   }>()
   const isNew = id === NewEnum.NEW
-  const requireConfirmation = usePendingTransactionsStore(
-    (s) => s.requireConfirmation,
-  )
   const { isEnabled: locationEnabled, autoAttach } =
     useTransactionLocationStore()
   const usdCurrency = currencyRegistryService.getCurrencyByCode("USD")
@@ -447,7 +443,6 @@ export function useTransactionForm({
         usdCode,
         attachmentsJson,
         effectiveDate,
-        requireConfirmation,
         recurringEnabled: isNew && isRecurringKind,
       })
       if (isNew) {
