@@ -131,7 +131,7 @@ export function RecurrenceCard({
         <Text
           variant="default"
           style={[
-            transactionFormStyles.inlineDateText,
+            transactionFormStyles.recurrenceUntilText,
             !until && transactionFormStyles.fieldPlaceholder,
           ]}
         >

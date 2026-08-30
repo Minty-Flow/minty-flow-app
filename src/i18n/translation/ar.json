@@ -1003,17 +1003,6 @@
         "location": "موقع",
         "refundLabel": "استرداد"
       },
-      "recurring": {
-        "label": "معاملة متكررة",
-        "recurrence": "التكرار",
-        "startsOn": "تبدأ في",
-        "endsOn": "تنتهي في",
-        "never": "أبداً",
-        "onADate": "في تاريخ محدد",
-        "occurrences": "المرات",
-        "timesCount_one": "مرة واحدة",
-        "timesCount_other": "{{count}} مرات"
-      },
       "recurrence": {
         "every": "التكرار كل",
         "unitTitle": "وحدة التكرار",
@@ -1131,19 +1120,10 @@
       "notFoundTransaction": "لم يتم العثور على المعاملة.",
       "kind": {
         "label": "النوع",
-        "recurrenceComingSoon": "إعدادات التكرار ستصل في تحديث لاحق",
         "loanComingSoon": "إعدادات القرض ستصل في تحديث لاحق"
       }
     },
     "recurring": {
-      "frequency": {
-        "none": "لا شيء",
-        "daily": "كل يوم",
-        "weekly": "كل أسبوع، {{day}}",
-        "biweekly": "كل أسبوعين، {{day}}",
-        "monthly": "كل شهر، {{date}}",
-        "yearly": "كل عام، {{date}}"
-      },
       "deleteModal": {
         "title": "حذف المعاملة المتكررة",
         "subtitle": "اختر المعاملات المراد إزالتها",
