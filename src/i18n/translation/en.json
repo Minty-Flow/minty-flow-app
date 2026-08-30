@@ -180,7 +180,6 @@
         "archivedBannerText": "This account is archived. Restore it to make changes.",
         "deleteLabel": "Permanently delete account",
         "typeLabel": "Account type",
-
         "archiveModal": {
           "archiveTitle": "Archive this account?",
           "archiveConfirm": "Archive",
@@ -605,7 +604,6 @@
           "deleteLabel": "Delete Goal",
           "archiveLabel": "Archive Goal",
           "unarchiveLabel": "Restore Goal",
-
           "archiveModal": {
             "archiveTitle": "Archive this goal?",
             "archiveConfirm": "Archive",
@@ -683,7 +681,6 @@
           "duplicateLabel": "Duplicate Budget",
           "duplicateSuccess": "Budget duplicated",
           "deleteLabel": "Delete Budget",
-
           "toast": {
             "notFound": "Budget not found.",
             "createFailed": "Failed to create budget.",
@@ -769,7 +766,6 @@
           "placeholderGeneric": "Work, Shopping...",
           "placeholderContact": "John Doe",
           "deleteLabel": "Permanently delete",
-
           "deleteModal": {
             "title": "Permanently delete {{name}}?",
             "descriptionWithCount_one": "This tag is used by {{count}} transaction. Permanently deleting the tag will unlink it and remove it permanently. This cannot be undone.",
@@ -986,8 +982,7 @@
       },
       "notFoundTransaction": "Transaction not found.",
       "kind": {
-        "label": "Kind",
-        "loanComingSoon": "Loan settings arrive in a later update"
+        "label": "Kind"
       },
       "upcoming": {
         "banner": "Upcoming — not counted in your balance or stats yet.",
@@ -1120,7 +1115,9 @@
         "deleteFailed": "Failed to delete transaction.",
         "rateLoading": "Rate is still loading, please wait",
         "setDifferentCurrencies": "Please set the converted amount for different currencies",
-        "recurringUntilBeforeStart": "The end date is before the start date"
+        "recurringUntilBeforeStart": "The end date is before the start date",
+        "loanAmountExceedsRemaining": "Amount is more than this loan still owes",
+        "loanNeedsCategory": "Pick a category before creating the loan"
       },
       "a11y": {
         "closePreview": "Close preview",
@@ -1138,6 +1135,16 @@
         "noTagsFound": "No tags found",
         "allTagsSelected": "All tags selected",
         "amountInput": "Amount input"
+      },
+      "loan": {
+        "linkExisting": "Link an existing loan",
+        "nameLabel": "Loan name",
+        "namePlaceholder": "Name this loan",
+        "dueDateLabel": "Due date",
+        "noDueDate": "No due date",
+        "remainingLabel": "Remaining",
+        "maxButton": "Max",
+        "newHint": "A one-time loan is created with this transaction as its opening entry."
       }
     },
     "recurring": {
@@ -1231,7 +1238,6 @@
         "namePlaceholder": "Groceries, Dining out, etc.",
         "typeLabel": "Type",
         "deleteLabel": "Permanently delete",
-
         "deleteModal": {
           "title": "Delete {{name}}?",
           "descriptionWithCount_one": "This category is used by {{count}} transaction. Deleting will unlink it. This cannot be undone.",

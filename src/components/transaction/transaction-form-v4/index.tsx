@@ -141,6 +141,14 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
               }
               onUntilPress={() => f.openDatePicker("recurringEnd")}
               onUntilReset={() => f.setRecurring({ until: null })}
+              loanDraft={f.loanDraft}
+              onLoanDraftChange={f.setLoanDraft}
+              linkedLoan={f.linkedLoan}
+              linkableLoans={f.linkableLoans}
+              onLinkLoan={f.linkExistingLoan}
+              onUnlinkLoan={f.unlinkLoan}
+              onFillRemaining={f.fillRemainingAmount}
+              loanCurrencyCode={f.selectedAccount?.currencyCode ?? "USD"}
             />
 
             <View style={transactionFormStyles.nameSection}>

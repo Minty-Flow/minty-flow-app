@@ -1106,7 +1106,9 @@
         "deleteFailed": "فشل حذف المعاملة.",
         "rateLoading": "لا يزال السعر قيد التحميل، يرجى الانتظار",
         "setDifferentCurrencies": "يرجى تحديد المبلغ المحول لعملات مختلفة",
-        "recurringUntilBeforeStart": "تاريخ الانتهاء قبل تاريخ البدء"
+        "recurringUntilBeforeStart": "تاريخ الانتهاء قبل تاريخ البدء",
+        "loanAmountExceedsRemaining": "المبلغ أكبر مما يدين به هذا القرض",
+        "loanNeedsCategory": "اختر فئة قبل إنشاء القرض"
       },
       "a11y": {
         "closePreview": "إغلاق المعاينة",
@@ -1127,13 +1129,22 @@
       },
       "notFoundTransaction": "لم يتم العثور على المعاملة.",
       "kind": {
-        "label": "النوع",
-        "loanComingSoon": "إعدادات القرض ستصل في تحديث لاحق"
+        "label": "النوع"
       },
       "upcoming": {
         "banner": "قادمة — لا تُحتسب في رصيدك أو إحصاءاتك بعد.",
         "markPaid": "تحديد كمدفوعة",
         "markDeposited": "تحديد كمُودعة"
+      },
+      "loan": {
+        "linkExisting": "ربط قرض موجود",
+        "nameLabel": "اسم القرض",
+        "namePlaceholder": "سمِّ هذا القرض",
+        "dueDateLabel": "تاريخ الاستحقاق",
+        "noDueDate": "بلا تاريخ استحقاق",
+        "remainingLabel": "المتبقّي",
+        "maxButton": "الكل",
+        "newHint": "يُنشأ قرض لمرة واحدة وتكون هذه المعاملة قيده الافتتاحي."
       }
     },
     "recurring": {

@@ -15,7 +15,9 @@ import {
   restoreTransaction,
   updateTransaction,
 } from "~/database/services/ledger-service"
+import { createLoanWithOpeningEntry } from "~/database/services/loan-service"
 import { createRecurringRule } from "~/database/services/recurring-transaction-service"
+import { getRepaymentTypeForLoan } from "~/domain/transaction-kind"
 import { useBalanceAtTransaction } from "~/hooks/use-balance-before"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import { useRecurringRule } from "~/hooks/use-recurring-rule"
@@ -61,6 +63,7 @@ import { buildTransactionPayload } from "./use-transaction-form.submit"
 export function useTransactionForm({
   transaction,
   accounts,
+  categories,
   goals,
   budgets,
   loans,
@@ -152,7 +155,6 @@ export function useTransactionForm({
       : kind === "upcoming"
         ? [2]
         : []
-  const tabLockedTo: number | null = null // linked-loan Paid/Collected lock lands in Slice 4
   const selectedAccount = accounts.find((a) => a.id === accountId)
   // Filter goals to only those linked to the selected account
   const accountGoals = accountId
@@ -222,6 +224,44 @@ export function useTransactionForm({
       : null
   const [isSaving, setIsSaving] = useState(false)
   const [loanDraft, setLoanDraft] = useState<LoanDraft | null>(null)
+  const [linkedLoanId, setLinkedLoanId] = useState<string | null>(null)
+  const linkedLoan = linkedLoanId
+    ? (loans.find((l) => l.id === linkedLoanId) ?? null)
+    : null
+  // Repayable loans for the active loan kind — a repayment can't exceed what is
+  // still owed, so closed loans are excluded.
+  const linkableLoans =
+    kind === "lent" || kind === "borrowed"
+      ? loans.filter((l) => l.loanType === kind && !l.isClosed)
+      : []
+  // Linking locks the top tab to the loan's relationship slot (0 lent / 1
+  // borrowed). The repayment's cash direction is set on `type` separately.
+  const tabLockedTo: number | null = linkedLoan
+    ? linkedLoan.loanType === "lent"
+      ? 0
+      : 1
+    : null
+  const linkExistingLoan = (id: string) => {
+    const loan = loans.find((l) => l.id === id)
+    if (!loan) return
+    setLinkedLoanId(id)
+    setLoanDraft(null)
+    const repaymentType = getRepaymentTypeForLoan(loan.loanType)
+    setValue("loanId", id, { shouldDirty: true })
+    setValue("kind", loan.loanType, { shouldDirty: true })
+    setValue("type", repaymentType, { shouldDirty: true })
+    onTransactionTypeChange(repaymentType)
+  }
+  const unlinkLoan = () => {
+    setLinkedLoanId(null)
+    setValue("loanId", null, { shouldDirty: true })
+    setLoanDraft({ name: "", dueDate: null })
+  }
+  const fillRemainingAmount = () => {
+    if (linkedLoan) {
+      setValue("amount", linkedLoan.remainingAmount, { shouldDirty: true })
+    }
+  }
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSaving,
@@ -311,7 +351,6 @@ export function useTransactionForm({
   const lockedFields: ReadonlySet<string> = new Set<string>(
     transaction?.loanId ? ["kind", "type", "loanId", "toAccountId"] : [],
   )
-  const linkedLoanId: string | null = null // Slice 4 populates this
   const setKind = (next: TransactionKind) => {
     if (!canEditKind || next === kind) return
     // ES-4: an existing transaction may not gain a loan link on edit.
@@ -324,6 +363,8 @@ export function useTransactionForm({
     })
     if (partials.recurring) setRecurring(partials.recurring)
     if ("loanDraft" in partials) setLoanDraft(partials.loanDraft ?? null)
+    if ("linkedLoanId" in partials)
+      setLinkedLoanId(partials.linkedLoanId ?? null)
     if ("toAccountId" in partials) {
       setValue("toAccountId", partials.toAccountId, { shouldDirty: true })
     }
@@ -504,6 +545,86 @@ export function useTransactionForm({
               title: t(
                 "components.transactionForm.toast.recurringCreateFailed",
               ),
+            })
+            return
+          }
+        } else if (data.kind === "lent" || data.kind === "borrowed") {
+          try {
+            if (linkedLoanId) {
+              const loan = loans.find((l) => l.id === linkedLoanId)
+              if (!loan) {
+                Toast.error({
+                  title: t("components.transactionForm.toast.saveFailed"),
+                })
+                return
+              }
+              // LP-1: a repayment can't exceed what the loan still owes.
+              if (data.amount > loan.remainingAmount) {
+                Toast.error({
+                  title: t(
+                    "components.transactionForm.toast.loanAmountExceedsRemaining",
+                  ),
+                })
+                return
+              }
+              await createTransaction({
+                ...payload,
+                loanId: loan.id,
+                kind: loan.loanType,
+                type: getRepaymentTypeForLoan(loan.loanType),
+              })
+              Toast.success({
+                title: t("components.transactionForm.toast.transactionCreated"),
+              })
+            } else {
+              if (!data.categoryId) {
+                Toast.error({
+                  title: t(
+                    "components.transactionForm.toast.loanNeedsCategory",
+                  ),
+                })
+                return
+              }
+              const categoryName = categories.find(
+                (c) => c.id === data.categoryId,
+              )?.name
+              const loanName =
+                loanDraft?.name.trim() ||
+                data.title?.trim() ||
+                categoryName ||
+                t("components.transactionForm.loan.nameLabel")
+              await createLoanWithOpeningEntry(
+                {
+                  name: loanName,
+                  principalAmount: data.amount,
+                  loanType: data.kind,
+                  term: "one_time",
+                  accountId: data.accountId,
+                  categoryId: data.categoryId,
+                  dueDate: loanDraft?.dueDate
+                    ? loanDraft.dueDate.getTime()
+                    : null,
+                },
+                {
+                  title: data.title?.trim() || null,
+                  description: data.description?.trim() || null,
+                  transactionDate: effectiveDate,
+                  tags: data.tags ?? [],
+                  location: data.location ?? null,
+                },
+              )
+              Toast.success({
+                title: t("components.transactionForm.toast.transactionCreated"),
+              })
+            }
+            synchronizePlannedTransactionNotifications().catch(() => {})
+          } catch (loanErr) {
+            logger.error("Failed to save loan transaction", {
+              message:
+                loanErr instanceof Error ? loanErr.message : String(loanErr),
+            })
+            Toast.error({
+              title: t("components.transactionForm.toast.saveFailed"),
             })
             return
           }
@@ -735,6 +856,11 @@ export function useTransactionForm({
     canEditKind,
     lockedFields,
     linkedLoanId,
+    linkedLoan,
+    linkableLoans,
+    linkExistingLoan,
+    unlinkLoan,
+    fillRemainingAmount,
     loanDraft,
     setLoanDraft,
 
