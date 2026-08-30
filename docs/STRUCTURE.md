@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T02:31:04.420Z
+Generated on: 2026-08-30T02:34:49.799Z
 ```
 ./
 ├── .github/
@@ -29,10 +29,13 @@ Generated on: 2026-08-30T02:31:04.420Z
 │       │   ├── progress.md
 │       │   ├── review-0476346..9bd185c.diff
 │       │   ├── review-319f978..0476346.diff
+│       │   ├── review-9bd185c..549ef7c.diff
 │       │   ├── task-1-brief.md
 │       │   ├── task-1-report.md
 │       │   ├── task-2-brief.md
-│       │   └── task-3-brief.md
+│       │   ├── task-2-report.md
+│       │   ├── task-3-brief.md
+│       │   └── task-4-brief.md
 │       └── .gitignore
 ├── docs/
 │   ├── adr/
@@ -62,7 +65,8 @@ Generated on: 2026-08-30T02:31:04.420Z
 │   └── with-android-release-signing.mts
 ├── scripts/
 │   ├── checks/
-│   │   └── verify-migration-0001.mts
+│   │   ├── verify-migration-0001.mts
+│   │   └── verify-transaction-kind.mts
 │   ├── check-missing-i18n-keys.mts
 │   ├── check-number-formatting.mts
 │   ├── find-unused-styles.mts
@@ -453,6 +457,9 @@ Generated on: 2026-08-30T02:31:04.420Z
 │   │   ├── forced-migration.ts
 │   │   ├── transaction.ts
 │   │   └── write-queue.ts
+│   ├── domain/
+│   │   ├── transaction-kind.assertions.ts
+│   │   └── transaction-kind.ts
 │   ├── hooks/
 │   │   ├── exchange-rates-editor.reducer.ts
 │   │   ├── use-balance-before.ts
