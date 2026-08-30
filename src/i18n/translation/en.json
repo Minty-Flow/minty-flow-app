@@ -1140,14 +1140,8 @@
         "amountInput": "Amount input"
       },
       "loan": {
-        "linkExisting": "Link an existing loan",
         "nameLabel": "Loan name",
-        "namePlaceholder": "Name this loan",
-        "dueDateLabel": "Due date",
-        "noDueDate": "No due date",
-        "remainingLabel": "Remaining",
-        "maxButton": "Max",
-        "newHint": "A one-time loan is created with this transaction as its opening entry."
+        "dueDateLabel": "Due date"
       },
       "deleteLoanModal": {
         "title": "Delete this loan?",

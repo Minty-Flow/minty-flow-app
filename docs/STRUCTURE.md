@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T19:15:52.101Z
+Generated on: 2026-08-30T19:33:59.772Z
 ```
 ./
 ├── .github/
@@ -389,7 +389,6 @@ Generated on: 2026-08-30T19:15:52.101Z
 │   │   │   │   ├── form-utils.ts
 │   │   │   │   ├── form.styles.ts
 │   │   │   │   ├── index.tsx
-│   │   │   │   ├── loan-card.tsx
 │   │   │   │   ├── on-kind-change.ts
 │   │   │   │   ├── recurrence-card.tsx
 │   │   │   │   ├── recurrence-unit-modal.tsx

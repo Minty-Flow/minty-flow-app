@@ -197,7 +197,6 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
       params: {
         id: "new",
         type: isLent ? "income" : "expense",
-        kind: loan.loanType,
         accountId: loan.accountId,
         categoryId: loan.categoryId,
         loanId: loan.id,
