@@ -154,6 +154,21 @@ export async function updateLoanById(
   })
 }
 
+/**
+ * One-way promotion of a one-time loan to a progress-tracked long-term loan.
+ * Idempotent: a loan already `long_term` (or missing) is left untouched, and the
+ * term never moves back (LP-4).
+ */
+export async function promoteLoanToLongTerm(id: string): Promise<void> {
+  const now = new Date().toISOString()
+  await runInTransaction("loan.promote", (db) => {
+    db.update(loans)
+      .set({ term: "long_term", updatedAt: now })
+      .where(and(eq(loans.id, id), eq(loans.term, "one_time")))
+      .run()
+  })
+}
+
 export async function deleteLoanById(id: string): Promise<void> {
   const now = new Date().toISOString()
 

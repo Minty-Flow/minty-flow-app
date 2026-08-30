@@ -224,7 +224,15 @@ export function useTransactionForm({
       : null
   const [isSaving, setIsSaving] = useState(false)
   const [loanDraft, setLoanDraft] = useState<LoanDraft | null>(null)
-  const [linkedLoanId, setLinkedLoanId] = useState<string | null>(null)
+  // A partial Collect/Settle opens this form prefilled with a loan id + loan
+  // kind — that is a repayment against an existing loan, so seed the link.
+  const [linkedLoanId, setLinkedLoanId] = useState<string | null>(
+    isNew &&
+      prefill?.loanId &&
+      (initialKind === "lent" || initialKind === "borrowed")
+      ? prefill.loanId
+      : null,
+  )
   const linkedLoan = linkedLoanId
     ? (loans.find((l) => l.id === linkedLoanId) ?? null)
     : null

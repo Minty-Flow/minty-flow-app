@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useLayoutEffect, useRef, useState } from "react"
+import { useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { type DimensionValue, FlatList, View as RNView } from "react-native"
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
@@ -22,6 +22,7 @@ import {
   useTransactions,
 } from "~/database/drizzle/read-models/transaction-read-model"
 import { createTransaction } from "~/database/services/ledger-service"
+import { useLoanTermReconcile } from "~/hooks/use-loan-term-reconcile"
 import { useLanguageStore } from "~/stores/language.store"
 import { TransactionTypeEnum } from "~/types/transactions"
 import { logger } from "~/utils/logger"
@@ -42,6 +43,8 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
   const [isCreatingTransaction, setIsCreatingTransaction] = useState(false)
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
   const loan = useLoan(loanId)
+  const reconcileLoans = useMemo(() => (loan ? [loan] : []), [loan])
+  useLoanTermReconcile(reconcileLoans)
   const account = useAccount(loan?.accountId ?? "")
   // Filter by loanId so the list shows only this loan's rows. Progress itself
   // comes from the loan read-model (loan.repaidAmount), not this list.
@@ -191,6 +194,7 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
       params: {
         id: "new",
         type: isLent ? "income" : "expense",
+        kind: loan.loanType,
         accountId: loan.accountId,
         categoryId: loan.categoryId,
         loanId: loan.id,
