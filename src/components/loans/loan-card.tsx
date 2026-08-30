@@ -9,10 +9,8 @@ import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useAccount } from "~/database/drizzle/read-models/account-read-model"
-import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import { useLanguageStore } from "~/stores/language.store"
 import type { Loan } from "~/types/loans"
-import { getLiveLoanProgress } from "~/utils/live-progress"
 import { getLoanProgressModel } from "~/utils/planning-progress"
 import { formatShortMonthDay } from "~/utils/time-utils"
 
@@ -23,8 +21,7 @@ interface LoanCardProps {
 
 export function LoanCard({ loan, onPress }: LoanCardProps) {
   const account = useAccount(loan.accountId)
-  const { items: progressTransactions } = useTransactions({ loanId: loan.id })
-  const paidAmount = getLiveLoanProgress(loan, progressTransactions)
+  const paidAmount = loan.repaidAmount
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const isRTL = useLanguageStore((s) => s.isRTL)

@@ -27,7 +27,6 @@ import {
   TransactionSubTypeEnum,
   TransactionTypeEnum,
 } from "~/types/transactions"
-import { getLiveLoanProgress } from "~/utils/live-progress"
 import { logger } from "~/utils/logger"
 import { getLoanProgressModel } from "~/utils/planning-progress"
 import { formatShortMonthDay } from "~/utils/time-utils"
@@ -47,12 +46,11 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
   const loan = useLoan(loanId)
   const account = useAccount(loan?.accountId ?? "")
-  // Always filter by loanId. Passing {} while the loan row loads returns every
-  // transaction, which getLiveLoanProgress then miscounts as repayments —
-  // flashing a wrong "received" figure and an unrelated transaction list.
+  // Filter by loanId so the list shows only this loan's rows. Progress itself
+  // comes from the loan read-model (loan.repaidAmount), not this list.
   const { items: transactionsFull, status: transactionsStatus } =
     useTransactions({ loanId })
-  const paidAmount = loan ? getLiveLoanProgress(loan, transactionsFull) : 0
+  const paidAmount = loan?.repaidAmount ?? 0
   const handleTransactionPress = (id: string) => {
     router.push({ pathname: "/transaction/[id]", params: { id } })
   }

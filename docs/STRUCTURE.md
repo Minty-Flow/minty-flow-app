@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T17:39:22.463Z
+Generated on: 2026-08-30T17:45:31.832Z
 ```
 ./
 ├── .github/
@@ -496,7 +496,6 @@ Generated on: 2026-08-30T17:39:22.463Z
 │   │   │   ├── budget.mapper.ts
 │   │   │   ├── category.mapper.ts
 │   │   │   ├── goal.mapper.ts
-│   │   │   ├── loan.mapper.ts
 │   │   │   ├── tag.mapper.ts
 │   │   │   └── transaction.mapper.ts
 │   │   ├── services/
