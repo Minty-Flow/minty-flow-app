@@ -342,7 +342,9 @@ In **edit** mode, `setKind` is a no-op when `!canEditKind` (ES-4/ES-5).
   accepted by the schema).
 - Every ES row behaves as tabled; locked fields are visibly disabled and
   server-side re-asserted.
-- `index.tsx` ≤ ~200 lines; submit/branch logic in the hook + pure builders.
+- `index.tsx` is pure wiring — no submit/branch logic (that lives in the hook +
+  pure builders). Line count is JSX-tree-bound (~350 after Task 9, may grow with
+  the kind selector); the bar is "no logic in the coordinator", not a number.
 - `pnpm types`, `pnpm lint`, `pnpm structure`, `pnpm check-i18n-keys` pass.
 
 ---
