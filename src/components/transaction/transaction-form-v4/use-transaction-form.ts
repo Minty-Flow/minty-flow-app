@@ -29,6 +29,8 @@ import { usePendingTransactionsStore } from "~/stores/pending-transactions.store
 import { useTransactionLocationStore } from "~/stores/transaction-location.store"
 import { NewEnum } from "~/types/new"
 import {
+  type Recurrence,
+  type RecurrenceUnit,
   RecurringEndEnum,
   type RecurringEndType,
   type RecurringFrequency,
@@ -285,17 +287,24 @@ export function useTransactionForm({
       : recurring.endDate !== null
         ? RecurringEndEnum.DATE
         : RecurringEndEnum.NEVER
+  // TODO Slice 2 Task 2: delete — bridges the old `frequency` state to the new API.
+  const FREQ_TO_UNIT: Record<string, RecurrenceUnit> = {
+    daily: "day",
+    weekly: "week",
+    biweekly: "week",
+    monthly: "month",
+    yearly: "year",
+  }
+  const bridgeRecurrence: Recurrence = {
+    interval: recurring.frequency === "biweekly" ? 2 : 1,
+    unit: FREQ_TO_UNIT[recurring.frequency ?? "monthly"] ?? "month",
+  }
   const recurringEndDateOccurrenceCount = (() => {
-    if (
-      endsOnType !== RecurringEndEnum.DATE ||
-      !recurring.endDate ||
-      !recurring.frequency
-    )
-      return null
+    if (endsOnType !== RecurringEndEnum.DATE || !recurring.endDate) return null
     return countOccurrencesBetween(
       recurring.startDate,
       recurring.endDate,
-      recurring.frequency,
+      bridgeRecurrence,
     )
   })()
   const handleRecurringToggle = (next: boolean) => {
@@ -450,10 +459,10 @@ export function useTransactionForm({
         if (recurring.enabled && recurring.frequency) {
           try {
             const rruleStr = buildRRuleString({
-              frequency: recurring.frequency,
+              interval: bridgeRecurrence.interval,
+              unit: bridgeRecurrence.unit,
               startDate: recurring.startDate,
-              endDate: recurring.endDate,
-              count: recurring.endAfterOccurrences,
+              until: recurring.endDate,
             })
             const rangeEnd =
               recurring.endDate?.getTime() ?? new Date(2099, 11, 31).getTime()

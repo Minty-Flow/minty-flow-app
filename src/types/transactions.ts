@@ -1,3 +1,12 @@
+export type RecurrenceUnit = "day" | "week" | "month" | "year"
+
+/** "every {interval} {unit}"; interval is an integer 1..999. */
+export interface Recurrence {
+  interval: number
+  unit: RecurrenceUnit
+}
+
+// --- deprecated, deleted in Slice 2 Task 2 ---
 export type RecurringFrequency =
   | "daily"
   | "weekly"
@@ -12,7 +21,6 @@ export const RecurringEndEnum = {
   OCCURRENCES: "occurrences",
 }
 
-/** How a recurring transaction ends: never, on a specific date, or after N occurrences */
 export type RecurringEndType =
   (typeof RecurringEndEnum)[keyof typeof RecurringEndEnum]
 
