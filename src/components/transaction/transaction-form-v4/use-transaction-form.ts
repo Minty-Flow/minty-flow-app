@@ -595,6 +595,7 @@ export function useTransactionForm({
                 loanId: loan.id,
                 kind: loan.loanType,
                 type: getRepaymentTypeForLoan(loan.loanType),
+                isPending: false,
               })
               Toast.success({
                 title: t("components.transactionForm.toast.transactionCreated"),

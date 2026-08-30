@@ -264,19 +264,22 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
               />
             )}
 
-            {/* Loan: hidden for transfers, filtered by selected account AND category */}
-            {transactionType !== TransactionTypeEnum.TRANSFER && (
-              <FormLoanPicker
-                loans={f.accountLoans}
-                loanId={f.loanId}
-                onSelect={(id) =>
-                  f.setValue("loanId", id, { shouldDirty: true })
-                }
-                onClear={() =>
-                  f.setValue("loanId", null, { shouldDirty: true })
-                }
-              />
-            )}
+            {/* Loan link: hidden for transfers and for the loan kinds (the
+                loan card owns linking there). */}
+            {transactionType !== TransactionTypeEnum.TRANSFER &&
+              f.kind !== "lent" &&
+              f.kind !== "borrowed" && (
+                <FormLoanPicker
+                  loans={f.accountLoans}
+                  loanId={f.loanId}
+                  onSelect={(id) =>
+                    f.setValue("loanId", id, { shouldDirty: true })
+                  }
+                  onClear={() =>
+                    f.setValue("loanId", null, { shouldDirty: true })
+                  }
+                />
+              )}
 
             <FormTagsPicker
               tags={tags}
