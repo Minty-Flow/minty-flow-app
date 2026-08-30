@@ -979,7 +979,6 @@
       "notFoundTransaction": "Transaction not found.",
       "kind": {
         "label": "Kind",
-        "recurrenceComingSoon": "Recurrence settings arrive in a later update",
         "loanComingSoon": "Loan settings arrive in a later update"
       },
       "fields": {
@@ -1012,17 +1011,6 @@
         "restore": "Restore",
         "location": "Location",
         "refundLabel": "Refund"
-      },
-      "recurring": {
-        "label": "Recurring transaction",
-        "recurrence": "Recurrence",
-        "startsOn": "Starts on",
-        "endsOn": "Ends on",
-        "never": "Never",
-        "onADate": "On a date",
-        "occurrences": "Occurrences",
-        "timesCount_one": "{{count}} time",
-        "timesCount_other": "{{count}} times"
       },
       "recurrence": {
         "every": "Repeat every",
@@ -1140,14 +1128,6 @@
       }
     },
     "recurring": {
-      "frequency": {
-        "none": "None",
-        "daily": "Every day",
-        "weekly": "Every week, {{day}}",
-        "biweekly": "Every 2 weeks, {{day}}",
-        "monthly": "Every month, {{date}}",
-        "yearly": "Every year, {{date}}"
-      },
       "deleteModal": {
         "title": "Delete recurring transaction",
         "subtitle": "Choose which transactions to remove",

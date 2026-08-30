@@ -364,9 +364,6 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     gap: ROW_GAP,
     justifyContent: "space-between",
   },
-  recurringDateRow: {
-    gap: ROW_GAP,
-  },
   inlineDateText: {
     ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
@@ -389,16 +386,20 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   pendingSwitchRow: {
     justifyContent: "space-between",
   },
-
-  recurringSwitchRow: {
-    justifyContent: "space-between",
-  },
   recurrenceRow: {
     marginHorizontal: H_PAD,
     flexDirection: "row",
     alignItems: "center",
     gap: SECTION_GAP,
     marginBottom: FORM_GAP,
+    direction: "ltr",
+  },
+  recurrenceUntilText: {
+    ...theme.typography.titleSmall,
+    color: theme.colors.onSurface,
+    flex: 1,
+    minWidth: 0,
+    writingDirection: "ltr",
   },
   stepperButton: {
     width: 40,
@@ -423,76 +424,6 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     paddingHorizontal: BUTTON_PAD_H,
     borderRadius: theme.radius,
     backgroundColor: theme.colors.secondary,
-  },
-  recurringSubSection: {
-    marginTop: 2 * FORM_GAP,
-  },
-  recurringSubLabel: {
-    marginHorizontal: H_PAD,
-    ...theme.typography.labelMedium,
-    fontWeight: "600",
-    color: theme.colors.semantic.semi,
-    letterSpacing: 0.5,
-    marginBottom: SECTION_GAP,
-  },
-  recurringToggleRow: {
-    marginHorizontal: H_PAD,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: ROW_GAP,
-  },
-  recurringToggleButton: {
-    paddingVertical: ROW_PADDING_V,
-    paddingHorizontal: BUTTON_PAD_H,
-    borderRadius: theme.radius,
-    backgroundColor: theme.colors.secondary,
-    borderWidth: 2,
-    borderColor: "transparent",
-  },
-  recurringToggleButtonSelected: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  recurringToggleLabel: {
-    ...theme.typography.bodyLarge,
-    color: theme.colors.onSurface,
-  },
-  recurringToggleLabelSelected: {
-    color: theme.colors.onPrimary,
-  },
-  endsOnPickerContainer: {
-    marginTop: FORM_GAP,
-    backgroundColor: theme.colors.secondary,
-    borderRadius: theme.radius,
-    overflow: "hidden",
-    marginHorizontal: H_PAD,
-  },
-  endsOnOptionRow: {
-    justifyContent: "space-between",
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.semantic.semi,
-  },
-  endsOnOptionRowLast: {
-    borderBottomWidth: 0,
-  },
-  endsOnOptionLabel: {
-    ...theme.typography.titleSmall,
-    color: theme.colors.onSurface,
-  },
-  occurrencePresetsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: ROW_GAP,
-    padding: H_PAD,
-    paddingTop: 0,
-  },
-  occurrencePresetButton: {
-    paddingVertical: ROW_PADDING_V,
-    paddingHorizontal: BUTTON_PAD_H,
-    borderRadius: theme.radius,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 2,
-    borderColor: "transparent",
   },
   fieldValue: {
     ...theme.typography.titleSmall,
