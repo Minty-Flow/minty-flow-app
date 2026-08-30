@@ -190,9 +190,11 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   inlineAccountPicker: {
     marginTop: FORM_GAP,
     marginHorizontal: H_PAD,
-    maxHeight: 280,
+    maxHeight: 320,
     borderRadius: theme.radius,
     overflow: "hidden",
+    backgroundColor: theme.colors.secondary,
+    padding: CARD_PAD,
   },
   inlinePickerRowSelected: {
     backgroundColor: `${theme.colors.primary}15`,
@@ -242,13 +244,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.bodyMedium.fontSize,
   },
   pickerSearchInput: {
-    marginBottom: SECTION_GAP,
-  },
-  pickerList: {
-    // height: 180,
-  },
-  pickerListContent: {
-    // paddingRight: CARD_PAD,
+    marginBottom: CARD_PAD,
   },
   categoryScrollContent: {
     paddingHorizontal: H_PAD,
@@ -290,6 +286,9 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     gap: SECTION_GAP,
     paddingVertical: SMALL_GAP,
   },
+  kindInfoButton: {
+    padding: 2,
+  },
   tagChipBase: {
     flexDirection: "row",
     alignItems: "center",
@@ -321,9 +320,24 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius,
     overflow: "hidden",
     maxHeight: 400,
+    backgroundColor: theme.colors.secondary,
+    padding: CARD_PAD,
+  },
+  tagPickerClearAllRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: SMALL_GAP,
+    paddingVertical: SMALL_GAP,
+    marginBottom: SMALL_GAP,
+  },
+  tagPickerClearAllText: {
+    ...theme.typography.labelLarge,
+    fontWeight: "500",
+    color: theme.colors.semantic.semi,
   },
   tagSearchInput: {
-    marginBottom: SECTION_GAP,
+    marginBottom: CARD_PAD,
   },
   tagPickerChipGrid: {
     flexDirection: "row",

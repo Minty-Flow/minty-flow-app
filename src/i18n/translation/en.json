@@ -983,6 +983,8 @@
         "edit": "Edit Transaction"
       },
       "notFoundTransaction": "Transaction not found.",
+      "searchTags": "Search tags...",
+      "createNewTag": "Create new tag",
       "kind": {
         "label": "Kind",
         "info": {

@@ -27,12 +27,14 @@ interface FormTagsPickerProps {
   tagIds: string[] | undefined
   addTag: (tagId: string) => void
   removeTag: (tagId: string) => void
+  clearTags: () => void
 }
 export function FormTagsPicker({
   tags,
   tagIds,
   addTag,
   removeTag,
+  clearTags,
 }: FormTagsPickerProps) {
   const router = useRouter()
   const { t } = useTranslation()
@@ -118,8 +120,29 @@ export function FormTagsPicker({
 
       {tagPickerOpen && (
         <View native style={transactionFormStyles.inlineTagPicker}>
+          {selectedTags.length > 0 && (
+            <Pressable
+              style={transactionFormStyles.tagPickerClearAllRow}
+              onPress={clearTags}
+              accessibilityLabel={t(
+                "components.transactionForm.a11y.clearAllTags",
+              )}
+            >
+              <IconSvg
+                name="x-outline"
+                size={14}
+                color={theme.colors.semantic.semi}
+              />
+              <Text
+                variant="default"
+                style={transactionFormStyles.tagPickerClearAllText}
+              >
+                {t("common.actions.clear")}
+              </Text>
+            </Pressable>
+          )}
           <Input
-            placeholder="Search tags..."
+            placeholder={t("components.transactionForm.searchTags")}
             value={tagSearchQuery}
             onChangeText={setTagSearchQuery}
             placeholderTextColor={theme.colors.semantic.semi}
@@ -182,7 +205,7 @@ export function FormTagsPicker({
               variant="default"
               style={transactionFormStyles.createTagRowText}
             >
-              Create new tag
+              {t("components.transactionForm.createNewTag")}
             </Text>
           </Pressable>
         </View>
