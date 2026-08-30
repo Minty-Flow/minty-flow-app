@@ -60,7 +60,7 @@
 | `drizzle/meta/_journal.json`, `drizzle/migrations.js` | Register `0001`. |
 | `src/app/transaction/[id].tsx` | Import `transaction-form-v4`; `initialType` plumbing → keep, add `initialKind` from `?kind=` param. |
 | `src/components/transaction/transaction-form-v4/index.tsx` | Reduced to coordinator (~200 lines): skeleton + new field order + wire hook. |
-| `src/components/transaction/transaction-form-v4/types.ts` | `TransactionFormV3Props` → `TransactionFormV4Props`: replace `transactionType`/`onTransactionTypeChange`/`initialSubtype`/`onSubtypeChange` with `initialKind`. |
+| `src/components/transaction/transaction-form-v4/types.ts` | `TransactionFormV4Props`: **drop** `initialSubtype` + `onSubtypeChange` (dead plumbing — the parent never reads `subtype`). **Add** `initialKind?: TransactionKind`. **Keep** `transactionType` + `onTransactionTypeChange` — the parent's `useCategoriesByType(transactionType)` / `useGoalsByType(...)` depend on them, so the form must still notify the parent on every type change (including a kind→lent/borrowed that forces a type). |
 | `src/components/transaction/transaction-form-v4/form-utils.ts` | `getDefaultValues` sets `kind`. |
 | various consumers of `TransactionSubTypeEnum.RECURRING/ONE_TIME/LOAN_*` | Task 11: switch to `kind`. |
 
@@ -1067,7 +1067,13 @@ In `use-transaction-form.ts`:
 
 - [ ] **Step 3: `getDefaultValues` sets `kind`**
 
-In `form-utils.ts`, both return objects gain `kind: initialKind ?? transaction?.kind ?? "default"`; add `initialKind?: TransactionKind` param. In `types.ts` replace `transactionType`/`onTransactionTypeChange`/`initialSubtype`/`onSubtypeChange` with `initialKind?: TransactionKind`; update `index.tsx` + `src/app/transaction/[id].tsx` accordingly (route reads `?kind=` → `initialKind`).
+In `form-utils.ts`, both return objects gain `kind: initialKind ?? transaction?.kind ?? "default"`; add `initialKind?: TransactionKind` param.
+
+In `types.ts`: **drop** `initialSubtype` + `onSubtypeChange`; **add** `initialKind?: TransactionKind`; **keep** `transactionType` + `onTransactionTypeChange`.
+
+In `src/app/transaction/[id].tsx` `TransactionEditor`: remove the `subtype`/`setSubtype` `useState` and the two dropped props; add a `kind` route param (`useLocalSearchParams` already types `kind?: string` from Task 8) parsed to a valid `TransactionKind` (else undefined), passed as `initialKind={transaction?.kind ?? parsedKind}`. Keep `transactionType`/`setTransactionType` and the `useCategoriesByType`/`useGoalsByType` wiring exactly as-is.
+
+In the hook: whenever `setKind` resolves a `type` change (kind→lent forces `expense`, kind→borrowed forces `income`, leaving `transfer`), it MUST also call `onTransactionTypeChange(newType)` — not just `setValue("type", …)` — so the parent refetches categories/goals. (Mirror how `handleTransactionTypeChange` already does both.)
 
 - [ ] **Step 4: `FormKindSelector` + `FormKindCard`**
 
