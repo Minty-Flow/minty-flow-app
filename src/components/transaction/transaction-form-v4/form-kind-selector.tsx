@@ -17,13 +17,13 @@ const KIND_LABEL_KEYS: Record<TransactionKind, TranslationKey> = {
   borrowed: "common.transaction.kinds.borrowed",
 }
 
-// `lent`/`borrowed` (Slice 4) stay defined in the enum + onKindChange/KT matrix,
-// but must not be user-selectable until their submit paths exist.
 const KINDS: TransactionKind[] = [
   "default",
   "upcoming",
   "subscription",
   "repetitive",
+  "lent",
+  "borrowed",
 ]
 
 type Props = {

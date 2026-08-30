@@ -62,6 +62,7 @@ export function onKindChange(
   return {
     recurring: freshRecurrence(),
     loanDraft: { name: "", dueDate: null },
+    linkedLoanId: null,
     toAccountId: undefined,
   }
 }

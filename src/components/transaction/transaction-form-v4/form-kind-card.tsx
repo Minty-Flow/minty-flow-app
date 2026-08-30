@@ -1,14 +1,12 @@
-import { useTranslation } from "react-i18next"
-
-import { Text } from "~/components/ui/text"
-import { View } from "~/components/ui/view"
+import type { Loan } from "~/types/loans"
 import type {
   Recurrence,
   RecurrenceUnit,
   TransactionKind,
 } from "~/types/transactions"
 
-import { formKindCardStyles } from "./form-kind-card.styles"
+import { LoanCard } from "./loan-card"
+import type { LoanDraft } from "./on-kind-change"
 import { RecurrenceCard } from "./recurrence-card"
 
 type Props = {
@@ -20,11 +18,17 @@ type Props = {
   onUnitChange: (u: RecurrenceUnit) => void
   onUntilPress: () => void
   onUntilReset: () => void
+  loanDraft: LoanDraft | null
+  onLoanDraftChange: (draft: LoanDraft) => void
+  linkedLoan: Loan | null
+  linkableLoans: Loan[]
+  onLinkLoan: (loanId: string) => void
+  onUnlinkLoan: () => void
+  onFillRemaining: () => void
+  loanCurrencyCode: string
 }
 
 export function FormKindCard(props: Props) {
-  const { t } = useTranslation()
-
   switch (props.kind) {
     case "subscription":
     case "repetitive":
@@ -42,11 +46,16 @@ export function FormKindCard(props: Props) {
     case "lent":
     case "borrowed":
       return (
-        <View style={formKindCardStyles.card}>
-          <Text variant="small" style={formKindCardStyles.text}>
-            {t("components.transactionForm.kind.loanComingSoon")}
-          </Text>
-        </View>
+        <LoanCard
+          loanDraft={props.loanDraft}
+          onLoanDraftChange={props.onLoanDraftChange}
+          linkedLoan={props.linkedLoan}
+          linkableLoans={props.linkableLoans}
+          onLink={props.onLinkLoan}
+          onUnlink={props.onUnlinkLoan}
+          onFillRemaining={props.onFillRemaining}
+          currencyCode={props.loanCurrencyCode}
+        />
       )
     default:
       return null
