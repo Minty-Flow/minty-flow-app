@@ -9,8 +9,40 @@ import {
   RESET_ORDER,
 } from "~/database/backup/backup-format"
 import { runInTransaction } from "~/database/transaction"
+import { deriveKind } from "~/domain/derive-kind"
+import { TransactionKindEnum } from "~/types/transactions"
 
 type Db = Parameters<Parameters<typeof runInTransaction>[1]>[0]
+
+const KNOWN_KINDS = new Set<string>(Object.values(TransactionKindEnum))
+
+/** Maps loan id → normalized loan_type, for deriveKind on `kind`-less transaction rows. */
+function buildLoanTypeMap(loans: RawRow[]): Map<string, "lent" | "borrowed"> {
+  const map = new Map<string, "lent" | "borrowed">()
+  for (const loan of loans) {
+    const id = typeof loan.id === "string" ? loan.id : null
+    const loanType = normalizeColumnValue("loan_type", loan.loan_type)
+    if (id && (loanType === "lent" || loanType === "borrowed")) {
+      map.set(id, loanType)
+    }
+  }
+  return map
+}
+
+function resolveTransactionKind(
+  row: RawRow,
+  loanTypeById: Map<string, "lent" | "borrowed">,
+): string {
+  if (typeof row.kind === "string" && KNOWN_KINDS.has(row.kind)) return row.kind
+  const loanId = typeof row.loan_id === "string" ? row.loan_id : null
+  return deriveKind({
+    subtype: typeof row.subtype === "string" ? row.subtype : null,
+    isPending: row.is_pending === 1 || row.is_pending === true,
+    type: typeof row.type === "string" ? row.type : "",
+    loanType: loanId ? (loanTypeById.get(loanId) ?? null) : null,
+    recurringId: typeof row.recurring_id === "string" ? row.recurring_id : null,
+  })
+}
 
 export async function resetDatabaseForBackupImport(): Promise<void> {
   await runInTransaction("import.reset", (db) => {
@@ -26,7 +58,12 @@ export async function resetDatabaseForBackupImport(): Promise<void> {
  * WDB Unix-ms timestamps are converted to ISO strings via normalizeColumnValue.
  * has_attachments is re-derived from extra JSON for transactions.
  */
-function insertRows(db: Db, tableName: string, rows: RawRow[]): void {
+function insertRows(
+  db: Db,
+  tableName: string,
+  rows: RawRow[],
+  loanTypeById?: Map<string, "lent" | "borrowed">,
+): void {
   if (rows.length === 0) return
   const cols = ALLOWED_COLUMNS[tableName] ?? []
   if (cols.length === 0) return
@@ -37,6 +74,9 @@ function insertRows(db: Db, tableName: string, rows: RawRow[]): void {
     const values = cols.map((col) => {
       if (isTransactions && col === "has_attachments") {
         return deriveHasAttachments(row.extra)
+      }
+      if (isTransactions && col === "kind") {
+        return resolveTransactionKind(row, loanTypeById ?? new Map())
       }
       return normalizeColumnValue(col, row[col])
     })
@@ -61,8 +101,14 @@ export function insertBackupData(db: Db, data: MintyFlowBackup["data"]): void {
   insertRows(db, "goals", data.goals)
   insertRows(db, "loans", data.loans)
 
-  // Tier 3: transactions
-  insertRows(db, "transactions", data.transactions)
+  // Tier 3: transactions — `kind`-less rows are backfilled via deriveKind, which
+  // needs each linked loan's type.
+  insertRows(
+    db,
+    "transactions",
+    data.transactions,
+    buildLoanTypeMap(data.loans),
+  )
 
   // Tier 4: transfers
   insertRows(db, "transfers", data.transfers)
