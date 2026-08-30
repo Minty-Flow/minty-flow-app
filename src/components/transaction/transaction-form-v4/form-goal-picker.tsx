@@ -8,6 +8,7 @@ import { View } from "~/components/ui/view"
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Goal } from "~/types/goals"
 
+import { FieldLabel } from "./field-label"
 import { transactionFormStyles } from "./form.styles"
 
 type Props = {
@@ -27,9 +28,9 @@ export function FormGoalPicker({ goals, goalId, onSelect, onClear }: Props) {
   return (
     <View style={transactionFormStyles.fieldBlock}>
       <View style={transactionFormStyles.sectionLabelRow}>
-        <Text variant="small" style={transactionFormStyles.sectionLabelInRow}>
+        <FieldLabel style={transactionFormStyles.sectionLabelInRow}>
           {t("components.transactionForm.fields.goal")}
-        </Text>
+        </FieldLabel>
         <Pressable
           onPress={() => goalId && onClear()}
           style={[

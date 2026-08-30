@@ -10,6 +10,7 @@ import { View } from "~/components/ui/view"
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Category } from "~/types/categories"
 
+import { FieldLabel } from "./field-label"
 import {
   CATEGORY_CELL_SIZE,
   CATEGORY_GAP,
@@ -38,9 +39,9 @@ export function FormCategoryPicker({
   return (
     <View style={transactionFormStyles.fieldBlock}>
       <View style={transactionFormStyles.sectionLabelRow}>
-        <Text variant="small" style={transactionFormStyles.sectionLabelInRow}>
+        <FieldLabel style={transactionFormStyles.sectionLabelInRow}>
           {t("components.transactionForm.fields.category")}
-        </Text>
+        </FieldLabel>
         <Pressable
           onPress={() => categoryId && onClear()}
           style={[
