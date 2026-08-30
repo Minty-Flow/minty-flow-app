@@ -332,7 +332,6 @@
       "preferences": {
         "title": "التفضيلات",
         "appearance": {
-          "label": "المظهر",
           "theme": {
             "title": "السمة",
             "selectThemePlaceholder": "اختر سمة",
@@ -442,7 +441,6 @@
           "basedOnDevice": "بناءً على إعدادات جهازك"
         },
         "buttonFeedback": {
-          "label": "استجابة الأزرار",
           "soundHaptic": {
             "title": "الصوت / الاهتزاز عند الضغط"
           },
@@ -458,7 +456,7 @@
           }
         },
         "transactionLocation": {
-          "title": "موقع المعاملة",
+          "title": "تتبّع موقع المعاملة",
           "permissionWarning": "لم يتم منح إذن الموقع",
           "enable": {
             "label": "تمكين",
@@ -930,7 +928,7 @@
         }
       },
       "reminders": {
-        "title": "التذكير",
+        "title": "التذكيرات",
         "testNotification": "اضغط لاختبار الإشعار",
         "remindDaily": {
           "label": "تذكير يومي",
