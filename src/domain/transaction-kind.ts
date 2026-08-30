@@ -4,14 +4,21 @@ import type { TransactionKind, TransactionType } from "~/types/transactions"
 const EXPENSE_INCOME_TRANSFER = ["expense", "income", "transfer"] as const
 const EXPENSE_INCOME = ["expense", "income"] as const
 
-/** Single source of truth for which transaction `type` each `kind` permits. */
+/**
+ * Single source of truth for which transaction `type` each `kind` permits.
+ *
+ * `kind` identifies the relationship (loan / recurring / …); `type` identifies
+ * the cash direction. A `lent` loan's opening entry is an expense (money out)
+ * and its repayments are income (money back) — so both types are valid for the
+ * loan kinds. Mirror for `borrowed`.
+ */
 export const ALLOWED_TYPES_BY_KIND = {
   default: EXPENSE_INCOME_TRANSFER,
   upcoming: EXPENSE_INCOME,
   subscription: EXPENSE_INCOME_TRANSFER,
   repetitive: EXPENSE_INCOME_TRANSFER,
-  lent: ["expense"],
-  borrowed: ["income"],
+  lent: EXPENSE_INCOME,
+  borrowed: EXPENSE_INCOME,
 } as const satisfies Record<TransactionKind, readonly TransactionType[]>
 
 export function getAllowedTransactionTypes(

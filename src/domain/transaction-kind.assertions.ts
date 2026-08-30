@@ -7,10 +7,16 @@ const _exhaustive: Record<TransactionKind, readonly TransactionType[]> =
   ALLOWED_TYPES_BY_KIND
 void _exhaustive
 
-// lent/borrowed are single-type.
-type _LentIsExpenseOnly =
-  (typeof ALLOWED_TYPES_BY_KIND)["lent"] extends readonly ["expense"]
-    ? true
+// Loan kinds allow both cash directions (opening entry + repayment).
+type _LoanKindsAllowBothDirections =
+  "expense" extends (typeof ALLOWED_TYPES_BY_KIND)["lent"][number]
+    ? "income" extends (typeof ALLOWED_TYPES_BY_KIND)["lent"][number]
+      ? "expense" extends (typeof ALLOWED_TYPES_BY_KIND)["borrowed"][number]
+        ? "income" extends (typeof ALLOWED_TYPES_BY_KIND)["borrowed"][number]
+          ? true
+          : never
+        : never
+      : never
     : never
-const _lentOk: _LentIsExpenseOnly = true
-void _lentOk
+const _loanKindsOk: _LoanKindsAllowBothDirections = true
+void _loanKindsOk

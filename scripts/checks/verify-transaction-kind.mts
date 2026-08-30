@@ -11,17 +11,22 @@ import {
   isKindTypeValid,
 } from "../../src/domain/transaction-kind.ts"
 
-// kind -> allowed types
-assert.deepEqual([...ALLOWED_TYPES_BY_KIND.lent], ["expense"])
-assert.deepEqual([...ALLOWED_TYPES_BY_KIND.borrowed], ["income"])
+// kind -> allowed types. Loan kinds allow BOTH directions: opening entry vs
+// repayment (lent: expense out / income back; borrowed: income in / expense back).
+assert.deepEqual([...ALLOWED_TYPES_BY_KIND.lent].sort(), ["expense", "income"])
+assert.deepEqual([...ALLOWED_TYPES_BY_KIND.borrowed].sort(), ["expense", "income"])
 assert.deepEqual([...ALLOWED_TYPES_BY_KIND.upcoming].sort(), ["expense", "income"])
 assert.deepEqual([...ALLOWED_TYPES_BY_KIND.subscription].sort(), ["expense", "income", "transfer"])
 assert.deepEqual([...ALLOWED_TYPES_BY_KIND.repetitive].sort(), ["expense", "income", "transfer"])
 assert.deepEqual([...ALLOWED_TYPES_BY_KIND.default].sort(), ["expense", "income", "transfer"])
 
-// isKindTypeValid
-assert.equal(isKindTypeValid("lent", "expense"), true)
-assert.equal(isKindTypeValid("lent", "income"), false)
+// isKindTypeValid — all four loan kind/type combinations are valid.
+assert.equal(isKindTypeValid("lent", "expense"), true) // money lent out (opening)
+assert.equal(isKindTypeValid("lent", "income"), true) // repayment received
+assert.equal(isKindTypeValid("borrowed", "income"), true) // money borrowed (opening)
+assert.equal(isKindTypeValid("borrowed", "expense"), true) // repayment made
+assert.equal(isKindTypeValid("lent", "transfer"), false)
+assert.equal(isKindTypeValid("borrowed", "transfer"), false)
 assert.equal(isKindTypeValid("upcoming", "transfer"), false)
 assert.equal(isKindTypeValid("repetitive", "transfer"), true)
 
