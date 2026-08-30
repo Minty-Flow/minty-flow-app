@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { ScrollView } from "react-native"
 
 import { IconSvg } from "~/components/icons"
 import { Button } from "~/components/ui/button"
@@ -23,7 +24,12 @@ export function FormKindSelector({ kind, onSelect, disabled = false }: Props) {
 
   return (
     <View style={transactionFormStyles.fieldBlock}>
-      <View style={transactionFormStyles.tagsWrapGrid}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={transactionFormStyles.kindScrollContent}
+      >
         <Button
           variant="ghost"
           size="icon"
@@ -43,7 +49,7 @@ export function FormKindSelector({ kind, onSelect, disabled = false }: Props) {
             onPress={() => !disabled && k !== kind && onSelect(k)}
           />
         ))}
-      </View>
+      </ScrollView>
 
       <KindInfoModal
         visible={infoVisible}

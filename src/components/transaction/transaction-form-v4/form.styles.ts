@@ -250,6 +250,13 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     paddingHorizontal: H_PAD,
     paddingVertical: SMALL_GAP,
   },
+  kindScrollContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SECTION_GAP,
+    paddingHorizontal: H_PAD,
+    paddingVertical: SMALL_GAP,
+  },
   categoryGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
