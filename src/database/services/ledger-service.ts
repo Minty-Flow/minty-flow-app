@@ -22,7 +22,7 @@ import type {
   RecurringEditPayload,
   TransactionFormValues,
 } from "~/schemas/transactions.schema"
-import type { TransactionType } from "~/types/transactions"
+import type { TransactionKind, TransactionType } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import {
   assertMinorUnits,
@@ -375,6 +375,7 @@ export async function createTransfer(
     isPending: boolean
     subtype?: string | null
     extra?: Record<string, string> | null
+    kind?: TransactionKind
   },
 ): Promise<void> {
   assertMinorUnits(params.amount)
@@ -447,6 +448,7 @@ export async function createTransfer(
         requiresManualConfirmation: 0,
         accountBalanceBefore: isPending ? 0 : fromAcc.balance,
         subtype: recurringOptions?.subtype ?? null,
+        kind: recurringOptions?.kind ?? "default",
         extra: extraJson,
         hasAttachments: 0,
         recurringId: recurringOptions?.recurringId ?? null,
@@ -475,6 +477,7 @@ export async function createTransfer(
         requiresManualConfirmation: 0,
         accountBalanceBefore: isPending ? 0 : toAcc.balance,
         subtype: recurringOptions?.subtype ?? null,
+        kind: recurringOptions?.kind ?? "default",
         extra: extraJson,
         hasAttachments: 0,
         recurringId: recurringOptions?.recurringId ?? null,
