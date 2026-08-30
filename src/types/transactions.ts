@@ -78,6 +78,12 @@ export interface Transaction {
   description: string | null
   amount: number
   isPending: boolean
+  /**
+   * @deprecated The per-kind auto-pay switches (autoPaySubscriptions /
+   * autoPayRepetitive / autoPayUpcoming) are the live control surface. No UI
+   * sets this any more; new rows persist `0`. Retained only so legacy and
+   * imported rows keep their permanent opt-out via `isPreapproved`.
+   */
   requiresManualConfirmation: boolean
 
   subtype: TransactionSubType | null // More specific classification

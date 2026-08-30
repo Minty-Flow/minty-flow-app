@@ -529,16 +529,16 @@
         "settings": {
           "showOnHome": "Show on home",
           "autoPaySubscriptions": {
-            "label": "Automatically Pay Subscriptions",
-            "description": "While on, a subscription entry that is already past its date gets marked as paid on its own the next time you launch the app."
+            "label": "Auto-confirm subscriptions",
+            "description": "While on, a subscription entry that is already past its date is confirmed on its own the next time you open the app."
           },
           "autoPayRepetitive": {
-            "label": "Automatically Pay Repetitive",
-            "description": "While on, a repeating entry that is already past its date gets marked as paid on its own the next time you launch the app."
+            "label": "Auto-confirm repeating",
+            "description": "While on, a repeating entry that is already past its date is confirmed on its own the next time you open the app."
           },
           "autoPayUpcoming": {
-            "label": "Automatically Pay Upcoming",
-            "description": "While on, an upcoming entry that is already past its date gets marked as paid on its own the next time you launch the app. Leave it off to clear each one yourself with Mark paid."
+            "label": "Auto-confirm upcoming",
+            "description": "While on, an upcoming entry that is already past its date is confirmed on its own the next time you open the app. Leave it off to clear each one yourself with Mark paid."
           },
           "notify": {
             "label": "Notify me",
