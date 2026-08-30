@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict"
 
+import { deriveKind } from "../../src/domain/derive-kind.ts"
 import {
   ALLOWED_TYPES_BY_KIND,
   getKindForLoanType,
@@ -36,5 +37,68 @@ assert.equal(getRepaymentTypeForLoan("borrowed"), "expense")
 const PENDING_OK = new Set(["upcoming", "subscription", "repetitive"])
 assert.equal(PENDING_OK.has("default"), false)
 assert.equal(PENDING_OK.has("upcoming"), true)
+
+// DM-1: deriveKind mirrors migration 0001 — loan > recurring(id or legacy
+// subtype) > pending(non-transfer) > default.
+assert.equal(
+  deriveKind({
+    subtype: "recurring",
+    isPending: false,
+    type: "expense",
+    loanType: null,
+    recurringId: null,
+  }),
+  "repetitive",
+)
+assert.equal(
+  deriveKind({
+    subtype: null,
+    isPending: true,
+    type: "expense",
+    loanType: null,
+    recurringId: "R1",
+  }),
+  "repetitive",
+) // recurring_id wins over pending
+assert.equal(
+  deriveKind({
+    subtype: null,
+    isPending: true,
+    type: "expense",
+    loanType: null,
+    recurringId: null,
+  }),
+  "upcoming",
+)
+assert.equal(
+  deriveKind({
+    subtype: null,
+    isPending: true,
+    type: "transfer",
+    loanType: null,
+    recurringId: null,
+  }),
+  "default",
+)
+assert.equal(
+  deriveKind({
+    subtype: null,
+    isPending: false,
+    type: "expense",
+    loanType: "lent",
+    recurringId: "R1",
+  }),
+  "lent",
+) // loan wins over recurring
+assert.equal(
+  deriveKind({
+    subtype: null,
+    isPending: false,
+    type: "income",
+    loanType: null,
+    recurringId: null,
+  }),
+  "default",
+)
 
 console.log("transaction-kind: OK")

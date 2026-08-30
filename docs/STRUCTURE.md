@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T02:51:39.878Z
+Generated on: 2026-08-30T02:58:04.368Z
 ```
 ./
 ├── .github/
@@ -33,6 +33,7 @@ Generated on: 2026-08-30T02:51:39.878Z
 │       │   ├── review-8e557fb..a570e9d.diff
 │       │   ├── review-9bd185c..549ef7c.diff
 │       │   ├── review-a570e9d..486844c.diff
+│       │   ├── review-a81b517..7f6da92.diff
 │       │   ├── task-1-brief.md
 │       │   ├── task-1-report.md
 │       │   ├── task-2-brief.md
@@ -45,7 +46,8 @@ Generated on: 2026-08-30T02:51:39.878Z
 │       │   ├── task-5-report.md
 │       │   ├── task-6-brief.md
 │       │   ├── task-6-report.md
-│       │   └── task-7-brief.md
+│       │   ├── task-7-brief.md
+│       │   └── task-8-brief.md
 │       └── .gitignore
 ├── docs/
 │   ├── adr/
@@ -468,6 +470,7 @@ Generated on: 2026-08-30T02:51:39.878Z
 │   │   ├── transaction.ts
 │   │   └── write-queue.ts
 │   ├── domain/
+│   │   ├── derive-kind.ts
 │   │   ├── transaction-kind.assertions.ts
 │   │   └── transaction-kind.ts
 │   ├── hooks/

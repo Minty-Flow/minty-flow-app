@@ -49,7 +49,9 @@ export type ValidateBackupResult =
       message: string
     }
 
-export const SCHEMA_VERSION = 3
+// v4: transactions carry `kind` (DM-1). A `kind`-less transaction row (older or
+// hand-edited snapshot) is backfilled on import via deriveKind.
+export const SCHEMA_VERSION = 4
 export const BACKUP_JSON_NAME = "backup.json"
 
 export const DATE_COLUMNS = new Set([
@@ -157,6 +159,7 @@ export const ALLOWED_COLUMNS: Record<string, string[]> = {
     "category_id",
     "amount",
     "type",
+    "kind",
     "transaction_date",
     "title",
     "description",
