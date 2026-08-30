@@ -714,19 +714,31 @@ const displayTitle =
 
 ### DM-1 — data management import / export
 
-- `data-management-service.ts` + `import-snapshot.ts` — add `kind`
-  (transactions) and `term` (loans) to the snapshot schema; bump the snapshot
-  version.
-- **Older snapshot (no `kind`/`term`):** run the **same backfill logic as
-  migration `0001`** (extract it into a shared pure function
-  `deriveKind({ subtype, isPending, type, loanType, recurringId })` — note
-  `recurringId`: recurring instances are detected by `recurring_id IS NOT NULL`,
-  not `subtype`) so imported rows are consistent, not blindly `default`.
-  `loan.term` → `long_term`.
-- **Newer snapshot than this app supports:** **rejected** with a clear message
-  (do not guess / partially import). Confirm/implement in `import-snapshot.ts`.
-- **Round-trip:** export → wipe → import → `kind` and `term` identical for every
-  row (acceptance).
+Actual backup architecture (confirmed during implementation): export =
+`data-management-service.ts` `buildBackupInMemory()` (`SELECT *`, so new columns
+ride along automatically); the import column allowlist + version constant live
+in `src/database/backup/backup-format.ts` (`ALLOWED_COLUMNS`, `SCHEMA_VERSION`);
+row insertion is `src/database/backup/backup-import-plan.ts` `insertRows()`;
+`import-snapshot.ts` is only emergency-snapshot file IO.
+
+- Add `"kind"` to `ALLOWED_COLUMNS.transactions` (and `"term"` to
+  `ALLOWED_COLUMNS.loans` in Slice 4); bump `SCHEMA_VERSION`.
+- **Cross-version import is rejected outright** — `validateBackup` does a strict
+  `meta.schemaVersion === SCHEMA_VERSION` check and refuses BOTH older and newer
+  backups with a clear message. This is the pre-existing, deliberate policy for
+  every schema bump; **do not relax it** in this work (a per-version upgrade
+  framework is out of scope). So a real exported backup always either carries
+  `kind` (same version) or is rejected before import.
+- **`deriveKind` fallback** (`src/domain/derive-kind.ts`, pure, type-only
+  imports) still earns its place: it runs in `insertRows` for any transaction
+  row that reaches insertion WITHOUT a `kind` — i.e. `recoverInterruptedImport`
+  emergency snapshots written by an older build, and hand-edited /
+  programmatically-built snapshots. Precedence mirrors migration `0001`: loan
+  link > recurring (`recurringId != null || subtype === 'recurring'`) >
+  pending(non-transfer) > default. Loan type is resolved from an in-memory
+  `buildLoanTypeMap(data.loans)` (no import reorder); unresolvable → `null`.
+- **Round-trip (same version):** export → wipe → import → `kind` identical for
+  every row (acceptance).
 
 ### Old-value cleanup — grep literals, not just enums
 
