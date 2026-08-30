@@ -1300,7 +1300,7 @@
         "currencyCount_one": "عملة واحدة",
         "currencyCount_other": "{{count}} عملات",
         "attachments": "المرفقات",
-        "pendingStatus": "حالة المعلقة",
+        "pendingStatus": "حالة الجدولة",
         "thisMonth": "هذا الشهر",
         "untitled": "بدون عنوان",
         "typeCount": "عدد النوع"
@@ -1311,8 +1311,8 @@
       },
       "pendingOptions": {
         "all": "الكل",
-        "pending": "معلقة",
-        "notPending": "غير معلقة"
+        "pending": "مجدولة",
+        "notPending": "غير مجدولة"
       },
       "groupByOptions": {
         "hour": "الساعة",

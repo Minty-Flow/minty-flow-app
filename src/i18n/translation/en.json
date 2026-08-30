@@ -1300,7 +1300,7 @@
         "currencyCount_one": "{{count}} currency",
         "currencyCount_other": "{{count}} currencies",
         "attachments": "Attachments",
-        "pendingStatus": "Pending Status",
+        "pendingStatus": "Scheduled Status",
         "thisMonth": "This month",
         "untitled": "Untitled",
         "typeCount": "type count"
@@ -1311,8 +1311,8 @@
       },
       "pendingOptions": {
         "all": "All",
-        "pending": "Pending",
-        "notPending": "Not Pending"
+        "pending": "Scheduled",
+        "notPending": "Not Scheduled"
       },
       "groupByOptions": {
         "hour": "Hour",
