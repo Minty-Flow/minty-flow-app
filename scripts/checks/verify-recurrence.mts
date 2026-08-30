@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict"
 import { endOfDay } from "date-fns"
+// Node's ESM loader exposes rrule's webpack bundle only via its default export;
+// recurrence.ts does the cross-runtime normalisation for the app itself.
 import RRulePkg from "rrule"
 const { RRule } = RRulePkg
 
