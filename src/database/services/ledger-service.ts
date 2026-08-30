@@ -62,6 +62,7 @@ const txSelection = {
   requires_manual_confirmation: transactions.requiresManualConfirmation,
   account_balance_before: transactions.accountBalanceBefore,
   subtype: transactions.subtype,
+  kind: transactions.kind,
   extra: transactions.extra,
   has_attachments: transactions.hasAttachments,
   recurring_id: transactions.recurringId,

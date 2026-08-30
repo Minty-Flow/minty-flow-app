@@ -40,6 +40,7 @@ export interface RowTransaction {
   requires_manual_confirmation: number // 0 | 1 (DEFAULT 0)
   account_balance_before: number
   subtype: string | null
+  kind: string
   extra: string | null // JSON
   has_attachments: number // 0 | 1
   recurring_id: string | null

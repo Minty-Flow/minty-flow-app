@@ -1,5 +1,6 @@
 import type {
   Transaction,
+  TransactionKind,
   TransactionSubType,
   TransactionType,
 } from "~/types/transactions"
@@ -35,6 +36,7 @@ export function mapTransaction(row: RowTransaction): Transaction {
     requiresManualConfirmation: !!row.requires_manual_confirmation,
     accountBalanceBefore: row.account_balance_before,
     subtype: row.subtype as TransactionSubType,
+    kind: (row.kind as TransactionKind) ?? "default",
     extra: parseExtra(row.extra, row.id),
     categoryId: row.category_id,
     accountId: row.account_id,
