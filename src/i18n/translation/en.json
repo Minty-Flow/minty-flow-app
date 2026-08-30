@@ -57,6 +57,12 @@
         "income": "Income",
         "transfer": "Transfer"
       },
+      "tabs": {
+        "lent": "Lent",
+        "borrowed": "Borrowed",
+        "paid": "Paid",
+        "collected": "Collected"
+      },
       "untitledTransaction": "Untitled Transaction",
       "uncategorized": "uncategorized"
     },

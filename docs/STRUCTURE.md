@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T03:23:31.851Z
+Generated on: 2026-08-30T03:26:57.764Z
 ```
 ./
 ├── .github/
@@ -41,6 +41,7 @@ Generated on: 2026-08-30T03:23:31.851Z
 │       │   ├── task-1-report.md
 │       │   ├── task-10-brief.md
 │       │   ├── task-11-brief.md
+│       │   ├── task-12-brief.md
 │       │   ├── task-2-brief.md
 │       │   ├── task-2-report.md
 │       │   ├── task-3-brief.md
@@ -353,6 +354,7 @@ Generated on: 2026-08-30T03:23:31.851Z
 │   │   │   │   ├── form-utils.ts
 │   │   │   │   ├── form.styles.ts
 │   │   │   │   ├── index.tsx
+│   │   │   │   ├── transaction-top-tabs.tsx
 │   │   │   │   ├── types.ts
 │   │   │   │   ├── use-form-attachments.ts
 │   │   │   │   ├── use-form-conversion-rate.ts
@@ -378,8 +380,7 @@ Generated on: 2026-08-30T03:23:31.851Z
 │   │   │   ├── edit-recurring-modal.tsx
 │   │   │   ├── location-picker-modal.tsx
 │   │   │   ├── notes-modal.tsx
-│   │   │   ├── transaction-section-list.tsx
-│   │   │   └── transaction-type-selector.tsx
+│   │   │   └── transaction-section-list.tsx
 │   │   ├── ui/
 │   │   │   ├── date-time-picker/
 │   │   │   │   ├── date-time-picker-modal.tsx
