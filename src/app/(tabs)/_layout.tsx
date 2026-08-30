@@ -108,6 +108,10 @@ const AnimatedFABOption = ({
     const p = progress.value
     return {
       opacity: p,
+      // Only tappable once the option has visibly moved out from behind the
+      // center "+" — otherwise a fast second tap right after expanding lands on
+      // an invisible option stacked under the "+" and opens a transaction.
+      pointerEvents: p > 0.6 ? "auto" : "none",
       transform: [
         { translateX: pos.left * (p - 1) },
         { translateY: pos.top * (p - 1) },
@@ -119,7 +123,6 @@ const AnimatedFABOption = ({
     <AnimatedPressable
       {...tooltipProps}
       onPress={option.onPress}
-      pointerEvents={isExpanded ? "auto" : "none"}
       style={[
         styles.fabOptionWrapper,
         pos,
@@ -335,6 +338,7 @@ const TabLayout = () => {
               tooltipText={t("navigation.tabs.addTransaction")}
               size="icon"
               onPress={toggleFab}
+              hitSlop={{ top: 16, left: 16, right: 16, bottom: 8 }}
               style={[
                 styles.centerButton,
                 { backgroundColor: theme.colors.primary },
