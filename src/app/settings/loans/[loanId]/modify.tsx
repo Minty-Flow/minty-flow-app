@@ -9,7 +9,7 @@ import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-m
 import { useCategories } from "~/database/drizzle/read-models/category-read-model"
 import { useLoansQuery } from "~/database/drizzle/read-models/loan-read-model"
 import { useModifyRouteLoader } from "~/hooks/use-modify-route-loader"
-import { type LoanType, LoanTypeEnum } from "~/types/loans"
+import { type LoanTerm, type LoanType, LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
 export default function LoanModifyScreen() {
   const params = useLocalSearchParams<{
@@ -19,6 +19,7 @@ export default function LoanModifyScreen() {
     prefillAccountId?: string
     prefillAmount?: string
     prefillLoanType?: string
+    prefillTerm?: string
   }>()
   const loanId = params.loanId ?? NewEnum.NEW
   const loansQuery = useLoansQuery()
@@ -32,10 +33,15 @@ export default function LoanModifyScreen() {
   const accounts = useActiveAccounts()
   const categories = useCategories()
   const prefill = (() => {
+    const term =
+      params.prefillTerm === "one_time" || params.prefillTerm === "long_term"
+        ? (params.prefillTerm as LoanTerm)
+        : undefined
     if (
       !params.prefillName &&
       !params.prefillAccountId &&
-      !params.prefillAmount
+      !params.prefillAmount &&
+      !term
     )
       return undefined
     return {
@@ -52,6 +58,7 @@ export default function LoanModifyScreen() {
       )
         ? (params.prefillLoanType as LoanType)
         : undefined,
+      term,
     }
   })()
   if (loadState.mode === "new") {

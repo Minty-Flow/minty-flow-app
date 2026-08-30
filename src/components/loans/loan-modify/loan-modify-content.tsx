@@ -69,6 +69,7 @@ export function LoanModifyContent({
     resolver: zodResolver(addLoanSchema),
     defaultValues: {
       loanType: loan?.loanType ?? prefill?.loanType ?? LoanTypeEnum.LENT,
+      term: loan?.term ?? prefill?.term ?? "long_term",
       name: loan?.name ?? prefill?.name ?? "",
       description: loan?.description ?? prefill?.description ?? null,
       icon: loan?.icon ?? "scale-outline",
@@ -80,6 +81,7 @@ export function LoanModifyContent({
     },
   })
   const formLoanType = watch("loanType")
+  const formTerm = watch("term") ?? "long_term"
   const formName = watch("name")
   const formIcon = watch("icon")
   const formColorSchemeName = watch("colorSchemeName")
@@ -249,6 +251,18 @@ export function LoanModifyContent({
             }}
             variant="segmented"
           />
+
+          {/* Term — chosen on the Loans screen tab, read-only here */}
+          <View style={loanModifyStyles.nameSection}>
+            <Text variant="small" style={loanModifyStyles.label}>
+              {t("screens.settings.loans.term.label")}
+            </Text>
+            <Text variant="default" style={loanModifyStyles.switchLabel}>
+              {formTerm === "long_term"
+                ? t("screens.settings.loans.term.longTerm")
+                : t("screens.settings.loans.term.oneTime")}
+            </Text>
+          </View>
 
           {/* Icon picker */}
           <ChangeIconInline
