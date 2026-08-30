@@ -42,14 +42,11 @@ export const TransactionKindEnum = {
 export type TransactionKind =
   (typeof TransactionKindEnum)[keyof typeof TransactionKindEnum]
 
+// `refund` is the only live subtype. Recurring / one-time / loan classification
+// moved to `kind` (Slices 1–4). Legacy rows may still carry the retired string
+// values in `subtype`; they are tolerated at read time and dropped on next save.
 export const TransactionSubTypeEnum = {
-  RECURRING: "recurring",
-  ONE_TIME: "one-time",
   REFUND: "refund",
-  LOAN_BORROWED: "loan_borrowed",
-  LOAN_REPAYMENT: "loan_repayment",
-  LOAN_LENT: "loan_lent",
-  LOAN_RECEIVED: "loan_received",
 } as const
 
 export type TransactionSubType =

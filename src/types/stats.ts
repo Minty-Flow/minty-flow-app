@@ -92,12 +92,6 @@ export interface ForecastSummary {
   forecastedNet: number
 }
 
-export interface ExpenseBySubtype {
-  recurring: number
-  oneTime: number
-  unclassified: number
-}
-
 export interface TopTagItem {
   tagId: string
   tagName: string
@@ -159,8 +153,6 @@ export interface CurrencyStats {
   spendingByDayOfWeek: DayOfWeekPoint[]
   /** Forecast for in-progress ranges; null for historical ranges */
   forecast: ForecastSummary | null
-  /** Expense split by transaction subtype */
-  expenseBySubtype: ExpenseBySubtype
   /** Top tags by expense */
   topTags: TopTagItem[]
   /** Per-account breakdown */

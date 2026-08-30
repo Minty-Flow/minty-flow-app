@@ -69,7 +69,9 @@ export function getDefaultValues(
     budgetId: transaction.budgetId ?? null,
     loanId: transaction.loanId ?? null,
     location: transaction.location,
-    subtype: transaction.subtype ?? null,
+    // Drop retired legacy subtype values (recurring / one-time / loan_*) so the
+    // form's zod resolver doesn't reject an edit of an old row.
+    subtype: transaction.subtype === "refund" ? "refund" : null,
     kind: initialKind ?? transaction.kind ?? "default",
     conversionRate: null,
   }
