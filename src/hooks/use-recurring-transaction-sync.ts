@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect } from "react"
 import { AppState } from "react-native"
 
 import { synchronizeAllRecurringTransactions } from "~/database/services/recurring-transaction-service"
@@ -8,27 +8,25 @@ import { usePendingTransactionsStore } from "~/stores/pending-transactions.store
 import { logger } from "~/utils/logger"
 
 /**
- * Debounce delay applied to every sync trigger — both the initial mount sync
- * and subsequent AppState "active" transitions. The delay coalesces rapid
- * foreground events (e.g. permission dialogs, in-app modals that briefly
- * background the app) into a single database write, preventing duplicate
- * recurring-transaction rows.
+ * Debounce delay applied to every sync trigger — the initial mount sync and
+ * AppState "active" transitions. Coalesces rapid foreground events (permission
+ * dialogs, brief in-app backgrounding) into a single pass, preventing duplicate
+ * recurring-transaction rows and redundant sweeps.
  */
 const SYNC_DEBOUNCE_MS = 1_000
 
 /**
- * Syncs recurring transactions: once on mount and whenever the app returns to foreground.
- * Also runs auto-confirm of past-due pending transactions on startup (after first sync).
+ * On mount and on every app foreground: generate due recurring instances, then
+ * (once the pending-transactions store has hydrated) configure + start the
+ * auto-confirmation service and run a full `sweep()` of all pending rows.
  *
- * Bug #2: This is the ONLY place that should trigger the recurring generator.
- * Do not call synchronizeAllRecurringTransactions from screens, context, or store
- * subscriptions — that causes double-runs and duplicate transactions.
+ * This is the ONLY place that triggers the recurring generator — calling it from
+ * screens/context/store subscriptions causes double-runs and duplicate rows.
  *
- * Hydration-aware: Waits for PendingTransactionsStore to hydrate before configuring
- * the auto-confirmation service to prevent non-reactive store reads.
- *
- * Both the initial sync and AppState-driven syncs are debounced by SYNC_DEBOUNCE_MS
- * so every code path is consistent and coalesces rapid back-to-foreground events.
+ * The foreground sweep is what closes the warm-background gap: a pre-approved
+ * pending row dated outside the home list's date window (e.g. an overdue
+ * subscription from a previous month) is only visible to `getPendingTransactions()`,
+ * which `sweep()` reads in full — not just the rows the UI happens to render.
  */
 export function useRecurringTransactionSync(): void {
   const isHydrated = usePendingTransactionsStore((s) => s.isHydrated)
@@ -42,33 +40,27 @@ export function useRecurringTransactionSync(): void {
   const updateDateUponConfirmation = usePendingTransactionsStore(
     (s) => s.updateDateUponConfirmation,
   )
-  const isFirstSyncRef = useRef(true)
 
   const sync = useCallback(async () => {
     try {
       await synchronizeAllRecurringTransactions()
 
-      // Consume the first-sync sentinel only once the startup auto-confirm has
-      // actually been dispatched. A first sync that lands before the pending-
-      // transactions store hydrates leaves the sentinel set, so the next sync
-      // (post-hydration) still runs the configure + startup sweep instead of it
-      // being skipped for the whole session.
-      if (isFirstSyncRef.current && isHydrated) {
-        isFirstSyncRef.current = false
+      // Skip auto-confirm until preferences have hydrated — configuring with
+      // default switch values would auto-confirm rows the user opted out of.
+      if (!isHydrated) return
 
-        autoConfirmationService.configure({
-          autoPaySubscriptions,
-          autoPayRepetitive,
-          autoPayUpcoming,
-          updateDateUponConfirmation,
-        })
-
-        await autoConfirmationService
-          .runAutoConfirmDueOnStartup()
-          .catch((e) =>
-            logger.error("Auto-confirm failed", { error: String(e) }),
-          )
-      }
+      autoConfirmationService.configure({
+        autoPaySubscriptions,
+        autoPayRepetitive,
+        autoPayUpcoming,
+        updateDateUponConfirmation,
+      })
+      autoConfirmationService.start()
+      await autoConfirmationService
+        .sweep()
+        .catch((e) =>
+          logger.error("Auto-confirm sweep failed", { error: String(e) }),
+        )
     } catch (e) {
       logger.error("Recurring sync failed", { error: String(e) })
     }
@@ -84,7 +76,6 @@ export function useRecurringTransactionSync(): void {
   }, SYNC_DEBOUNCE_MS)
 
   useEffect(() => {
-    // Initial sync — debounced for consistency with AppState-driven syncs.
     debouncedSync()
 
     const sub = AppState.addEventListener("change", (state) => {
