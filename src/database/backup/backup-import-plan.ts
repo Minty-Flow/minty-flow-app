@@ -10,11 +10,23 @@ import {
 } from "~/database/backup/backup-format"
 import { runInTransaction } from "~/database/transaction"
 import { deriveKind } from "~/domain/derive-kind"
+import { LoanTermEnum } from "~/types/loans"
 import { TransactionKindEnum } from "~/types/transactions"
 
 type Db = Parameters<Parameters<typeof runInTransaction>[1]>[0]
 
 const KNOWN_KINDS = new Set<string>(Object.values(TransactionKindEnum))
+const KNOWN_LOAN_TERMS = new Set<string>(Object.values(LoanTermEnum))
+
+/**
+ * `term`-less loan rows come from v4-or-earlier snapshots; those loans all
+ * predate Slice 4, so they are progress-tracked long-term loans.
+ */
+function resolveLoanTerm(row: RawRow): string {
+  return typeof row.term === "string" && KNOWN_LOAN_TERMS.has(row.term)
+    ? row.term
+    : LoanTermEnum.LONG_TERM
+}
 
 /** Maps loan id → normalized loan_type, for deriveKind on `kind`-less transaction rows. */
 function buildLoanTypeMap(loans: RawRow[]): Map<string, "lent" | "borrowed"> {
@@ -68,6 +80,7 @@ function insertRows(
   const cols = ALLOWED_COLUMNS[tableName] ?? []
   if (cols.length === 0) return
   const isTransactions = tableName === "transactions"
+  const isLoans = tableName === "loans"
   const queryPrefix = `INSERT INTO ${tableName} (${cols.join(", ")}) VALUES `
 
   for (const row of rows) {
@@ -77,6 +90,9 @@ function insertRows(
       }
       if (isTransactions && col === "kind") {
         return resolveTransactionKind(row, loanTypeById ?? new Map())
+      }
+      if (isLoans && col === "term") {
+        return resolveLoanTerm(row)
       }
       return normalizeColumnValue(col, row[col])
     })

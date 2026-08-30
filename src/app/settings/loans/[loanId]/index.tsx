@@ -132,7 +132,11 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
       date: formatShortMonthDay(loan.dueDate),
     })
   }
-  const subtitleParts = [account?.name, dueText()].filter(Boolean)
+  const termLabel =
+    loan.term === "long_term"
+      ? t("screens.settings.loans.term.longTerm")
+      : t("screens.settings.loans.term.oneTime")
+  const subtitleParts = [account?.name, termLabel, dueText()].filter(Boolean)
   const subtitleColor =
     loan.isOverdue && !isPaid ? theme.colors.semantic.expense : mutedColor
   const badgeLabel = isPaid

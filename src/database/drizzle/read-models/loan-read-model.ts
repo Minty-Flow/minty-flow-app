@@ -1,7 +1,7 @@
 import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 
 import { getThemeStrict } from "~/styles/theme/registry"
-import type { Loan, LoanType } from "~/types/loans"
+import type { Loan, LoanTerm, LoanType } from "~/types/loans"
 
 import { drizzleDb } from "../db"
 import { loans } from "../schema"
@@ -21,6 +21,7 @@ export function useLoansQuery(): LiveReadModelResult<Loan[]> {
       description: row.description,
       principalAmount: row.principalAmount,
       loanType: row.loanType as LoanType,
+      term: (row.term as LoanTerm) ?? "one_time",
       dueDate: row.dueDate != null ? new Date(row.dueDate) : null,
       accountId: row.accountId,
       categoryId: row.categoryId,

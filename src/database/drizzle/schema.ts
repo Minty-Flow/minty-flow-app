@@ -280,6 +280,7 @@ export const loans = sqliteTable(
     description: text("description"),
     principalAmount: integer("principal_amount").notNull(),
     loanType: text("loan_type").notNull(),
+    term: text("term").notNull().default("one_time"),
     dueDate: text("due_date"),
     accountId: text("account_id")
       .notNull()
@@ -301,6 +302,7 @@ export const loans = sqliteTable(
       "loans_loan_type_check",
       sql`${table.loanType} IN ('lent', 'borrowed')`,
     ),
+    check("loans_term_check", sql`${table.term} IN ('one_time', 'long_term')`),
     index("idx_loan_account").on(table.accountId),
     index("idx_loan_category").on(table.categoryId),
   ],

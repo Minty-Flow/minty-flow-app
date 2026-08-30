@@ -697,6 +697,10 @@
           "lent": "Lent",
           "borrowed": "Borrowed"
         },
+        "term": {
+          "oneTime": "One-time",
+          "longTerm": "Long-term"
+        },
         "card": {
           "paid": "Paid",
           "paidBack": "Paid back",
