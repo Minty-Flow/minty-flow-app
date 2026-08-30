@@ -10,13 +10,13 @@ import type { Goal } from "~/types/goals"
 import type { Loan } from "~/types/loans"
 import type { Tag } from "~/types/tags"
 import type {
-  RecurringFrequency,
+  Recurrence,
   TransactionAttachment,
   TransactionKind,
   TransactionType,
 } from "~/types/transactions"
 
-export type DatePickerTarget = "transaction" | "recurringStart" | "recurringEnd"
+export type DatePickerTarget = "transaction" | "recurringEnd"
 
 export interface TransactionFormV4Props {
   transaction: TransactionWithRelations | null
@@ -53,12 +53,9 @@ export type DatePickerState = {
 }
 
 export type RecurringState = {
-  enabled: boolean
-  frequency: RecurringFrequency
+  recurrence: Recurrence
+  until: Date | null
   startDate: Date
-  endDate: Date | null
-  endAfterOccurrences: number | null
-  endsOnPickerExpanded: boolean
 }
 
 export type AttachmentState = {

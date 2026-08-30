@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T10:46:52.228Z
+Generated on: 2026-08-30T10:58:58.000Z
 ```
 ./
 ├── .github/
@@ -70,6 +70,7 @@ Generated on: 2026-08-30T10:46:52.228Z
 │       │   └── task-9-report.md
 │       ├── 2026-08-30-transaction-kind-slice-2/
 │       │   ├── progress.md
+│       │   ├── review-1a7d18c..5651730.diff
 │       │   ├── review-5f5eeef..1a7d18c.diff
 │       │   ├── task-1-brief.md
 │       │   ├── task-1-report.md
@@ -372,13 +373,14 @@ Generated on: 2026-08-30T10:46:52.228Z
 │   │   │   │   ├── form-loan-picker.tsx
 │   │   │   │   ├── form-modals.tsx
 │   │   │   │   ├── form-notes-section.tsx
-│   │   │   │   ├── form-recurring-section.tsx
 │   │   │   │   ├── form-tags-picker.tsx
 │   │   │   │   ├── form-to-account-picker.tsx
 │   │   │   │   ├── form-utils.ts
 │   │   │   │   ├── form.styles.ts
 │   │   │   │   ├── index.tsx
 │   │   │   │   ├── on-kind-change.ts
+│   │   │   │   ├── recurrence-card.tsx
+│   │   │   │   ├── recurrence-unit-modal.tsx
 │   │   │   │   ├── transaction-top-tabs.tsx
 │   │   │   │   ├── types.ts
 │   │   │   │   ├── use-form-attachments.ts

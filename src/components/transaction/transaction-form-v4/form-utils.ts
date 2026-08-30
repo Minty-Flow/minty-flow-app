@@ -1,49 +1,11 @@
 import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
-import i18n from "~/i18n/config"
 import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import type { Account } from "~/types/accounts"
 import {
-  type RecurringFrequency,
   type TransactionKind,
   type TransactionType,
   TransactionTypeEnum,
 } from "~/types/transactions"
-import {
-  formatDayName,
-  formatMonthDay,
-  formatOrdinalDay,
-} from "~/utils/time-utils"
-
-export function getRecurrenceDisplayLabel(
-  frequency: RecurringFrequency,
-  startDate: Date,
-) {
-  const { t } = i18n
-
-  if (frequency === null) return t("components.recurring.frequency.none")
-  switch (frequency) {
-    case "daily":
-      return t("components.recurring.frequency.daily")
-    case "weekly":
-      return t("components.recurring.frequency.weekly", {
-        day: formatDayName(startDate),
-      })
-    case "biweekly":
-      return t("components.recurring.frequency.biweekly", {
-        day: formatDayName(startDate),
-      })
-    case "monthly":
-      return t("components.recurring.frequency.monthly", {
-        date: formatOrdinalDay(startDate),
-      })
-    case "yearly":
-      return t("components.recurring.frequency.yearly", {
-        date: formatMonthDay(startDate),
-      })
-    default:
-      return t("components.recurring.frequency.none")
-  }
-}
 
 export function getDefaultValues(
   transaction: TransactionWithRelations | null,

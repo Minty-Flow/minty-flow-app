@@ -29,7 +29,6 @@ import { FormKindSelector } from "./form-kind-selector"
 import { FormLoanPicker } from "./form-loan-picker"
 import { FormModals } from "./form-modals"
 import { FormNotesSection } from "./form-notes-section"
-import { FormRecurringSection } from "./form-recurring-section"
 import { FormTagsPicker } from "./form-tags-picker"
 import { FormToAccountPicker } from "./form-to-account-picker"
 import { TransactionTopTabs } from "./transaction-top-tabs"
@@ -106,8 +105,8 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
             />
           )}
 
-          {/* Date + Pending: hidden when recurring is enabled */}
-          {!f.recurring.enabled && (
+          {/* Date + Pending: hidden for subscription/repetitive kinds */}
+          {!f.isRecurringKind && (
             <FormDateSection
               date={f.date}
               control={f.control}
@@ -120,7 +119,24 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
             onSelect={f.setKind}
             disabled={!f.canEditKind}
           />
-          <FormKindCard kind={f.kind} />
+          <FormKindCard
+            kind={f.kind}
+            recurrence={f.recurring.recurrence}
+            until={f.recurring.until}
+            occurrenceCount={f.occurrenceCount}
+            onIntervalChange={(n) =>
+              f.setRecurring({
+                recurrence: { ...f.recurring.recurrence, interval: n },
+              })
+            }
+            onUnitChange={(u) =>
+              f.setRecurring({
+                recurrence: { ...f.recurring.recurrence, unit: u },
+              })
+            }
+            onUntilPress={() => f.openDatePicker("recurringEnd")}
+            onUntilReset={() => f.setRecurring({ until: null })}
+          />
 
           {/* Title: hidden by default — derives from category name */}
           {showTitle && (
@@ -251,7 +267,6 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
           />
 
           {transactionType === TransactionTypeEnum.EXPENSE &&
-            !f.recurring.enabled &&
             f.kind !== "subscription" &&
             f.kind !== "repetitive" && (
               <ListItem
@@ -259,7 +274,6 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
                 onPress={f.handleRefundToggle}
                 accessibilityRole="switch"
                 accessibilityState={{ checked: f.isRefund }}
-                disabled={f.recurring.enabled}
               >
                 <View style={transactionFormStyles.switchLeft}>
                   <DynamicIcon
@@ -275,58 +289,8 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
                     {t("components.transactionForm.fields.refundLabel")}
                   </Text>
                 </View>
-                <Switch value={f.isRefund} disabled={f.recurring.enabled} />
+                <Switch value={f.isRefund} />
               </ListItem>
-            )}
-
-          {!f.isRefund &&
-            f.kind !== "subscription" &&
-            f.kind !== "repetitive" && (
-              <FormRecurringSection
-                enabled={f.recurring.enabled}
-                frequency={f.recurring.frequency}
-                startDate={f.recurring.startDate}
-                endDate={f.recurring.endDate}
-                endAfterOccurrences={f.recurring.endAfterOccurrences}
-                endsOnPickerExpanded={f.recurring.endsOnPickerExpanded}
-                endsOnType={f.endsOnType}
-                recurringEndDateOccurrenceCount={
-                  f.recurringEndDateOccurrenceCount
-                }
-                onToggle={f.handleRecurringToggle}
-                onFrequencyChange={(freq) =>
-                  f.setRecurring({ frequency: freq })
-                }
-                onStartDatePress={() => f.openDatePicker("recurringStart")}
-                onEndPickerToggle={() =>
-                  f.setRecurring({
-                    endsOnPickerExpanded: !f.recurring.endsOnPickerExpanded,
-                  })
-                }
-                onEndTypeNever={() =>
-                  f.setRecurring({
-                    endDate: null,
-                    endAfterOccurrences: null,
-                    endsOnPickerExpanded: false,
-                  })
-                }
-                onEndTypeDate={() => {
-                  f.setRecurring({
-                    endAfterOccurrences: null,
-                    endsOnPickerExpanded: false,
-                  })
-                  f.openDatePicker("recurringEnd")
-                }}
-                onEndTypeOccurrences={() =>
-                  f.setRecurring({
-                    endDate: null,
-                    endAfterOccurrences: f.recurring.endAfterOccurrences ?? 4,
-                  })
-                }
-                onOccurrencePreset={(n) =>
-                  f.setRecurring({ endAfterOccurrences: n })
-                }
-              />
             )}
 
           {f.locationEnabled && (

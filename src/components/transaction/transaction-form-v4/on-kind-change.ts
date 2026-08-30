@@ -1,4 +1,4 @@
-import type { TransactionKind } from "~/types/transactions"
+import type { Recurrence, TransactionKind } from "~/types/transactions"
 
 import type { RecurringState } from "./types"
 
@@ -15,20 +15,14 @@ export type KindScratchState = {
 }
 
 const RECURRING_KINDS = new Set<TransactionKind>(["subscription", "repetitive"])
+const DEFAULT_RECURRENCE: Recurrence = { interval: 1, unit: "month" }
 
-function disabledRecurring(): RecurringState {
+function freshRecurrence(): RecurringState {
   return {
-    enabled: false,
-    frequency: "daily" as RecurringState["frequency"],
+    recurrence: { ...DEFAULT_RECURRENCE },
+    until: null,
     startDate: new Date(),
-    endDate: null,
-    endAfterOccurrences: null,
-    endsOnPickerExpanded: false,
   }
-}
-
-function enabledRecurring(): RecurringState {
-  return { ...disabledRecurring(), enabled: true }
 }
 
 /**
@@ -43,12 +37,12 @@ export function onKindChange(
 ): Partial<KindScratchState> {
   if (prev === next) return {}
 
-  // subscription <-> repetitive: keep the recurrence scratch untouched.
+  // subscription <-> repetitive: label only, keep the recurrence scratch.
   if (RECURRING_KINDS.has(prev) && RECURRING_KINDS.has(next)) return {}
 
   if (next === "default" || next === "upcoming") {
     const out: Partial<KindScratchState> = {
-      recurring: disabledRecurring(),
+      recurring: freshRecurrence(),
       loanDraft: null,
       linkedLoanId: null,
     }
@@ -59,18 +53,14 @@ export function onKindChange(
     return out
   }
 
-  if (next === "subscription" || next === "repetitive") {
-    const out: Partial<KindScratchState> = {
-      loanDraft: null,
-      linkedLoanId: null,
-    }
-    if (!state.recurring?.enabled) out.recurring = enabledRecurring()
-    return out
+  if (RECURRING_KINDS.has(next)) {
+    // arrived from a non-recurring kind -> seed a fresh recurrence
+    return { recurring: freshRecurrence(), loanDraft: null, linkedLoanId: null }
   }
 
   // next is "lent" | "borrowed"
   return {
-    recurring: disabledRecurring(),
+    recurring: freshRecurrence(),
     loanDraft: { name: "", dueDate: null },
     toAccountId: undefined,
   }

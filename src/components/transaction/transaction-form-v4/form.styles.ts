@@ -393,6 +393,37 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   recurringSwitchRow: {
     justifyContent: "space-between",
   },
+  recurrenceRow: {
+    marginHorizontal: H_PAD,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SECTION_GAP,
+    marginBottom: FORM_GAP,
+  },
+  stepperButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: theme.radius,
+    backgroundColor: theme.colors.secondary,
+  },
+  stepperValue: {
+    minWidth: 36,
+    textAlign: "center",
+    writingDirection: "ltr",
+    color: theme.colors.onSurface,
+  },
+  recurrenceUnitButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: ROW_PADDING_V,
+    paddingHorizontal: BUTTON_PAD_H,
+    borderRadius: theme.radius,
+    backgroundColor: theme.colors.secondary,
+  },
   recurringSubSection: {
     marginTop: 2 * FORM_GAP,
   },
