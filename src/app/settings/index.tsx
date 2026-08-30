@@ -20,6 +20,7 @@ interface SettingsItem {
   soon?: boolean
 }
 
+// Understand -> Manage -> Organize -> Admin.
 const moneyManagementItems: SettingsItem[] = [
   {
     titleKey: "screens.settings.insights.title",
@@ -32,34 +33,14 @@ const moneyManagementItems: SettingsItem[] = [
     icon: "wallet-outline",
   },
   {
-    titleKey: "components.categories.title",
-    route: "/settings/categories",
-    icon: "category-2-outline",
-  },
-  {
-    titleKey: "screens.settings.tags.title",
-    route: "/settings/tags",
-    icon: "tags-outline",
-  },
-  {
-    titleKey: "screens.settings.trash.title",
-    route: "/settings/trash",
-    icon: "trash-outline",
-  },
-  {
-    titleKey: "screens.settings.loans.title",
-    route: "/settings/loans",
-    icon: "scale-outline",
+    titleKey: "screens.settings.budgets.title",
+    route: "/settings/budgets",
+    icon: "chart-pie-outline",
   },
   {
     titleKey: "screens.settings.goals.title",
     route: "/settings/goals",
     icon: "target-outline",
-  },
-  {
-    titleKey: "screens.settings.budgets.title",
-    route: "/settings/budgets",
-    icon: "chart-pie-outline",
   },
   {
     titleKey: "screens.settings.pending.title",
@@ -70,6 +51,26 @@ const moneyManagementItems: SettingsItem[] = [
     titleKey: "screens.settings.billSplitter.title",
     route: "/settings/bill-splitter",
     icon: "page-break-outline",
+  },
+  {
+    titleKey: "components.categories.title",
+    route: "/settings/categories",
+    icon: "category-2-outline",
+  },
+  {
+    titleKey: "screens.settings.tags.title",
+    route: "/settings/tags",
+    icon: "tags-outline",
+  },
+  {
+    titleKey: "screens.settings.loans.title",
+    route: "/settings/loans",
+    icon: "scale-outline",
+  },
+  {
+    titleKey: "screens.settings.trash.title",
+    route: "/settings/trash",
+    icon: "trash-outline",
   },
 ]
 
@@ -117,11 +118,8 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {/* Other Settings Section */}
-      <View style={styles.section}>
-        <Text variant="small" style={styles.sectionTitle}>
-          {t("screens.settings.sections.other")}
-        </Text>
+      {/* Admin: quieter, set apart by spacing rather than a section label */}
+      <View style={[styles.section, styles.adminSection]}>
         <View>
           {otherSettingsItems.map((item) => (
             <ActionItem
@@ -180,13 +178,8 @@ const styles = StyleSheet.create((theme) => ({
   section: {
     marginBottom: 20,
   },
-  sectionTitle: {
-    paddingHorizontal: 20,
-    ...theme.typography.labelXSmall,
-    fontWeight: "600",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    color: theme.colors.semantic.semi,
+  adminSection: {
+    marginTop: 24,
   },
   footer: {
     alignItems: "center",
