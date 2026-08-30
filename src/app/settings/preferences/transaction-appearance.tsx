@@ -31,6 +31,7 @@ const BASE_TX = {
   extra: null,
   description: null,
   subtype: null,
+  kind: "default" as const,
   accountBalanceBefore: 0,
   budgetId: null,
   notes: null,

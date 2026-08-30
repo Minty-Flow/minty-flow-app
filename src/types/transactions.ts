@@ -40,6 +40,18 @@ export const TransactionTypeEnum = {
 export type TransactionType =
   (typeof TransactionTypeEnum)[keyof typeof TransactionTypeEnum]
 
+export const TransactionKindEnum = {
+  DEFAULT: "default",
+  UPCOMING: "upcoming",
+  SUBSCRIPTION: "subscription",
+  REPETITIVE: "repetitive",
+  LENT: "lent",
+  BORROWED: "borrowed",
+} as const
+
+export type TransactionKind =
+  (typeof TransactionKindEnum)[keyof typeof TransactionKindEnum]
+
 export const TransactionSubTypeEnum = {
   RECURRING: "recurring",
   ONE_TIME: "one-time",
@@ -71,6 +83,7 @@ export interface TransactionLocation {
 export interface Transaction {
   id: string
   type: TransactionType // "expense" | "income" | "transfer"
+  kind: TransactionKind
   transactionDate: Date
   isDeleted: boolean
   deletedAt: Date | null
