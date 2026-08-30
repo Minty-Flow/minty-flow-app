@@ -372,7 +372,7 @@ export function LoanModifyContent({
               <View style={loanModifyStyles.dueDateLeft}>
                 <IconSvg name="calendar-month" size={24} />
                 <Text variant="default" style={loanModifyStyles.switchLabel}>
-                  {t("screens.settings.goals.form.targetDateLabel")}
+                  {t("screens.settings.loans.form.dueDateLabel")}
                 </Text>
               </View>
               <View style={loanModifyStyles.dueDateRight}>

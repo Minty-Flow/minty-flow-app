@@ -719,7 +719,8 @@
         },
         "form": {
           "amountLabel": "المبلغ الأصلي",
-          "deleteLabel": "حذف القرض"
+          "deleteLabel": "حذف القرض",
+          "dueDateLabel": "تاريخ الاستحقاق"
         },
         "detail": {
           "title": "قرض",

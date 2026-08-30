@@ -719,7 +719,8 @@
         },
         "form": {
           "amountLabel": "Principal Amount",
-          "deleteLabel": "Delete Loan"
+          "deleteLabel": "Delete Loan",
+          "dueDateLabel": "Due Date"
         },
         "detail": {
           "title": "Loan",

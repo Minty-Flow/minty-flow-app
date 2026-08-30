@@ -23,7 +23,7 @@ const SLOT_TYPES: [TransactionType, TransactionType, TransactionType] = [
   TransactionTypeEnum.TRANSFER,
 ]
 
-// Icon stays mapped by slot index even when the label changes.
+// Default per-slot icons; the `icons` prop overrides them (e.g. lent/borrowed).
 const SLOT_ICONS: [IconSvgName, IconSvgName, IconSvgName] = [
   "chevrons-up-outline",
   "chevrons-down-outline",
