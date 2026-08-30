@@ -430,7 +430,7 @@ export function useTransactionForm({
         attachmentsJson,
         effectiveDate,
         requireConfirmation,
-        recurringEnabled: isRecurringKind,
+        recurringEnabled: isNew && isRecurringKind,
       })
       if (isNew) {
         if (data.kind === "subscription" || data.kind === "repetitive") {
