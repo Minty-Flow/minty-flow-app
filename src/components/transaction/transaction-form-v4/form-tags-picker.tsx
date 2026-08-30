@@ -20,7 +20,7 @@ import { getThemeStrict } from "~/styles/theme/registry"
 import { NewEnum } from "~/types/new"
 import type { Tag } from "~/types/tags"
 
-import { FieldLabel } from "./field-label"
+import { FieldLabel, FieldLabelRow } from "./field-label"
 import { transactionFormStyles } from "./form.styles"
 
 interface FormTagsPickerProps {
@@ -69,7 +69,7 @@ export function FormTagsPicker({
   }
   return (
     <RNView ref={wrapperRef} style={transactionFormStyles.fieldBlock}>
-      <View style={transactionFormStyles.sectionLabelRow}>
+      <FieldLabelRow style={transactionFormStyles.sectionLabelRow}>
         <FieldLabel style={transactionFormStyles.sectionLabelInRow}>
           {t("components.transactionForm.fields.tags")}
         </FieldLabel>
@@ -93,7 +93,7 @@ export function FormTagsPicker({
             {t("common.actions.clear")}
           </Text>
         </Pressable>
-      </View>
+      </FieldLabelRow>
       <View style={transactionFormStyles.tagsWrapGrid}>
         <Pressable
           style={[

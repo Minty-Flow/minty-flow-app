@@ -21,7 +21,7 @@ import { getThemeStrict } from "~/styles/theme/registry"
 import type { Account } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
 
-import { FieldLabel } from "./field-label"
+import { FieldLabel, FieldLabelRow } from "./field-label"
 import { transactionFormStyles } from "./form.styles"
 
 interface FormToAccountPickerProps {
@@ -70,7 +70,7 @@ export function FormToAccountPicker({
   if (transactionType !== "transfer") return null
   return (
     <View native ref={wrapperRef} style={transactionFormStyles.fieldBlock}>
-      <View style={transactionFormStyles.sectionLabelRow}>
+      <FieldLabelRow style={transactionFormStyles.sectionLabelRow}>
         <FieldLabel style={transactionFormStyles.sectionLabelInRow}>
           {t("components.transactionForm.fields.toAccount")}
         </FieldLabel>
@@ -90,7 +90,7 @@ export function FormToAccountPicker({
             {t("common.actions.clear")}
           </Text>
         </Pressable>
-      </View>
+      </FieldLabelRow>
       <Pressable
         style={[
           transactionFormStyles.accountTrigger,
