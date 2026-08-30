@@ -1116,50 +1116,70 @@ git commit -m "feat(transaction-form): kind selector, onKindChange matrix, new f
 
 ---
 
-## Task 12: retire non-`refund` subtype values + literal grep sweep
+## Task 12: drop migration `0001` `subtype`-NULL step + confirm form-plumbing cleanup
+
+**Re-scoped (controller ruling at Task 12, recorded in the ledger).** The
+original Task 12 shrank `TransactionSubTypeEnum` to `{REFUND}` and migrated every
+consumer. A grep at Task 12 found `LOAN_*` subtypes are load-bearing across
+`src/app/accounts/`, account detail, category detail, `summary-card`,
+`stats-data.computeExpenseBySubtype`, **and two write paths**
+(`loan-service.createLoan`, the loan Collect/Settle flow). That migration is
+Slice 4 (loans engine) + a later stats slice — not Slice 1. Worse, migration
+`0001`'s step-5 `UPDATE transactions SET subtype=NULL WHERE subtype IN
+('recurring','one-time','loan_*')` **orphans those loan-activity filters** for
+every user with existing loans. This task removes that step and verifies the
+genuinely-dead form plumbing is gone.
 
 **Files:**
-- Modify: `src/types/transactions.ts` (`TransactionSubTypeEnum` → `{ REFUND: "refund" }`)
-- Modify: every consumer surfaced by the grep list below
+- Modify: `drizzle/0001_deep_daredevil.sql` — delete the final
+  `UPDATE ... SET \`subtype\` = NULL ...` statement and the
+  `--> statement-breakpoint` before it. `0001` has not shipped; editing it in
+  place is correct (devices that already applied it skip by `folderMillis`; no
+  real user has run it).
+- Modify: `scripts/checks/verify-migration-0001.mts` — delete the
+  "only 'refund' subtype remains" assertion (`subtype IS NOT NULL AND subtype <>
+  'refund'` → 0). Leave the rest.
+- Modify: `drizzle/meta/0001_snapshot.json` — only if `pnpm drizzle-kit ...`
+  or the pre-commit hook flags a drift; the snapshot models schema DDL, not the
+  backfill, so it should be untouched. Do not hand-edit it otherwise.
 
-**Interfaces:**
-- Consumes: `kind` everywhere it now lives.
-- Produces: `TransactionSubTypeEnum` has only `REFUND`; `TransactionSubType = "refund"`. No code references `recurring` / `one-time` / `loan_*` subtypes.
+**Do NOT touch** `src/types/transactions.ts` `TransactionSubTypeEnum`, or any
+`subtype`-value consumer. Those move to Slice 4 / a later stats slice.
 
-- [ ] **Step 1: Grep for literals**
+- [ ] **Step 1: Remove step 5 from the migration**
+
+In `drizzle/0001_deep_daredevil.sql`, delete the last statement (the
+`SET \`subtype\` = NULL` one) and the `--> statement-breakpoint` line directly
+above it. The file now ends after the `kind = 'upcoming'` UPDATE.
+
+- [ ] **Step 2: Relax the verify script**
+
+In `scripts/checks/verify-migration-0001.mts`, remove the assertion block that
+checks `count(subtype IS NOT NULL AND subtype <> 'refund') = 0` (and its comment).
+Every other assertion stays.
+
+- [ ] **Step 3: Confirm the dead form plumbing is actually gone**
 
 Run:
 ```bash
-rg -n "recurring|one-time|loan_borrowed|loan_repayment|loan_lent|loan_received|biweekly|RecurringFrequency|RECURRING_OPTIONS|endAfterOccurrences|initialType|initialSubtype|TransactionTypeSelector|transaction-form-v3|showCategoryForUntitled" src
+rg -n "TransactionTypeSelector|transaction-form-v3|initialSubtype|onSubtypeChange" src
 ```
-Record every hit. Expected remaining owners after Slice 1: recurrence internals (`biweekly`, `RecurringFrequency`, `RECURRING_OPTIONS`, `endAfterOccurrences`) belong to **Slice 2** — leave them. `showCategoryForUntitled` belongs to **Slice 5** — leave it. Everything about `subtype` values `recurring`/`one-time`/`loan_*` and `TransactionTypeSelector`/`transaction-form-v3`/`initialSubtype` must be zero after this task.
-
-- [ ] **Step 2: Shrink the enum**
-
-In `src/types/transactions.ts`:
-
-```ts
-export const TransactionSubTypeEnum = {
-  REFUND: "refund",
-} as const
-
-export type TransactionSubType =
-  (typeof TransactionSubTypeEnum)[keyof typeof TransactionSubTypeEnum]
-```
-
-- [ ] **Step 3: Fix the fallout**
-
-`pnpm types` will list each break. Expected edits:
-- `recurring-transaction-service.ts` — `RecurringTransactionTemplate.subtype` field: it stored `one-time`/`recurring`; now that `kind` carries recurrence, set `subtype` in spawned `txData` to `data.subtype ?? null` only for `refund` passthrough; drop any `TransactionSubTypeEnum.RECURRING` usage.
-- `transaction-item/index.tsx` — already only checks `REFUND`; ensure the import still resolves.
-- `get-balance-delta.ts` — keeps the `refund` branch; no change.
-- `data-management` / `loan-service.ts` / `balance-service.ts` / `transaction-list-utils.ts` / `live-progress.ts` — replace any `subtype === 'loan_*'` / `'recurring'` checks with the equivalent `kind` check (`kind === 'lent'` etc.) or delete if now dead.
-- `stats-data.ts` `computeExpenseBySubtype` (~line 608-620) currently buckets by `subtype === RECURRING` / `ONE_TIME`. After migration those are always NULL, so it already only ever produces `unclassified`. Rework it to bucket by `kind` (`repetitive`/`subscription` → `recurring` bucket; everything else → the other buckets) so the stat is meaningful again — OR, if the "expense by subtype" stat is unused in the UI, delete `computeExpenseBySubtype` and its `ExpenseBySubtype` type + call site. Grep `computeExpenseBySubtype` / `ExpenseBySubtype` / `expenseBySubtype` across `src/app/stats/**` and `src/components/stats/**` first; pick delete if there are no render consumers.
+Expected: **zero hits** (Tasks 8 + 11 removed these). If anything remains, fix
+that reference (it is genuinely dead form plumbing) and note it. Do NOT expand
+into `loan_*` / `recurring` / `one-time` / `biweekly` — those are other slices'.
 
 - [ ] **Step 4: Verify**
 
-Run: `pnpm types && pnpm lint && node ./scripts/checks/verify-transaction-kind.mts`
-Expected: PASS. Re-run the Step 1 `rg` — no `subtype`-value / `transaction-form-v3` / `TransactionTypeSelector` / `initialSubtype` hits remain.
+Run:
+```bash
+node ./scripts/checks/verify-migration-0001.mts <a fixture db>   # if you can build one cheaply; else skip
+pnpm types && pnpm lint && node ./scripts/checks/verify-transaction-kind.mts
+```
+Expected: PASS. Rebuild the Task 1 fixture DB (per the Task 1 report's approach)
+if it's quick, apply the edited `0001.sql`, and confirm `verify-migration-0001.mts`
+still prints `migration 0001: OK` and that `SELECT DISTINCT subtype` shows the
+legacy values preserved (not NULLed). If building a fixture is not quick, state
+that and rely on `pnpm types`/`lint` + reasoning.
 
 - [ ] **Step 5: Manual QA — regression sweep**
 
@@ -1199,7 +1219,7 @@ git commit -m "refactor: reduce transaction subtype to refund-only; kind is now 
 | New field order (account under amount, date before kind, title after) | 11 |
 | ES-1…ES-8 locks (`canEditKind`, `lockedFields`) | 11 (+ 5 server side) |
 | Delete `transaction-type-selector.tsx` | 10 |
-| Retire non-`refund` subtype + literal grep sweep | 12 |
+| Drop migration `0001` `subtype`-NULL step (loan filters read it); confirm form-plumbing cleanup | 12 (re-scoped — `subtype`-value retirement moved to Slice 4 / later stats slice) |
 | i18n keys (kind labels, tab labels, validation) both `en`+`ar` | 4, 10, 11 |
 
 Out of scope by design (Slices 2–5): real `RecurrenceCard`/interval-unit, real `LoanCard`/one-time-vs-long-term, full "upcoming" UX + CSI-3 stats audit, title display-time derivation. `FormKindCard` renders placeholders for subscription/repetitive/lent/borrowed until then; `buildTransactionPayload` does the minimal `upcoming ⇒ isPending`.

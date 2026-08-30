@@ -220,10 +220,17 @@ no-op):
    *(loan link wins over recurring)*
 4. `UPDATE transactions SET kind='upcoming'
    WHERE is_pending=1 AND kind='default' AND type <> 'transfer';`
-5. `UPDATE transactions SET subtype=NULL
-   WHERE subtype IN ('recurring','one-time','loan_borrowed','loan_repayment','loan_lent','loan_received');`
-   *(data-only cleanup; `refund` untouched. Safe to omit — nothing reads these
-   after Slice 1.)*
+
+**No `subtype` cleanup step.** An earlier draft NULLed the legacy
+`recurring`/`one-time`/`loan_*` subtypes — that was wrong: `src/app/accounts/`,
+account detail, category detail, `summary-card`, and
+`stats-data.computeExpenseBySubtype` still filter on `LOAN_*` / `recurring` /
+`one-time`, and `loan-service.createLoan` + the loan Collect/Settle flow still
+*write* `LOAN_*`. `kind` is the new axis and is now on every row; `subtype`
+keeps its legacy values. Retiring `LOAN_*` onto `kind`+`type`+opening-entry
+helper is **Slice 4** (loans engine); retiring `recurring`/`one-time` (and
+reworking/removing `computeExpenseBySubtype`) rides with the later slice that
+owns that stat.
 
 **No `BEGIN; … COMMIT;` in the file** — verified: `drizzle-orm`'s async sqlite
 migrator (`sqlite-core/dialect.cjs` `async migrate`) wraps all pending migration
@@ -246,14 +253,17 @@ file back and the next launch retries cleanly.
       AND recurring_id IS NULL AND subtype IS NOT 'recurring' AND loan_id IS NULL)`
 - [ ] `#(kind='default')` == the remainder; no row left `kind IS NULL`
 - [ ] pending recurring instances are `repetitive`, not `upcoming`
-- [ ] `refund` subtypes preserved; (if step 5 kept) no other subtype value remains
+- [ ] `subtype` column untouched — every pre-migration `subtype` value (incl.
+      `refund`, `loan_*`, `recurring`, `one-time`) is exactly as before
 - [ ] re-running the file against the migrated DB changes nothing
 
 ### Types / rows / mappers / schema / ledger
 
 - `src/types/transactions.ts` — add `TransactionKindEnum` + `TransactionKind`;
-  `Transaction` gains `kind`. `TransactionSubTypeEnum` reduced to
-  `{ REFUND: "refund" }`; delete `RECURRING`, `ONE_TIME`, `LOAN_*`.
+  `Transaction` gains `kind`. **`TransactionSubTypeEnum` is left intact** —
+  `RECURRING`/`ONE_TIME`/`LOAN_*` are still read by the accounts/category/summary
+  screens and written by the loans flows. Retiring them is Slice 4 (`LOAN_*`) and
+  a later stats slice (`recurring`/`one-time`).
 - `src/database/types/rows.ts` — `RowTransaction.kind: string`.
 - `src/database/mappers/transaction.mapper.ts` — map `kind`.
 - `src/database/drizzle/schema.ts` — `kind` column + CHECK.
@@ -742,21 +752,24 @@ row insertion is `src/database/backup/backup-import-plan.ts` `insertRows()`;
 - **Round-trip (same version):** export → wipe → import → `kind` identical for
   every row (acceptance).
 
-### Old-value cleanup — grep literals, not just enums
+### Old-value cleanup — deferred out of Slice 1
 
-Search `src/` for the literal strings (catches code that doesn't import the
-enum):
+Slice 1 only guarantees `TransactionTypeSelector`, `transaction-form-v3`, and
+`initialSubtype` are gone (they were pure form plumbing). The `subtype`-value
+retirement (`loan_*`, `recurring`, `one-time`) and the recurrence-internal
+renames (`biweekly`, `RecurringFrequency`, `RECURRING_OPTIONS`,
+`endAfterOccurrences`) belong to their owning slices:
 
-```
-recurring        one-time         loan_borrowed    loan_repayment
-loan_lent        loan_received    biweekly         RecurringFrequency
-RECURRING_OPTIONS  endAfterOccurrences  subtype        initialType
-initialSubtype   TransactionTypeSelector  transaction-form-v3
-showCategoryForUntitled
-```
-
-Every hit moves to `kind` / the new recurrence model / the new appearance key,
-or (for `subtype` = `refund` and `getBalanceDelta`'s refund branch) stays.
+- `LOAN_*` subtypes → **Slice 4** (loans engine): migrate the accounts /
+  account-detail / category-detail / `summary-card` filters and the
+  `loan-service.createLoan` + Collect/Settle writes onto `kind` + `type` + the
+  opening-entry helper, then drop the enum values.
+- `recurring` / `one-time` subtypes + `computeExpenseBySubtype` /
+  `ExpenseBySubtype` → the later stats slice: rework onto `kind`
+  (`repetitive`/`subscription`) or delete if unused in the UI.
+- `biweekly` / `RecurringFrequency` / `RECURRING_OPTIONS` /
+  `endAfterOccurrences` → **Slice 2** (interval+unit recurrence).
+- `showCategoryForUntitled` → **Slice 5**.
 
 ### Other
 
