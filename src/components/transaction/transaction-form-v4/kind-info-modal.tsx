@@ -4,6 +4,7 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
 import { Button } from "~/components/ui/button"
+import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 
 import {
@@ -22,6 +23,7 @@ export function KindInfoModal({ visible, onRequestClose }: Props) {
   const { t } = useTranslation()
   const { width, height } = useWindowDimensions()
   const maxCardWidth = Math.min(width - 48, 420)
+  const closeLabel = t("common.actions.close")
 
   return (
     <Modal
@@ -33,7 +35,13 @@ export function KindInfoModal({ visible, onRequestClose }: Props) {
       accessibilityViewIsModal
     >
       <View style={styles.root}>
-        <View style={styles.backdrop} />
+        <Pressable
+          style={styles.backdrop}
+          onPress={onRequestClose}
+          accessibilityLabel={closeLabel}
+          native
+          disableRipple
+        />
         <View style={styles.content}>
           <View
             style={[
@@ -102,10 +110,10 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: 24,
     gap: 16,
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius ?? 16,
+    borderRadius: theme.radius,
   },
   title: { textAlign: "center", fontWeight: "600" },
-  list: { flexGrow: 0 },
+  list: { flexShrink: 1 },
   listContent: { gap: 18, paddingVertical: 4 },
   row: { flexDirection: "row", gap: 12, alignItems: "flex-start" },
   iconBox: { marginTop: 2 },
