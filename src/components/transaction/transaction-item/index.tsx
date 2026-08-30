@@ -124,19 +124,19 @@ export const TransactionItem = ({
   const showCategoryInSubtitle = useTransactionItemAppearanceStore(
     (s) => s.showCategory,
   )
-  const showCategoryForUntitled = useTransactionItemAppearanceStore(
-    (s) => s.showCategoryForUntitled,
+  const showUntitledForBlankTitle = useTransactionItemAppearanceStore(
+    (s) => s.showUntitledForBlankTitle,
   )
   const leadingIconPref = useTransactionItemAppearanceStore(
     (s) => s.leadingIcon,
   )
   const untitledLabel = t("common.transaction.untitledTransaction")
-  const trimmedTitle = title?.trim()
-  const isUntitled = !trimmedTitle
+  const trimmedTitle = title?.trim() || undefined
   const displayTitle =
-    showCategoryForUntitled && isUntitled
-      ? (category?.name ?? untitledLabel)
-      : (trimmedTitle ?? untitledLabel)
+    trimmedTitle ??
+    (showUntitledForBlankTitle
+      ? untitledLabel
+      : (category?.name ?? untitledLabel))
   const displayIcon =
     leadingIconPref === "account" ? (account?.icon ?? icon) : icon
   const displayColorScheme =
