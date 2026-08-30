@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { endOfDay } from "date-fns"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useEffect, useReducer, useState } from "react"
+import { useEffect, useReducer, useRef, useState } from "react"
 import { type Resolver, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
@@ -38,7 +38,11 @@ import {
 import { toStoredAttachment } from "~/utils/attachments"
 import { logger } from "~/utils/logger"
 import { rescaleMinorUnits } from "~/utils/money"
-import { buildRRuleString, countOccurrencesBetween } from "~/utils/recurrence"
+import {
+  buildRRuleString,
+  countOccurrencesBetween,
+  parseRecurrence,
+} from "~/utils/recurrence"
 import { Toast } from "~/utils/toast"
 
 import { EMPTY_TAG_IDS } from "./constants"
@@ -290,6 +294,20 @@ export function useTransactionForm({
       setRecurring({ startDate: date })
     }
   }, [isNew, isRecurringKind, date, recurring.startDate])
+  // ES-8: seed the recurrence card from the stored rule exactly once when
+  // editing a rule-linked instance. After this the user's card edits win.
+  const seededFromRuleRef = useRef(false)
+  useEffect(() => {
+    if (seededFromRuleRef.current) return
+    if (!transaction?.recurringId || !recurringRule) return
+    seededFromRuleRef.current = true
+    const to = recurringRule.range.to
+    setRecurring({
+      recurrence: parseRecurrence(recurringRule.rules[0] ?? ""),
+      until: to >= new Date(2099, 0, 1).getTime() ? null : new Date(to),
+      startDate: new Date(recurringRule.range.from), // RS-2 anchor
+    })
+  }, [transaction?.recurringId, recurringRule])
   // ES-4/5/8: kind is locked once a transaction is tied to a loan or a
   // recurring rule (recurrence editing lands in Slice 2, loan wiring in Slice 4).
   const canEditKind =

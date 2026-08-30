@@ -6,7 +6,11 @@ import { EditRecurringModal } from "~/components/transaction/edit-recurring-moda
 import { LocationPickerModal } from "~/components/transaction/location-picker-modal"
 import { DateTimePickerModal } from "~/components/ui/date-time-picker"
 import type { RecurringTransactionTemplate } from "~/database/services/recurring-transaction-service"
-import type { Transaction, TransactionLocation } from "~/types/transactions"
+import type {
+  Recurrence,
+  Transaction,
+  TransactionLocation,
+} from "~/types/transactions"
 
 import type { DatePickerState, ModalState } from "./types"
 
@@ -17,6 +21,8 @@ interface FormModalsProps {
   location: TransactionLocation | null
   transaction: Transaction | null
   recurringRule: RecurringTransactionTemplate | null
+  recurrenceForEdit?: Recurrence
+  untilForEdit?: Date | null
   onConfirmExit: () => void
   onDestroyConfirm: () => void
   onLocationConfirm: (loc: TransactionLocation) => void
@@ -31,6 +37,8 @@ export function FormModals({
   location,
   transaction,
   recurringRule,
+  recurrenceForEdit,
+  untilForEdit,
   onConfirmExit,
   onDestroyConfirm,
   onLocationConfirm,
@@ -103,6 +111,8 @@ export function FormModals({
             transaction={transaction}
             recurringRule={recurringRule}
             pendingPayload={modals.pendingEditPayload}
+            recurrence={recurrenceForEdit}
+            until={untilForEdit}
             onRequestClose={() => {
               setModals({
                 editRecurringModalVisible: false,

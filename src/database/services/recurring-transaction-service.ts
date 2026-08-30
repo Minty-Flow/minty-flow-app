@@ -1,4 +1,5 @@
-import { and, count, eq } from "drizzle-orm"
+import { endOfDay } from "date-fns"
+import { and, count, desc, eq, lte } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
 import { recurringTransactions, transactions } from "~/database/drizzle/schema"
@@ -8,10 +9,14 @@ import type {
   RecurringEditPayload,
   TransactionFormValues,
 } from "~/schemas/transactions.schema"
-import type { TransactionKind, TransactionSubType } from "~/types/transactions"
+import type {
+  Recurrence,
+  TransactionKind,
+  TransactionSubType,
+} from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { assertMinorUnits } from "~/utils/money"
-import { nextAbsoluteOccurrence } from "~/utils/recurrence"
+import { buildRRuleString, nextAbsoluteOccurrence } from "~/utils/recurrence"
 
 // ── Row types ─────────────────────────────────────────────────────────────────
 
@@ -55,6 +60,12 @@ export interface RecurringTransactionTemplate {
   tags: string[] | null
   extra: Record<string, string> | null
   kind: TransactionKind
+}
+
+/** Template plus the raw scheduling columns, for the edit screen. */
+export interface RecurringRuleDetails extends RecurringTransactionTemplate {
+  rules: string[]
+  range: RecurringTimeRange
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -233,6 +244,66 @@ export async function updateRecurringRuleTemplate(
   })
 }
 
+const FOREVER_MS = new Date(2099, 11, 31).getTime()
+
+/**
+ * ES-8 — rewrite a rule's recurrence (interval/unit) and/or its "until".
+ * Keeps `range.from` (RS-2). Resets `last_generated_transaction_date` to the
+ * latest already-generated occurrence <= now so the next sync continues without
+ * duplicating or skipping. Never touches the template fields.
+ */
+export async function updateRecurringRule(
+  ruleId: string,
+  opts: { recurrence: Recurrence; until: Date | null },
+): Promise<void> {
+  const rule = drizzleDb
+    .select(recurringSelection)
+    .from(recurringTransactions)
+    .where(eq(recurringTransactions.id, ruleId))
+    .get()
+  if (!rule) throw new Error(`Recurring rule ${ruleId} not found`)
+
+  const range = parseTimeRange(rule) // keeps range.from
+  const untilEod = opts.until ? endOfDay(opts.until) : null
+  const nextRange = {
+    from: range.from,
+    to: untilEod?.getTime() ?? FOREVER_MS,
+  }
+  const rrule = buildRRuleString({
+    interval: opts.recurrence.interval,
+    unit: opts.recurrence.unit,
+    startDate: new Date(range.from),
+    until: opts.until ?? null,
+  })
+
+  const nowIso = new Date().toISOString()
+  const lastPast = drizzleDb
+    .select({ d: transactions.transactionDate })
+    .from(transactions)
+    .where(
+      and(
+        eq(transactions.recurringId, ruleId),
+        eq(transactions.isDeleted, 0),
+        lte(transactions.transactionDate, nowIso),
+      ),
+    )
+    .orderBy(desc(transactions.transactionDate))
+    .get()
+
+  await runInTransaction("recurring.updateRule", (db) => {
+    db.update(recurringTransactions)
+      .set({
+        rules: JSON.stringify([rrule]),
+        range: JSON.stringify(nextRange),
+        lastGeneratedTransactionDate: lastPast?.d ?? null,
+      })
+      .where(eq(recurringTransactions.id, ruleId))
+      .run()
+  })
+
+  await synchronizeAllRecurringTransactions()
+}
+
 export type RecurringEditScope = "this" | "this_and_future"
 export type RecurringDeleteScope = "this" | "all" | "this_and_future"
 
@@ -242,12 +313,16 @@ export async function applyRecurringEditScope({
   transactionDate,
   ruleId,
   payload,
+  recurrence,
+  until,
 }: {
   scope: RecurringEditScope
   transactionId: string
   transactionDate: Date
   ruleId: string
   payload: RecurringEditPayload
+  recurrence?: Recurrence
+  until?: Date | null
 }): Promise<void> {
   const { detachFromRule, updateFutureRecurringInstances, updateTransaction } =
     await import("./ledger-service")
@@ -266,6 +341,9 @@ export async function applyRecurringEditScope({
     accountId: payload.accountId,
     type: payload.type,
   })
+  if (recurrence) {
+    await updateRecurringRule(ruleId, { recurrence, until: until ?? null })
+  }
   await updateTransaction(transactionId, payload)
 }
 
@@ -560,11 +638,16 @@ export async function synchronizeAllRecurringTransactions(
 
 export async function findRecurringById(
   id: string,
-): Promise<RecurringTransactionTemplate | null> {
+): Promise<RecurringRuleDetails | null> {
   const row = drizzleDb
     .select(recurringSelection)
     .from(recurringTransactions)
     .where(eq(recurringTransactions.id, id))
     .get()
-  return row ? parseTemplate(row) : null
+  if (!row) return null
+  return {
+    ...parseTemplate(row),
+    rules: parseRules(row),
+    range: parseTimeRange(row),
+  }
 }

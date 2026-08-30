@@ -336,6 +336,8 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
         location={f.location}
         transaction={transaction}
         recurringRule={f.recurringRule}
+        recurrenceForEdit={f.recurring.recurrence}
+        untilForEdit={f.recurring.until}
         onConfirmExit={f.handleConfirmExit}
         onDestroyConfirm={f.handleDestroyConfirm}
         onLocationConfirm={f.handleLocationConfirm}
