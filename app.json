@@ -10,6 +10,9 @@
     "icon": "./src/assets/images/icon.png",
     "scheme": "mintyflow",
     "userInterfaceStyle": "automatic",
+    "updates": {
+      "enabled": false
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mintyflow.tracker",
