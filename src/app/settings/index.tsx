@@ -20,70 +20,91 @@ interface SettingsItem {
   soon?: boolean
 }
 
-// Understand -> Manage -> Organize -> Admin.
-const moneyManagementItems: SettingsItem[] = [
-  {
-    titleKey: "screens.settings.insights.title",
-    route: "/stats/insights" as Href,
-    icon: "sparkles",
-  },
-  {
-    titleKey: "screens.accounts.title",
-    route: "/settings/all-accounts",
-    icon: "wallet-outline",
-  },
-  {
-    titleKey: "screens.settings.budgets.title",
-    route: "/settings/budgets",
-    icon: "chart-pie-outline",
-  },
-  {
-    titleKey: "screens.settings.goals.title",
-    route: "/settings/goals",
-    icon: "target-outline",
-  },
-  {
-    titleKey: "screens.settings.pending.title",
-    route: "/settings/pending-transactions",
-    icon: "history-toggle-outline",
-  },
-  {
-    titleKey: "screens.settings.billSplitter.title",
-    route: "/settings/bill-splitter",
-    icon: "page-break-outline",
-  },
-  {
-    titleKey: "components.categories.title",
-    route: "/settings/categories",
-    icon: "category-2-outline",
-  },
-  {
-    titleKey: "screens.settings.tags.title",
-    route: "/settings/tags",
-    icon: "tags-outline",
-  },
-  {
-    titleKey: "screens.settings.loans.title",
-    route: "/settings/loans",
-    icon: "scale-outline",
-  },
-  {
-    titleKey: "screens.settings.trash.title",
-    route: "/settings/trash",
-    icon: "trash-outline",
-  },
-]
+interface SettingsGroup {
+  labelKey?: TranslationKey
+  items: SettingsItem[]
+}
 
-const otherSettingsItems: SettingsItem[] = [
+// Understand -> Plan -> Organize -> System.
+const settingsGroups: SettingsGroup[] = [
   {
-    titleKey: "screens.settings.preferences.title",
-    route: "/settings/preferences",
-    icon: "puzzle-outline",
+    items: [
+      {
+        titleKey: "screens.settings.insights.title",
+        route: "/stats/insights" as Href,
+        icon: "sparkles",
+      },
+      {
+        titleKey: "screens.accounts.title",
+        route: "/settings/all-accounts",
+        icon: "wallet-outline",
+      },
+    ],
   },
   {
-    titleKey: "screens.settings.dataManagement.title",
-    route: "/settings/data-management",
-    icon: "database-outline",
+    labelKey: "screens.settings.groups.planning",
+    items: [
+      {
+        titleKey: "screens.settings.budgets.title",
+        route: "/settings/budgets",
+        icon: "chart-pie-outline",
+      },
+      {
+        titleKey: "screens.settings.goals.title",
+        route: "/settings/goals",
+        icon: "target-outline",
+      },
+      {
+        titleKey: "screens.settings.pending.title",
+        route: "/settings/pending-transactions",
+        icon: "history-toggle-outline",
+      },
+      {
+        titleKey: "screens.settings.billSplitter.title",
+        route: "/settings/bill-splitter",
+        icon: "page-break-outline",
+      },
+    ],
+  },
+  {
+    labelKey: "screens.settings.groups.organization",
+    items: [
+      {
+        titleKey: "components.categories.title",
+        route: "/settings/categories",
+        icon: "category-2-outline",
+      },
+      {
+        titleKey: "screens.settings.tags.title",
+        route: "/settings/tags",
+        icon: "tags-outline",
+      },
+      {
+        titleKey: "screens.settings.loans.title",
+        route: "/settings/loans",
+        icon: "scale-outline",
+      },
+      {
+        titleKey: "screens.settings.trash.title",
+        route: "/settings/trash",
+        icon: "trash-outline",
+      },
+    ],
+  },
+  {
+    labelKey: "screens.settings.groups.system",
+    items: [
+      {
+        titleKey: "screens.settings.preferences.title",
+        route: "/settings/preferences",
+        icon: "puzzle-outline",
+      },
+      {
+        titleKey: "screens.settings.dataManagement.title",
+        route: "/settings/data-management",
+        icon: "database-outline",
+      },
+    ],
   },
 ]
 
@@ -103,35 +124,30 @@ export default function SettingsScreen() {
       {/* User Profile Section */}
       <ProfileSection />
 
-      {/* Money Management Section */}
-      <View style={styles.section}>
-        <View>
-          {moneyManagementItems.map((item) => (
-            <ActionItem
-              key={item.titleKey}
-              icon={item.icon}
-              title={t(item.titleKey)}
-              onPress={() => router.push(item.route)}
-              soon={item.soon}
-            />
-          ))}
+      {settingsGroups.map((group) => (
+        <View
+          key={group.labelKey ?? "overview"}
+          style={[
+            styles.section,
+            group.labelKey ? styles.labelledSection : null,
+          ]}
+        >
+          {group.labelKey ? (
+            <Text style={styles.sectionTitle}>{t(group.labelKey)}</Text>
+          ) : null}
+          <View>
+            {group.items.map((item) => (
+              <ActionItem
+                key={item.titleKey}
+                icon={item.icon}
+                title={t(item.titleKey)}
+                onPress={() => router.push(item.route)}
+                soon={item.soon}
+              />
+            ))}
+          </View>
         </View>
-      </View>
-
-      {/* Admin: quieter, set apart by spacing rather than a section label */}
-      <View style={[styles.section, styles.adminSection]}>
-        <View>
-          {otherSettingsItems.map((item) => (
-            <ActionItem
-              key={item.titleKey}
-              icon={item.icon}
-              title={t(item.titleKey)}
-              soon={item.soon}
-              onPress={() => router.push(item.route)}
-            />
-          ))}
-        </View>
-      </View>
+      ))}
 
       {/* Maker credit + version */}
       <View style={styles.footer}>
@@ -178,8 +194,17 @@ const styles = StyleSheet.create((theme) => ({
   section: {
     marginBottom: 20,
   },
-  adminSection: {
-    marginTop: 24,
+  labelledSection: {
+    marginTop: 8,
+  },
+  sectionTitle: {
+    paddingHorizontal: 20,
+    ...theme.typography.labelXSmall,
+    fontWeight: "600",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    color: theme.colors.semantic.semi,
+    marginBottom: 8,
   },
   footer: {
     alignItems: "center",
