@@ -894,7 +894,29 @@ export function buildTransactionPayload(
 }
 ```
 
-Keep the behaviour byte-for-byte; only relocate. Add `kind: data.kind ?? "default"` to the returned payload.
+Keep the behaviour byte-for-byte; only relocate. Then apply the `kind`
+resolution — **bidirectional CSI-2 consistency** for this plain (non-transfer,
+non-recurring, non-loan) create/update path:
+
+```ts
+const resolvedIsPending = /* the existing effectiveIsPending computation */
+const resolvedKind =
+  data.kind === "upcoming"
+    ? "upcoming"
+    : resolvedIsPending && (data.kind ?? "default") === "default"
+      ? "upcoming"            // future-dated / pending-toggled default ⇒ upcoming (CSI-2)
+      : (data.kind ?? "default")
+// return { …payload, kind: resolvedKind, isPending: resolvedKind === "upcoming" ? true : resolvedIsPending }
+```
+
+This closes the CSI-2 window opened by Task 5: after Task 5, `createTransaction`
+throws in `__DEV__` on `{ kind: "default", isPending: true }`. The current form
+produces exactly that for a future-dated transaction, so `buildTransactionPayload`
+must map it to `kind: "upcoming"`. `kind: "upcoming"` from the (future) kind
+selector likewise forces `isPending`. Recurring/loan paths are unaffected (they
+set their own kind). This is still behaviour-preserving from the user's view — a
+future-dated entry is still planned/pending — it just now carries the canonical
+kind.
 
 - [ ] **Step 2: Move state + handlers into the hook**
 
@@ -911,7 +933,7 @@ Expected: PASS.
 
 - [ ] **Step 5: Manual QA — full parity sweep**
 
-Run: `pnpm ios`. Exercise: create expense (with category, tags, notes, attachment, goal, budget), create income, create transfer (same-currency and cross-currency with rate), create a future pending one, create a recurring one, edit each, delete + restore + destroy, unsaved-changes guard on back. Every path must behave exactly as before Task 8.
+Run: `pnpm ios`. Exercise: create expense (with category, tags, notes, attachment, goal, budget), create income, create transfer (same-currency and cross-currency with rate), create a future pending one, create a recurring one, edit each, delete + restore + destroy, unsaved-changes guard on back. Every path must behave exactly as before Task 8 — **and** the future-dated pending create must now succeed and produce a row with `kind='upcoming'` (Step 1's `resolvedKind` mapping). Before this task's Step 1 mapping lands, that create throws in `__DEV__` via the Task 5 CSI-2 assert — expected transient state, not a Task 8 regression.
 
 - [ ] **Step 6: Commit**
 
@@ -1043,7 +1065,9 @@ In `form-utils.ts`, both return objects gain `kind: initialKind ?? transaction?.
 
 `form-kind-selector.tsx`: a `ListItem` showing the current kind's label + chevron; on press opens a bottom-sheet (reuse the app's sheet/selector pattern — check `src/components/selector-modals/`) listing all 6 `TransactionKindEnum` values with labels; selecting calls `onSelect(kind)`. `disabled` when `!canEditKind`.
 `form-kind-card.tsx`: `switch (kind)` → `subscription`/`repetitive` → `<PlaceholderCard label={t("components.transactionForm.kind.recurrenceComingSoon")} />`; `lent`/`borrowed` → `<PlaceholderCard label={t("components.transactionForm.kind.loanComingSoon")} />`; `default`/`upcoming` → `null`. (Real cards: Slices 2 & 4.)
-For `upcoming`: the hook's `buildTransactionPayload` already coalesces; add `kind === "upcoming"` ⟹ `isPending = true` in `buildTransactionPayload` (CSI-2, minimal — full upcoming UX is Slice 3).
+For `upcoming`: `buildTransactionPayload` already handles the bidirectional
+`kind='upcoming' ⟺ isPending` mapping (Task 9 Step 1). Nothing extra needed here
+beyond letting the kind selector set `kind: "upcoming"` — full upcoming UX is Slice 3.
 
 - [ ] **Step 5: New field order in `index.tsx`**
 
