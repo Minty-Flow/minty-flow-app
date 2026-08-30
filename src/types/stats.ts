@@ -220,8 +220,10 @@ export interface StatsRawRow {
   accountId: string
   /** Balance snapshot before this transaction was applied */
   accountBalanceBefore: number
-  /** Transaction subtype: 'recurring' | 'one-time' | null */
+  /** Transaction subtype: 'recurring' | 'one-time' | 'refund' | null */
   subtype: string | null
+  /** Non-null when the row is a loan opening entry or repayment (excluded from generic totals). */
+  loanId: string | null
   /** Transaction title/description */
   title: string | null | undefined
 }

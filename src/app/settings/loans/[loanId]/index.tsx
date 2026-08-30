@@ -23,10 +23,7 @@ import {
 } from "~/database/drizzle/read-models/transaction-read-model"
 import { createTransaction } from "~/database/services/ledger-service"
 import { useLanguageStore } from "~/stores/language.store"
-import {
-  TransactionSubTypeEnum,
-  TransactionTypeEnum,
-} from "~/types/transactions"
+import { TransactionTypeEnum } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { getLoanProgressModel } from "~/utils/planning-progress"
 import { formatShortMonthDay } from "~/utils/time-utils"
@@ -163,9 +160,7 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
       createTransaction({
         amount: remaining,
         type: transactionType,
-        subtype: isLent
-          ? TransactionSubTypeEnum.LOAN_RECEIVED
-          : TransactionSubTypeEnum.LOAN_REPAYMENT,
+        kind: loan.loanType,
         transactionDate: new Date(),
         accountId: loan.accountId,
         categoryId: loan.categoryId,

@@ -110,24 +110,14 @@ const Card = ({
     rows.forEach((row) => {
       const currency = row.account?.currencyCode ?? ""
       if (!currency) return
+      // Loan cash flows (opening entry + repayments) are not generic income/expense.
+      if (row.loanId != null) return
       let amount = row.amount || 0
-      if (type === TransactionTypeEnum.EXPENSE) {
-        if (
-          row.subtype === TransactionSubTypeEnum.LOAN_REPAYMENT ||
-          row.subtype === TransactionSubTypeEnum.LOAN_LENT
-        ) {
-          return
-        }
-        if (row.subtype === TransactionSubTypeEnum.REFUND) {
-          amount = -amount
-        }
-      } else if (type === TransactionTypeEnum.INCOME) {
-        if (
-          row.subtype === TransactionSubTypeEnum.LOAN_BORROWED ||
-          row.subtype === TransactionSubTypeEnum.LOAN_RECEIVED
-        ) {
-          return
-        }
+      if (
+        type === TransactionTypeEnum.EXPENSE &&
+        row.subtype === TransactionSubTypeEnum.REFUND
+      ) {
+        amount = -amount
       }
       totals[currency] = (totals[currency] || 0) + amount
     })

@@ -52,33 +52,23 @@ import {
 /* Stats inclusion guards                                              */
 /* ------------------------------------------------------------------ */
 
-const LOAN_EXPENSE_SUBTYPES = new Set<string>([
-  TransactionSubTypeEnum.LOAN_REPAYMENT,
-  TransactionSubTypeEnum.LOAN_LENT,
-])
-
-const LOAN_INCOME_SUBTYPES = new Set<string>([
-  TransactionSubTypeEnum.LOAN_BORROWED,
-  TransactionSubTypeEnum.LOAN_RECEIVED,
-])
-
 /**
  * True when the row counts as a real expense for statistics purposes.
- * Loan expense subtypes (repayment, lent) are excluded entirely.
+ * Loan cash flows (opening entry + repayments) are excluded entirely.
  * Refunds are real expenses — they contribute a negative amount.
  */
-function isRealExpense(row: { type: string; subtype: string | null }): boolean {
+function isRealExpense(row: { type: string; loanId: string | null }): boolean {
   if (row.type !== TransactionTypeEnum.EXPENSE) return false
-  return !LOAN_EXPENSE_SUBTYPES.has(row.subtype ?? "")
+  return row.loanId == null
 }
 
 /**
  * True when the row counts as real income for statistics purposes.
- * Loan income subtypes (borrowed, received) are excluded entirely.
+ * Loan cash flows (opening entry + repayments) are excluded entirely.
  */
-function isRealIncome(row: { type: string; subtype: string | null }): boolean {
+function isRealIncome(row: { type: string; loanId: string | null }): boolean {
   if (row.type !== TransactionTypeEnum.INCOME) return false
-  return !LOAN_INCOME_SUBTYPES.has(row.subtype ?? "")
+  return row.loanId == null
 }
 
 /**
@@ -91,6 +81,7 @@ function expenseContribution(row: {
   type: string
   subtype: string | null
   amount: number
+  loanId: string | null
 }): number {
   if (!isRealExpense(row)) return 0
   const abs = Math.abs(row.amount)
@@ -121,9 +112,10 @@ async function fetchStatsTransactions(
     account_balance_before: number
     subtype: string | null
     title: string | null
+    loan_id: string | null
   }>(sql`
     SELECT t.id, t.account_id, t.category_id, t.amount, t.type, t.transaction_date,
-            t.account_balance_before, t.subtype, t.title
+            t.account_balance_before, t.subtype, t.title, t.loan_id
      FROM transactions t
      WHERE t.is_deleted = 0
        AND t.is_pending = 0
@@ -175,6 +167,7 @@ async function fetchStatsTransactions(
       accountId: tx.account_id,
       accountBalanceBefore: tx.account_balance_before,
       subtype: tx.subtype,
+      loanId: tx.loan_id ?? null,
       title: tx.title,
     } satisfies StatsRawRow
   })
@@ -238,8 +231,9 @@ async function fetchPendingSummary(
     amount: number
     type: string
     subtype: string | null
+    loan_id: string | null
   }>(sql`
-    SELECT t.account_id, t.amount, t.type, t.subtype
+    SELECT t.account_id, t.amount, t.type, t.subtype, t.loan_id
      FROM transactions t
      WHERE t.is_deleted = 0
        AND t.is_pending = 1
@@ -268,8 +262,9 @@ async function fetchPendingSummary(
       totalIncome: 0,
     }
     const abs = Math.abs(tx.amount)
+    const isLoanFlow = tx.loan_id != null
     if (tx.type === TransactionTypeEnum.EXPENSE) {
-      if (!LOAN_EXPENSE_SUBTYPES.has(tx.subtype ?? "")) {
+      if (!isLoanFlow) {
         if (tx.subtype === TransactionSubTypeEnum.REFUND) {
           // Pending refund reduces pending expense
           existing.totalExpense = Math.max(0, existing.totalExpense - abs)
@@ -278,7 +273,7 @@ async function fetchPendingSummary(
         }
       }
     } else if (tx.type === TransactionTypeEnum.INCOME) {
-      if (!LOAN_INCOME_SUBTYPES.has(tx.subtype ?? "")) {
+      if (!isLoanFlow) {
         existing.totalIncome += abs
       }
     }
