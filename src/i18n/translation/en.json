@@ -324,6 +324,11 @@
       }
     },
     "settings": {
+      "groups": {
+        "planning": "Planning",
+        "organization": "Organization",
+        "system": "System"
+      },
       "about": {
         "version": "v{{version}}",
         "tagline": "Made to help your money make cents.",
@@ -331,6 +336,11 @@
       },
       "preferences": {
         "title": "Preferences",
+        "groups": {
+          "behavior": "Behavior",
+          "system": "System",
+          "customization": "Customization"
+        },
         "appearance": {
           "theme": {
             "title": "Theme",

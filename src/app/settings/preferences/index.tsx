@@ -5,6 +5,7 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { ActionItem } from "~/components/action-item"
 import type { IconSvgName } from "~/components/icons"
+import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TranslationKey } from "~/i18n/config"
 import { useWeekStartStore } from "~/stores/week-start.store"
@@ -136,6 +137,9 @@ export default function PreferencesScreen() {
       </View>
 
       <View style={[styles.group, styles.groupGap]}>
+        <Text style={styles.sectionTitle}>
+          {t("screens.settings.preferences.groups.behavior")}
+        </Text>
         {behaviorItems.map(renderItem)}
         {Platform.OS === "android" && (
           <ActionItem
@@ -147,10 +151,16 @@ export default function PreferencesScreen() {
       </View>
 
       <View style={[styles.group, styles.groupGap]}>
+        <Text style={styles.sectionTitle}>
+          {t("screens.settings.preferences.groups.system")}
+        </Text>
         {adminItems.map(renderItem)}
       </View>
 
       <View style={[styles.group, styles.groupGap]}>
+        <Text style={styles.sectionTitle}>
+          {t("screens.settings.preferences.groups.customization")}
+        </Text>
         {customizationItems.map(renderItem)}
       </View>
     </ScrollView>
@@ -171,5 +181,14 @@ const styles = StyleSheet.create((theme) => ({
   },
   groupGap: {
     marginTop: 18,
+  },
+  sectionTitle: {
+    paddingHorizontal: 20,
+    ...theme.typography.labelXSmall,
+    fontWeight: "600",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    color: theme.colors.semantic.semi,
+    marginBottom: 8,
   },
 }))

@@ -324,6 +324,11 @@
       }
     },
     "settings": {
+      "groups": {
+        "planning": "التخطيط",
+        "organization": "التنظيم",
+        "system": "النظام"
+      },
       "about": {
         "version": "v{{version}}",
         "tagline": "صُنع ليمنح أموالك معنى.",
@@ -331,6 +336,11 @@
       },
       "preferences": {
         "title": "التفضيلات",
+        "groups": {
+          "behavior": "السلوك",
+          "system": "النظام",
+          "customization": "التخصيص"
+        },
         "appearance": {
           "theme": {
             "title": "السمة",
