@@ -149,10 +149,8 @@ export function FormAttachmentsSection({
           <Text variant="default" style={transactionFormStyles.addFilesLabel}>
             {t("components.transactionForm.addFiles.label")}
           </Text>
-          <IconSvg
-            name={
-              addFilesExpanded ? "chevron-up-outline" : "chevron-down-outline"
-            }
+          <ChevronIcon
+            direction={addFilesExpanded ? "up" : "trailing"}
             size={20}
             style={transactionFormStyles.chevronIcon}
           />

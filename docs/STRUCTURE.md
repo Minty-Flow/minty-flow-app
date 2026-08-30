@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T19:33:59.772Z
+Generated on: 2026-08-30T19:58:13.638Z
 ```
 ./
 ├── .github/
@@ -389,6 +389,8 @@ Generated on: 2026-08-30T19:33:59.772Z
 │   │   │   │   ├── form-utils.ts
 │   │   │   │   ├── form.styles.ts
 │   │   │   │   ├── index.tsx
+│   │   │   │   ├── kind-info-modal.tsx
+│   │   │   │   ├── kind-info.ts
 │   │   │   │   ├── on-kind-change.ts
 │   │   │   │   ├── recurrence-card.tsx
 │   │   │   │   ├── recurrence-unit-modal.tsx
