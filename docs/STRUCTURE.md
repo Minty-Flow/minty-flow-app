@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T01:59:55.801Z
+Generated on: 2026-08-30T02:10:11.292Z
 ```
 ./
 ├── .github/
@@ -30,6 +30,11 @@ Generated on: 2026-08-30T01:59:55.801Z
 │   │   ├── domain.md
 │   │   ├── issue-tracker.md
 │   │   └── triage-labels.md
+│   ├── superpowers/
+│   │   ├── plans/
+│   │   │   └── 2026-08-30-transaction-kind-slice-1.md
+│   │   └── specs/
+│   │       └── 2026-08-30-transaction-form-kind-redesign-design.md
 │   ├── post-release-drizzle-architecture-plan.md
 │   ├── stats-recurring-spending-map-plan.md
 │   └── STRUCTURE.md
