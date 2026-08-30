@@ -984,7 +984,7 @@
       },
       "notFoundTransaction": "Transaction not found.",
       "searchTags": "Search tags...",
-      "createNewTag": "Create new tag",
+      "createNewTag": "New tag",
       "kind": {
         "label": "Kind",
         "info": {
