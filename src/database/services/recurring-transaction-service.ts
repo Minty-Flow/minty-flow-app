@@ -324,8 +324,12 @@ export async function applyRecurringEditScope({
   recurrence?: Recurrence
   until?: Date | null
 }): Promise<void> {
-  const { detachFromRule, updateFutureRecurringInstances, updateTransaction } =
-    await import("./ledger-service")
+  const {
+    deleteFutureRecurringInstances,
+    detachFromRule,
+    updateFutureRecurringInstances,
+    updateTransaction,
+  } = await import("./ledger-service")
 
   if (scope === "this") {
     await detachFromRule(transactionId)
@@ -333,7 +337,22 @@ export async function applyRecurringEditScope({
     return
   }
 
+  // Branch on cadence change (recurrence or until provided)
+  const hasCadenceChange = recurrence != null || until !== undefined
+
+  if (hasCadenceChange) {
+    // Delete forward instances FIRST when cadence changes.
+    // Cutoff: fromDate = transactionDate + 1ms spares the edited instance.
+    // deleteFutureRecurringInstances filters gte(transactionDate, fromDate),
+    // so +1ms ensures the edited instance's timestamp is strictly less.
+    const fromDate = new Date(transactionDate.getTime() + 1)
+    await deleteFutureRecurringInstances(ruleId, fromDate)
+  }
+
+  // Update field values on future instances (no-op if cadence change, since deleted).
   await updateFutureRecurringInstances(ruleId, transactionDate, payload)
+
+  // Update template fields for regeneration.
   await updateRecurringRuleTemplate(ruleId, {
     amount: payload.amount,
     title: payload.title,
@@ -341,9 +360,17 @@ export async function applyRecurringEditScope({
     accountId: payload.accountId,
     type: payload.type,
   })
-  if (recurrence) {
-    await updateRecurringRule(ruleId, { recurrence, until: until ?? null })
+
+  // Update recurrence/until if cadence changed. Deleting forward instances
+  // prevents the effectiveLast guard from stalling generation on the new cadence.
+  if (recurrence != null) {
+    await updateRecurringRule(ruleId, {
+      recurrence,
+      until: until ?? null,
+    })
   }
+
+  // Update the edited instance.
   await updateTransaction(transactionId, payload)
 }
 
