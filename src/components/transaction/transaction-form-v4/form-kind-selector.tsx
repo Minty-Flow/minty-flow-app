@@ -2,8 +2,8 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { IconSvg } from "~/components/icons"
+import { Button } from "~/components/ui/button"
 import { Chip } from "~/components/ui/chips"
-import { Pressable } from "~/components/ui/pressable"
 import { View } from "~/components/ui/view"
 import type { TransactionKind } from "~/types/transactions"
 
@@ -24,16 +24,16 @@ export function FormKindSelector({ kind, onSelect, disabled = false }: Props) {
   return (
     <View style={transactionFormStyles.fieldBlock}>
       <View style={transactionFormStyles.tagsWrapGrid}>
-        <Pressable
+        <Button
+          variant="ghost"
+          size="icon"
           onPress={() => setInfoVisible(true)}
-          hitSlop={8}
           accessibilityLabel={t(
             "components.transactionForm.kind.info.a11yOpen",
           )}
-          style={transactionFormStyles.kindInfoButton}
         >
           <IconSvg name="info-circle" size={20} />
-        </Pressable>
+        </Button>
         {KIND_ORDER.map((k) => (
           <Chip
             key={k}

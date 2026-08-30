@@ -286,9 +286,6 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     gap: SECTION_GAP,
     paddingVertical: SMALL_GAP,
   },
-  kindInfoButton: {
-    padding: 2,
-  },
   tagChipBase: {
     flexDirection: "row",
     alignItems: "center",
