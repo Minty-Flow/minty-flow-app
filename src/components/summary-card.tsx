@@ -30,13 +30,15 @@ export const SummarySection = ({
   const excludeFromTotals = useTransfersPreferencesStore(
     (s) => s.excludeFromTotals,
   )
-  const incomeRows = transactionsWithRelations.filter(
+  // CSI-3: pending (upcoming / not-yet-due recurring) rows never contribute to totals.
+  const settledRows = transactionsWithRelations.filter((row) => !row.isPending)
+  const incomeRows = settledRows.filter(
     (row) => row.type === TransactionTypeEnum.INCOME,
   )
-  const expenseRows = transactionsWithRelations.filter(
+  const expenseRows = settledRows.filter(
     (row) => row.type === TransactionTypeEnum.EXPENSE,
   )
-  const transferRows = transactionsWithRelations.filter(
+  const transferRows = settledRows.filter(
     (row) => row.type === TransactionTypeEnum.TRANSFER || row.isTransfer,
   )
   const extraIncomeByCurrency = (() => {

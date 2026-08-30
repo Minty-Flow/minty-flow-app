@@ -114,19 +114,23 @@ or progress figure. Concrete audit checklist (Slice 3 owns closing it; each item
 is an acceptance line — confirm a `is_pending = 0` / `NOT is_pending` guard, add
 where missing):
 
-- [ ] `src/database/services/balance-service.ts` — has it (`eq(isPending, 0)`)
-- [ ] `src/database/services/budget-service.ts` — spent aggregation
-- [ ] `src/database/services/goal-service.ts` — goal progress
-- [ ] `src/database/services/loan-service.ts` + loan mapper/read-model — loan progress
-- [ ] `src/database/services/stats-service.ts` — every `sql` aggregation
-- [ ] `src/database/drizzle/read-models/stats-data.ts`
-- [ ] `src/utils/live-progress.ts`
-- [ ] `src/utils/transaction-list-utils.ts` — running / section totals
-- [ ] `src/components/summary-card.tsx` and home/dashboard summaries
-- [ ] account list balances / account detail totals
-- [ ] category totals (`stats/categories`)
-- [ ] net-worth / cash-flow / calendar stat screens
-- [ ] `recurring-transaction-service` — *creates* pending; must not *sum* them
+Audit result (Slice 3, ticket 01 — 2026-08-30): one gap found and fixed
+(`summary-card.tsx`); every other target was already guarded.
+
+- [x] `src/database/services/balance-service.ts` — `eq(transactions.isPending, 0)` in `getBalanceAtTransaction`
+- [x] `src/database/services/budget-service.ts` — CRUD only, no aggregation; spent is computed in `src/utils/live-progress.ts` `getLiveBudgetSpent` which skips `transaction.isPending`
+- [x] `src/database/services/goal-service.ts` — CRUD only; progress via `getLiveGoalProgress`, guards `transaction.isPending`
+- [x] `src/database/services/loan-service.ts` + loan read-model — CRUD / stored-column only; progress via `getLiveLoanProgress`, guards `transaction.isPending`
+- [x] `stats-service.ts` does not exist — stats aggregation lives in `stats-data.ts` / `stats-read-model.ts`
+- [x] `src/database/drizzle/read-models/stats-data.ts` — every `fetchStatsTransactions` / `fetchBalanceTimeline` SQL has `AND t.is_pending = 0`; the lone `is_pending = 1` block is `fetchPendingSummary`, a deliberate separate preview never mixed into totals; `fetchWrappedInsights` shares `fetchStatsTransactions`
+- [x] `src/database/drizzle/read-models/stats-read-model.ts` — no raw transaction aggregation; sums stored `accounts.balance`
+- [x] `src/utils/live-progress.ts` — `getLiveBudgetSpent`, `getLiveBudgetSpentByCategory`, `getLiveGoalProgress`, `getLiveLoanProgress` all guard `transaction.isPending`
+- [x] `src/utils/transaction-list-utils.ts` — `buildTransactionSections` totals are guarded upstream: `transaction-section-list.tsx` runs `applyPendingFilter` first, which drops pending rows for every view except the deliberate "pending" filter
+- [x] `src/components/summary-card.tsx` — **was the gap.** `SummarySection` summed home income/expense with no pending guard and home passes it unfiltered `transactionsFull`. Fixed: filter `!row.isPending` before splitting income/expense/transfer rows
+- [x] account list balances / account detail totals — list reads stored `accounts.balance` (ledger-service guards every mutation with `if (!isPending)`); `accounts/[accountId]/index.tsx` in/out totals do `if (t.isPending || t.isDeleted) continue`
+- [x] category totals (`stats/categories`) — reads `useStats()` → `fetchAllStatsData` (guarded); no direct transaction sum
+- [x] net-worth / cash-flow / calendar stat screens — all consume `useStats()` data via props; no direct transaction access
+- [x] `recurring-transaction-service` — only *creates* rows with `isPending`; performs no summation and routes writes through the ledger service
 
 ### CSI-4 — `kind` persistence, every write path
 
@@ -477,6 +481,15 @@ until confirmed. `is_pending` already behaves this way for balance and budgets.
   tab shape) wired to `confirmTransaction`.
 - `upcoming-transactions-section` — align copy with the kind name; it already
   lists pending rows.
+- **Auto-confirmation is split into two per-kind switches** (replaces the single
+  `requireConfirmation` pref). `autoPaySubscriptions` (default on) governs
+  `subscription` / `repetitive` due instances; `autoPayUpcoming` (default off)
+  governs `kind === 'upcoming'`. `isPreapproved(row, { autoPaySubscriptions,
+  autoPayUpcoming })` in `auto-confirmation-service.ts` is the single resolver;
+  `shouldAutoConfirm` delegates to it. A row's frozen `requiresManualConfirmation`
+  flag still wins as an explicit opt-out. New rows no longer bake the pref in —
+  the live switch decides. Settings screen (`preferences/pending-transactions`)
+  now shows the two switches + Show on home + Notify me.
 
 ### Acceptance — Slice 3
 

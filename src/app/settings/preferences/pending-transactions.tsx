@@ -85,21 +85,19 @@ function ToggleRow({
 }
 
 export default function PendingTransactionsPreferencesScreen() {
-  const requireConfirmation = usePendingTransactionsStore(
-    (s) => s.requireConfirmation,
+  const autoPaySubscriptions = usePendingTransactionsStore(
+    (s) => s.autoPaySubscriptions,
   )
-  const setRequireConfirmation = usePendingTransactionsStore(
-    (s) => s.setRequireConfirmation,
+  const setAutoPaySubscriptions = usePendingTransactionsStore(
+    (s) => s.setAutoPaySubscriptions,
+  )
+  const autoPayUpcoming = usePendingTransactionsStore((s) => s.autoPayUpcoming)
+  const setAutoPayUpcoming = usePendingTransactionsStore(
+    (s) => s.setAutoPayUpcoming,
   )
   const homeTimeframe = usePendingTransactionsStore((s) => s.homeTimeframe)
   const setHomeTimeframe = usePendingTransactionsStore(
     (s) => s.setHomeTimeframe,
-  )
-  const updateDateUponConfirmation = usePendingTransactionsStore(
-    (s) => s.updateDateUponConfirmation,
-  )
-  const setUpdateDateUponConfirmation = usePendingTransactionsStore(
-    (s) => s.setUpdateDateUponConfirmation,
   )
   const notify = usePendingTransactionsStore((s) => s.notify)
   const setNotify = usePendingTransactionsStore((s) => s.setNotify)
@@ -179,30 +177,24 @@ export default function PendingTransactionsPreferencesScreen() {
       />
 
       <ToggleRow
-        title={t("screens.settings.pending.settings.requireConfirmation.label")}
-        description={t(
-          "screens.settings.pending.settings.requireConfirmation.description",
+        title={t(
+          "screens.settings.pending.settings.autoPaySubscriptions.label",
         )}
-        value={requireConfirmation}
-        onToggle={() => setRequireConfirmation(!requireConfirmation)}
+        description={t(
+          "screens.settings.pending.settings.autoPaySubscriptions.description",
+        )}
+        value={autoPaySubscriptions}
+        onToggle={() => setAutoPaySubscriptions(!autoPaySubscriptions)}
       />
 
-      {requireConfirmation && (
-        <ToggleRow
-          title={t(
-            "screens.settings.pending.settings.updateDateOnConfirm.label",
-          )}
-          description={t(
-            "screens.settings.pending.settings.updateDateOnConfirm.description",
-          )}
-          value={updateDateUponConfirmation}
-          onToggle={() =>
-            setUpdateDateUponConfirmation(!updateDateUponConfirmation)
-          }
-        />
-      )}
-
-      {requireConfirmation && <PermissionWarnings />}
+      <ToggleRow
+        title={t("screens.settings.pending.settings.autoPayUpcoming.label")}
+        description={t(
+          "screens.settings.pending.settings.autoPayUpcoming.description",
+        )}
+        value={autoPayUpcoming}
+        onToggle={() => setAutoPayUpcoming(!autoPayUpcoming)}
+      />
 
       <ToggleRow
         title={t("screens.settings.pending.settings.notify.label")}

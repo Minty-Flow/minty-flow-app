@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T16:26:11.212Z
+Generated on: 2026-08-30T17:12:41.233Z
 ```
 ./
 ├── .github/
@@ -392,6 +392,7 @@ Generated on: 2026-08-30T16:26:11.212Z
 │   │   │   │   ├── recurrence-unit-modal.tsx
 │   │   │   │   ├── transaction-top-tabs.tsx
 │   │   │   │   ├── types.ts
+│   │   │   │   ├── upcoming-banner.tsx
 │   │   │   │   ├── use-form-attachments.ts
 │   │   │   │   ├── use-form-conversion-rate.ts
 │   │   │   │   ├── use-form-date-picker.tsx

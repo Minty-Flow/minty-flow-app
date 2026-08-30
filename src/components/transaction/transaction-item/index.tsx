@@ -15,10 +15,12 @@ import {
   deleteTransfer,
 } from "~/database/services/ledger-service"
 import { useIsConfirmable } from "~/hooks/use-time-reactivity"
+import { isPreapproved } from "~/services/auto-confirmation-service"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { useTransactionItemAppearanceStore } from "~/stores/transaction-item-appearance.store"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import {
+  TransactionKindEnum,
   TransactionSubTypeEnum,
   TransactionTypeEnum,
 } from "~/types/transactions"
@@ -74,11 +76,11 @@ export const TransactionItem = ({
     amount,
     title,
     transactionDate,
-    requiresManualConfirmation,
     extra,
     isDeleted,
     transferId,
     subtype,
+    kind,
   } = transactionWithRelations
   const isTransfer = txIsTransfer || type === TransactionTypeEnum.TRANSFER
   const transferLayout = useTransfersPreferencesStore((s) => s.layout)
@@ -139,11 +141,15 @@ export const TransactionItem = ({
     leadingIconPref === "account" ? (account?.icon ?? icon) : icon
   const displayColorScheme =
     leadingIconPref === "account" ? account?.colorScheme : category?.colorScheme
-  const globalRequireConfirmation = usePendingTransactionsStore(
-    (s) => s.requireConfirmation,
+  const autoPaySubscriptions = usePendingTransactionsStore(
+    (s) => s.autoPaySubscriptions,
   )
-  const requireConfirmation =
-    requiresManualConfirmation ?? globalRequireConfirmation
+  const autoPayUpcoming = usePendingTransactionsStore((s) => s.autoPayUpcoming)
+  // Show the manual confirm affordance only for rows that will NOT auto-pay.
+  const requireConfirmation = !isPreapproved(transactionWithRelations, {
+    autoPaySubscriptions,
+    autoPayUpcoming,
+  })
   const isUpcoming = variant === "upcoming"
   const isConfirmable = useIsConfirmable(transactionWithRelations)
   const isAutoRecurring = Boolean(extra?.recurringId)
@@ -162,7 +168,11 @@ export const TransactionItem = ({
     : ` • ${formatReadableTime(transactionDate)}`
   const subtitleText = `${accountLabel}${categorySegment}${timeSegment}`
   const showRecurringBadge = isUpcoming && isAutoRecurring
-  const showPendingBadge = isUpcoming && !isAutoRecurring
+  // CSI-2: the "Upcoming" chip follows `kind`, not the section variant, so it
+  // also shows in the main list. Pending recurring instances keep the recurring
+  // indicator instead (their kind is subscription/repetitive, not upcoming).
+  const showUpcomingBadge =
+    kind === TransactionKindEnum.UPCOMING && !isAutoRecurring
   const handleRestorePress = async (closeSwipe: () => void) => {
     closeSwipe()
     await Promise.resolve(onRestore?.())
@@ -259,7 +269,7 @@ export const TransactionItem = ({
           otherCurrencyAmount={otherCurrencyAmount}
           relatedAccountCurrencyCode={relatedAccount?.currencyCode}
           showRecurringBadge={showRecurringBadge}
-          showPendingBadge={showPendingBadge}
+          showUpcomingBadge={showUpcomingBadge}
         />
       </Pressable>
 

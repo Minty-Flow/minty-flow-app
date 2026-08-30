@@ -32,9 +32,10 @@ const SYNC_DEBOUNCE_MS = 1_000
  */
 export function useRecurringTransactionSync(): void {
   const isHydrated = usePendingTransactionsStore((s) => s.isHydrated)
-  const requireConfirmation = usePendingTransactionsStore(
-    (s) => s.requireConfirmation,
+  const autoPaySubscriptions = usePendingTransactionsStore(
+    (s) => s.autoPaySubscriptions,
   )
+  const autoPayUpcoming = usePendingTransactionsStore((s) => s.autoPayUpcoming)
   const updateDateUponConfirmation = usePendingTransactionsStore(
     (s) => s.updateDateUponConfirmation,
   )
@@ -50,7 +51,8 @@ export function useRecurringTransactionSync(): void {
 
       // Configure service with store state before running auto-confirm
       autoConfirmationService.configure({
-        requireConfirmation,
+        autoPaySubscriptions,
+        autoPayUpcoming,
         updateDateUponConfirmation,
       })
 
@@ -60,7 +62,12 @@ export function useRecurringTransactionSync(): void {
     } catch (e) {
       logger.error("Recurring sync failed", { error: String(e) })
     }
-  }, [isHydrated, requireConfirmation, updateDateUponConfirmation])
+  }, [
+    isHydrated,
+    autoPaySubscriptions,
+    autoPayUpcoming,
+    updateDateUponConfirmation,
+  ])
   const debouncedSync = useDebouncedCallback(() => {
     void sync()
   }, SYNC_DEBOUNCE_MS)

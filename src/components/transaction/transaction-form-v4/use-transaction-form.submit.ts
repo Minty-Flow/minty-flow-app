@@ -10,7 +10,6 @@ export interface BuildPayloadCtx {
   usdCode: string
   attachmentsJson: string | null
   effectiveDate: Date
-  requireConfirmation: boolean
   recurringEnabled: boolean
 }
 
@@ -32,7 +31,6 @@ export function buildTransactionPayload(
     usdCode,
     attachmentsJson,
     effectiveDate,
-    requireConfirmation,
     recurringEnabled,
   } = ctx
 
@@ -44,16 +42,15 @@ export function buildTransactionPayload(
   } else {
     delete builtExtra.attachments
   }
-  const isFuture = effectiveDate.getTime() > Date.now()
   const effectiveIsPending = data.isPending ?? false
+  // Whether a pending row auto-pays is decided live by the per-kind switches
+  // (autoPaySubscriptions / autoPayUpcoming), so new rows carry no opt-out.
+  // An existing row keeps whatever opt-out it already had.
   const requiresManualConfirmation = recurringEnabled
     ? undefined
     : transaction
-      ? (transaction.requiresManualConfirmation ??
-        (isFuture ? requireConfirmation : undefined))
-      : effectiveIsPending
-        ? requireConfirmation
-        : undefined
+      ? transaction.requiresManualConfirmation
+      : undefined
   const payload = {
     amount: data.amount,
     currency: selectedAccount?.currencyCode ?? usdCode,

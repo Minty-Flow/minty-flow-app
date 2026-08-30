@@ -122,7 +122,7 @@
         "header": "Upcoming",
         "seeAll": "See all",
         "recurringCount": "{{count}} recurring",
-        "pendingCount": "{{count}} pending",
+        "pendingCount": "{{count}} upcoming",
         "subHeaderRecurring": "RECURRING",
         "confirmAll": {
           "button": "Confirm all",
@@ -133,7 +133,7 @@
           "daysCount": "Next {{count}} day(s)"
         },
         "a11y": {
-          "header": "Pending",
+          "header": "Upcoming",
           "confirm": "Confirm transaction",
           "confirmAll": "Confirm all transactions",
           "confirmAllButton": "Confirm all",
@@ -521,13 +521,13 @@
         "caption": "Pending transactions will not be counted towards income, expenses, and account balance.",
         "settings": {
           "showOnHome": "Show on home",
-          "requireConfirmation": {
-            "label": "Require confirmation",
-            "description": "When on, new planned transactions need your approval before they count. Existing transactions keep their original mode."
+          "autoPaySubscriptions": {
+            "label": "Automatically Pay Subscriptions",
+            "description": "While on, a subscription or repeating entry that is already past its date gets marked as paid on its own the next time you launch the app."
           },
-          "updateDateOnConfirm": {
-            "label": "Update date on confirm",
-            "description": "Disable to retain original transaction date."
+          "autoPayUpcoming": {
+            "label": "Automatically Pay Upcoming",
+            "description": "While on, an upcoming entry that is already past its date gets marked as paid on its own the next time you launch the app. Leave it off to clear each one yourself with Mark paid."
           },
           "notify": {
             "label": "Notify me",
@@ -981,6 +981,11 @@
         "label": "Kind",
         "loanComingSoon": "Loan settings arrive in a later update"
       },
+      "upcoming": {
+        "banner": "Upcoming — not counted in your balance or stats yet.",
+        "markPaid": "Mark paid",
+        "markDeposited": "Mark deposited"
+      },
       "fields": {
         "transferTitle": "Transfer",
         "transferTitleFull": "From {{from}} to {{to}}",
@@ -1372,7 +1377,7 @@
     },
     "transactionItem": {
       "recurring": "Recurring",
-      "pending": "Pending",
+      "upcoming": "Upcoming",
       "canceled": "Transaction canceled",
       "failedToDelete": "Failed to delete"
     },
