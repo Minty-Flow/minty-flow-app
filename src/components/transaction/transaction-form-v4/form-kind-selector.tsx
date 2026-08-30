@@ -1,12 +1,6 @@
-import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Modal } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
 
-import { modalStyles } from "~/components/selector-modals/styles"
-import { Button } from "~/components/ui/button"
-import { ChevronIcon } from "~/components/ui/chevron-icon"
-import { ListItem } from "~/components/ui/list-item"
+import { Chip } from "~/components/ui/chips"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TranslationKey } from "~/i18n/config"
@@ -36,78 +30,23 @@ type Props = {
 
 export function FormKindSelector({ kind, onSelect, disabled = false }: Props) {
   const { t } = useTranslation()
-  const [visible, setVisible] = useState(false)
-
-  const close = () => setVisible(false)
-  const handleSelect = (next: TransactionKind) => {
-    onSelect(next)
-    close()
-  }
 
   return (
     <View style={transactionFormStyles.fieldBlock}>
       <Text variant="small" style={transactionFormStyles.sectionLabel}>
         {t("components.transactionForm.kind.label")}
       </Text>
-      <ListItem
-        style={transactionFormStyles.inlineDateRow}
-        onPress={() => setVisible(true)}
-        disabled={disabled}
-        accessibilityState={{ disabled }}
-      >
-        <Text
-          variant="default"
-          style={[
-            transactionFormStyles.inlineDateText,
-            disabled && transactionFormStyles.clearButtonDisabled,
-          ]}
-        >
-          {t(KIND_LABEL_KEYS[kind])}
-        </Text>
-        {!disabled && (
-          <ChevronIcon
-            direction="trailing"
-            size={20}
-            style={transactionFormStyles.chevronIcon}
+      <View style={transactionFormStyles.tagsWrapGrid}>
+        {KINDS.map((k) => (
+          <Chip
+            key={k}
+            label={t(KIND_LABEL_KEYS[k])}
+            selected={k === kind}
+            disabled={disabled}
+            onPress={() => !disabled && k !== kind && onSelect(k)}
           />
-        )}
-      </ListItem>
-
-      <Modal
-        visible={visible}
-        animationType="slide"
-        onRequestClose={close}
-        statusBarTranslucent
-        accessibilityViewIsModal
-      >
-        <SafeAreaView
-          style={modalStyles.modalContainer}
-          edges={["top", "bottom"]}
-        >
-          <View style={modalStyles.header}>
-            <Text variant="default" style={modalStyles.headerTitle}>
-              {t("components.transactionForm.kind.label")}
-            </Text>
-            <Button variant="ghost" onPress={close}>
-              <Text variant="default">{t("common.actions.cancel")}</Text>
-            </Button>
-          </View>
-          <View style={modalStyles.listWrapper}>
-            {KINDS.map((k) => (
-              <ListItem
-                key={k}
-                style={[
-                  modalStyles.item,
-                  k === kind && modalStyles.itemSelected,
-                ]}
-                onPress={() => handleSelect(k)}
-              >
-                <Text variant="large">{t(KIND_LABEL_KEYS[k])}</Text>
-              </ListItem>
-            ))}
-          </View>
-        </SafeAreaView>
-      </Modal>
+        ))}
+      </View>
     </View>
   )
 }

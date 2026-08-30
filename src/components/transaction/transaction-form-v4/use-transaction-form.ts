@@ -160,13 +160,12 @@ export function useTransactionForm({
   const accountGoals = accountId
     ? goals.filter((g) => g.accountIds.includes(accountId))
     : []
-  // Filter loans to only those matching both the selected account AND category
-  const accountLoans =
-    accountId && categoryId
-      ? loans.filter(
-          (l) => l.accountId === accountId && l.categoryId === categoryId,
-        )
-      : []
+  // Loans linkable from the selected account. Category is intentionally NOT
+  // required to match: a loan is created against one account+category, but
+  // linking a repayment must not force the user onto that exact category.
+  const accountLoans = accountId
+    ? loans.filter((l) => l.accountId === accountId)
+    : []
   // Filter budgets by selected account AND category
   const accountBudgets = accountId
     ? budgets.filter(
@@ -211,13 +210,9 @@ export function useTransactionForm({
       }
     }
     if (loanId) {
-      const newLoans =
-        newAccountId && categoryId
-          ? loans.filter(
-              (l) =>
-                l.accountId === newAccountId && l.categoryId === categoryId,
-            )
-          : []
+      const newLoans = newAccountId
+        ? loans.filter((l) => l.accountId === newAccountId)
+        : []
       if (!newLoans.some((l) => l.id === loanId)) {
         setValue("loanId", null, { shouldDirty: false })
       }
@@ -664,30 +659,13 @@ export function useTransactionForm({
         setValue("budgetId", null, { shouldDirty: false })
       }
     }
-    // Clear loan if it no longer matches the new category
-    if (loanId) {
-      const validLoan = accountId
-        ? loans.some(
-            (l) =>
-              l.id === loanId &&
-              l.accountId === accountId &&
-              l.categoryId === id,
-          )
-        : false
-      if (!validLoan) {
-        setValue("loanId", null, { shouldDirty: false })
-      }
-    }
+    // Loan is account-scoped only; a category change never invalidates it.
   }
   const handleCategoryClear = () => {
     setValue("categoryId", null, { shouldDirty: true })
     // Clear budget since it was category-filtered
     if (budgetId) {
       setValue("budgetId", null, { shouldDirty: false })
-    }
-    // Clear loan since it is filtered by both account and category
-    if (loanId) {
-      setValue("loanId", null, { shouldDirty: false })
     }
   }
   const amountErrorKey = errors.amount?.message

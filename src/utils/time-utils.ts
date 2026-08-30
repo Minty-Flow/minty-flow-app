@@ -284,6 +284,32 @@ export function formatCreatedAt(date: DateInput): string {
   return formatWithPattern(dateObj, FORMAT.CREATED_AT)
 }
 
+/**
+ * Transaction date + time for the form's date row:
+ * "Today 3:42 PM", "Yesterday 9:00 AM", "Mar 4 3:42 PM", and
+ * "Mar 4, 2027 3:42 PM" only when the year differs from the current year.
+ */
+export function formatTransactionDateTime(date: DateInput): string {
+  const dateObj = toDate(date)
+  if (!dateObj) return t("dates.unknown")
+
+  const time = fmt(dateObj, FORMAT.READABLE_TIME)
+
+  let day: string
+  if (isToday(dateObj)) day = t("dates.today")
+  else if (isYesterday(dateObj)) day = t("dates.yesterday")
+  else if (isTomorrow(dateObj)) day = t("dates.tomorrow")
+  else {
+    const sameYear = dateObj.getFullYear() === new Date().getFullYear()
+    day = fmt(
+      dateObj,
+      sameYear ? FORMAT.SHORT_MONTH_DAY : FORMAT.SHORT_MONTH_DAY_YEAR,
+    )
+  }
+
+  return `${day} ${time}`
+}
+
 /** LOAN DATE: Localized medium date (Feb 15, 2024) */
 export function formatLoanDate(date: DateInput): string {
   return formatWithPattern(date, FORMAT.LOAN_DATE)
