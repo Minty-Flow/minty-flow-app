@@ -31,6 +31,8 @@ export interface TransactionFormV4Props {
   initialTagIds?: string[]
   initialKind?: TransactionKind
   prefill?: Partial<TransactionFormValues>
+  /** Show the free-text title field. Off by default — title derives from category. */
+  showTitle?: boolean
 }
 
 export type ModalState = {

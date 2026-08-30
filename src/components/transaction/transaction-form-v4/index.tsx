@@ -37,7 +37,14 @@ import type { TransactionFormV4Props } from "./types"
 import { useTransactionForm } from "./use-transaction-form"
 
 export function TransactionFormV4(props: TransactionFormV4Props) {
-  const { transaction, accounts, categories, tags, transactionType } = props
+  const {
+    transaction,
+    accounts,
+    categories,
+    tags,
+    transactionType,
+    showTitle = false,
+  } = props
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const f = useTransactionForm(props)
@@ -105,7 +112,6 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
               date={f.date}
               control={f.control}
               onDatePress={() => f.openDatePicker("transaction")}
-              onSetNow={f.handleSetNow}
             />
           )}
 
@@ -116,30 +122,32 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
           />
           <FormKindCard kind={f.kind} />
 
-          {/* Title */}
-          <View style={transactionFormStyles.nameSection}>
-            <Controller
-              control={f.control}
-              name="title"
-              render={({ field: { value, onChange } }) => (
-                <Input
-                  value={value ?? ""}
-                  onChangeText={onChange}
-                  placeholder={
-                    f.derivedTransferTitle ||
-                    t("common.transaction.untitledTransaction")
-                  }
-                  variant="title"
-                  placeholderTextColor={theme.colors.semantic.semi}
-                />
-              )}
-            />
-            {f.titleErrorKey ? (
-              <Text style={transactionFormStyles.fieldError}>
-                {t(f.titleErrorKey as TranslationKey)}
-              </Text>
-            ) : null}
-          </View>
+          {/* Title: hidden by default — derives from category name */}
+          {showTitle && (
+            <View style={transactionFormStyles.nameSection}>
+              <Controller
+                control={f.control}
+                name="title"
+                render={({ field: { value, onChange } }) => (
+                  <Input
+                    value={value ?? ""}
+                    onChangeText={onChange}
+                    placeholder={
+                      f.derivedTransferTitle ||
+                      t("common.transaction.untitledTransaction")
+                    }
+                    variant="title"
+                    placeholderTextColor={theme.colors.semantic.semi}
+                  />
+                )}
+              />
+              {f.titleErrorKey ? (
+                <Text style={transactionFormStyles.fieldError}>
+                  {t(f.titleErrorKey as TranslationKey)}
+                </Text>
+              ) : null}
+            </View>
+          )}
 
           <FormNotesSection
             description={f.description}

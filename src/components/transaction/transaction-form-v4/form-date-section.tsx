@@ -7,13 +7,12 @@ import { DynamicIcon } from "~/components/dynamic-icon"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { InfoBanner } from "~/components/ui/info-banner"
 import { ListItem } from "~/components/ui/list-item"
-import { Pressable } from "~/components/ui/pressable"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import { startOfNextMinute } from "~/utils/pending-transactions"
-import { formatCreatedAt } from "~/utils/time-utils"
+import { formatTransactionDateTime } from "~/utils/time-utils"
 
 import { transactionFormStyles } from "./form.styles"
 
@@ -21,15 +20,9 @@ type Props = {
   date: Date
   control: Control<TransactionFormValues>
   onDatePress: () => void
-  onSetNow: () => void
 }
 
-export function FormDateSection({
-  date,
-  control,
-  onDatePress,
-  onSetNow,
-}: Props) {
+export function FormDateSection({ date, control, onDatePress }: Props) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
 
@@ -42,22 +35,9 @@ export function FormDateSection({
   return (
     <>
       <View style={transactionFormStyles.fieldBlock}>
-        <View style={transactionFormStyles.sectionLabelRow}>
-          <Text variant="small" style={transactionFormStyles.sectionLabelInRow}>
-            {t("components.transactionForm.fields.transactionDate")}
-          </Text>
-          <Pressable
-            onPress={onSetNow}
-            style={transactionFormStyles.clearButton}
-            accessibilityLabel={t(
-              "components.transactionForm.a11y.setDateTimeNow",
-            )}
-          >
-            <Text variant="small" style={transactionFormStyles.clearButtonText}>
-              {t("components.transactionForm.fields.now")}
-            </Text>
-          </Pressable>
-        </View>
+        <Text variant="small" style={transactionFormStyles.sectionLabel}>
+          {t("components.transactionForm.fields.transactionDate")}
+        </Text>
         <ListItem
           style={transactionFormStyles.inlineDateRow}
           onPress={onDatePress}
@@ -69,7 +49,7 @@ export function FormDateSection({
             variant="badge"
           />
           <Text variant="default" style={transactionFormStyles.inlineDateText}>
-            {formatCreatedAt(date)}
+            {formatTransactionDateTime(date)}
           </Text>
           <ChevronIcon
             direction="trailing"

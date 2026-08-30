@@ -734,13 +734,16 @@ row insertion is `src/database/backup/backup-import-plan.ts` `insertRows()`;
 `import-snapshot.ts` is only emergency-snapshot file IO.
 
 - Add `"kind"` to `ALLOWED_COLUMNS.transactions` (and `"term"` to
-  `ALLOWED_COLUMNS.loans` in Slice 4); bump `SCHEMA_VERSION`.
-- **Cross-version import is rejected outright** — `validateBackup` does a strict
-  `meta.schemaVersion === SCHEMA_VERSION` check and refuses BOTH older and newer
-  backups with a clear message. This is the pre-existing, deliberate policy for
-  every schema bump; **do not relax it** in this work (a per-version upgrade
-  framework is out of scope). So a real exported backup always either carries
-  `kind` (same version) or is rejected before import.
+  `ALLOWED_COLUMNS.loans` in Slice 4); bump `SCHEMA_VERSION` to 4.
+- **One-release backward window (revised — live users, no server backup).**
+  `validateBackup` accepts `MIN_SUPPORTED_SCHEMA_VERSION (3) ≤ meta.schemaVersion
+  ≤ SCHEMA_VERSION (4)` and still refuses anything older or newer with a clear
+  message. v3 → v4 differs *only* by the additive `transactions.kind` column, and
+  `insertRows` already backfills a missing `kind` via `deriveKind`, so a v3
+  backup restores losslessly. This deliberately relaxes the previous
+  "reject every non-current version" policy for exactly one column bump; drop
+  `MIN_SUPPORTED_SCHEMA_VERSION` back to `SCHEMA_VERSION` once v3 exports have
+  aged out. A per-version upgrade framework is still out of scope.
 - **`deriveKind` fallback** (`src/domain/derive-kind.ts`, pure, type-only
   imports) still earns its place: it runs in `insertRows` for any transaction
   row that reaches insertion WITHOUT a `kind` — i.e. `recoverInterruptedImport`
