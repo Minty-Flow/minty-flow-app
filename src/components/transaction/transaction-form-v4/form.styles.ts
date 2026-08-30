@@ -338,13 +338,18 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     color: theme.colors.semantic.semi,
     paddingVertical: SECTION_GAP,
   },
+  tagPickerFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: SECTION_GAP,
+  },
   tagPickerFooterRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: ROW_GAP,
     paddingVertical: ROW_PADDING_V,
     paddingHorizontal: SECTION_GAP,
-    marginTop: SECTION_GAP,
     borderRadius: theme.radius,
   },
   createTagRowText: {

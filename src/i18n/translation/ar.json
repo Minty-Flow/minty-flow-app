@@ -1133,7 +1133,7 @@
       },
       "notFoundTransaction": "لم يتم العثور على المعاملة.",
       "searchTags": "ابحث عن الوسوم...",
-      "createNewTag": "إنشاء وسم جديد",
+      "createNewTag": "وسم جديد",
       "kind": {
         "label": "النوع",
         "info": {
