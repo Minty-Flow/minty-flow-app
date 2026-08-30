@@ -1,12 +1,9 @@
-import type { Loan } from "~/types/loans"
 import type {
   Recurrence,
   RecurrenceUnit,
   TransactionKind,
 } from "~/types/transactions"
 
-import { LoanCard } from "./loan-card"
-import type { LoanDraft } from "./on-kind-change"
 import { RecurrenceCard } from "./recurrence-card"
 
 type Props = {
@@ -18,46 +15,23 @@ type Props = {
   onUnitChange: (u: RecurrenceUnit) => void
   onUntilPress: () => void
   onUntilReset: () => void
-  loanDraft: LoanDraft | null
-  onLoanDraftChange: (draft: LoanDraft) => void
-  linkedLoan: Loan | null
-  linkableLoans: Loan[]
-  onLinkLoan: (loanId: string) => void
-  onUnlinkLoan: () => void
-  onFillRemaining: () => void
-  loanCurrencyCode: string
 }
 
 export function FormKindCard(props: Props) {
-  switch (props.kind) {
-    case "subscription":
-    case "repetitive":
-      return (
-        <RecurrenceCard
-          recurrence={props.recurrence}
-          until={props.until}
-          occurrenceCount={props.occurrenceCount}
-          onIntervalChange={props.onIntervalChange}
-          onUnitChange={props.onUnitChange}
-          onUntilPress={props.onUntilPress}
-          onUntilReset={props.onUntilReset}
-        />
-      )
-    case "lent":
-    case "borrowed":
-      return (
-        <LoanCard
-          loanDraft={props.loanDraft}
-          onLoanDraftChange={props.onLoanDraftChange}
-          linkedLoan={props.linkedLoan}
-          linkableLoans={props.linkableLoans}
-          onLink={props.onLinkLoan}
-          onUnlink={props.onUnlinkLoan}
-          onFillRemaining={props.onFillRemaining}
-          currencyCode={props.loanCurrencyCode}
-        />
-      )
-    default:
-      return null
+  if (props.kind === "subscription" || props.kind === "repetitive") {
+    return (
+      <RecurrenceCard
+        recurrence={props.recurrence}
+        until={props.until}
+        occurrenceCount={props.occurrenceCount}
+        onIntervalChange={props.onIntervalChange}
+        onUnitChange={props.onUnitChange}
+        onUntilPress={props.onUntilPress}
+        onUntilReset={props.onUntilReset}
+      />
+    )
   }
+  // lent / borrowed build a one-time loan straight from the main form fields
+  // (title -> loan name, date -> due date) — no extra block.
+  return null
 }

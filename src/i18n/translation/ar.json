@@ -1140,14 +1140,8 @@
         "markDeposited": "تحديد كمُودعة"
       },
       "loan": {
-        "linkExisting": "ربط قرض موجود",
         "nameLabel": "اسم القرض",
-        "namePlaceholder": "سمِّ هذا القرض",
-        "dueDateLabel": "تاريخ الاستحقاق",
-        "noDueDate": "بلا تاريخ استحقاق",
-        "remainingLabel": "المتبقّي",
-        "maxButton": "الكل",
-        "newHint": "يُنشأ قرض لمرة واحدة وتكون هذه المعاملة قيده الافتتاحي."
+        "dueDateLabel": "تاريخ الاستحقاق"
       },
       "deleteLoanModal": {
         "title": "حذف هذا القرض؟",

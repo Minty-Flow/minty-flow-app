@@ -21,9 +21,16 @@ type Props = {
   date: Date
   control: Control<TransactionFormValues>
   onDatePress: () => void
+  /** Loan kinds: this row is the loan's due date, and pending never applies. */
+  dueDateMode?: boolean
 }
 
-export function FormDateSection({ date, control, onDatePress }: Props) {
+export function FormDateSection({
+  date,
+  control,
+  onDatePress,
+  dueDateMode = false,
+}: Props) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
 
@@ -31,13 +38,15 @@ export function FormDateSection({ date, control, onDatePress }: Props) {
   // already pending (e.g. an overdue one) so the user can still turn it off.
   const isPending = useWatch({ control, name: "isPending" })
   const isFuture = date.getTime() > startOfNextMinute().getTime()
-  const showPending = isFuture || !!isPending
+  const showPending = !dueDateMode && (isFuture || !!isPending)
 
   return (
     <>
       <View style={transactionFormStyles.fieldBlock}>
         <FieldLabel style={transactionFormStyles.sectionLabel}>
-          {t("components.transactionForm.fields.transactionDate")}
+          {dueDateMode
+            ? t("components.transactionForm.loan.dueDateLabel")
+            : t("components.transactionForm.fields.transactionDate")}
         </FieldLabel>
         <ListItem
           style={transactionFormStyles.inlineDateRow}

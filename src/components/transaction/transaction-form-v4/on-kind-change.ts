@@ -5,12 +5,8 @@ import type { RecurringState } from "./types"
 // Runtime-import-free (type-only imports) so scripts/checks/*.mts can load it
 // under Node type-stripping.
 
-export type LoanDraft = { name: string; dueDate: Date | null }
-
 export type KindScratchState = {
   recurring: RecurringState
-  loanDraft: LoanDraft | null
-  linkedLoanId: string | null
   toAccountId: string | undefined
 }
 
@@ -41,11 +37,7 @@ export function onKindChange(
   if (RECURRING_KINDS.has(prev) && RECURRING_KINDS.has(next)) return {}
 
   if (next === "default" || next === "upcoming") {
-    const out: Partial<KindScratchState> = {
-      recurring: freshRecurrence(),
-      loanDraft: null,
-      linkedLoanId: null,
-    }
+    const out: Partial<KindScratchState> = { recurring: freshRecurrence() }
     // upcoming disallows transfer — drop any pending destination account.
     if (next === "upcoming" && state.toAccountId !== undefined) {
       out.toAccountId = undefined
@@ -55,14 +47,10 @@ export function onKindChange(
 
   if (RECURRING_KINDS.has(next)) {
     // arrived from a non-recurring kind -> seed a fresh recurrence
-    return { recurring: freshRecurrence(), loanDraft: null, linkedLoanId: null }
+    return { recurring: freshRecurrence() }
   }
 
-  // next is "lent" | "borrowed"
-  return {
-    recurring: freshRecurrence(),
-    loanDraft: { name: "", dueDate: null },
-    linkedLoanId: null,
-    toAccountId: undefined,
-  }
+  // next is "lent" | "borrowed": a new one-time loan built from the main form
+  // fields (title -> name, date -> due date), so only the transfer dest drops.
+  return { recurring: freshRecurrence(), toAccountId: undefined }
 }

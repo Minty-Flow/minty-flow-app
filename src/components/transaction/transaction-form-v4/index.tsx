@@ -55,13 +55,16 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
     (s) => s.showUntitledForBlankTitle,
   )
   const untitledLabel = t("common.transaction.untitledTransaction")
-  // Mirror the list display rule: a blank title falls back to the category name
-  // unless the user opted to keep the literal "Untitled" label.
-  const titlePlaceholder =
-    f.derivedTransferTitle ||
-    (showUntitledForBlankTitle
-      ? untitledLabel
-      : (categories.find((c) => c.id === f.categoryId)?.name ?? untitledLabel))
+  // For the loan kinds the title IS the loan name; otherwise mirror the list
+  // display rule — a blank title falls back to the category name unless the
+  // user opted to keep the literal "Untitled" label.
+  const titlePlaceholder = f.isLoanKind
+    ? t("components.transactionForm.loan.nameLabel")
+    : f.derivedTransferTitle ||
+      (showUntitledForBlankTitle
+        ? untitledLabel
+        : (categories.find((c) => c.id === f.categoryId)?.name ??
+          untitledLabel))
 
   return (
     <ShowFieldLabelsProvider value={showFieldLabels}>
@@ -72,7 +75,6 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
             value={f.topTabType}
             onChange={f.onTopTabChange}
             hiddenSlots={f.tabHiddenSlots}
-            lockedTo={f.tabLockedTo}
           />
         </View>
 
@@ -123,12 +125,14 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
               />
             )}
 
-            {/* Date + Pending: hidden for subscription/repetitive kinds */}
+            {/* Date + Pending: hidden for subscription/repetitive kinds.
+                For loan kinds this row is the loan's due date. */}
             {!f.isRecurringKind && (
               <FormDateSection
                 date={f.date}
                 control={f.control}
                 onDatePress={() => f.openDatePicker("transaction")}
+                dueDateMode={f.isLoanKind}
               />
             )}
 
@@ -154,14 +158,6 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
               }
               onUntilPress={() => f.openDatePicker("recurringEnd")}
               onUntilReset={() => f.setRecurring({ until: null })}
-              loanDraft={f.loanDraft}
-              onLoanDraftChange={f.setLoanDraft}
-              linkedLoan={f.linkedLoan}
-              linkableLoans={f.linkableLoans}
-              onLinkLoan={f.linkExistingLoan}
-              onUnlinkLoan={f.unlinkLoan}
-              onFillRemaining={f.fillRemainingAmount}
-              loanCurrencyCode={f.selectedAccount?.currencyCode ?? "USD"}
             />
 
             <View style={transactionFormStyles.nameSection}>
