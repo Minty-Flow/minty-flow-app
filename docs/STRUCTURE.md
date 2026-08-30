@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T00:29:15.141Z
+Generated on: 2026-08-30T01:47:39.771Z
 ```
 ./
 ├── .github/
@@ -24,6 +24,8 @@ Generated on: 2026-08-30T00:29:15.141Z
 │   │   └── prepare-commit-msg
 │   └── pre-commit
 ├── docs/
+│   ├── adr/
+│   │   └── 0001-transaction-kind-axis.md
 │   ├── agents/
 │   │   ├── domain.md
 │   │   ├── issue-tracker.md
@@ -553,6 +555,7 @@ Generated on: 2026-08-30T00:29:15.141Z
 ├── babel.config.js
 ├── biome.json
 ├── CODE_OF_CONDUCT.md
+├── CONTEXT.md
 ├── CONTRIBUTING.md
 ├── drizzle.config.ts
 ├── expo-env.d.ts
