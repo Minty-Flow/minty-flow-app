@@ -12,6 +12,7 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
 import type { TranslationKey } from "~/i18n/config"
+import { useTransactionItemAppearanceStore } from "~/stores/transaction-item-appearance.store"
 import { TransactionTypeEnum } from "~/types/transactions"
 
 import { FieldLabel, ShowFieldLabelsProvider } from "./field-label"
@@ -49,6 +50,18 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const f = useTransactionForm(props)
+
+  const showUntitledForBlankTitle = useTransactionItemAppearanceStore(
+    (s) => s.showUntitledForBlankTitle,
+  )
+  const untitledLabel = t("common.transaction.untitledTransaction")
+  // Mirror the list display rule: a blank title falls back to the category name
+  // unless the user opted to keep the literal "Untitled" label.
+  const titlePlaceholder =
+    f.derivedTransferTitle ||
+    (showUntitledForBlankTitle
+      ? untitledLabel
+      : (categories.find((c) => c.id === f.categoryId)?.name ?? untitledLabel))
 
   return (
     <ShowFieldLabelsProvider value={showFieldLabels}>
@@ -159,10 +172,7 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
                   <Input
                     value={value ?? ""}
                     onChangeText={onChange}
-                    placeholder={
-                      f.derivedTransferTitle ||
-                      t("common.transaction.untitledTransaction")
-                    }
+                    placeholder={titlePlaceholder}
                     variant="title"
                     placeholderTextColor={theme.colors.semantic.semi}
                   />

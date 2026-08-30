@@ -128,8 +128,8 @@ export default function TransactionAppearanceScreen() {
   const variant = useTransactionItemAppearanceStore((s) => s.variant)
   const leadingIcon = useTransactionItemAppearanceStore((s) => s.leadingIcon)
   const showCategory = useTransactionItemAppearanceStore((s) => s.showCategory)
-  const showCategoryForUntitled = useTransactionItemAppearanceStore(
-    (s) => s.showCategoryForUntitled,
+  const showUntitledForBlankTitle = useTransactionItemAppearanceStore(
+    (s) => s.showUntitledForBlankTitle,
   )
 
   const setVariant = useTransactionItemAppearanceStore((s) => s.setVariant)
@@ -139,8 +139,8 @@ export default function TransactionAppearanceScreen() {
   const setShowCategory = useTransactionItemAppearanceStore(
     (s) => s.setShowCategory,
   )
-  const setShowCategoryForUntitled = useTransactionItemAppearanceStore(
-    (s) => s.setShowCategoryForUntitled,
+  const setShowUntitledForBlankTitle = useTransactionItemAppearanceStore(
+    (s) => s.setShowUntitledForBlankTitle,
   )
 
   const isLessDense = variant === "elevated"
@@ -179,7 +179,9 @@ export default function TransactionAppearanceScreen() {
       <View native style={styles.toggleCard}>
         <ListItem
           style={styles.toggleRow}
-          onPress={() => setShowCategoryForUntitled(!showCategoryForUntitled)}
+          onPress={() =>
+            setShowUntitledForBlankTitle(!showUntitledForBlankTitle)
+          }
         >
           <View native style={styles.toggleRowContent}>
             <Text style={styles.toggleLabel}>
@@ -194,8 +196,8 @@ export default function TransactionAppearanceScreen() {
             </Text>
           </View>
           <Switch
-            value={showCategoryForUntitled}
-            onValueChange={setShowCategoryForUntitled}
+            value={showUntitledForBlankTitle}
+            onValueChange={setShowUntitledForBlankTitle}
           />
         </ListItem>
 

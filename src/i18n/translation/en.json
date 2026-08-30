@@ -408,8 +408,8 @@
               "leadingIcon": "Leading Icon"
             },
             "showForUntitled": {
-              "label": "Show category for untitled",
-              "description": "Use the category name as the title when a transaction has no name"
+              "label": "Show “Untitled” for blank titles",
+              "description": "When a transaction has no name, show “Untitled” instead of its category name"
             },
             "showAfterAccount": {
               "label": "Show category after account",
