@@ -59,3 +59,36 @@ orthogonal (a subscription is an expense; a Collected repayment is income).
 - `is_pending` is now derived from `kind = 'upcoming'` on write; the two must not
   drift. `confirmTransaction` resets `kind` to `default` when it clears
   `is_pending`.
+
+## State model
+
+```
+kind axis (transaction):
+
+              ┌─────────┐
+    ┌─────────│ default │◀────────┐
+    │         └────┬────┘         │ confirm (Mark paid / deposited)
+    │              │              │
+    │        set kind in form     │
+    │   ┌──────────┼──────────┐   │
+    ▼   ▼          ▼          ▼   │
+ upcoming   subscription  repetitive
+    │        (recurring rule spawns instances;
+    │         future instances is_pending=1,
+    │         kind preserved)
+    └──────────────────────────────┘
+
+ lent / borrowed  ── open one-time loan (opening entry) ──▶
+       │
+       ├─ Collect All / Settle All ─────▶ closed        (progress ≥ 1)
+       │
+       └─ Partially Collect / Settle ──▶ long_term loan (0 < progress < 1)
+                                          └─ further repayments ─▶ completed
+
+edit locks: once a transaction is loan-linked, kind / type / loanId are
+immutable through the transaction form; recurring instances detach from their
+rule if their kind is changed away from subscription/repetitive.
+```
+
+`type` (expense/income/transfer) is the orthogonal axis and does not change
+after creation for loan-linked or recurring rows.
