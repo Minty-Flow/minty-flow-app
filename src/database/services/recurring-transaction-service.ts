@@ -1,5 +1,5 @@
 import { endOfDay } from "date-fns"
-import { and, count, desc, eq, lte } from "drizzle-orm"
+import { and, count, desc, eq } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
 import { recurringTransactions, transactions } from "~/database/drizzle/schema"
@@ -16,7 +16,11 @@ import type {
 } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { assertMinorUnits } from "~/utils/money"
-import { buildRRuleString, nextAbsoluteOccurrence } from "~/utils/recurrence"
+import {
+  buildRRuleString,
+  nextAbsoluteOccurrence,
+  parseRecurrence,
+} from "~/utils/recurrence"
 
 // ── Row types ─────────────────────────────────────────────────────────────────
 
@@ -249,8 +253,10 @@ const FOREVER_MS = new Date(2099, 11, 31).getTime()
 /**
  * ES-8 — rewrite a rule's recurrence (interval/unit) and/or its "until".
  * Keeps `range.from` (RS-2). Resets `last_generated_transaction_date` to the
- * latest already-generated occurrence <= now so the next sync continues without
- * duplicating or skipping. Never touches the template fields.
+ * latest live occurrence (past or future) so the next sync continues without
+ * stalling. Handles future-dated edited instances by anchoring to the max of
+ * all instances, preventing effectiveLast guard from pinning the cursor below
+ * new-cadence occurrences. Never touches the template fields.
  */
 export async function updateRecurringRule(
   ruleId: string,
@@ -276,16 +282,13 @@ export async function updateRecurringRule(
     until: opts.until ?? null,
   })
 
-  const nowIso = new Date().toISOString()
-  const lastPast = drizzleDb
+  // Get the latest live instance (past or future) to anchor the cursor.
+  // This prevents stalling when the edited instance is future-dated (pending).
+  const lastLive = drizzleDb
     .select({ d: transactions.transactionDate })
     .from(transactions)
     .where(
-      and(
-        eq(transactions.recurringId, ruleId),
-        eq(transactions.isDeleted, 0),
-        lte(transactions.transactionDate, nowIso),
-      ),
+      and(eq(transactions.recurringId, ruleId), eq(transactions.isDeleted, 0)),
     )
     .orderBy(desc(transactions.transactionDate))
     .get()
@@ -295,7 +298,7 @@ export async function updateRecurringRule(
       .set({
         rules: JSON.stringify([rrule]),
         range: JSON.stringify(nextRange),
-        lastGeneratedTransactionDate: lastPast?.d ?? null,
+        lastGeneratedTransactionDate: lastLive?.d ?? null,
       })
       .where(eq(recurringTransactions.id, ruleId))
       .run()
@@ -337,22 +340,34 @@ export async function applyRecurringEditScope({
     return
   }
 
-  // Branch on cadence change (recurrence or until provided)
-  const hasCadenceChange = recurrence != null || until !== undefined
+  // Detect real cadence change by comparing incoming values against stored rule.
+  // Field-only edits (amount/title/category only) must not trigger delete + regenerate.
+  const storedRule = await findRecurringById(ruleId)
+  const storedRec = storedRule
+    ? parseRecurrence(storedRule.rules[0] ?? "")
+    : null
+  const incomingUntilMs = until ? endOfDay(until).getTime() : FOREVER_MS
+  const recurrenceChanged =
+    !!recurrence &&
+    !!storedRec &&
+    !!storedRule &&
+    (recurrence.interval !== storedRec.interval ||
+      recurrence.unit !== storedRec.unit ||
+      incomingUntilMs !== storedRule.range.to)
 
-  if (hasCadenceChange) {
+  if (recurrenceChanged && recurrence) {
     // Delete forward instances FIRST when cadence changes.
     // Cutoff: fromDate = transactionDate + 1ms spares the edited instance.
     // deleteFutureRecurringInstances filters gte(transactionDate, fromDate),
     // so +1ms ensures the edited instance's timestamp is strictly less.
     const fromDate = new Date(transactionDate.getTime() + 1)
     await deleteFutureRecurringInstances(ruleId, fromDate)
+  } else if (!recurrenceChanged) {
+    // Pure field-only edit: update field values on future instances.
+    await updateFutureRecurringInstances(ruleId, transactionDate, payload)
   }
 
-  // Update field values on future instances (no-op if cadence change, since deleted).
-  await updateFutureRecurringInstances(ruleId, transactionDate, payload)
-
-  // Update template fields for regeneration.
+  // Update template fields.
   await updateRecurringRuleTemplate(ruleId, {
     amount: payload.amount,
     title: payload.title,
@@ -361,9 +376,9 @@ export async function applyRecurringEditScope({
     type: payload.type,
   })
 
-  // Update recurrence/until if cadence changed. Deleting forward instances
-  // prevents the effectiveLast guard from stalling generation on the new cadence.
-  if (recurrence != null) {
+  // Update recurrence/until if cadence changed.
+  // With forward instances deleted, effectiveLast no longer stalls the sync.
+  if (recurrenceChanged && recurrence) {
     await updateRecurringRule(ruleId, {
       recurrence,
       until: until ?? null,
