@@ -96,6 +96,7 @@ export const transactions = sqliteTable(
       .notNull()
       .default(0),
     subtype: text("subtype"),
+    kind: text("kind").notNull().default("default"),
     extra: text("extra"),
     hasAttachments: integer("has_attachments")
       .notNull()
@@ -139,6 +140,10 @@ export const transactions = sqliteTable(
     check(
       "transactions_subtype_check",
       sql`${table.subtype} IS NULL OR ${table.subtype} IN ('recurring', 'one-time', 'refund', 'loan_borrowed', 'loan_repayment', 'loan_lent', 'loan_received')`,
+    ),
+    check(
+      "transactions_kind_check",
+      sql`${table.kind} IN ('default','upcoming','subscription','repetitive','lent','borrowed')`,
     ),
     check(
       "transactions_has_attachments_check",
