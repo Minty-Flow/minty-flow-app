@@ -69,7 +69,7 @@ export function LoanModifyContent({
     resolver: zodResolver(addLoanSchema),
     defaultValues: {
       loanType: loan?.loanType ?? prefill?.loanType ?? LoanTypeEnum.LENT,
-      term: loan?.term ?? prefill?.term ?? "long_term",
+      term: loan?.term ?? prefill?.term ?? "one_time",
       name: loan?.name ?? prefill?.name ?? "",
       description: loan?.description ?? prefill?.description ?? null,
       icon: loan?.icon ?? "scale-outline",
@@ -81,7 +81,7 @@ export function LoanModifyContent({
     },
   })
   const formLoanType = watch("loanType")
-  const formTerm = watch("term") ?? "long_term"
+  const formTerm = watch("term") ?? "one_time"
   const formName = watch("name")
   const formIcon = watch("icon")
   const formColorSchemeName = watch("colorSchemeName")

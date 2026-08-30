@@ -73,6 +73,9 @@ export function LoanCard({ loan, onPress }: LoanCardProps) {
 
   const progressBarColor = isPaid ? mutedColor : accentColor
   const progressPercent = Math.round(clampedProgress * 1000) / 10
+  // A one-time loan is open or covered — no partial progress. Only a long-term
+  // loan (which a partial Collect/Settle promotes it to) shows a progress bar.
+  const isLongTerm = loan.term === "long_term"
 
   return (
     <Pressable
@@ -121,58 +124,78 @@ export function LoanCard({ loan, onPress }: LoanCardProps) {
         </View>
       </View>
 
-      <View style={styles.progressTrack}>
-        <RNView
-          style={[
-            styles.progressFill,
-            {
-              width: `${progressPercent}%` as DimensionValue,
-              backgroundColor: progressBarColor,
-            },
-          ]}
-        />
-      </View>
+      {isLongTerm ? (
+        <>
+          <View style={styles.progressTrack}>
+            <RNView
+              style={[
+                styles.progressFill,
+                {
+                  width: `${progressPercent}%` as DimensionValue,
+                  backgroundColor: progressBarColor,
+                },
+              ]}
+            />
+          </View>
 
-      <View style={styles.row3}>
-        <Text variant="small" style={styles.paidLabel}>
-          {isLent
-            ? t("screens.settings.loans.card.received")
-            : t("screens.settings.loans.card.paidBack")}{" "}
-          <Money
-            value={paid}
-            currency={account?.currencyCode ?? ""}
-            variant="small"
-            tone="transfer"
-            hideSign
-          />{" "}
-          {t("screens.settings.loans.card.of")}{" "}
+          <View style={styles.row3}>
+            <Text variant="small" style={styles.paidLabel}>
+              {isLent
+                ? t("screens.settings.loans.card.received")
+                : t("screens.settings.loans.card.paidBack")}{" "}
+              <Money
+                value={paid}
+                currency={account?.currencyCode ?? ""}
+                variant="small"
+                tone="transfer"
+                hideSign
+              />{" "}
+              {t("screens.settings.loans.card.of")}{" "}
+              <Money
+                value={principal}
+                currency={account?.currencyCode ?? ""}
+                variant="small"
+                tone="transfer"
+                hideSign
+              />
+            </Text>
+
+            {isPaid ? (
+              <Text
+                variant="small"
+                style={[styles.rightText, { color: mutedColor }]}
+              >
+                {t("screens.settings.loans.card.settled")}
+              </Text>
+            ) : (
+              <Money
+                value={remaining}
+                currency={account?.currencyCode ?? ""}
+                variant="small"
+                tone="transfer"
+                hideSign
+                style={{ color: accentColor }}
+              />
+            )}
+          </View>
+        </>
+      ) : (
+        <View style={styles.row3}>
+          <Text variant="small" style={styles.paidLabel}>
+            {isLent
+              ? t("screens.settings.loans.type.lent")
+              : t("screens.settings.loans.type.borrowed")}
+          </Text>
           <Money
             value={principal}
             currency={account?.currencyCode ?? ""}
             variant="small"
             tone="transfer"
             hideSign
+            style={isPaid ? { color: mutedColor } : { color: accentColor }}
           />
-        </Text>
-
-        {isPaid ? (
-          <Text
-            variant="small"
-            style={[styles.rightText, { color: mutedColor }]}
-          >
-            {t("screens.settings.loans.card.settled")}
-          </Text>
-        ) : (
-          <Money
-            value={remaining}
-            currency={account?.currencyCode ?? ""}
-            variant="small"
-            tone="transfer"
-            hideSign
-            style={{ color: accentColor }}
-          />
-        )}
-      </View>
+        </View>
+      )}
     </Pressable>
   )
 }

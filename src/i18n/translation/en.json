@@ -700,8 +700,8 @@
         },
         "term": {
           "label": "Term",
-          "oneTime": "One-time",
-          "longTerm": "Long-term"
+          "oneTime": "One time",
+          "longTerm": "Long term"
         },
         "card": {
           "paid": "Paid",
