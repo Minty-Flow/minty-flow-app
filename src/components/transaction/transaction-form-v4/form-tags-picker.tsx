@@ -120,34 +120,14 @@ export function FormTagsPicker({
 
       {tagPickerOpen && (
         <View native style={transactionFormStyles.inlineTagPicker}>
-          {selectedTags.length > 0 && (
-            <Pressable
-              style={transactionFormStyles.tagPickerClearAllRow}
-              onPress={clearTags}
-              accessibilityLabel={t(
-                "components.transactionForm.a11y.clearAllTags",
-              )}
-            >
-              <IconSvg
-                name="x-outline"
-                size={14}
-                color={theme.colors.semantic.semi}
-              />
-              <Text
-                variant="default"
-                style={transactionFormStyles.tagPickerClearAllText}
-              >
-                {t("common.actions.clear")}
-              </Text>
-            </Pressable>
-          )}
-          <Input
-            placeholder={t("components.transactionForm.searchTags")}
-            value={tagSearchQuery}
-            onChangeText={setTagSearchQuery}
-            placeholderTextColor={theme.colors.semantic.semi}
-            style={transactionFormStyles.tagSearchInput}
-          />
+          <View native style={transactionFormStyles.searchFieldWrap}>
+            <Input
+              placeholder={t("components.transactionForm.searchTags")}
+              value={tagSearchQuery}
+              onChangeText={setTagSearchQuery}
+              placeholderTextColor={theme.colors.semantic.semi}
+            />
+          </View>
           <ScrollView
             keyboardShouldPersistTaps="handled"
             nestedScrollEnabled
@@ -190,8 +170,29 @@ export function FormTagsPicker({
               </Text>
             )}
           </ScrollView>
+          {selectedTags.length > 0 && (
+            <Pressable
+              style={transactionFormStyles.tagPickerFooterRow}
+              onPress={clearTags}
+              accessibilityLabel={t(
+                "components.transactionForm.a11y.clearAllTags",
+              )}
+            >
+              <IconSvg
+                name="x-outline"
+                size={16}
+                color={theme.colors.semantic.semi}
+              />
+              <Text
+                variant="default"
+                style={transactionFormStyles.tagPickerClearAllText}
+              >
+                {t("common.actions.clear")}
+              </Text>
+            </Pressable>
+          )}
           <Pressable
-            style={transactionFormStyles.createTagRow}
+            style={transactionFormStyles.tagPickerFooterRow}
             onPress={() => {
               setTagPickerOpen(false)
               router.push({

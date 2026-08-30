@@ -134,13 +134,14 @@ export function FormToAccountPicker({
       </Pressable>
       {toAccountPickerOpen && (
         <View native style={transactionFormStyles.inlineAccountPicker}>
-          <Input
-            placeholder={t("screens.accounts.a11y.searchPlaceholder")}
-            value={toAccountSearchQuery}
-            onChangeText={setToAccountSearchQuery}
-            placeholderTextColor={theme.colors.semantic.semi}
-            style={transactionFormStyles.pickerSearchInput}
-          />
+          <View native style={transactionFormStyles.searchFieldWrap}>
+            <Input
+              placeholder={t("screens.accounts.a11y.searchPlaceholder")}
+              value={toAccountSearchQuery}
+              onChangeText={setToAccountSearchQuery}
+              placeholderTextColor={theme.colors.semantic.semi}
+            />
+          </View>
           <ScrollView
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
