@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-29T22:13:18.582Z
+Generated on: 2026-08-30T00:03:08.205Z
 ```
 ./
 ├── .github/
@@ -24,10 +24,6 @@ Generated on: 2026-08-29T22:13:18.582Z
 │   │   └── prepare-commit-msg
 │   └── pre-commit
 ├── docs/
-│   ├── agents/
-│   │   ├── domain.md
-│   │   ├── issue-tracker.md
-│   │   └── triage-labels.md
 │   ├── post-release-drizzle-architecture-plan.md
 │   ├── stats-recurring-spending-map-plan.md
 │   └── STRUCTURE.md
