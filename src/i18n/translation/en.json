@@ -523,7 +523,11 @@
           "showOnHome": "Show on home",
           "autoPaySubscriptions": {
             "label": "Automatically Pay Subscriptions",
-            "description": "While on, a subscription or repeating entry that is already past its date gets marked as paid on its own the next time you launch the app."
+            "description": "While on, a subscription entry that is already past its date gets marked as paid on its own the next time you launch the app."
+          },
+          "autoPayRepetitive": {
+            "label": "Automatically Pay Repetitive",
+            "description": "While on, a repeating entry that is already past its date gets marked as paid on its own the next time you launch the app."
           },
           "autoPayUpcoming": {
             "label": "Automatically Pay Upcoming",

@@ -42,6 +42,9 @@ export function UpcomingTransactionsSection({
   const autoPaySubscriptions = usePendingTransactionsStore(
     (s) => s.autoPaySubscriptions,
   )
+  const autoPayRepetitive = usePendingTransactionsStore(
+    (s) => s.autoPayRepetitive,
+  )
   const autoPayUpcoming = usePendingTransactionsStore((s) => s.autoPayUpcoming)
   const updateDateUponConfirmation = usePendingTransactionsStore(
     (s) => s.updateDateUponConfirmation,
@@ -69,6 +72,7 @@ export function UpcomingTransactionsSection({
       const canConfirm = confirmable(row, nowMs)
       const preapproved = isPreapproved(row, {
         autoPaySubscriptions,
+        autoPayRepetitive,
         autoPayUpcoming,
       })
       if (preapproved && canConfirm) {
@@ -100,6 +104,7 @@ export function UpcomingTransactionsSection({
     // Configure must run before start (start throws if config is null)
     autoConfirmationService.configure({
       autoPaySubscriptions,
+      autoPayRepetitive,
       autoPayUpcoming,
       updateDateUponConfirmation,
     })
@@ -108,6 +113,7 @@ export function UpcomingTransactionsSection({
   }, [
     upcoming,
     autoPaySubscriptions,
+    autoPayRepetitive,
     autoPayUpcoming,
     updateDateUponConfirmation,
     autoConfirmVersion,

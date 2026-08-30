@@ -35,6 +35,9 @@ export function useRecurringTransactionSync(): void {
   const autoPaySubscriptions = usePendingTransactionsStore(
     (s) => s.autoPaySubscriptions,
   )
+  const autoPayRepetitive = usePendingTransactionsStore(
+    (s) => s.autoPayRepetitive,
+  )
   const autoPayUpcoming = usePendingTransactionsStore((s) => s.autoPayUpcoming)
   const updateDateUponConfirmation = usePendingTransactionsStore(
     (s) => s.updateDateUponConfirmation,
@@ -52,6 +55,7 @@ export function useRecurringTransactionSync(): void {
       // Configure service with store state before running auto-confirm
       autoConfirmationService.configure({
         autoPaySubscriptions,
+        autoPayRepetitive,
         autoPayUpcoming,
         updateDateUponConfirmation,
       })
@@ -65,6 +69,7 @@ export function useRecurringTransactionSync(): void {
   }, [
     isHydrated,
     autoPaySubscriptions,
+    autoPayRepetitive,
     autoPayUpcoming,
     updateDateUponConfirmation,
   ])

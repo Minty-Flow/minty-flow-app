@@ -11,8 +11,10 @@ const pendingTransactionsStorage = createMMKV({
 })
 
 interface PendingTransactionsPreferences {
-  /** Auto-confirm subscription / repetitive recurring instances once their date passes. */
+  /** Auto-confirm `subscription` recurring instances once their date passes. */
   autoPaySubscriptions: boolean
+  /** Auto-confirm `repetitive` recurring instances once their date passes. */
+  autoPayRepetitive: boolean
   /** Auto-confirm user-created `upcoming` transactions once their date passes. Off = confirm each via Mark paid. */
   autoPayUpcoming: boolean
   /** Number of days of planned transactions to show in home/list. */
@@ -30,6 +32,7 @@ interface PendingTransactionsPreferences {
 
 const DEFAULTS: PendingTransactionsPreferences = {
   autoPaySubscriptions: true,
+  autoPayRepetitive: true,
   autoPayUpcoming: false,
   homeTimeframe: 3,
   updateDateUponConfirmation: false,
@@ -40,6 +43,7 @@ const DEFAULTS: PendingTransactionsPreferences = {
 interface PendingTransactionsStore extends PendingTransactionsPreferences {
   isHydrated: boolean
   setAutoPaySubscriptions: (value: boolean) => void
+  setAutoPayRepetitive: (value: boolean) => void
   setAutoPayUpcoming: (value: boolean) => void
   setHomeTimeframe: (value: number) => void
   setUpdateDateUponConfirmation: (value: boolean) => void
@@ -54,6 +58,7 @@ export const usePendingTransactionsStore = create<PendingTransactionsStore>()(
       isHydrated: false,
 
       setAutoPaySubscriptions: (value) => set({ autoPaySubscriptions: value }),
+      setAutoPayRepetitive: (value) => set({ autoPayRepetitive: value }),
       setAutoPayUpcoming: (value) => set({ autoPayUpcoming: value }),
       setHomeTimeframe: (value) => set({ homeTimeframe: value }),
       setUpdateDateUponConfirmation: (value) =>

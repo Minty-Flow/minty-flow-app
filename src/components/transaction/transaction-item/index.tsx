@@ -144,10 +144,14 @@ export const TransactionItem = ({
   const autoPaySubscriptions = usePendingTransactionsStore(
     (s) => s.autoPaySubscriptions,
   )
+  const autoPayRepetitive = usePendingTransactionsStore(
+    (s) => s.autoPayRepetitive,
+  )
   const autoPayUpcoming = usePendingTransactionsStore((s) => s.autoPayUpcoming)
   // Show the manual confirm affordance only for rows that will NOT auto-pay.
   const requireConfirmation = !isPreapproved(transactionWithRelations, {
     autoPaySubscriptions,
+    autoPayRepetitive,
     autoPayUpcoming,
   })
   const isUpcoming = variant === "upcoming"
