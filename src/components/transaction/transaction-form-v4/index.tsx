@@ -24,6 +24,8 @@ import { FormDateSection } from "./form-date-section"
 import { FormDeleteActions } from "./form-delete-actions"
 import { FormFooter } from "./form-footer"
 import { FormGoalPicker } from "./form-goal-picker"
+import { FormKindCard } from "./form-kind-card"
+import { FormKindSelector } from "./form-kind-selector"
 import { FormLoanPicker } from "./form-loan-picker"
 import { FormModals } from "./form-modals"
 import { FormNotesSection } from "./form-notes-section"
@@ -60,6 +62,60 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
         }}
       >
         <View style={transactionFormStyles.form}>
+          {/* Amount */}
+          <View style={transactionFormStyles.balanceSection}>
+            <SmartAmountInput
+              valueMinor={f.amount ?? 0}
+              onChangeMinor={(value) =>
+                f.setValue("amount", value, { shouldDirty: true })
+              }
+              currencyCode={f.selectedAccount?.currencyCode ?? "USD"}
+              error={f.amountError}
+              label={t("components.transactionForm.fields.amountLabel")}
+              placeholder="0"
+              type={transactionType}
+            />
+          </View>
+
+          <FormAccountPicker
+            accounts={accounts}
+            accountId={f.accountId}
+            toAccountId={f.toAccountId}
+            setValue={f.setValue}
+            selectedAccount={f.selectedAccount}
+            balanceAtTransaction={f.balanceAtTransaction}
+            transaction={transaction}
+            accountError={f.accountError}
+            onAccountChange={f.handleAccountChange}
+          />
+
+          {/* Category: hidden for transfers */}
+          {transactionType !== TransactionTypeEnum.TRANSFER && (
+            <FormCategoryPicker
+              categories={categories}
+              categoryId={f.categoryId}
+              onSelect={f.handleCategorySelect}
+              onClear={f.handleCategoryClear}
+            />
+          )}
+
+          {/* Date + Pending: hidden when recurring is enabled */}
+          {!f.recurring.enabled && (
+            <FormDateSection
+              date={f.date}
+              control={f.control}
+              onDatePress={() => f.openDatePicker("transaction")}
+              onSetNow={f.handleSetNow}
+            />
+          )}
+
+          <FormKindSelector
+            kind={f.kind}
+            onSelect={f.setKind}
+            disabled={!f.canEditKind}
+          />
+          <FormKindCard kind={f.kind} />
+
           {/* Title */}
           <View style={transactionFormStyles.nameSection}>
             <Controller
@@ -85,58 +141,39 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
             ) : null}
           </View>
 
-          {/* Amount */}
-          <View style={transactionFormStyles.balanceSection}>
-            <SmartAmountInput
-              valueMinor={f.amount ?? 0}
-              onChangeMinor={(value) =>
-                f.setValue("amount", value, { shouldDirty: true })
-              }
-              currencyCode={f.selectedAccount?.currencyCode ?? "USD"}
-              error={f.amountError}
-              label={t("components.transactionForm.fields.amountLabel")}
-              placeholder="0"
-              type={transactionType}
-            />
-          </View>
+          <FormNotesSection
+            description={f.description}
+            descriptionErrorKey={f.descriptionErrorKey}
+            notesModalVisible={f.modals.notesModalVisible}
+            onOpenModal={() => f.setModals({ notesModalVisible: true })}
+            onCloseModal={() => f.setModals({ notesModalVisible: false })}
+            onSave={(html) =>
+              f.setValue("description", html, { shouldDirty: true })
+            }
+          />
 
-          {transactionType === TransactionTypeEnum.EXPENSE &&
-            !f.recurring.enabled && (
-              <ListItem
-                style={transactionFormStyles.switchRow}
-                onPress={f.handleRefundToggle}
-                accessibilityRole="switch"
-                accessibilityState={{ checked: f.isRefund }}
-                disabled={f.recurring.enabled}
-              >
-                <View style={transactionFormStyles.switchLeft}>
-                  <DynamicIcon
-                    icon="receipt-refund-outline"
-                    size={20}
-                    color={theme.colors.primary}
-                    variant="badge"
-                  />
-                  <Text
-                    variant="default"
-                    style={transactionFormStyles.switchLabel}
-                  >
-                    {t("components.transactionForm.fields.refundLabel")}
-                  </Text>
-                </View>
-                <Switch value={f.isRefund} disabled={f.recurring.enabled} />
-              </ListItem>
-            )}
-
-          <FormAccountPicker
-            accounts={accounts}
-            accountId={f.accountId}
-            toAccountId={f.toAccountId}
-            setValue={f.setValue}
-            selectedAccount={f.selectedAccount}
-            balanceAtTransaction={f.balanceAtTransaction}
-            transaction={transaction}
-            accountError={f.accountError}
-            onAccountChange={f.handleAccountChange}
+          <FormAttachmentsSection
+            list={f.attachmentState.list}
+            preview={f.attachmentState.preview}
+            fileToOpen={f.attachmentState.fileToOpen}
+            toRemove={f.attachmentState.toRemove}
+            addFilesExpanded={f.attachmentState.addFilesExpanded}
+            onToggleAddFiles={() =>
+              f.setAttachmentState({
+                addFilesExpanded: !f.attachmentState.addFilesExpanded,
+              })
+            }
+            onClosePreview={() => f.setAttachmentState({ preview: null })}
+            onCancelFileOpen={() => f.setAttachmentState({ fileToOpen: null })}
+            onPreview={(a) => f.setAttachmentState({ preview: a })}
+            onOpenExternal={(a) => f.setAttachmentState({ fileToOpen: a })}
+            onRemoveRequest={(a) => f.setAttachmentState({ toRemove: a })}
+            onRemoveConfirm={f.removeAttachment}
+            onRemoveCancel={() => f.setAttachmentState({ toRemove: null })}
+            onSelectFromFiles={f.handleSelectFromFiles}
+            onTakePhoto={f.handleTakePhoto}
+            onSelectMultipleMedia={f.handleSelectMultipleMedia}
+            onSelectSinglePhoto={f.handleSelectSinglePhoto}
           />
 
           <FormToAccountPicker
@@ -162,16 +199,6 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
                 selectedToAccount={f.selectedToAccount}
               />
             )}
-
-          {/* Category: hidden for transfers */}
-          {transactionType !== TransactionTypeEnum.TRANSFER && (
-            <FormCategoryPicker
-              categories={categories}
-              categoryId={f.categoryId}
-              onSelect={f.handleCategorySelect}
-              onClear={f.handleCategoryClear}
-            />
-          )}
 
           {/* Goal: hidden for transfers, filtered by selected account */}
           {transactionType !== TransactionTypeEnum.TRANSFER && (
@@ -215,96 +242,84 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
             removeTag={f.removeTag}
           />
 
-          {/* Date + Pending: hidden when recurring is enabled */}
-          {!f.recurring.enabled && (
-            <FormDateSection
-              date={f.date}
-              control={f.control}
-              onDatePress={() => f.openDatePicker("transaction")}
-              onSetNow={f.handleSetNow}
-            />
-          )}
+          {transactionType === TransactionTypeEnum.EXPENSE &&
+            !f.recurring.enabled &&
+            f.kind !== "subscription" &&
+            f.kind !== "repetitive" && (
+              <ListItem
+                style={transactionFormStyles.switchRow}
+                onPress={f.handleRefundToggle}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: f.isRefund }}
+                disabled={f.recurring.enabled}
+              >
+                <View style={transactionFormStyles.switchLeft}>
+                  <DynamicIcon
+                    icon="receipt-refund-outline"
+                    size={20}
+                    color={theme.colors.primary}
+                    variant="badge"
+                  />
+                  <Text
+                    variant="default"
+                    style={transactionFormStyles.switchLabel}
+                  >
+                    {t("components.transactionForm.fields.refundLabel")}
+                  </Text>
+                </View>
+                <Switch value={f.isRefund} disabled={f.recurring.enabled} />
+              </ListItem>
+            )}
 
-          <FormNotesSection
-            description={f.description}
-            descriptionErrorKey={f.descriptionErrorKey}
-            notesModalVisible={f.modals.notesModalVisible}
-            onOpenModal={() => f.setModals({ notesModalVisible: true })}
-            onCloseModal={() => f.setModals({ notesModalVisible: false })}
-            onSave={(html) =>
-              f.setValue("description", html, { shouldDirty: true })
-            }
-          />
-
-          <FormAttachmentsSection
-            list={f.attachmentState.list}
-            preview={f.attachmentState.preview}
-            fileToOpen={f.attachmentState.fileToOpen}
-            toRemove={f.attachmentState.toRemove}
-            addFilesExpanded={f.attachmentState.addFilesExpanded}
-            onToggleAddFiles={() =>
-              f.setAttachmentState({
-                addFilesExpanded: !f.attachmentState.addFilesExpanded,
-              })
-            }
-            onClosePreview={() => f.setAttachmentState({ preview: null })}
-            onCancelFileOpen={() => f.setAttachmentState({ fileToOpen: null })}
-            onPreview={(a) => f.setAttachmentState({ preview: a })}
-            onOpenExternal={(a) => f.setAttachmentState({ fileToOpen: a })}
-            onRemoveRequest={(a) => f.setAttachmentState({ toRemove: a })}
-            onRemoveConfirm={f.removeAttachment}
-            onRemoveCancel={() => f.setAttachmentState({ toRemove: null })}
-            onSelectFromFiles={f.handleSelectFromFiles}
-            onTakePhoto={f.handleTakePhoto}
-            onSelectMultipleMedia={f.handleSelectMultipleMedia}
-            onSelectSinglePhoto={f.handleSelectSinglePhoto}
-          />
-
-          {!f.isRefund && (
-            <FormRecurringSection
-              enabled={f.recurring.enabled}
-              frequency={f.recurring.frequency}
-              startDate={f.recurring.startDate}
-              endDate={f.recurring.endDate}
-              endAfterOccurrences={f.recurring.endAfterOccurrences}
-              endsOnPickerExpanded={f.recurring.endsOnPickerExpanded}
-              endsOnType={f.endsOnType}
-              recurringEndDateOccurrenceCount={
-                f.recurringEndDateOccurrenceCount
-              }
-              onToggle={f.handleRecurringToggle}
-              onFrequencyChange={(freq) => f.setRecurring({ frequency: freq })}
-              onStartDatePress={() => f.openDatePicker("recurringStart")}
-              onEndPickerToggle={() =>
-                f.setRecurring({
-                  endsOnPickerExpanded: !f.recurring.endsOnPickerExpanded,
-                })
-              }
-              onEndTypeNever={() =>
-                f.setRecurring({
-                  endDate: null,
-                  endAfterOccurrences: null,
-                  endsOnPickerExpanded: false,
-                })
-              }
-              onEndTypeDate={() => {
-                f.setRecurring({
-                  endAfterOccurrences: null,
-                  endsOnPickerExpanded: false,
-                })
-                f.openDatePicker("recurringEnd")
-              }}
-              onEndTypeOccurrences={() =>
-                f.setRecurring({
-                  endDate: null,
-                  endAfterOccurrences: f.recurring.endAfterOccurrences ?? 4,
-                })
-              }
-              onOccurrencePreset={(n) =>
-                f.setRecurring({ endAfterOccurrences: n })
-              }
-            />
-          )}
+          {!f.isRefund &&
+            f.kind !== "subscription" &&
+            f.kind !== "repetitive" && (
+              <FormRecurringSection
+                enabled={f.recurring.enabled}
+                frequency={f.recurring.frequency}
+                startDate={f.recurring.startDate}
+                endDate={f.recurring.endDate}
+                endAfterOccurrences={f.recurring.endAfterOccurrences}
+                endsOnPickerExpanded={f.recurring.endsOnPickerExpanded}
+                endsOnType={f.endsOnType}
+                recurringEndDateOccurrenceCount={
+                  f.recurringEndDateOccurrenceCount
+                }
+                onToggle={f.handleRecurringToggle}
+                onFrequencyChange={(freq) =>
+                  f.setRecurring({ frequency: freq })
+                }
+                onStartDatePress={() => f.openDatePicker("recurringStart")}
+                onEndPickerToggle={() =>
+                  f.setRecurring({
+                    endsOnPickerExpanded: !f.recurring.endsOnPickerExpanded,
+                  })
+                }
+                onEndTypeNever={() =>
+                  f.setRecurring({
+                    endDate: null,
+                    endAfterOccurrences: null,
+                    endsOnPickerExpanded: false,
+                  })
+                }
+                onEndTypeDate={() => {
+                  f.setRecurring({
+                    endAfterOccurrences: null,
+                    endsOnPickerExpanded: false,
+                  })
+                  f.openDatePicker("recurringEnd")
+                }}
+                onEndTypeOccurrences={() =>
+                  f.setRecurring({
+                    endDate: null,
+                    endAfterOccurrences: f.recurring.endAfterOccurrences ?? 4,
+                  })
+                }
+                onOccurrencePreset={(n) =>
+                  f.setRecurring({ endAfterOccurrences: n })
+                }
+              />
+            )}
 
           {f.locationEnabled && (
             <View style={transactionFormStyles.fieldBlock}>

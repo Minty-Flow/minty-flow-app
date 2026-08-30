@@ -2,6 +2,7 @@
 import assert from "node:assert/strict"
 
 import { deriveKind } from "../../src/domain/derive-kind.ts"
+import { onKindChange } from "../../src/components/transaction/transaction-form-v4/on-kind-change.ts"
 import {
   ALLOWED_TYPES_BY_KIND,
   getKindForLoanType,
@@ -100,5 +101,25 @@ assert.equal(
   }),
   "default",
 )
+
+// KT matrix: leaving a recurring kind clears recurrence + loan scratch.
+const kindScratch = {
+  recurring: { enabled: true },
+  loanDraft: { name: "x" },
+  linkedLoanId: "L1",
+  toAccountId: "A2",
+} as any
+const toDefault = onKindChange("subscription", "default", kindScratch)
+assert.equal(toDefault.recurring?.enabled ?? false, false)
+assert.equal(toDefault.loanDraft, null)
+assert.equal(toDefault.linkedLoanId, null)
+// subscription <-> repetitive keeps recurrence untouched.
+const subToRep = onKindChange("subscription", "repetitive", kindScratch)
+assert.equal("recurring" in subToRep, false)
+// -> lent seeds a loan draft, clears recurrence, drops to-account.
+const toLent = onKindChange("default", "lent", kindScratch)
+assert.equal(toLent.recurring?.enabled ?? false, false)
+assert.deepEqual(toLent.loanDraft, { name: "", dueDate: null })
+assert.equal(toLent.toAccountId, undefined)
 
 console.log("transaction-kind: OK")

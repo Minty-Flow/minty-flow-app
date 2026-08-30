@@ -21,7 +21,8 @@ import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import { GoalTypeEnum } from "~/types/goals"
 import { NewEnum } from "~/types/new"
 import {
-  type TransactionSubType,
+  type TransactionKind,
+  TransactionKindEnum,
   type TransactionType,
   TransactionTypeEnum,
 } from "~/types/transactions"
@@ -32,11 +33,21 @@ const VALID_TYPES: TransactionType[] = [
   TransactionTypeEnum.TRANSFER,
 ]
 
+const VALID_KINDS: string[] = Object.values(TransactionKindEnum)
+
 function parseTransactionType(type: string | undefined): TransactionType {
   if (type && VALID_TYPES.includes(type as TransactionType)) {
     return type as TransactionType
   }
   return TransactionTypeEnum.EXPENSE
+}
+
+function parseTransactionKind(
+  kind: string | undefined,
+): TransactionKind | undefined {
+  return kind && VALID_KINDS.includes(kind)
+    ? (kind as TransactionKind)
+    : undefined
 }
 
 function transactionTypeToGoalType(transactionType: TransactionType) {
@@ -48,6 +59,7 @@ function transactionTypeToGoalType(transactionType: TransactionType) {
 interface TransactionEditorProps {
   transaction: TransactionWithRelations | null
   initialType?: TransactionType
+  initialKind?: TransactionKind
   initialTagIds: string[]
   prefill?: Partial<TransactionFormValues>
 }
@@ -55,15 +67,12 @@ interface TransactionEditorProps {
 function TransactionEditor({
   transaction,
   initialType,
+  initialKind,
   initialTagIds,
   prefill,
 }: TransactionEditorProps) {
   const [transactionType, setTransactionType] = useState<TransactionType>(
     transaction?.type ?? initialType ?? TransactionTypeEnum.EXPENSE,
-  )
-
-  const [subtype, setSubtype] = useState<TransactionSubType | null>(
-    transaction?.subtype ?? null,
   )
 
   const accounts = useActiveAccounts()
@@ -79,8 +88,7 @@ function TransactionEditor({
       transactionType={transactionType}
       onTransactionTypeChange={setTransactionType}
       initialTagIds={initialTagIds}
-      initialSubtype={subtype ?? undefined}
-      onSubtypeChange={setSubtype}
+      initialKind={transaction?.kind ?? initialKind}
       prefill={prefill}
       accounts={accounts}
       categories={categories}
@@ -140,7 +148,7 @@ export default function TransactionScreen() {
     accountId: prefillAccountId,
     categoryId: prefillCategoryId,
     loanId: prefillLoanId,
-    kind: _kind,
+    kind: kindParam,
   } = useLocalSearchParams<{
     id: string
     type?: string
@@ -151,6 +159,7 @@ export default function TransactionScreen() {
   }>()
   const isNew = id === NewEnum.NEW
   const initialType = parseTransactionType(typeParam)
+  const initialKind = parseTransactionKind(kindParam)
 
   const prefill: Partial<TransactionFormValues> | undefined =
     isNew && (prefillAccountId || prefillCategoryId || prefillLoanId)
@@ -166,6 +175,7 @@ export default function TransactionScreen() {
       <TransactionEditor
         transaction={null}
         initialType={initialType}
+        initialKind={initialKind}
         initialTagIds={[]}
         prefill={prefill}
       />

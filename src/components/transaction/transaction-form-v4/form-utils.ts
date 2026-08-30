@@ -4,7 +4,7 @@ import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import type { Account } from "~/types/accounts"
 import {
   type RecurringFrequency,
-  type TransactionSubType,
+  type TransactionKind,
   type TransactionType,
   TransactionTypeEnum,
 } from "~/types/transactions"
@@ -51,7 +51,7 @@ export function getDefaultValues(
   transactionType: TransactionType,
   initialTagIds: string[] = [],
   prefill?: Partial<TransactionFormValues>,
-  initialSubtype?: TransactionSubType | null,
+  initialKind?: TransactionKind,
 ): TransactionFormValues {
   const defaultAccountId = accounts.find((a) => a.isPrimary)?.id ?? ""
 
@@ -70,7 +70,8 @@ export function getDefaultValues(
       isPending: false,
       tags: [],
       location: undefined,
-      subtype: initialSubtype ?? null,
+      subtype: null,
+      kind: initialKind ?? "default",
       conversionRate: null,
       ...prefill,
     }
@@ -107,6 +108,7 @@ export function getDefaultValues(
     loanId: transaction.loanId ?? null,
     location: transaction.location,
     subtype: transaction.subtype ?? null,
+    kind: initialKind ?? transaction.kind ?? "default",
     conversionRate: null,
   }
 }

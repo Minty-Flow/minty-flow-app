@@ -45,6 +45,7 @@ import { Toast } from "~/utils/toast"
 
 import { EMPTY_TAG_IDS } from "./constants"
 import { getDefaultValues, mergeReducer } from "./form-utils"
+import { type LoanDraft, onKindChange } from "./on-kind-change"
 import type {
   ModalState,
   RecurringState,
@@ -65,7 +66,7 @@ export function useTransactionForm({
   transactionType,
   onTransactionTypeChange,
   initialTagIds = EMPTY_TAG_IDS,
-  initialSubtype,
+  initialKind,
   prefill,
 }: TransactionFormV4Props) {
   const router = useRouter()
@@ -98,7 +99,7 @@ export function useTransactionForm({
     transactionType,
     initialTagIds,
     prefill,
-    initialSubtype,
+    initialKind,
   )
   const {
     control,
@@ -227,6 +228,7 @@ export function useTransactionForm({
       ? accounts.find((a) => a.id === toAccountId)
       : null
   const [isSaving, setIsSaving] = useState(false)
+  const [loanDraft, setLoanDraft] = useState<LoanDraft | null>(null)
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSaving,
@@ -306,6 +308,43 @@ export function useTransactionForm({
       enabled: next,
       ...(next ? { startDate: watch("transactionDate") } : {}),
     })
+  }
+  // ES-4/5/8: kind is locked once a transaction is tied to a loan or a
+  // recurring rule (recurrence editing lands in Slice 2, loan wiring in Slice 4).
+  const canEditKind =
+    isNew || (transaction?.loanId == null && transaction?.recurringId == null)
+  const lockedFields: ReadonlySet<string> = new Set<string>(
+    transaction?.loanId ? ["kind", "type", "loanId", "toAccountId"] : [],
+  )
+  const linkedLoanId: string | null = null // Slice 4 populates this
+  const setKind = (next: TransactionKind) => {
+    if (!canEditKind || next === kind) return
+    const partials = onKindChange(kind, next, {
+      recurring,
+      loanDraft,
+      linkedLoanId,
+      toAccountId,
+    })
+    if (partials.recurring) setRecurring(partials.recurring)
+    if ("loanDraft" in partials) setLoanDraft(partials.loanDraft ?? null)
+    if ("toAccountId" in partials) {
+      setValue("toAccountId", partials.toAccountId, { shouldDirty: true })
+    }
+    setValue("kind", next, { shouldDirty: true })
+    if (next === "lent" || next === "borrowed") {
+      const newType =
+        next === "lent"
+          ? TransactionTypeEnum.EXPENSE
+          : TransactionTypeEnum.INCOME
+      setValue("type", newType, { shouldDirty: true })
+      onTransactionTypeChange(newType)
+    } else if (
+      next === "upcoming" &&
+      topTabType === TransactionTypeEnum.TRANSFER
+    ) {
+      setValue("type", TransactionTypeEnum.EXPENSE, { shouldDirty: true })
+      onTransactionTypeChange(TransactionTypeEnum.EXPENSE)
+    }
   }
   const handleConfirmExit = () => {
     allowNavigation()
@@ -690,6 +729,15 @@ export function useTransactionForm({
     tabLockedTo,
     topTabType,
     onTopTabChange,
+
+    // kind
+    kind,
+    setKind,
+    canEditKind,
+    lockedFields,
+    linkedLoanId,
+    loanDraft,
+    setLoanDraft,
 
     // derived collections / selections
     selectedAccount,

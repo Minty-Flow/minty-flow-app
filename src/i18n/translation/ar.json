@@ -62,6 +62,14 @@
         "paid": "مدفوع",
         "collected": "محصّل"
       },
+      "kinds": {
+        "default": "قياسي",
+        "upcoming": "قادم",
+        "subscription": "اشتراك",
+        "repetitive": "متكرر",
+        "lent": "أقرضت",
+        "borrowed": "اقترضت"
+      },
       "untitledTransaction": "معاملة بدون عنوان",
       "uncategorized": "غير مصنف"
     },
@@ -1099,7 +1107,12 @@
         "allTagsSelected": "تم تحديد جميع الوسوم",
         "amountInput": "إدخال المبلغ"
       },
-      "notFoundTransaction": "لم يتم العثور على المعاملة."
+      "notFoundTransaction": "لم يتم العثور على المعاملة.",
+      "kind": {
+        "label": "النوع",
+        "recurrenceComingSoon": "إعدادات التكرار ستصل في تحديث لاحق",
+        "loanComingSoon": "إعدادات القرض ستصل في تحديث لاحق"
+      }
     },
     "recurring": {
       "frequency": {

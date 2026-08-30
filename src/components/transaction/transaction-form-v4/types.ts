@@ -12,7 +12,7 @@ import type { Tag } from "~/types/tags"
 import type {
   RecurringFrequency,
   TransactionAttachment,
-  TransactionSubType,
+  TransactionKind,
   TransactionType,
 } from "~/types/transactions"
 
@@ -29,9 +29,8 @@ export interface TransactionFormV4Props {
   transactionType: TransactionType
   onTransactionTypeChange: (type: TransactionType) => void
   initialTagIds?: string[]
-  initialSubtype?: TransactionSubType // Added
+  initialKind?: TransactionKind
   prefill?: Partial<TransactionFormValues>
-  onSubtypeChange: (subtype: TransactionSubType | null) => void // Added
 }
 
 export type ModalState = {
