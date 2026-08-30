@@ -32,6 +32,7 @@ import {
   RecurringEndEnum,
   type RecurringEndType,
   type RecurringFrequency,
+  type TransactionKind,
   type TransactionLocation,
   TransactionSubTypeEnum,
   TransactionTypeEnum,
@@ -132,6 +133,27 @@ export function useTransactionForm({
         })()
       : null
   const isRefund = watch("subtype") === TransactionSubTypeEnum.REFUND
+  const kind = (watch("kind") ?? "default") as TransactionKind
+  const topTabType = watch("type")
+  const tabLabels: [string, string, string] =
+    kind === "lent" || kind === "borrowed"
+      ? [
+          t("common.transaction.tabs.lent"),
+          t("common.transaction.tabs.borrowed"),
+          "",
+        ]
+      : [
+          t("common.transaction.types.expense"),
+          t("common.transaction.types.income"),
+          t("common.transaction.types.transfer"),
+        ]
+  const tabHiddenSlots: number[] =
+    kind === "lent" || kind === "borrowed"
+      ? [2]
+      : kind === "upcoming"
+        ? [2]
+        : []
+  const tabLockedTo: number | null = null // linked-loan Paid/Collected lock lands in Slice 4
   const selectedAccount = accounts.find((a) => a.id === accountId)
   // Filter goals to only those linked to the selected account
   const accountGoals = accountId
@@ -572,6 +594,16 @@ export function useTransactionForm({
       setValue("toAccountId", toAccountId ?? "", { shouldDirty: false })
     }
   }
+  const onTopTabChange = (type: TransactionFormValues["type"]) => {
+    handleTransactionTypeChange(type)
+    if (kind === "lent" || kind === "borrowed") {
+      if (type === TransactionTypeEnum.EXPENSE) {
+        setValue("kind", "lent", { shouldDirty: true })
+      } else if (type === TransactionTypeEnum.INCOME) {
+        setValue("kind", "borrowed", { shouldDirty: true })
+      }
+    }
+  }
   const handleRefundToggle = () => {
     setValue("subtype", isRefund ? null : TransactionSubTypeEnum.REFUND, {
       shouldDirty: true,
@@ -651,6 +683,13 @@ export function useTransactionForm({
     loanId,
     location,
     isRefund,
+
+    // top-tab state machine
+    tabLabels,
+    tabHiddenSlots,
+    tabLockedTo,
+    topTabType,
+    onTopTabChange,
 
     // derived collections / selections
     selectedAccount,

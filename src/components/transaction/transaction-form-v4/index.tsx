@@ -5,7 +5,6 @@ import { useUnistyles } from "react-native-unistyles"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { FormLocationPicker } from "~/components/location/form-location-picker"
 import { SmartAmountInput } from "~/components/smart-amount-input"
-import { TransactionTypeSelector } from "~/components/transaction/transaction-type-selector"
 import { Input } from "~/components/ui/input"
 import { ListItem } from "~/components/ui/list-item"
 import { Switch } from "~/components/ui/switch"
@@ -31,6 +30,7 @@ import { FormNotesSection } from "./form-notes-section"
 import { FormRecurringSection } from "./form-recurring-section"
 import { FormTagsPicker } from "./form-tags-picker"
 import { FormToAccountPicker } from "./form-to-account-picker"
+import { TransactionTopTabs } from "./transaction-top-tabs"
 import type { TransactionFormV4Props } from "./types"
 import { useTransactionForm } from "./use-transaction-form"
 
@@ -43,9 +43,12 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
   return (
     <View style={transactionFormStyles.container}>
       <View style={transactionFormStyles.header}>
-        <TransactionTypeSelector
-          value={transactionType}
-          onChange={f.handleTransactionTypeChange}
+        <TransactionTopTabs
+          labels={f.tabLabels}
+          value={f.topTabType}
+          onChange={f.onTopTabChange}
+          hiddenSlots={f.tabHiddenSlots}
+          lockedTo={f.tabLockedTo}
         />
       </View>
 

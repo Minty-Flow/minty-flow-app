@@ -56,6 +56,12 @@
         "income": "دخل",
         "transfer": "تحويل"
       },
+      "tabs": {
+        "lent": "أقرضت",
+        "borrowed": "اقترضت",
+        "paid": "مدفوع",
+        "collected": "محصّل"
+      },
       "untitledTransaction": "معاملة بدون عنوان",
       "uncategorized": "غير مصنف"
     },

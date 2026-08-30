@@ -1,67 +1,66 @@
-import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg, type IconSvgName } from "~/components/icons"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import type { TranslationKey } from "~/i18n/config"
 import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
 
-interface TransactionTypeSelectorProps {
+interface TransactionTopTabsProps {
+  labels: [string, string, string]
   value: TransactionType
   onChange: (type: TransactionType) => void
+  hiddenSlots?: number[]
+  lockedTo?: number | null
 }
 
-const TYPE_CONFIG: Record<
-  TransactionType,
-  { labelKey: TranslationKey; icon: IconSvgName }
-> = {
-  [TransactionTypeEnum.EXPENSE]: {
-    labelKey: "common.transaction.types.expense",
-    icon: "chevrons-up-outline",
-  },
-  [TransactionTypeEnum.INCOME]: {
-    labelKey: "common.transaction.types.income",
-    icon: "chevrons-down-outline",
-  },
-  [TransactionTypeEnum.TRANSFER]: {
-    labelKey: "common.transaction.types.transfer",
-    icon: "arrows-right-left-outline",
-  },
-}
-
-const TYPES: TransactionType[] = [
+// Slot index → transaction type (0 expense, 1 income, 2 transfer).
+const SLOT_TYPES: [TransactionType, TransactionType, TransactionType] = [
   TransactionTypeEnum.EXPENSE,
   TransactionTypeEnum.INCOME,
   TransactionTypeEnum.TRANSFER,
 ]
 
-export const TransactionTypeSelector = ({
+// Icon stays mapped by slot index even when the label changes.
+const SLOT_ICONS: [IconSvgName, IconSvgName, IconSvgName] = [
+  "chevrons-up-outline",
+  "chevrons-down-outline",
+  "arrows-right-left-outline",
+]
+
+export const TransactionTopTabs = ({
+  labels,
   value,
   onChange,
-}: TransactionTypeSelectorProps) => {
-  const { t } = useTranslation()
+  hiddenSlots = [],
+  lockedTo = null,
+}: TransactionTopTabsProps) => {
+  const locked = lockedTo != null
+  const slots = locked
+    ? [lockedTo]
+    : [0, 1, 2].filter((slot) => !hiddenSlots.includes(slot))
+
   return (
     <View style={styles.segmented}>
-      {TYPES.map((type) => {
-        const config = TYPE_CONFIG[type]
-        const isSelected = value === type
+      {slots.map((slot) => {
+        const type = SLOT_TYPES[slot]
+        const isSelected = locked || value === type
         return (
           <Pressable
-            key={type}
-            onPress={() => onChange(type)}
+            key={slot}
+            onPress={locked ? undefined : () => onChange(type)}
+            disabled={locked}
             style={[styles.segment, isSelected && styles.active]}
           >
             <IconSvg
-              name={config.icon}
+              name={SLOT_ICONS[slot]}
               color={isSelected ? styles.activeText.color : undefined}
               size={18}
             />
             <Text
               style={[styles.segmentLabel, isSelected && styles.activeText]}
             >
-              {t(config.labelKey)}
+              {labels[slot]}
             </Text>
           </Pressable>
         )
