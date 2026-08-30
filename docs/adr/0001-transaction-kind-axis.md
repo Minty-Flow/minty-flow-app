@@ -54,8 +54,11 @@ orthogonal (a subscription is an expense; a Collected repayment is income).
 - The migration is additive (`ADD COLUMN` + backfill `UPDATE`s). It is still
   forward-only and runs on user devices at startup, hence this record, but it
   avoids the risk of a full table rebuild.
-- The `subtype` column keeps a CHECK that lists values we no longer write. This
-  is deliberate — tightening it would require the rebuild we are avoiding.
+- The `subtype` column is unchanged by this work. `refund` stays a `subtype`
+  concern permanently; `loan_*` stays until Slice 4 migrates the loans engine
+  onto `kind` + `type`; `recurring` / `one-time` stay until a later stats slice.
+  The migration does not touch `subtype` data, and the `subtype` CHECK is left
+  as-is (tightening it would need the table rebuild we are avoiding).
 - `is_pending` is now derived from `kind = 'upcoming'` on write; the two must not
   drift. `confirmTransaction` resets `kind` to `default` when it clears
   `is_pending`.
