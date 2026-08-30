@@ -448,6 +448,7 @@ export async function createTransfer(
         requiresManualConfirmation: 0,
         accountBalanceBefore: isPending ? 0 : fromAcc.balance,
         subtype: recurringOptions?.subtype ?? null,
+        // transfers are pending+default by design (migration 0001 & deriveKind exclude type='transfer' from 'upcoming') — CSI-2 assert intentionally not applied here
         kind: recurringOptions?.kind ?? "default",
         extra: extraJson,
         hasAttachments: 0,
@@ -1219,7 +1220,20 @@ export async function confirmTransaction(
           .where(eq(accounts.id, leg.account_id))
           .run()
         db.update(transactions)
-          .set({ isPending: 1, accountBalanceBefore: 0, updatedAt: now })
+          .set({
+            isPending: 1,
+            // Mirror the confirm branch in reverse: a re-pended default leg
+            // that isn't a transfer or recurring instance goes back to
+            // 'upcoming' so it never lands in the CSI-2-forbidden
+            // kind='default' && is_pending=1 state.
+            ...(leg.kind === "default" &&
+            leg.type !== "transfer" &&
+            leg.recurring_id == null
+              ? { kind: "upcoming" }
+              : {}),
+            accountBalanceBefore: 0,
+            updatedAt: now,
+          })
           .where(eq(transactions.id, leg.id))
           .run()
       }

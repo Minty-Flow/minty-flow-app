@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T09:49:52.592Z
+Generated on: 2026-08-30T10:03:19.969Z
 ```
 ./
 ├── .github/
@@ -26,6 +26,7 @@ Generated on: 2026-08-30T09:49:52.592Z
 ├── .superpowers/
 │   └── sdd/
 │       ├── 2026-08-30-transaction-kind-slice-1/
+│       │   ├── final-code-only.diff
 │       │   ├── progress.md
 │       │   ├── review-0476346..9bd185c.diff
 │       │   ├── review-06de076..8c2d414.diff
@@ -36,8 +37,10 @@ Generated on: 2026-08-30T09:49:52.592Z
 │       │   ├── review-7f6da92..9243259.diff
 │       │   ├── review-8e557fb..a570e9d.diff
 │       │   ├── review-9bd185c..549ef7c.diff
+│       │   ├── review-9bfa4ab..e2fc8e9.diff
 │       │   ├── review-a570e9d..486844c.diff
 │       │   ├── review-a81b517..7f6da92.diff
+│       │   ├── review-ad5f3ad..e2fc8e9.diff
 │       │   ├── review-ef3a9e7..71717ef.diff
 │       │   ├── task-1-brief.md
 │       │   ├── task-1-report.md
@@ -46,6 +49,7 @@ Generated on: 2026-08-30T09:49:52.592Z
 │       │   ├── task-11-brief.md
 │       │   ├── task-11-report.md
 │       │   ├── task-12-brief.md
+│       │   ├── task-12-report.md
 │       │   ├── task-2-brief.md
 │       │   ├── task-2-report.md
 │       │   ├── task-3-brief.md
