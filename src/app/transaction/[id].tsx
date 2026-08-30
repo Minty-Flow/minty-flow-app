@@ -3,7 +3,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
-import { TransactionFormV3 } from "~/components/transaction/transaction-form-v3"
+import { TransactionFormV4 } from "~/components/transaction/transaction-form-v4"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -74,7 +74,7 @@ function TransactionEditor({
   const loans = useAllLoans()
 
   return (
-    <TransactionFormV3
+    <TransactionFormV4
       transaction={transaction}
       transactionType={transactionType}
       onTransactionTypeChange={setTransactionType}
@@ -140,12 +140,14 @@ export default function TransactionScreen() {
     accountId: prefillAccountId,
     categoryId: prefillCategoryId,
     loanId: prefillLoanId,
+    kind: _kind,
   } = useLocalSearchParams<{
     id: string
     type?: string
     accountId?: string
     categoryId?: string
     loanId?: string
+    kind?: string
   }>()
   const isNew = id === NewEnum.NEW
   const initialType = parseTransactionType(typeParam)
