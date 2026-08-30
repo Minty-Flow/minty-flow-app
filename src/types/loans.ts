@@ -41,7 +41,13 @@ export interface Loan {
   icon: string | null
   colorSchemeName: string | null
   colorScheme: MintyColorScheme | null // Computed from colorSchemeName via registry
-  isOverdue: boolean // Computed: dueDate != null && now > dueDate; always pair with !isPaid guard in UI
+  isOverdue: boolean // Computed: dueDate != null && now > dueDate; always pair with !isClosed guard in UI
+  // Computed in the loan read-model from non-deleted, non-pending transactions
+  // where loan_id = id AND type = getRepaymentTypeForLoan(loanType) (LP).
+  repaidAmount: number
+  remainingAmount: number // max(0, principalAmount - repaidAmount)
+  progress: number // clamp(repaidAmount / principalAmount, 0, 1); 1 when principal is 0
+  isClosed: boolean // progress >= 1
   createdAt: Date
   updatedAt: Date
 }
