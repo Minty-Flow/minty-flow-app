@@ -23,6 +23,10 @@ export const transactionSchema = z
     title: z.string().max(255).nullable().optional(),
     description: z.string().max(1000).nullable().optional(),
     isPending: z.boolean().default(false),
+    /**
+     * @deprecated Superseded by the per-kind auto-pay switches. No UI sets this;
+     * new rows persist `0`. Kept for legacy/imported rows' permanent opt-out.
+     */
     requiresManualConfirmation: z.boolean().nullable().optional(),
     tags: z.array(z.string()).default([]),
     goalId: z.string().nullable().optional(),
