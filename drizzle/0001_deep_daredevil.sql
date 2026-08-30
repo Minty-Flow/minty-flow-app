@@ -5,5 +5,3 @@ UPDATE `transactions` SET `kind` = 'repetitive' WHERE (`recurring_id` IS NOT NUL
 UPDATE `transactions` SET `kind` = CASE (SELECT `loan_type` FROM `loans` WHERE `loans`.`id` = `transactions`.`loan_id`) WHEN 'lent' THEN 'lent' WHEN 'borrowed' THEN 'borrowed' ELSE `kind` END WHERE `loan_id` IS NOT NULL AND `kind` IN ('default','repetitive');
 --> statement-breakpoint
 UPDATE `transactions` SET `kind` = 'upcoming' WHERE `is_pending` = 1 AND `kind` = 'default' AND `type` <> 'transfer';
---> statement-breakpoint
-UPDATE `transactions` SET `subtype` = NULL WHERE `subtype` IN ('recurring','one-time','loan_borrowed','loan_repayment','loan_lent','loan_received');

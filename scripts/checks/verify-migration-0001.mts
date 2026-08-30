@@ -51,13 +51,6 @@ assert.equal(
   "pending recurring instances are not 'upcoming'",
 )
 
-// No residual non-refund subtype
-assert.equal(
-  one("SELECT count(*) n FROM transactions WHERE subtype IS NOT NULL AND subtype <> 'refund'"),
-  0,
-  "only 'refund' subtype remains",
-)
-
 // Idempotency: re-applying ALL migration statements changes nothing
 const migrationSql = readFileSync(join(import.meta.dirname, "../../drizzle/0001_deep_daredevil.sql"), "utf8")
 const backfillStatements = migrationSql
