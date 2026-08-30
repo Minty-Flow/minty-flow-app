@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T10:34:06.445Z
+Generated on: 2026-08-30T10:46:52.228Z
 ```
 ./
 ├── .github/
@@ -69,6 +69,14 @@ Generated on: 2026-08-30T10:34:06.445Z
 │       │   ├── task-9-brief.md
 │       │   └── task-9-report.md
 │       ├── 2026-08-30-transaction-kind-slice-2/
+│       │   ├── progress.md
+│       │   ├── review-5f5eeef..1a7d18c.diff
+│       │   ├── task-1-brief.md
+│       │   ├── task-1-report.md
+│       │   ├── task-2-brief.md
+│       │   ├── task-3-brief.md
+│       │   ├── task-4-brief.md
+│       │   └── task-5-brief.md
 │       └── .gitignore
 ├── docs/
 │   ├── adr/
@@ -100,6 +108,7 @@ Generated on: 2026-08-30T10:34:06.445Z
 ├── scripts/
 │   ├── checks/
 │   │   ├── verify-migration-0001.mts
+│   │   ├── verify-recurrence.mts
 │   │   └── verify-transaction-kind.mts
 │   ├── check-missing-i18n-keys.mts
 │   ├── check-number-formatting.mts
