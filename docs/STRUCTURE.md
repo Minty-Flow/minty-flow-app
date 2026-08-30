@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T18:36:10.456Z
+Generated on: 2026-08-30T18:38:09.356Z
 ```
 ./
 ├── .github/
@@ -530,6 +530,7 @@ Generated on: 2026-08-30T18:36:10.456Z
 │   │   ├── use-chart-font.ts
 │   │   ├── use-debounced-callback.ts
 │   │   ├── use-import-recovery.ts
+│   │   ├── use-loan-term-reconcile.ts
 │   │   ├── use-location-permission-status.ts
 │   │   ├── use-modify-route-loader.ts
 │   │   ├── use-navigation-guard.ts
