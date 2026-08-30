@@ -45,24 +45,30 @@ export function useRecurringTransactionSync(): void {
   const isFirstSyncRef = useRef(true)
 
   const sync = useCallback(async () => {
-    const runAfterSync = isFirstSyncRef.current
-    isFirstSyncRef.current = false
-
     try {
       await synchronizeAllRecurringTransactions()
-      if (!runAfterSync || !isHydrated) return
 
-      // Configure service with store state before running auto-confirm
-      autoConfirmationService.configure({
-        autoPaySubscriptions,
-        autoPayRepetitive,
-        autoPayUpcoming,
-        updateDateUponConfirmation,
-      })
+      // Consume the first-sync sentinel only once the startup auto-confirm has
+      // actually been dispatched. A first sync that lands before the pending-
+      // transactions store hydrates leaves the sentinel set, so the next sync
+      // (post-hydration) still runs the configure + startup sweep instead of it
+      // being skipped for the whole session.
+      if (isFirstSyncRef.current && isHydrated) {
+        isFirstSyncRef.current = false
 
-      await autoConfirmationService
-        .runAutoConfirmDueOnStartup()
-        .catch((e) => logger.error("Auto-confirm failed", { error: String(e) }))
+        autoConfirmationService.configure({
+          autoPaySubscriptions,
+          autoPayRepetitive,
+          autoPayUpcoming,
+          updateDateUponConfirmation,
+        })
+
+        await autoConfirmationService
+          .runAutoConfirmDueOnStartup()
+          .catch((e) =>
+            logger.error("Auto-confirm failed", { error: String(e) }),
+          )
+      }
     } catch (e) {
       logger.error("Recurring sync failed", { error: String(e) })
     }
