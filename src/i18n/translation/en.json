@@ -63,6 +63,14 @@
         "paid": "Paid",
         "collected": "Collected"
       },
+      "kinds": {
+        "default": "Standard",
+        "upcoming": "Upcoming",
+        "subscription": "Subscription",
+        "repetitive": "Repeating",
+        "lent": "Lent",
+        "borrowed": "Borrowed"
+      },
       "untitledTransaction": "Untitled Transaction",
       "uncategorized": "uncategorized"
     },
@@ -969,6 +977,11 @@
         "edit": "Edit Transaction"
       },
       "notFoundTransaction": "Transaction not found.",
+      "kind": {
+        "label": "Kind",
+        "recurrenceComingSoon": "Recurrence settings arrive in a later update",
+        "loanComingSoon": "Loan settings arrive in a later update"
+      },
       "fields": {
         "transferTitle": "Transfer",
         "transferTitleFull": "From {{from}} to {{to}}",

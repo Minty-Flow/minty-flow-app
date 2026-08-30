@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T09:28:47.750Z
+Generated on: 2026-08-30T09:39:05.023Z
 ```
 ./
 ├── .github/
@@ -43,6 +43,7 @@ Generated on: 2026-08-30T09:28:47.750Z
 │       │   ├── task-10-brief.md
 │       │   ├── task-10-report.md
 │       │   ├── task-11-brief.md
+│       │   ├── task-11-report.md
 │       │   ├── task-12-brief.md
 │       │   ├── task-2-brief.md
 │       │   ├── task-2-report.md
@@ -347,6 +348,9 @@ Generated on: 2026-08-30T09:28:47.750Z
 │   │   │   │   ├── form-delete-actions.tsx
 │   │   │   │   ├── form-footer.tsx
 │   │   │   │   ├── form-goal-picker.tsx
+│   │   │   │   ├── form-kind-card.styles.ts
+│   │   │   │   ├── form-kind-card.tsx
+│   │   │   │   ├── form-kind-selector.tsx
 │   │   │   │   ├── form-loan-picker.tsx
 │   │   │   │   ├── form-modals.tsx
 │   │   │   │   ├── form-notes-section.tsx
@@ -356,6 +360,7 @@ Generated on: 2026-08-30T09:28:47.750Z
 │   │   │   │   ├── form-utils.ts
 │   │   │   │   ├── form.styles.ts
 │   │   │   │   ├── index.tsx
+│   │   │   │   ├── on-kind-change.ts
 │   │   │   │   ├── transaction-top-tabs.tsx
 │   │   │   │   ├── types.ts
 │   │   │   │   ├── use-form-attachments.ts
