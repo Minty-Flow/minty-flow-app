@@ -57,7 +57,7 @@ export async function createLoan(data: CreateLoanInput): Promise<string> {
         description: data.description ?? null,
         principalAmount: data.principalAmount,
         loanType: data.loanType,
-        term: data.term ?? "long_term",
+        term: data.term ?? "one_time",
         dueDate:
           data.dueDate != null ? new Date(data.dueDate).toISOString() : null,
         accountId: data.accountId,

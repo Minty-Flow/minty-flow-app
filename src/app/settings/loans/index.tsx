@@ -28,7 +28,7 @@ export default function LoansScreen() {
   const navigation = useNavigation()
   const [filterVisible, setFilterVisible] = useState(false)
   const [activeFilter, setActiveFilter] = useState<LoanTypeFilter>("all")
-  const [activeTerm, setActiveTerm] = useState<LoanTerm>("long_term")
+  const [activeTerm, setActiveTerm] = useState<LoanTerm>("one_time")
   const isFiltered = activeFilter !== "all"
   const toggleFilter = useCallback(() => {
     setFilterVisible((v) => !v)
@@ -83,23 +83,21 @@ export default function LoansScreen() {
   if (status === "loading") return <RouteLoadingState />
   return (
     <View style={styles.container}>
-      <View style={styles.termTabs}>
-        <TabsMinty<LoanTerm>
-          items={[
-            {
-              value: "long_term",
-              label: t("screens.settings.loans.term.longTerm"),
-            },
-            {
-              value: "one_time",
-              label: t("screens.settings.loans.term.oneTime"),
-            },
-          ]}
-          activeValue={activeTerm}
-          onValueChange={setActiveTerm}
-          variant="segmented"
-        />
-      </View>
+      <TabsMinty<LoanTerm>
+        items={[
+          {
+            value: "one_time",
+            label: t("screens.settings.loans.term.oneTime"),
+          },
+          {
+            value: "long_term",
+            label: t("screens.settings.loans.term.longTerm"),
+          },
+        ]}
+        activeValue={activeTerm}
+        onValueChange={setActiveTerm}
+        variant="segmented"
+      />
 
       {filterVisible ? (
         <View style={styles.filterContainer}>
@@ -149,11 +147,6 @@ const styles = StyleSheet.create((t) => ({
   container: {
     flex: 1,
     backgroundColor: t.colors.surface,
-  },
-  termTabs: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 4,
   },
   filterContainer: {
     justifyContent: "center",

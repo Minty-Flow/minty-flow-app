@@ -114,6 +114,9 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
     remaining,
     dueDays,
   } = getLoanProgressModel(loan, paidAmount)
+  // One-time loans are open or covered — no progress bar. Only long-term loans
+  // (which a partial Collect/Settle promotes them to) track partial progress.
+  const isLongTerm = loan.term === "long_term"
   const accentColor = loan.colorScheme?.primary ?? theme.colors.primary
   const accentTint = loan.colorScheme?.secondary ?? `${theme.colors.primary}20`
   const mutedColor = theme.colors.onSecondary
@@ -244,52 +247,77 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
         <Text style={styles.description}>{loan.description}</Text>
       ) : null}
 
-      <View style={styles.progressSection}>
-        <View style={styles.progressTrack}>
-          <RNView
-            style={[
-              styles.progressFill,
-              {
-                width: `${clampedProgress * 100}%` as DimensionValue,
-                backgroundColor: progressBarColor,
-              },
-            ]}
-          />
-        </View>
-        <View style={styles.amountRow}>
-          <Text style={styles.amountText}>
-            {isLent
-              ? t("screens.settings.loans.card.received")
-              : t("screens.settings.loans.card.paidBack")}{" "}
-            <Money
-              value={paid}
-              currency={currencyCode}
-              tone="transfer"
-              hideSign
-            />{" "}
-            {t("screens.settings.loans.card.of")}{" "}
-            <Money
-              value={principal}
-              currency={currencyCode}
-              tone="transfer"
-              hideSign
+      {isLongTerm ? (
+        <View style={styles.progressSection}>
+          <View style={styles.progressTrack}>
+            <RNView
+              style={[
+                styles.progressFill,
+                {
+                  width: `${clampedProgress * 100}%` as DimensionValue,
+                  backgroundColor: progressBarColor,
+                },
+              ]}
             />
-          </Text>
-          {isPaid ? (
-            <Text style={[styles.remainingText, { color: mutedColor }]}>
-              {t("screens.settings.loans.card.settled")}
+          </View>
+          <View style={styles.amountRow}>
+            <Text style={styles.amountText}>
+              {isLent
+                ? t("screens.settings.loans.card.received")
+                : t("screens.settings.loans.card.paidBack")}{" "}
+              <Money
+                value={paid}
+                currency={currencyCode}
+                tone="transfer"
+                hideSign
+              />{" "}
+              {t("screens.settings.loans.card.of")}{" "}
+              <Money
+                value={principal}
+                currency={currencyCode}
+                tone="transfer"
+                hideSign
+              />
             </Text>
-          ) : (
-            <Money
-              value={remaining}
-              currency={currencyCode}
-              tone="transfer"
-              hideSign
-              style={[styles.remainingText, { color: accentColor }]}
-            />
-          )}
+            {isPaid ? (
+              <Text style={[styles.remainingText, { color: mutedColor }]}>
+                {t("screens.settings.loans.card.settled")}
+              </Text>
+            ) : (
+              <Money
+                value={remaining}
+                currency={currencyCode}
+                tone="transfer"
+                hideSign
+                style={[styles.remainingText, { color: accentColor }]}
+              />
+            )}
+          </View>
         </View>
-      </View>
+      ) : (
+        <View style={styles.progressSection}>
+          <View style={styles.amountRow}>
+            <Text style={styles.amountText}>
+              {isLent
+                ? t("screens.settings.loans.type.lent")
+                : t("screens.settings.loans.type.borrowed")}
+            </Text>
+            {isPaid ? (
+              <Text style={[styles.remainingText, { color: mutedColor }]}>
+                {t("screens.settings.loans.card.settled")}
+              </Text>
+            ) : (
+              <Money
+                value={principal}
+                currency={currencyCode}
+                tone="transfer"
+                hideSign
+                style={[styles.remainingText, { color: accentColor }]}
+              />
+            )}
+          </View>
+        </View>
+      )}
 
       {/* Collect / Settle button */}
       {!isPaid && (
