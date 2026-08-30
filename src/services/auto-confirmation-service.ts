@@ -13,8 +13,8 @@ import { logger } from "~/utils/logger"
  * Auto-Confirmation Service
  *
  * A pending row is "pre-approved" when its kind's auto-pay switch is on
- * (`autoPaySubscriptions` for subscription/repetitive, `autoPayUpcoming` for
- * `upcoming`) and it carries no explicit `requiresManualConfirmation` opt-out.
+ * (`autoPaySubscriptions` / `autoPayRepetitive` / `autoPayUpcoming`) and it
+ * carries no explicit `requiresManualConfirmation` opt-out.
  * The moment transactionDate passes, pre-approved rows are confirmed so they
  * never linger in an "auto-confirming" state.
  *
@@ -34,6 +34,7 @@ type ConfirmCallback = (transactionId: string) => void
 
 interface AutoConfirmConfig {
   autoPaySubscriptions: boolean
+  autoPayRepetitive: boolean
   autoPayUpcoming: boolean
   updateDateUponConfirmation: boolean
 }
@@ -276,6 +277,7 @@ export function useAutoConfirmVersion(): number {
 /** Per-kind auto-pay resolution: which switch governs this row. */
 type AutoPayConfig = {
   autoPaySubscriptions: boolean
+  autoPayRepetitive: boolean
   autoPayUpcoming: boolean
 }
 
@@ -291,6 +293,7 @@ export function isPreapproved(
   // A row created in a "require confirmation" mode keeps that opt-out for life.
   if (row.requiresManualConfirmation) return false
   if (row.kind === TransactionKindEnum.UPCOMING) return cfg.autoPayUpcoming
-  // subscription / repetitive recurring instances (and any legacy pending row).
+  if (row.kind === TransactionKindEnum.REPETITIVE) return cfg.autoPayRepetitive
+  // subscription instances (and any legacy pending row).
   return cfg.autoPaySubscriptions
 }

@@ -91,6 +91,12 @@ export default function PendingTransactionsPreferencesScreen() {
   const setAutoPaySubscriptions = usePendingTransactionsStore(
     (s) => s.setAutoPaySubscriptions,
   )
+  const autoPayRepetitive = usePendingTransactionsStore(
+    (s) => s.autoPayRepetitive,
+  )
+  const setAutoPayRepetitive = usePendingTransactionsStore(
+    (s) => s.setAutoPayRepetitive,
+  )
   const autoPayUpcoming = usePendingTransactionsStore((s) => s.autoPayUpcoming)
   const setAutoPayUpcoming = usePendingTransactionsStore(
     (s) => s.setAutoPayUpcoming,
@@ -185,6 +191,15 @@ export default function PendingTransactionsPreferencesScreen() {
         )}
         value={autoPaySubscriptions}
         onToggle={() => setAutoPaySubscriptions(!autoPaySubscriptions)}
+      />
+
+      <ToggleRow
+        title={t("screens.settings.pending.settings.autoPayRepetitive.label")}
+        description={t(
+          "screens.settings.pending.settings.autoPayRepetitive.description",
+        )}
+        value={autoPayRepetitive}
+        onToggle={() => setAutoPayRepetitive(!autoPayRepetitive)}
       />
 
       <ToggleRow
