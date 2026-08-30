@@ -741,6 +741,7 @@ export function useTransactionForm({
       { shouldDirty: true },
     )
   }
+  const clearTags = () => setValue("tags", [], { shouldDirty: true })
   const handleTransactionTypeChange = (type: TransactionFormValues["type"]) => {
     onTransactionTypeChange(type)
     setValue("type", type, { shouldDirty: true })
@@ -908,5 +909,6 @@ export function useTransactionForm({
     handleDestroyConfirm,
     addTag,
     removeTag,
+    clearTags,
   }
 }

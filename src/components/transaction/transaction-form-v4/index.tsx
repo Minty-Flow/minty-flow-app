@@ -278,6 +278,7 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
             tagIds={f.tagIds}
             addTag={f.addTag}
             removeTag={f.removeTag}
+            clearTags={f.clearTags}
           />
 
           {transactionType === TransactionTypeEnum.EXPENSE &&

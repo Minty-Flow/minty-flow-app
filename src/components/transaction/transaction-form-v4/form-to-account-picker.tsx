@@ -142,10 +142,8 @@ export function FormToAccountPicker({
             style={transactionFormStyles.pickerSearchInput}
           />
           <ScrollView
-            style={transactionFormStyles.pickerList}
-            contentContainerStyle={transactionFormStyles.pickerListContent}
             keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator
+            showsVerticalScrollIndicator={false}
             nestedScrollEnabled
           >
             {filteredToAccountsForPicker.map((account) => (
