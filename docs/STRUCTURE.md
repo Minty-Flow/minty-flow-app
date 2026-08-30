@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-08-30T02:16:10.354Z
+Generated on: 2026-08-30T02:25:35.555Z
 ```
 ./
 ├── .github/
@@ -27,7 +27,10 @@ Generated on: 2026-08-30T02:16:10.354Z
 │   └── sdd/
 │       ├── 2026-08-30-transaction-kind-slice-1/
 │       │   ├── progress.md
-│       │   └── task-1-brief.md
+│       │   ├── review-319f978..0476346.diff
+│       │   ├── task-1-brief.md
+│       │   ├── task-1-report.md
+│       │   └── task-2-brief.md
 │       └── .gitignore
 ├── docs/
 │   ├── adr/

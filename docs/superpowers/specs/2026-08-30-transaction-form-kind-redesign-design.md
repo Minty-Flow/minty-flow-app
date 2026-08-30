@@ -209,7 +209,10 @@ no-op):
 
 1. `ALTER TABLE transactions ADD COLUMN kind …` (above)
 2. `UPDATE transactions SET kind='repetitive'
-   WHERE subtype='recurring' AND kind='default';`
+   WHERE (recurring_id IS NOT NULL OR subtype='recurring') AND kind='default';`
+   *(the durable "is a recurring instance" signal in this codebase is
+   `recurring_id`; current code never writes `subtype='recurring'` — that value
+   is only possible in Flutter-era legacy rows, kept in the OR as belt-and-braces.)*
 3. `UPDATE transactions SET kind = CASE
       (SELECT loan_type FROM loans WHERE loans.id = transactions.loan_id)
       WHEN 'lent' THEN 'lent' WHEN 'borrowed' THEN 'borrowed' ELSE kind END
@@ -222,9 +225,10 @@ no-op):
    *(data-only cleanup; `refund` untouched. Safe to omit — nothing reads these
    after Slice 1.)*
 
-Wrap steps 2–5 in `BEGIN; … COMMIT;` inside the file **unless** verification
-shows `useMigrations` already wraps each file in a transaction (see Migration
-safety).
+**No `BEGIN; … COMMIT;` in the file** — verified: `drizzle-orm`'s async sqlite
+migrator (`sqlite-core/dialect.cjs` `async migrate`) wraps all pending migration
+files in one `session.transaction()`, so a failing statement rolls the whole
+file back and the next launch retries cleanly.
 
 #### Migration `0001` validation checklist (run on a production-shaped DB copy)
 
@@ -234,12 +238,12 @@ safety).
       type='index'`) — additive migration cannot drop them; confirm anyway
 - [ ] no triggers existed in `0000` to lose (verify) — additive migration is
       inherently rebuild-free
-- [ ] `#(kind='repetitive')` == pre-migration `#(subtype='recurring' AND
-      loan_id IS NULL)`
+- [ ] `#(kind='repetitive')` == pre-migration `#((recurring_id IS NOT NULL OR
+      subtype='recurring') AND loan_id IS NULL)`
 - [ ] `#(kind IN ('lent','borrowed'))` == pre-migration `#(loan_id IS NOT NULL)`;
       each matches its loan's `loan_type`
 - [ ] `#(kind='upcoming')` == pre-migration `#(is_pending=1 AND type<>'transfer'
-      AND subtype IS NOT 'recurring' AND loan_id IS NULL)`
+      AND recurring_id IS NULL AND subtype IS NOT 'recurring' AND loan_id IS NULL)`
 - [ ] `#(kind='default')` == the remainder; no row left `kind IS NULL`
 - [ ] pending recurring instances are `repetitive`, not `upcoming`
 - [ ] `refund` subtypes preserved; (if step 5 kept) no other subtype value remains
@@ -715,8 +719,10 @@ const displayTitle =
   version.
 - **Older snapshot (no `kind`/`term`):** run the **same backfill logic as
   migration `0001`** (extract it into a shared pure function
-  `deriveKind({ subtype, isPending, type, loanType })`) so imported rows are
-  consistent, not blindly `default`. `loan.term` → `long_term`.
+  `deriveKind({ subtype, isPending, type, loanType, recurringId })` — note
+  `recurringId`: recurring instances are detected by `recurring_id IS NOT NULL`,
+  not `subtype`) so imported rows are consistent, not blindly `default`.
+  `loan.term` → `long_term`.
 - **Newer snapshot than this app supports:** **rejected** with a clear message
   (do not guess / partially import). Confirm/implement in `import-snapshot.ts`.
 - **Round-trip:** export → wipe → import → `kind` and `term` identical for every

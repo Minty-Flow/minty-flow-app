@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 import { DatabaseSync } from "node:sqlite"
 
 const dbPath = process.argv[2]
@@ -11,6 +13,11 @@ if (!dbPath) {
 const db = new DatabaseSync(dbPath)
 const one = (sql: string): number =>
   (db.prepare(sql).get() as { n: number }).n
+
+const distribution = (): string =>
+  (db.prepare("SELECT kind, count(*) n FROM transactions GROUP BY kind ORDER BY kind").all() as { kind: string; n: number }[])
+    .map((r) => `${r.kind}=${r.n}`)
+    .join(",")
 
 // FK integrity
 assert.equal((db.prepare("PRAGMA foreign_key_check").all() as unknown[]).length, 0, "foreign_key_check must be clean")
@@ -32,7 +39,12 @@ assert.equal(
   "loan-linked kind matches loan_type",
 )
 
-// Pending recurring instances are 'repetitive', never 'upcoming'
+// Every recurring instance is 'repetitive' (unless loan-overridden), never 'upcoming'/'default'
+assert.equal(
+  one("SELECT count(*) n FROM transactions WHERE recurring_id IS NOT NULL AND loan_id IS NULL AND kind NOT IN ('repetitive')"),
+  0,
+  "recurring instances (no loan) are 'repetitive'",
+)
 assert.equal(
   one("SELECT count(*) n FROM transactions WHERE is_pending = 1 AND recurring_id IS NOT NULL AND kind = 'upcoming'"),
   0,
@@ -46,10 +58,14 @@ assert.equal(
   "only 'refund' subtype remains",
 )
 
-// Idempotency: re-running the backfill statements changes nothing
-const before = one("SELECT count(*) n FROM transactions WHERE kind <> 'default'")
-db.exec("UPDATE transactions SET kind = 'repetitive' WHERE subtype = 'recurring' AND kind = 'default'")
-db.exec("UPDATE transactions SET kind = 'upcoming' WHERE is_pending = 1 AND kind = 'default' AND type <> 'transfer'")
-assert.equal(one("SELECT count(*) n FROM transactions WHERE kind <> 'default'"), before, "backfill is idempotent")
+// Idempotency: re-applying ALL migration statements changes nothing
+const migrationSql = readFileSync(join(import.meta.dirname, "../../drizzle/0001_deep_daredevil.sql"), "utf8")
+const backfillStatements = migrationSql
+  .split("--> statement-breakpoint")
+  .map((s) => s.trim())
+  .filter((s) => s.length > 0 && !s.startsWith("ALTER TABLE"))
+const distBefore = distribution()
+for (const stmt of backfillStatements) db.exec(stmt)
+assert.equal(distribution(), distBefore, `backfill is idempotent (${distBefore})`)
 
 console.log("migration 0001: OK")

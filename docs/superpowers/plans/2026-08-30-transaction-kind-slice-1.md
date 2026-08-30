@@ -119,7 +119,7 @@ Replace the contents of `drizzle/0001_<name>.sql` with exactly (keep the `--> st
 ```sql
 ALTER TABLE `transactions` ADD `kind` text DEFAULT 'default' NOT NULL CHECK (`kind` IN ('default','upcoming','subscription','repetitive','lent','borrowed'));
 --> statement-breakpoint
-UPDATE `transactions` SET `kind` = 'repetitive' WHERE `subtype` = 'recurring' AND `kind` = 'default';
+UPDATE `transactions` SET `kind` = 'repetitive' WHERE (`recurring_id` IS NOT NULL OR `subtype` = 'recurring') AND `kind` = 'default';
 --> statement-breakpoint
 UPDATE `transactions` SET `kind` = CASE (SELECT `loan_type` FROM `loans` WHERE `loans`.`id` = `transactions`.`loan_id`) WHEN 'lent' THEN 'lent' WHEN 'borrowed' THEN 'borrowed' ELSE `kind` END WHERE `loan_id` IS NOT NULL AND `kind` IN ('default','repetitive');
 --> statement-breakpoint
@@ -127,6 +127,13 @@ UPDATE `transactions` SET `kind` = 'upcoming' WHERE `is_pending` = 1 AND `kind` 
 --> statement-breakpoint
 UPDATE `transactions` SET `subtype` = NULL WHERE `subtype` IN ('recurring','one-time','loan_borrowed','loan_repayment','loan_lent','loan_received');
 ```
+
+**Recurring detection uses `recurring_id IS NOT NULL`** (with `subtype='recurring'`
+OR'd in for Flutter-era legacy rows) — the current app spawns recurring
+instances with `recurring_id` set and `subtype` NULL, so `subtype='recurring'`
+alone would miss every recurring instance and a pending one would wrongly become
+`upcoming`. This contradicts an earlier draft of this task; the corrected form
+above is authoritative.
 
 - [ ] **Step 4: Register the migration for the expo bundler**
 
@@ -185,7 +192,12 @@ assert.equal(
   "loan-linked kind matches loan_type",
 )
 
-// Pending recurring instances are 'repetitive', never 'upcoming'
+// Every recurring instance is 'repetitive' (unless loan-overridden), never 'upcoming'/'default'
+assert.equal(
+  one("SELECT count(*) n FROM transactions WHERE recurring_id IS NOT NULL AND loan_id IS NULL AND kind NOT IN ('repetitive')"),
+  0,
+  "recurring instances (no loan) are 'repetitive'",
+)
 assert.equal(
   one("SELECT count(*) n FROM transactions WHERE is_pending = 1 AND recurring_id IS NOT NULL AND kind = 'upcoming'"),
   0,
@@ -729,11 +741,12 @@ Add to `scripts/checks/verify-transaction-kind.mts`:
 ```ts
 import { deriveKind } from "../../src/domain/derive-kind.ts"
 
-assert.equal(deriveKind({ subtype: "recurring", isPending: false, type: "expense", loanType: null }), "repetitive")
-assert.equal(deriveKind({ subtype: null, isPending: true, type: "expense", loanType: null }), "upcoming")
-assert.equal(deriveKind({ subtype: null, isPending: true, type: "transfer", loanType: null }), "default")
-assert.equal(deriveKind({ subtype: "recurring", isPending: false, type: "expense", loanType: "lent" }), "lent")
-assert.equal(deriveKind({ subtype: null, isPending: false, type: "income", loanType: null }), "default")
+assert.equal(deriveKind({ subtype: "recurring", isPending: false, type: "expense", loanType: null, recurringId: null }), "repetitive")
+assert.equal(deriveKind({ subtype: null, isPending: true, type: "expense", loanType: null, recurringId: "R1" }), "repetitive") // recurring_id wins over pending
+assert.equal(deriveKind({ subtype: null, isPending: true, type: "expense", loanType: null, recurringId: null }), "upcoming")
+assert.equal(deriveKind({ subtype: null, isPending: true, type: "transfer", loanType: null, recurringId: null }), "default")
+assert.equal(deriveKind({ subtype: null, isPending: false, type: "expense", loanType: "lent", recurringId: "R1" }), "lent") // loan wins over recurring
+assert.equal(deriveKind({ subtype: null, isPending: false, type: "income", loanType: null, recurringId: null }), "default")
 ```
 
 Run: `node ./scripts/checks/verify-transaction-kind.mts` → FAIL (module missing).
@@ -752,13 +765,14 @@ export interface DeriveKindInput {
   isPending: boolean
   type: string
   loanType: "lent" | "borrowed" | null
+  recurringId: string | null
 }
 
-/** Mirrors migration 0001's backfill precedence: loan link > recurring > pending. */
+/** Mirrors migration 0001's backfill precedence: loan link > recurring > pending(non-transfer). */
 export function deriveKind(input: DeriveKindInput): TransactionKind {
   if (input.loanType === "lent") return "lent"
   if (input.loanType === "borrowed") return "borrowed"
-  if (input.subtype === "recurring") return "repetitive"
+  if (input.recurringId != null || input.subtype === "recurring") return "repetitive"
   if (input.isPending && input.type !== "transfer") return "upcoming"
   return "default"
 }
@@ -776,7 +790,7 @@ In `data-management-service.ts`, find where transaction rows are serialised for 
 
 In `import-snapshot.ts`, when inserting a transaction from a snapshot:
 - if the row has `kind`, use it;
-- else `deriveKind({ subtype: row.subtype ?? null, isPending: !!row.isPending, type: row.type, loanType: <lent/borrowed of row.loanId's loan if resolvable, else null> })`.
+- else `deriveKind({ subtype: row.subtype ?? null, isPending: !!row.isPending, type: row.type, loanType: <lent/borrowed of row.loanId's loan if resolvable, else null>, recurringId: row.recurringId ?? null })`.
 If the snapshot's version is **newer** than this app supports, reject with the existing error path (grep for how version mismatch is currently handled; if only older is handled, add a `throw` with an i18n'd message key `screens.dataManagement.import.versionTooNew` in both `en.json` and `ar.json`).
 
 - [ ] **Step 6: Verify**
@@ -1101,7 +1115,8 @@ export type TransactionSubType =
 - `recurring-transaction-service.ts` — `RecurringTransactionTemplate.subtype` field: it stored `one-time`/`recurring`; now that `kind` carries recurrence, set `subtype` in spawned `txData` to `data.subtype ?? null` only for `refund` passthrough; drop any `TransactionSubTypeEnum.RECURRING` usage.
 - `transaction-item/index.tsx` — already only checks `REFUND`; ensure the import still resolves.
 - `get-balance-delta.ts` — keeps the `refund` branch; no change.
-- `data-management` / `stats-data.ts` / `loan-service.ts` / `balance-service.ts` / `transaction-list-utils.ts` / `live-progress.ts` — replace any `subtype === 'loan_*'` / `'recurring'` checks with the equivalent `kind` check (`kind === 'lent'` etc.) or delete if now dead.
+- `data-management` / `loan-service.ts` / `balance-service.ts` / `transaction-list-utils.ts` / `live-progress.ts` — replace any `subtype === 'loan_*'` / `'recurring'` checks with the equivalent `kind` check (`kind === 'lent'` etc.) or delete if now dead.
+- `stats-data.ts` `computeExpenseBySubtype` (~line 608-620) currently buckets by `subtype === RECURRING` / `ONE_TIME`. After migration those are always NULL, so it already only ever produces `unclassified`. Rework it to bucket by `kind` (`repetitive`/`subscription` → `recurring` bucket; everything else → the other buckets) so the stat is meaningful again — OR, if the "expense by subtype" stat is unused in the UI, delete `computeExpenseBySubtype` and its `ExpenseBySubtype` type + call site. Grep `computeExpenseBySubtype` / `ExpenseBySubtype` / `expenseBySubtype` across `src/app/stats/**` and `src/components/stats/**` first; pick delete if there are no render consumers.
 
 - [ ] **Step 4: Verify**
 
