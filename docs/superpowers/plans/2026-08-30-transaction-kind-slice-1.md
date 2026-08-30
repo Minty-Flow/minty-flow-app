@@ -815,12 +815,16 @@ git commit -m "feat(data-management): export/import transaction kind with derive
 
 **Files:**
 - Rename: `src/components/transaction/transaction-form-v3/` → `src/components/transaction/transaction-form-v4/`
-- Modify: `src/app/transaction/[id].tsx`
+- Modify: `src/app/transaction/[id].tsx` (imports `TransactionFormV3`)
 - Modify: `src/components/transaction/transaction-form-v4/index.tsx` (export name), `types.ts`
+- Modify: `src/components/loans/loan-modify/loan-modify-content.tsx` — **also imports from the v3 dir** (`transaction-form-v3/form-account-picker`, `transaction-form-v3/form-category-picker`); update both paths to `transaction-form-v4/…`.
+- Modify: `src/components/inline-category-picker/index.tsx` — a comment (`// Mirror the constants from transaction-form-v3/form.styles.ts`); update the path in the comment.
 
 **Interfaces:**
 - Consumes: nothing new.
 - Produces: `TransactionFormV4` exported from `~/components/transaction/transaction-form-v4`; route renders it. Behaviour identical to before.
+
+**External importers of the v3 dir (verified via `rg "transaction-form-v3"` — the plan's earlier "only importer" line was wrong):** `src/app/transaction/[id].tsx` (the component), `src/components/loans/loan-modify/loan-modify-content.tsx` (two sub-components), `src/components/inline-category-picker/index.tsx` (comment only). All three must be updated.
 
 - [ ] **Step 1: Move the directory preserving history**
 
@@ -833,9 +837,12 @@ git mv src/components/transaction/transaction-form-v3 src/components/transaction
 
 In `src/components/transaction/transaction-form-v4/index.tsx`, rename `export function TransactionFormV3(` → `export function TransactionFormV4(`. In `types.ts` rename `TransactionFormV3Props` → `TransactionFormV4Props` (leave its fields for now).
 
-- [ ] **Step 3: Update the route**
+- [ ] **Step 3: Update every external reference**
 
-In `src/app/transaction/[id].tsx`, change the import and both JSX usages from `TransactionFormV3` to `TransactionFormV4` (import path `~/components/transaction/transaction-form-v4`). Add `kind` to `useLocalSearchParams` destructure typing (`kind?: string`) — unused for now, passed through in Task 10.
+- `src/app/transaction/[id].tsx` — change the import path + both JSX usages `TransactionFormV3` → `TransactionFormV4` (path `~/components/transaction/transaction-form-v4`). Add `kind?: string` to the `useLocalSearchParams` destructure typing — unused for now, passed through in Task 11.
+- `src/components/loans/loan-modify/loan-modify-content.tsx` — change both imports `~/components/transaction/transaction-form-v3/form-account-picker` and `…/form-category-picker` → `…/transaction-form-v4/…`.
+- `src/components/inline-category-picker/index.tsx` — update the `transaction-form-v3` path in the comment.
+- Then `rg "transaction-form-v3|TransactionFormV3"` over `src/` — must return zero hits.
 
 - [ ] **Step 4: Verify**
 
@@ -844,14 +851,15 @@ Expected: PASS (`pnpm structure` regenerates `docs/STRUCTURE.md` with the new pa
 
 - [ ] **Step 5: Manual QA**
 
-Run: `pnpm ios`. Open the FAB → expense/income/transfer; create one of each; edit one; delete one. Everything works exactly as before the move.
+Run: `pnpm ios`. Open the FAB → expense/income/transfer; create one of each; edit one; delete one. Also open a loan → Modify (exercises `loan-modify-content`'s moved sub-component imports). Everything works exactly as before the move.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add -A
+git add src/components/transaction/transaction-form-v4 src/app/transaction/\[id\].tsx src/components/loans/loan-modify/loan-modify-content.tsx src/components/inline-category-picker/index.tsx
 git commit -m "refactor: rename transaction-form-v3 to v4 (no behaviour change)"
 ```
+(`git mv` already staged the renamed dir; the explicit `git add` picks up the reference updates. Do **not** `git add -A`. Let the hook stage `docs/STRUCTURE.md`.)
 
 ---
 
