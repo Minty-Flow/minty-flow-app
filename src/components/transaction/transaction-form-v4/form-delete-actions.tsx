@@ -11,6 +11,7 @@ import { transactionFormStyles } from "./form.styles"
 type Props = {
   transaction: Transaction
   isSaving: boolean
+  isLoanOpeningEntry?: boolean
   onRestore: () => void
   onDelete: () => void
   onDestroy: () => void
@@ -19,6 +20,7 @@ type Props = {
 export function FormDeleteActions({
   transaction,
   isSaving,
+  isLoanOpeningEntry = false,
   onRestore,
   onDelete,
   onDestroy,
@@ -78,7 +80,9 @@ export function FormDeleteActions({
           color={transactionFormStyles.deleteButtonColor.color}
         />
         <Text variant="default" style={transactionFormStyles.deleteButtonColor}>
-          {t("components.transactionForm.fields.moveToTrash")}
+          {isLoanOpeningEntry
+            ? t("components.transactionForm.fields.deleteLoan")
+            : t("components.transactionForm.fields.moveToTrash")}
         </Text>
       </Button>
     </View>

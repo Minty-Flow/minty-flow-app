@@ -15,7 +15,11 @@ import {
   restoreTransaction,
   updateTransaction,
 } from "~/database/services/ledger-service"
-import { createLoanWithOpeningEntry } from "~/database/services/loan-service"
+import {
+  createLoanWithOpeningEntry,
+  deleteLoanById,
+  isLoanOpeningTransaction,
+} from "~/database/services/loan-service"
 import { createRecurringRule } from "~/database/services/recurring-transaction-service"
 import { getRepaymentTypeForLoan } from "~/domain/transaction-kind"
 import { useBalanceAtTransaction } from "~/hooks/use-balance-before"
@@ -88,6 +92,7 @@ export function useTransactionForm({
     unsavedModalVisible: false,
     editRecurringModalVisible: false,
     deleteRecurringModalVisible: false,
+    deleteLoanModalVisible: false,
     destroyModalVisible: false,
     notesModalVisible: false,
     locationPickerVisible: false,
@@ -358,6 +363,16 @@ export function useTransactionForm({
     isNew || (transaction?.loanId == null && transaction?.recurringId == null)
   const lockedFields: ReadonlySet<string> = new Set<string>(
     transaction?.loanId ? ["kind", "type", "loanId", "toAccountId"] : [],
+  )
+  // LX-2: the loan's opening entry can't be deleted on its own — deleting it
+  // deletes the loan. A repayment deletes normally (progress recomputes on read).
+  const loanForTransaction = transaction?.loanId
+    ? (loans.find((l) => l.id === transaction.loanId) ?? null)
+    : null
+  const isLoanOpeningEntry = !!(
+    transaction &&
+    loanForTransaction &&
+    isLoanOpeningTransaction(transaction, loanForTransaction)
   )
   const setKind = (next: TransactionKind) => {
     if (!canEditKind || next === kind) return
@@ -692,6 +707,10 @@ export function useTransactionForm({
   }
   const handleDeleteConfirm = () => {
     if (!transaction) return
+    if (isLoanOpeningEntry) {
+      setModals({ deleteLoanModalVisible: true })
+      return
+    }
     if (transaction.recurringId && recurringRule) {
       setModals({ deleteRecurringModalVisible: true })
       return
@@ -715,6 +734,24 @@ export function useTransactionForm({
           title: t("components.transactionForm.toast.moveToTrashFailed"),
         })
       })
+  }
+  const handleDeleteLoanConfirm = async () => {
+    if (!transaction?.loanId) return
+    setModals({ deleteLoanModalVisible: false })
+    try {
+      await deleteLoanById(transaction.loanId)
+      synchronizePlannedTransactionNotifications().catch(() => {})
+      Toast.success({
+        title: t("components.transactionForm.toast.loanDeleted"),
+      })
+      allowNavigation()
+      router.back()
+    } catch (error) {
+      logger.error("Failed to delete loan", { error })
+      Toast.error({
+        title: t("components.transactionForm.toast.moveToTrashFailed"),
+      })
+    }
   }
   const handleRestore = async () => {
     if (!transaction?.isDeleted) return
@@ -869,6 +906,7 @@ export function useTransactionForm({
     linkExistingLoan,
     unlinkLoan,
     fillRemainingAmount,
+    isLoanOpeningEntry,
     loanDraft,
     setLoanDraft,
 
@@ -934,6 +972,7 @@ export function useTransactionForm({
     handleConfirmExit,
     handleCancelPress,
     handleDeleteConfirm,
+    handleDeleteLoanConfirm,
     handleRestore,
     handleDestroy,
     handleDestroyConfirm,

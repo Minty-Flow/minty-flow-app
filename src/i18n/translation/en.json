@@ -1018,7 +1018,8 @@
         "moveToTrash": "Move to trash",
         "restore": "Restore",
         "location": "Location",
-        "refundLabel": "Refund"
+        "refundLabel": "Refund",
+        "deleteLoan": "Delete loan"
       },
       "recurrence": {
         "every": "Repeat every",
@@ -1117,7 +1118,8 @@
         "setDifferentCurrencies": "Please set the converted amount for different currencies",
         "recurringUntilBeforeStart": "The end date is before the start date",
         "loanAmountExceedsRemaining": "Amount is more than this loan still owes",
-        "loanNeedsCategory": "Pick a category before creating the loan"
+        "loanNeedsCategory": "Pick a category before creating the loan",
+        "loanDeleted": "Loan deleted"
       },
       "a11y": {
         "closePreview": "Close preview",
@@ -1145,6 +1147,10 @@
         "remainingLabel": "Remaining",
         "maxButton": "Max",
         "newHint": "A one-time loan is created with this transaction as its opening entry."
+      },
+      "deleteLoanModal": {
+        "title": "Delete this loan?",
+        "description": "This removes the loan. Its transactions stay in your history, no longer linked to a loan."
       }
     },
     "recurring": {

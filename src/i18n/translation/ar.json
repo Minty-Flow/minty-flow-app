@@ -1009,7 +1009,8 @@
         "budget": "الميزانية",
         "loan": "القرض",
         "location": "موقع",
-        "refundLabel": "استرداد"
+        "refundLabel": "استرداد",
+        "deleteLoan": "حذف القرض"
       },
       "recurrence": {
         "every": "التكرار كل",
@@ -1108,7 +1109,8 @@
         "setDifferentCurrencies": "يرجى تحديد المبلغ المحول لعملات مختلفة",
         "recurringUntilBeforeStart": "تاريخ الانتهاء قبل تاريخ البدء",
         "loanAmountExceedsRemaining": "المبلغ أكبر مما يدين به هذا القرض",
-        "loanNeedsCategory": "اختر فئة قبل إنشاء القرض"
+        "loanNeedsCategory": "اختر فئة قبل إنشاء القرض",
+        "loanDeleted": "تم حذف القرض"
       },
       "a11y": {
         "closePreview": "إغلاق المعاينة",
@@ -1145,6 +1147,10 @@
         "remainingLabel": "المتبقّي",
         "maxButton": "الكل",
         "newHint": "يُنشأ قرض لمرة واحدة وتكون هذه المعاملة قيده الافتتاحي."
+      },
+      "deleteLoanModal": {
+        "title": "حذف هذا القرض؟",
+        "description": "يُحذف القرض. تبقى معاملاته في سجلّك دون ارتباط بأي قرض."
       }
     },
     "recurring": {
