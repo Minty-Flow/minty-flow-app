@@ -561,12 +561,6 @@ function AppRootLayout() {
                   options={{ title: t("screens.settings.pending.title") }}
                 />
                 <Stack.Screen
-                  name="settings/recurring"
-                  options={{
-                    title: t("screens.settings.recurring.title"),
-                  }}
-                />
-                <Stack.Screen
                   name="settings/rules"
                   options={{
                     title: t("screens.settings.rules.title"),

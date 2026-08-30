@@ -960,22 +960,6 @@
           }
         }
       },
-      "recurring": {
-        "title": "Recurring Expenses",
-        "empty": "No recurring expenses yet",
-        "monthly": "Per month",
-        "yearly": "Per year",
-        "nextCharge": "Next {{date}}",
-        "increased": "Price up",
-        "paused": "Paused",
-        "showPaused": "Show",
-        "hidePaused": "Hide",
-        "groupBy": {
-          "date": "By date",
-          "account": "By account",
-          "category": "By category"
-        }
-      },
       "rules": {
         "title": "Auto-categorise",
         "empty": "No rules yet — turn one on from a transaction, or add one here",
