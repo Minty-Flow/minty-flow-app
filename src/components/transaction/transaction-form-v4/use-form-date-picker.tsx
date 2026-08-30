@@ -25,24 +25,21 @@ export function useFormDatePicker(
   )
   const datePickerTargetRef = useRef<DatePickerTarget>("transaction")
   const applyTarget = (date: Date) => {
-    const tgt = datePickerTargetRef.current
-    if (tgt === "recurringStart") setRecurring({ startDate: date })
-    else if (tgt === "recurringEnd") setRecurring({ endDate: date })
-    else {
-      setValue("transactionDate", date, { shouldDirty: true })
-      setValue("isPending", date.getTime() > startOfNextMinute().getTime(), {
-        shouldDirty: true,
-      })
+    if (datePickerTargetRef.current === "recurringEnd") {
+      setRecurring({ until: date })
+      return
     }
+    setValue("transactionDate", date, { shouldDirty: true })
+    setValue("isPending", date.getTime() > startOfNextMinute().getTime(), {
+      shouldDirty: true,
+    })
   }
   const openDatePicker = (target: DatePickerTarget = "transaction") => {
     datePickerTargetRef.current = target
     const current =
-      target === "recurringStart"
-        ? recurring.startDate
-        : target === "recurringEnd"
-          ? (recurring.endDate ?? new Date())
-          : watch("transactionDate")
+      target === "recurringEnd"
+        ? (recurring.until ?? new Date())
+        : watch("transactionDate")
     setDatePicker({ tempDate: current })
     if (Platform.OS === "android") {
       setDatePicker({ androidStage: "date", tempDate: current })

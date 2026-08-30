@@ -1014,6 +1014,26 @@
         "timesCount_one": "مرة واحدة",
         "timesCount_other": "{{count}} مرات"
       },
+      "recurrence": {
+        "every": "التكرار كل",
+        "unitTitle": "وحدة التكرار",
+        "unit": {
+          "day_one": "يوم",
+          "day_other": "أيام",
+          "week_one": "أسبوع",
+          "week_other": "أسابيع",
+          "month_one": "شهر",
+          "month_other": "أشهر",
+          "year_one": "سنة",
+          "year_other": "سنوات"
+        },
+        "until": "حتى",
+        "forever": "للأبد",
+        "reset": "إعادة تعيين",
+        "increment": "زيادة الفاصل",
+        "decrement": "إنقاص الفاصل",
+        "untilBeforeStart": "تاريخ الانتهاء قبل تاريخ البدء — لا تكرارات."
+      },
       "addFiles": {
         "label": "إضافة ملفات",
         "selectFromFiles": "اختر من الملفات",
@@ -1088,7 +1108,8 @@
         "deletedDescription": "تم حذف المعاملة نهائياً.",
         "deleteFailed": "فشل حذف المعاملة.",
         "rateLoading": "لا يزال السعر قيد التحميل، يرجى الانتظار",
-        "setDifferentCurrencies": "يرجى تحديد المبلغ المحول لعملات مختلفة"
+        "setDifferentCurrencies": "يرجى تحديد المبلغ المحول لعملات مختلفة",
+        "recurringUntilBeforeStart": "تاريخ الانتهاء قبل تاريخ البدء"
       },
       "a11y": {
         "closePreview": "إغلاق المعاينة",

@@ -1024,6 +1024,26 @@
         "timesCount_one": "{{count}} time",
         "timesCount_other": "{{count}} times"
       },
+      "recurrence": {
+        "every": "Repeat every",
+        "unitTitle": "Repeat unit",
+        "unit": {
+          "day_one": "day",
+          "day_other": "days",
+          "week_one": "week",
+          "week_other": "weeks",
+          "month_one": "month",
+          "month_other": "months",
+          "year_one": "year",
+          "year_other": "years"
+        },
+        "until": "Until",
+        "forever": "Forever",
+        "reset": "Reset",
+        "increment": "Increase interval",
+        "decrement": "Decrease interval",
+        "untilBeforeStart": "End date is before the start date — no occurrences."
+      },
       "addFiles": {
         "label": "Add files",
         "selectFromFiles": "Select from files",
@@ -1098,7 +1118,8 @@
         "deletedDescription": "Transaction permanently removed.",
         "deleteFailed": "Failed to delete transaction.",
         "rateLoading": "Rate is still loading, please wait",
-        "setDifferentCurrencies": "Please set the converted amount for different currencies"
+        "setDifferentCurrencies": "Please set the converted amount for different currencies",
+        "recurringUntilBeforeStart": "The end date is before the start date"
       },
       "a11y": {
         "closePreview": "Close preview",

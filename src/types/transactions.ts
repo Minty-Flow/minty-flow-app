@@ -6,24 +6,6 @@ export interface Recurrence {
   unit: RecurrenceUnit
 }
 
-// --- deprecated, deleted in Slice 2 Task 2 ---
-export type RecurringFrequency =
-  | "daily"
-  | "weekly"
-  | "biweekly"
-  | "monthly"
-  | "yearly"
-  | null
-
-export const RecurringEndEnum = {
-  NEVER: "never",
-  DATE: "date",
-  OCCURRENCES: "occurrences",
-}
-
-export type RecurringEndType =
-  (typeof RecurringEndEnum)[keyof typeof RecurringEndEnum]
-
 /** Attachment metadata for transaction extra (e.g. file attachments) */
 export interface TransactionAttachment {
   uri: string

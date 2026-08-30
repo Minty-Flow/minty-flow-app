@@ -17,10 +17,14 @@ const KIND_LABEL_KEYS: Record<TransactionKind, TranslationKey> = {
   borrowed: "common.transaction.kinds.borrowed",
 }
 
-// Slice 1 wires only `default` and `upcoming`. `subscription`/`repetitive` (Slice 2)
-// and `lent`/`borrowed` (Slice 4) stay defined in the enum + onKindChange/KT
-// matrix, but must not be user-selectable until their submit paths exist.
-const KINDS: TransactionKind[] = ["default", "upcoming"]
+// `lent`/`borrowed` (Slice 4) stay defined in the enum + onKindChange/KT matrix,
+// but must not be user-selectable until their submit paths exist.
+const KINDS: TransactionKind[] = [
+  "default",
+  "upcoming",
+  "subscription",
+  "repetitive",
+]
 
 type Props = {
   kind: TransactionKind

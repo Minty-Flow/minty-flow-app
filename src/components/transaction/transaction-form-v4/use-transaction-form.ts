@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
+import { endOfDay } from "date-fns"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useReducer, useState } from "react"
+import { useEffect, useReducer, useState } from "react"
 import { type Resolver, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
@@ -29,11 +30,6 @@ import { usePendingTransactionsStore } from "~/stores/pending-transactions.store
 import { useTransactionLocationStore } from "~/stores/transaction-location.store"
 import { NewEnum } from "~/types/new"
 import {
-  type Recurrence,
-  type RecurrenceUnit,
-  RecurringEndEnum,
-  type RecurringEndType,
-  type RecurringFrequency,
   type TransactionKind,
   type TransactionLocation,
   TransactionSubTypeEnum,
@@ -232,12 +228,9 @@ export function useTransactionForm({
     onBlock: () => setModals({ unsavedModalVisible: true }),
   })
   const [recurring, setRecurring] = useReducer(mergeReducer<RecurringState>, {
-    enabled: false,
-    frequency: "daily" as RecurringFrequency,
-    startDate: new Date(),
-    endDate: null,
-    endAfterOccurrences: null,
-    endsOnPickerExpanded: false,
+    recurrence: { interval: 1, unit: "month" },
+    until: null,
+    startDate: watch("transactionDate"),
   })
   const { conversionRate, setConversionRate } = useFormConversionRate(
     transactionType,
@@ -281,38 +274,22 @@ export function useTransactionForm({
       to: selectedToAccount.name,
     })
   })()
-  const endsOnType: RecurringEndType =
-    recurring.endAfterOccurrences !== null
-      ? RecurringEndEnum.OCCURRENCES
-      : recurring.endDate !== null
-        ? RecurringEndEnum.DATE
-        : RecurringEndEnum.NEVER
-  // TODO Slice 2 Task 2: delete — bridges the old `frequency` state to the new API.
-  const FREQ_TO_UNIT: Record<string, RecurrenceUnit> = {
-    daily: "day",
-    weekly: "week",
-    biweekly: "week",
-    monthly: "month",
-    yearly: "year",
-  }
-  const bridgeRecurrence: Recurrence = {
-    interval: recurring.frequency === "biweekly" ? 2 : 1,
-    unit: FREQ_TO_UNIT[recurring.frequency ?? "monthly"] ?? "month",
-  }
-  const recurringEndDateOccurrenceCount = (() => {
-    if (endsOnType !== RecurringEndEnum.DATE || !recurring.endDate) return null
-    return countOccurrencesBetween(
-      recurring.startDate,
-      recurring.endDate,
-      bridgeRecurrence,
-    )
-  })()
-  const handleRecurringToggle = (next: boolean) => {
-    setRecurring({
-      enabled: next,
-      ...(next ? { startDate: watch("transactionDate") } : {}),
-    })
-  }
+  const isRecurringKind = kind === "subscription" || kind === "repetitive"
+  const occurrenceCount = recurring.until
+    ? countOccurrencesBetween(
+        recurring.startDate,
+        endOfDay(recurring.until),
+        recurring.recurrence,
+      )
+    : null
+
+  // RS-1: a new subscription/repetitive starts at the form's transactionDate
+  // (which is `new Date()` at open for these kinds — Date field is hidden).
+  useEffect(() => {
+    if (isNew && isRecurringKind && recurring.startDate !== date) {
+      setRecurring({ startDate: date })
+    }
+  }, [isNew, isRecurringKind, date, recurring.startDate])
   // ES-4/5/8: kind is locked once a transaction is tied to a loan or a
   // recurring rule (recurrence editing lands in Slice 2, loan wiring in Slice 4).
   const canEditKind =
@@ -438,7 +415,7 @@ export function useTransactionForm({
         router.back()
         return
       }
-      const effectiveDate = recurring.enabled
+      const effectiveDate = isRecurringKind
         ? recurring.startDate
         : data.transactionDate
       const attachmentsJson =
@@ -453,19 +430,39 @@ export function useTransactionForm({
         attachmentsJson,
         effectiveDate,
         requireConfirmation,
-        recurringEnabled: recurring.enabled,
+        recurringEnabled: isRecurringKind,
       })
       if (isNew) {
-        if (recurring.enabled && recurring.frequency) {
+        if (data.kind === "subscription" || data.kind === "repetitive") {
           try {
+            const startDate = data.transactionDate
+            const untilEod = recurring.until ? endOfDay(recurring.until) : null
+
+            // RS-4: until before start -> no valid occurrences; block the save.
+            if (
+              untilEod &&
+              countOccurrencesBetween(
+                startDate,
+                untilEod,
+                recurring.recurrence,
+              ) === 0
+            ) {
+              Toast.error({
+                title: t(
+                  "components.transactionForm.toast.recurringUntilBeforeStart",
+                ),
+              })
+              return
+            }
+
             const rruleStr = buildRRuleString({
-              interval: bridgeRecurrence.interval,
-              unit: bridgeRecurrence.unit,
-              startDate: recurring.startDate,
-              until: recurring.endDate,
+              interval: recurring.recurrence.interval,
+              unit: recurring.recurrence.unit,
+              startDate,
+              until: recurring.until,
             })
             const rangeEnd =
-              recurring.endDate?.getTime() ?? new Date(2099, 11, 31).getTime()
+              untilEod?.getTime() ?? new Date(2099, 11, 31).getTime()
             await createRecurringRule({
               amount: data.amount,
               type: data.type,
@@ -475,10 +472,9 @@ export function useTransactionForm({
               description: data.description?.trim() ?? null,
               subtype: data.subtype ?? null,
               tags: data.tags ?? [],
-              // Slice 2: replace with data.kind once subscription/repetitive are selectable
-              kind: "repetitive",
+              kind: data.kind,
               range: {
-                from: recurring.startDate.getTime(),
+                from: startDate.getTime(),
                 to: rangeEnd,
               },
               rules: [rruleStr],
@@ -751,10 +747,9 @@ export function useTransactionForm({
     // recurring
     recurring,
     setRecurring,
-    endsOnType,
-    recurringEndDateOccurrenceCount,
+    occurrenceCount,
+    isRecurringKind,
     recurringRule,
-    handleRecurringToggle,
 
     // conversion rate
     conversionRate,

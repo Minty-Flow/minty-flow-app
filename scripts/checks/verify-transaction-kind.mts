@@ -102,23 +102,27 @@ assert.equal(
   "default",
 )
 
-// KT matrix: leaving a recurring kind clears recurrence + loan scratch.
+// KT matrix: leaving a recurring kind reseeds a fresh recurrence + clears loan scratch.
 const kindScratch = {
-  recurring: { enabled: true },
-  loanDraft: { name: "x" },
+  recurring: {
+    recurrence: { interval: 2, unit: "week" },
+    until: new Date(),
+    startDate: new Date(),
+  },
+  loanDraft: { name: "x", dueDate: null },
   linkedLoanId: "L1",
   toAccountId: "A2",
 } as any
 const toDefault = onKindChange("subscription", "default", kindScratch)
-assert.equal(toDefault.recurring?.enabled ?? false, false)
+assert.deepEqual(toDefault.recurring?.recurrence, { interval: 1, unit: "month" })
+assert.equal(toDefault.recurring?.until, null)
 assert.equal(toDefault.loanDraft, null)
 assert.equal(toDefault.linkedLoanId, null)
-// subscription <-> repetitive keeps recurrence untouched.
+// subscription <-> repetitive keeps the recurrence scratch untouched.
 const subToRep = onKindChange("subscription", "repetitive", kindScratch)
 assert.equal("recurring" in subToRep, false)
-// -> lent seeds a loan draft, clears recurrence, drops to-account.
+// -> lent seeds a loan draft, reseeds recurrence, drops to-account.
 const toLent = onKindChange("default", "lent", kindScratch)
-assert.equal(toLent.recurring?.enabled ?? false, false)
 assert.deepEqual(toLent.loanDraft, { name: "", dueDate: null })
 assert.equal(toLent.toAccountId, undefined)
 
