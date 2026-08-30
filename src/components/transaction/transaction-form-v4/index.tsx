@@ -74,13 +74,13 @@ import { getDefaultValues, mergeReducer } from "./form-utils"
 import type {
   ModalState,
   RecurringState,
-  TransactionFormV3Props,
+  TransactionFormV4Props,
 } from "./types"
 import { useFormAttachments } from "./use-form-attachments"
 import { useFormConversionRate } from "./use-form-conversion-rate"
 import { useFormDatePicker } from "./use-form-date-picker"
 import { useFormLocation } from "./use-form-location"
-export function TransactionFormV3({
+export function TransactionFormV4({
   transaction,
   accounts,
   categories,
@@ -93,7 +93,7 @@ export function TransactionFormV3({
   initialTagIds = EMPTY_TAG_IDS,
   initialSubtype,
   prefill,
-}: TransactionFormV3Props) {
+}: TransactionFormV4Props) {
   const router = useRouter()
   const navigation = useNavigation()
   const { t } = useTranslation()
