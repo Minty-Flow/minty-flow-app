@@ -803,8 +803,16 @@ renames (`biweekly`, `RecurringFrequency`, `RECURRING_OPTIONS`,
 ## Migration order
 
 `0001` add `transactions.kind` + backfill (Slice 1) → `0002` add `loans.term` +
-backfill (Slice 4). Slices 2, 3, 5 need no SQL migration. Ship `0001` in its own
-app release, watch field reports, then ship `0002` in a later release.
+backfill (Slice 4). Slices 2, 3, 5 need no SQL migration.
+
+**Both ship in the same release** (revised 2026-10-10; originally `0001` was to
+ship alone and `0002` a release later). Why this is safe: both are additive
+(`ADD COLUMN` + backfill `UPDATE`s, no table rebuild), the validation
+checklists pass on a production-shaped DB copy, and the migrator applies every
+pending migration inside one transaction (see Migration safety), so a user's
+database either gets both or neither — never `0001` without `0002`. The
+isolation benefit of one-migration-per-release does not outweigh shipping the
+redesign across two releases with a half-finished loans model.
 
 ## Migration safety (live users — no server backup)
 
@@ -818,10 +826,12 @@ repo's existing defensive-migration patterns.
   constraints on existing columns alone.
 - **Guarded + idempotent backfills** so a retry after a partial apply is a
   no-op.
-- **Confirm the migrator's transaction behavior** for the expo driver. If
-  `useMigrations` does not wrap each file in a transaction, wrap the backfill
-  `UPDATE`s in `BEGIN; … COMMIT;` inside the `.sql`. Verify before relying on
-  rollback.
+- **Transaction behavior (verified).** `useMigrations` → `migrate()` →
+  `SQLiteAsyncDialect.migrate` (drizzle-orm `sqlite-core/dialect`) runs *all*
+  pending migrations, and records each in `__drizzle_migrations`, inside a
+  single `session.transaction(...)`. A failure in any statement rolls back every
+  pending migration, so no extra `BEGIN; … COMMIT;` is needed in the `.sql`
+  files. Re-check this if drizzle-orm is upgraded.
 - **Test against a real DB.** Pull a production-shaped DB (device pull or a user
   data-management export → import) and run each migration on a copy; work the
   validation checklists (`0001`, `0002`).
@@ -831,5 +841,8 @@ repo's existing defensive-migration patterns.
   DM-1 `deriveKind`).
 - **Snapshot first.** Confirm the `data-management` emergency-snapshot /
   `use-import-recovery` path covers a first-run-after-update failure; if not,
-  snapshot immediately before `0001` applies.
-- One migration per release so a bad one is isolated.
+  snapshot immediately before the first pending migration applies.
+- `0001` and `0002` ship together (see Migration order). Because they are one
+  atomic unit, validate them together on the production-shaped DB copy:
+  `0001` checklist, `0002` checklist, `PRAGMA foreign_key_check`, then re-run both
+  to confirm the no-op.

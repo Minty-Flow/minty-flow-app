@@ -54,6 +54,11 @@ orthogonal (a subscription is an expense; a Collected repayment is income).
 - The migration is additive (`ADD COLUMN` + backfill `UPDATE`s). It is still
   forward-only and runs on user devices at startup, hence this record, but it
   avoids the risk of a full table rebuild.
+- `0001` (`transactions.kind`) ships in the same release as `0002`
+  (`loans.term`, Slice 4). Revised 2026-10-10 from "`0001` alone, `0002` a release
+  later": the drizzle migrator runs all pending migrations in one transaction,
+  so a device gets both or neither, and both are additive. See the spec's
+  "Migration order" and "Migration safety".
 - The `subtype` column is unchanged by this work. `refund` stays a `subtype`
   concern permanently; `loan_*` stays until Slice 4 migrates the loans engine
   onto `kind` + `type`; `recurring` / `one-time` stay until a later stats slice.
