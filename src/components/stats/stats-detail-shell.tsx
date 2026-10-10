@@ -19,7 +19,7 @@ import { formatRangeLabel } from "~/utils/stats-date-range"
 import type { DateRangePresetId } from "~/utils/time-utils"
 
 import { StatsCurrencyToggle } from "./stats-currency-toggle"
-import { StatsEmptyState } from "./stats-empty-state"
+import { type EmptyScenario, StatsEmptyState } from "./stats-empty-state"
 import { StatsPeriodHeader } from "./stats-period-header"
 
 interface StatsDetailContext {
@@ -34,6 +34,9 @@ interface StatsDetailShellProps {
   /** Overrides route params (e.g. net-worth/calendar force thisYear) */
   init?: UseStatsInit
   showPeriodHeader?: boolean
+  /** "dashboard" is the stats tab itself: more top / bottom room. */
+  variant?: "detail" | "dashboard"
+  emptyScenario?: EmptyScenario
   children: (ctx: StatsDetailContext) => ReactNode
 }
 
@@ -90,8 +93,11 @@ function useStatsInitFromParams(): UseStatsInit {
 export function StatsDetailShell({
   init,
   showPeriodHeader = true,
+  variant = "detail",
+  emptyScenario,
   children,
 }: StatsDetailShellProps) {
+  const isDashboard = variant === "dashboard"
   const { theme } = useUnistyles()
   const paramsInit = useStatsInitFromParams()
   const {
@@ -122,7 +128,10 @@ export function StatsDetailShell({
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[
+        styles.content,
+        isDashboard && styles.contentDashboard,
+      ]}
       style={styles.scroll}
       refreshControl={
         <RefreshControl
@@ -152,12 +161,17 @@ export function StatsDetailShell({
       )}
 
       {hasNoData && (
-        <StatsEmptyState rangeLabel={formatRangeLabel(dateRange)} />
+        <StatsEmptyState
+          rangeLabel={formatRangeLabel(dateRange)}
+          scenario={emptyScenario}
+        />
       )}
 
       {stats && (
         <>
-          <View style={styles.toggleRow}>
+          <View
+            style={[styles.toggleRow, isDashboard && styles.toggleRowDashboard]}
+          >
             <StatsCurrencyToggle
               currencies={byCurrency.map((s) => s.currency)}
               value={stats.currency}
@@ -176,7 +190,12 @@ export function StatsDetailShell({
         </>
       )}
 
-      <View style={styles.bottomSpacer} />
+      <View
+        style={[
+          styles.bottomSpacer,
+          isDashboard && styles.bottomSpacerDashboard,
+        ]}
+      />
     </ScrollView>
   )
 }
@@ -190,9 +209,16 @@ const styles = StyleSheet.create((theme) => ({
     gap: 6,
     paddingTop: 8,
   },
+  contentDashboard: {
+    marginTop: 50,
+    paddingTop: 0,
+  },
   toggleRow: {
     flexDirection: "row",
     justifyContent: "center",
+  },
+  toggleRowDashboard: {
+    paddingHorizontal: 20,
   },
   body: {
     paddingHorizontal: 20,
@@ -200,6 +226,9 @@ const styles = StyleSheet.create((theme) => ({
   },
   bottomSpacer: {
     height: 40,
+  },
+  bottomSpacerDashboard: {
+    height: 100,
   },
   loading: {
     alignItems: "center",

@@ -8,16 +8,10 @@
  */
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Alert, Pressable, Text, View } from "react-native"
-import {
-  StyleSheet as UnistylesSheet,
-  useUnistyles,
-} from "react-native-unistyles"
+import { Alert } from "react-native"
+import { useUnistyles } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/icons"
-import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
-import { BottomSheet } from "~/components/ui/bottom-sheet"
-import { ListItem } from "~/components/ui/list-item"
+import { ActionChoiceSheet } from "~/components/action-choice-sheet"
 import {
   applyRecurringDeleteScope,
   type RecurringTransactionTemplate,
@@ -27,8 +21,6 @@ import type { Transaction } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
-import { ChevronIcon } from "../ui/chevron-icon"
-
 type DeleteScope = "this" | "all" | "this_and_future"
 interface DeleteRecurringSheetProps {
   visible: boolean
@@ -36,60 +28,6 @@ interface DeleteRecurringSheetProps {
   recurringRule: RecurringTransactionTemplate
   onRequestClose: () => void
   onDeleted: () => void
-}
-interface OptionRowProps {
-  label: string
-  sublabel: string
-  onPress: () => void
-  loading: boolean
-  isLast?: boolean
-  isDestructive?: boolean
-}
-function OptionRow({
-  label,
-  sublabel,
-  onPress,
-  loading,
-  isLast,
-  isDestructive,
-}: OptionRowProps) {
-  const { theme } = useUnistyles()
-  const chevronColor = isDestructive
-    ? theme.colors.error
-    : theme.colors.onSecondary
-  return (
-    <ListItem
-      style={({ pressed }) => [
-        styles.optionRow,
-        !isLast && styles.optionRowBorder,
-        pressed && styles.optionRowPressed,
-      ]}
-      onPress={onPress}
-      disabled={loading}
-    >
-      <View style={styles.optionRowContent}>
-        <Text
-          style={[
-            styles.optionLabel,
-            isDestructive && styles.optionLabelDestructive,
-          ]}
-        >
-          {label}
-        </Text>
-        <Text style={styles.optionSublabel}>{sublabel}</Text>
-      </View>
-      {loading ? (
-        <ActivityIndicatorMinty size="small" color={theme.colors.error} />
-      ) : (
-        <ChevronIcon
-          direction={"trailing"}
-          size={20}
-          color={chevronColor}
-          style={styles.optionChevron}
-        />
-      )}
-    </ListItem>
-  )
 }
 export function DeleteRecurringSheet({
   visible,
@@ -156,146 +94,38 @@ export function DeleteRecurringSheet({
     }
   }
   return (
-    <BottomSheet
-      isPresented={visible}
-      onDismiss={onRequestClose}
-      dismissable={!loadingScope}
-    >
-      <View style={styles.card}>
-        <View style={styles.header}>
-          <View
-            style={[
-              styles.iconCircle,
-              { backgroundColor: `${theme.colors.error}20` },
-            ]}
-          >
-            <IconSvg
-              name="trash-outline"
-              size={24}
-              color={theme.colors.error}
-            />
-          </View>
-          <Text style={styles.title}>
-            {t("components.recurring.deleteSheet.title")}
-          </Text>
-          <Text style={styles.subtitle}>
-            {t("components.recurring.deleteSheet.subtitle")}
-          </Text>
-        </View>
-
-        <View style={styles.optionsCard}>
-          <OptionRow
-            label={t("components.recurring.deleteSheet.optionThis")}
-            sublabel={t("components.recurring.deleteSheet.optionThisSublabel")}
-            onPress={() => handleDelete("this")}
-            loading={loadingScope === "this"}
-            isDestructive
-          />
-          <OptionRow
-            label={t("components.recurring.deleteSheet.optionAll")}
-            sublabel={t("components.recurring.deleteSheet.optionAllSublabel")}
-            onPress={() => handleDelete("all")}
-            loading={loadingScope === "all"}
-            isDestructive
-          />
-          <OptionRow
-            label={t("components.recurring.deleteSheet.optionFuture")}
-            sublabel={t(
-              "components.recurring.deleteSheet.optionFutureSublabel",
-            )}
-            onPress={() => handleDelete("this_and_future")}
-            loading={loadingScope === "this_and_future"}
-            isLast
-            isDestructive
-          />
-        </View>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.cancelButton,
-            pressed && styles.cancelButtonPressed,
-          ]}
-          onPress={onRequestClose}
-          disabled={!!loadingScope}
-        >
-          <Text style={styles.cancelText}>
-            {t("components.recurring.deleteSheet.cancel")}
-          </Text>
-        </Pressable>
-      </View>
-    </BottomSheet>
+    <ActionChoiceSheet
+      visible={visible}
+      onClose={onRequestClose}
+      icon="trash-outline"
+      accentColor={theme.colors.error}
+      title={t("components.recurring.deleteSheet.title")}
+      subtitle={t("components.recurring.deleteSheet.subtitle")}
+      cancelLabel={t("components.recurring.deleteSheet.cancel")}
+      loadingKey={loadingScope}
+      options={[
+        {
+          key: "this",
+          label: t("components.recurring.deleteSheet.optionThis"),
+          sublabel: t("components.recurring.deleteSheet.optionThisSublabel"),
+          onPress: () => handleDelete("this"),
+          destructive: true,
+        },
+        {
+          key: "all",
+          label: t("components.recurring.deleteSheet.optionAll"),
+          sublabel: t("components.recurring.deleteSheet.optionAllSublabel"),
+          onPress: () => handleDelete("all"),
+          destructive: true,
+        },
+        {
+          key: "this_and_future",
+          label: t("components.recurring.deleteSheet.optionFuture"),
+          sublabel: t("components.recurring.deleteSheet.optionFutureSublabel"),
+          onPress: () => handleDelete("this_and_future"),
+          destructive: true,
+        },
+      ]}
+    />
   )
 }
-const styles = UnistylesSheet.create((theme) => ({
-  card: {
-    paddingVertical: 8,
-    gap: 16,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: 8,
-    gap: 8,
-  },
-  iconCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 4,
-  },
-  title: {
-    ...theme.typography.headlineSmall,
-    fontWeight: "700",
-    textAlign: "center",
-    letterSpacing: -0.3,
-    color: theme.colors.onSurface,
-  },
-  subtitle: {
-    fontSize: theme.typography.labelLarge.fontSize,
-    textAlign: "center",
-    color: theme.colors.onSecondary,
-  },
-  optionsCard: {
-    borderRadius: 16,
-    overflow: "hidden",
-    marginBottom: 12,
-    borderWidth: 1,
-    backgroundColor: `${theme.colors.onSurface}10`,
-    borderColor: theme.colors.semantic.semi,
-  },
-  optionRow: {},
-  optionRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.semantic.semi,
-  },
-  optionRowPressed: { opacity: 0.7 },
-  optionRowContent: { flex: 1, gap: 2 },
-  optionLabel: {
-    ...theme.typography.titleSmall,
-    fontWeight: "600",
-    letterSpacing: -0.2,
-    color: theme.colors.onSurface,
-  },
-  optionLabelDestructive: { color: theme.colors.error },
-  optionSublabel: {
-    fontSize: theme.typography.bodyMedium.fontSize,
-    fontWeight: "400",
-    color: theme.colors.onSecondary,
-  },
-  optionChevron: { marginLeft: 8 },
-  cancelButton: {
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: "center",
-    borderWidth: 1,
-    backgroundColor: `${theme.colors.onSurface}10`,
-    borderColor: theme.colors.semantic.semi,
-  },
-  cancelButtonPressed: { opacity: 0.7 },
-  cancelText: {
-    ...theme.typography.titleSmall,
-    fontWeight: "600",
-    color: theme.colors.onSurface,
-  },
-}))

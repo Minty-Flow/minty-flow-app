@@ -1,33 +1,25 @@
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useLayoutEffect, useState } from "react"
+import { useLayoutEffect } from "react"
 import { StyleSheet } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
+import { FilterToggleButton } from "~/components/filter-toggle-button"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { MonthYearPicker } from "~/components/month-year-picker"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionSectionList } from "~/components/transaction/transaction-section-list"
-import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import {
-  useCategoriesByType,
-  useCategory,
-} from "~/database/drizzle/read-models/category-read-model"
-import { useTags } from "~/database/drizzle/read-models/tag-read-model"
+import { useCategory } from "~/database/drizzle/read-models/category-read-model"
 import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
-import { getMonthRange } from "~/database/services/account-service"
-import { getThemeStrict } from "~/styles/theme/registry"
-import type {
-  SearchState,
-  TransactionListFilterState,
-} from "~/types/transaction-filters"
 import {
-  DEFAULT_SEARCH_STATE,
-  DEFAULT_TRANSACTION_LIST_FILTER_STATE,
-} from "~/types/transaction-filters"
+  useSelectedMonth,
+  useTransactionListFilters,
+} from "~/hooks/use-transaction-list-state"
+import { getThemeStrict } from "~/styles/theme/registry"
 import {
   TransactionSubTypeEnum,
   TransactionTypeEnum,
@@ -38,39 +30,26 @@ export default function CategoryDetailsScreen() {
   }>()
   const router = useRouter()
   const navigation = useNavigation()
-  const [selectedYear, setSelectedYear] = useState(() =>
-    new Date().getFullYear(),
-  )
-  const [selectedMonth, setSelectedMonth] = useState(() =>
-    new Date().getMonth(),
-  )
-  const [filterState, setFilterState] = useState<TransactionListFilterState>(
-    DEFAULT_TRANSACTION_LIST_FILTER_STATE,
-  )
-  const [searchState, setSearchState] =
-    useState<SearchState>(DEFAULT_SEARCH_STATE)
-  const [showFilters, setShowFilters] = useState(false)
+  const month = useSelectedMonth()
+  const {
+    filterState,
+    setFilterState,
+    searchState,
+    setSearchState,
+    showFilters,
+    toggleFilters,
+  } = useTransactionListFilters()
   const category = useCategory(categoryId ?? "")
-  const categoriesExpense = useCategoriesByType(TransactionTypeEnum.EXPENSE)
-  const categoriesIncome = useCategoriesByType(TransactionTypeEnum.INCOME)
-  const categoriesTransfer = useCategoriesByType(TransactionTypeEnum.TRANSFER)
-  const tags = useTags()
-  const { fromDate, toDate } = getMonthRange(selectedYear, selectedMonth)
   const { items: transactionsFull } = useTransactions(
     categoryId
       ? {
           categoryId,
-          from: new Date(fromDate).toISOString(),
-          to: new Date(toDate).toISOString(),
+          from: month.from,
+          to: month.to,
         }
       : {},
   )
   const colorScheme = getThemeStrict(category?.colorSchemeName ?? null)
-  const categoriesByType = {
-    expense: categoriesExpense,
-    income: categoriesIncome,
-    transfer: categoriesTransfer,
-  }
   const dominantCurrency = (() => {
     for (const r of transactionsFull) {
       const code = r.account?.currencyCode
@@ -104,16 +83,7 @@ export default function CategoryDetailsScreen() {
       title: category?.name ?? "",
       headerRight: () => (
         <View style={{ flexDirection: "row", gap: 4, alignItems: "center" }}>
-          <Button
-            variant={"ghost"}
-            size="icon"
-            onPress={() => setShowFilters((v) => !v)}
-          >
-            <IconSvg
-              name={showFilters ? "filter-2-x-outline" : "filter-2-outline"}
-              size={20}
-            />
-          </Button>
+          <FilterToggleButton active={showFilters} onPress={toggleFilters} />
           <Button
             variant="ghost"
             size="icon"
@@ -129,15 +99,16 @@ export default function CategoryDetailsScreen() {
         </View>
       ),
     })
-  }, [navigation, router, category?.id, category?.name, showFilters])
+  }, [
+    navigation,
+    router,
+    category?.id,
+    category?.name,
+    showFilters,
+    toggleFilters,
+  ])
   if (!category) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicatorMinty />
-        </View>
-      </View>
-    )
+    return <RouteLoadingState />
   }
   const typeLabel =
     category.type.charAt(0).toUpperCase() + category.type.slice(1)
@@ -191,19 +162,14 @@ export default function CategoryDetailsScreen() {
   return (
     <View style={styles.container}>
       <MonthYearPicker
-        initialYear={selectedYear}
-        initialMonth={selectedMonth}
-        onSelect={(y, m) => {
-          setSelectedYear(y)
-          setSelectedMonth(m)
-        }}
+        initialYear={month.year}
+        initialMonth={month.month}
+        onSelect={month.onSelect}
       />
 
       {showFilters && (
         <TransactionFilterHeader
           accounts={[]}
-          categoriesByType={categoriesByType}
-          tags={tags}
           filterState={filterState}
           onFilterChange={setFilterState}
           searchState={searchState}
@@ -225,11 +191,6 @@ export default function CategoryDetailsScreen() {
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
   // ── Header Card ──────────────────────────────────────────────
   headerCard: {

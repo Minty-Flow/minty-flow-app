@@ -2,10 +2,11 @@ import * as LocalAuthentication from "expo-local-authentication"
 import { AppState } from "react-native"
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
 
 import { AppData } from "~/constants/app-data"
 import { logger } from "~/utils/logger"
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 // Module-level guard: register the AppState listener only once across all rehydrations
 // (onRehydrateStorage can fire multiple times in development with Fast Refresh).
@@ -67,11 +68,7 @@ export const useAppLockStore = create<AppLockStore>()(
     }),
     {
       name: APP_LOCK_STORE_KEY,
-      storage: createJSONStorage(() => ({
-        getItem: (name) => appLockStorage.getString(name) ?? null,
-        setItem: (name, value) => appLockStorage.set(name, value),
-        removeItem: (name) => appLockStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(appLockStorage),
       partialize: (state) => ({
         lockAppEnabled: state.lockAppEnabled,
         lockAfterClosing: state.lockAfterClosing,

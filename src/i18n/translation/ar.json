@@ -80,7 +80,15 @@
       "info": "معلومات",
       "deleted": "تم الحذف"
     },
-    "failedToOpenLink": "فشل في فتح المتصفح"
+    "failedToOpenLink": "فشل في فتح المتصفح",
+    "notFound": {
+      "account": "الحساب غير موجود.",
+      "budget": "الميزانية غير موجودة.",
+      "category": "الفئة غير موجودة.",
+      "goal": "الهدف غير موجود.",
+      "loan": "القرض غير موجود.",
+      "tag": "الوسم غير موجود."
+    }
   },
   "navigation": {
     "tabs": {
@@ -751,6 +759,10 @@
           "statusPaid": "مدفوع"
         },
         "form": {
+          "nameLabel": "اسم القرض",
+          "namePlaceholder": "مثال: قرض السيارة من سامي",
+          "descriptionLabel": "الوصف",
+          "descriptionPlaceholder": "ملاحظة اختيارية عن هذا القرض",
           "amountLabel": "المبلغ الأصلي",
           "deleteLabel": "حذف القرض",
           "dueDateLabel": "تاريخ الاستحقاق"

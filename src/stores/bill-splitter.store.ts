@@ -1,6 +1,6 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
 
 import type {
   BillItem,
@@ -8,6 +8,7 @@ import type {
   ItemSplit,
   Participant,
 } from "~/types/bill-splitter"
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 import {
   assertMinorUnits,
   rescaleMinorUnits,
@@ -144,11 +145,7 @@ export const useBillSplitterStore = create<BillSplitterState>()(
         accountId: null,
         currencyCode: null,
       }),
-      storage: createJSONStorage(() => ({
-        getItem: (name) => billSplitterStorage.getString(name) ?? null,
-        setItem: (name, value) => billSplitterStorage.set(name, value),
-        removeItem: (name) => billSplitterStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(billSplitterStorage),
     },
   ),
 )

@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 const transactionItemAppearanceStorage = createMMKV({
   id: "transaction-item-appearance-storage",
@@ -67,13 +69,7 @@ export const useTransactionItemAppearanceStore =
           }
           return state
         },
-        storage: createJSONStorage(() => ({
-          getItem: (name) =>
-            transactionItemAppearanceStorage.getString(name) ?? null,
-          setItem: (name, value) =>
-            transactionItemAppearanceStorage.set(name, value),
-          removeItem: (name) => transactionItemAppearanceStorage.remove(name),
-        })),
+        storage: mmkvJSONStorage(transactionItemAppearanceStorage),
       },
     ),
   )

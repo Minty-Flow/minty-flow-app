@@ -16,7 +16,7 @@ import {
 export type BudgetStatus = "onTrack" | "watch" | "over"
 export type GoalStatus = "onTrack" | "behind" | "flexible" | "reached"
 
-export function getBudgetPeriodBounds(
+function getBudgetPeriodBounds(
   period: BudgetPeriod,
   startDate: Date,
   endDate: Date | null,

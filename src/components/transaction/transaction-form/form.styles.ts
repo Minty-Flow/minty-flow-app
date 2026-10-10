@@ -340,12 +340,6 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     gap: ROW_GAP,
     justifyContent: "space-between",
   },
-  inlineDateText: {
-    ...theme.typography.titleSmall,
-    color: theme.colors.onSurface,
-    flex: 1,
-    minWidth: 0,
-  },
   switchRow: {
     justifyContent: "space-between",
     marginBottom: ELEMENT_GAP,

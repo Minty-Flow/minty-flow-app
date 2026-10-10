@@ -16,7 +16,7 @@ import { PermissionBanner } from "~/components/ui/permission-banner"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useNotificationPermissionStatus } from "~/hooks/use-notification-permission-status"
+import { useNotificationPermissionStatus } from "~/hooks/use-permission-status"
 import { useNotificationStore } from "~/stores/notification.store"
 import { formatReadableTime } from "~/utils/time-utils"
 

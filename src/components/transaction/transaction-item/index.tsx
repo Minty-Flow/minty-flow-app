@@ -28,9 +28,8 @@ import { convertMinorUnits } from "~/utils/money"
 import { formatFriendlyDate, formatReadableTime } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
-import { LeftAction } from "./left-action"
-import { RightAction } from "./right-action"
 import { transactionItemStyles } from "./styles"
+import { SwipeAction } from "./swipe-action"
 import { TransactionItemLeft } from "./transaction-item-left"
 import { TransactionItemRight } from "./transaction-item-right"
 
@@ -188,9 +187,10 @@ export const TransactionItem = ({
       close: () => void
     },
   ) => (
-    <LeftAction
+    <SwipeAction
+      kind="restore"
       progress={progress}
-      onRestorePress={() => {
+      onPress={() => {
         void handleRestorePress(swipeableMethods.close)
       }}
       accessibilityLabel={leftActionAccessibilityLabel}
@@ -240,10 +240,14 @@ export const TransactionItem = ({
       close: () => void
     },
   ) => (
-    <RightAction
+    <SwipeAction
+      kind="trash"
       progress={progress}
-      onTrashPress={() => handleTrashPress(swipeableMethods.close)}
-      accessibilityLabel={rightActionAccessibilityLabel}
+      onPress={() => handleTrashPress(swipeableMethods.close)}
+      accessibilityLabel={
+        rightActionAccessibilityLabel ??
+        t("screens.settings.trash.a11y.moveToTrash")
+      }
     />
   )
   const content = (

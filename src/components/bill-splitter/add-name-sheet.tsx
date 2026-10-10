@@ -3,10 +3,10 @@ import { useTranslation } from "react-i18next"
 import { View } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/icons"
 import { BottomSheet } from "~/components/ui/bottom-sheet"
 import { Button } from "~/components/ui/button"
 import { Input } from "~/components/ui/input"
+import { SheetIconHeader } from "~/components/ui/sheet-icon-header"
 import { Text } from "~/components/ui/text"
 
 interface AddNameSheetProps {
@@ -37,23 +37,11 @@ export function AddNameSheet({ visible, onAdd, onClose }: AddNameSheetProps) {
   return (
     <BottomSheet isPresented={visible} onDismiss={handleClose}>
       <View style={styles.card}>
-        <View style={styles.header}>
-          <View
-            style={[
-              styles.iconCircle,
-              { backgroundColor: `${theme.colors.primary}20` },
-            ]}
-          >
-            <IconSvg
-              name="user-plus-outline"
-              size={24}
-              color={theme.colors.primary}
-            />
-          </View>
-          <Text style={styles.title}>
-            {t("screens.settings.billSplitter.names.addName")}
-          </Text>
-        </View>
+        <SheetIconHeader
+          icon="user-plus-outline"
+          accentColor={theme.colors.primary}
+          title={t("screens.settings.billSplitter.names.addName")}
+        />
 
         <Input
           value={name}
@@ -82,30 +70,10 @@ export function AddNameSheet({ visible, onAdd, onClose }: AddNameSheetProps) {
   )
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create({
   card: {
     paddingVertical: 8,
     gap: 16,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: 8,
-    gap: 8,
-  },
-  iconCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 4,
-  },
-  title: {
-    ...theme.typography.headlineSmall,
-    fontWeight: "700",
-    textAlign: "center",
-    letterSpacing: -0.3,
-    color: theme.colors.onSurface,
   },
   buttonRow: {
     flexDirection: "row",
@@ -114,4 +82,4 @@ const styles = StyleSheet.create((theme) => ({
   button: {
     flex: 1,
   },
-}))
+})

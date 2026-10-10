@@ -1,11 +1,11 @@
 import { useNavigation, useRouter } from "expo-router"
-import { useLayoutEffect, useRef, useState } from "react"
+import { useLayoutEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
-import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
 import { StyleSheet } from "react-native-unistyles"
 
 import { ConfirmSheet } from "~/components/confirm-sheet"
+import { FilterToggleButton } from "~/components/filter-toggle-button"
 import { IconSvg } from "~/components/icons"
 import { InfoSheet } from "~/components/info-sheet"
 import { MonthYearPicker } from "~/components/month-year-picker"
@@ -15,27 +15,20 @@ import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { View } from "~/components/ui/view"
-import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
-import { useTags } from "~/database/drizzle/read-models/tag-read-model"
 import {
   type TransactionWithRelations,
   useTransactions,
 } from "~/database/drizzle/read-models/transaction-read-model"
-import { getMonthRange } from "~/database/services/account-service"
 import {
   destroyTransaction,
   restoreTransaction,
 } from "~/database/services/ledger-service"
-import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
-import type {
-  SearchState,
-  TransactionListFilterState,
-} from "~/types/transaction-filters"
 import {
-  DEFAULT_SEARCH_STATE,
-  DEFAULT_TRANSACTION_LIST_FILTER_STATE,
-} from "~/types/transaction-filters"
-import { TransactionTypeEnum } from "~/types/transactions"
+  useSelectedMonth,
+  useSingleOpenSwipeable,
+  useTransactionListFilters,
+} from "~/hooks/use-transaction-list-state"
+import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 import {
@@ -48,42 +41,29 @@ export default function TrashScreen() {
   const { t } = useTranslation()
   const router = useRouter()
   const navigation = useNavigation()
-  const openSwipeableRef = useRef<SwipeableMethods | null>(null)
-  const [selectedYear, setSelectedYear] = useState(() =>
-    new Date().getFullYear(),
-  )
-  const [selectedMonth, setSelectedMonth] = useState(() =>
-    new Date().getMonth(),
-  )
-  const [filterState, setFilterState] = useState<TransactionListFilterState>(
-    DEFAULT_TRANSACTION_LIST_FILTER_STATE,
-  )
-  const [searchState, setSearchState] =
-    useState<SearchState>(DEFAULT_SEARCH_STATE)
-  const [showFilters, setShowFilters] = useState(false)
+  const { onWillOpen: handleWillOpen } = useSingleOpenSwipeable()
+  const month = useSelectedMonth()
+  const {
+    filterState,
+    setFilterState,
+    searchState,
+    setSearchState,
+    showFilters,
+    toggleFilters,
+  } = useTransactionListFilters()
   const [pendingDestroyItem, setPendingDestroyItem] =
     useState<TransactionWithRelations | null>(null)
   const [showSwipeInfo, setShowSwipeInfo] = useState(false)
-  const categoriesExpense = useCategoriesByType(TransactionTypeEnum.EXPENSE)
-  const categoriesIncome = useCategoriesByType(TransactionTypeEnum.INCOME)
-  const categoriesTransfer = useCategoriesByType(TransactionTypeEnum.TRANSFER)
-  const tags = useTags()
   const transferLayout = useTransfersPreferencesStore((s) => s.layout)
-  const { fromDate, toDate } = getMonthRange(selectedYear, selectedMonth)
   const { items: allDeleted, status: transactionsStatus } = useTransactions({
-    from: new Date(fromDate).toISOString(),
-    to: new Date(toDate).toISOString(),
+    from: month.from,
+    to: month.to,
     deletedOnly: true,
   })
   const transactionsFull = applyTransferLayout(
     applySearch(applyTransactionFilters(allDeleted, filterState), searchState),
     transferLayout,
   )
-  const categoriesByType = {
-    expense: categoriesExpense,
-    income: categoriesIncome,
-    transfer: categoriesTransfer,
-  }
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -96,20 +76,11 @@ export default function TrashScreen() {
           >
             <IconSvg name="info-circle-outline" size={20} />
           </Button>
-          <Button
-            variant={"ghost"}
-            size="icon"
-            onPress={() => setShowFilters((v) => !v)}
-          >
-            <IconSvg
-              name={showFilters ? "filter-2-x-outline" : "filter-2-outline"}
-              size={20}
-            />
-          </Button>
+          <FilterToggleButton active={showFilters} onPress={toggleFilters} />
         </View>
       ),
     })
-  }, [navigation, showFilters, t])
+  }, [navigation, showFilters, t, toggleFilters])
   if (transactionsStatus === "loading" && allDeleted.length === 0)
     return <RouteLoadingState />
   const handleRestore = (item: TransactionWithRelations) => async () => {
@@ -151,12 +122,7 @@ export default function TrashScreen() {
       onPress={() => router.push(`/transaction/${item.id}`)}
       onDelete={() => setPendingDestroyItem(item)}
       onRestore={handleRestore(item)}
-      onWillOpen={(methods) => {
-        if (openSwipeableRef.current !== methods) {
-          openSwipeableRef.current?.close()
-        }
-        openSwipeableRef.current = methods
-      }}
+      onWillOpen={handleWillOpen}
       rightActionAccessibilityLabel={t(
         "screens.settings.trash.a11y.moveToTrash",
       )}
@@ -167,19 +133,14 @@ export default function TrashScreen() {
   return (
     <View style={styles.container}>
       <MonthYearPicker
-        initialYear={selectedYear}
-        initialMonth={selectedMonth}
-        onSelect={(y, m) => {
-          setSelectedYear(y)
-          setSelectedMonth(m)
-        }}
+        initialYear={month.year}
+        initialMonth={month.month}
+        onSelect={month.onSelect}
       />
 
       {showFilters && (
         <TransactionFilterHeader
           accounts={[]}
-          categoriesByType={categoriesByType}
-          tags={tags}
           filterState={filterState}
           onFilterChange={setFilterState}
           searchState={searchState}

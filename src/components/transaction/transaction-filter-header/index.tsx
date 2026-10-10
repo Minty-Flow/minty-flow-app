@@ -11,6 +11,8 @@ import { useUnistyles } from "react-native-unistyles"
 import { DateRangePresetSheet } from "~/components/date-range-preset-sheet"
 import { IconSvg, type IconSvgName } from "~/components/icons"
 import { Chip } from "~/components/ui/chips"
+import { useCategoriesByTypeMap } from "~/database/drizzle/read-models/category-read-model"
+import { useTags } from "~/database/drizzle/read-models/tag-read-model"
 import type {
   AttachmentsOptionsType,
   GroupByOption,
@@ -45,8 +47,6 @@ import {
 } from "./types"
 export function TransactionFilterHeader({
   accounts,
-  categoriesByType,
-  tags,
   filterState,
   onFilterChange,
   selectedRange = null,
@@ -56,6 +56,8 @@ export function TransactionFilterHeader({
   hiddenFilters = EMPTY_HIDDEN_FILTERS,
 }: TransactionFilterHeaderProps) {
   const { t } = useTranslation()
+  const categoriesByType = useCategoriesByTypeMap()
+  const tags = useTags()
   const searchState = propSearchState ?? DEFAULT_SEARCH_STATE
   const [expandedPanel, setExpandedPanel] = useState<FilterPanelKey | null>(
     null,

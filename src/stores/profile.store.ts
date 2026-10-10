@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 /**
  * MMKV storage instance for user profile data.
@@ -69,11 +71,7 @@ export const useProfileStore = create<ProfileStore>()(
     }),
     {
       name: "profile-store",
-      storage: createJSONStorage(() => ({
-        getItem: (name) => profileStorage.getString(name) ?? null,
-        setItem: (name, value) => profileStorage.set(name, value),
-        removeItem: (name) => profileStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(profileStorage),
     },
   ),
 )

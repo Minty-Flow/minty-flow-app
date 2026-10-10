@@ -2,7 +2,7 @@
 import assert from "node:assert/strict"
 
 import { deriveKind } from "../../src/domain/derive-kind.ts"
-import { onKindChange } from "../../src/components/transaction/transaction-form-v4/on-kind-change.ts"
+import { onKindChange } from "../../src/components/transaction/transaction-form/on-kind-change.ts"
 import {
   ALLOWED_TYPES_BY_KIND,
   getKindForLoanType,

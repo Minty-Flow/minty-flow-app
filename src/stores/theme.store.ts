@@ -1,9 +1,10 @@
 import { createMMKV } from "react-native-mmkv"
 import { UnistylesRuntime } from "react-native-unistyles"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
 
 import type { ThemeKey } from "~/styles/unistyles"
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 export const DEFAULT_THEME = "coastalTrim"
 const THEME_PERSIST_STORE_KEY = "theme-preferences-store"
@@ -96,11 +97,7 @@ export const useThemeStore = create<ThemeStore>()(
     }),
     {
       name: THEME_PERSIST_STORE_KEY,
-      storage: createJSONStorage(() => ({
-        getItem: (name) => themeStorage.getString(name) ?? null,
-        setItem: (name, value) => themeStorage.set(name, value),
-        removeItem: (name) => themeStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(themeStorage),
       onRehydrateStorage: () => (state) => {
         // Sync UnistylesRuntime and native chrome when store hydrates on app start
         if (state?.themeMode) {

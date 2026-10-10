@@ -8,12 +8,17 @@ import { useUnistyles } from "react-native-unistyles"
 import { ChangeIconInline } from "~/components/change-icon-inline"
 import { ColorVariantInline } from "~/components/color-variant-inline"
 import { IconSvg } from "~/components/icons"
+import {
+  FormDeleteButton,
+  FormNameField,
+} from "~/components/modify-form/form-fields"
+import { modifyFormStyles } from "~/components/modify-form/modify-form.styles"
+import { ModifyFormFooter } from "~/components/modify-form/modify-form-footer"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { TabsMinty } from "~/components/tabs-minty"
-import { FormAccountPicker } from "~/components/transaction/transaction-form-v4/form-account-picker"
-import { FormCategoryPicker } from "~/components/transaction/transaction-form-v4/form-category-picker"
-import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
-import { Button } from "~/components/ui/button"
+import { FormAccountPicker } from "~/components/transaction/transaction-form/form-account-picker"
+import { FormCategoryPicker } from "~/components/transaction/transaction-form/form-category-picker"
 import {
   DateTimePickerSheet,
   useDateTimePicker,
@@ -41,7 +46,6 @@ import { rescaleMinorUnits } from "~/utils/money"
 import { formatShortMonthDayYear } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
-import { LoanFormFooter } from "./loan-form-footer"
 import { LoanFormSheets } from "./loan-form-sheets"
 import { loanModifyStyles } from "./loan-modify.styles"
 import type { LoanModifyContentProps } from "./types"
@@ -214,21 +218,15 @@ export function LoanModifyContent({
     ? formatShortMonthDayYear(formDueDate)
     : null
   if (!isAddMode && !loan) {
-    return (
-      <View style={loanModifyStyles.container}>
-        <View style={loanModifyStyles.loadingContainer}>
-          <ActivityIndicatorMinty />
-        </View>
-      </View>
-    )
+    return <RouteLoadingState />
   }
   return (
-    <View style={loanModifyStyles.container}>
+    <View style={modifyFormStyles.container}>
       <ScrollIntoViewProvider
-        scrollViewStyle={loanModifyStyles.scrollView}
-        contentContainerStyle={loanModifyStyles.scrollContent}
+        scrollViewStyle={modifyFormStyles.scrollView}
+        contentContainerStyle={modifyFormStyles.scrollContent}
       >
-        <View style={loanModifyStyles.form} key={loan?.id ?? NewEnum.NEW}>
+        <View style={modifyFormStyles.form} key={loan?.id ?? NewEnum.NEW}>
           {/* Loan type selector: Lent / Borrowed */}
           <TabsMinty<LoanType>
             items={[
@@ -253,8 +251,8 @@ export function LoanModifyContent({
           />
 
           {/* Term — chosen on the Loans screen tab, read-only here */}
-          <View style={loanModifyStyles.nameSection}>
-            <Text variant="small" style={loanModifyStyles.label}>
+          <View style={modifyFormStyles.nameSection}>
+            <Text variant="small" style={modifyFormStyles.label}>
               {t("screens.settings.loans.term.label")}
             </Text>
             <Text variant="default" style={loanModifyStyles.switchLabel}>
@@ -272,29 +270,12 @@ export function LoanModifyContent({
           />
 
           {/* Name section */}
-          <View style={loanModifyStyles.nameSection}>
-            <Text variant="small" style={loanModifyStyles.label}>
-              {t("screens.settings.goals.form.nameLabel")}
-            </Text>
-            <Controller
-              control={control}
-              name="name"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  placeholder={t("screens.settings.goals.form.namePlaceholder")}
-                  error={!!errors.name}
-                />
-              )}
-            />
-            {errors.name && (
-              <Text variant="small" style={loanModifyStyles.errorText}>
-                {t(errors.name.message as TranslationKey)}
-              </Text>
-            )}
-          </View>
+          <FormNameField
+            control={control}
+            label={t("screens.settings.loans.form.nameLabel")}
+            placeholder={t("screens.settings.loans.form.namePlaceholder")}
+            error={errors.name}
+          />
 
           {/* Settings list */}
           <View style={loanModifyStyles.settingsList}>
@@ -350,7 +331,7 @@ export function LoanModifyContent({
             {errors.categoryId && (
               <Text
                 variant="small"
-                style={[loanModifyStyles.errorText, { paddingHorizontal: 20 }]}
+                style={[modifyFormStyles.errorText, { paddingHorizontal: 20 }]}
               >
                 {t(errors.categoryId.message as TranslationKey)}
               </Text>
@@ -413,8 +394,8 @@ export function LoanModifyContent({
 
           {/* Description input — optional */}
           <View style={loanModifyStyles.descriptionSection}>
-            <Text variant="small" style={loanModifyStyles.label}>
-              {t("screens.settings.goals.form.descriptionLabel")}
+            <Text variant="small" style={modifyFormStyles.label}>
+              {t("screens.settings.loans.form.descriptionLabel")}
             </Text>
             <Controller
               control={control}
@@ -425,7 +406,7 @@ export function LoanModifyContent({
                   onChangeText={(text) => onChange(text || null)}
                   onBlur={onBlur}
                   placeholder={t(
-                    "screens.settings.goals.form.descriptionPlaceholder",
+                    "screens.settings.loans.form.descriptionPlaceholder",
                   )}
                   multiline
                   numberOfLines={3}
@@ -439,26 +420,16 @@ export function LoanModifyContent({
 
         {/* Delete button — edit mode only */}
         {!isAddMode && (
-          <View style={loanModifyStyles.deleteSection}>
-            <Button
-              variant="ghost"
+          <View style={modifyFormStyles.deleteSection}>
+            <FormDeleteButton
+              label={t("screens.settings.loans.form.deleteLabel")}
               onPress={() => setDeleteSheetVisible(true)}
-              style={loanModifyStyles.actionButton}
-            >
-              <IconSvg
-                name="trash-outline"
-                size={20}
-                color={loanModifyStyles.deleteIcon.color}
-              />
-              <Text variant="default" style={loanModifyStyles.deleteText}>
-                {t("screens.settings.loans.form.deleteLabel")}
-              </Text>
-            </Button>
+            />
           </View>
         )}
       </ScrollIntoViewProvider>
 
-      <LoanFormFooter
+      <ModifyFormFooter
         formName={formName}
         isAddMode={isAddMode}
         isDirty={isDirty}

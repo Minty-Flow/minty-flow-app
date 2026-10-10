@@ -1,36 +1,27 @@
 import { useNavigation, useRouter } from "expo-router"
-import { useLayoutEffect, useRef, useState } from "react"
+import { useLayoutEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
-import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
 import { StyleSheet } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/icons"
+import { FilterToggleButton } from "~/components/filter-toggle-button"
 import { MonthYearPicker } from "~/components/month-year-picker"
 import { RouteLoadingState } from "~/components/route-load-state"
 import { DeleteRecurringSheet } from "~/components/transaction/delete-recurring-sheet"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionItem } from "~/components/transaction/transaction-item"
-import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { View } from "~/components/ui/view"
-import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
-import { useTags } from "~/database/drizzle/read-models/tag-read-model"
 import {
   type TransactionWithRelations,
   useTransactions,
 } from "~/database/drizzle/read-models/transaction-read-model"
-import { getMonthRange } from "~/database/services/account-service"
 import { useRecurringRule } from "~/hooks/use-recurring-rule"
-import type {
-  SearchState,
-  TransactionListFilterState,
-} from "~/types/transaction-filters"
 import {
-  DEFAULT_SEARCH_STATE,
-  DEFAULT_TRANSACTION_LIST_FILTER_STATE,
-} from "~/types/transaction-filters"
-import { TransactionTypeEnum } from "~/types/transactions"
+  useSelectedMonth,
+  useSingleOpenSwipeable,
+  useTransactionListFilters,
+} from "~/hooks/use-transaction-list-state"
 import {
   applySearch,
   applyTransactionFilters,
@@ -39,63 +30,42 @@ export default function PendingTransactionsScreen() {
   const { t } = useTranslation()
   const router = useRouter()
   const navigation = useNavigation()
-  const openSwipeableRef = useRef<SwipeableMethods | null>(null)
-  const [selectedYear, setSelectedYear] = useState(() =>
-    new Date().getFullYear(),
-  )
-  const [selectedMonth, setSelectedMonth] = useState(() =>
-    new Date().getMonth(),
-  )
-  const [filterState, setFilterState] = useState<TransactionListFilterState>(
-    DEFAULT_TRANSACTION_LIST_FILTER_STATE,
-  )
-  const [searchState, setSearchState] =
-    useState<SearchState>(DEFAULT_SEARCH_STATE)
-  const [showFilters, setShowFilters] = useState(false)
+  const { onWillOpen: handleWillOpen, closeOpen: closeOpenSwipeable } =
+    useSingleOpenSwipeable()
+  const month = useSelectedMonth()
+  const {
+    filterState,
+    setFilterState,
+    searchState,
+    setSearchState,
+    showFilters,
+    toggleFilters,
+  } = useTransactionListFilters()
   const [recurringToDelete, setRecurringToDelete] =
     useState<TransactionWithRelations | null>(null)
   const recurringRule = useRecurringRule(
     recurringToDelete?.extra?.recurringId ?? null,
   )
-  const categoriesExpense = useCategoriesByType(TransactionTypeEnum.EXPENSE)
-  const categoriesIncome = useCategoriesByType(TransactionTypeEnum.INCOME)
-  const categoriesTransfer = useCategoriesByType(TransactionTypeEnum.TRANSFER)
-  const tags = useTags()
-  const { fromDate, toDate } = getMonthRange(selectedYear, selectedMonth)
   const { items: allPending, status: transactionsStatus } = useTransactions({
-    from: new Date(fromDate).toISOString(),
-    to: new Date(toDate).toISOString(),
+    from: month.from,
+    to: month.to,
     isPending: true,
   })
   const transactionsFull = applySearch(
     applyTransactionFilters(allPending, filterState),
     searchState,
   )
-  const categoriesByType = {
-    expense: categoriesExpense,
-    income: categoriesIncome,
-    transfer: categoriesTransfer,
-  }
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <Button
-          variant={"ghost"}
-          size="icon"
-          onPress={() => setShowFilters((v) => !v)}
-        >
-          <IconSvg
-            name={showFilters ? "filter-2-x-outline" : "filter-2-outline"}
-            size={20}
-          />
-        </Button>
+        <FilterToggleButton active={showFilters} onPress={toggleFilters} />
       ),
     })
-  }, [navigation, showFilters])
+  }, [navigation, showFilters, toggleFilters])
   if (transactionsStatus === "loading" && allPending.length === 0)
     return <RouteLoadingState />
   const handleDeleteDone = () => {
-    openSwipeableRef.current?.close()
+    closeOpenSwipeable()
   }
   // Recurring spawns must route through the 3-option scope modal, not a plain
   // soft-delete — same guard the transaction form and Upcoming section use.
@@ -112,12 +82,7 @@ export default function PendingTransactionsScreen() {
       onPress={() => router.push(`/transaction/${item.id}`)}
       onBeforeDelete={handleBeforeDelete}
       onDelete={handleDeleteDone}
-      onWillOpen={(methods) => {
-        if (openSwipeableRef.current !== methods) {
-          openSwipeableRef.current?.close()
-        }
-        openSwipeableRef.current = methods
-      }}
+      onWillOpen={handleWillOpen}
     />
   )
   const keyExtractor = (item: TransactionWithRelations) => item.id
@@ -125,19 +90,14 @@ export default function PendingTransactionsScreen() {
     <View style={styles.container}>
       <MonthYearPicker
         allowFuture
-        initialYear={selectedYear}
-        initialMonth={selectedMonth}
-        onSelect={(y, m) => {
-          setSelectedYear(y)
-          setSelectedMonth(m)
-        }}
+        initialYear={month.year}
+        initialMonth={month.month}
+        onSelect={month.onSelect}
       />
 
       {showFilters && (
         <TransactionFilterHeader
           accounts={[]}
-          categoriesByType={categoriesByType}
-          tags={tags}
           filterState={filterState}
           onFilterChange={setFilterState}
           searchState={searchState}
@@ -172,7 +132,7 @@ export default function PendingTransactionsScreen() {
           onRequestClose={() => setRecurringToDelete(null)}
           onDeleted={() => {
             setRecurringToDelete(null)
-            openSwipeableRef.current?.close()
+            closeOpenSwipeable()
           }}
         />
       )}

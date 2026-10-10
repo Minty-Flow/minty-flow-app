@@ -1,4 +1,3 @@
-import { endOfMonth, startOfMonth } from "date-fns"
 import { and, count, eq, inArray, or, sql } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
@@ -432,15 +431,4 @@ export async function getAccountTransactionCount(
     )
     .get()
   return row?.cnt ?? 0
-}
-
-export function getMonthRange(
-  year: number,
-  month: number,
-): { fromDate: number; toDate: number } {
-  const d = new Date(year, month, 1)
-  return {
-    fromDate: startOfMonth(d).getTime(),
-    toDate: endOfMonth(d).getTime(),
-  }
 }

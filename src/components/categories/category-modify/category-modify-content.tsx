@@ -1,18 +1,20 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useNavigation, useRouter } from "expo-router"
 import { useState } from "react"
-import { Controller, useForm } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
 import { CategoryTypeInline } from "~/components/categories/category-type-inline"
 import { ChangeIconInline } from "~/components/change-icon-inline"
 import { ColorVariantInline } from "~/components/color-variant-inline"
-import { IconSvg } from "~/components/icons"
-import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
-import { Button } from "~/components/ui/button"
-import { Input } from "~/components/ui/input"
+import {
+  FormDeleteButton,
+  FormNameField,
+} from "~/components/modify-form/form-fields"
+import { modifyFormStyles } from "~/components/modify-form/modify-form.styles"
+import { ModifyFormFooter } from "~/components/modify-form/modify-form-footer"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { Separator } from "~/components/ui/separator"
-import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
 import {
@@ -21,7 +23,6 @@ import {
   updateCategoryById,
 } from "~/database/services/category-service"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
-import type { TranslationKey } from "~/i18n/config"
 import {
   type AddCategoriesFormSchema,
   addCategoriesSchema,
@@ -32,9 +33,7 @@ import { NewEnum } from "~/types/new"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
-import { CategoryFormFooter } from "./category-form-footer"
 import { CategoryFormSheets } from "./category-form-sheets"
-import { categoryModifyStyles } from "./category-modify.styles"
 import type { CategoryModifyContentProps } from "./types"
 export function CategoryModifyContent({
   categoryModifyId,
@@ -151,53 +150,27 @@ export function CategoryModifyContent({
   }
   const currentColorScheme = getThemeStrict(formColorSchemeName)
   if (!isAddMode && !category) {
-    return (
-      <View style={categoryModifyStyles.container}>
-        <View style={categoryModifyStyles.loadingContainer}>
-          <ActivityIndicatorMinty />
-        </View>
-      </View>
-    )
+    return <RouteLoadingState />
   }
   return (
-    <View style={categoryModifyStyles.container}>
+    <View style={modifyFormStyles.container}>
       <ScrollIntoViewProvider
-        scrollViewStyle={categoryModifyStyles.scrollView}
-        contentContainerStyle={categoryModifyStyles.scrollContent}
+        scrollViewStyle={modifyFormStyles.scrollView}
+        contentContainerStyle={modifyFormStyles.scrollContent}
       >
-        <View
-          style={categoryModifyStyles.form}
-          key={category?.id || NewEnum.NEW}
-        >
+        <View style={modifyFormStyles.form} key={category?.id || NewEnum.NEW}>
           <ChangeIconInline
             currentIcon={formIcon}
             onIconSelected={handleIconSelected}
             colorScheme={currentColorScheme}
           />
 
-          <View style={categoryModifyStyles.nameSection}>
-            <Text variant="small" style={categoryModifyStyles.label}>
-              {t("components.categories.form.nameLabel")}
-            </Text>
-            <Controller
-              control={control}
-              name="name"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  placeholder={t("components.categories.form.namePlaceholder")}
-                  error={!!errors.name}
-                />
-              )}
-            />
-            {errors.name && (
-              <Text variant="small" style={categoryModifyStyles.errorText}>
-                {t(errors.name.message as TranslationKey)}
-              </Text>
-            )}
-          </View>
+          <FormNameField
+            control={control}
+            label={t("components.categories.form.nameLabel")}
+            placeholder={t("components.categories.form.namePlaceholder")}
+            error={errors.name}
+          />
 
           <View>
             <CategoryTypeInline
@@ -219,26 +192,16 @@ export function CategoryModifyContent({
         </View>
 
         {!isAddMode && (
-          <View style={categoryModifyStyles.deleteSection}>
-            <Button
-              variant="ghost"
+          <View style={modifyFormStyles.deleteSection}>
+            <FormDeleteButton
+              label={t("components.categories.form.deleteLabel")}
               onPress={() => setDeleteSheetVisible(true)}
-              style={categoryModifyStyles.actionButton}
-            >
-              <IconSvg
-                name="trash-outline"
-                size={20}
-                color={categoryModifyStyles.deleteIcon.color}
-              />
-              <Text variant="default" style={categoryModifyStyles.deleteText}>
-                {t("components.categories.form.deleteLabel")}
-              </Text>
-            </Button>
+            />
           </View>
         )}
       </ScrollIntoViewProvider>
 
-      <CategoryFormFooter
+      <ModifyFormFooter
         formName={formName}
         isAddMode={isAddMode}
         isDirty={isDirty}

@@ -47,9 +47,6 @@ importers:
       expo-crypto:
         specifier: ~57.0.1
         version: 57.0.3(expo@57.0.27)
-      expo-device:
-        specifier: ~57.0.1
-        version: 57.0.2(expo@57.0.27)
       expo-document-picker:
         specifier: ~57.0.1
         version: 57.0.3(expo@57.0.27)
@@ -180,9 +177,6 @@ importers:
         specifier: ^5.0.13
         version: 5.0.15(@types/react@19.2.18)(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3))
     devDependencies:
-      '@babel/plugin-proposal-decorators':
-        specifier: ^7.29.7
-        version: 7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)
       '@biomejs/biome':
         specifier: ^2.5.6
         version: 2.5.15
@@ -3001,11 +2995,6 @@ packages:
     peerDependencies:
       expo: '*'
 
-  expo-device@57.0.2:
-    resolution: {integrity: sha512-1A0/FICR3CgrH43FeiDQP3l5eHDmiMoh4EjXfhfoHHkMgdBQdyD0kwDWskiGZlQ3E0Nd0LHkCFH6vJ1ofm/jow==}
-    peerDependencies:
-      expo: '*'
-
   expo-document-picker@57.0.3:
     resolution: {integrity: sha512-XlxdZ0zzv44JRD8O15DISgIO8FTaZ581oc4kQp6MJoR7vdahjcY+2qCuDt5k1J8/lc0YR+bXon/v81norciuxw==}
     peerDependencies:
@@ -4891,10 +4880,6 @@ packages:
   typescript@7.0.2:
     resolution: {integrity: sha512-8FYau96o3NKOhbjKi/qNvG/W5jhzxkbdm5sj9AbZ/5T5sWqn3hJgLfGx27sRKZWTvyzCP8dLRBTf5tBTSRVUNA==}
     engines: {node: '>=16.20.0'}
-    hasBin: true
-
-  ua-parser-js@0.7.41:
-    resolution: {integrity: sha512-O3oYyCMPYgNNHuO7Jjk3uacJWZF8loBgwrfd/5LE/HyZ3lUIOdniQ7DNXJcIgZbwioZxk0fLfI4EVnetdiX5jg==}
     hasBin: true
 
   undici-types@7.24.6:
@@ -8027,11 +8012,6 @@ snapshots:
     dependencies:
       expo: 57.0.27(5ec83e81a26d14f07383da3357cd863c)
 
-  expo-device@57.0.2(expo@57.0.27):
-    dependencies:
-      expo: 57.0.27(5ec83e81a26d14f07383da3357cd863c)
-      ua-parser-js: 0.7.41
-
   expo-document-picker@57.0.3(expo@57.0.27):
     dependencies:
       expo: 57.0.27(5ec83e81a26d14f07383da3357cd863c)
@@ -10301,8 +10281,6 @@ snapshots:
       '@typescript/typescript-sunos-x64': 7.0.2
       '@typescript/typescript-win32-arm64': 7.0.2
       '@typescript/typescript-win32-x64': 7.0.2
-
-  ua-parser-js@0.7.41: {}
 
   undici-types@7.24.6: {}
 
