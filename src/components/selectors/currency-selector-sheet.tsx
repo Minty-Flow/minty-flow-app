@@ -8,17 +8,14 @@ import { useTranslation } from "react-i18next"
 import { FlatList, View } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/icons"
-import { SearchInput } from "~/components/search-input"
-import { BottomSheet } from "~/components/ui/bottom-sheet"
-import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { EmptyState } from "~/components/ui/empty-state"
 import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { currencyRegistryService } from "~/services/currency-registry"
 import type { Currency } from "~/types/currency"
 
-import { sheetHeaderStyles, sheetStyles, triggerStyles } from "./styles"
+import { SearchSheet, SelectorTrigger } from "./selector-parts"
+import { sheetStyles } from "./styles"
 
 interface CurrencySelectorSheetProps {
   selectedCurrencyCode: string
@@ -116,73 +113,38 @@ export function CurrencySelectorSheet({
   )
   return (
     <>
-      <View style={triggerStyles.wrapper}>
-        <ListItem
-          style={triggerStyles.triggerRow}
-          onPress={open}
-          disabled={!editable}
-        >
-          <View style={triggerStyles.triggerLeft}>
-            <IconSvg name="currency-outline" size={24} />
-            <Text variant="default" style={triggerStyles.triggerLabel}>
-              {t("components.selectors.currency.triggerLabel")}
-            </Text>
-          </View>
-          <View style={triggerStyles.triggerRight}>
-            <Text variant="default" style={triggerStyles.triggerValue}>
-              {selectedCurrencyCode}
-            </Text>
-            {editable && (
-              <ChevronIcon
-                direction="trailing"
-                size={20}
-                style={triggerStyles.chevronIcon}
-              />
-            )}
-          </View>
-        </ListItem>
-      </View>
-
-      <BottomSheet
-        isPresented={visible}
-        onDismiss={close}
-        contentPadding={0}
-        heightFraction={0.75}
+      <SelectorTrigger
+        icon="currency-outline"
+        label={t("components.selectors.currency.triggerLabel")}
+        value={selectedCurrencyCode}
+        editable={editable}
+        onPress={open}
+      />
+      <SearchSheet
+        visible={visible}
+        onClose={close}
+        title={t("components.selectors.currency.title")}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder={t(
+          "components.selectors.currency.searchPlaceholderEx",
+        )}
       >
-        <View style={{ flex: 1 }}>
-          <View style={sheetHeaderStyles.header}>
-            <Text variant="default" style={sheetHeaderStyles.title}>
-              {t("components.selectors.currency.title")}
-            </Text>
-          </View>
-          <View style={sheetStyles.searchContainer}>
-            <SearchInput
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onClear={() => setSearchQuery("")}
-              placeholder={t(
-                "components.selectors.currency.searchPlaceholderEx",
-              )}
-            />
-          </View>
-          <View style={sheetStyles.listWrapper}>
-            <FlatList
-              data={filteredCurrencies}
-              keyExtractor={keyExtractor}
-              renderItem={renderItem}
-              ListEmptyComponent={listEmptyComponent}
-              initialNumToRender={14}
-              maxToRenderPerBatch={20}
-              windowSize={11}
-              extraData={selectedCurrencyCode}
-              keyboardShouldPersistTaps="always"
-              style={sheetStyles.list}
-              contentContainerStyle={sheetStyles.listContent}
-              showsVerticalScrollIndicator
-            />
-          </View>
-        </View>
-      </BottomSheet>
+        <FlatList
+          data={filteredCurrencies}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
+          ListEmptyComponent={listEmptyComponent}
+          initialNumToRender={14}
+          maxToRenderPerBatch={20}
+          windowSize={11}
+          extraData={selectedCurrencyCode}
+          keyboardShouldPersistTaps="always"
+          style={sheetStyles.list}
+          contentContainerStyle={sheetStyles.listContent}
+          showsVerticalScrollIndicator
+        />
+      </SearchSheet>
     </>
   )
 }

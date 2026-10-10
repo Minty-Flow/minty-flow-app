@@ -3,6 +3,7 @@ import { type DimensionValue, View as RNView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
+import { getGoalDisplay } from "~/components/goals/goal-display"
 import { Money } from "~/components/money"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -12,12 +13,6 @@ import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { Goal } from "~/types/goals"
 import { getLiveGoalProgress } from "~/utils/live-progress"
-import { roundToSafeInteger } from "~/utils/money"
-import { formatMoney } from "~/utils/number-format"
-import {
-  type GoalStatus,
-  getGoalProgressModel,
-} from "~/utils/planning-progress"
 
 interface GoalCardProps {
   goal: Goal
@@ -33,74 +28,21 @@ export function GoalCard({ goal, onPress }: GoalCardProps) {
   const privacyMode = useMoneyFormattingStore((s) => s.privacyMode)
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
 
-  const isExpenseGoal = goal.goalType === "expense"
   const {
     currentAmount: resolved,
     clampedProgress,
     isCompleted,
     remaining,
-    daysLeft,
     status,
-  } = getGoalProgressModel(goal, currentAmount)
-
-  const dateSubtitle = (): string => {
-    if (isCompleted) return t("screens.settings.goals.card.reachedLabel")
-    if (daysLeft === null) return t("screens.settings.goals.card.noDeadline")
-    if (daysLeft === 0)
-      return t("screens.settings.goals.card.daysLeft", { count: 0 })
-    if (daysLeft < 0)
-      return t("screens.settings.goals.card.overdue", {
-        count: Math.abs(daysLeft),
-      })
-    return t("screens.settings.goals.card.daysLeft", { count: daysLeft })
-  }
-
-  const insightText = (): string => {
-    if (isCompleted) return t("screens.settings.goals.card.insight.goalReached")
-    if (daysLeft === null) return t("screens.settings.goals.card.noDeadline")
-    const daily = remaining / Math.max(daysLeft, 1)
-    const raw = formatMoney(roundToSafeInteger(daily), goal.currencyCode, {
-      currencyDisplay: currencyLook,
-      hideSign: true,
-    })
-    const amount = privacyMode ? raw.replace(/[\d٠-٩۰-۹]/gu, "⁕") : raw
-    const key = isExpenseGoal
-      ? "screens.settings.goals.card.insight.spendPerDay"
-      : "screens.settings.goals.card.insight.savePerDay"
-    return t(key, { amount })
-  }
-
-  const statusColors = {
-    reached: {
-      dot: theme.colors.semantic.income,
-      text: theme.colors.semantic.income,
-      bg: `${theme.colors.semantic.income}20`,
-    },
-    onTrack: {
-      dot: theme.colors.semantic.income,
-      text: theme.colors.semantic.income,
-      bg: `${theme.colors.semantic.income}20`,
-    },
-    behind: {
-      dot: theme.colors.semantic.expense,
-      text: theme.colors.semantic.expense,
-      bg: `${theme.colors.semantic.expense}20`,
-    },
-    flexible: {
-      dot: theme.colors.onSecondary,
-      text: theme.colors.onSecondary,
-      bg: theme.colors.secondary,
-    },
-  } satisfies Record<GoalStatus, { dot: string; text: string; bg: string }>
-
-  const badge = statusColors[status]
-
-  const progressBarColor =
-    isCompleted || status === "reached"
-      ? theme.colors.semantic.income
-      : status === "behind"
-        ? theme.colors.semantic.expense
-        : theme.colors.primary
+    isExpenseGoal,
+    badge,
+    progressBarColor,
+    dateSubtitle,
+    insightText,
+  } = getGoalDisplay(goal, currentAmount, t, theme, {
+    currencyLook,
+    privacyMode,
+  })
 
   const progressPercent = Math.round(clampedProgress * 1000) / 10
 
@@ -126,7 +68,7 @@ export function GoalCard({ goal, onPress }: GoalCardProps) {
               {goal.name}
             </Text>
             <Text variant="small" style={styles.dateSubtitle} numberOfLines={1}>
-              {dateSubtitle()}
+              {dateSubtitle}
             </Text>
           </View>
         </View>
@@ -206,7 +148,7 @@ export function GoalCard({ goal, onPress }: GoalCardProps) {
 
       {/* Row 4: Italic insight */}
       <Text variant="small" style={styles.insight}>
-        {insightText()}
+        {insightText}
       </Text>
     </Pressable>
   )

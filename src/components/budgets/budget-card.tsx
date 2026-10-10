@@ -9,7 +9,6 @@ import { Money } from "~/components/money"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useCategories } from "~/database/drizzle/read-models/category-read-model"
 import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import { useMinuteTick } from "~/hooks/use-time-reactivity"
 import type { TranslationKey } from "~/i18n/config"
@@ -17,6 +16,7 @@ import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { useWeekStartStore } from "~/stores/week-start.store"
 import type { Budget } from "~/types/budgets"
+import type { Category } from "~/types/categories"
 import { getLiveBudgetSpent } from "~/utils/live-progress"
 import { roundToSafeInteger } from "~/utils/money"
 import { formatMoney, formatPercent } from "~/utils/number-format"
@@ -55,10 +55,11 @@ function markAlerted(budget: BudgetAlertCtx): void {
 }
 interface BudgetCardProps {
   budget: Budget
+  /** All categories, loaded once by the list instead of per card. */
+  categories: Category[]
   onPress: () => void
 }
-export function BudgetCard({ budget, onPress }: BudgetCardProps) {
-  const allCategories = useCategories()
+export function BudgetCard({ budget, categories, onPress }: BudgetCardProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const isRTL = useLanguageStore((s) => s.isRTL)
@@ -66,7 +67,7 @@ export function BudgetCard({ budget, onPress }: BudgetCardProps) {
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
   const weekStart = useWeekStartStore((s) => s.weekStart)
   const linkedCategories = budget.categoryIds
-    .map((id) => allCategories.find((c) => c.id === id))
+    .map((id) => categories.find((c) => c.id === id))
     .filter((c): c is NonNullable<typeof c> => Boolean(c))
   // Tick every minute so rolling periods (daily/weekly/monthly/yearly) snap
   // to a new window the moment their boundary crosses, even if the app is

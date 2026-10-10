@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 const MAX_EXPORT_HISTORY = 50 // Choose a reasonable limit
 
@@ -47,11 +49,7 @@ export const useExportHistoryStore = create<ExportHistoryStore>()(
     }),
     {
       name: "export-history-store",
-      storage: createJSONStorage(() => ({
-        getItem: (name) => exportHistoryStorage.getString(name) ?? null,
-        setItem: (name, value) => exportHistoryStorage.set(name, value),
-        removeItem: (name) => exportHistoryStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(exportHistoryStorage),
     },
   ),
 )

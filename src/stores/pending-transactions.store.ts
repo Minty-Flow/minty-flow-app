@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 /**
  * MMKV storage for pending transaction preferences.
@@ -69,11 +71,7 @@ export const usePendingTransactionsStore = create<PendingTransactionsStore>()(
     }),
     {
       name: "pending-transactions-store",
-      storage: createJSONStorage(() => ({
-        getItem: (name) => pendingTransactionsStorage.getString(name) ?? null,
-        setItem: (name, value) => pendingTransactionsStorage.set(name, value),
-        removeItem: (name) => pendingTransactionsStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(pendingTransactionsStorage),
       onRehydrateStorage: () => (state) => {
         if (state) {
           // Direct mutation is intentional: MMKV storage is synchronous, so hydration

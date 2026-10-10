@@ -18,7 +18,7 @@ import type {
 
 export type DatePickerTarget = "transaction" | "recurringEnd"
 
-export interface TransactionFormV4Props {
+export interface TransactionFormProps {
   transaction: TransactionWithRelations | null
   accounts: Account[]
   categories: Category[]

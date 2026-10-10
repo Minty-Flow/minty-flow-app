@@ -1,14 +1,13 @@
 import { StyleSheet } from "react-native-unistyles"
 
-export const categoryModifyStyles = StyleSheet.create((theme) => ({
+/**
+ * Layout shared by every create / edit form (account, budget, category, goal,
+ * loan). Form-specific styles live next to each form and only add to these.
+ */
+export const modifyFormStyles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.surface,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
   scrollView: {
     flex: 1,
@@ -25,15 +24,15 @@ export const categoryModifyStyles = StyleSheet.create((theme) => ({
     color: theme.colors.onSurface,
     letterSpacing: 0.5,
   },
-  nameSection: {
-    gap: 10,
-    paddingHorizontal: 20,
-  },
   errorText: {
     ...theme.typography.labelMedium,
     color: theme.colors.error,
     marginTop: 4,
     textAlign: "center",
+  },
+  nameSection: {
+    gap: 10,
+    paddingHorizontal: 20,
   },
   deleteSection: {
     marginTop: 32,

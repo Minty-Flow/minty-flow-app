@@ -8,19 +8,23 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
 
-const RESTORE_ACTION_WIDTH = 128
+const ACTION_WIDTH = 128
 
-type LeftActionProps = {
+type SwipeActionProps = {
   progress: SharedValue<number>
-  onRestorePress: () => void
+  /** "trash" (red, right side) or "restore" (green, left side). */
+  kind: "trash" | "restore"
+  onPress: () => void
   accessibilityLabel?: string
 }
 
-export const LeftAction = ({
+/** Action revealed behind a swiped transaction row; the icon grows in as it opens. */
+export const SwipeAction = ({
   progress,
-  onRestorePress,
+  kind,
+  onPress,
   accessibilityLabel,
-}: LeftActionProps) => {
+}: SwipeActionProps) => {
   const iconStyle = useAnimatedStyle(() => {
     const scale = interpolate(progress.value, [0, 1], [0.5, 1], "clamp")
     const opacity = interpolate(
@@ -34,8 +38,11 @@ export const LeftAction = ({
 
   return (
     <TouchableOpacity
-      style={leftActionStyles.container}
-      onPress={onRestorePress}
+      style={[
+        styles.container,
+        kind === "trash" ? styles.trash : styles.restore,
+      ]}
+      onPress={onPress}
       activeOpacity={1}
       hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       accessibilityLabel={accessibilityLabel}
@@ -43,24 +50,29 @@ export const LeftAction = ({
     >
       <Animated.View style={iconStyle}>
         <IconSvg
-          name="restore-outline"
+          name={kind === "trash" ? "trash-outline" : "restore-outline"}
           size={24}
-          color={leftActionStyles.restoreIcon.color}
+          color={styles.icon.color}
         />
       </Animated.View>
     </TouchableOpacity>
   )
 }
 
-const leftActionStyles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create((theme) => ({
   container: {
-    width: RESTORE_ACTION_WIDTH,
+    width: ACTION_WIDTH,
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
+  },
+  trash: {
+    backgroundColor: theme.colors.error,
+  },
+  restore: {
     backgroundColor: theme.colors.semantic.success,
   },
-  restoreIcon: {
+  icon: {
     color: theme.colors.onError,
   },
 }))

@@ -44,7 +44,3 @@ export function useTagsQuery(): LiveReadModelResult<Tag[]> {
 export function useTags(): Tag[] {
   return useTagsQuery().data
 }
-
-export function useTag(id: string): Tag | undefined {
-  return useTags().find((tag) => tag.id === id)
-}

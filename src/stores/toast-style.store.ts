@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 export type ToastPosition = "top" | "bottom"
 
@@ -90,11 +92,7 @@ export const useToastStyleStore = create<ToastStyleStore>()(
     }),
     {
       name: "toast-style-store",
-      storage: createJSONStorage(() => ({
-        getItem: (name) => toastStyleStorage.getString(name) ?? null,
-        setItem: (name, value) => toastStyleStorage.set(name, value),
-        removeItem: (name) => toastStyleStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(toastStyleStorage),
     },
   ),
 )

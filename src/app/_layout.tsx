@@ -4,42 +4,29 @@ import { useDrizzleStudio } from "expo-drizzle-studio-plugin"
 import { NavigationBar } from "expo-navigation-bar"
 import * as Notifications from "expo-notifications"
 import { Stack, useRouter, useSegments } from "expo-router"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import { Alert, BackHandler, Platform } from "react-native"
+import { Platform } from "react-native"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import { SafeAreaProvider } from "react-native-safe-area-context"
 import { UnistylesRuntime, useUnistyles } from "react-native-unistyles"
 
 import { AppLockGate } from "~/components/app-lock-gate"
-import { ConfirmSheet } from "~/components/confirm-sheet"
+import {
+  ForcedMigrationGate,
+  MigrationState,
+} from "~/components/forced-migration-gate"
 import { RouteErrorBoundary } from "~/components/route-error-boundary"
-import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
-import { Button } from "~/components/ui/button"
-import { Text } from "~/components/ui/text"
 import { ToastManager } from "~/components/ui/toast"
 import { TooltipProvider } from "~/components/ui/tooltip"
-import { View } from "~/components/ui/view"
 import { drizzleDb, expoDb } from "~/database/drizzle/db"
-import {
-  exportLegacyDbForForcedMigration,
-  generateLegacyZipBackupForForcedMigration,
-  getDatabaseState,
-  upgradeLegacyDbToDrizzle,
-} from "~/database/forced-migration"
-import { saveExistingFileToDevice } from "~/database/services/data-management-service"
 import { useImportRecovery } from "~/hooks/use-import-recovery"
 import { useNotificationSync } from "~/hooks/use-notification-sync"
 import { useRetentionCleanup } from "~/hooks/use-retention-cleanup"
 import { useShakeListener } from "~/hooks/use-shake-listener"
 import { useTransactionLifecycleSync } from "~/hooks/use-transaction-lifecycle-sync"
 import { DirectionEnum } from "~/i18n/language.constants"
-import { useDbMigrationStore } from "~/stores/db-migration.store"
-import {
-  hideDevelopmentNoticeForSession,
-  useDevelopmentNoticeStore,
-} from "~/stores/development-notice.store"
 import { useLanguageStore } from "~/stores/language.store"
 import { useOnboardingStore } from "~/stores/onboarding.store"
 import { NewEnum } from "~/types/new"
@@ -50,225 +37,10 @@ import migrations from "../../drizzle/migrations"
 // TODO: code of conduct to be added alongside contributions rules
 
 export default function RootLayout() {
-  return <ForcedMigrationGate />
-}
-
-function ForcedMigrationGate() {
-  const { t } = useTranslation()
-  const phase = useDbMigrationStore((s) => s.phase)
-  const backupUri = useDbMigrationStore((s) => s.backupUri)
-  const userBackupUri = useDbMigrationStore((s) => s.userBackupUri)
-  const error = useDbMigrationStore((s) => s.error)
-  const setPhase = useDbMigrationStore((s) => s.setPhase)
-  const markUserBackupSaved = useDbMigrationStore((s) => s.markUserBackupSaved)
-  const markExported = useDbMigrationStore((s) => s.markExported)
-  const markComplete = useDbMigrationStore((s) => s.markComplete)
-  const markFailed = useDbMigrationStore((s) => s.markFailed)
-  const [checked, setChecked] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [backupPromptVisible, setBackupPromptVisible] = useState(false)
-  const upgradeNoticeShownRef = useRef(false)
-  const migrationRunRef = useRef(false)
-
-  // TODO(remove-after-drizzle-rollout): old SQLite -> Drizzle compatibility gate.
-  // Once every supported install has this marker, delete this wrapper and render AppRootLayout directly.
-
-  const showUpgradeNotice = useCallback(() => {
-    if (upgradeNoticeShownRef.current) return
-    upgradeNoticeShownRef.current = true
-    const developmentNotice = useDevelopmentNoticeStore.getState()
-    if (!developmentNotice.dismissed) {
-      hideDevelopmentNoticeForSession()
-      Alert.alert(
-        "Your data is ready",
-        `Your backup is saved and your data is ready.\n\n${t("common.developmentNotice.message")}`,
-        [
-          {
-            text: "Don't show again",
-            onPress: developmentNotice.dismiss,
-          },
-          { text: t("common.actions.ok") },
-        ],
-      )
-      return
-    }
-    Alert.alert(
-      "Your data is ready",
-      "Your backup is saved and your data is ready.",
-      [{ text: "OK" }],
-    )
-  }, [t])
-
-  const runInPlaceUpgrade = useCallback(
-    async (createBackup: boolean): Promise<boolean> => {
-      setBusy(true)
-      migrationRunRef.current = true
-      try {
-        if (createBackup) {
-          if (!userBackupUri) {
-            setPhase("exporting")
-            const userBackup = await generateLegacyZipBackupForForcedMigration()
-            const saved = await saveExistingFileToDevice(
-              userBackup.uri,
-              userBackup.fileName,
-            )
-            if (!saved) {
-              markFailed(
-                "Please save the backup first. The update will continue right after it's safely stored.",
-              )
-              return false
-            }
-            markUserBackupSaved(userBackup)
-          }
-          if (!backupUri) {
-            const backup = await exportLegacyDbForForcedMigration()
-            markExported(backup)
-          }
-        }
-        setPhase("migrating")
-        upgradeLegacyDbToDrizzle(migrations)
-        markComplete()
-        showUpgradeNotice()
-        return true
-      } catch (e) {
-        const message = e instanceof Error ? e.message : String(e)
-        logger.error("Forced DB migration in-place upgrade failed", {
-          error: message,
-        })
-        markFailed(message)
-        return false
-      } finally {
-        migrationRunRef.current = false
-        setBusy(false)
-      }
-    },
-    [
-      backupUri,
-      markComplete,
-      markExported,
-      markFailed,
-      markUserBackupSaved,
-      setPhase,
-      showUpgradeNotice,
-      userBackupUri,
-    ],
-  )
-
-  const exitApp = useCallback(() => {
-    BackHandler.exitApp()
-  }, [])
-
-  useEffect(() => {
-    if (migrationRunRef.current) return
-    if (phase === "failed") {
-      setChecked(true)
-      return
-    }
-    try {
-      const state = getDatabaseState(migrations)
-      if (state === "legacy") {
-        setPhase("needs_backup")
-        setChecked(true)
-        setBackupPromptVisible(true)
-        return
-      }
-      if (phase !== "complete") markComplete()
-      setChecked(true)
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e)
-      logger.error("Forced DB migration detection failed", { error: message })
-      markFailed(message)
-      setChecked(true)
-    }
-  }, [markComplete, markFailed, phase, setPhase])
-
-  if (!checked) return <MigrationState message="Checking database..." />
-
-  if (phase === "idle" || phase === "complete") return <DrizzleMigratedApp />
-
-  if (phase === "needs_backup") {
-    return (
-      <>
-        <ForcedMigrationState
-          message="Backup required before update."
-          detail="Minty Flow needs to save a ZIP backup on your phone before updating your data."
-          actionLabel="Continue"
-          busy={busy}
-          onAction={() => setBackupPromptVisible(true)}
-        />
-        <ConfirmSheet
-          visible={backupPromptVisible && !busy}
-          onRequestClose={exitApp}
-          onConfirm={async () => {
-            await runInPlaceUpgrade(true)
-          }}
-          title="Save a backup first"
-          description="This update changes how Minty Flow stores your data. Before it starts, we'll ask where to save a ZIP backup on your phone so you have a recovery copy."
-          note="After the backup is saved, the update continues automatically. Keep Minty Flow open until it finishes."
-          confirmLabel="Save backup"
-          cancelLabel="Exit app"
-          icon="archive"
-          closeOnConfirm={false}
-        />
-      </>
-    )
-  }
-
-  if (phase === "exporting" || phase === "exported" || phase === "migrating") {
-    return (
-      <MigrationState
-        message={
-          phase === "exporting"
-            ? "Before updating your data, Minty Flow needs to save a backup ZIP on your phone."
-            : "Backup saved. Updating your data now..."
-        }
-      />
-    )
-  }
-
-  if (phase === "failed") {
-    return (
-      <>
-        <ForcedMigrationState
-          message="Database upgrade paused."
-          detail={error ?? "Unknown error"}
-          actionLabel={userBackupUri ? "Try again" : "Save backup"}
-          busy={busy}
-          onAction={() => {
-            if (userBackupUri) {
-              void runInPlaceUpgrade(true)
-              return
-            }
-            setBackupPromptVisible(true)
-          }}
-        />
-        <ConfirmSheet
-          visible={backupPromptVisible && !busy}
-          onRequestClose={exitApp}
-          onConfirm={async () => {
-            await runInPlaceUpgrade(true)
-          }}
-          title="Save a backup first"
-          description="This update changes how Minty Flow stores your data. Before it starts, we'll ask where to save a ZIP backup on your phone so you have a recovery copy."
-          note="After the backup is saved, the update continues automatically. Keep Minty Flow open until it finishes."
-          confirmLabel="Save backup"
-          cancelLabel="Exit app"
-          icon="archive"
-          closeOnConfirm={false}
-        />
-      </>
-    )
-  }
-
   return (
-    <ForcedMigrationState
-      message={
-        phase === "needs_backup"
-          ? "Waiting to start database upgrade..."
-          : "Before updating your data, Minty Flow needs to save a backup ZIP on your phone."
-      }
-      detail="Keep Minty Flow open until this finishes."
-    />
+    <ForcedMigrationGate>
+      <DrizzleMigratedApp />
+    </ForcedMigrationGate>
   )
 }
 
@@ -297,61 +69,6 @@ function DrizzleMigratedApp() {
   return <AppRootLayout />
 }
 
-function MigrationState({ message }: { message: string }) {
-  return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <ActivityIndicatorMinty />
-      <Text>{message}</Text>
-    </View>
-  )
-}
-
-function ForcedMigrationState({
-  message,
-  detail,
-  actionLabel,
-  onAction,
-  busy,
-}: {
-  message: string
-  detail?: string
-  actionLabel?: string
-  onAction?: () => void
-  busy?: boolean
-}) {
-  const { theme } = useUnistyles()
-  return (
-    <View
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 14,
-        padding: 24,
-        backgroundColor: theme.colors.surface,
-      }}
-    >
-      {(!onAction || busy) && <ActivityIndicatorMinty />}
-      <Text variant="h4" style={{ textAlign: "center" }}>
-        {message}
-      </Text>
-      {detail && (
-        <Text
-          variant="small"
-          style={{ color: theme.colors.semantic.semi, textAlign: "center" }}
-        >
-          {detail}
-        </Text>
-      )}
-      {actionLabel && (
-        <Button disabled={!onAction || busy} onPress={onAction}>
-          <Text>{actionLabel}</Text>
-        </Button>
-      )}
-    </View>
-  )
-}
-
 function AppRootLayout() {
   const { theme } = useUnistyles()
   const { t } = useTranslation()
@@ -377,6 +94,17 @@ function AppRootLayout() {
       }).catch(() => {})
     }
   }, [])
+
+  /** Header title for a create / edit route: `newTitle` when the id param is "new". */
+  const modifyTitle =
+    (param: string, newTitle: string, editTitle: string) =>
+    ({ route }: { route: { params?: object } }) => ({
+      title:
+        (route.params as Record<string, unknown> | undefined)?.[param] ===
+        NewEnum.NEW
+          ? newTitle
+          : editTitle,
+    })
 
   useShakeListener()
   useRetentionCleanup()
@@ -466,17 +194,11 @@ function AppRootLayout() {
                 />
                 <Stack.Screen
                   name="settings/loans/[loanId]/modify"
-                  options={({ route }) => {
-                    const params = route.params as
-                      | { loanId?: string }
-                      | undefined
-                    return {
-                      title:
-                        params?.loanId === NewEnum.NEW
-                          ? t("screens.settings.loans.addNew")
-                          : t("screens.settings.loans.title"),
-                    }
-                  }}
+                  options={modifyTitle(
+                    "loanId",
+                    t("screens.settings.loans.addNew"),
+                    t("screens.settings.loans.title"),
+                  )}
                 />
                 <Stack.Screen
                   name="settings/all-accounts"
@@ -502,17 +224,11 @@ function AppRootLayout() {
                 />
                 <Stack.Screen
                   name="settings/categories/[categoryId]/modify"
-                  options={({ route }) => {
-                    const params = route.params as
-                      | { categoryId?: string }
-                      | undefined
-                    return {
-                      title:
-                        params?.categoryId === NewEnum.NEW
-                          ? t("components.categories.form.title.create")
-                          : t("components.categories.form.title.edit"),
-                    }
-                  }}
+                  options={modifyTitle(
+                    "categoryId",
+                    t("components.categories.form.title.create"),
+                    t("components.categories.form.title.edit"),
+                  )}
                 />
                 <Stack.Screen
                   name="settings/tags/index"
@@ -544,17 +260,11 @@ function AppRootLayout() {
                 />
                 <Stack.Screen
                   name="settings/budgets/[budgetId]/modify"
-                  options={({ route }) => {
-                    const params = route.params as
-                      | { budgetId?: string }
-                      | undefined
-                    return {
-                      title:
-                        params?.budgetId === NewEnum.NEW
-                          ? t("screens.settings.budgets.form.title.create")
-                          : t("screens.settings.budgets.form.title.edit"),
-                    }
-                  }}
+                  options={modifyTitle(
+                    "budgetId",
+                    t("screens.settings.budgets.form.title.create"),
+                    t("screens.settings.budgets.form.title.edit"),
+                  )}
                 />
                 <Stack.Screen
                   name="settings/pending-transactions"
@@ -606,17 +316,11 @@ function AppRootLayout() {
                 />
                 <Stack.Screen
                   name="settings/goals/[goalId]/modify"
-                  options={({ route }) => {
-                    const params = route.params as
-                      | { goalId?: string }
-                      | undefined
-                    return {
-                      title:
-                        params?.goalId === NewEnum.NEW
-                          ? t("screens.settings.goals.form.title.create")
-                          : t("screens.settings.goals.form.title.edit"),
-                    }
-                  }}
+                  options={modifyTitle(
+                    "goalId",
+                    t("screens.settings.goals.form.title.create"),
+                    t("screens.settings.goals.form.title.edit"),
+                  )}
                 />
 
                 {/* settings screens preferences */}
@@ -720,31 +424,19 @@ function AppRootLayout() {
                 />
                 <Stack.Screen
                   name="accounts/[accountId]/modify"
-                  options={({ route }) => {
-                    const params = route.params as
-                      | { accountId?: string }
-                      | undefined
-                    return {
-                      title:
-                        params?.accountId === NewEnum.NEW
-                          ? t("screens.accounts.form.title.create")
-                          : t("screens.accounts.form.title.edit"),
-                    }
-                  }}
+                  options={modifyTitle(
+                    "accountId",
+                    t("screens.accounts.form.title.create"),
+                    t("screens.accounts.form.title.edit"),
+                  )}
                 />
                 <Stack.Screen
                   name="settings/tags/[tagId]"
-                  options={({ route }) => {
-                    const params = route.params as
-                      | { tagId?: string }
-                      | undefined
-                    return {
-                      title:
-                        params?.tagId === NewEnum.NEW
-                          ? t("screens.settings.tags.form.title.create")
-                          : t("screens.settings.tags.form.title.edit"),
-                    }
-                  }}
+                  options={modifyTitle(
+                    "tagId",
+                    t("screens.settings.tags.form.title.create"),
+                    t("screens.settings.tags.form.title.edit"),
+                  )}
                 />
 
                 <Stack.Screen

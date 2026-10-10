@@ -4,7 +4,7 @@ import { EmptyState } from "~/components/ui/empty-state"
 
 import { View } from "../ui/view"
 
-type EmptyScenario =
+export type EmptyScenario =
   | "noData"
   | "allPending"
   | "allTransfers"

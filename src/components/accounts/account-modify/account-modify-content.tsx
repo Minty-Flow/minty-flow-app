@@ -5,12 +5,14 @@ import { AccountTypeInline } from "~/components/accounts/account-type-inline"
 import { ChangeIconInline } from "~/components/change-icon-inline"
 import { ColorVariantInline } from "~/components/color-variant-inline"
 import { IconSvg } from "~/components/icons"
+import { FormNameField } from "~/components/modify-form/form-fields"
+import { modifyFormStyles } from "~/components/modify-form/modify-form.styles"
+import { ModifyFormFooter } from "~/components/modify-form/modify-form-footer"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { CurrencySelectorSheet } from "~/components/selectors/currency-selector-sheet"
 import { SmartAmountInput } from "~/components/smart-amount-input"
-import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import { InfoBanner } from "~/components/ui/info-banner"
-import { Input } from "~/components/ui/input"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
@@ -18,7 +20,6 @@ import type { TranslationKey } from "~/i18n/config"
 import { NewEnum } from "~/types/new"
 
 import { AccountDeleteSection } from "./account-delete-section"
-import { AccountFormFooter } from "./account-form-footer"
 import { AccountFormSheets } from "./account-form-sheets"
 import { accountModifyStyles } from "./account-modify.styles"
 import { AccountSwitchesSection } from "./account-switches-section"
@@ -65,24 +66,18 @@ export function AccountModifyContent({
   } = useAccountForm({ accountId, account })
 
   if (!isAddMode && !account) {
-    return (
-      <View style={accountModifyStyles.container}>
-        <View style={accountModifyStyles.loadingContainer}>
-          <ActivityIndicatorMinty />
-        </View>
-      </View>
-    )
+    return <RouteLoadingState />
   }
 
   const isArchived = account?.isArchived ?? false
 
   return (
-    <View style={accountModifyStyles.container}>
+    <View style={modifyFormStyles.container}>
       <ScrollIntoViewProvider
-        scrollViewStyle={accountModifyStyles.scrollView}
-        contentContainerStyle={accountModifyStyles.scrollContent}
+        scrollViewStyle={modifyFormStyles.scrollView}
+        contentContainerStyle={modifyFormStyles.scrollContent}
       >
-        <View style={accountModifyStyles.form} key={account?.id || NewEnum.NEW}>
+        <View style={modifyFormStyles.form} key={account?.id || NewEnum.NEW}>
           <ChangeIconInline
             currentIcon={formIcon}
             onIconSelected={handleIconSelected}
@@ -90,29 +85,12 @@ export function AccountModifyContent({
             iconSize={64}
           />
 
-          <View style={accountModifyStyles.nameSection}>
-            <Text variant="small" style={accountModifyStyles.label}>
-              {t("screens.accounts.form.namePlaceholder")}
-            </Text>
-            <Controller
-              control={control}
-              name="name"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  placeholder={t("screens.accounts.form.placeholder")}
-                  error={!!errors.name}
-                />
-              )}
-            />
-            {errors.name && (
-              <Text variant="small" style={accountModifyStyles.errorText}>
-                {t(errors.name.message as TranslationKey)}
-              </Text>
-            )}
-          </View>
+          <FormNameField
+            control={control}
+            label={t("screens.accounts.form.namePlaceholder")}
+            placeholder={t("screens.accounts.form.placeholder")}
+            error={errors.name}
+          />
 
           <View style={accountModifyStyles.balanceSection}>
             <Controller
@@ -171,11 +149,11 @@ export function AccountModifyContent({
         </View>
 
         {!isAddMode && (
-          <View style={accountModifyStyles.deleteSection}>
+          <View style={modifyFormStyles.deleteSection}>
             <Button
               variant="ghost"
               onPress={openArchiveSheet}
-              style={accountModifyStyles.actionButton}
+              style={modifyFormStyles.actionButton}
             >
               <IconSvg
                 name={isArchived ? "archive-off-outline" : "archive-outline"}
@@ -197,12 +175,12 @@ export function AccountModifyContent({
         )}
       </ScrollIntoViewProvider>
 
-      <AccountFormFooter
+      <ModifyFormFooter
         formName={formName}
         isAddMode={isAddMode}
         isDirty={isDirty}
         isSubmitting={isSubmitting}
-        isArchived={isArchived}
+        hideSave={isArchived}
         onCancel={handleGoBack}
         onSave={handleSubmit}
       />

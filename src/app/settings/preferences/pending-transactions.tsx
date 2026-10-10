@@ -10,7 +10,7 @@ import {
 import { ChoiceChips } from "~/components/ui/chips"
 import { InfoBanner } from "~/components/ui/info-banner"
 import { PermissionBanner } from "~/components/ui/permission-banner"
-import { useNotificationPermissionStatus } from "~/hooks/use-notification-permission-status"
+import { useNotificationPermissionStatus } from "~/hooks/use-permission-status"
 import type { TranslationKey } from "~/i18n/config"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 

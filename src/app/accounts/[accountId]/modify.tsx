@@ -1,5 +1,6 @@
 import { useLocalSearchParams } from "expo-router"
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { AccountModifyContent } from "~/components/accounts/account-modify/account-modify-content"
 import {
@@ -12,6 +13,7 @@ import { useModifyRouteLoader } from "~/hooks/use-modify-route-loader"
 import { NewEnum } from "~/types/new"
 
 export default function EditAccountScreen() {
+  const { t } = useTranslation()
   const params = useLocalSearchParams<{ accountId: string }>()
   const accountId = params.accountId
   const isAddMode = accountId === NewEnum.NEW || !accountId
@@ -21,8 +23,7 @@ export default function EditAccountScreen() {
     id: accountId,
     data: accountsQuery.data,
     updatedAt: accountsQuery.updatedAt,
-    find: (item, id) => item.id === id,
-    notFoundMessage: "Account not found.",
+    notFoundMessage: t("common.notFound.account"),
   })
   const [transactionCount, setTransactionCount] = useState(0)
 

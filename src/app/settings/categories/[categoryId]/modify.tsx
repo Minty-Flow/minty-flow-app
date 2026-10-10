@@ -1,4 +1,5 @@
 import { useLocalSearchParams } from "expo-router"
+import { useTranslation } from "react-i18next"
 
 import { CategoryModifyContent } from "~/components/categories/category-modify/category-modify-content"
 import {
@@ -11,6 +12,7 @@ import type { CategoryType } from "~/types/categories"
 import { NewEnum } from "~/types/new"
 
 export default function EditCategoryScreen() {
+  const { t } = useTranslation()
   const params = useLocalSearchParams<{
     categoryId: string
     initialType: CategoryType
@@ -21,8 +23,7 @@ export default function EditCategoryScreen() {
     id: params.categoryId,
     data: categoriesQuery.data,
     updatedAt: categoriesQuery.updatedAt,
-    find: (item, id) => item.id === id,
-    notFoundMessage: "Category not found.",
+    notFoundMessage: t("common.notFound.category"),
   })
 
   if (loadState.mode === "new") {

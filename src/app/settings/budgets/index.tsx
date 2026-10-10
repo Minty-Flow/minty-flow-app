@@ -1,20 +1,20 @@
 import { useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
-import { StyleSheet, useUnistyles } from "react-native-unistyles"
+import { StyleSheet } from "react-native-unistyles"
 
 import { BudgetCard } from "~/components/budgets/budget-card"
-import { IconSvg } from "~/components/icons"
 import { RouteLoadingState } from "~/components/route-load-state"
 import { EmptyState } from "~/components/ui/empty-state"
-import { Pressable } from "~/components/ui/pressable"
+import { Fab } from "~/components/ui/fab"
 import { View } from "~/components/ui/view"
-import { useAllBudgetsQuery } from "~/database/drizzle/read-models/budget-read-model"
+import { useBudgetsQuery } from "~/database/drizzle/read-models/budget-read-model"
+import { useCategories } from "~/database/drizzle/read-models/category-read-model"
 import type { Budget } from "~/types/budgets"
 import { NewEnum } from "~/types/new"
 export default function BudgetsScreen() {
-  const { data: budgets, status } = useAllBudgetsQuery()
-  const { theme } = useUnistyles()
+  const { data: budgets, status } = useBudgetsQuery()
+  const categories = useCategories()
   const { t } = useTranslation()
   const router = useRouter()
   const handleAddBudget = () => {
@@ -24,7 +24,11 @@ export default function BudgetsScreen() {
     router.push(`/settings/budgets/${budgetId}`)
   }
   const renderBudgetItem = ({ item }: { item: Budget }) => (
-    <BudgetCard budget={item} onPress={() => handleEditBudget(item.id)} />
+    <BudgetCard
+      budget={item}
+      categories={categories}
+      onPress={() => handleEditBudget(item.id)}
+    />
   )
   if (status === "loading") return <RouteLoadingState />
   return (
@@ -40,15 +44,11 @@ export default function BudgetsScreen() {
           />
         }
         renderItem={renderBudgetItem}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
-      <Pressable
+      <Fab
         onPress={handleAddBudget}
-        style={styles.fab}
         accessibilityLabel={t("screens.settings.budgets.addNew")}
-      >
-        <IconSvg name="plus-outline" size={24} color={theme.colors.onPrimary} />
-      </Pressable>
+      />
     </View>
   )
 }
@@ -61,24 +61,5 @@ const styles = StyleSheet.create((t) => ({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 96,
-  },
-  separator: {
-    height: 0,
-  },
-  fab: {
-    position: "absolute",
-    bottom: 24,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: t.radius,
-    backgroundColor: t.colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: t.colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
   },
 }))

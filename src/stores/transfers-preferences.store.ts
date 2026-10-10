@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 const PERSIST_NAME = "transfers-preferences-store"
 
@@ -45,11 +47,7 @@ export const useTransfersPreferencesStore = create<TransfersPreferencesStore>()(
     }),
     {
       name: PERSIST_NAME,
-      storage: createJSONStorage(() => ({
-        getItem: (name) => transfersPreferencesStorage.getString(name) ?? null,
-        setItem: (name, value) => transfersPreferencesStorage.set(name, value),
-        removeItem: (name) => transfersPreferencesStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(transfersPreferencesStorage),
     },
   ),
 )

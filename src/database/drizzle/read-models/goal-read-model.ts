@@ -43,7 +43,7 @@ export function useGoalsQuery(): LiveReadModelResult<Goal[]> {
   return createLiveReadModelResult(data, [goalsResult, accountLinksResult])
 }
 
-export function useAllGoals(): Goal[] {
+function useAllGoals(): Goal[] {
   return useGoalsQuery().data.filter((goal) => !goal.isArchived)
 }
 
@@ -52,17 +52,9 @@ export function useAllGoalsQuery(): LiveReadModelResult<Goal[]> {
   return { ...result, data: result.data.filter((goal) => !goal.isArchived) }
 }
 
-export function useArchivedGoals(): Goal[] {
-  return useGoalsQuery().data.filter((goal) => goal.isArchived)
-}
-
 export function useArchivedGoalsQuery(): LiveReadModelResult<Goal[]> {
   const result = useGoalsQuery()
   return { ...result, data: result.data.filter((goal) => goal.isArchived) }
-}
-
-export function useGoal(id: string): Goal | undefined {
-  return useGoalsQuery().data.find((goal) => goal.id === id)
 }
 
 export function useGoalsByType(goalType: GoalType): Goal[] {

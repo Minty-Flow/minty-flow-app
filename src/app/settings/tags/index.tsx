@@ -4,11 +4,11 @@ import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
+import { FilterToggleButton } from "~/components/filter-toggle-button"
 import { IconSvg } from "~/components/icons"
 import { RouteLoadingState } from "~/components/route-load-state"
 import { SearchInput } from "~/components/search-input"
 import { TagCard } from "~/components/tags/tag-card"
-import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
@@ -40,16 +40,11 @@ export default function TagsScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <Button
-          variant={"ghost"}
-          size="icon"
+        <FilterToggleButton
+          variant="search"
+          active={showSearch}
           onPress={() => setShowSearch((v) => !v)}
-        >
-          <IconSvg
-            name={showSearch ? "filter-2-x-outline" : "filter-2-search-outline"}
-            size={20}
-          />
-        </Button>
+        />
       ),
     })
   }, [navigation, showSearch])

@@ -150,25 +150,24 @@ function ReorderableRow<T>({
     </AnimatedView>
   )
 }
-interface ReorderableListV2Props<T>
-  extends Omit<FlatListProps<T>, "renderItem"> {
+interface ReorderableListProps<T> extends Omit<FlatListProps<T>, "renderItem"> {
   data: T[]
   onReorder: (newData: T[]) => void
   renderItem: ListRenderItem<T>
   showButtons?: boolean
   keyExtractor?: (item: T, index: number) => string
 }
-export function ReorderableListV2<T>({
+export function ReorderableList<T>({
   data,
   onReorder,
   renderItem,
   showButtons = true,
   keyExtractor,
   ...flatListProps
-}: ReorderableListV2Props<T>) {
+}: ReorderableListProps<T>) {
   if (__DEV__ && !keyExtractor) {
     logger.warn(
-      "ReorderableListV2: no keyExtractor provided. Index-based keys will break reorder animations.",
+      "ReorderableList: no keyExtractor provided. Index-based keys will break reorder animations.",
     )
   }
   const move = (from: number, to: number) => {

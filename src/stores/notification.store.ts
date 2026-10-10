@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 /**
  * MMKV storage instance for notification preferences.
@@ -34,11 +36,7 @@ export const useNotificationStore = create<NotificationStore>()(
     }),
     {
       name: "notification-preferences-store",
-      storage: createJSONStorage(() => ({
-        getItem: (name) => notificationStorage.getString(name) ?? null,
-        setItem: (name, value) => notificationStorage.set(name, value),
-        removeItem: (name) => notificationStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(notificationStorage),
     },
   ),
 )

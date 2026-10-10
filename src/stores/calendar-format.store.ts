@@ -1,7 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
 
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 import { notifyFormatChange } from "~/utils/notify-format-change"
 
 /** "auto" follows the device's clock setting. */
@@ -57,11 +58,7 @@ export const useCalendarFormatStore = create<CalendarFormatStore>()(
     }),
     {
       name: "calendar-format-store",
-      storage: createJSONStorage(() => ({
-        getItem: (name) => calendarFormatStorage.getString(name) ?? null,
-        setItem: (name, value) => calendarFormatStorage.set(name, value),
-        removeItem: (name) => calendarFormatStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(calendarFormatStorage),
     },
   ),
 )

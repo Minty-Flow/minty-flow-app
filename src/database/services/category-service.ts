@@ -1,6 +1,5 @@
-import { and, count, eq, isNotNull } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 
-import { drizzleDb } from "~/database/drizzle/db"
 import { categories, transactions } from "~/database/drizzle/schema"
 import { runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
@@ -61,22 +60,4 @@ export async function deleteCategoryById(id: string): Promise<void> {
       .run()
     db.delete(categories).where(eq(categories.id, id)).run()
   })
-}
-
-export async function getCategoryTransactionCounts(): Promise<
-  Map<string, number>
-> {
-  const rows = drizzleDb
-    .select({ categoryId: transactions.categoryId, cnt: count() })
-    .from(transactions)
-    .where(
-      and(isNotNull(transactions.categoryId), eq(transactions.isDeleted, 0)),
-    )
-    .groupBy(transactions.categoryId)
-    .all()
-  const map = new Map<string, number>()
-  for (const row of rows) {
-    if (row.categoryId) map.set(row.categoryId, row.cnt)
-  }
-  return map
 }

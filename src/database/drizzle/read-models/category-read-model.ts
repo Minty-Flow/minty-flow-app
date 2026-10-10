@@ -3,6 +3,7 @@ import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Category, CategoryType } from "~/types/categories"
+import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
 
 import { drizzleDb } from "../db"
 import { categories, transactions } from "../schema"
@@ -52,6 +53,18 @@ export function useCategories(): Category[] {
 
 export function useCategoriesByType(type: string): Category[] {
   return useCategories().filter((category) => category.type === type)
+}
+
+/** Categories split by transaction type, from a single query. */
+export function useCategoriesByTypeMap(): Record<TransactionType, Category[]> {
+  const categories = useCategories()
+  return {
+    expense: categories.filter((c) => c.type === TransactionTypeEnum.EXPENSE),
+    income: categories.filter((c) => c.type === TransactionTypeEnum.INCOME),
+    transfer: categories.filter(
+      (c) => (c.type as string) === TransactionTypeEnum.TRANSFER,
+    ),
+  }
 }
 
 export function useCategoriesByTypeQuery(

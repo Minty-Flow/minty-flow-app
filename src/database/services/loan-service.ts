@@ -1,15 +1,12 @@
 import { and, eq, sql } from "drizzle-orm"
 
-import { drizzleDb } from "~/database/drizzle/db"
 import {
   accounts,
   loans,
   transactions,
   transactionTags,
 } from "~/database/drizzle/schema"
-import { mapTransaction } from "~/database/mappers/transaction.mapper"
 import { runInTransaction } from "~/database/transaction"
-import type { RowTransaction } from "~/database/types/rows"
 import { generateId } from "~/database/utils/generate-id"
 import { getBalanceDelta } from "~/database/utils/get-balance-delta"
 import { hasAttachmentsFromExtra } from "~/database/utils/has-attachments-from-extra"
@@ -269,31 +266,6 @@ export function isLoanOpeningTransaction(
     tx.loanId === loan.id &&
     tx.type === getOpeningTypeForLoan(loan.loanType)
   )
-}
-
-export async function getLoanOpeningTransaction(
-  loanId: string,
-): Promise<Transaction | null> {
-  const loan = drizzleDb
-    .select({ loanType: loans.loanType })
-    .from(loans)
-    .where(eq(loans.id, loanId))
-    .get()
-  if (!loan) return null
-
-  const openingType = getOpeningTypeForLoan(loan.loanType as LoanType)
-  const row = drizzleDb
-    .select()
-    .from(transactions)
-    .where(
-      and(
-        eq(transactions.loanId, loanId),
-        eq(transactions.type, openingType),
-        eq(transactions.isDeleted, 0),
-      ),
-    )
-    .get()
-  return row ? mapTransaction(row as unknown as RowTransaction) : null
 }
 
 // ── Atomic create with opening entry (LA-1, form path) ───────────────────────

@@ -19,15 +19,6 @@ export interface LoanModifyContentProps {
   prefill?: LoanPrefill
 }
 
-export interface LoanFormFooterProps {
-  formName: string
-  isAddMode: boolean
-  isDirty: boolean
-  isSubmitting: boolean
-  onCancel: () => void
-  onSave: () => void
-}
-
 export interface LoanFormSheetsProps {
   deleteSheetVisible: boolean
   unsavedSheetVisible: boolean

@@ -1,11 +1,12 @@
 /**
- * Account (from) picker block for the transaction form: trigger + inline list with search.
- * Optional scroll-into-view when scroll refs are passed.
+ * Account pickers for the transaction form: trigger + inline list with search.
+ * `FormAccountPicker` picks the (from) account, `FormToAccountPicker` the
+ * transfer destination; both render the shared `AccountPickerField`.
  */
 import { useRouter } from "expo-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { View as RNView, ScrollView } from "react-native"
+import { ScrollView } from "react-native"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
@@ -20,74 +21,67 @@ import { useScrollIntoView } from "~/hooks/use-scroll-into-view"
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Account } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
+import { TransactionTypeEnum } from "~/types/transactions"
 
 import { transactionFormStyles } from "./form.styles"
 
-interface FormAccountPickerProps {
+type SetAccountValue = (
+  name: "accountId" | "toAccountId",
+  value: string,
+  opts: {
+    shouldDirty: boolean
+  },
+) => void
+
+interface AccountPickerFieldProps {
   accounts: Account[]
-  accountId: string
-  toAccountId: string | undefined
-  setValue: (
-    name: "accountId" | "toAccountId",
-    value: string,
-    opts: {
-      shouldDirty: boolean
-    },
-  ) => void
+  selectedId: string | undefined
   selectedAccount: Account | null | undefined
-  balanceAtTransaction: number | null
-  transaction: {
-    id: string
-  } | null
-  accountError: string | undefined
-  /** Called after the selected account changes (new id or cleared). */
-  onAccountChange?: (newAccountId: string) => void
+  /** Balance shown in the trigger for the selected account. */
+  triggerBalance: number | undefined
+  /** Placeholder + accessibility label while closed. */
+  selectLabel: string
+  error?: string
+  onSelect: (accountId: string) => void
 }
-export function FormAccountPicker({
+
+function AccountPickerField({
   accounts,
-  accountId,
-  toAccountId,
-  setValue,
+  selectedId,
   selectedAccount,
-  balanceAtTransaction,
-  transaction,
-  accountError,
-  onAccountChange,
-}: FormAccountPickerProps) {
+  triggerBalance,
+  selectLabel,
+  error,
+  onSelect,
+}: AccountPickerFieldProps) {
   const router = useRouter()
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const { wrapperRef, scrollIntoView } = useScrollIntoView()
-  const [accountPickerOpen, setAccountPickerOpen] = useState(false)
-  const [accountSearchQuery, setAccountSearchQuery] = useState("")
-  const filteredAccountsForPicker = (() => {
-    if (!accountSearchQuery.trim()) return accounts
-    const lower = accountSearchQuery.toLowerCase()
+  const [open, setOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const filteredAccounts = (() => {
+    if (!searchQuery.trim()) return accounts
+    const lower = searchQuery.toLowerCase()
     return accounts.filter((a) => a.name.toLowerCase().includes(lower))
   })()
   const handleToggle = () => {
-    if (!accountPickerOpen) {
+    if (!open) {
       scrollIntoView()
-      setAccountSearchQuery("")
+      setSearchQuery("")
     }
-    setAccountPickerOpen((o) => !o)
+    setOpen((o) => !o)
   }
   return (
-    <RNView ref={wrapperRef} style={transactionFormStyles.fieldBlock}>
+    <View native ref={wrapperRef} style={transactionFormStyles.fieldBlock}>
       <Pressable
         style={[
           transactionFormStyles.accountTrigger,
           selectedAccount && transactionFormStyles.accountTriggerSelected,
-          accountError &&
-            selectedAccount &&
-            transactionFormStyles.accountTriggerError,
+          error && selectedAccount && transactionFormStyles.accountTriggerError,
         ]}
         onPress={handleToggle}
-        accessibilityLabel={
-          accountPickerOpen
-            ? t("common.actions.cancel")
-            : t("screens.accounts.a11y.select")
-        }
+        accessibilityLabel={open ? t("common.actions.cancel") : selectLabel}
       >
         {selectedAccount ? (
           <>
@@ -106,17 +100,13 @@ export function FormAccountPicker({
                 {selectedAccount.name}
               </Text>
               <Money
-                value={
-                  transaction && balanceAtTransaction !== null
-                    ? balanceAtTransaction
-                    : selectedAccount.balance
-                }
+                value={triggerBalance ?? selectedAccount.balance}
                 currency={selectedAccount.currencyCode}
                 style={transactionFormStyles.accountTriggerBalance}
               />
             </View>
             <ChevronIcon
-              direction={accountPickerOpen ? "up" : "trailing"}
+              direction={open ? "up" : "trailing"}
               size={20}
               style={transactionFormStyles.chevronIcon}
             />
@@ -134,23 +124,23 @@ export function FormAccountPicker({
               style={transactionFormStyles.accountTriggerPlaceholder}
               numberOfLines={1}
             >
-              {t("screens.accounts.a11y.select")}
+              {selectLabel}
             </Text>
             <IconSvg
-              name={accountPickerOpen ? "x-outline" : "chevron-down-outline"}
+              name={open ? "x-outline" : "chevron-down-outline"}
               size={20}
               style={transactionFormStyles.chevronIcon}
             />
           </>
         )}
       </Pressable>
-      {accountPickerOpen && (
+      {open && (
         <View native style={transactionFormStyles.inlineAccountPicker}>
           <View native style={transactionFormStyles.searchFieldWrap}>
             <Input
               placeholder={t("screens.accounts.a11y.searchPlaceholder")}
-              value={accountSearchQuery}
-              onChangeText={setAccountSearchQuery}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
               placeholderTextColor={theme.colors.semantic.semi}
             />
           </View>
@@ -159,21 +149,17 @@ export function FormAccountPicker({
             showsVerticalScrollIndicator={false}
             nestedScrollEnabled
           >
-            {filteredAccountsForPicker.map((account) => (
+            {filteredAccounts.map((account) => (
               <Pressable
                 key={account.id}
                 style={[
                   transactionFormStyles.accountPickerRow,
-                  account.id === accountId &&
+                  account.id === selectedId &&
                     transactionFormStyles.inlinePickerRowSelected,
                 ]}
                 onPress={() => {
-                  setValue("accountId", account.id, { shouldDirty: true })
-                  if (toAccountId === account.id) {
-                    setValue("toAccountId", "", { shouldDirty: true })
-                  }
-                  onAccountChange?.(account.id)
-                  setAccountPickerOpen(false)
+                  onSelect(account.id)
+                  setOpen(false)
                 }}
               >
                 <DynamicIcon
@@ -201,7 +187,7 @@ export function FormAccountPicker({
                 </View>
               </Pressable>
             ))}
-            {filteredAccountsForPicker.length === 0 ? (
+            {filteredAccounts.length === 0 ? (
               <Pressable
                 style={transactionFormStyles.accountPickerRowAdd}
                 onPress={() => {
@@ -209,7 +195,7 @@ export function FormAccountPicker({
                     pathname: "/accounts/[accountId]/modify",
                     params: { accountId: NewEnum.NEW },
                   })
-                  setAccountPickerOpen(false)
+                  setOpen(false)
                 }}
                 accessibilityLabel={t("screens.accounts.a11y.add")}
               >
@@ -231,9 +217,96 @@ export function FormAccountPicker({
           </ScrollView>
         </View>
       )}
-      {accountError ? (
-        <Text style={transactionFormStyles.fieldError}>{accountError}</Text>
+      {error ? (
+        <Text style={transactionFormStyles.fieldError}>{error}</Text>
       ) : null}
-    </RNView>
+    </View>
+  )
+}
+
+interface FormAccountPickerProps {
+  accounts: Account[]
+  accountId: string
+  toAccountId: string | undefined
+  setValue: SetAccountValue
+  selectedAccount: Account | null | undefined
+  balanceAtTransaction: number | null
+  transaction: {
+    id: string
+  } | null
+  accountError: string | undefined
+  /** Called after the selected account changes (new id or cleared). */
+  onAccountChange?: (newAccountId: string) => void
+}
+
+export function FormAccountPicker({
+  accounts,
+  accountId,
+  toAccountId,
+  setValue,
+  selectedAccount,
+  balanceAtTransaction,
+  transaction,
+  accountError,
+  onAccountChange,
+}: FormAccountPickerProps) {
+  const { t } = useTranslation()
+  return (
+    <AccountPickerField
+      accounts={accounts}
+      selectedId={accountId}
+      selectedAccount={selectedAccount}
+      triggerBalance={
+        transaction && balanceAtTransaction !== null
+          ? balanceAtTransaction
+          : undefined
+      }
+      selectLabel={t("screens.accounts.a11y.select")}
+      error={accountError}
+      onSelect={(id) => {
+        setValue("accountId", id, { shouldDirty: true })
+        if (toAccountId === id) {
+          setValue("toAccountId", "", { shouldDirty: true })
+        }
+        onAccountChange?.(id)
+      }}
+    />
+  )
+}
+
+interface FormToAccountPickerProps {
+  accounts: Account[]
+  toAccountId: string | undefined
+  accountId: string
+  setValue: SetAccountValue
+  selectedToAccount: Account | null | undefined
+  transactionType: string
+}
+
+/** Transfer destination; renders nothing for non-transfer transactions. */
+export function FormToAccountPicker({
+  accounts,
+  toAccountId,
+  accountId,
+  setValue,
+  selectedToAccount,
+  transactionType,
+}: FormToAccountPickerProps) {
+  const { t } = useTranslation()
+  if (transactionType !== TransactionTypeEnum.TRANSFER) return null
+  return (
+    <AccountPickerField
+      accounts={accounts}
+      selectedId={toAccountId}
+      selectedAccount={selectedToAccount}
+      triggerBalance={undefined}
+      selectLabel={t("screens.accounts.a11y.selectTo")}
+      onSelect={(id) => {
+        setValue("toAccountId", id, { shouldDirty: true })
+        if (accountId === id) {
+          setValue("accountId", "", { shouldDirty: true })
+        }
+      }}
+    />
   )
 }
