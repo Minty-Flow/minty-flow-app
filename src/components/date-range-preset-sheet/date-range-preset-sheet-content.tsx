@@ -9,14 +9,14 @@ import {
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView, View } from "react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useUnistyles } from "react-native-unistyles"
 
 import { MonthGrid } from "~/components/month-grid"
+import { sheetHeaderStyles } from "~/components/selectors/styles"
 import { Button } from "~/components/ui/button"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import {
-  DateTimePickerModal,
+  DateTimePickerSheet,
   useDateTimePicker,
 } from "~/components/ui/date-time-picker"
 import { Input } from "~/components/ui/input"
@@ -25,23 +25,22 @@ import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { formatLoanDate } from "~/utils/time-utils"
 
-import { dateRangePresetModalStyles as styles } from "./date-range-preset-modal.styles"
+import { dateRangePresetSheetStyles as styles } from "./date-range-preset-sheet.styles"
 import { PRESETS } from "./presets"
 import type {
-  DateRangePresetModalContentProps,
+  DateRangePresetSheetContentProps,
   ExpandedSection,
   PresetButtonId,
   PresetOption,
 } from "./types"
-export const DateRangePresetModalContent = ({
+export const DateRangePresetSheetContent = ({
   initialStart,
   initialEnd,
   onSave,
   onRequestClose,
-}: DateRangePresetModalContentProps) => {
+}: DateRangePresetSheetContentProps) => {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
-  const insets = useSafeAreaInsets()
   const now = new Date()
   const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null)
   /** Custom range */
@@ -125,8 +124,8 @@ export const DateRangePresetModalContent = ({
   const mutedColor = theme.colors.semantic?.semi ?? theme.colors.onSurface
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
-        <Text variant="h3" style={styles.headerTitle}>
+      <View style={sheetHeaderStyles.header}>
+        <Text style={sheetHeaderStyles.title}>
           {t("components.dateRange.title")}
         </Text>
       </View>
@@ -320,7 +319,7 @@ export const DateRangePresetModalContent = ({
         </View>
       </ScrollView>
 
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}>
+      <View style={styles.bottomBar}>
         <Button variant="outline" onPress={onRequestClose} style={{ flex: 1 }}>
           <Text variant="default">{t("common.actions.cancel")}</Text>
         </Button>
@@ -328,13 +327,13 @@ export const DateRangePresetModalContent = ({
 
       {startDatePicker.pickerElement}
       {endDatePicker.pickerElement}
-      <DateTimePickerModal
-        {...startDatePicker.modalProps}
+      <DateTimePickerSheet
+        {...startDatePicker.sheetProps}
         title={t("components.dateRange.startDate")}
       />
 
-      <DateTimePickerModal
-        {...endDatePicker.modalProps}
+      <DateTimePickerSheet
+        {...endDatePicker.sheetProps}
         title={t("components.dateRange.endDate")}
       />
     </View>

@@ -1,11 +1,11 @@
 /**
- * Shared styles for selector modals (currency, contact, etc.):
- * trigger row + modal shell (header, search, list area) + list item base.
+ * Shared styles for the selectors (currency, contact, etc.):
+ * trigger row + sheet shell (header, search, list area) + list item base.
  */
 
 import { StyleSheet } from "react-native-unistyles"
 
-/** Trigger row: same look for all selector modals (currency, contact). */
+/** Trigger row: same look for all selectors (currency, contact). */
 export const triggerStyles = StyleSheet.create((theme) => ({
   wrapper: {
     width: "100%",
@@ -38,12 +38,8 @@ export const triggerStyles = StyleSheet.create((theme) => ({
   },
 }))
 
-/** Modal shell and list: shared across currency and contact modals. */
-export const modalStyles = StyleSheet.create((theme) => ({
-  modalContainer: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
+/** Sheet shell and list: shared across the currency and contact sheets. */
+export const sheetStyles = StyleSheet.create((theme) => ({
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -95,5 +91,19 @@ export const modalStyles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+  },
+}))
+
+/** Header for selector sheets: centered title, no divider, tight top. */
+export const sheetHeaderStyles = StyleSheet.create((theme) => ({
+  header: {
+    alignItems: "center",
+    paddingBottom: 8,
+  },
+  title: {
+    ...theme.typography.headlineSmall,
+    fontWeight: "600",
+    color: theme.colors.onSurface,
+    textAlign: "center",
   },
 }))

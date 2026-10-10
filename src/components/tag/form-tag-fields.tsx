@@ -11,7 +11,7 @@ import { StyleSheet } from "react-native-unistyles"
 import { ChangeIconInline } from "~/components/change-icon-inline"
 import { ColorVariantInline } from "~/components/color-variant-inline"
 import { FormLocationPicker } from "~/components/location/form-location-picker"
-import { ContactSelectorModal } from "~/components/selector-modals/contact-selector-modal"
+import { ContactSelectorSheet } from "~/components/selectors/contact-selector-sheet"
 import { LocationPickerModal } from "~/components/transaction/location-picker-modal"
 import { Input } from "~/components/ui/input"
 import { Separator } from "~/components/ui/separator"
@@ -115,7 +115,7 @@ export const FormTagFields = ({
       <View style={styles.settingsList}>
         {/* Person: contact selector – inline with search and scroll */}
         {formType === "contact" && (
-          <ContactSelectorModal
+          <ContactSelectorSheet
             onContactSelected={(contact) => {
               if (contact.name) {
                 setValue("name", contact.name, { shouldDirty: true })
@@ -146,6 +146,10 @@ export const FormTagFields = ({
               visible={locationPickerVisible}
               initialLocation={selectedLocation}
               onConfirm={handleLocationConfirm}
+              onDelete={() => {
+                handleLocationClear()
+                setLocationPickerVisible(false)
+              }}
               onRequestClose={() => setLocationPickerVisible(false)}
             />
           </>

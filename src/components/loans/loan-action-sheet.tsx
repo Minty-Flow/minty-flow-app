@@ -1,27 +1,28 @@
 /**
- * LoanActionModal
+ * LoanActionSheet
  *
- * Bottom-sheet style modal shown on the loan detail page.
+ * Bottom sheet shown on the loan detail page.
  * Offers two action options:
  *   - Full action:    "Collect All" (LENT) or "Settle All" (BORROWED)
  *   - Partial action: "Partially Collect" (LENT) or "Partially Settle" (BORROWED)
  *
- * Follows the option-row pattern from edit-recurring-modal.tsx.
+ * Follows the option-row pattern from edit-recurring-sheet.tsx.
  */
 
 import { useTranslation } from "react-i18next"
-import { Modal, Pressable, useWindowDimensions, View } from "react-native"
+import { Pressable, View } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
+import { BottomSheet } from "~/components/ui/bottom-sheet"
 import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { type LoanType, LoanTypeEnum } from "~/types/loans"
 
 import { ChevronIcon } from "../ui/chevron-icon"
 
-interface LoanActionModalProps {
+interface LoanActionSheetProps {
   visible: boolean
   loanType: LoanType
   isLoading: boolean
@@ -81,23 +82,21 @@ function OptionRow({
   )
 }
 
-export function LoanActionModal({
+export function LoanActionSheet({
   visible,
   loanType,
   isLoading,
   onFullAction,
   onPartialAction,
   onClose,
-}: LoanActionModalProps) {
+}: LoanActionSheetProps) {
   const { t } = useTranslation()
-  const { width } = useWindowDimensions()
-  const maxCardWidth = Math.min(width - 48, 400)
   const { theme } = useUnistyles()
 
   const isLent = loanType === LoanTypeEnum.LENT
 
   // Translation keys vary by loan type
-  const modalTitle = isLent
+  const sheetTitle = isLent
     ? t("screens.settings.loans.actions.collect")
     : t("screens.settings.loans.actions.settle")
 
@@ -118,109 +117,67 @@ export function LoanActionModal({
     : t("screens.settings.loans.actions.partialSettleDesc")
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-      onRequestClose={onClose}
-      accessibilityViewIsModal
+    <BottomSheet
+      isPresented={visible}
+      onDismiss={onClose}
+      dismissable={!isLoading}
     >
-      <View style={styles.modalRoot}>
-        <Pressable
-          style={styles.backdrop}
-          onPress={onClose}
-          accessibilityLabel={t("common.actions.close")}
-        />
-        <View style={styles.content}>
+      <View style={styles.card}>
+        {/* Icon + title header */}
+        <View style={styles.header}>
           <View
             style={[
-              styles.card,
-              {
-                maxWidth: maxCardWidth,
-                backgroundColor: theme.colors.surface,
-                borderRadius: theme.radius ?? 16,
-              },
+              styles.iconCircle,
+              { backgroundColor: `${theme.colors.primary}20` },
             ]}
           >
-            {/* Icon + title header */}
-            <View style={styles.header}>
-              <View
-                style={[
-                  styles.iconCircle,
-                  { backgroundColor: `${theme.colors.primary}20` },
-                ]}
-              >
-                <IconSvg
-                  name="wallet-outline"
-                  size={24}
-                  color={theme.colors.primary}
-                />
-              </View>
-              <Text style={styles.title}>{modalTitle}</Text>
-            </View>
-
-            {/* Action option rows */}
-            <View style={styles.optionsCard}>
-              <OptionRow
-                label={fullActionLabel}
-                sublabel={fullActionSublabel}
-                onPress={onFullAction}
-                showSpinner={isLoading}
-                disabled={isLoading}
-              />
-              <OptionRow
-                label={partialActionLabel}
-                sublabel={partialActionSublabel}
-                onPress={onPartialAction}
-                showSpinner={false}
-                disabled={isLoading}
-                isLast
-              />
-            </View>
-
-            {/* Cancel button */}
-            <Pressable
-              style={({ pressed }) => [
-                styles.cancelButton,
-                pressed && styles.cancelButtonPressed,
-              ]}
-              onPress={onClose}
-              disabled={isLoading}
-            >
-              <Text style={styles.cancelText}>
-                {t("common.actions.cancel")}
-              </Text>
-            </Pressable>
+            <IconSvg
+              name="wallet-outline"
+              size={24}
+              color={theme.colors.primary}
+            />
           </View>
+          <Text style={styles.title}>{sheetTitle}</Text>
         </View>
+
+        {/* Action option rows */}
+        <View style={styles.optionsCard}>
+          <OptionRow
+            label={fullActionLabel}
+            sublabel={fullActionSublabel}
+            onPress={onFullAction}
+            showSpinner={isLoading}
+            disabled={isLoading}
+          />
+          <OptionRow
+            label={partialActionLabel}
+            sublabel={partialActionSublabel}
+            onPress={onPartialAction}
+            showSpinner={false}
+            disabled={isLoading}
+            isLast
+          />
+        </View>
+
+        {/* Cancel button */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.cancelButton,
+            pressed && styles.cancelButtonPressed,
+          ]}
+          onPress={onClose}
+          disabled={isLoading}
+        >
+          <Text style={styles.cancelText}>{t("common.actions.cancel")}</Text>
+        </Pressable>
       </View>
-    </Modal>
+    </BottomSheet>
   )
 }
 
 const styles = StyleSheet.create((theme) => ({
-  modalRoot: {
-    flex: 1,
-  },
-  backdrop: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: theme.colors.shadow,
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 24,
-  },
   card: {
-    width: "100%",
-    paddingHorizontal: 20,
-    paddingVertical: 24,
+    paddingVertical: 8,
     gap: 16,
   },
   header: {

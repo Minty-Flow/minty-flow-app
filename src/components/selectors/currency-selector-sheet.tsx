@@ -1,17 +1,16 @@
 /**
- * Currency selector as a modal: trigger row (shared style) + full-screen modal
- * with search and FlatList. Currencies are local/static — no async, no Suspense.
- * FlatList virtualization handles performance; search auto-focuses when modal opens.
+ * Currency selector: trigger row (shared style) + native bottom sheet with
+ * search and FlatList. Currencies are local/static — no async, no Suspense.
+ * FlatList virtualization handles performance;
  */
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FlatList, Modal, View } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
+import { FlatList, View } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
 import { SearchInput } from "~/components/search-input"
-import { Button } from "~/components/ui/button"
+import { BottomSheet } from "~/components/ui/bottom-sheet"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { EmptyState } from "~/components/ui/empty-state"
 import { ListItem } from "~/components/ui/list-item"
@@ -19,9 +18,9 @@ import { Text } from "~/components/ui/text"
 import { currencyRegistryService } from "~/services/currency-registry"
 import type { Currency } from "~/types/currency"
 
-import { modalStyles, triggerStyles } from "./styles"
+import { sheetHeaderStyles, sheetStyles, triggerStyles } from "./styles"
 
-interface CurrencySelectorModalProps {
+interface CurrencySelectorSheetProps {
   selectedCurrencyCode: string
   onCurrencySelected: (code: string) => void
   editable?: boolean
@@ -40,13 +39,13 @@ const CurrencyRow = function CurrencyRow({
   return (
     <ListItem
       style={({ pressed }: { pressed: boolean }) => [
-        modalStyles.item,
-        pressed && modalStyles.itemPressed,
-        isSelected && modalStyles.itemSelected,
+        sheetStyles.item,
+        pressed && sheetStyles.itemPressed,
+        isSelected && sheetStyles.itemSelected,
       ]}
       onPress={() => onSelect(item.code)}
     >
-      <View style={modalStyles.itemLeft}>
+      <View style={sheetStyles.itemLeft}>
         <Text variant="large" style={currencyItemStyles.currencyName}>
           {item.name}
         </Text>
@@ -57,7 +56,7 @@ const CurrencyRow = function CurrencyRow({
               : "")}
         </Text>
       </View>
-      <View style={modalStyles.itemRight}>
+      <View style={sheetStyles.itemRight}>
         <Text variant="large" style={currencyItemStyles.currencyCode}>
           {item.code}
         </Text>
@@ -78,11 +77,11 @@ const currencyItemStyles = StyleSheet.create((theme) => ({
     color: theme.colors.onSurface,
   },
 }))
-export function CurrencySelectorModal({
+export function CurrencySelectorSheet({
   selectedCurrencyCode,
   onCurrencySelected,
   editable = true,
-}: CurrencySelectorModalProps) {
+}: CurrencySelectorSheetProps) {
   const { t } = useTranslation()
   const [visible, setVisible] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -144,26 +143,19 @@ export function CurrencySelectorModal({
         </ListItem>
       </View>
 
-      <Modal
-        visible={visible}
-        animationType="slide"
-        onRequestClose={close}
-        statusBarTranslucent
-        accessibilityViewIsModal
+      <BottomSheet
+        isPresented={visible}
+        onDismiss={close}
+        contentPadding={0}
+        heightFraction={0.75}
       >
-        <SafeAreaView
-          style={modalStyles.modalContainer}
-          edges={["top", "bottom"]}
-        >
-          <View style={modalStyles.header}>
-            <Text variant="default" style={modalStyles.headerTitle}>
+        <View style={{ flex: 1 }}>
+          <View style={sheetHeaderStyles.header}>
+            <Text variant="default" style={sheetHeaderStyles.title}>
               {t("components.selectors.currency.title")}
             </Text>
-            <Button variant="ghost" onPress={close}>
-              <Text variant="default">{t("common.actions.cancel")}</Text>
-            </Button>
           </View>
-          <View style={modalStyles.searchContainer}>
+          <View style={sheetStyles.searchContainer}>
             <SearchInput
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -173,7 +165,7 @@ export function CurrencySelectorModal({
               )}
             />
           </View>
-          <View style={modalStyles.listWrapper}>
+          <View style={sheetStyles.listWrapper}>
             <FlatList
               data={filteredCurrencies}
               keyExtractor={keyExtractor}
@@ -184,13 +176,13 @@ export function CurrencySelectorModal({
               windowSize={11}
               extraData={selectedCurrencyCode}
               keyboardShouldPersistTaps="always"
-              style={modalStyles.list}
-              contentContainerStyle={modalStyles.listContent}
+              style={sheetStyles.list}
+              contentContainerStyle={sheetStyles.listContent}
               showsVerticalScrollIndicator
             />
           </View>
-        </SafeAreaView>
-      </Modal>
+        </View>
+      </BottomSheet>
     </>
   )
 }

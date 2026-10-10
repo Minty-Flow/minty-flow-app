@@ -56,7 +56,7 @@ import { getDefaultValues, mergeReducer } from "./form-utils"
 import { KIND_ICONS } from "./kind-info"
 import { onKindChange } from "./on-kind-change"
 import type {
-  ModalState,
+  OverlayState,
   RecurringState,
   TransactionFormV4Props,
 } from "./types"
@@ -90,12 +90,12 @@ export function useTransactionForm({
     useTransactionLocationStore()
   const usdCurrency = currencyRegistryService.getCurrencyByCode("USD")
   const usdCode = usdCurrency?.code ?? "USD"
-  const [modals, setModals] = useReducer(mergeReducer<ModalState>, {
-    unsavedModalVisible: false,
-    editRecurringModalVisible: false,
-    deleteRecurringModalVisible: false,
-    deleteLoanModalVisible: false,
-    destroyModalVisible: false,
+  const [overlays, setOverlays] = useReducer(mergeReducer<OverlayState>, {
+    unsavedSheetVisible: false,
+    editRecurringSheetVisible: false,
+    deleteRecurringSheetVisible: false,
+    deleteLoanSheetVisible: false,
+    destroySheetVisible: false,
     notesModalVisible: false,
     locationPickerVisible: false,
     pendingEditPayload: null,
@@ -174,8 +174,12 @@ export function useTransactionForm({
   // Loans linkable from the selected account. Category is intentionally NOT
   // required to match: a loan is created against one account+category, but
   // linking a repayment must not force the user onto that exact category.
+  // Closed (fully repaid) loans can't take another repayment, so they are not
+  // offered — except the one this transaction is already linked to.
   const accountLoans = accountId
-    ? loans.filter((l) => l.accountId === accountId)
+    ? loans.filter(
+        (l) => l.accountId === accountId && (!l.isClosed || l.id === loanId),
+      )
     : []
   // Filter budgets by selected account AND category
   const accountBudgets = accountId
@@ -238,7 +242,7 @@ export function useTransactionForm({
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSaving,
-    onBlock: () => setModals({ unsavedModalVisible: true }),
+    onBlock: () => setOverlays({ unsavedSheetVisible: true }),
   })
   const [recurring, setRecurring] = useReducer(mergeReducer<RecurringState>, {
     recurrence: { interval: 1, unit: "month" },
@@ -272,7 +276,7 @@ export function useTransactionForm({
   } = useFormDatePicker(recurring, setRecurring, watch, setValue)
   const { isCapturingLocation, handleLocationConfirm, handleClearLocation } =
     useFormLocation(isNew, locationEnabled, autoAttach, setValue, () =>
-      setModals({ locationPickerVisible: false }),
+      setOverlays({ locationPickerVisible: false }),
     )
   const balanceAtTransaction = useBalanceAtTransaction(transaction)
   const derivedTransferTitle = (() => {
@@ -597,7 +601,7 @@ export function useTransactionForm({
         }
       } else if (transaction) {
         if (transaction.recurringId && recurringRule) {
-          setModals({
+          setOverlays({
             pendingEditPayload: {
               amount: payload.amount,
               type: payload.type,
@@ -612,7 +616,7 @@ export function useTransactionForm({
               extra: payload.extra,
               subtype: payload.subtype,
             },
-            editRecurringModalVisible: true,
+            editRecurringSheetVisible: true,
           })
           return
         }
@@ -636,7 +640,7 @@ export function useTransactionForm({
   }
   const handleCancelPress = () => {
     if (isDirty) {
-      setModals({ unsavedModalVisible: true })
+      setOverlays({ unsavedSheetVisible: true })
     } else {
       allowNavigation()
       router.back()
@@ -645,11 +649,11 @@ export function useTransactionForm({
   const handleDeleteConfirm = () => {
     if (!transaction) return
     if (isLoanOpeningEntry) {
-      setModals({ deleteLoanModalVisible: true })
+      setOverlays({ deleteLoanSheetVisible: true })
       return
     }
     if (transaction.recurringId && recurringRule) {
-      setModals({ deleteRecurringModalVisible: true })
+      setOverlays({ deleteRecurringSheetVisible: true })
       return
     }
     const promise =
@@ -674,7 +678,7 @@ export function useTransactionForm({
   }
   const handleDeleteLoanConfirm = async () => {
     if (!transaction?.loanId) return
-    setModals({ deleteLoanModalVisible: false })
+    setOverlays({ deleteLoanSheetVisible: false })
     try {
       await deleteLoanById(transaction.loanId)
       synchronizePlannedTransactionNotifications().catch(() => {})
@@ -709,11 +713,11 @@ export function useTransactionForm({
   }
   const handleDestroy = () => {
     if (!transaction) return
-    setModals({ destroyModalVisible: true })
+    setOverlays({ destroySheetVisible: true })
   }
   const handleDestroyConfirm = async () => {
     if (!transaction) return
-    setModals({ destroyModalVisible: false })
+    setOverlays({ destroySheetVisible: false })
     try {
       await destroyTransaction(transaction.id)
       Toast.success({
@@ -729,11 +733,8 @@ export function useTransactionForm({
       })
     }
   }
-  const addTag = (tagId: string) => {
-    const current = tagIds ?? []
-    if (current.includes(tagId)) return
-    setValue("tags", [...current, tagId], { shouldDirty: true })
-  }
+  const setTags = (ids: string[]) =>
+    setValue("tags", ids, { shouldDirty: true })
   const removeTag = (tagId: string) => {
     setValue(
       "tags",
@@ -741,7 +742,6 @@ export function useTransactionForm({
       { shouldDirty: true },
     )
   }
-  const clearTags = () => setValue("tags", [], { shouldDirty: true })
   const handleTransactionTypeChange = (type: TransactionFormValues["type"]) => {
     onTransactionTypeChange(type)
     setValue("type", type, { shouldDirty: true })
@@ -856,9 +856,9 @@ export function useTransactionForm({
     amountError,
     accountError,
 
-    // modals
-    modals,
-    setModals,
+    // overlays
+    overlays,
+    setOverlays,
 
     // recurring
     recurring,
@@ -907,8 +907,7 @@ export function useTransactionForm({
     handleRestore,
     handleDestroy,
     handleDestroyConfirm,
-    addTag,
+    setTags,
     removeTag,
-    clearTags,
   }
 }

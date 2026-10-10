@@ -1,48 +1,48 @@
 import { useTranslation } from "react-i18next"
 
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import type { Category } from "~/types/categories"
 
-interface CategoryFormModalsProps {
-  deleteModalVisible: boolean
-  unsavedModalVisible: boolean
+interface CategoryFormSheetsProps {
+  deleteSheetVisible: boolean
+  unsavedSheetVisible: boolean
   isAddMode: boolean
   category: Category | undefined
-  onCloseDeleteModal: () => void
-  onCloseUnsavedModal: () => void
+  onCloseDeleteSheet: () => void
+  onCloseUnsavedSheet: () => void
   onConfirmDelete: () => void
   onDiscardAndNavigate: () => void
 }
 
-export function CategoryFormModals({
-  deleteModalVisible,
-  unsavedModalVisible,
+export function CategoryFormSheets({
+  deleteSheetVisible,
+  unsavedSheetVisible,
   isAddMode,
   category,
-  onCloseDeleteModal,
-  onCloseUnsavedModal,
+  onCloseDeleteSheet,
+  onCloseUnsavedSheet,
   onConfirmDelete,
   onDiscardAndNavigate,
-}: CategoryFormModalsProps) {
+}: CategoryFormSheetsProps) {
   const { t } = useTranslation()
 
   return (
     <>
       {!isAddMode && category && (
-        <ConfirmModal
-          visible={deleteModalVisible}
-          onRequestClose={onCloseDeleteModal}
+        <ConfirmSheet
+          visible={deleteSheetVisible}
+          onRequestClose={onCloseDeleteSheet}
           onConfirm={onConfirmDelete}
-          title={t("components.categories.form.deleteModal.title", {
+          title={t("components.categories.form.deleteSheet.title", {
             name: category.name,
           })}
           description={
             category.transactionCount > 0
               ? t(
-                  "components.categories.form.deleteModal.descriptionWithCount",
+                  "components.categories.form.deleteSheet.descriptionWithCount",
                   { count: category.transactionCount },
                 )
-              : t("components.categories.form.deleteModal.descriptionEmpty")
+              : t("components.categories.form.deleteSheet.descriptionEmpty")
           }
           confirmLabel={t("common.actions.delete")}
           cancelLabel={t("common.actions.cancel")}
@@ -51,12 +51,12 @@ export function CategoryFormModals({
         />
       )}
 
-      <ConfirmModal
-        visible={unsavedModalVisible}
-        onRequestClose={onCloseUnsavedModal}
+      <ConfirmSheet
+        visible={unsavedSheetVisible}
+        onRequestClose={onCloseUnsavedSheet}
         onConfirm={onDiscardAndNavigate}
-        title={t("common.modals.closeWithoutSaving")}
-        description={t("common.modals.unsavedDescription")}
+        title={t("common.sheets.closeWithoutSaving")}
+        description={t("common.sheets.unsavedDescription")}
         confirmLabel={t("common.actions.discard")}
         cancelLabel={t("common.actions.cancel")}
         variant="default"

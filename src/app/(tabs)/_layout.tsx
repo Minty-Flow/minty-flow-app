@@ -23,6 +23,7 @@ import { FAB_BUTTON_STYLE } from "~/constants/fab-button"
 import { DirectionEnum } from "~/i18n/language.constants"
 import { useButtonPlacementStore } from "~/stores/button-placement.store"
 import {
+  hideDevelopmentNoticeForSession,
   isDevelopmentNoticeHiddenForSession,
   useDevelopmentNoticeStore,
 } from "~/stores/development-notice.store"
@@ -243,6 +244,9 @@ const TabLayout = () => {
     if (developmentNoticeDismissed || isDevelopmentNoticeHiddenForSession()) {
       return
     }
+    // Once per session: this layout remounts after a restore/navigation, which
+    // would otherwise show the notice again (the root upgrade gate does the same).
+    hideDevelopmentNoticeForSession()
     Alert.alert("A quick note", t("common.developmentNotice.message"), [
       {
         text: "Don't show again",

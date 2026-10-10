@@ -5,10 +5,10 @@ import { FlatList, View as RNView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { BillItemCard } from "~/components/bill-splitter/bill-item-card"
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
-import { InfoModal } from "~/components/info-modal"
+import { InfoSheet } from "~/components/info-sheet"
 import { Money } from "~/components/money"
 import { RouteLoadingState } from "~/components/route-load-state"
 import { Button } from "~/components/ui/button"
@@ -334,14 +334,14 @@ export default function BillSplitterScreen() {
         <IconSvg name="plus-outline" size={24} color={theme.colors.onPrimary} />
       </Pressable>
 
-      {/* Modals */}
-      <InfoModal
+      {/* Sheets */}
+      <InfoSheet
         visible={infoVisible}
         onRequestClose={() => setInfoVisible(false)}
         title={t("screens.settings.billSplitter.info.title")}
         description={t("screens.settings.billSplitter.info.description")}
       />
-      <ConfirmModal
+      <ConfirmSheet
         visible={clearVisible}
         onRequestClose={() => setClearVisible(false)}
         onConfirm={clearBill}

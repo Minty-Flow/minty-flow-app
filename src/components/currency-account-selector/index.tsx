@@ -28,7 +28,7 @@ import type { Account } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
 import { Toast } from "~/utils/toast"
 
-import { triggerStyles } from "../selector-modals/styles"
+import { triggerStyles } from "../selectors/styles"
 import { currencyAccountStyles } from "./currency-account-selector.styles"
 import type { CurrencyAccountSelectorProps } from "./types"
 

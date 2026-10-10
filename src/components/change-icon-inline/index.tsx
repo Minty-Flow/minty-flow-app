@@ -12,7 +12,7 @@ import type { TextInput as RNTextInput } from "react-native"
 import { View } from "react-native"
 import { useUnistyles } from "react-native-unistyles"
 
-import { IconSelectionModal } from "~/components/change-icon-inline/icon-selection-modal"
+import { IconSelectionSheet } from "~/components/change-icon-inline/icon-selection-sheet"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { Pressable } from "~/components/ui/pressable"
 import type { MintyColorScheme } from "~/styles/theme/types"
@@ -41,7 +41,7 @@ export function ChangeIconInline({
   const [mode, setMode] = useState<InlineMode>(null)
   const [emojiInputValue, setEmojiInputValue] = useState("")
   const [imageUri, setImageUri] = useState<string | null>(null)
-  const [iconModalVisible, setIconModalVisible] = useState(false)
+  const [iconSheetVisible, setIconSheetVisible] = useState(false)
   const emojiInputRef = useRef<ComponentRef<typeof RNTextInput>>(null)
 
   const colorScheme: MintyColorScheme = colorSchemeProp ?? {
@@ -67,7 +67,7 @@ export function ChangeIconInline({
   }
 
   const handleIconPress = () => {
-    setIconModalVisible(true)
+    setIconSheetVisible(true)
   }
 
   const handleEmojiLetterPress = () => {
@@ -220,14 +220,14 @@ export function ChangeIconInline({
         </View>
       )}
 
-      <IconSelectionModal
-        visible={iconModalVisible}
-        onClose={() => setIconModalVisible(false)}
+      <IconSelectionSheet
+        visible={iconSheetVisible}
+        onClose={() => setIconSheetVisible(false)}
         colorScheme={colorScheme}
         initialIcon={currentIcon}
         onIconSelected={(selectedIcon) => {
           onIconSelected?.(selectedIcon)
-          setIconModalVisible(false)
+          setIconSheetVisible(false)
           setExpanded(false)
         }}
       />

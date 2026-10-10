@@ -66,14 +66,14 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
   const formBalance = watch("balance")
   const formIsPrimary = watch("isPrimary")
   const navigation = useNavigation()
-  const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
+  const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSubmitting,
-    onBlock: () => setUnsavedModalVisible(true),
+    onBlock: () => setUnsavedSheetVisible(true),
   })
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-  const [archiveModalVisible, setArchiveModalVisible] = useState(false)
+  const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
+  const [archiveSheetVisible, setArchiveSheetVisible] = useState(false)
   const onSubmit = async (data: AddAccountsFormSchema) => {
     try {
       if (isAddMode) {
@@ -177,8 +177,8 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
     formCurrencyCode,
     formIsPrimary,
     currentColorScheme,
-    unsavedModalVisible,
-    deleteModalVisible,
+    unsavedSheetVisible,
+    deleteSheetVisible,
     allowNavigation,
     handleGoBack,
     setValue,
@@ -188,12 +188,12 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
     handleColorSelected,
     handleColorCleared,
     handleCurrencySelected,
-    openDeleteModal: () => setDeleteModalVisible(true),
-    closeDeleteModal: () => setDeleteModalVisible(false),
-    closeUnsavedModal: () => setUnsavedModalVisible(false),
-    archiveModalVisible,
+    openDeleteSheet: () => setDeleteSheetVisible(true),
+    closeDeleteSheet: () => setDeleteSheetVisible(false),
+    closeUnsavedSheet: () => setUnsavedSheetVisible(false),
+    archiveSheetVisible,
     handleArchive,
-    openArchiveModal: () => setArchiveModalVisible(true),
-    closeArchiveModal: () => setArchiveModalVisible(false),
+    openArchiveSheet: () => setArchiveSheetVisible(true),
+    closeArchiveSheet: () => setArchiveSheetVisible(false),
   }
 }

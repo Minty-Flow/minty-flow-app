@@ -15,7 +15,7 @@ import { FormCategoryPicker } from "~/components/transaction/transaction-form-v4
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import {
-  DateTimePickerModal,
+  DateTimePickerSheet,
   useDateTimePicker,
 } from "~/components/ui/date-time-picker"
 import { Input } from "~/components/ui/input"
@@ -42,7 +42,7 @@ import { formatShortMonthDayYear } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
 import { LoanFormFooter } from "./loan-form-footer"
-import { LoanFormModals } from "./loan-form-modals"
+import { LoanFormSheets } from "./loan-form-sheets"
 import { loanModifyStyles } from "./loan-modify.styles"
 import type { LoanModifyContentProps } from "./types"
 export function LoanModifyContent({
@@ -130,13 +130,13 @@ export function LoanModifyContent({
     }
   }
   const navigation = useNavigation()
-  const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
+  const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSubmitting,
-    onBlock: () => setUnsavedModalVisible(true),
+    onBlock: () => setUnsavedSheetVisible(true),
   })
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
   const dueDatePicker = useDateTimePicker({
     onConfirm: (date) =>
       setValue("dueDate", date.getTime(), { shouldDirty: true }),
@@ -439,7 +439,7 @@ export function LoanModifyContent({
           <View style={loanModifyStyles.deleteSection}>
             <Button
               variant="ghost"
-              onPress={() => setDeleteModalVisible(true)}
+              onPress={() => setDeleteSheetVisible(true)}
               style={loanModifyStyles.actionButton}
             >
               <IconSvg
@@ -464,23 +464,23 @@ export function LoanModifyContent({
         onSave={handleSubmit}
       />
 
-      <LoanFormModals
-        deleteModalVisible={deleteModalVisible}
-        unsavedModalVisible={unsavedModalVisible}
+      <LoanFormSheets
+        deleteSheetVisible={deleteSheetVisible}
+        unsavedSheetVisible={unsavedSheetVisible}
         isAddMode={isAddMode}
         loan={loan}
-        onCloseDeleteModal={() => setDeleteModalVisible(false)}
-        onCloseUnsavedModal={() => setUnsavedModalVisible(false)}
+        onCloseDeleteSheet={() => setDeleteSheetVisible(false)}
+        onCloseUnsavedSheet={() => setUnsavedSheetVisible(false)}
         onConfirmDelete={handleDelete}
         onDiscardAndNavigate={() => {
-          setUnsavedModalVisible(false)
+          setUnsavedSheetVisible(false)
           allowNavigation()
           handleGoBack()
         }}
       />
 
       {dueDatePicker.pickerElement}
-      <DateTimePickerModal {...dueDatePicker.modalProps} />
+      <DateTimePickerSheet {...dueDatePicker.sheetProps} />
     </View>
   )
 }

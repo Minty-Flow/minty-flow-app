@@ -28,7 +28,7 @@
     "developmentNotice": {
       "message": "Minty Flow ما زال قيد التطوير، لذلك قد يحدث فقدان للبيانات. أعتذر عن ذلك. ابتداءً من هذا الإصدار، أركز على الاستقرار ونسخ احتياطية أكثر أماناً في التحديثات القادمة."
     },
-    "modals": {
+    "sheets": {
       "unsavedDescription": "سيتم فقدان كافة التغييرات.",
       "closeWithoutSaving": "إغلاق دون حفظ؟",
       "deletePermanently": "حذف نهائي",
@@ -126,8 +126,8 @@
         "subHeaderRecurring": "متكررة",
         "confirmAll": {
           "button": "تأكيد الكل",
-          "modalTitle": "تأكيد الكل؟",
-          "modalDescription": "سيتم تأكيد جميع المعاملات المعلقة. لا يمكن التراجع عن ذلك."
+          "sheetTitle": "تأكيد الكل؟",
+          "sheetDescription": "سيتم تأكيد جميع المعاملات المعلقة. لا يمكن التراجع عن ذلك."
         },
         "chips": {
           "daysCount": "خلال الـ {{count}} أيام القادمة"
@@ -180,13 +180,13 @@
         "archivedBannerText": "هذا الحساب مؤرشف. استعده لإجراء التعديلات.",
         "deleteLabel": "حذف الحساب نهائياً",
         "typeLabel": "نوع الحساب",
-        "archiveModal": {
+        "archiveSheet": {
           "archiveTitle": "أرشفة هذا الحساب؟",
           "archiveConfirm": "أرشفة",
           "unarchiveTitle": "استعادة هذا الحساب؟",
           "unarchiveConfirm": "استعادة"
         },
-        "deleteModal": {
+        "deleteSheet": {
           "title": "حذف {{name}} نهائياً؟",
           "descriptionWithCount_one": "يحتوي هذا الحساب على {{count}} معاملة. سيؤدي الحذف النهائي إلى حذفها أيضاً. لا يمكن التراجع عن هذا الإجراء.",
           "descriptionWithCount_other": "يحتوي هذا الحساب على {{count}} معاملة. سيؤدي الحذف النهائي إلى حذفها جميعاً. لا يمكن التراجع عن هذا الإجراء.",
@@ -461,12 +461,7 @@
         },
         "language": {
           "title": "اللغة",
-          "sectionLabel": "تغيير اللغة",
-          "rtlReloadConfirm": {
-            "title": "إعادة التشغيل مطلوبة",
-            "description": "يتطلب التبديل إلى هذه اللغة إعادة تشغيل التطبيق لتطبيق اتجاه النص الجديد.",
-            "confirmLabel": "إعادة التشغيل"
-          }
+          "sectionLabel": "تغيير اللغة"
         },
         "transactionLocation": {
           "title": "تتبّع موقع المعاملة",
@@ -498,7 +493,7 @@
         "empty": {
           "noTransactions": "لا توجد معاملات محذوفة",
           "label": "إفراغ سلة المحذوفات",
-          "modal": {
+          "sheet": {
             "title": "إفراغ سلة المحذوفات",
             "description": "سيتم حذف جميع العناصر الموجودة في سلة المحذوفات نهائياً. لا يمكن التراجع عن هذا الإجراء.",
             "confirm": "إفراغ السلة",
@@ -612,7 +607,7 @@
           "deleteLabel": "حذف الهدف",
           "archiveLabel": "أرشفة الهدف",
           "unarchiveLabel": "استعادة الهدف",
-          "archiveModal": {
+          "archiveSheet": {
             "archiveTitle": "أرشفة هذا الهدف؟",
             "archiveConfirm": "أرشفة",
             "unarchiveTitle": "استعادة هذا الهدف؟",
@@ -778,7 +773,7 @@
           "placeholderContact": "محمد علي",
           "placeholderLocation": "المنزل، العمل، المقهى...",
           "deleteLabel": "حذف نهائي",
-          "deleteModal": {
+          "deleteSheet": {
             "title": "حذف {{name}} نهائياً؟",
             "descriptionWithCount_one": "يُستخدم هذا الوسم في {{count}} معاملة. سيؤدي الحذف النهائي إلى إلغاء ارتباطه وإزالته. لا يمكن التراجع عن ذلك.",
             "descriptionWithCount_other": "يُستخدم هذا الوسم في {{count}} معاملة. سيؤدي الحذف النهائي إلى إلغاء ارتباطه من جميعها وإزالته. لا يمكن التراجع عن ذلك.",
@@ -855,7 +850,7 @@
         "loading": "جاري تحميل أسعار الصرف...",
         "searchPlaceholder": "البحث عن العملات...",
         "instructionCaption": "اختر أحد المدخلات لتعيين سعر صرف مخصص. ملاحظة: جميع حسابات أسعار الصرف تعتمد على الدولار الأمريكي كمرجع.",
-        "infoModal": {
+        "infoSheet": {
           "title": "أسعار الصرف",
           "description": "تُعرض الأسعار كقيمة مقابل 1 دولار أمريكي. اختر عملة لتعيين سعر مخصص. تعتمد جميع الحسابات على الدولار الأمريكي كمرجع أساسي.",
           "ok": "حسناً"
@@ -1059,7 +1054,7 @@
         "title": "حذف الملف",
         "description": "هل أنت متأكد من إزالة هذا المرفق؟"
       },
-      "destroyModal": {
+      "destroySheet": {
         "description": "ستُزال هذه المعاملة نهائياً ولا يمكن استعادتها."
       },
       "amountInput": {
@@ -1080,7 +1075,7 @@
         }
       },
       "attachments": {
-        "openFileModal": "فتح الملف",
+        "openFileSheet": "فتح الملف",
         "a11y": {
           "removeAttachment": "إزالة المرفق",
           "addFiles": "إضافة ملفات",
@@ -1142,6 +1137,8 @@
       "notFoundTransaction": "لم يتم العثور على المعاملة.",
       "searchTags": "ابحث عن الوسوم...",
       "createNewTag": "وسم جديد",
+      "selectTags": "اختيار الوسوم",
+      "clearSelection": "مسح التحديد",
       "kind": {
         "label": "النوع",
         "info": {
@@ -1164,13 +1161,13 @@
         "nameLabel": "اسم القرض",
         "dueDateLabel": "تاريخ الاستحقاق"
       },
-      "deleteLoanModal": {
+      "deleteLoanSheet": {
         "title": "حذف هذا القرض؟",
         "description": "يُحذف القرض. تبقى معاملاته في سجلّك دون ارتباط بأي قرض."
       }
     },
     "recurring": {
-      "deleteModal": {
+      "deleteSheet": {
         "title": "حذف المعاملة المتكررة",
         "subtitle": "اختر المعاملات المراد إزالتها",
         "optionThis": "هذه المعاملة",
@@ -1184,7 +1181,7 @@
         "cancel": "إلغاء",
         "delete": "حذف"
       },
-      "editModal": {
+      "editSheet": {
         "title": "تعديل المعاملة المتكررة",
         "subtitle": "اختر مدى تطبيق التغييرات",
         "optionThis": "هذه المعاملة",
@@ -1260,7 +1257,7 @@
         "namePlaceholder": "بقالة، مطاعم، إلخ.",
         "typeLabel": "النوع",
         "deleteLabel": "حذف نهائي",
-        "deleteModal": {
+        "deleteSheet": {
           "title": "حذف {{name}}؟",
           "descriptionWithCount_one": "تستخدم هذه الفئة في {{count}} معاملة. سيؤدي الحذف إلى إلغاء الارتباط. لا يمكن التراجع عن ذلك.",
           "descriptionWithCount_other": "تستخدم هذه الفئة في {{count}} معاملة. سيؤدي الحذف إلى إلغاء ارتباطها. لا يمكن التراجع عن ذلك.",
@@ -1387,6 +1384,9 @@
     "locationPicker": {
       "title": "اختر الموقع",
       "gettingLocation": "جاري تحديد الموقع...",
+      "permissionDenied": "الإذن بالوصول إلى الموقع مطلوب",
+      "servicesOff": "يرجى تفعيل خدمات الموقع",
+      "unavailable": "تعذر تحديد موقعك",
       "tapOrDrag": "حرك الخريطة لتحديد الموقع",
       "tapToEdit": "اضغط على الخريطة للتعديل",
       "addLocation": "إضافة موقع",
@@ -1403,7 +1403,7 @@
         "permissionDescription": "يرجى منح الإذن للوصول إلى جهات اتصالك لاختيار جهة اتصال من هاتفك."
       },
       "currency": {
-        "title": "العملة",
+        "title": "اختر عملة",
         "triggerLabel": "العملة",
         "searchPlaceholder": "البحث عن العملات...",
         "noCurrenciesFound": "لا توجد عملات",

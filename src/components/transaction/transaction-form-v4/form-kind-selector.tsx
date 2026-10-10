@@ -10,7 +10,7 @@ import type { TransactionKind } from "~/types/transactions"
 
 import { transactionFormStyles } from "./form.styles"
 import { KIND_LABEL_KEYS, KIND_ORDER } from "./kind-info"
-import { KindInfoModal } from "./kind-info-modal"
+import { KindInfoSheet } from "./kind-info-sheet"
 
 type Props = {
   kind: TransactionKind
@@ -51,7 +51,7 @@ export function FormKindSelector({ kind, onSelect, disabled = false }: Props) {
         ))}
       </ScrollView>
 
-      <KindInfoModal
+      <KindInfoSheet
         visible={infoVisible}
         onRequestClose={() => setInfoVisible(false)}
       />

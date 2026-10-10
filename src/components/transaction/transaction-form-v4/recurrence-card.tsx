@@ -13,7 +13,7 @@ import { clampInterval } from "~/utils/recurrence"
 import { formatTransactionDateTime } from "~/utils/time-utils"
 
 import { transactionFormStyles } from "./form.styles"
-import { RecurrenceUnitModal } from "./recurrence-unit-modal"
+import { RecurrenceUnitSheet } from "./recurrence-unit-sheet"
 
 type Props = {
   recurrence: Recurrence
@@ -36,7 +36,7 @@ export function RecurrenceCard({
 }: Props) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
-  const [unitModal, setUnitModal] = useState(false)
+  const [unitSheet, setUnitSheet] = useState(false)
 
   const unitLabel = t(
     `components.transactionForm.recurrence.unit.${recurrence.unit}`,
@@ -86,7 +86,7 @@ export function RecurrenceCard({
         </Pressable>
 
         <Pressable
-          onPress={() => setUnitModal(true)}
+          onPress={() => setUnitSheet(true)}
           style={transactionFormStyles.recurrenceUnitButton}
           accessibilityRole="button"
         >
@@ -150,11 +150,11 @@ export function RecurrenceCard({
         </Text>
       )}
 
-      <RecurrenceUnitModal
-        visible={unitModal}
+      <RecurrenceUnitSheet
+        visible={unitSheet}
         value={recurrence.unit}
         onSelect={onUnitChange}
-        onClose={() => setUnitModal(false)}
+        onClose={() => setUnitSheet(false)}
       />
     </View>
   )

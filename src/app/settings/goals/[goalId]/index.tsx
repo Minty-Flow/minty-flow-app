@@ -5,7 +5,7 @@ import { type DimensionValue, FlatList, View as RNView } from "react-native"
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
@@ -47,7 +47,7 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
   const privacyMode = useMoneyFormattingStore((s) => s.privacyMode)
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
-  const [unarchiveModalVisible, setUnarchiveModalVisible] = useState(false)
+  const [unarchiveSheetVisible, setUnarchiveSheetVisible] = useState(false)
   const goal = useGoal(goalId)
   const allAccounts = useActiveAccounts()
   const { items: transactionsFull } = useTransactions({ goalId })
@@ -101,7 +101,7 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
           <Button
             variant="ghost"
             size="icon"
-            onPress={() => setUnarchiveModalVisible(true)}
+            onPress={() => setUnarchiveSheetVisible(true)}
           >
             <IconSvg name="archive-off-outline" size={20} />
           </Button>
@@ -354,14 +354,14 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
         contentContainerStyle={styles.listContent}
       />
 
-      <ConfirmModal
-        visible={unarchiveModalVisible}
-        onRequestClose={() => setUnarchiveModalVisible(false)}
+      <ConfirmSheet
+        visible={unarchiveSheetVisible}
+        onRequestClose={() => setUnarchiveSheetVisible(false)}
         onConfirm={handleUnarchive}
-        title={t("screens.settings.goals.form.archiveModal.unarchiveTitle")}
+        title={t("screens.settings.goals.form.archiveSheet.unarchiveTitle")}
         description={goal.name}
         confirmLabel={t(
-          "screens.settings.goals.form.archiveModal.unarchiveConfirm",
+          "screens.settings.goals.form.archiveSheet.unarchiveConfirm",
         )}
         cancelLabel={t("common.actions.cancel")}
         variant="default"

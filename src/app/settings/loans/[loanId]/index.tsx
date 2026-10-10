@@ -7,7 +7,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
-import { LoanActionModal } from "~/components/loans/loan-action-modal"
+import { LoanActionSheet } from "~/components/loans/loan-action-sheet"
 import { Money } from "~/components/money"
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
@@ -39,7 +39,7 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
   const navigation = useNavigation()
   const { theme } = useUnistyles()
   const isRTL = useLanguageStore((s) => s.isRTL)
-  const [actionModalVisible, setActionModalVisible] = useState(false)
+  const [actionSheetVisible, setActionSheetVisible] = useState(false)
   const [isCreatingTransaction, setIsCreatingTransaction] = useState(false)
   const openSwipeableRef = useRef<SwipeableMethods | null>(null)
   const loan = useLoan(loanId)
@@ -178,7 +178,7 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
       }),
     )
       .then(() => {
-        setActionModalVisible(false)
+        setActionSheetVisible(false)
         Toast.success({ title: successTitle })
       })
       .catch((error) => {
@@ -191,7 +191,7 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
   }
   const handlePartialAction = () => {
     if (!loan) return
-    setActionModalVisible(false)
+    setActionSheetVisible(false)
     router.push({
       pathname: "/transaction/[id]",
       params: {
@@ -322,7 +322,7 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
       {!isPaid && (
         <Button
           variant="default"
-          onPress={() => setActionModalVisible(true)}
+          onPress={() => setActionSheetVisible(true)}
           style={styles.collectSettleButton}
         >
           <IconSvg
@@ -363,13 +363,13 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
         }
         contentContainerStyle={styles.listContent}
       />
-      <LoanActionModal
-        visible={actionModalVisible}
+      <LoanActionSheet
+        visible={actionSheetVisible}
         loanType={loan.loanType}
         isLoading={isCreatingTransaction}
         onFullAction={handleFullAction}
         onPartialAction={handlePartialAction}
-        onClose={() => setActionModalVisible(false)}
+        onClose={() => setActionSheetVisible(false)}
       />
     </View>
   )

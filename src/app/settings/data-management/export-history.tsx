@@ -1,11 +1,12 @@
 import * as FileSystem from "expo-file-system/legacy"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FlatList, Modal, Share, useWindowDimensions } from "react-native"
+import { FlatList, Share } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { IconSvg, type IconSvgName } from "~/components/icons"
+import { BottomSheet } from "~/components/ui/bottom-sheet"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { EmptyState } from "~/components/ui/empty-state"
 import { ListItem } from "~/components/ui/list-item"
@@ -74,7 +75,7 @@ function ExportRow({ record, fileSize, onPress }: ExportRowProps) {
     </Pressable>
   )
 }
-interface ActionModalProps {
+interface ActionSheetProps {
   visible: boolean
   record: ExportRecord | null
   fileSize: number | null
@@ -83,7 +84,7 @@ interface ActionModalProps {
   onShare: () => void
   onDelete: () => void
 }
-function ActionModal({
+function ActionSheet({
   visible,
   record,
   fileSize,
@@ -91,11 +92,9 @@ function ActionModal({
   onSave,
   onShare,
   onDelete,
-}: ActionModalProps) {
+}: ActionSheetProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
-  const { width } = useWindowDimensions()
-  const maxCardWidth = Math.min(width - 32, 440)
   const title = record ? t(RECORD_TITLE_KEYS[record.type]) : ""
   const icon: IconSvgName = record
     ? getRecordIcon(record.type)
@@ -107,64 +106,47 @@ function ActionModal({
         .join(" · ")
     : ""
   return (
-    <Modal
-      visible={visible && record !== null}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-      statusBarTranslucent
-    >
-      <View style={actionStyles.modalRoot}>
-        <Pressable
-          style={actionStyles.backdrop}
-          onPress={onClose}
-          accessibilityLabel={t("common.actions.close")}
-          native
-          disableRipple
-        />
-        <View style={actionStyles.content}>
-          <View style={[actionStyles.card, { maxWidth: maxCardWidth }]}>
-            <View style={actionStyles.header}>
-              <View style={actionStyles.headerIcon}>
-                <IconSvg name={icon} size={22} />
-              </View>
-              <View style={actionStyles.headerBody}>
-                <Text style={actionStyles.headerTitle} numberOfLines={1}>
-                  {title}
-                </Text>
-                <Text style={actionStyles.headerMeta} numberOfLines={1}>
-                  {meta}
-                </Text>
-              </View>
-            </View>
-
-            <View
-              style={[
-                actionStyles.divider,
-                { backgroundColor: `${theme.colors.onSurface}12` },
-              ]}
-            />
-
-            <ActionButton
-              icon="download-outline"
-              label={t("screens.settings.dataManagement.history.saveAs")}
-              onPress={onSave}
-            />
-            <ActionButton
-              icon="share-outline"
-              label={t("screens.settings.dataManagement.history.share")}
-              onPress={onShare}
-            />
-            <ActionButton
-              icon="trash-outline"
-              label={t("screens.settings.dataManagement.history.remove")}
-              onPress={onDelete}
-              destructive
-            />
+    <BottomSheet isPresented={visible && record !== null} onDismiss={onClose}>
+      <View style={actionStyles.card}>
+        <View style={actionStyles.header}>
+          <View style={actionStyles.headerIcon}>
+            <IconSvg name={icon} size={22} />
+          </View>
+          <View style={actionStyles.headerBody}>
+            <Text style={actionStyles.headerTitle} numberOfLines={1}>
+              {title}
+            </Text>
+            <Text style={actionStyles.headerMeta} numberOfLines={1}>
+              {meta}
+            </Text>
           </View>
         </View>
+
+        <View
+          style={[
+            actionStyles.divider,
+            { backgroundColor: `${theme.colors.onSurface}12` },
+          ]}
+        />
+
+        <ActionButton
+          icon="download-outline"
+          label={t("screens.settings.dataManagement.history.saveAs")}
+          onPress={onSave}
+        />
+        <ActionButton
+          icon="share-outline"
+          label={t("screens.settings.dataManagement.history.share")}
+          onPress={onShare}
+        />
+        <ActionButton
+          icon="trash-outline"
+          label={t("screens.settings.dataManagement.history.remove")}
+          onPress={onDelete}
+          destructive
+        />
       </View>
-    </Modal>
+    </BottomSheet>
   )
 }
 interface ActionButtonProps {
@@ -342,7 +324,7 @@ export default function ExportHistoryScreen() {
         }
       />
 
-      <ActionModal
+      <ActionSheet
         visible={actionId !== null}
         record={activeRecord}
         fileSize={activeRecord ? (fileSizes[activeRecord.id] ?? null) : null}
@@ -352,7 +334,7 @@ export default function ExportHistoryScreen() {
         onDelete={handleDeletePress}
       />
 
-      <ConfirmModal
+      <ConfirmSheet
         visible={confirm.visible}
         variant="destructive"
         icon="trash-outline"
@@ -457,27 +439,7 @@ const rowStyles = StyleSheet.create((theme) => ({
   },
 }))
 const actionStyles = StyleSheet.create((theme) => ({
-  modalRoot: {
-    flex: 1,
-  },
-  backdrop: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: theme.colors.shadow,
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 16,
-  },
   card: {
-    width: "100%",
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius ?? 16,
     paddingVertical: 8,
   },
   header: {

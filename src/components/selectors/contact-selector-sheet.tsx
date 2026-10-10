@@ -1,27 +1,26 @@
 /**
- * Contact selector as a modal: trigger row (shared style) + modal with
+ * Contact selector: trigger row (shared style) + bottom sheet with
  * search and FlatList. Tap a contact to select and close. Uses Suspense +
- * contacts promise so the modal opens instantly and the list loads asynchronously.
+ * contacts promise so the sheet opens instantly and the list loads asynchronously.
  */
 import * as Contacts from "expo-contacts/legacy"
 import i18n from "i18next"
 import { Suspense, use, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FlatList, Modal, View } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
+import { FlatList, View } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
 import { SearchInput } from "~/components/search-input"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
-import { Button } from "~/components/ui/button"
+import { BottomSheet } from "~/components/ui/bottom-sheet"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { EmptyState } from "~/components/ui/empty-state"
 import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { Toast } from "~/utils/toast"
 
-import { modalStyles, triggerStyles } from "./styles"
+import { sheetHeaderStyles, sheetStyles, triggerStyles } from "./styles"
 
 function createContactsPromise(onPermissionDenied?: () => void): Promise<{
   contacts: Contacts.Contact[]
@@ -55,7 +54,7 @@ function createContactsPromise(onPermissionDenied?: () => void): Promise<{
     }
   })()
 }
-interface ContactSelectorModalProps {
+interface ContactSelectorSheetProps {
   onContactSelected: (contact: Contacts.Contact) => void
   onPermissionDenied?: () => void
   editable?: boolean
@@ -111,8 +110,8 @@ function ContactListContent({
       maxToRenderPerBatch={20}
       windowSize={11}
       keyboardShouldPersistTaps="always"
-      style={modalStyles.list}
-      contentContainerStyle={modalStyles.listContent}
+      style={sheetStyles.list}
+      contentContainerStyle={sheetStyles.listContent}
       showsVerticalScrollIndicator
     />
   )
@@ -136,9 +135,9 @@ function ContactItem({
   return (
     <ListItem
       style={({ pressed }: { pressed: boolean }) => [
-        modalStyles.item,
+        sheetStyles.item,
         contactItemStyles.itemGap,
-        pressed && modalStyles.itemPressed,
+        pressed && sheetStyles.itemPressed,
       ]}
       onPress={() => onPress(contact)}
     >
@@ -186,11 +185,11 @@ const contactItemStyles = StyleSheet.create((theme) => ({
     ...theme.typography.titleSmall,
   },
 }))
-export function ContactSelectorModal({
+export function ContactSelectorSheet({
   onContactSelected,
   onPermissionDenied,
   editable = true,
-}: ContactSelectorModalProps) {
+}: ContactSelectorSheetProps) {
   const { t } = useTranslation()
   const [visible, setVisible] = useState(false)
   const [contactsPromise, setContactsPromise] = useState<Promise<{
@@ -236,26 +235,19 @@ export function ContactSelectorModal({
         </ListItem>
       </View>
 
-      <Modal
-        visible={visible}
-        animationType="slide"
-        onRequestClose={close}
-        statusBarTranslucent
-        accessibilityViewIsModal
+      <BottomSheet
+        isPresented={visible}
+        onDismiss={close}
+        contentPadding={0}
+        heightFraction={0.75}
       >
-        <SafeAreaView
-          style={modalStyles.modalContainer}
-          edges={["top", "bottom"]}
-        >
-          <View style={modalStyles.header}>
-            <Text variant="default" style={modalStyles.headerTitle}>
+        <View style={{ flex: 1 }}>
+          <View style={sheetHeaderStyles.header}>
+            <Text variant="default" style={sheetHeaderStyles.title}>
               {t("components.selectors.contacts.title")}
             </Text>
-            <Button variant="secondary" onPress={close}>
-              <Text variant="default">{t("common.actions.cancel")}</Text>
-            </Button>
           </View>
-          <View style={modalStyles.searchContainer}>
+          <View style={sheetStyles.searchContainer}>
             <SearchInput
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -263,11 +255,11 @@ export function ContactSelectorModal({
               placeholder={t("components.selectors.contacts.searchPlaceholder")}
             />
           </View>
-          <View style={modalStyles.listWrapper}>
+          <View style={sheetStyles.listWrapper}>
             {contactsPromise ? (
               <Suspense
                 fallback={
-                  <View style={modalStyles.loadingContainer}>
+                  <View style={sheetStyles.loadingContainer}>
                     <ActivityIndicatorMinty size="small" />
                   </View>
                 }
@@ -279,13 +271,13 @@ export function ContactSelectorModal({
                 />
               </Suspense>
             ) : (
-              <View style={modalStyles.loadingContainer}>
+              <View style={sheetStyles.loadingContainer}>
                 <ActivityIndicatorMinty size="small" />
               </View>
             )}
           </View>
-        </SafeAreaView>
-      </Modal>
+        </View>
+      </BottomSheet>
     </>
   )
 }
