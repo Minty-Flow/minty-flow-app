@@ -18,9 +18,6 @@ export const dateRangePresetSheetStyles = StyleSheet.create((theme) => {
       marginBottom: 8,
       marginHorizontal: 20,
     },
-    sectionLabel: {
-      color: muted,
-    },
     presetsRow: {
       flexDirection: "row",
       flexWrap: "wrap",
@@ -53,12 +50,6 @@ export const dateRangePresetSheetStyles = StyleSheet.create((theme) => {
     },
     rowText: {
       color: theme.colors.onSurface,
-    },
-    expandedContent: {
-      padding: 20,
-      paddingTop: 0,
-      backgroundColor: theme.colors.surface,
-      gap: 16,
     },
     expandedContentCompact: {
       gap: 0,

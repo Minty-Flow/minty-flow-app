@@ -1,17 +1,9 @@
-import {
-  endOfDay,
-  endOfMonth,
-  endOfYear,
-  startOfDay,
-  startOfMonth,
-  startOfYear,
-} from "date-fns"
+import { endOfDay, startOfDay } from "date-fns"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView, View } from "react-native"
 import { useUnistyles } from "react-native-unistyles"
 
-import { MonthGrid } from "~/components/month-grid"
 import { sheetHeaderStyles } from "~/components/selectors/styles"
 import { Button } from "~/components/ui/button"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
@@ -19,7 +11,6 @@ import {
   DateTimePickerSheet,
   useDateTimePicker,
 } from "~/components/ui/date-time-picker"
-import { Input } from "~/components/ui/input"
 import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -38,6 +29,8 @@ export const DateRangePresetSheetContent = ({
   initialEnd,
   onSave,
   onRequestClose,
+  onPickMonth,
+  onPickYear,
 }: DateRangePresetSheetContentProps) => {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
@@ -48,16 +41,6 @@ export const DateRangePresetSheetContent = ({
     start: initialStart ?? now,
     end: initialEnd ?? now,
   }))
-  /** Month picker */
-  const [monthState, setMonthState] = useState(() => ({
-    year: now.getFullYear(),
-    yearInput: String(now.getFullYear()),
-    month: now.getMonth(),
-  }))
-  /** Year picker */
-  const [byYearInput, setByYearInput] = useState(() =>
-    String(now.getFullYear()),
-  )
   const startDatePicker = useDateTimePicker({
     onConfirm: (date) =>
       setCustomRange((prev) => ({
@@ -78,39 +61,6 @@ export const DateRangePresetSheetContent = ({
   const handlePresetSelect = (preset: PresetOption) => {
     const { start, end } = preset.getRange()
     onSave(start, end, preset.id)
-    onRequestClose()
-  }
-  const handleByMonthSelect = (monthIndex: number) => {
-    setMonthState((s) => ({ ...s, month: monthIndex }))
-  }
-  const handleByYearNow = () => {
-    setByYearInput(String(now.getFullYear()))
-  }
-  const handleByMonthNow = () => {
-    const y = now.getFullYear()
-    setMonthState({
-      year: y,
-      yearInput: String(y),
-      month: now.getMonth(),
-    })
-  }
-  const handleByMonthYearChange = (year: number) => {
-    setMonthState((s) => ({ ...s, year, yearInput: String(year) }))
-  }
-  const handleByMonthYearInputChange = (val: string) => {
-    setMonthState((s) => ({ ...s, yearInput: val }))
-  }
-  const handleByMonthDone = () => {
-    const d = new Date(monthState.year, monthState.month, 1)
-    onSave(startOfMonth(d), endOfMonth(d), "byMonth")
-    onRequestClose()
-  }
-  const handleByYearDone = () => {
-    const y = Number.parseInt(byYearInput, 10)
-    const year =
-      Number.isFinite(y) && y >= 1970 && y <= 2100 ? y : now.getFullYear()
-    const d = new Date(year, 0, 1)
-    onSave(startOfYear(d), endOfYear(d), "byYear")
     onRequestClose()
   }
   const handleCustomDone = () => {
@@ -159,87 +109,24 @@ export const DateRangePresetSheetContent = ({
           ))}
         </View>
 
-        {/* MONTH SECTION */}
+        {/* MONTH / YEAR: each opens its own sheet */}
 
         <View style={styles.collapsibleSection}>
-          <ListItem
-            onPress={() => toggleSection("byMonth")}
-            style={styles.rowBase}
-          >
+          <ListItem onPress={onPickMonth} style={styles.rowBase}>
             <Text variant="default" style={styles.rowText}>
               {t("common.timePeriods.month")}
             </Text>
-
-            <ChevronIcon
-              direction={expandedSection === "byMonth" ? "down" : "trailing"}
-              size={20}
-              color={mutedColor}
-            />
+            <ChevronIcon direction="trailing" size={20} color={mutedColor} />
           </ListItem>
-
-          {expandedSection === "byMonth" && (
-            <View style={styles.expandedContent}>
-              <MonthGrid
-                year={monthState.year}
-                yearInput={monthState.yearInput}
-                month={monthState.month}
-                onYearInputChange={handleByMonthYearInputChange}
-                onYearChange={handleByMonthYearChange}
-                onMonthChange={handleByMonthSelect}
-                showYearChevrons
-                onNow={handleByMonthNow}
-                onDone={handleByMonthDone}
-              />
-            </View>
-          )}
         </View>
 
-        {/* YEAR SECTION */}
-
         <View style={styles.collapsibleSection}>
-          <ListItem
-            onPress={() => toggleSection("byYear")}
-            style={styles.rowBase}
-          >
+          <ListItem onPress={onPickYear} style={styles.rowBase}>
             <Text variant="default" style={styles.rowText}>
               {t("common.timePeriods.year")}
             </Text>
-
-            <ChevronIcon
-              direction={expandedSection === "byYear" ? "down" : "trailing"}
-              size={20}
-              color={mutedColor}
-            />
+            <ChevronIcon direction="trailing" size={20} color={mutedColor} />
           </ListItem>
-
-          {expandedSection === "byYear" && (
-            <View style={styles.expandedContent}>
-              <Text variant="small" style={styles.sectionLabel}>
-                {t("components.dateRange.yearPlaceholder")}
-              </Text>
-
-              <Input
-                value={byYearInput}
-                onChangeText={(val) => {
-                  const digits = val.replace(/\D/g, "").slice(0, 4)
-                  setByYearInput(digits)
-                }}
-                keyboardType="number-pad"
-                maxLength={4}
-                placeholder={t("components.dateRange.yearInputPlaceholder")}
-              />
-
-              <View style={styles.actionsRow}>
-                <Button variant="secondary" onPress={handleByYearNow}>
-                  <Text variant="default">{t("components.dateRange.now")}</Text>
-                </Button>
-
-                <Button variant="secondary" onPress={handleByYearDone}>
-                  <Text variant="default">{t("common.actions.done")}</Text>
-                </Button>
-              </View>
-            </View>
-          )}
         </View>
 
         {/* CUSTOM RANGE */}
