@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native-unistyles"
 
 export const H_PAD = 20
-const FORM_GAP = 8
+const FORM_GAP = 4
 const SECTION_GAP = 8
 const ROW_PADDING_V = 8
 const ROW_GAP = 10
@@ -10,8 +10,6 @@ const SMALL_GAP = 4
 const ELEMENT_GAP = 12
 const TRIGGER_PAD = 6
 const MICRO_GAP = 2
-export const CATEGORY_CELL_SIZE = 74
-export const CATEGORY_GAP = 10
 const BUTTON_PAD_H = 14
 
 export const transactionFormStyles = StyleSheet.create((theme) => ({
@@ -246,10 +244,6 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   searchFieldWrap: {
     marginBottom: CARD_PAD,
   },
-  categoryScrollContent: {
-    paddingHorizontal: H_PAD,
-    paddingVertical: SMALL_GAP,
-  },
   kindScrollContent: {
     flexDirection: "row",
     alignItems: "center",
@@ -257,47 +251,12 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     paddingHorizontal: H_PAD,
     paddingVertical: SMALL_GAP,
   },
-  categoryGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: CATEGORY_GAP,
-  },
-  categoryCell: {
-    width: CATEGORY_CELL_SIZE,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: ROW_PADDING_V,
-    paddingHorizontal: TRIGGER_PAD,
-    borderRadius: 12,
-    // backgroundColor: theme.colors.secondary,
-    borderWidth: 2,
-    borderStyle: "dashed",
-    borderColor: theme.colors.secondary,
-  },
-  categoryCellSelected: {
-    borderStyle: "solid",
-
-    borderColor: theme.colors.primary,
-  },
-  categoryCellLabel: {
-    fontSize: theme.typography.labelXSmall.fontSize,
-    color: theme.colors.onSurface,
-    marginTop: SMALL_GAP,
-    textAlign: "center",
-  },
   tagsWrapGrid: {
     marginHorizontal: H_PAD,
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "center",
     gap: SECTION_GAP,
-    paddingVertical: SMALL_GAP,
-  },
-  tagsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SECTION_GAP,
-    paddingHorizontal: H_PAD,
     paddingVertical: SMALL_GAP,
   },
   tagChipBase: {
@@ -321,6 +280,61 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     ...theme.typography.labelLarge,
     fontWeight: "500",
     color: theme.colors.primary,
+  },
+  // Edge-to-edge like the other form rows (ListItem): each pressable carries the
+  // 20px side inset itself, so its press feedback reaches the screen edges.
+  dateTimeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: FORM_GAP,
+  },
+  dateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: ROW_GAP,
+    flex: 1,
+    minWidth: 0,
+    paddingVertical: 14,
+    paddingStart: 20,
+    paddingEnd: 8,
+  },
+  dateButtonText: {
+    ...theme.typography.titleMedium,
+    fontWeight: "700",
+    color: theme.colors.onSurface,
+    flexShrink: 1,
+  },
+  timeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 14,
+    paddingStart: 8,
+    paddingEnd: 20,
+  },
+  timeBox: {
+    minWidth: 42,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: `${theme.colors.onSurface}14`,
+  },
+  timeText: {
+    ...theme.typography.titleSmall,
+    fontWeight: "700",
+    color: theme.colors.onSurface,
+  },
+  timeColon: {
+    ...theme.typography.titleSmall,
+    fontWeight: "700",
+    color: theme.colors.onSurface,
+  },
+  timePeriodText: {
+    ...theme.typography.labelLarge,
+    color: theme.colors.semantic.semi,
   },
   inlineDateRow: {
     gap: ROW_GAP,
@@ -347,6 +361,25 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   },
   pendingSwitchRow: {
     justifyContent: "space-between",
+  },
+  lockedKindRow: {
+    justifyContent: "space-between",
+    gap: ROW_GAP,
+    marginBottom: FORM_GAP,
+  },
+  lockedKindLeft: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: ROW_GAP,
+  },
+  lockedKindText: {
+    flex: 1,
+    minWidth: 0,
+  },
+  lockedKindSubtitle: {
+    color: theme.colors.semantic.semi,
   },
   recurrenceRow: {
     marginHorizontal: H_PAD,

@@ -4,15 +4,15 @@ import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
-import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { InfoBanner } from "~/components/ui/info-banner"
 import { ListItem } from "~/components/ui/list-item"
+import { Pressable } from "~/components/ui/pressable"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import { startOfNextMinute } from "~/utils/pending-transactions"
-import { formatTransactionDateTime } from "~/utils/time-utils"
+import { formatTimeParts, formatTransactionDay } from "~/utils/time-utils"
 
 import { transactionFormStyles } from "./form.styles"
 
@@ -20,6 +20,7 @@ type Props = {
   date: Date
   control: Control<TransactionFormValues>
   onDatePress: () => void
+  onTimePress: () => void
   /** Loan kinds: this row is the loan's due date, and pending never applies. */
   dueDateMode?: boolean
 }
@@ -28,6 +29,7 @@ export function FormDateSection({
   date,
   control,
   onDatePress,
+  onTimePress,
   dueDateMode = false,
 }: Props) {
   const { t } = useTranslation()
@@ -38,29 +40,52 @@ export function FormDateSection({
   const isPending = useWatch({ control, name: "isPending" })
   const isFuture = date.getTime() > startOfNextMinute().getTime()
   const showPending = !dueDateMode && (isFuture || !!isPending)
+  const time = formatTimeParts(date)
 
   return (
     <>
-      <View style={transactionFormStyles.fieldBlock}>
-        <ListItem
-          style={transactionFormStyles.inlineDateRow}
+      {/* Date button (left) and time button (right): each opens only its own picker. */}
+      <View style={transactionFormStyles.dateTimeRow}>
+        <Pressable
+          style={transactionFormStyles.dateButton}
           onPress={onDatePress}
+          accessibilityRole="button"
         >
           <DynamicIcon
             icon="calendar-month"
-            size={20}
+            size={22}
             color={theme.colors.primary}
             variant="badge"
           />
-          <Text variant="default" style={transactionFormStyles.inlineDateText}>
-            {formatTransactionDateTime(date)}
+          <Text
+            variant="default"
+            numberOfLines={1}
+            style={transactionFormStyles.dateButtonText}
+          >
+            {formatTransactionDay(date)}
           </Text>
-          <ChevronIcon
-            direction="trailing"
-            size={20}
-            style={transactionFormStyles.chevronIcon}
-          />
-        </ListItem>
+        </Pressable>
+
+        <Pressable
+          style={transactionFormStyles.timeButton}
+          onPress={onTimePress}
+          accessibilityRole="button"
+        >
+          <View style={transactionFormStyles.timeBox}>
+            <Text style={transactionFormStyles.timeText}>{time.hour}</Text>
+          </View>
+          <Text style={transactionFormStyles.timeColon}>:</Text>
+          <View style={transactionFormStyles.timeBox}>
+            <Text style={transactionFormStyles.timeText}>{time.minute}</Text>
+          </View>
+          {time.period ? (
+            <View style={transactionFormStyles.timeBox}>
+              <Text style={transactionFormStyles.timePeriodText}>
+                {time.period}
+              </Text>
+            </View>
+          ) : null}
+        </Pressable>
       </View>
 
       {showPending && (

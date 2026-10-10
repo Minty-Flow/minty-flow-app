@@ -16,6 +16,7 @@ import { runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
 import { generateId } from "~/database/utils/generate-id"
 import { getBalanceDelta } from "~/database/utils/get-balance-delta"
+import { hasAttachmentsFromExtra } from "~/database/utils/has-attachments-from-extra"
 import type {
   CreateTransferParams,
   EditTransferFields,
@@ -29,21 +30,6 @@ import {
   convertMinorUnits,
   toMajorUnits,
 } from "~/utils/money"
-
-function hasAttachmentsFromExtra(
-  extra: Record<string, string> | null,
-): boolean {
-  if (!extra?.attachments) return false
-  try {
-    const parsed = JSON.parse(extra.attachments) as unknown
-    if (Array.isArray(parsed)) return parsed.length > 0
-    if (typeof parsed === "object" && parsed !== null)
-      return Object.keys(parsed).length > 0
-    return false
-  } catch {
-    return extra.attachments.length > 0
-  }
-}
 
 // CSI-2: a pending transaction may only carry a kind that represents a
 // legitimately un-applied state. Anything else is a form/caller bug.
