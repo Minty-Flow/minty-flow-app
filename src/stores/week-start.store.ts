@@ -2,6 +2,8 @@ import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 
+import { notifyFormatChange } from "~/utils/notify-format-change"
+
 /**
  * "auto" follows the device region (which starts the week on Saturday in much
  * of the Arabic-speaking world, so it is not reducible to a Sunday/Monday flag).
@@ -23,6 +25,7 @@ export const useWeekStartStore = create<WeekStartStore>()(
       weekStart: "auto",
       setWeekStart: (weekStart) => {
         set({ weekStart })
+        notifyFormatChange()
       },
     }),
     {
