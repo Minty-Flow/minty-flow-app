@@ -1,4 +1,3 @@
-import { getLocales } from "expo-localization"
 import i18n from "i18next"
 import { initReactI18next } from "react-i18next"
 
@@ -49,8 +48,9 @@ declare module "i18next" {
   }
 }
 
-const deviceLocale = getLocales()[0]
-const initialLanguage = deviceLocale?.languageCode ?? LangCodeEnum.EN
+// English first, always: a saved choice (applied on rehydrate) is the only way to
+// get another language. The device language is deliberately not consulted.
+const initialLanguage = LangCodeEnum.EN
 
 i18n.use(initReactI18next).init({
   resources: LanguageResources,
