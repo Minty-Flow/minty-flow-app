@@ -29,6 +29,8 @@ Status: `done` converted · `next` good sheet candidate · `review` needs a deci
 
 | `transaction/transaction-form-v4/tag-picker-sheet.tsx` | (new, replaced the inline dropdown) | **done** | `heightFraction={0.75}`; draft selection applied on Done; search, New tag, Clear selection. Check keyboard vs search field. |
 
+| `month-picker-sheet.tsx` / `year-picker-sheet.tsx` | inline `MonthGrid` + inline year input | **done** | Replaces `month-grid.tsx`. Month sheet opens the year sheet stacked on top. Used by `MonthYearPicker` (5 screens) and the date-range sheet. Check stacking on iOS. |
+
 ## Native `Alert.alert` (5 calls, decisions)
 
 | Where | What it is | Decision |

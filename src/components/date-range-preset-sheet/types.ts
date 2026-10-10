@@ -21,11 +21,14 @@ export interface PresetOption {
   getRange: () => { start: Date; end: Date }
 }
 
-export type ExpandedSection = "byMonth" | "byYear" | "custom" | null
+export type ExpandedSection = "custom" | null
 
 export interface DateRangePresetSheetContentProps {
   initialStart?: Date
   initialEnd?: Date
   onSave: (start: Date, end: Date, source: DateRangePresetId) => void
   onRequestClose: () => void
+  /** Month / Year rows: the parent closes this sheet and opens the picker. */
+  onPickMonth: () => void
+  onPickYear: () => void
 }
