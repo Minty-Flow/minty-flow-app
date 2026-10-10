@@ -441,6 +441,36 @@
             "info": "This order is reflected in the transaction buttons on the home screen"
           }
         },
+        "calendarFormat": {
+          "title": "Calendar formatting",
+          "clock": {
+            "label": "Clock format",
+            "12h": "12-hour",
+            "24h": "24-hour"
+          },
+          "date": {
+            "label": "Date format",
+            "styleLabel": "Style",
+            "orderLabel": "Order",
+            "style": {
+              "full": "Full",
+              "dateOnly": "Date only",
+              "numeric": "Numeric",
+              "numericOnly": "Numeric only"
+            },
+            "order": {
+              "default": "Default",
+              "mdy": "Month / Day / Year",
+              "dmy": "Day / Month / Year",
+              "ymd": "Year / Month / Day",
+              "ydm": "Year / Day / Month"
+            }
+          },
+          "firstDay": {
+            "label": "First day of the week",
+            "default": "Default"
+          }
+        },
         "weekStart": {
           "label": "Week starts on",
           "auto": "Auto",
@@ -874,16 +904,15 @@
           "import": "Import",
           "history": "History"
         },
-        "fileNameLabel": "File name",
-        "fileNameHelper": "Leave blank to use the default name. The extension is added for you.",
         "exportZip": "Full Backup (ZIP)",
         "exportZipDesc": "Can be fully restored later. Includes your attached files.",
         "exportJson": "Export Data (JSON)",
         "exportJsonDesc": "Essential data only. Images and attached files are not included.",
         "exportCsv": "Export Transactions (CSV)",
         "exportCsvDesc": "Cannot be used to restore. Ideal for opening in spreadsheet apps.",
+        "fileNameLabel": "File name",
+        "fileNameHelper": "Leave blank to use the default name. The extension is added for you.",
         "exportSaved": "Saved to device",
-        "exportSavedLocally": "Saved locally",
         "exportError": "Export failed. Please try again.",
         "exportFileNotFound": "Original file no longer exists. Please export again.",
         "importJson": "Restore from Backup",
@@ -1001,6 +1030,10 @@
           "repetitive": "A recurring entry. Each one stays out of your totals until marked paid or received; clearing the current entry queues the next.",
           "lent": "Money you lent out. Counts as negative cash flow until you mark it collected.",
           "borrowed": "Money you borrowed. Counts as positive cash flow until you mark it settled."
+        },
+        "locked": {
+          "loan": "Linked to loan: {{name}}",
+          "recurring": "Part of a recurring series"
         }
       },
       "upcoming": {
@@ -1201,40 +1234,51 @@
         "noneSelected": "None selected",
         "expense": {
           "groceries": "Groceries",
-          "transportation": "Transportation",
-          "healthcare": "Healthcare",
-          "education": "Education",
-          "shopping": "Shopping",
           "dining": "Food & Dining",
+          "transportation": "Transportation",
+          "housing": "Housing",
+          "utilities": "Bills & Utilities",
+          "shopping": "Shopping",
+          "healthcare": "Health",
           "entertainment": "Entertainment",
-          "housing": "Housing & Utilities",
-          "fitness": "Health & Fitness",
-          "utilities": "Utilities",
-          "travel": "Travel",
-          "personalCare": "Personal Care",
-          "clothing": "Clothing",
-          "subscriptions": "Subscriptions",
+          "education": "Education",
+          "kids": "Kids & Childcare",
           "insurance": "Insurance",
+          "fuel": "Fuel",
+          "carMaintenance": "Car Maintenance",
           "pets": "Pets",
-          "coffee": "Coffee & Drinks",
+          "businessExpenses": "Business Expenses",
+          "taxes": "Taxes",
+          "travel": "Travel",
+          "homeMaintenance": "Home Maintenance",
           "charity": "Charity"
         },
         "income": {
           "salary": "Salary",
-          "freelance": "Freelance",
-          "investment": "Investment",
-          "business": "Business",
-          "gift": "Gift",
-          "rental": "Rental Income",
-          "dividends": "Dividends",
-          "bonus": "Bonus",
-          "sideIncome": "Side Income",
-          "pension": "Pension",
-          "taxRefund": "Tax Refund",
-          "cashback": "Cashback",
-          "commission": "Commission",
+          "freelance": "Freelance & Side Work",
+          "investment": "Investments",
+          "gift": "Gifts",
+          "cashback": "Cashback & Refunds",
           "allowance": "Allowance",
-          "overtime": "Overtime"
+          "business": "Business Income",
+          "rental": "Rental Income",
+          "pension": "Pension"
+        },
+        "essentials": "Essentials",
+        "packsTitle": "Fits your life",
+        "packsHint": "Add a few extras that match your situation.",
+        "addPack": "Add all",
+        "removePack": "Remove",
+        "packs": {
+          "student": "Student",
+          "family": "Family",
+          "car": "Car owner",
+          "pets": "Pet owner",
+          "selfEmployed": "Self-employed",
+          "traveler": "Traveler",
+          "landlord": "Landlord",
+          "retired": "Retired",
+          "giving": "Giving"
         }
       },
       "search": {
@@ -1365,6 +1409,7 @@
       "noVariants": "No color variants available for the current theme"
     },
     "dateRange": {
+      "monthPickerTitle": "Select a month",
       "yearPlaceholder": "Select a year",
       "title": "Select range",
       "commonOptions": "Common options",
@@ -1428,10 +1473,6 @@
     "searchInput": {
       "placeholder": "Search..."
     },
-    "inlineCategoryPicker": {
-      "noCategories": "No categories yet",
-      "createCategory": "Create a category"
-    },
     "currencyAccountSelector": {
       "currencyLabel": "Currency",
       "accountsLabel": "Accounts",
@@ -1441,6 +1482,18 @@
       "noAccountsForCurrency": "No accounts for this currency",
       "accountsClearedTitle": "Accounts cleared",
       "accountsClearedDescription": "Selected accounts were removed because they don't match {{currency}}."
+    },
+    "categoryPicker": {
+      "title": "Select a category",
+      "titleMulti": "Select categories",
+      "search": "Search categories",
+      "mostUsed": "Most used",
+      "all": "All categories",
+      "allChip": "All ({{count}})",
+      "newCategory": "New category",
+      "noResults": "No categories found",
+      "selectAll": "Select all",
+      "deselectAll": "Deselect all"
     }
   },
   "validation": {
