@@ -136,6 +136,11 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
           {transactionType !== TransactionTypeEnum.TRANSFER && (
             <FormCategoryPicker
               categories={categories}
+              categoryType={
+                transactionType === TransactionTypeEnum.INCOME
+                  ? "income"
+                  : "expense"
+              }
               categoryId={f.categoryId}
               onSelect={f.handleCategorySelect}
               onClear={f.handleCategoryClear}
@@ -148,7 +153,8 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
             <FormDateSection
               date={f.date}
               control={f.control}
-              onDatePress={() => f.openDatePicker("transaction")}
+              onDatePress={() => f.openDatePicker("transaction", "date")}
+              onTimePress={() => f.openDatePicker("transaction", "time")}
               dueDateMode={f.isLoanKind}
             />
           )}
@@ -156,7 +162,9 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
           <FormKindSelector
             kind={f.kind}
             onSelect={f.setKind}
-            disabled={!f.canEditKind}
+            isNew={f.isNew}
+            locked={!f.canEditKind}
+            linkedLoan={f.linkedLoan}
           />
           <FormKindCard
             kind={f.kind}
@@ -209,35 +217,42 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
             }
           />
 
-          {/* Goal: hidden for transfers, filtered by selected account */}
-          {transactionType !== TransactionTypeEnum.TRANSFER && (
-            <FormGoalPicker
-              goals={f.accountGoals}
-              goalId={f.goalId}
-              onSelect={(id) => f.setValue("goalId", id, { shouldDirty: true })}
-              onClear={() => f.setValue("goalId", null, { shouldDirty: true })}
-            />
-          )}
+          {/* Goal: hidden for transfers and loan kinds (a loan isn't saving
+                toward a goal), filtered by selected account */}
+          {transactionType !== TransactionTypeEnum.TRANSFER &&
+            !f.isLoanKind && (
+              <FormGoalPicker
+                goals={f.accountGoals}
+                goalId={f.goalId}
+                onSelect={(id) =>
+                  f.setValue("goalId", id, { shouldDirty: true })
+                }
+                onClear={() =>
+                  f.setValue("goalId", null, { shouldDirty: true })
+                }
+              />
+            )}
 
-          {/* Budget: hidden for transfers, filtered by account + category */}
-          {transactionType !== TransactionTypeEnum.TRANSFER && (
-            <FormBudgetPicker
-              budgets={f.accountBudgets}
-              budgetId={f.budgetId}
-              onSelect={(id) =>
-                f.setValue("budgetId", id, { shouldDirty: true })
-              }
-              onClear={() =>
-                f.setValue("budgetId", null, { shouldDirty: true })
-              }
-            />
-          )}
+          {/* Budget: hidden for transfers and loan kinds (a loan isn't
+                spending), filtered by account + category */}
+          {transactionType !== TransactionTypeEnum.TRANSFER &&
+            !f.isLoanKind && (
+              <FormBudgetPicker
+                budgets={f.accountBudgets}
+                budgetId={f.budgetId}
+                onSelect={(id) =>
+                  f.setValue("budgetId", id, { shouldDirty: true })
+                }
+                onClear={() =>
+                  f.setValue("budgetId", null, { shouldDirty: true })
+                }
+              />
+            )}
 
           {/* Loan link: hidden for transfers and for the loan kinds (the
                 loan card owns linking there). */}
           {transactionType !== TransactionTypeEnum.TRANSFER &&
-            f.kind !== "lent" &&
-            f.kind !== "borrowed" && (
+            !f.isLoanKind && (
               <FormLoanPicker
                 loans={f.accountLoans}
                 loanId={f.loanId}
@@ -257,9 +272,11 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
             removeTag={f.removeTag}
           />
 
+          {/* Refund: not for recurring kinds, and not for loans (money coming
+                back on a loan is a repayment, not a refund). */}
           {transactionType === TransactionTypeEnum.EXPENSE &&
-            f.kind !== "subscription" &&
-            f.kind !== "repetitive" && (
+            !f.isRecurringKind &&
+            !f.isLoanKind && (
               <ListItem
                 style={transactionFormStyles.switchRow}
                 onPress={f.handleRefundToggle}

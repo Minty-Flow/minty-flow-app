@@ -31,7 +31,7 @@ export function FormLoanPicker({ loans, loanId, onSelect, onClear }: Props) {
               onPress={() => (isSelected ? onClear() : onSelect(loan.id))}
               leading={
                 <DynamicIcon
-                  icon={loan.icon || "banknotes"}
+                  icon={loan.icon || "scale-outline"}
                   size={16}
                   colorScheme={getThemeStrict(loan.colorSchemeName)}
                   variant="badge"

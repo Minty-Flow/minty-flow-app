@@ -59,11 +59,6 @@ export function FormOverlays({
         value={datePicker.tempDate}
         onClose={onDatePickerClose}
         onConfirm={onIosDateConfirm}
-        confirmLabel={
-          datePicker.mode === "date"
-            ? "common.actions.next"
-            : "common.actions.add"
-        }
       />
 
       <LocationPickerModal
