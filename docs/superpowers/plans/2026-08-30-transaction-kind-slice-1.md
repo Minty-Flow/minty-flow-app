@@ -1,7 +1,5 @@
 # Transaction `kind` axis — Slice 1 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Add a single `kind` axis to transactions (`default | upcoming | subscription | repetitive | lent | borrowed`), migrate existing data onto it, and restructure the transaction form into a coordinator + `useTransactionForm` hook with a kind selector, top-tab state machine, and edit-semantics locks — without changing recurrence, loans, or upcoming behavior (Slices 2–5).
 
 **Architecture:** New additive SQLite column `transactions.kind` (no table rebuild) with a guarded, idempotent backfill in migration `0001`. A pure domain module `src/domain/transaction-kind.ts` is the single source of truth for kind↔type rules; the zod schema, the form hook, and the ledger service all import it. The 988-line `transaction-form-v3/index.tsx` is `git mv`'d to `transaction-form-v4/` and split into a thin coordinator, a deep `useTransactionForm` hook, pure builder functions, and a pure `onKindChange` transition function. `subtype` shrinks to `refund`-only in the final task once `kind` is everywhere.
@@ -12,7 +10,6 @@
 
 ## Global Constraints
 
-- **Commit messages / PR bodies carry NO attribution** — no `Co-Authored-By`, no `Claude-Session`, no "Generated with…", no AI/tool mention. Do not GPG-sign. (`CLAUDE.md` rule 1.)
 - **Money is integer minor units.** Never `parseFloat`/`toFixed`/`Number()`/`Intl.NumberFormat` in feature code. This slice does not touch money math; keep it that way.
 - **No `console.*`** — use `src/utils/logger.ts` (`logger.warn` / `logger.error`).
 - **No `any`.** TypeScript strict.
@@ -1227,15 +1224,3 @@ Out of scope by design (Slices 2–5): real `RecurrenceCard`/interval-unit, real
 **2. Placeholder scan:** The only "coming soon" strings are deliberate real i18n keys (Task 11 Step 6) that Slices 2/4 delete — flagged as such. No `TODO`/`TBD`/"handle edge cases". Every code step has literal content.
 
 **3. Type consistency:** `TransactionKind`, `TransactionKindEnum`, `ALLOWED_TYPES_BY_KIND`, `isKindTypeValid`, `getKindForLoanType`, `getOpeningTypeForLoan`, `getRepaymentTypeForLoan`, `deriveKind`, `onKindChange`, `buildTransactionPayload`, `TransactionFormV4Props`, `initialKind`, `canEditKind`, `lockedFields`, `tabLabels`/`tabHiddenSlots`/`tabLockedTo` — names are used identically across Tasks 3–12. Pure modules loaded by the `.mts` check scripts (`transaction-kind.ts`, `derive-kind.ts`, ideally `on-kind-change.ts`) keep **type-only imports only** — Node's type-stripping elides them, so `~/` is fine and no runtime resolution happens; all app code imports these via `~/domain/…` / `~/components/…` normally.
-
----
-
-## Execution Handoff
-
-**Plan complete and saved to `docs/superpowers/plans/2026-08-30-transaction-kind-slice-1.md`. Two execution options:**
-
-**1. Subagent-Driven (recommended)** — I dispatch a fresh subagent per task, review between tasks, fast iteration.
-
-**2. Inline Execution** — Execute tasks in this session using executing-plans, batch execution with checkpoints.
-
-**Which approach?**

@@ -1,8 +1,7 @@
 # Project Structure
-Generated on: 2026-08-30T23:06:14.927Z
+Generated on: 2026-10-10T19:43:19.837Z
 ```
 ./
-├── .github/
 ├── .husky/
 │   ├── _/
 │   │   ├── .gitignore
@@ -23,70 +22,6 @@ Generated on: 2026-08-30T23:06:14.927Z
 │   │   ├── pre-rebase
 │   │   └── prepare-commit-msg
 │   └── pre-commit
-├── .superpowers/
-│   └── sdd/
-│       ├── 2026-08-30-transaction-kind-slice-1/
-│       │   ├── final-code-only.diff
-│       │   ├── final-fix-report.md
-│       │   ├── progress.md
-│       │   ├── review-0476346..9bd185c.diff
-│       │   ├── review-06de076..8c2d414.diff
-│       │   ├── review-319f978..0476346.diff
-│       │   ├── review-549ef7c..8e557fb.diff
-│       │   ├── review-5ffb899..fe1d1a3.diff
-│       │   ├── review-71717ef..842ca4d.diff
-│       │   ├── review-7f6da92..9243259.diff
-│       │   ├── review-8e557fb..a570e9d.diff
-│       │   ├── review-9bd185c..549ef7c.diff
-│       │   ├── review-9bfa4ab..e2fc8e9.diff
-│       │   ├── review-a570e9d..486844c.diff
-│       │   ├── review-a81b517..7f6da92.diff
-│       │   ├── review-ad5f3ad..e2fc8e9.diff
-│       │   ├── review-e2fc8e9..d515814.diff
-│       │   ├── review-ef3a9e7..71717ef.diff
-│       │   ├── task-1-brief.md
-│       │   ├── task-1-report.md
-│       │   ├── task-10-brief.md
-│       │   ├── task-10-report.md
-│       │   ├── task-11-brief.md
-│       │   ├── task-11-report.md
-│       │   ├── task-12-brief.md
-│       │   ├── task-12-report.md
-│       │   ├── task-2-brief.md
-│       │   ├── task-2-report.md
-│       │   ├── task-3-brief.md
-│       │   ├── task-3-report.md
-│       │   ├── task-4-brief.md
-│       │   ├── task-4-report.md
-│       │   ├── task-5-brief.md
-│       │   ├── task-5-report.md
-│       │   ├── task-6-brief.md
-│       │   ├── task-6-report.md
-│       │   ├── task-7-brief.md
-│       │   ├── task-7-report.md
-│       │   ├── task-8-brief.md
-│       │   ├── task-8-report.md
-│       │   ├── task-9-brief.md
-│       │   └── task-9-report.md
-│       ├── 2026-08-30-transaction-kind-slice-2/
-│       │   ├── progress.md
-│       │   ├── review-0988469..e9eaa54.diff
-│       │   ├── review-1a7d18c..5651730.diff
-│       │   ├── review-1c75836..50bddf0.diff
-│       │   ├── review-3751378..0988469.diff
-│       │   ├── review-5651730..3751378.diff
-│       │   ├── review-5f5eeef..1a7d18c.diff
-│       │   ├── review-e9eaa54..1c75836.diff
-│       │   ├── task-1-brief.md
-│       │   ├── task-1-report.md
-│       │   ├── task-2-brief.md
-│       │   ├── task-2-report.md
-│       │   ├── task-3-brief.md
-│       │   ├── task-3-report.md
-│       │   ├── task-4-brief.md
-│       │   ├── task-4-report.md
-│       │   └── task-5-brief.md
-│       └── .gitignore
 ├── docs/
 │   ├── adr/
 │   │   └── 0001-transaction-kind-axis.md
@@ -100,6 +35,7 @@ Generated on: 2026-08-30T23:06:14.927Z
 │   │   │   └── 2026-08-30-transaction-kind-slice-2.md
 │   │   └── specs/
 │   │       └── 2026-08-30-transaction-form-kind-redesign-design.md
+│   ├── bottom-sheet-migration.md
 │   ├── post-release-drizzle-architecture-plan.md
 │   ├── stats-recurring-spending-map-plan.md
 │   └── STRUCTURE.md
@@ -224,7 +160,7 @@ Generated on: 2026-08-30T23:06:14.927Z
 │   │   │   ├── account-modify/
 │   │   │   │   ├── account-delete-section.tsx
 │   │   │   │   ├── account-form-footer.tsx
-│   │   │   │   ├── account-form-modals.tsx
+│   │   │   │   ├── account-form-sheets.tsx
 │   │   │   │   ├── account-modify-content.tsx
 │   │   │   │   ├── account-modify.styles.ts
 │   │   │   │   ├── account-switches-section.tsx
@@ -233,12 +169,12 @@ Generated on: 2026-08-30T23:06:14.927Z
 │   │   │   ├── account-card.tsx
 │   │   │   └── account-type-inline.tsx
 │   │   ├── bill-splitter/
-│   │   │   ├── add-name-modal.tsx
+│   │   │   ├── add-name-sheet.tsx
 │   │   │   └── bill-item-card.tsx
 │   │   ├── budgets/
 │   │   │   ├── budget-modify/
 │   │   │   │   ├── budget-form-footer.tsx
-│   │   │   │   ├── budget-form-modals.tsx
+│   │   │   │   ├── budget-form-sheets.tsx
 │   │   │   │   ├── budget-modify-content.tsx
 │   │   │   │   ├── budget-modify.styles.ts
 │   │   │   │   └── types.ts
@@ -246,7 +182,7 @@ Generated on: 2026-08-30T23:06:14.927Z
 │   │   ├── categories/
 │   │   │   ├── category-modify/
 │   │   │   │   ├── category-form-footer.tsx
-│   │   │   │   ├── category-form-modals.tsx
+│   │   │   │   ├── category-form-sheets.tsx
 │   │   │   │   ├── category-modify-content.tsx
 │   │   │   │   ├── category-modify.styles.ts
 │   │   │   │   └── types.ts
@@ -257,7 +193,7 @@ Generated on: 2026-08-30T23:06:14.927Z
 │   │   ├── change-icon-inline/
 │   │   │   ├── change-icon-inline.styles.ts
 │   │   │   ├── emoji-letter-mode.tsx
-│   │   │   ├── icon-selection-modal.tsx
+│   │   │   ├── icon-selection-sheet.tsx
 │   │   │   ├── image-mode.tsx
 │   │   │   ├── index.tsx
 │   │   │   ├── mode-selector-list.tsx
@@ -266,16 +202,16 @@ Generated on: 2026-08-30T23:06:14.927Z
 │   │   │   ├── currency-account-selector.styles.ts
 │   │   │   ├── index.tsx
 │   │   │   └── types.ts
-│   │   ├── date-range-preset-modal/
-│   │   │   ├── date-range-preset-modal-content.tsx
-│   │   │   ├── date-range-preset-modal.styles.ts
+│   │   ├── date-range-preset-sheet/
+│   │   │   ├── date-range-preset-sheet-content.tsx
+│   │   │   ├── date-range-preset-sheet.styles.ts
 │   │   │   ├── index.tsx
 │   │   │   ├── presets.ts
 │   │   │   └── types.ts
 │   │   ├── goals/
 │   │   │   ├── goal-modify/
 │   │   │   │   ├── goal-form-footer.tsx
-│   │   │   │   ├── goal-form-modals.tsx
+│   │   │   │   ├── goal-form-sheets.tsx
 │   │   │   │   ├── goal-modify-content.tsx
 │   │   │   │   ├── goal-modify.styles.ts
 │   │   │   │   └── types.ts
@@ -285,19 +221,19 @@ Generated on: 2026-08-30T23:06:14.927Z
 │   │   ├── loans/
 │   │   │   ├── loan-modify/
 │   │   │   │   ├── loan-form-footer.tsx
-│   │   │   │   ├── loan-form-modals.tsx
+│   │   │   │   ├── loan-form-sheets.tsx
 │   │   │   │   ├── loan-modify-content.tsx
 │   │   │   │   ├── loan-modify.styles.ts
 │   │   │   │   └── types.ts
-│   │   │   ├── loan-action-modal.tsx
+│   │   │   ├── loan-action-sheet.tsx
 │   │   │   └── loan-card.tsx
 │   │   ├── location/
 │   │   │   └── form-location-picker.tsx
 │   │   ├── profile/
 │   │   │   └── profile-section.tsx
-│   │   ├── selector-modals/
-│   │   │   ├── contact-selector-modal.tsx
-│   │   │   ├── currency-selector-modal.tsx
+│   │   ├── selectors/
+│   │   │   ├── contact-selector-sheet.tsx
+│   │   │   ├── currency-selector-sheet.tsx
 │   │   │   └── styles.ts
 │   │   ├── smart-amount-input/
 │   │   │   ├── amount-input-row.tsx
@@ -337,7 +273,7 @@ Generated on: 2026-08-30T23:06:14.927Z
 │   │   │   ├── action-buttons.tsx
 │   │   │   ├── delete-section.tsx
 │   │   │   ├── form-tag-fields.tsx
-│   │   │   ├── form-tag-modals.tsx
+│   │   │   ├── form-tag-sheets.tsx
 │   │   │   └── type-tabs.tsx
 │   │   ├── tags/
 │   │   │   └── tag-card.tsx
@@ -381,18 +317,19 @@ Generated on: 2026-08-30T23:06:14.927Z
 │   │   │   │   ├── form-kind-card.tsx
 │   │   │   │   ├── form-kind-selector.tsx
 │   │   │   │   ├── form-loan-picker.tsx
-│   │   │   │   ├── form-modals.tsx
 │   │   │   │   ├── form-notes-section.tsx
+│   │   │   │   ├── form-overlays.tsx
 │   │   │   │   ├── form-tags-picker.tsx
 │   │   │   │   ├── form-to-account-picker.tsx
 │   │   │   │   ├── form-utils.ts
 │   │   │   │   ├── form.styles.ts
 │   │   │   │   ├── index.tsx
-│   │   │   │   ├── kind-info-modal.tsx
+│   │   │   │   ├── kind-info-sheet.tsx
 │   │   │   │   ├── kind-info.ts
 │   │   │   │   ├── on-kind-change.ts
 │   │   │   │   ├── recurrence-card.tsx
-│   │   │   │   ├── recurrence-unit-modal.tsx
+│   │   │   │   ├── recurrence-unit-sheet.tsx
+│   │   │   │   ├── tag-picker-sheet.tsx
 │   │   │   │   ├── transaction-top-tabs.tsx
 │   │   │   │   ├── types.ts
 │   │   │   │   ├── upcoming-banner.tsx
@@ -416,19 +353,20 @@ Generated on: 2026-08-30T23:06:14.927Z
 │   │   │   │   ├── use-app-foreground.ts
 │   │   │   │   └── utils.ts
 │   │   │   ├── attachment-preview-modal.tsx
-│   │   │   ├── delete-recurring-modal.tsx
-│   │   │   ├── edit-recurring-modal.tsx
+│   │   │   ├── delete-recurring-sheet.tsx
+│   │   │   ├── edit-recurring-sheet.tsx
 │   │   │   ├── location-picker-modal.tsx
 │   │   │   ├── notes-modal.tsx
 │   │   │   └── transaction-section-list.tsx
 │   │   ├── ui/
 │   │   │   ├── date-time-picker/
-│   │   │   │   ├── date-time-picker-modal.tsx
+│   │   │   │   ├── date-time-picker-sheet.tsx
 │   │   │   │   ├── date-time-picker.tsx
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── styles.ts
 │   │   │   │   └── use-date-time-picker.tsx
 │   │   │   ├── activity-indicator-minty.tsx
+│   │   │   ├── bottom-sheet.tsx
 │   │   │   ├── button.tsx
 │   │   │   ├── chevron-icon.tsx
 │   │   │   ├── chips.tsx
@@ -448,10 +386,10 @@ Generated on: 2026-08-30T23:06:14.927Z
 │   │   ├── action-item.tsx
 │   │   ├── app-lock-gate.tsx
 │   │   ├── color-variant-inline.tsx
-│   │   ├── confirm-modal.tsx
+│   │   ├── confirm-sheet.tsx
 │   │   ├── dynamic-icon.tsx
 │   │   ├── external-link.tsx
-│   │   ├── info-modal.tsx
+│   │   ├── info-sheet.tsx
 │   │   ├── keyboard-sticky-view-minty.tsx
 │   │   ├── money.tsx
 │   │   ├── month-grid.tsx
@@ -478,7 +416,6 @@ Generated on: 2026-08-30T23:06:14.927Z
 │   │   │   ├── backup-format.ts
 │   │   │   └── backup-import-plan.ts
 │   │   ├── drizzle/
-│   │   │   ├── hooks/
 │   │   │   ├── read-models/
 │   │   │   │   ├── account-read-model.ts
 │   │   │   │   ├── budget-read-model.ts
@@ -659,7 +596,6 @@ Generated on: 2026-08-30T23:06:14.927Z
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml
 ├── README.md
-├── skills-lock.json
 └── tsconfig.json
 
 ```

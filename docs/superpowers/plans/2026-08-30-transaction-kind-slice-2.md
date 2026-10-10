@@ -1,7 +1,5 @@
 # Transaction `kind` — Slice 2 (recurrence: interval + unit) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Replace the fixed recurrence frequencies (`daily|weekly|biweekly|monthly|yearly` + "ends after N occurrences") with a free "every **N** **unit**" model plus an "Until <date> | Forever" end, driven by the `subscription` / `repetitive` kinds, and make those two kinds selectable in the form.
 
 **Architecture:** `src/utils/recurrence.ts` becomes the single owner of the interval+unit ⇄ RRULE mapping (`buildRRuleString`, `countOccurrencesBetween`, new `parseRecurrence`). The form's `RecurringState` drops `enabled`/`frequency`/`endAfterOccurrences` — recurrence is "on" iff `kind ∈ {subscription, repetitive}`. A new `recurrence-card.tsx` (rendered by `form-kind-card.tsx`) shows the discrete controls. Existing recurring rules are read through `parseRecurrence` at display time — **no SQL migration, no rewrite of stored `rules` blobs**.
@@ -24,7 +22,6 @@
 - **CSI-2** — a pending future recurring instance keeps `kind = subscription|repetitive` (never `upcoming`); `is_pending = 1` is allowed for these kinds. Already handled by `synchronizeRecurringTransaction` + the `ledger-service` assert; do not regress it.
 - i18n keys added to **both** `src/i18n/translation/en.json` and `ar.json`; `pnpm check-i18n-keys` passes (0 missing / 0 extra).
 - Pre-commit must pass every task: `pnpm structure`, `pnpm lint:fix`, `pnpm check-number-formatting`, `pnpm types`.
-- Commit messages: no attribution trailers, no AI-tool mentions, no GPG signing (repo `CLAUDE.md` rule 1).
 
 ---
 
