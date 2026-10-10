@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
-import { StyleSheet } from "react-native-unistyles"
 
+import { settingsStyles } from "~/components/settings/settings-list"
 import { ToggleItem } from "~/components/toggle-item"
 import { InfoBanner } from "~/components/ui/info-banner"
 import { View } from "~/components/ui/view"
@@ -13,8 +13,11 @@ export default function SoundScreen() {
   const disableSound = useAndroidSoundStore((s) => s.disableSound)
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.list}>
+    <ScrollView
+      style={settingsStyles.screen}
+      contentContainerStyle={settingsStyles.content}
+    >
+      <View>
         <ToggleItem
           icon={
             disableSound
@@ -36,17 +39,3 @@ export default function SoundScreen() {
     </ScrollView>
   )
 }
-
-const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  content: {
-    paddingVertical: 12,
-    paddingBottom: 40,
-  },
-  list: {
-    gap: 0,
-  },
-}))

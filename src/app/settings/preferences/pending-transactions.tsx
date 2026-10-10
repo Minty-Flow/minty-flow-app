@@ -3,13 +3,13 @@ import { useTranslation } from "react-i18next"
 import { Linking, Platform, ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
+import {
+  SettingsSwitchRow,
+  settingsStyles,
+} from "~/components/settings/settings-list"
 import { ChoiceChips } from "~/components/ui/chips"
 import { InfoBanner } from "~/components/ui/info-banner"
-import { ListItem } from "~/components/ui/list-item"
 import { PermissionBanner } from "~/components/ui/permission-banner"
-import { Switch } from "~/components/ui/switch"
-import { Text } from "~/components/ui/text"
-import { View } from "~/components/ui/view"
 import { useNotificationPermissionStatus } from "~/hooks/use-notification-permission-status"
 import type { TranslationKey } from "~/i18n/config"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
@@ -56,31 +56,6 @@ function PermissionWarnings() {
       )}
       showBanner={showNotificationsRow}
     />
-  )
-}
-
-function ToggleRow({
-  title,
-  description,
-  value,
-  onToggle,
-}: {
-  title: string
-  description?: string
-  value: boolean
-  onToggle: () => void
-}) {
-  return (
-    <ListItem style={styles.toggleSection} onPress={onToggle}>
-      <View style={styles.toggleHeader}>
-        <Text style={styles.toggleTitle}>{title}</Text>
-
-        <Switch value={value} />
-      </View>
-      {description && (
-        <Text style={styles.toggleDescription}>{description}</Text>
-      )}
-    </ListItem>
   )
 }
 
@@ -171,7 +146,10 @@ export default function PendingTransactionsPreferencesScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={settingsStyles.screen}
+      contentContainerStyle={settingsStyles.content}
+    >
       <InfoBanner text={t("screens.settings.pending.caption")} />
 
       <ChoiceChips
@@ -182,40 +160,40 @@ export default function PendingTransactionsPreferencesScreen() {
         style={styles.choiceSection}
       />
 
-      <ToggleRow
-        title={t(
+      <SettingsSwitchRow
+        label={t(
           "screens.settings.pending.settings.autoPaySubscriptions.label",
         )}
         description={t(
           "screens.settings.pending.settings.autoPaySubscriptions.description",
         )}
         value={autoPaySubscriptions}
-        onToggle={() => setAutoPaySubscriptions(!autoPaySubscriptions)}
+        onValueChange={setAutoPaySubscriptions}
       />
 
-      <ToggleRow
-        title={t("screens.settings.pending.settings.autoPayRepetitive.label")}
+      <SettingsSwitchRow
+        label={t("screens.settings.pending.settings.autoPayRepetitive.label")}
         description={t(
           "screens.settings.pending.settings.autoPayRepetitive.description",
         )}
         value={autoPayRepetitive}
-        onToggle={() => setAutoPayRepetitive(!autoPayRepetitive)}
+        onValueChange={setAutoPayRepetitive}
       />
 
-      <ToggleRow
-        title={t("screens.settings.pending.settings.autoPayUpcoming.label")}
+      <SettingsSwitchRow
+        label={t("screens.settings.pending.settings.autoPayUpcoming.label")}
         description={t(
           "screens.settings.pending.settings.autoPayUpcoming.description",
         )}
         value={autoPayUpcoming}
-        onToggle={() => setAutoPayUpcoming(!autoPayUpcoming)}
+        onValueChange={setAutoPayUpcoming}
       />
 
-      <ToggleRow
-        title={t("screens.settings.pending.settings.notify.label")}
+      <SettingsSwitchRow
+        label={t("screens.settings.pending.settings.notify.label")}
         description={t("screens.settings.pending.settings.notify.description")}
         value={notify}
-        onToggle={handleNotifyToggle}
+        onValueChange={handleNotifyToggle}
       />
 
       {notify && (
@@ -236,36 +214,8 @@ export default function PendingTransactionsPreferencesScreen() {
   )
 }
 
-const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  content: {
-    paddingBottom: 40,
-  },
+const styles = StyleSheet.create(() => ({
   choiceSection: {
     padding: 20,
-  },
-  toggleSection: {
-    flexDirection: "column",
-    alignItems: "stretch",
-  },
-  toggleHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  toggleTitle: {
-    fontSize: theme.typography.headlineSmall.fontSize,
-    fontWeight: "600",
-    color: theme.colors.onSurface,
-    flex: 1,
-  },
-  toggleDescription: {
-    fontSize: theme.typography.labelLarge.fontSize,
-    color: theme.colors.semantic.semi,
-    lineHeight: 20,
-    paddingRight: 60,
   },
 }))
