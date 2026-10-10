@@ -1,103 +1,96 @@
 /**
- * Tags picker block for the transaction form: chips + inline dropdown with search.
- * Optional scroll-into-view when scroll refs are passed.
+ * Tags field for the transaction form: one horizontal row. "Add tag" is always
+ * first and opens the tag picker sheet; the applied tags follow as chips
+ * (tap one to drop it).
  */
-import { useRouter } from "expo-router"
-import { useMemo, useState } from "react"
+import { useFocusEffect, useRouter } from "expo-router"
+import { useCallback, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { View as RNView, ScrollView } from "react-native"
+import { ScrollView } from "react-native"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { Chip } from "~/components/ui/chips"
-import { Input } from "~/components/ui/input"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useScrollIntoView } from "~/hooks/use-scroll-into-view"
 import { getThemeStrict } from "~/styles/theme/registry"
 import { NewEnum } from "~/types/new"
 import type { Tag } from "~/types/tags"
 
 import { transactionFormStyles } from "./form.styles"
+import { TagPickerSheet } from "./tag-picker-sheet"
 
 interface FormTagsPickerProps {
   tags: Tag[]
   tagIds: string[] | undefined
-  addTag: (tagId: string) => void
+  setTags: (tagIds: string[]) => void
   removeTag: (tagId: string) => void
-  clearTags: () => void
 }
+
 export function FormTagsPicker({
   tags,
   tagIds,
-  addTag,
+  setTags,
   removeTag,
-  clearTags,
 }: FormTagsPickerProps) {
-  const router = useRouter()
   const { t } = useTranslation()
   const { theme } = useUnistyles()
-  const { wrapperRef, scrollIntoView } = useScrollIntoView()
-  const [tagPickerOpen, setTagPickerOpen] = useState(false)
-  const [tagSearchQuery, setTagSearchQuery] = useState("")
-  const selectedTagIdSet = useMemo(() => new Set(tagIds ?? []), [tagIds])
-  const selectedTags = useMemo(
-    () => tags.filter((tag) => selectedTagIdSet.has(tag.id)),
-    [selectedTagIdSet, tags],
-  )
-  const filteredTagsForPicker = useMemo(() => {
-    const available = tags.filter((tag) => !selectedTagIdSet.has(tag.id))
-    if (!tagSearchQuery.trim()) return available
-    const lower = tagSearchQuery.toLowerCase()
-    return available.filter((tag) => tag.name.toLowerCase().includes(lower))
-  }, [selectedTagIdSet, tagSearchQuery, tags])
-  const handleToggle = () => {
-    if (!tagPickerOpen) {
-      scrollIntoView()
-      setTagSearchQuery("")
-    }
-    setTagPickerOpen((o) => !o)
+  const router = useRouter()
+  const [sheetVisible, setSheetVisible] = useState(false)
+  // True while the create-tag screen is open: reopen the picker on return.
+  const reopenOnFocusRef = useRef(false)
+  const selectedIds = tagIds ?? []
+  const selectedTags = tags.filter((tag) => selectedIds.includes(tag.id))
+  const addLabel = t("components.transactionForm.a11y.addTag")
+
+  const handleNewTag = (draft: string[]) => {
+    setTags(draft)
+    reopenOnFocusRef.current = true
+    setSheetVisible(false)
+    router.push({
+      pathname: "/settings/tags/[tagId]",
+      params: { tagId: NewEnum.NEW },
+    })
   }
+
+  // Back from the create-tag screen: reopen the picker.
+  useFocusEffect(
+    useCallback(() => {
+      if (reopenOnFocusRef.current) {
+        reopenOnFocusRef.current = false
+        setSheetVisible(true)
+      }
+    }, []),
+  )
+
   return (
-    <RNView ref={wrapperRef} style={transactionFormStyles.fieldBlock}>
-      <View style={transactionFormStyles.tagsWrapGrid}>
+    <View style={transactionFormStyles.fieldBlock}>
+      <ScrollView
+        horizontal
+        keyboardShouldPersistTaps="handled"
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={transactionFormStyles.tagsRow}
+      >
         <Pressable
           style={[
             transactionFormStyles.tagChipBase,
             transactionFormStyles.tagChipAdd,
-            tagPickerOpen && transactionFormStyles.tagChipCancel,
           ]}
-          onPress={handleToggle}
-          accessibilityLabel={
-            tagPickerOpen
-              ? t("common.actions.cancel")
-              : t("components.transactionForm.a11y.addTag")
-          }
+          onPress={() => setSheetVisible(true)}
+          accessibilityLabel={addLabel}
         >
-          <Text
-            variant="default"
-            style={[
-              transactionFormStyles.tagChipAddText,
-              tagPickerOpen && { color: theme.colors.semantic.semi },
-            ]}
-          >
-            {tagPickerOpen
-              ? t("common.actions.cancel")
-              : t("components.transactionForm.a11y.addTag")}
+          <Text variant="default" style={transactionFormStyles.tagChipAddText}>
+            {addLabel}
           </Text>
-          <IconSvg
-            name={tagPickerOpen ? "x-outline" : "plus-outline"}
-            size={16}
-            color={tagPickerOpen ? theme.colors.semantic.semi : undefined}
-          />
+          <IconSvg name="plus-outline" size={16} />
         </Pressable>
         {selectedTags.map((tag) => (
           <Chip
             key={tag.id}
             label={tag.name}
-            selected={true}
+            selected
             onPress={() => removeTag(tag.id)}
             leading={
               <DynamicIcon
@@ -116,103 +109,16 @@ export function FormTagsPicker({
             }
           />
         ))}
-      </View>
+      </ScrollView>
 
-      {tagPickerOpen && (
-        <View native style={transactionFormStyles.inlineTagPicker}>
-          <View native style={transactionFormStyles.searchFieldWrap}>
-            <Input
-              placeholder={t("components.transactionForm.searchTags")}
-              value={tagSearchQuery}
-              onChangeText={setTagSearchQuery}
-              placeholderTextColor={theme.colors.semantic.semi}
-            />
-          </View>
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            nestedScrollEnabled
-            showsVerticalScrollIndicator={false}
-          >
-            {filteredTagsForPicker.length > 0 ? (
-              <View native style={transactionFormStyles.tagPickerChipGrid}>
-                {filteredTagsForPicker.map((tag) => (
-                  <Chip
-                    key={tag.id}
-                    label={tag.name}
-                    selected={false}
-                    onPress={() => addTag(tag.id)}
-                    leading={
-                      <DynamicIcon
-                        icon={tag.icon || "tag-outline"}
-                        size={16}
-                        colorScheme={getThemeStrict(tag.colorSchemeName)}
-                        variant="badge"
-                      />
-                    }
-                    trailing={
-                      <IconSvg
-                        name="plus-outline"
-                        size={16}
-                        color={theme.colors.semantic.semi}
-                      />
-                    }
-                  />
-                ))}
-              </View>
-            ) : (
-              <Text
-                variant="default"
-                style={transactionFormStyles.tagPickerEmptyText}
-              >
-                {tagSearchQuery.trim()
-                  ? t("components.transactionForm.a11y.noTagsFound")
-                  : t("components.transactionForm.a11y.allTagsSelected")}
-              </Text>
-            )}
-          </ScrollView>
-          <View native style={transactionFormStyles.tagPickerFooter}>
-            <Pressable
-              style={transactionFormStyles.tagPickerFooterRow}
-              onPress={() => {
-                setTagPickerOpen(false)
-                router.push({
-                  pathname: "/settings/tags/[tagId]",
-                  params: { tagId: NewEnum.NEW },
-                })
-              }}
-            >
-              <IconSvg name="tag-plus-outline" size={16} />
-              <Text
-                variant="default"
-                style={transactionFormStyles.createTagRowText}
-              >
-                {t("components.transactionForm.createNewTag")}
-              </Text>
-            </Pressable>
-            {selectedTags.length > 0 && (
-              <Pressable
-                style={transactionFormStyles.tagPickerFooterRow}
-                onPress={clearTags}
-                accessibilityLabel={t(
-                  "components.transactionForm.a11y.clearAllTags",
-                )}
-              >
-                <IconSvg
-                  name="x-outline"
-                  size={16}
-                  color={theme.colors.semantic.semi}
-                />
-                <Text
-                  variant="default"
-                  style={transactionFormStyles.tagPickerClearAllText}
-                >
-                  {t("common.actions.clear")}
-                </Text>
-              </Pressable>
-            )}
-          </View>
-        </View>
-      )}
-    </RNView>
+      <TagPickerSheet
+        visible={sheetVisible}
+        tags={tags}
+        selectedIds={selectedIds}
+        onApply={setTags}
+        onNewTag={handleNewTag}
+        onClose={() => setSheetVisible(false)}
+      />
+    </View>
   )
 }

@@ -1,37 +1,37 @@
 import { useTranslation } from "react-i18next"
 
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import type { Account } from "~/types/accounts"
 
-interface AccountFormModalsProps {
-  deleteModalVisible: boolean
-  archiveModalVisible: boolean
-  unsavedModalVisible: boolean
+interface AccountFormSheetsProps {
+  deleteSheetVisible: boolean
+  archiveSheetVisible: boolean
+  unsavedSheetVisible: boolean
   isAddMode: boolean
   account: Account | undefined
   transactionCount: number
-  onCloseDeleteModal: () => void
-  onCloseArchiveModal: () => void
-  onCloseUnsavedModal: () => void
+  onCloseDeleteSheet: () => void
+  onCloseArchiveSheet: () => void
+  onCloseUnsavedSheet: () => void
   onConfirmDelete: () => void
   onConfirmArchive: () => void
   onDiscardAndNavigate: () => void
 }
 
-export function AccountFormModals({
-  deleteModalVisible,
-  archiveModalVisible,
-  unsavedModalVisible,
+export function AccountFormSheets({
+  deleteSheetVisible,
+  archiveSheetVisible,
+  unsavedSheetVisible,
   isAddMode,
   account,
   transactionCount,
-  onCloseDeleteModal,
-  onCloseArchiveModal,
-  onCloseUnsavedModal,
+  onCloseDeleteSheet,
+  onCloseArchiveSheet,
+  onCloseUnsavedSheet,
   onConfirmDelete,
   onConfirmArchive,
   onDiscardAndNavigate,
-}: AccountFormModalsProps) {
+}: AccountFormSheetsProps) {
   const { t } = useTranslation()
 
   const isArchived = account?.isArchived ?? false
@@ -39,19 +39,19 @@ export function AccountFormModals({
   return (
     <>
       {!isAddMode && account && (
-        <ConfirmModal
-          visible={deleteModalVisible}
-          onRequestClose={onCloseDeleteModal}
+        <ConfirmSheet
+          visible={deleteSheetVisible}
+          onRequestClose={onCloseDeleteSheet}
           onConfirm={onConfirmDelete}
-          title={t("screens.accounts.form.deleteModal.title", {
+          title={t("screens.accounts.form.deleteSheet.title", {
             name: account.name,
           })}
           description={
             transactionCount > 0
-              ? t("screens.accounts.form.deleteModal.descriptionWithCount", {
+              ? t("screens.accounts.form.deleteSheet.descriptionWithCount", {
                   count: transactionCount,
                 })
-              : t("screens.accounts.form.deleteModal.descriptionEmpty")
+              : t("screens.accounts.form.deleteSheet.descriptionEmpty")
           }
           confirmLabel={t("common.actions.delete")}
           cancelLabel={t("common.actions.cancel")}
@@ -61,19 +61,19 @@ export function AccountFormModals({
       )}
 
       {!isAddMode && account && (
-        <ConfirmModal
-          visible={archiveModalVisible}
-          onRequestClose={onCloseArchiveModal}
+        <ConfirmSheet
+          visible={archiveSheetVisible}
+          onRequestClose={onCloseArchiveSheet}
           onConfirm={onConfirmArchive}
           title={
             isArchived
-              ? t("screens.accounts.form.archiveModal.unarchiveTitle")
-              : t("screens.accounts.form.archiveModal.archiveTitle")
+              ? t("screens.accounts.form.archiveSheet.unarchiveTitle")
+              : t("screens.accounts.form.archiveSheet.archiveTitle")
           }
           confirmLabel={
             isArchived
-              ? t("screens.accounts.form.archiveModal.unarchiveConfirm")
-              : t("screens.accounts.form.archiveModal.archiveConfirm")
+              ? t("screens.accounts.form.archiveSheet.unarchiveConfirm")
+              : t("screens.accounts.form.archiveSheet.archiveConfirm")
           }
           cancelLabel={t("common.actions.cancel")}
           variant="default"
@@ -81,12 +81,12 @@ export function AccountFormModals({
         />
       )}
 
-      <ConfirmModal
-        visible={unsavedModalVisible}
-        onRequestClose={onCloseUnsavedModal}
+      <ConfirmSheet
+        visible={unsavedSheetVisible}
+        onRequestClose={onCloseUnsavedSheet}
         onConfirm={onDiscardAndNavigate}
-        title={t("common.modals.closeWithoutSaving")}
-        description={t("common.modals.unsavedDescription")}
+        title={t("common.sheets.closeWithoutSaving")}
+        description={t("common.sheets.unsavedDescription")}
         confirmLabel={t("common.actions.discard")}
         cancelLabel={t("common.actions.cancel")}
         variant="default"

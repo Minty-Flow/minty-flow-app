@@ -13,7 +13,7 @@ import {
 import { ActionButtons } from "~/components/tag/action-buttons"
 import { DeleteSection } from "~/components/tag/delete-section"
 import { FormTagFields } from "~/components/tag/form-tag-fields"
-import { FormTagModals } from "~/components/tag/form-tag-modals"
+import { FormTagSheets } from "~/components/tag/form-tag-sheets"
 import { TypeTabs } from "~/components/tag/type-tabs"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { View } from "~/components/ui/view"
@@ -41,7 +41,7 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
   const { t } = useTranslation()
   const router = useRouter()
   const navigation = useNavigation()
-  const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
+  const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
   const isAddMode = tagId === NewEnum.NEW || !tagId
   const {
     control,
@@ -71,14 +71,14 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
     router.back()
   }
   const handleBlock = () => {
-    setUnsavedModalVisible(true)
+    setUnsavedSheetVisible(true)
   }
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSubmitting,
     onBlock: handleBlock,
   })
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
   const onSubmit = async (data: AddTagsFormSchema) => {
     try {
       if (isAddMode) {
@@ -148,7 +148,7 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
         />
 
         {!isAddMode && (
-          <DeleteSection onDeletePress={() => setDeleteModalVisible(true)} />
+          <DeleteSection onDeletePress={() => setDeleteSheetVisible(true)} />
         )}
       </ScrollIntoViewProvider>
 
@@ -161,13 +161,13 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
         formName={formName}
       />
 
-      <FormTagModals
-        deleteModalVisible={deleteModalVisible}
-        setDeleteModalVisible={setDeleteModalVisible}
+      <FormTagSheets
+        deleteSheetVisible={deleteSheetVisible}
+        setDeleteSheetVisible={setDeleteSheetVisible}
         tag={tag}
         handleDelete={handleDelete}
-        unsavedModalVisible={unsavedModalVisible}
-        setUnsavedModalVisible={setUnsavedModalVisible}
+        unsavedSheetVisible={unsavedSheetVisible}
+        setUnsavedSheetVisible={setUnsavedSheetVisible}
         allowNavigation={allowNavigation}
         handleConfirm={handleConfirm}
       />

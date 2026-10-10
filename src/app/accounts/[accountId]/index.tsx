@@ -3,7 +3,7 @@ import { useLayoutEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
@@ -58,8 +58,8 @@ export default function AccountDetailsScreen() {
   const [searchState, setSearchState] =
     useState<SearchState>(DEFAULT_SEARCH_STATE)
   const [showFilters, setShowFilters] = useState(false)
-  const [unarchiveModalVisible, setUnarchiveModalVisible] = useState(false)
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  const [unarchiveSheetVisible, setUnarchiveSheetVisible] = useState(false)
+  const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
   const account = useAccount(accountId ?? "")
   const categoriesExpense = useCategoriesByType(TransactionTypeEnum.EXPENSE)
   const categoriesIncome = useCategoriesByType(TransactionTypeEnum.INCOME)
@@ -149,14 +149,14 @@ export default function AccountDetailsScreen() {
               <Button
                 variant="ghost"
                 size="icon"
-                onPress={() => setDeleteModalVisible(true)}
+                onPress={() => setDeleteSheetVisible(true)}
               >
                 <IconSvg name="trash-outline" size={20} />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                onPress={() => setUnarchiveModalVisible(true)}
+                onPress={() => setUnarchiveSheetVisible(true)}
               >
                 <IconSvg name="archive-off-outline" size={20} />
               </Button>
@@ -318,26 +318,26 @@ export default function AccountDetailsScreen() {
         ListHeaderComponent={headerContent}
       />
 
-      <ConfirmModal
-        visible={unarchiveModalVisible}
-        onRequestClose={() => setUnarchiveModalVisible(false)}
+      <ConfirmSheet
+        visible={unarchiveSheetVisible}
+        onRequestClose={() => setUnarchiveSheetVisible(false)}
         onConfirm={handleUnarchive}
-        title={t("screens.accounts.form.archiveModal.unarchiveTitle")}
+        title={t("screens.accounts.form.archiveSheet.unarchiveTitle")}
         description={account.name}
-        confirmLabel={t("screens.accounts.form.archiveModal.unarchiveConfirm")}
+        confirmLabel={t("screens.accounts.form.archiveSheet.unarchiveConfirm")}
         cancelLabel={t("common.actions.cancel")}
         variant="default"
         icon="archive-off-outline"
       />
 
-      <ConfirmModal
-        visible={deleteModalVisible}
-        onRequestClose={() => setDeleteModalVisible(false)}
+      <ConfirmSheet
+        visible={deleteSheetVisible}
+        onRequestClose={() => setDeleteSheetVisible(false)}
         onConfirm={handleDelete}
-        title={t("screens.accounts.form.deleteModal.title", {
+        title={t("screens.accounts.form.deleteSheet.title", {
           name: account.name,
         })}
-        description={t("screens.accounts.form.deleteModal.descriptionEmpty")}
+        description={t("screens.accounts.form.deleteSheet.descriptionEmpty")}
         confirmLabel={t("common.actions.delete")}
         cancelLabel={t("common.actions.cancel")}
         variant="destructive"

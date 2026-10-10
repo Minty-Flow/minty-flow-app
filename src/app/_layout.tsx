@@ -13,7 +13,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context"
 import { UnistylesRuntime, useUnistyles } from "react-native-unistyles"
 
 import { AppLockGate } from "~/components/app-lock-gate"
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { RouteErrorBoundary } from "~/components/route-error-boundary"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
@@ -196,7 +196,7 @@ function ForcedMigrationGate() {
           busy={busy}
           onAction={() => setBackupPromptVisible(true)}
         />
-        <ConfirmModal
+        <ConfirmSheet
           visible={backupPromptVisible && !busy}
           onRequestClose={exitApp}
           onConfirm={async () => {
@@ -242,7 +242,7 @@ function ForcedMigrationGate() {
             setBackupPromptVisible(true)
           }}
         />
-        <ConfirmModal
+        <ConfirmSheet
           visible={backupPromptVisible && !busy}
           onRequestClose={exitApp}
           onConfirm={async () => {

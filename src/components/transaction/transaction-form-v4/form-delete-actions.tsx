@@ -58,7 +58,7 @@ export function FormDeleteActions({
             variant="default"
             style={transactionFormStyles.deleteButtonColor}
           >
-            {t("common.modals.deletePermanently")}
+            {t("common.sheets.deletePermanently")}
           </Text>
         </Button>
       </View>

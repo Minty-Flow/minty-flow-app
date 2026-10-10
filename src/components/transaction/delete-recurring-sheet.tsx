@@ -1,5 +1,5 @@
 /**
- * DeleteRecurringModal
+ * DeleteRecurringSheet
  *
  * Shows 3 options when deleting a transaction that belongs to a recurring rule:
  *   1. This transaction   — soft-delete only this instance
@@ -8,14 +8,7 @@
  */
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import {
-  Alert,
-  Modal,
-  Pressable,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native"
+import { Alert, Pressable, Text, View } from "react-native"
 import {
   StyleSheet as UnistylesSheet,
   useUnistyles,
@@ -23,6 +16,7 @@ import {
 
 import { IconSvg } from "~/components/icons"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
+import { BottomSheet } from "~/components/ui/bottom-sheet"
 import { ListItem } from "~/components/ui/list-item"
 import {
   applyRecurringDeleteScope,
@@ -36,7 +30,7 @@ import { Toast } from "~/utils/toast"
 import { ChevronIcon } from "../ui/chevron-icon"
 
 type DeleteScope = "this" | "all" | "this_and_future"
-interface DeleteRecurringModalProps {
+interface DeleteRecurringSheetProps {
   visible: boolean
   transaction: Transaction
   recurringRule: RecurringTransactionTemplate
@@ -97,17 +91,15 @@ function OptionRow({
     </ListItem>
   )
 }
-export function DeleteRecurringModal({
+export function DeleteRecurringSheet({
   visible,
   transaction,
   recurringRule,
   onRequestClose,
   onDeleted,
-}: DeleteRecurringModalProps) {
+}: DeleteRecurringSheetProps) {
   const [loadingScope, setLoadingScope] = useState<DeleteScope | null>(null)
   const { t } = useTranslation()
-  const { width } = useWindowDimensions()
-  const maxCardWidth = Math.min(width - 48, 400)
   const { theme } = useUnistyles()
   const performDelete = async (scope: DeleteScope) => {
     if (loadingScope) return
@@ -132,7 +124,7 @@ export function DeleteRecurringModal({
       onRequestClose()
       onDeleted()
     } catch (error) {
-      logger.error("DeleteRecurringModal: failed to delete", {
+      logger.error("DeleteRecurringSheet: failed to delete", {
         scope,
         error: error instanceof Error ? error.message : String(error),
       })
@@ -145,15 +137,15 @@ export function DeleteRecurringModal({
   const handleDelete = (scope: DeleteScope) => {
     if (scope === "all" || scope === "this_and_future") {
       Alert.alert(
-        t("components.recurring.deleteModal.confirmTitle"),
-        t("components.recurring.deleteModal.confirmMessage"),
+        t("components.recurring.deleteSheet.confirmTitle"),
+        t("components.recurring.deleteSheet.confirmMessage"),
         [
           {
-            text: t("components.recurring.deleteModal.cancel"),
+            text: t("components.recurring.deleteSheet.cancel"),
             style: "cancel",
           },
           {
-            text: t("components.recurring.deleteModal.delete"),
+            text: t("components.recurring.deleteSheet.delete"),
             style: "destructive",
             onPress: () => performDelete(scope),
           },
@@ -164,123 +156,79 @@ export function DeleteRecurringModal({
     }
   }
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-      onRequestClose={onRequestClose}
-      accessibilityViewIsModal
+    <BottomSheet
+      isPresented={visible}
+      onDismiss={onRequestClose}
+      dismissable={!loadingScope}
     >
-      <View style={styles.modalRoot}>
-        <Pressable
-          style={styles.backdrop}
-          onPress={onRequestClose}
-          accessibilityLabel={t("common.actions.close")}
-        />
-        <View style={styles.content}>
+      <View style={styles.card}>
+        <View style={styles.header}>
           <View
             style={[
-              styles.card,
-              {
-                maxWidth: maxCardWidth,
-                backgroundColor: theme.colors.surface,
-                borderRadius: theme.radius ?? 16,
-              },
+              styles.iconCircle,
+              { backgroundColor: `${theme.colors.error}20` },
             ]}
           >
-            <View style={styles.header}>
-              <View
-                style={[
-                  styles.iconCircle,
-                  { backgroundColor: `${theme.colors.error}20` },
-                ]}
-              >
-                <IconSvg
-                  name="trash-outline"
-                  size={24}
-                  color={theme.colors.error}
-                />
-              </View>
-              <Text style={styles.title}>
-                {t("components.recurring.deleteModal.title")}
-              </Text>
-              <Text style={styles.subtitle}>
-                {t("components.recurring.deleteModal.subtitle")}
-              </Text>
-            </View>
-
-            <View style={styles.optionsCard}>
-              <OptionRow
-                label={t("components.recurring.deleteModal.optionThis")}
-                sublabel={t(
-                  "components.recurring.deleteModal.optionThisSublabel",
-                )}
-                onPress={() => handleDelete("this")}
-                loading={loadingScope === "this"}
-                isDestructive
-              />
-              <OptionRow
-                label={t("components.recurring.deleteModal.optionAll")}
-                sublabel={t(
-                  "components.recurring.deleteModal.optionAllSublabel",
-                )}
-                onPress={() => handleDelete("all")}
-                loading={loadingScope === "all"}
-                isDestructive
-              />
-              <OptionRow
-                label={t("components.recurring.deleteModal.optionFuture")}
-                sublabel={t(
-                  "components.recurring.deleteModal.optionFutureSublabel",
-                )}
-                onPress={() => handleDelete("this_and_future")}
-                loading={loadingScope === "this_and_future"}
-                isLast
-                isDestructive
-              />
-            </View>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.cancelButton,
-                pressed && styles.cancelButtonPressed,
-              ]}
-              onPress={onRequestClose}
-              disabled={!!loadingScope}
-            >
-              <Text style={styles.cancelText}>
-                {t("components.recurring.deleteModal.cancel")}
-              </Text>
-            </Pressable>
+            <IconSvg
+              name="trash-outline"
+              size={24}
+              color={theme.colors.error}
+            />
           </View>
+          <Text style={styles.title}>
+            {t("components.recurring.deleteSheet.title")}
+          </Text>
+          <Text style={styles.subtitle}>
+            {t("components.recurring.deleteSheet.subtitle")}
+          </Text>
         </View>
+
+        <View style={styles.optionsCard}>
+          <OptionRow
+            label={t("components.recurring.deleteSheet.optionThis")}
+            sublabel={t("components.recurring.deleteSheet.optionThisSublabel")}
+            onPress={() => handleDelete("this")}
+            loading={loadingScope === "this"}
+            isDestructive
+          />
+          <OptionRow
+            label={t("components.recurring.deleteSheet.optionAll")}
+            sublabel={t("components.recurring.deleteSheet.optionAllSublabel")}
+            onPress={() => handleDelete("all")}
+            loading={loadingScope === "all"}
+            isDestructive
+          />
+          <OptionRow
+            label={t("components.recurring.deleteSheet.optionFuture")}
+            sublabel={t(
+              "components.recurring.deleteSheet.optionFutureSublabel",
+            )}
+            onPress={() => handleDelete("this_and_future")}
+            loading={loadingScope === "this_and_future"}
+            isLast
+            isDestructive
+          />
+        </View>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.cancelButton,
+            pressed && styles.cancelButtonPressed,
+          ]}
+          onPress={onRequestClose}
+          disabled={!!loadingScope}
+        >
+          <Text style={styles.cancelText}>
+            {t("components.recurring.deleteSheet.cancel")}
+          </Text>
+        </Pressable>
       </View>
-    </Modal>
+    </BottomSheet>
   )
 }
 const styles = UnistylesSheet.create((theme) => ({
-  modalRoot: {
-    flex: 1,
-  },
-  backdrop: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: theme.colors.shadow,
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 24,
-  },
   card: {
-    width: "100%",
-    paddingHorizontal: 20,
-    paddingVertical: 24,
+    paddingVertical: 8,
     gap: 16,
   },
   header: {

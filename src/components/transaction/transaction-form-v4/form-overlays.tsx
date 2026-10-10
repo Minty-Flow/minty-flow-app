@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next"
 
-import { ConfirmModal } from "~/components/confirm-modal"
-import { DeleteRecurringModal } from "~/components/transaction/delete-recurring-modal"
-import { EditRecurringModal } from "~/components/transaction/edit-recurring-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
+import { DeleteRecurringSheet } from "~/components/transaction/delete-recurring-sheet"
+import { EditRecurringSheet } from "~/components/transaction/edit-recurring-sheet"
 import { LocationPickerModal } from "~/components/transaction/location-picker-modal"
-import { DateTimePickerModal } from "~/components/ui/date-time-picker"
+import { DateTimePickerSheet } from "~/components/ui/date-time-picker"
 import type { RecurringTransactionTemplate } from "~/database/services/recurring-transaction-service"
 import type {
   Recurrence,
@@ -12,11 +12,11 @@ import type {
   TransactionLocation,
 } from "~/types/transactions"
 
-import type { DatePickerState, ModalState } from "./types"
+import type { DatePickerState, OverlayState } from "./types"
 
-interface FormModalsProps {
-  modals: ModalState
-  setModals: (update: Partial<ModalState>) => void
+interface FormOverlaysProps {
+  overlays: OverlayState
+  setOverlays: (update: Partial<OverlayState>) => void
   datePicker: DatePickerState
   location: TransactionLocation | null
   transaction: Transaction | null
@@ -27,13 +27,14 @@ interface FormModalsProps {
   onDestroyConfirm: () => void
   onDeleteLoanConfirm: () => void
   onLocationConfirm: (loc: TransactionLocation) => void
+  onLocationDelete: () => void
   onIosDateConfirm: (date: Date) => void
   onDatePickerClose: () => void
 }
 
-export function FormModals({
-  modals,
-  setModals,
+export function FormOverlays({
+  overlays,
+  setOverlays,
   datePicker,
   location,
   transaction,
@@ -44,14 +45,15 @@ export function FormModals({
   onDestroyConfirm,
   onDeleteLoanConfirm,
   onLocationConfirm,
+  onLocationDelete,
   onIosDateConfirm,
   onDatePickerClose,
-}: FormModalsProps) {
+}: FormOverlaysProps) {
   const { t } = useTranslation()
 
   return (
     <>
-      <DateTimePickerModal
+      <DateTimePickerSheet
         visible={datePicker.visible}
         mode={datePicker.mode}
         value={datePicker.tempDate}
@@ -65,33 +67,37 @@ export function FormModals({
       />
 
       <LocationPickerModal
-        visible={modals.locationPickerVisible}
+        visible={overlays.locationPickerVisible}
         initialLocation={location}
         onConfirm={onLocationConfirm}
-        onRequestClose={() => setModals({ locationPickerVisible: false })}
+        onDelete={() => {
+          onLocationDelete()
+          setOverlays({ locationPickerVisible: false })
+        }}
+        onRequestClose={() => setOverlays({ locationPickerVisible: false })}
       />
 
-      <ConfirmModal
-        visible={modals.unsavedModalVisible}
-        onRequestClose={() => setModals({ unsavedModalVisible: false })}
+      <ConfirmSheet
+        visible={overlays.unsavedSheetVisible}
+        onRequestClose={() => setOverlays({ unsavedSheetVisible: false })}
         onConfirm={() => {
-          setModals({ unsavedModalVisible: false })
+          setOverlays({ unsavedSheetVisible: false })
           onConfirmExit()
         }}
-        title={t("common.modals.closeWithoutSaving")}
-        description={t("common.modals.unsavedDescription")}
+        title={t("common.sheets.closeWithoutSaving")}
+        description={t("common.sheets.unsavedDescription")}
         confirmLabel={t("common.actions.discard")}
         cancelLabel={t("common.actions.cancel")}
         variant="default"
       />
 
-      <ConfirmModal
-        visible={modals.deleteLoanModalVisible}
-        onRequestClose={() => setModals({ deleteLoanModalVisible: false })}
+      <ConfirmSheet
+        visible={overlays.deleteLoanSheetVisible}
+        onRequestClose={() => setOverlays({ deleteLoanSheetVisible: false })}
         onConfirm={onDeleteLoanConfirm}
-        title={t("components.transactionForm.deleteLoanModal.title")}
+        title={t("components.transactionForm.deleteLoanSheet.title")}
         description={t(
-          "components.transactionForm.deleteLoanModal.description",
+          "components.transactionForm.deleteLoanSheet.description",
         )}
         confirmLabel={t("common.actions.delete")}
         cancelLabel={t("common.actions.cancel")}
@@ -99,12 +105,12 @@ export function FormModals({
         icon="trash-outline"
       />
 
-      <ConfirmModal
-        visible={modals.destroyModalVisible}
-        onRequestClose={() => setModals({ destroyModalVisible: false })}
+      <ConfirmSheet
+        visible={overlays.destroySheetVisible}
+        onRequestClose={() => setOverlays({ destroySheetVisible: false })}
         onConfirm={onDestroyConfirm}
-        title={t("common.modals.deletePermanently")}
-        description={t("components.transactionForm.destroyModal.description")}
+        title={t("common.sheets.deletePermanently")}
+        description={t("components.transactionForm.destroySheet.description")}
         confirmLabel={t("common.actions.delete")}
         cancelLabel={t("common.actions.cancel")}
         variant="destructive"
@@ -113,25 +119,25 @@ export function FormModals({
 
       {transaction?.recurringId && recurringRule && (
         <>
-          <DeleteRecurringModal
-            visible={modals.deleteRecurringModalVisible}
+          <DeleteRecurringSheet
+            visible={overlays.deleteRecurringSheetVisible}
             transaction={transaction}
             recurringRule={recurringRule}
             onRequestClose={() =>
-              setModals({ deleteRecurringModalVisible: false })
+              setOverlays({ deleteRecurringSheetVisible: false })
             }
             onDeleted={onConfirmExit}
           />
-          <EditRecurringModal
-            visible={modals.editRecurringModalVisible}
+          <EditRecurringSheet
+            visible={overlays.editRecurringSheetVisible}
             transaction={transaction}
             recurringRule={recurringRule}
-            pendingPayload={modals.pendingEditPayload}
+            pendingPayload={overlays.pendingEditPayload}
             recurrence={recurrenceForEdit}
             until={untilForEdit}
             onRequestClose={() => {
-              setModals({
-                editRecurringModalVisible: false,
+              setOverlays({
+                editRecurringSheetVisible: false,
                 pendingEditPayload: null,
               })
             }}

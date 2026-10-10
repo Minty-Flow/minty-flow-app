@@ -3,7 +3,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { IconSvg } from "~/components/icons"
 import { Button } from "~/components/ui/button"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
@@ -25,7 +25,7 @@ import { confirmable } from "~/utils/pending-transactions"
 import { Toast } from "~/utils/toast"
 import { applyTransferLayout } from "~/utils/transaction-list-utils"
 
-import { DeleteRecurringModal } from "../delete-recurring-modal"
+import { DeleteRecurringSheet } from "../delete-recurring-sheet"
 import { TransactionItem } from "../transaction-item"
 import type { UpcomingTransactionsSectionProps } from "./types"
 import { upcomingSectionStyles as sectionStyles } from "./upcoming-transactions-section.styles"
@@ -72,7 +72,7 @@ export function UpcomingTransactionsSection({
   })()
   const router = useRouter()
   const { collapsed, setCollapsed } = useUpcomingSectionStore()
-  const [confirmAllModalVisible, setConfirmAllModalVisible] = useState(false)
+  const [confirmAllSheetVisible, setConfirmAllSheetVisible] = useState(false)
   const [recurringToDelete, setRecurringToDelete] =
     useState<TransactionWithRelations | null>(null)
   const recurringRule = useRecurringRule(
@@ -104,8 +104,8 @@ export function UpcomingTransactionsSection({
       })
     }
   }
-  const openConfirmAllModal = () => setConfirmAllModalVisible(true)
-  const closeConfirmAllModal = () => setConfirmAllModalVisible(false)
+  const openConfirmAllSheet = () => setConfirmAllSheetVisible(true)
+  const closeConfirmAllSheet = () => setConfirmAllSheetVisible(false)
   const handleBeforeDelete = (row: TransactionWithRelations) => {
     if (row.extra?.recurringId) {
       setRecurringToDelete(row)
@@ -123,12 +123,12 @@ export function UpcomingTransactionsSection({
   ).length
   return (
     <View style={sectionStyles.wrapper}>
-      <ConfirmModal
-        visible={confirmAllModalVisible}
-        onRequestClose={closeConfirmAllModal}
+      <ConfirmSheet
+        visible={confirmAllSheetVisible}
+        onRequestClose={closeConfirmAllSheet}
         onConfirm={handleConfirmAll}
-        title={t("screens.home.upcoming.confirmAll.modalTitle")}
-        description={t("screens.home.upcoming.confirmAll.modalDescription")}
+        title={t("screens.home.upcoming.confirmAll.sheetTitle")}
+        description={t("screens.home.upcoming.confirmAll.sheetDescription")}
         confirmLabel={t("screens.home.upcoming.confirmAll.button")}
         cancelLabel={t("common.actions.cancel")}
         variant="default"
@@ -136,7 +136,7 @@ export function UpcomingTransactionsSection({
       />
 
       {recurringToDelete && recurringRule && (
-        <DeleteRecurringModal
+        <DeleteRecurringSheet
           visible={true}
           transaction={recurringToDelete}
           recurringRule={recurringRule}
@@ -318,7 +318,7 @@ export function UpcomingTransactionsSection({
                   {manualConfirmableCount > 1 && (
                     <Button
                       variant="ghost"
-                      onPress={openConfirmAllModal}
+                      onPress={openConfirmAllSheet}
                       style={sectionStyles.confirmAllButton}
                       accessibilityLabel={t(
                         "screens.home.upcoming.a11y.confirmAll",

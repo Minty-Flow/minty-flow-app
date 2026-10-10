@@ -29,7 +29,7 @@
     "developmentNotice": {
       "message": "Minty Flow is still in development, so data loss may happen. I'm sorry for that. Starting with this release, I'm focused on stability and safer backups for future updates."
     },
-    "modals": {
+    "sheets": {
       "unsavedDescription": "All changes will be lost.",
       "closeWithoutSaving": "Close without saving?",
       "deletePermanently": "Delete permanently",
@@ -126,8 +126,8 @@
         "subHeaderRecurring": "RECURRING",
         "confirmAll": {
           "button": "Confirm all",
-          "modalTitle": "Confirm all?",
-          "modalDescription": "All transactions awaiting confirmation will be confirmed. This cannot be undone."
+          "sheetTitle": "Confirm all?",
+          "sheetDescription": "All transactions awaiting confirmation will be confirmed. This cannot be undone."
         },
         "chips": {
           "daysCount": "Next {{count}} day(s)"
@@ -180,13 +180,13 @@
         "archivedBannerText": "This account is archived. Restore it to make changes.",
         "deleteLabel": "Permanently delete account",
         "typeLabel": "Account type",
-        "archiveModal": {
+        "archiveSheet": {
           "archiveTitle": "Archive this account?",
           "archiveConfirm": "Archive",
           "unarchiveTitle": "Restore this account?",
           "unarchiveConfirm": "Restore"
         },
-        "deleteModal": {
+        "deleteSheet": {
           "title": "Permanently delete {{name}}?",
           "descriptionWithCount_one": "This account has {{count}} transaction. Permanently deleting the account will also delete it. This action cannot be undone.",
           "descriptionWithCount_other": "This account has {{count}} transactions. Permanently deleting the account will also delete them. This action cannot be undone.",
@@ -461,12 +461,7 @@
         },
         "language": {
           "title": "Language",
-          "sectionLabel": "change language",
-          "rtlReloadConfirm": {
-            "title": "Restart required",
-            "description": "Switching to this language requires a restart to apply the new text direction.",
-            "confirmLabel": "Restart"
-          }
+          "sectionLabel": "change language"
         },
         "transactionLocation": {
           "title": "Transaction Location Tracking",
@@ -498,7 +493,7 @@
         "empty": {
           "noTransactions": "No deleted transactions",
           "label": "Empty trash bin",
-          "modal": {
+          "sheet": {
             "title": "Empty Trash",
             "description": "All items in the trash will be permanently deleted. This action cannot be undone.",
             "confirm": "Empty Trash",
@@ -612,7 +607,7 @@
           "deleteLabel": "Delete Goal",
           "archiveLabel": "Archive Goal",
           "unarchiveLabel": "Restore Goal",
-          "archiveModal": {
+          "archiveSheet": {
             "archiveTitle": "Archive this goal?",
             "archiveConfirm": "Archive",
             "unarchiveTitle": "Restore this goal?",
@@ -776,7 +771,7 @@
           "placeholderGeneric": "Work, Shopping...",
           "placeholderContact": "John Doe",
           "deleteLabel": "Permanently delete",
-          "deleteModal": {
+          "deleteSheet": {
             "title": "Permanently delete {{name}}?",
             "descriptionWithCount_one": "This tag is used by {{count}} transaction. Permanently deleting the tag will unlink it and remove it permanently. This cannot be undone.",
             "descriptionWithCount_other": "This tag is used by {{count}} transactions. Permanently deleting the tag will unlink it from all of them and remove it permanently. This cannot be undone.",
@@ -855,7 +850,7 @@
         "loading": "Loading exchange rates…",
         "searchPlaceholder": "Search currencies...",
         "instructionCaption": "Select an entry to set a custom exchange rate. Note: All exchange rate calculations use USD as a reference.",
-        "infoModal": {
+        "infoSheet": {
           "title": "Exchange Rates",
           "description": "Rates are shown as amount per 1 USD. Select an entry to set a custom rate. All calculations use USD as reference.",
           "ok": "OK"
@@ -993,6 +988,8 @@
       "notFoundTransaction": "Transaction not found.",
       "searchTags": "Search tags...",
       "createNewTag": "New tag",
+      "selectTags": "Select tags",
+      "clearSelection": "Clear selection",
       "kind": {
         "label": "Kind",
         "info": {
@@ -1080,7 +1077,7 @@
         "title": "Delete file",
         "description": "Are you sure you want to remove this attachment?"
       },
-      "destroyModal": {
+      "destroySheet": {
         "description": "This transaction will be removed forever and cannot be restored."
       },
       "amountInput": {
@@ -1101,7 +1098,7 @@
         }
       },
       "attachments": {
-        "openFileModal": "Open file",
+        "openFileSheet": "Open file",
         "a11y": {
           "removeAttachment": "Remove attachment",
           "addFiles": "Add files",
@@ -1164,13 +1161,13 @@
         "nameLabel": "Loan name",
         "dueDateLabel": "Due date"
       },
-      "deleteLoanModal": {
+      "deleteLoanSheet": {
         "title": "Delete this loan?",
         "description": "This removes the loan. Its transactions stay in your history, no longer linked to a loan."
       }
     },
     "recurring": {
-      "deleteModal": {
+      "deleteSheet": {
         "title": "Delete recurring transaction",
         "subtitle": "Choose which transactions to remove",
         "optionThis": "This transaction",
@@ -1184,7 +1181,7 @@
         "cancel": "Cancel",
         "delete": "Delete"
       },
-      "editModal": {
+      "editSheet": {
         "title": "Edit recurring transaction",
         "subtitle": "Choose how far to apply your changes",
         "optionThis": "This transaction",
@@ -1260,7 +1257,7 @@
         "namePlaceholder": "Groceries, Dining out, etc.",
         "typeLabel": "Type",
         "deleteLabel": "Permanently delete",
-        "deleteModal": {
+        "deleteSheet": {
           "title": "Delete {{name}}?",
           "descriptionWithCount_one": "This category is used by {{count}} transaction. Deleting will unlink it. This cannot be undone.",
           "descriptionWithCount_other": "This category is used by {{count}} transactions. Deleting will unlink them. This cannot be undone.",
@@ -1387,6 +1384,9 @@
     "locationPicker": {
       "title": "Pick Location",
       "gettingLocation": "Getting location...",
+      "permissionDenied": "Location permission needed",
+      "servicesOff": "Turn on location services",
+      "unavailable": "Couldn't get your location",
       "tapOrDrag": "Pan map to position pin",
       "tapToEdit": "Tap on the map to edit",
       "addLocation": "Add a location",
@@ -1403,7 +1403,7 @@
         "permissionDescription": "Please grant permission to access your contacts in order to select a contact from your phone."
       },
       "currency": {
-        "title": "Currency",
+        "title": "Select a currency",
         "triggerLabel": "Currency",
         "searchPlaceholder": "Search currencies...",
         "noCurrenciesFound": "No currencies found",

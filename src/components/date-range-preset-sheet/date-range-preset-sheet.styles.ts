@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native-unistyles"
 
-export const dateRangePresetModalStyles = StyleSheet.create((theme) => {
+export const dateRangePresetSheetStyles = StyleSheet.create((theme) => {
   const muted = theme.colors.semantic?.semi ?? theme.colors.onSurface
   const radius = theme.radius
   const borderColor = `${muted}40`
@@ -8,14 +8,6 @@ export const dateRangePresetModalStyles = StyleSheet.create((theme) => {
   return {
     container: {
       flex: 1,
-      backgroundColor: theme.colors.surface,
-    },
-    header: {
-      paddingHorizontal: 20,
-    },
-    headerTitle: {
-      color: muted,
-      marginTop: 10,
     },
     scrollContent: {
       paddingTop: 20,

@@ -1,6 +1,6 @@
 import type { DateRangePresetId } from "~/utils/time-utils"
 
-export interface DateRangePresetModalProps {
+export interface DateRangePresetSheetProps {
   visible: boolean
   initialStart?: Date
   initialEnd?: Date
@@ -23,7 +23,7 @@ export interface PresetOption {
 
 export type ExpandedSection = "byMonth" | "byYear" | "custom" | null
 
-export interface DateRangePresetModalContentProps {
+export interface DateRangePresetSheetContentProps {
   initialStart?: Date
   initialEnd?: Date
   onSave: (start: Date, end: Date, source: DateRangePresetId) => void

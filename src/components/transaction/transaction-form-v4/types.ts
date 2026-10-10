@@ -33,12 +33,12 @@ export interface TransactionFormV4Props {
   prefill?: Partial<TransactionFormValues>
 }
 
-export type ModalState = {
-  unsavedModalVisible: boolean
-  editRecurringModalVisible: boolean
-  deleteRecurringModalVisible: boolean
-  deleteLoanModalVisible: boolean
-  destroyModalVisible: boolean
+export type OverlayState = {
+  unsavedSheetVisible: boolean
+  editRecurringSheetVisible: boolean
+  deleteRecurringSheetVisible: boolean
+  deleteLoanSheetVisible: boolean
+  destroySheetVisible: boolean
   notesModalVisible: boolean
   locationPickerVisible: boolean
   pendingEditPayload: RecurringEditPayload | null

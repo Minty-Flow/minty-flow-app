@@ -1,5 +1,5 @@
 /**
- * EditRecurringModal
+ * EditRecurringSheet
  *
  * Shows 2 options when saving edits to a transaction that belongs to a recurring rule:
  *   1. This transaction        — update only this instance (detach from rule)
@@ -9,7 +9,7 @@
  */
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Modal, Pressable, Text, useWindowDimensions, View } from "react-native"
+import { Pressable, Text, View } from "react-native"
 import {
   StyleSheet as UnistylesSheet,
   useUnistyles,
@@ -17,6 +17,7 @@ import {
 
 import { IconSvg } from "~/components/icons"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
+import { BottomSheet } from "~/components/ui/bottom-sheet"
 import { ListItem } from "~/components/ui/list-item"
 import {
   applyRecurringEditScope,
@@ -30,7 +31,7 @@ import { Toast } from "~/utils/toast"
 import { ChevronIcon } from "../ui/chevron-icon"
 
 type EditScope = "this" | "this_and_future"
-interface EditRecurringModalProps {
+interface EditRecurringSheetProps {
   visible: boolean
   transaction: Transaction
   recurringRule: RecurringTransactionTemplate
@@ -84,7 +85,7 @@ function OptionRow({
     </ListItem>
   )
 }
-export function EditRecurringModal({
+export function EditRecurringSheet({
   visible,
   transaction,
   recurringRule,
@@ -93,11 +94,9 @@ export function EditRecurringModal({
   until,
   onRequestClose,
   onSaved,
-}: EditRecurringModalProps) {
+}: EditRecurringSheetProps) {
   const [loadingScope, setLoadingScope] = useState<EditScope | null>(null)
   const { t } = useTranslation()
-  const { width } = useWindowDimensions()
-  const maxCardWidth = Math.min(width - 48, 400)
   const { theme } = useUnistyles()
   const handleEdit = async (scope: EditScope) => {
     if (loadingScope || !pendingPayload) return
@@ -122,7 +121,7 @@ export function EditRecurringModal({
       onRequestClose()
       onSaved()
     } catch (error) {
-      logger.error("EditRecurringModal: failed to save", {
+      logger.error("EditRecurringSheet: failed to save", {
         scope,
         error: error instanceof Error ? error.message : String(error),
       })
@@ -133,114 +132,70 @@ export function EditRecurringModal({
     setLoadingScope(null)
   }
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-      onRequestClose={onRequestClose}
-      accessibilityViewIsModal
+    <BottomSheet
+      isPresented={visible}
+      onDismiss={onRequestClose}
+      dismissable={!loadingScope}
     >
-      <View style={styles.modalRoot}>
-        <Pressable
-          style={styles.backdrop}
-          onPress={onRequestClose}
-          accessibilityLabel={t("common.actions.close")}
-        />
-        <View style={styles.content}>
+      <View style={styles.card}>
+        <View style={styles.header}>
           <View
             style={[
-              styles.card,
+              styles.iconCircle,
               {
-                maxWidth: maxCardWidth,
-                backgroundColor: theme.colors.surface,
-                borderRadius: theme.radius ?? 16,
+                backgroundColor: theme.colors.semantic?.success,
               },
             ]}
           >
-            <View style={styles.header}>
-              <View
-                style={[
-                  styles.iconCircle,
-                  {
-                    backgroundColor: theme.colors.semantic?.success,
-                  },
-                ]}
-              >
-                <IconSvg
-                  name="pencil-outline"
-                  size={24}
-                  color={theme.colors.semantic?.success ?? theme.colors.primary}
-                />
-              </View>
-              <Text style={styles.title}>
-                {t("components.recurring.editModal.title")}
-              </Text>
-              <Text style={styles.subtitle}>
-                {t("components.recurring.editModal.subtitle")}
-              </Text>
-            </View>
-
-            <View style={styles.optionsCard}>
-              <OptionRow
-                label={t("components.recurring.editModal.optionThis")}
-                sublabel={t(
-                  "components.recurring.editModal.optionThisSublabel",
-                )}
-                onPress={() => handleEdit("this")}
-                loading={loadingScope === "this"}
-              />
-              <OptionRow
-                label={t("components.recurring.editModal.optionFuture")}
-                sublabel={t(
-                  "components.recurring.editModal.optionFutureSublabel",
-                )}
-                onPress={() => handleEdit("this_and_future")}
-                loading={loadingScope === "this_and_future"}
-                isLast
-              />
-            </View>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.cancelButton,
-                pressed && styles.cancelButtonPressed,
-              ]}
-              onPress={onRequestClose}
-              disabled={!!loadingScope}
-            >
-              <Text style={styles.cancelText}>
-                {t("components.recurring.editModal.cancel")}
-              </Text>
-            </Pressable>
+            <IconSvg
+              name="pencil-outline"
+              size={24}
+              color={theme.colors.semantic?.success ?? theme.colors.primary}
+            />
           </View>
+          <Text style={styles.title}>
+            {t("components.recurring.editSheet.title")}
+          </Text>
+          <Text style={styles.subtitle}>
+            {t("components.recurring.editSheet.subtitle")}
+          </Text>
         </View>
+
+        <View style={styles.optionsCard}>
+          <OptionRow
+            label={t("components.recurring.editSheet.optionThis")}
+            sublabel={t("components.recurring.editSheet.optionThisSublabel")}
+            onPress={() => handleEdit("this")}
+            loading={loadingScope === "this"}
+          />
+          <OptionRow
+            label={t("components.recurring.editSheet.optionFuture")}
+            sublabel={t("components.recurring.editSheet.optionFutureSublabel")}
+            onPress={() => handleEdit("this_and_future")}
+            loading={loadingScope === "this_and_future"}
+            isLast
+          />
+        </View>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.cancelButton,
+            pressed && styles.cancelButtonPressed,
+          ]}
+          onPress={onRequestClose}
+          disabled={!!loadingScope}
+        >
+          <Text style={styles.cancelText}>
+            {t("components.recurring.editSheet.cancel")}
+          </Text>
+        </Pressable>
       </View>
-    </Modal>
+    </BottomSheet>
   )
 }
 const styles = UnistylesSheet.create((theme) => ({
-  modalRoot: {
-    flex: 1,
-  },
-  backdrop: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: theme.colors.shadow,
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 24,
-  },
   card: {
-    width: "100%",
-    paddingHorizontal: 20,
-    paddingVertical: 24,
+    paddingVertical: 8,
     gap: 16,
   },
   header: {

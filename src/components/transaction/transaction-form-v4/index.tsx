@@ -28,8 +28,8 @@ import { FormGoalPicker } from "./form-goal-picker"
 import { FormKindCard } from "./form-kind-card"
 import { FormKindSelector } from "./form-kind-selector"
 import { FormLoanPicker } from "./form-loan-picker"
-import { FormModals } from "./form-modals"
 import { FormNotesSection } from "./form-notes-section"
+import { FormOverlays } from "./form-overlays"
 import { FormTagsPicker } from "./form-tags-picker"
 import { FormToAccountPicker } from "./form-to-account-picker"
 import { TransactionTopTabs } from "./transaction-top-tabs"
@@ -201,36 +201,12 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
           <FormNotesSection
             description={f.description}
             descriptionErrorKey={f.descriptionErrorKey}
-            notesModalVisible={f.modals.notesModalVisible}
-            onOpenModal={() => f.setModals({ notesModalVisible: true })}
-            onCloseModal={() => f.setModals({ notesModalVisible: false })}
+            notesModalVisible={f.overlays.notesModalVisible}
+            onOpenModal={() => f.setOverlays({ notesModalVisible: true })}
+            onCloseModal={() => f.setOverlays({ notesModalVisible: false })}
             onSave={(html) =>
               f.setValue("description", html, { shouldDirty: true })
             }
-          />
-
-          <FormAttachmentsSection
-            list={f.attachmentState.list}
-            preview={f.attachmentState.preview}
-            fileToOpen={f.attachmentState.fileToOpen}
-            toRemove={f.attachmentState.toRemove}
-            addFilesExpanded={f.attachmentState.addFilesExpanded}
-            onToggleAddFiles={() =>
-              f.setAttachmentState({
-                addFilesExpanded: !f.attachmentState.addFilesExpanded,
-              })
-            }
-            onClosePreview={() => f.setAttachmentState({ preview: null })}
-            onCancelFileOpen={() => f.setAttachmentState({ fileToOpen: null })}
-            onPreview={(a) => f.setAttachmentState({ preview: a })}
-            onOpenExternal={(a) => f.setAttachmentState({ fileToOpen: a })}
-            onRemoveRequest={(a) => f.setAttachmentState({ toRemove: a })}
-            onRemoveConfirm={f.removeAttachment}
-            onRemoveCancel={() => f.setAttachmentState({ toRemove: null })}
-            onSelectFromFiles={f.handleSelectFromFiles}
-            onTakePhoto={f.handleTakePhoto}
-            onSelectMultipleMedia={f.handleSelectMultipleMedia}
-            onSelectSinglePhoto={f.handleSelectSinglePhoto}
           />
 
           {/* Goal: hidden for transfers, filtered by selected account */}
@@ -277,9 +253,8 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
           <FormTagsPicker
             tags={tags}
             tagIds={f.tagIds}
-            addTag={f.addTag}
+            setTags={f.setTags}
             removeTag={f.removeTag}
-            clearTags={f.clearTags}
           />
 
           {transactionType === TransactionTypeEnum.EXPENSE &&
@@ -309,12 +284,36 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
               </ListItem>
             )}
 
+          <FormAttachmentsSection
+            list={f.attachmentState.list}
+            preview={f.attachmentState.preview}
+            fileToOpen={f.attachmentState.fileToOpen}
+            toRemove={f.attachmentState.toRemove}
+            addFilesExpanded={f.attachmentState.addFilesExpanded}
+            onToggleAddFiles={() =>
+              f.setAttachmentState({
+                addFilesExpanded: !f.attachmentState.addFilesExpanded,
+              })
+            }
+            onClosePreview={() => f.setAttachmentState({ preview: null })}
+            onCancelFileOpen={() => f.setAttachmentState({ fileToOpen: null })}
+            onPreview={(a) => f.setAttachmentState({ preview: a })}
+            onOpenExternal={(a) => f.setAttachmentState({ fileToOpen: a })}
+            onRemoveRequest={(a) => f.setAttachmentState({ toRemove: a })}
+            onRemoveConfirm={f.removeAttachment}
+            onRemoveCancel={() => f.setAttachmentState({ toRemove: null })}
+            onSelectFromFiles={f.handleSelectFromFiles}
+            onTakePhoto={f.handleTakePhoto}
+            onSelectMultipleMedia={f.handleSelectMultipleMedia}
+            onSelectSinglePhoto={f.handleSelectSinglePhoto}
+          />
+
           {f.locationEnabled && (
             <View style={transactionFormStyles.fieldBlock}>
               <FormLocationPicker
                 location={f.location}
                 isCapturingLocation={f.isCapturingLocation}
-                onPress={() => f.setModals({ locationPickerVisible: true })}
+                onPress={() => f.setOverlays({ locationPickerVisible: true })}
                 onClear={f.handleClearLocation}
               />
             </View>
@@ -343,9 +342,9 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
 
       {f.datePickerAndroidElement}
 
-      <FormModals
-        modals={f.modals}
-        setModals={f.setModals}
+      <FormOverlays
+        overlays={f.overlays}
+        setOverlays={f.setOverlays}
         datePicker={f.datePicker}
         location={f.location}
         transaction={transaction}
@@ -356,6 +355,7 @@ export function TransactionFormV4(props: TransactionFormV4Props) {
         onDestroyConfirm={f.handleDestroyConfirm}
         onDeleteLoanConfirm={f.handleDeleteLoanConfirm}
         onLocationConfirm={f.handleLocationConfirm}
+        onLocationDelete={f.handleClearLocation}
         onIosDateConfirm={f.confirmIosDate}
         onDatePickerClose={() => f.setDatePicker({ visible: false })}
       />

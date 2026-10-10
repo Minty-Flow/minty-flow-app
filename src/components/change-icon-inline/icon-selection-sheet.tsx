@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FlatList, Modal, Pressable, TextInput, View } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
+import { FlatList, Pressable, TextInput, View } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { IconSvg, type IconSvgName } from "~/components/icons"
+import { sheetHeaderStyles } from "~/components/selectors/styles"
+import { BottomSheet } from "~/components/ui/bottom-sheet"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
@@ -16,7 +17,7 @@ import type { MintyColorScheme } from "~/styles/theme/types"
 
 import { DynamicIcon } from "../dynamic-icon"
 
-interface IconSelectionModalProps {
+interface IconSelectionSheetProps {
   visible: boolean
   onClose: () => void
   onIconSelected?: (icon: string | null) => void
@@ -51,7 +52,7 @@ const IconItem = ({
   )
 }
 /**
- * SearchHeader - Memoised search input for the icon modal
+ * SearchHeader - Memoised search input for the icon sheet
  */
 const SearchHeader = ({
   searchQuery,
@@ -134,17 +135,17 @@ const searchIcons = (
     .map(({ icon }) => icon)
 }
 /**
- * IconSelectionModal – full-screen modal icon picker with fuzzy search.
+ * IconSelectionSheet – native bottom-sheet icon picker (75% height) with fuzzy search.
  *
  * Controlled by the `visible` prop; call `onClose` to dismiss.
  */
-export const IconSelectionModal = ({
+export const IconSelectionSheet = ({
   visible,
   onClose,
   colorScheme,
   onIconSelected,
   initialIcon,
-}: IconSelectionModalProps) => {
+}: IconSelectionSheetProps) => {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const [searchQuery, setSearchQuery] = useState("")
@@ -156,12 +157,13 @@ export const IconSelectionModal = ({
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 200)
     return () => clearTimeout(timer)
   }, [searchQuery])
-  // Reset state when modal opens
-  const handleShow = () => {
+  // Reset state each time the sheet opens
+  useEffect(() => {
+    if (!visible) return
     setSelectedIcon(initialIcon || null)
     setSearchQuery("")
     setDebouncedQuery("")
-  }
+  }, [visible, initialIcon])
   const availableIcons = searchIcons(MINTY_SVGS, debouncedQuery)
   const handleIconSelect = (iconName: string) => {
     setSelectedIcon(iconName)
@@ -189,23 +191,17 @@ export const IconSelectionModal = ({
     />
   )
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      onRequestClose={onClose}
-      onShow={handleShow}
-      statusBarTranslucent
-      accessibilityViewIsModal
+    <BottomSheet
+      isPresented={visible}
+      onDismiss={onClose}
+      contentPadding={0}
+      heightFraction={0.75}
     >
-      <SafeAreaView style={styles.modalContainer} edges={["top", "bottom"]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>
+      <View style={styles.container}>
+        <View style={sheetHeaderStyles.header}>
+          <Text style={sheetHeaderStyles.title}>
             {t("components.iconPicker.title")}
           </Text>
-          <Button variant="secondary" onPress={onClose}>
-            <Text>{t("common.actions.cancel")}</Text>
-          </Button>
         </View>
 
         {/* Search */}
@@ -264,31 +260,15 @@ export const IconSelectionModal = ({
             <Text>{t("common.actions.done")}</Text>
           </Button>
         </View>
-      </SafeAreaView>
-    </Modal>
+      </View>
+    </BottomSheet>
   )
 }
 const styles = StyleSheet.create((theme) => ({
-  modalContainer: {
+  container: {
     flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.semantic.semi,
-  },
-  headerTitle: {
-    ...theme.typography.headlineSmall,
-    fontWeight: "600",
-    color: theme.colors.onSurface,
   },
   searchWrapper: {
-    paddingTop: 12,
     paddingBottom: 4,
   },
   searchContainer: {
@@ -334,9 +314,6 @@ const styles = StyleSheet.create((theme) => ({
     paddingTop: 16,
     paddingBottom: 8,
     paddingHorizontal: 20,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.semantic.semi,
-    backgroundColor: theme.colors.surface,
     gap: 12,
   },
   footerLeft: {

@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import { ScrollView, TextInput } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { AddNameModal } from "~/components/bill-splitter/add-name-modal"
+import { AddNameSheet } from "~/components/bill-splitter/add-name-sheet"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { SmartAmountInput } from "~/components/smart-amount-input"
@@ -432,7 +432,7 @@ export default function AddItemScreen() {
         </Button>
       </View>
 
-      <AddNameModal
+      <AddNameSheet
         visible={addNameVisible}
         onAdd={handleAddParticipant}
         onClose={() => setAddNameVisible(false)}

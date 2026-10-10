@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { AddNameModal } from "~/components/bill-splitter/add-name-modal"
+import { AddNameSheet } from "~/components/bill-splitter/add-name-sheet"
 import { IconSvg } from "~/components/icons"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Pressable } from "~/components/ui/pressable"
@@ -17,7 +17,7 @@ export default function NamesScreen() {
   const participants = useBillSplitterStore((s) => s.participants)
   const addParticipant = useBillSplitterStore((s) => s.addParticipant)
   const removeParticipant = useBillSplitterStore((s) => s.removeParticipant)
-  const [addModalVisible, setAddModalVisible] = useState(false)
+  const [addSheetVisible, setAddSheetVisible] = useState(false)
   const renderItem = ({ item }: { item: Participant }) => (
     <View style={styles.nameRow}>
       <Text style={styles.nameText} numberOfLines={1}>
@@ -57,17 +57,17 @@ export default function NamesScreen() {
 
       {/* FAB */}
       <Pressable
-        onPress={() => setAddModalVisible(true)}
+        onPress={() => setAddSheetVisible(true)}
         style={styles.fab}
         accessibilityLabel={t("screens.settings.billSplitter.names.addName")}
       >
         <IconSvg name="plus-outline" size={24} color={theme.colors.onPrimary} />
       </Pressable>
 
-      <AddNameModal
-        visible={addModalVisible}
+      <AddNameSheet
+        visible={addSheetVisible}
         onAdd={addParticipant}
-        onClose={() => setAddModalVisible(false)}
+        onClose={() => setAddSheetVisible(false)}
       />
     </View>
   )

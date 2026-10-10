@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
-import { DateRangePresetModal } from "~/components/date-range-preset-modal"
+import { DateRangePresetSheet } from "~/components/date-range-preset-sheet"
 import { MonthYearPicker } from "~/components/month-year-picker"
 import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
@@ -31,7 +31,7 @@ export function StatsPeriodHeader({
   navigate,
 }: StatsPeriodHeaderProps) {
   const { t } = useTranslation()
-  const [modalVisible, setModalVisible] = useState(false)
+  const [sheetVisible, setSheetVisible] = useState(false)
 
   return (
     <>
@@ -48,22 +48,22 @@ export function StatsPeriodHeader({
         <Text variant="muted" style={styles.rangeLabel}>
           {formatRangeLabel(dateRange)}
         </Text>
-        <Button variant="ghost" onPress={() => setModalVisible(true)}>
+        <Button variant="ghost" onPress={() => setSheetVisible(true)}>
           <Text style={styles.moreOptionsText}>
             {t("screens.stats.moreOptions")}
           </Text>
         </Button>
       </View>
 
-      <DateRangePresetModal
-        visible={modalVisible}
+      <DateRangePresetSheet
+        visible={sheetVisible}
         initialStart={dateRange.from}
         initialEnd={dateRange.to}
         onSave={(start, end, source) => {
           setCustomRange(start, end, source)
-          setModalVisible(false)
+          setSheetVisible(false)
         }}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => setSheetVisible(false)}
       />
     </>
   )

@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { AttachmentPreviewModal } from "~/components/transaction/attachment-preview-modal"
@@ -248,10 +248,10 @@ export function FormAttachmentsSection({
         )}
       </View>
 
-      {/* Modals managed here to keep JSX co-located with state */}
+      {/* Overlays managed here to keep JSX co-located with state */}
       <AttachmentPreviewModal attachment={preview} onClose={onClosePreview} />
 
-      <ConfirmModal
+      <ConfirmSheet
         visible={!!fileToOpen}
         onRequestClose={onCancelFileOpen}
         onConfirm={async () => {
@@ -267,14 +267,14 @@ export function FormAttachmentsSection({
         title={t("components.transactionForm.openFile.title", {
           name:
             fileToOpen?.name ??
-            t("components.transactionForm.attachments.openFileModal"),
+            t("components.transactionForm.attachments.openFileSheet"),
         })}
         description={t("components.transactionForm.openFile.description")}
         confirmLabel={t("common.actions.confirm")}
         cancelLabel={t("common.actions.cancel")}
       />
 
-      <ConfirmModal
+      <ConfirmSheet
         visible={!!toRemove}
         onRequestClose={onRemoveCancel}
         onConfirm={() => {

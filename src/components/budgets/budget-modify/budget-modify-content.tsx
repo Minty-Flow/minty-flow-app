@@ -14,7 +14,7 @@ import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty
 import { Button } from "~/components/ui/button"
 import { Chip } from "~/components/ui/chips"
 import {
-  DateTimePickerModal,
+  DateTimePickerSheet,
   useDateTimePicker,
 } from "~/components/ui/date-time-picker"
 import { Input } from "~/components/ui/input"
@@ -45,7 +45,7 @@ import { formatShortMonthDayYear } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
 import { BudgetFormFooter } from "./budget-form-footer"
-import { BudgetFormModals } from "./budget-form-modals"
+import { BudgetFormSheets } from "./budget-form-sheets"
 import { budgetModifyStyles } from "./budget-modify.styles"
 import type { BudgetModifyContentProps } from "./types"
 
@@ -105,13 +105,13 @@ export function BudgetModifyContent({
   const watchedEndDate = watch("endDate")
   const isActive = watch("isActive")
   const navigation = useNavigation()
-  const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
+  const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSubmitting,
-    onBlock: () => setUnsavedModalVisible(true),
+    onBlock: () => setUnsavedSheetVisible(true),
   })
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
   const startDatePicker = useDateTimePicker({
     onConfirm: (date) =>
       setValue("startDate", date.getTime(), { shouldDirty: true }),
@@ -460,7 +460,7 @@ export function BudgetModifyContent({
           <View style={budgetModifyStyles.deleteSection}>
             <Button
               variant="ghost"
-              onPress={() => setDeleteModalVisible(true)}
+              onPress={() => setDeleteSheetVisible(true)}
               style={budgetModifyStyles.actionButton}
             >
               <IconSvg
@@ -499,16 +499,16 @@ export function BudgetModifyContent({
         onSave={handleSubmit}
       />
 
-      <BudgetFormModals
-        deleteModalVisible={deleteModalVisible}
-        unsavedModalVisible={unsavedModalVisible}
+      <BudgetFormSheets
+        deleteSheetVisible={deleteSheetVisible}
+        unsavedSheetVisible={unsavedSheetVisible}
         isAddMode={isAddMode}
         budget={budget}
-        onCloseDeleteModal={() => setDeleteModalVisible(false)}
-        onCloseUnsavedModal={() => setUnsavedModalVisible(false)}
+        onCloseDeleteSheet={() => setDeleteSheetVisible(false)}
+        onCloseUnsavedSheet={() => setUnsavedSheetVisible(false)}
         onConfirmDelete={handleDelete}
         onDiscardAndNavigate={() => {
-          setUnsavedModalVisible(false)
+          setUnsavedSheetVisible(false)
           allowNavigation()
           handleGoBack()
         }}
@@ -516,8 +516,8 @@ export function BudgetModifyContent({
 
       {startDatePicker.pickerElement}
       {endDatePicker.pickerElement}
-      <DateTimePickerModal {...startDatePicker.modalProps} />
-      <DateTimePickerModal {...endDatePicker.modalProps} />
+      <DateTimePickerSheet {...startDatePicker.sheetProps} />
+      <DateTimePickerSheet {...endDatePicker.sheetProps} />
     </View>
   )
 }

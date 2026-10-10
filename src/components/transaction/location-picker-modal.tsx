@@ -1,10 +1,13 @@
 import * as Haptics from "expo-haptics"
 import * as Location from "expo-location"
-import { useReducer, useRef, useState } from "react"
+import { useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Modal, Platform } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { StyleSheet as UnistylesSheet } from "react-native-unistyles"
+import {
+  StyleSheet as UnistylesSheet,
+  useUnistyles,
+} from "react-native-unistyles"
 import { WebView, type WebViewMessageEvent } from "react-native-webview"
 
 import { IconSvg } from "~/components/icons"
@@ -14,12 +17,25 @@ import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TransactionLocation } from "~/types/transactions"
+import { Toast } from "~/utils/toast"
 
-const GPS_FALLBACK_COORDINATES = { latitude: 37.7749, longitude: -122.4194 }
+// Only the map's starting view when nothing is saved and GPS hasn't answered yet.
+const DEFAULT_MAP_CENTER = { latitude: 37.7749, longitude: -122.4194 }
+const LOCATE_TIMEOUT_MS = 10_000
+// A cached position this recent is good enough to move the map immediately.
+const LAST_KNOWN_MAX_AGE_MS = 5 * 60_000
+// Module-level so the WebView prop is referentially stable across re-renders.
+const WEBVIEW_ORIGINS = [
+  "https://unpkg.com",
+  "https://tiles.openfreemap.org",
+  "about:blank",
+]
 interface LocationPickerModalProps {
   visible: boolean
   initialLocation?: TransactionLocation | null
   onConfirm: (location: TransactionLocation) => void
+  /** Clears the saved location. The Delete button only shows when one exists. */
+  onDelete?: () => void
   onRequestClose: () => void
 }
 type LocationContentState = {
@@ -28,15 +44,10 @@ type LocationContentState = {
     latitude: number
     longitude: number
   } | null
-  gpsCoords: {
-    latitude: number
-    longitude: number
-  } | null
 }
 function mergeReducer<S>(state: S, update: Partial<S>): S {
   return { ...state, ...update }
 }
-// Add this helper OUTSIDE the component, next to fetchGpsCoords and fetchReverseGeocode:
 type WebViewMapMessage = {
   type: string
   lat: number
@@ -132,16 +143,11 @@ function buildMaplibreHtml(lat: number, lng: number): string {
     map.on('dragstart', () => pin.classList.add('lifting'));
     map.on('dragend', () => pin.classList.remove('lifting'));
 
-    function onRNMessage(raw) {
-      try {
-        const msg = JSON.parse(raw);
-        if (msg.type === 'reset_pin') {
-          map.flyTo({ center: [msg.lng, msg.lat], zoom: 15 });
-        }
-      } catch (_) {}
-    }
-    document.addEventListener('message', (e) => onRNMessage(e.data));
-    window.addEventListener('message', (e) => onRNMessage(e.data));
+    // Called from React Native via injectJavaScript (more reliable than
+    // postMessage, whose delivery differs between Android and iOS WebViews).
+    window.flyTo = function (lat, lng) {
+      map.flyTo({ center: [lng, lat], zoom: 15 });
+    };
   </script>
 </body>
 </html>`
@@ -151,21 +157,81 @@ function buildMaplibreHtml(lat: number, lng: number): string {
 // try/finally inside component scope.
 // (Compiler limitation: BuildHIR::lowerStatement can't handle try/finally)
 // ---------------------------------------------------------------------------
-async function fetchGpsCoords(): Promise<{
-  latitude: number
-  longitude: number
-}> {
+type LocateResult =
+  | { ok: true; latitude: number; longitude: number }
+  | { ok: false; reason: "permission" | "services" | "unavailable" }
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("timeout")), ms)
+    promise.then(
+      (v) => {
+        clearTimeout(timer)
+        resolve(v)
+      },
+      (e) => {
+        clearTimeout(timer)
+        reject(e)
+      },
+    )
+  })
+}
+
+type Coords = { latitude: number; longitude: number }
+
+/**
+ * Real device position, or the reason there isn't one — never a fake fallback.
+ * Progressive: a cached fix (instant) is reported through `onFix` first so the
+ * map moves right away, then the fresh fix refines it.
+ */
+async function locateDevice(
+  onFix: (coords: Coords) => void,
+): Promise<LocateResult> {
   try {
-    const { status } = await Location.requestForegroundPermissionsAsync()
+    let { status } = await Location.getForegroundPermissionsAsync()
     if (status !== Location.PermissionStatus.GRANTED) {
-      return GPS_FALLBACK_COORDINATES
+      status = (await Location.requestForegroundPermissionsAsync()).status
     }
-    const pos = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
+    if (status !== Location.PermissionStatus.GRANTED) {
+      return { ok: false, reason: "permission" }
+    }
+    if (!(await Location.hasServicesEnabledAsync())) {
+      return { ok: false, reason: "services" }
+    }
+    const last = await Location.getLastKnownPositionAsync({
+      maxAge: LAST_KNOWN_MAX_AGE_MS,
     })
-    return { latitude: pos.coords.latitude, longitude: pos.coords.longitude }
+    if (last) {
+      onFix({
+        latitude: last.coords.latitude,
+        longitude: last.coords.longitude,
+      })
+    }
+    try {
+      const pos = await withTimeout(
+        Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        }),
+        LOCATE_TIMEOUT_MS,
+      )
+      const fresh = {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+      }
+      onFix(fresh)
+      return { ok: true, ...fresh }
+    } catch {
+      // No fresh fix in time (indoors, cold GPS): the cached one already moved the map.
+      return last
+        ? {
+            ok: true,
+            latitude: last.coords.latitude,
+            longitude: last.coords.longitude,
+          }
+        : { ok: false, reason: "unavailable" }
+    }
   } catch {
-    return GPS_FALLBACK_COORDINATES
+    return { ok: false, reason: "unavailable" }
   }
 }
 async function fetchReverseGeocode(
@@ -193,25 +259,39 @@ async function fetchReverseGeocode(
 function LocationPickerContent({
   initialLocation,
   onConfirm,
+  onDelete,
   onRequestClose,
 }: Omit<LocationPickerModalProps, "visible">) {
   const { t } = useTranslation()
+  const { theme } = useUnistyles()
   const insets = useSafeAreaInsets()
   const webviewRef = useRef<WebView>(null)
   const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const mapReadyRef = useRef(false)
+  const pendingFlyRef = useRef<{ latitude: number; longitude: number } | null>(
+    null,
+  )
   const [address, setAddress] = useState<string | null>(null)
+  // With no saved location we start on GPS: confirm stays off until the first fix.
+  const [awaitingFirstFix, setAwaitingFirstFix] = useState(!initialLocation)
+  // Button spinner only; the footer and Confirm don't change on later presses.
+  const [isLocating, setIsLocating] = useState(false)
   const [locState, setLocState] = useReducer(
     mergeReducer<LocationContentState>,
     initialLocation, // passed as the seed
     (init) => {
-      const initLat = init?.latitude ?? 37.7749
-      const initLng = init?.longitude ?? -122.4194
+      const initLat = init?.latitude ?? DEFAULT_MAP_CENTER.latitude
+      const initLng = init?.longitude ?? DEFAULT_MAP_CENTER.longitude
       return {
         mapHtml: buildMaplibreHtml(initLat, initLng),
         coords: { latitude: initLat, longitude: initLng },
-        gpsCoords: null,
       }
     },
+  )
+  // Same object across re-renders: a fresh `source` object makes the WebView reload (the flash).
+  const webSource = useMemo(
+    () => ({ html: locState.mapHtml ?? "" }),
+    [locState.mapHtml],
   )
   const triggerReverseGeocode = (lat: number, lng: number) => {
     if (geocodeTimer.current) clearTimeout(geocodeTimer.current)
@@ -220,9 +300,53 @@ function LocationPickerContent({
       fetchReverseGeocode(lat, lng).then((result) => setAddress(result))
     }, 800)
   }
+  const flyTo = (coords: { latitude: number; longitude: number }) => {
+    if (!mapReadyRef.current) {
+      pendingFlyRef.current = coords
+      return
+    }
+    webviewRef.current?.injectJavaScript(
+      `window.flyTo(${Number(coords.latitude)}, ${Number(coords.longitude)}); true;`,
+    )
+  }
+  const locate = async () => {
+    setIsLocating(true)
+    const result = await locateDevice((fix) => {
+      setAwaitingFirstFix(false)
+      flyTo(fix)
+    })
+    setIsLocating(false)
+    setAwaitingFirstFix(false)
+    if (result.ok) return
+    Toast.warn({
+      title: t(
+        result.reason === "permission"
+          ? "components.locationPicker.permissionDenied"
+          : result.reason === "services"
+            ? "components.locationPicker.servicesOff"
+            : "components.locationPicker.unavailable",
+      ),
+    })
+  }
+  // Start on the user's position when there is no saved location.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: run once on mount
+  useEffect(() => {
+    if (!initialLocation) void locate()
+    return () => {
+      if (geocodeTimer.current) clearTimeout(geocodeTimer.current)
+    }
+  }, [])
   const handleMessage = (event: WebViewMessageEvent) => {
     const data = parseWebViewMessage(event.nativeEvent.data)
     if (!data) return
+    if (data.type === "map_loaded") {
+      mapReadyRef.current = true
+      if (pendingFlyRef.current) {
+        const pending = pendingFlyRef.current
+        pendingFlyRef.current = null
+        flyTo(pending)
+      }
+    }
     if (data.type === "pin_moved" || data.type === "map_loaded") {
       setLocState({ coords: { latitude: data.lat, longitude: data.lng } })
       triggerReverseGeocode(data.lat, data.lng)
@@ -230,21 +354,6 @@ function LocationPickerContent({
     if (data.type === "pin_moved") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     }
-  }
-  const handleResetToGps = async () => {
-    // Use cached coords if already fetched
-    let gps = locState.gpsCoords
-    if (!gps) {
-      gps = await fetchGpsCoords()
-      setLocState({ gpsCoords: gps })
-    }
-    webviewRef.current?.postMessage(
-      JSON.stringify({
-        type: "reset_pin",
-        lat: gps.latitude,
-        lng: gps.longitude,
-      }),
-    )
   }
   const handleConfirm = () => {
     if (!locState.coords) return
@@ -254,14 +363,14 @@ function LocationPickerContent({
       address,
     })
   }
-  const footerLabel =
-    address ??
-    (locState.coords
-      ? `${locState.coords.latitude.toFixed(5)}, ${locState.coords.longitude.toFixed(5)}`
-      : t("components.locationPicker.tapOrDrag"))
+  const footerLabel = awaitingFirstFix
+    ? t("components.locationPicker.gettingLocation")
+    : (address ??
+      (locState.coords
+        ? `${locState.coords.latitude.toFixed(5)}, ${locState.coords.longitude.toFixed(5)}`
+        : t("components.locationPicker.tapOrDrag")))
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View
         style={[styles.header, { paddingTop: Math.max(insets.top + 10, 20) }]}
       >
@@ -281,28 +390,30 @@ function LocationPickerContent({
           <WebView
             ref={webviewRef}
             style={styles.map}
-            source={{ html: locState.mapHtml ?? "" }}
+            source={webSource}
             onMessage={handleMessage}
             javaScriptEnabled
             domStorageEnabled
-            originWhitelist={[
-              "https://unpkg.com",
-              "https://tiles.openfreemap.org",
-              "about:blank",
-            ]}
+            nestedScrollEnabled
+            originWhitelist={WEBVIEW_ORIGINS}
           />
 
           <Pressable
-            onPress={handleResetToGps}
+            onPress={locate}
+            disabled={isLocating}
             hitSlop={8}
             style={styles.fabMyLocation}
           >
-            <IconSvg name="current-location" size={24} />
+            {isLocating ? (
+              <ActivityIndicatorMinty size="small" />
+            ) : (
+              <IconSvg name="current-location" size={24} />
+            )}
           </Pressable>
         </View>
       )}
 
-      {/* Footer: address/coords + Cancel/Confirm */}
+      {/* Footer: address/coords + Cancel / Delete / Confirm */}
       <View
         style={[
           styles.footer,
@@ -314,18 +425,23 @@ function LocationPickerContent({
         </Text>
         <View style={styles.actions}>
           <Button
-            variant="outline"
-            size="lg"
+            variant="ghost"
             onPress={onRequestClose}
             style={styles.actionBtn}
           >
             <Text variant="default">{t("common.actions.cancel")}</Text>
           </Button>
+          {onDelete && initialLocation && (
+            <Button variant="ghost" onPress={onDelete} style={styles.actionBtn}>
+              <Text variant="default" style={{ color: theme.colors.error }}>
+                {t("common.actions.delete")}
+              </Text>
+            </Button>
+          )}
           <Button
             variant="default"
-            size="lg"
             onPress={handleConfirm}
-            disabled={!locState.coords}
+            disabled={!locState.coords || awaitingFirstFix}
             style={styles.actionBtn}
           >
             <Text variant="default">{t("common.actions.confirm")}</Text>
@@ -339,6 +455,7 @@ export function LocationPickerModal({
   visible,
   initialLocation,
   onConfirm,
+  onDelete,
   onRequestClose,
 }: LocationPickerModalProps) {
   return (
@@ -351,6 +468,7 @@ export function LocationPickerModal({
       <LocationPickerContent
         initialLocation={initialLocation}
         onConfirm={onConfirm}
+        onDelete={onDelete}
         onRequestClose={onRequestClose}
       />
     </Modal>
