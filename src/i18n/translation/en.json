@@ -80,6 +80,14 @@
       "warning": "Warning",
       "info": "Info",
       "deleted": "Deleted"
+    },
+    "notFound": {
+      "account": "Account not found.",
+      "budget": "Budget not found.",
+      "category": "Category not found.",
+      "goal": "Goal not found.",
+      "loan": "Loan not found.",
+      "tag": "Tag not found."
     }
   },
   "navigation": {
@@ -751,6 +759,10 @@
           "statusPaid": "Paid"
         },
         "form": {
+          "nameLabel": "Loan Name",
+          "namePlaceholder": "e.g. Car loan from Sam",
+          "descriptionLabel": "Description",
+          "descriptionPlaceholder": "Optional note about this loan",
           "amountLabel": "Principal Amount",
           "deleteLabel": "Delete Loan",
           "dueDateLabel": "Due Date"

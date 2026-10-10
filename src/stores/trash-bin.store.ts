@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 /**
  * MMKV storage instance for trash bin.
@@ -47,11 +49,7 @@ export const useTrashBinStore = create<trashBinStore>()(
     }),
     {
       name: "trash-bin-store",
-      storage: createJSONStorage(() => ({
-        getItem: (name) => trashBinStorage.getString(name) ?? null,
-        setItem: (name, value) => trashBinStorage.set(name, value),
-        removeItem: (name) => trashBinStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(trashBinStorage),
     },
   ),
 )

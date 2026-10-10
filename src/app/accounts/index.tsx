@@ -10,7 +10,7 @@ import {
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { PrivacyEyeControl } from "~/components/privacy-eye-control"
-import { ReorderableListV2 } from "~/components/reorderable-list-v2"
+import { ReorderableList } from "~/components/reorderable-list"
 import { RouteLoadingState } from "~/components/route-load-state"
 import { SearchInput } from "~/components/search-input"
 import { Button } from "~/components/ui/button"
@@ -18,10 +18,7 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
 import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
-import {
-  getMonthRange,
-  updateAccountsOrder,
-} from "~/database/services/account-service"
+import { updateAccountsOrder } from "~/database/services/account-service"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import type { Account } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
@@ -30,6 +27,7 @@ import {
   TransactionTypeEnum,
 } from "~/types/transactions"
 import { logger } from "~/utils/logger"
+import { getMonthRange } from "~/utils/time-utils"
 
 function AccountsScreen() {
   const { t } = useTranslation()
@@ -222,7 +220,7 @@ function AccountsScreen() {
         />
       </View>
 
-      <ReorderableListV2
+      <ReorderableList
         data={displayAccounts}
         keyExtractor={(item) => item.id}
         onReorder={(newAccounts) => setReorderedAccounts(newAccounts)}

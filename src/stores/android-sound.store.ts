@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 /**
  * MMKV storage instance for android sound data.
@@ -42,11 +44,7 @@ export const useAndroidSoundStore = create<AndroidSoundStore>()(
     {
       name: "android-sound-store",
       // Use the custom MMKV instance for storage
-      storage: createJSONStorage(() => ({
-        getItem: (name) => androidSoundStorage.getString(name) ?? null,
-        setItem: (name, value) => androidSoundStorage.set(name, value),
-        removeItem: (name) => androidSoundStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(androidSoundStorage),
     },
   ),
 )

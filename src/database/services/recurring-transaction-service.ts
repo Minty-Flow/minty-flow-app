@@ -197,7 +197,7 @@ export async function createRecurringRule(
   return id
 }
 
-export async function disableRecurringRule(ruleId: string): Promise<void> {
+async function disableRecurringRule(ruleId: string): Promise<void> {
   await runInTransaction("recurring.disable", (db) => {
     db.update(recurringTransactions)
       .set({ disabled: 1 })
@@ -215,7 +215,7 @@ type RecurringRuleTemplateUpdate = Partial<{
   type: string
 }>
 
-export async function updateRecurringRuleTemplate(
+async function updateRecurringRuleTemplate(
   ruleId: string,
   fields: RecurringRuleTemplateUpdate,
 ): Promise<void> {
@@ -258,7 +258,7 @@ const FOREVER_MS = new Date(2099, 11, 31).getTime()
  * all instances, preventing effectiveLast guard from pinning the cursor below
  * new-cadence occurrences. Never touches the template fields.
  */
-export async function updateRecurringRule(
+async function updateRecurringRule(
   ruleId: string,
   opts: { recurrence: Recurrence; until: Date | null },
 ): Promise<void> {

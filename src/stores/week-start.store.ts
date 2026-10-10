@@ -1,7 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
 
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 import { notifyFormatChange } from "~/utils/notify-format-change"
 
 /**
@@ -30,11 +31,7 @@ export const useWeekStartStore = create<WeekStartStore>()(
     }),
     {
       name: "week-start-store",
-      storage: createJSONStorage(() => ({
-        getItem: (name) => weekStartStorage.getString(name) ?? null,
-        setItem: (name, value) => weekStartStorage.set(name, value),
-        removeItem: (name) => weekStartStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(weekStartStorage),
     },
   ),
 )

@@ -4,50 +4,52 @@ import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 
-import { accountModifyStyles } from "./account-modify.styles"
+import { modifyFormStyles } from "./modify-form.styles"
 
-interface AccountFormFooterProps {
+interface ModifyFormFooterProps {
   formName: string
   isAddMode: boolean
   isDirty: boolean
   isSubmitting: boolean
-  isArchived?: boolean
+  /** Hide the save button (e.g. an archived account is read-only). */
+  hideSave?: boolean
   onCancel: () => void
   onSave: () => void
 }
 
-export function AccountFormFooter({
+/** Cancel / Create-or-Save footer shared by every create / edit form. */
+export function ModifyFormFooter({
   formName,
   isAddMode,
   isDirty,
   isSubmitting,
-  isArchived = false,
+  hideSave = false,
   onCancel,
   onSave,
-}: AccountFormFooterProps) {
+}: ModifyFormFooterProps) {
   const { t } = useTranslation()
 
   return (
-    <View style={accountModifyStyles.actions}>
+    <View style={modifyFormStyles.actions}>
       <Button
         variant="outline"
         onPress={onCancel}
-        style={accountModifyStyles.button}
+        style={modifyFormStyles.button}
       >
-        <Text variant="default" style={accountModifyStyles.cancelText}>
+        <Text variant="default" style={modifyFormStyles.cancelText}>
           {t("common.actions.cancel")}
         </Text>
       </Button>
-      {!isArchived && (
+      {!hideSave && (
         <Button
           variant="default"
           onPress={onSave}
-          style={accountModifyStyles.button}
+          style={modifyFormStyles.button}
           disabled={
             !formName.trim() || (!isAddMode && !isDirty) || isSubmitting
           }
         >
-          <Text variant="default" style={accountModifyStyles.saveText}>
+          <Text variant="default" style={modifyFormStyles.saveText}>
             {isSubmitting
               ? t("common.actions.saving")
               : isAddMode

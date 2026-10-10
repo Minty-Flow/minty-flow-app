@@ -6,17 +6,18 @@ export type ModifyRouteLoadState<T> =
   | { mode: "not-found"; message: string }
   | { mode: "edit"; entity: T }
 
-export function useModifyRouteLoader<T>({
+export function useModifyRouteLoader<T extends { id: string }>({
   id,
   data,
   updatedAt,
-  find,
+  find = (item, id) => item.id === id,
   notFoundMessage,
 }: {
   id: string | undefined
   data: T[]
   updatedAt: Date | undefined
-  find: (item: T, id: string) => boolean
+  /** Defaults to matching `item.id`. */
+  find?: (item: T, id: string) => boolean
   notFoundMessage: string
 }): ModifyRouteLoadState<T> {
   if (!id || id === NewEnum.NEW) return { mode: "new" }

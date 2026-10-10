@@ -14,8 +14,6 @@ import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
-import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
-import { useTags } from "~/database/drizzle/read-models/tag-read-model"
 import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { useProfileStore } from "~/stores/profile.store"
@@ -27,7 +25,6 @@ import {
   DEFAULT_SEARCH_STATE,
   DEFAULT_TRANSACTION_LIST_FILTER_STATE,
 } from "~/types/transaction-filters"
-import { TransactionTypeEnum } from "~/types/transactions"
 import { buildQueryFilters } from "~/utils/transaction-list-utils"
 
 function HomeScreen() {
@@ -46,21 +43,12 @@ function HomeScreen() {
   const profileName = useProfileStore((s) => s.name)
   const image = useProfileStore((s) => s.imageUri)
   const accounts = useActiveAccounts()
-  const categoriesExpense = useCategoriesByType(TransactionTypeEnum.EXPENSE)
-  const categoriesIncome = useCategoriesByType(TransactionTypeEnum.INCOME)
-  const categoriesTransfer = useCategoriesByType(TransactionTypeEnum.TRANSFER)
-  const tags = useTags()
   const { fromDate, toDate } = buildQueryFilters(selectedRange, homeTimeframe)
   const { items: transactionsFull, status: transactionsStatus } =
     useTransactions({
       from: new Date(fromDate).toISOString(),
       to: new Date(toDate).toISOString(),
     })
-  const categoriesByType = {
-    expense: categoriesExpense,
-    income: categoriesIncome,
-    transfer: categoriesTransfer,
-  }
   const summaryHeader = (
     <SummarySection transactionsWithRelations={transactionsFull} />
   )
@@ -90,8 +78,6 @@ function HomeScreen() {
       {/* Inline filter header: pill bar + expandable filter panels */}
       <TransactionFilterHeader
         accounts={accounts}
-        categoriesByType={categoriesByType}
-        tags={tags}
         filterState={filterState}
         onFilterChange={setFilterState}
         selectedRange={selectedRange}

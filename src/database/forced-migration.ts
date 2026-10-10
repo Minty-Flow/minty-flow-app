@@ -332,9 +332,7 @@ function latestMigrationMs(migrations: DrizzleMigrationBundle): number {
   return Math.max(...migrations.journal.entries.map((entry) => entry.when))
 }
 
-export function isDrizzleBaselineApplied(
-  migrations: DrizzleMigrationBundle,
-): boolean {
+function isDrizzleBaselineApplied(migrations: DrizzleMigrationBundle): boolean {
   if (!tableExists("__drizzle_migrations")) return false
   if (!hasAllRequiredTablesAndColumns()) return false
   if (!hasAllRequiredIndexes()) return false

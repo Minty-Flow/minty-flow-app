@@ -3,8 +3,8 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
-import { TransactionFormV4 } from "~/components/transaction/transaction-form-v4"
-import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
+import { RouteLoadingState } from "~/components/route-load-state"
+import { TransactionForm } from "~/components/transaction/transaction-form"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
@@ -83,7 +83,7 @@ function TransactionEditor({
   const loans = useAllLoans()
 
   return (
-    <TransactionFormV4
+    <TransactionForm
       transaction={transaction}
       transactionType={transactionType}
       onTransactionTypeChange={setTransactionType}
@@ -111,13 +111,7 @@ function EditTransactionScreen({ transactionId }: { transactionId: string }) {
   const initialTagIds = transaction?.tagIds ?? []
 
   if (status === "idle" || status === "loading") {
-    return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicatorMinty />
-        </View>
-      </View>
-    )
+    return <RouteLoadingState />
   }
 
   if (transaction === null) {

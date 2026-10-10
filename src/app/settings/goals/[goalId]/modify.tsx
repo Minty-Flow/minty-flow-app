@@ -1,4 +1,5 @@
 import { useLocalSearchParams } from "expo-router"
+import { useTranslation } from "react-i18next"
 
 import { GoalModifyContent } from "~/components/goals/goal-modify/goal-modify-content"
 import {
@@ -11,6 +12,7 @@ import { useModifyRouteLoader } from "~/hooks/use-modify-route-loader"
 import { NewEnum } from "~/types/new"
 
 export default function GoalModifyScreen() {
+  const { t } = useTranslation()
   const params = useLocalSearchParams<{ goalId: string }>()
   const goalId = params.goalId ?? NewEnum.NEW
 
@@ -19,8 +21,7 @@ export default function GoalModifyScreen() {
     id: goalId,
     data: goalsQuery.data,
     updatedAt: goalsQuery.updatedAt,
-    find: (item, id) => item.id === id,
-    notFoundMessage: "Goal not found.",
+    notFoundMessage: t("common.notFound.goal"),
   })
   const accounts = useActiveAccounts()
 

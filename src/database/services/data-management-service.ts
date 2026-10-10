@@ -211,19 +211,6 @@ async function generateJsonBackup(baseName?: string): Promise<{
   return { uri, fileName }
 }
 
-export async function generateInternalJsonBackup(baseName?: string): Promise<{
-  uri: string
-  fileName: string
-}> {
-  return generateJsonBackup(baseName)
-}
-
-export async function readBackupJsonFromUri(uri: string): Promise<string> {
-  return FileSystem.readAsStringAsync(uri, {
-    encoding: FileSystem.EncodingType.UTF8,
-  })
-}
-
 export async function saveJsonToDevice(
   baseName?: string,
 ): Promise<SavedExport> {

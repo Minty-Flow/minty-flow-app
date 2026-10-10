@@ -6,6 +6,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles"
 import { AddNameSheet } from "~/components/bill-splitter/add-name-sheet"
 import { IconSvg } from "~/components/icons"
 import { EmptyState } from "~/components/ui/empty-state"
+import { Fab } from "~/components/ui/fab"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -56,13 +57,10 @@ export default function NamesScreen() {
       />
 
       {/* FAB */}
-      <Pressable
+      <Fab
         onPress={() => setAddSheetVisible(true)}
-        style={styles.fab}
         accessibilityLabel={t("screens.settings.billSplitter.names.addName")}
-      >
-        <IconSvg name="plus-outline" size={24} color={theme.colors.onPrimary} />
-      </Pressable>
+      />
 
       <AddNameSheet
         visible={addSheetVisible}
@@ -109,21 +107,5 @@ const styles = StyleSheet.create((theme) => ({
   },
   deleteButton: {
     padding: 4,
-  },
-  fab: {
-    position: "absolute",
-    bottom: 24,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: theme.radius,
-    backgroundColor: theme.colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
   },
 }))

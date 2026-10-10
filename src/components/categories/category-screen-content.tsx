@@ -3,14 +3,13 @@ import { useLayoutEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/icons"
+import { FilterToggleButton } from "~/components/filter-toggle-button"
 import { SearchInput } from "~/components/search-input"
 import { View } from "~/components/ui/view"
 import type { TranslationKey } from "~/i18n/config"
 import { type CategoryType, CategoryTypeEnum } from "~/types/categories"
 
 import { TabsMinty } from "../tabs-minty"
-import { Button } from "../ui/button"
 import { CategoryList } from "./category-list"
 
 interface CategoryScreenContentProps {
@@ -45,16 +44,11 @@ export function CategoryScreenContent({
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <Button
-          variant={"ghost"}
-          size="icon"
+        <FilterToggleButton
+          variant="search"
+          active={showSearch}
           onPress={() => setShowSearch((v) => !v)}
-        >
-          <IconSvg
-            name={showSearch ? "filter-2-x-outline" : "filter-2-search-outline"}
-            size={20}
-          />
-        </Button>
+        />
       ),
     })
   }, [navigation, showSearch])

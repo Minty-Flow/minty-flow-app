@@ -6,16 +6,15 @@ import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
 import type { IconSvgName } from "~/components/icons"
+import { ModifyFormFooter } from "~/components/modify-form/modify-form-footer"
 import {
   RouteLoadingState,
   RouteNotFoundState,
 } from "~/components/route-load-state"
-import { ActionButtons } from "~/components/tag/action-buttons"
 import { DeleteSection } from "~/components/tag/delete-section"
 import { FormTagFields } from "~/components/tag/form-tag-fields"
 import { FormTagSheets } from "~/components/tag/form-tag-sheets"
 import { TypeTabs } from "~/components/tag/type-tabs"
-import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
 import { useTagsQuery } from "~/database/drizzle/read-models/tag-read-model"
@@ -113,13 +112,7 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
   }
   const currentColorScheme = getThemeStrict(formColorSchemeName)
   if (!isAddMode && !tag) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicatorMinty />
-        </View>
-      </View>
-    )
+    return <RouteLoadingState />
   }
   return (
     <View style={styles.container}>
@@ -152,13 +145,13 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
         )}
       </ScrollIntoViewProvider>
 
-      <ActionButtons
-        onCancelPress={() => router.back()}
-        onSavePress={handleFormSubmit(onSubmit)}
-        isSubmitting={isSubmitting}
+      <ModifyFormFooter
+        formName={formName}
         isAddMode={isAddMode}
         isDirty={isDirty}
-        formName={formName}
+        isSubmitting={isSubmitting}
+        onCancel={() => router.back()}
+        onSave={handleFormSubmit(onSubmit)}
       />
 
       <FormTagSheets
@@ -175,6 +168,7 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
   )
 }
 export default function EditTagScreen() {
+  const { t } = useTranslation()
   const { tagId } = useLocalSearchParams<{
     tagId: string
   }>()
@@ -183,8 +177,7 @@ export default function EditTagScreen() {
     id: tagId,
     data: tagsQuery.data,
     updatedAt: tagsQuery.updatedAt,
-    find: (item, id) => item.id === id,
-    notFoundMessage: "Tag not found.",
+    notFoundMessage: t("common.notFound.tag"),
   })
 
   if (loadState.mode === "new") {
@@ -201,11 +194,6 @@ const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.surface,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
   scrollView: {
     flex: 1,
