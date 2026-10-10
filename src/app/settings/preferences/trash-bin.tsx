@@ -6,6 +6,10 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { ConfirmSheet } from "~/components/confirm-sheet"
 import { IconSvg } from "~/components/icons"
+import {
+  SettingsRow,
+  settingsStyles,
+} from "~/components/settings/settings-list"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { ChoiceChips } from "~/components/ui/chips"
 import { ListItem } from "~/components/ui/list-item"
@@ -73,7 +77,10 @@ export default function TrashBinScreen() {
       })
   } // Added 't' to dependencies
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={settingsStyles.screen}
+      contentContainerStyle={settingsStyles.content}
+    >
       {/* Retention Period Choices */}
       <ChoiceChips
         title={t("screens.settings.trash.retention.title")}
@@ -93,23 +100,17 @@ export default function TrashBinScreen() {
       />
 
       {/* View Removed List */}
-      <ListItem style={styles.actionItem} onPress={handleView}>
-        <View style={styles.actionItemLeft}>
-          <View style={styles.actionItemContent}>
-            <View style={styles.titleRow}>
-              <Text variant="default" style={styles.actionItemTitle}>
-                {t("screens.settings.trash.viewRemovedList")}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <ChevronIcon
-          direction={"trailing"}
-          size={18}
-          color={styles.actionItemIcon.color}
-        />
-      </ListItem>
+      <SettingsRow
+        label={t("screens.settings.trash.viewRemovedList")}
+        onPress={handleView}
+        trailing={
+          <ChevronIcon
+            direction="trailing"
+            size={18}
+            color={styles.actionItemIcon.color}
+          />
+        }
+      />
 
       {/* Empty Trash Bin */}
       <ListItem
@@ -150,10 +151,6 @@ export default function TrashBinScreen() {
   )
 }
 const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
   actionItem: {
     justifyContent: "space-between",
   },
@@ -170,11 +167,6 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-  },
-  actionItemTitle: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-    fontWeight: "600",
-    color: theme.colors.onSurface,
   },
   actionTrashItemTitle: {
     fontSize: theme.typography.bodyLarge.fontSize,

@@ -1,12 +1,11 @@
 /**
- * Tags field for the transaction form: one horizontal row. "Add tag" is always
- * first and opens the tag picker sheet; the applied tags follow as chips
- * (tap one to drop it).
+ * Tags field for the transaction form: a wrapping row of chips. "Add tag" is
+ * always first and opens the tag picker sheet; the applied tags follow (tap one
+ * to drop it) and wrap onto new lines instead of scrolling.
  */
 import { useFocusEffect, useRouter } from "expo-router"
 import { useCallback, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ScrollView } from "react-native"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
@@ -67,12 +66,7 @@ export function FormTagsPicker({
 
   return (
     <View style={transactionFormStyles.fieldBlock}>
-      <ScrollView
-        horizontal
-        keyboardShouldPersistTaps="handled"
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={transactionFormStyles.tagsRow}
-      >
+      <View style={transactionFormStyles.tagsWrapGrid}>
         <Pressable
           style={[
             transactionFormStyles.tagChipBase,
@@ -109,7 +103,7 @@ export function FormTagsPicker({
             }
           />
         ))}
-      </ScrollView>
+      </View>
 
       <TagPickerSheet
         visible={sheetVisible}

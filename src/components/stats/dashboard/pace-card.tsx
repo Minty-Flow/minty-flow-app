@@ -41,6 +41,7 @@ export function PaceCard({
             tone="transfer"
             visualTone="expense"
             compact
+            fit
             variant="h4"
             style={styles.totalAmount}
           />
@@ -60,6 +61,7 @@ export function PaceCard({
             tone="transfer"
             visualTone="expense"
             compact
+            fit
             variant="small"
             style={styles.avgAmount}
           />
@@ -76,14 +78,17 @@ const styles = StyleSheet.create((theme) => ({
   label: {
     fontSize: theme.typography.labelXSmall.fontSize,
   },
+  // The delta badge drops to its own line when the amount leaves no room.
   totalRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
   },
   totalAmount: {
+    flexShrink: 1,
     fontWeight: "700",
-    fontSize: theme.typography.bodyLarge.fontSize,
+    fontSize: theme.typography.titleSmall.fontSize,
   },
   avgRow: {
     flexDirection: "row",
@@ -92,7 +97,9 @@ const styles = StyleSheet.create((theme) => ({
     gap: 8,
   },
   avgAmount: {
+    flexShrink: 1,
     fontWeight: "600",
     fontSize: theme.typography.bodyMedium.fontSize,
+    textAlign: "right",
   },
 }))

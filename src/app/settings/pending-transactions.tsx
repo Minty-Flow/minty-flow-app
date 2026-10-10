@@ -124,6 +124,7 @@ export default function PendingTransactionsScreen() {
   return (
     <View style={styles.container}>
       <MonthYearPicker
+        allowFuture
         initialYear={selectedYear}
         initialMonth={selectedMonth}
         onSelect={(y, m) => {

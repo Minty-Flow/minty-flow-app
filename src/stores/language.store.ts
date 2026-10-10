@@ -1,4 +1,3 @@
-import { getLocales } from "expo-localization"
 import { I18nManager } from "react-native"
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
@@ -31,13 +30,9 @@ interface LanguageStore {
 export const useLanguageStore = create<LanguageStore>()(
   persist(
     (set) => {
-      const locale = getLocales()[0]
-
-      const initialLang = (locale.languageCode ??
-        LangCodeEnum.EN) as LangCodeType
-
-      const initialDirection = (locale.textDirection ??
-        DirectionEnum.LTR) as DirectionType
+      // English first, always: only an explicit saved choice changes this.
+      const initialLang: LangCodeType = LangCodeEnum.EN
+      const initialDirection: DirectionType = DirectionEnum.LTR
 
       return {
         /* ───────── State ───────── */
@@ -45,8 +40,8 @@ export const useLanguageStore = create<LanguageStore>()(
         direction: initialDirection,
 
         /* ───────── Derived ───────── */
-        isRTL: initialDirection === DirectionEnum.RTL,
-        isLTR: initialDirection === DirectionEnum.LTR,
+        isRTL: false,
+        isLTR: true,
 
         /* ───────── Actions ───────── */
         setLanguageCode: (value) => {
@@ -58,6 +53,7 @@ export const useLanguageStore = create<LanguageStore>()(
           i18n.dir(newDirection)
 
           if (I18nManager.isRTL !== shouldBeRTL) {
+            I18nManager.allowRTL(true)
             I18nManager.forceRTL(shouldBeRTL)
           }
 

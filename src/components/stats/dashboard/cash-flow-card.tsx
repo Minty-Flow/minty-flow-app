@@ -13,6 +13,8 @@ interface InOutRowProps {
   totalIncome: number
   totalExpense: number
   currency: string
+  /** "stacked": In and Out on their own lines (for narrow cards). */
+  layout?: "columns" | "stacked"
 }
 
 /** "● In $X   $Y Out ●" row — shared with the cash-flow detail summary */
@@ -20,8 +22,52 @@ export function InOutRow({
   totalIncome,
   totalExpense,
   currency,
+  layout = "columns",
 }: InOutRowProps) {
   const { t } = useTranslation()
+
+  if (layout === "stacked") {
+    return (
+      <View style={styles.stacked}>
+        <View style={styles.stackedRow}>
+          <View style={styles.inOutLabelRow}>
+            <View style={[styles.dot, styles.dotIncome]} />
+            <Text variant="muted" style={styles.inOutLabel}>
+              {t("screens.stats.dashboard.in")}
+            </Text>
+          </View>
+          <Money
+            value={totalIncome}
+            currency={currency}
+            tone="transfer"
+            visualTone="income"
+            compact
+            fit
+            variant="small"
+            style={styles.stackedAmount}
+          />
+        </View>
+        <View style={styles.stackedRow}>
+          <View style={styles.inOutLabelRow}>
+            <View style={[styles.dot, styles.dotExpense]} />
+            <Text variant="muted" style={styles.inOutLabel}>
+              {t("screens.stats.dashboard.out")}
+            </Text>
+          </View>
+          <Money
+            value={totalExpense}
+            currency={currency}
+            tone="transfer"
+            visualTone="expense"
+            compact
+            fit
+            variant="small"
+            style={styles.stackedAmount}
+          />
+        </View>
+      </View>
+    )
+  }
 
   return (
     <View style={styles.inOutRow}>
@@ -85,32 +131,36 @@ export function CashFlowCard({
       icon="arrows-transfer-up-down-outline"
       onPress={onPress}
     >
-      <View style={styles.headline}>
-        <IconSvg
-          name={overspent ? "trending-down-outline" : "pig-money-outline"}
-          size={18}
-          color={
-            overspent
-              ? theme.colors.semantic.expense
-              : theme.colors.semantic.income
-          }
-        />
-        <Text variant="muted" style={styles.headlineLabel} numberOfLines={1}>
-          {overspent
-            ? t("screens.stats.dashboard.overspent")
-            : t("screens.stats.dashboard.saved")}
-        </Text>
+      <View style={styles.body}>
+        <View style={styles.headline}>
+          <IconSvg
+            name={overspent ? "trending-down-outline" : "pig-money-outline"}
+            size={16}
+            color={
+              overspent
+                ? theme.colors.semantic.expense
+                : theme.colors.semantic.income
+            }
+          />
+          <Text variant="muted" style={styles.headlineLabel} numberOfLines={1}>
+            {overspent
+              ? t("screens.stats.dashboard.overspent")
+              : t("screens.stats.dashboard.saved")}
+          </Text>
+        </View>
         <Money
           value={Math.abs(current.net)}
           currency={currency}
           tone="transfer"
           visualTone={overspent ? "expense" : "income"}
           compact
+          fit
           variant="small"
           style={styles.headlineAmount}
         />
       </View>
       <InOutRow
+        layout="stacked"
         totalIncome={current.totalIncome}
         totalExpense={current.totalExpense}
         currency={currency}
@@ -120,6 +170,24 @@ export function CashFlowCard({
 }
 
 const styles = StyleSheet.create((theme) => ({
+  body: {
+    gap: 4,
+  },
+  stacked: {
+    gap: 6,
+  },
+  stackedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  stackedAmount: {
+    flexShrink: 1,
+    fontSize: theme.typography.labelLarge.fontSize,
+    fontWeight: "700",
+    textAlign: "right",
+  },
   headline: {
     flexDirection: "row",
     alignItems: "center",
@@ -130,7 +198,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   headlineAmount: {
     fontWeight: "700",
-    fontSize: theme.typography.bodyLarge.fontSize,
+    fontSize: theme.typography.titleSmall.fontSize,
   },
   inOutRow: {
     flexDirection: "row",

@@ -8,6 +8,9 @@ import { startOfNextMinute } from "~/utils/pending-transactions"
 
 import { mergeReducer } from "./form-utils"
 import type { DatePickerState, DatePickerTarget, RecurringState } from "./types"
+
+type PickerMode = "date" | "time"
+
 export function useFormDatePicker(
   recurring: RecurringState,
   setRecurring: (update: Partial<RecurringState>) => void,
@@ -24,7 +27,26 @@ export function useFormDatePicker(
     },
   )
   const datePickerTargetRef = useRef<DatePickerTarget>("transaction")
-  const applyTarget = (date: Date) => {
+  // The date and time buttons each edit their own half of the value.
+  const mergePart = (base: Date, picked: Date, mode: PickerMode) => {
+    const merged = new Date(base)
+    if (mode === "date") {
+      merged.setFullYear(
+        picked.getFullYear(),
+        picked.getMonth(),
+        picked.getDate(),
+      )
+    } else {
+      merged.setHours(picked.getHours(), picked.getMinutes(), 0, 0)
+    }
+    return merged
+  }
+  const currentValue = () =>
+    datePickerTargetRef.current === "recurringEnd"
+      ? (recurring.until ?? new Date())
+      : watch("transactionDate")
+  const applyPicked = (picked: Date, mode: PickerMode) => {
+    const date = mergePart(currentValue(), picked, mode)
     if (datePickerTargetRef.current === "recurringEnd") {
       setRecurring({ until: date })
       return
@@ -34,26 +56,21 @@ export function useFormDatePicker(
       shouldDirty: true,
     })
   }
-  const openDatePicker = (target: DatePickerTarget = "transaction") => {
+  const openDatePicker = (
+    target: DatePickerTarget = "transaction",
+    mode: PickerMode = "date",
+  ) => {
     datePickerTargetRef.current = target
-    const current =
-      target === "recurringEnd"
-        ? (recurring.until ?? new Date())
-        : watch("transactionDate")
-    setDatePicker({ tempDate: current })
+    const current = currentValue()
     if (Platform.OS === "android") {
-      setDatePicker({ androidStage: "date", tempDate: current })
+      setDatePicker({ androidStage: mode, mode, tempDate: current })
     } else {
-      setDatePicker({ mode: "date", visible: true })
+      setDatePicker({ mode, tempDate: current, visible: true })
     }
   }
   const confirmIosDate = (date: Date) => {
-    if (datePicker.mode === "time") {
-      applyTarget(date)
-      setDatePicker({ visible: false })
-    } else {
-      setDatePicker({ mode: "time", tempDate: date })
-    }
+    applyPicked(date, datePicker.mode)
+    setDatePicker({ visible: false })
   }
   const handleSetNow = () => {
     const now = new Date()
@@ -63,29 +80,16 @@ export function useFormDatePicker(
     })
   }
   const pickerElement =
-    Platform.OS === "android" && datePicker.androidStage === "date" ? (
+    Platform.OS === "android" && datePicker.androidStage ? (
       <DateTimePicker
         value={datePicker.tempDate}
-        mode="date"
+        mode={datePicker.androidStage}
+        display={datePicker.androidStage === "time" ? "spinner" : undefined}
         presentation="dialog"
-        onValueChange={(_, selectedDate) => {
-          if (selectedDate) {
-            setDatePicker({ tempDate: selectedDate, androidStage: "time" })
-          } else {
-            setDatePicker({ androidStage: null })
-          }
-        }}
-        onDismiss={() => setDatePicker({ androidStage: null })}
-      />
-    ) : Platform.OS === "android" && datePicker.androidStage === "time" ? (
-      <DateTimePicker
-        value={datePicker.tempDate}
-        mode="time"
-        display="spinner"
-        presentation="dialog"
-        onValueChange={(_, timeDate) => {
+        onValueChange={(_, picked) => {
+          const mode = datePicker.androidStage
           setDatePicker({ androidStage: null })
-          if (timeDate) applyTarget(timeDate)
+          if (picked && mode) applyPicked(picked, mode)
         }}
         onDismiss={() => setDatePicker({ androidStage: null })}
       />

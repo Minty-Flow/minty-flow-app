@@ -560,6 +560,7 @@ export function useTransactionForm({
                 transactionDate: new Date(),
                 tags: data.tags ?? [],
                 location: data.location ?? null,
+                extra: payload.extra ?? null,
               },
             )
             Toast.success({
@@ -840,6 +841,7 @@ export function useTransactionForm({
     canEditKind,
     lockedFields,
     isLoanOpeningEntry,
+    linkedLoan: loanForTransaction,
 
     // derived collections / selections
     selectedAccount,

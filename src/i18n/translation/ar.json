@@ -441,6 +441,36 @@
             "info": "يظهر هذا الترتيب في أزرار المعاملات على الشاشة الرئيسية"
           }
         },
+        "calendarFormat": {
+          "title": "تنسيق التقويم",
+          "clock": {
+            "label": "تنسيق الساعة",
+            "12h": "12 ساعة",
+            "24h": "24 ساعة"
+          },
+          "date": {
+            "label": "تنسيق التاريخ",
+            "styleLabel": "النمط",
+            "orderLabel": "الترتيب",
+            "style": {
+              "full": "كامل",
+              "dateOnly": "التاريخ فقط",
+              "numeric": "رقمي",
+              "numericOnly": "رقمي فقط"
+            },
+            "order": {
+              "default": "الافتراضي",
+              "mdy": "شهر / يوم / سنة",
+              "dmy": "يوم / شهر / سنة",
+              "ymd": "سنة / شهر / يوم",
+              "ydm": "سنة / يوم / شهر"
+            }
+          },
+          "firstDay": {
+            "label": "أول يوم في الأسبوع",
+            "default": "الافتراضي"
+          }
+        },
         "weekStart": {
           "label": "يبدأ الأسبوع يوم",
           "auto": "تلقائي",
@@ -874,16 +904,15 @@
           "import": "استيراد",
           "history": "السجل"
         },
-        "fileNameLabel": "اسم الملف",
-        "fileNameHelper": "اتركه فارغاً لاستخدام الاسم الافتراضي. تتم إضافة الامتداد تلقائياً.",
         "exportZip": "نسخة احتياطية كاملة (ZIP)",
         "exportZipDesc": "يمكن استعادتها بالكامل لاحقاً. تتضمن ملفاتك المرفقة.",
         "exportJson": "تصدير البيانات (JSON)",
         "exportJsonDesc": "البيانات الأساسية فقط. الصور والملفات المرفقة غير مضمّنة.",
         "exportCsv": "تصدير المعاملات (CSV)",
         "exportCsvDesc": "لا يمكن استخدامه للاستعادة. مثالي للفتح في تطبيقات جداول البيانات.",
+        "fileNameLabel": "اسم الملف",
+        "fileNameHelper": "اتركه فارغاً لاستخدام الاسم الافتراضي. تتم إضافة الامتداد تلقائياً.",
         "exportSaved": "تم الحفظ على الجهاز",
-        "exportSavedLocally": "تم الحفظ محلياً",
         "exportError": "فشل التصدير. يرجى المحاولة مرة أخرى.",
         "exportFileNotFound": "الملف الأصلي لم يعد موجوداً. يرجى التصدير مجدداً.",
         "importJson": "استعادة من نسخة احتياطية",
@@ -1150,6 +1179,10 @@
           "repetitive": "معاملة متكررة. تبقى كل معاملة خارج مجاميعك حتى تُحدَّد كمدفوعة أو مستلمة، وعند إنهاء المعاملة الحالية تُضاف التالية.",
           "lent": "مال أقرضته. يُحتسب تدفقاً نقدياً سالباً حتى تحدّده كمُحصَّل.",
           "borrowed": "مال اقترضته. يُحتسب تدفقاً نقدياً موجباً حتى تحدّده كمُسدَّد."
+        },
+        "locked": {
+          "loan": "مرتبط بالقرض: {{name}}",
+          "recurring": "جزء من سلسلة متكررة"
         }
       },
       "upcoming": {
@@ -1200,41 +1233,52 @@
         "selectedCount": "{{count}} محدد",
         "noneSelected": "لم يتم التحديد",
         "expense": {
-          "education": "تعليم",
           "groceries": "بقالة",
-          "healthcare": "الرعاية الصحية",
-          "shopping": "التسوق",
-          "transportation": "مواصلات",
           "dining": "طعام ومطاعم",
+          "transportation": "مواصلات",
+          "housing": "سكن",
+          "utilities": "فواتير وخدمات",
+          "shopping": "التسوق",
+          "healthcare": "الصحة",
           "entertainment": "ترفيه",
-          "housing": "سكن وخدمات",
-          "fitness": "صحة ورياضة",
-          "utilities": "فواتير",
-          "travel": "سفر",
-          "personalCare": "عناية شخصية",
-          "clothing": "ملابس",
-          "subscriptions": "اشتراكات",
+          "education": "تعليم",
+          "kids": "الأطفال ورعايتهم",
           "insurance": "تأمين",
+          "fuel": "وقود",
+          "carMaintenance": "صيانة السيارة",
           "pets": "حيوانات أليفة",
-          "coffee": "قهوة ومشروبات",
+          "businessExpenses": "مصاريف العمل",
+          "taxes": "ضرائب",
+          "travel": "سفر",
+          "homeMaintenance": "صيانة المنزل",
           "charity": "خيرية"
         },
         "income": {
-          "business": "عمل",
-          "freelance": "مستقل",
-          "gift": "هدية",
-          "investment": "استثمار",
           "salary": "مرتب",
-          "rental": "دخل الإيجار",
-          "dividends": "أرباح الأسهم",
-          "bonus": "مكافأة",
-          "sideIncome": "دخل إضافي",
-          "pension": "معاش",
-          "taxRefund": "استرداد ضريبي",
-          "cashback": "استرداد نقدي",
-          "commission": "عمولة",
+          "freelance": "عمل حر وإضافي",
+          "investment": "استثمارات",
+          "gift": "هدايا",
+          "cashback": "استرداد نقدي ومرتجعات",
           "allowance": "مصروف",
-          "overtime": "وقت إضافي"
+          "business": "دخل العمل",
+          "rental": "دخل الإيجار",
+          "pension": "معاش"
+        },
+        "essentials": "الأساسيات",
+        "packsTitle": "حسب أسلوب حياتك",
+        "packsHint": "أضف بعض الفئات التي تناسب وضعك.",
+        "addPack": "إضافة الكل",
+        "removePack": "إزالة",
+        "packs": {
+          "student": "طالب",
+          "family": "عائلة",
+          "car": "مالك سيارة",
+          "pets": "مربي حيوانات أليفة",
+          "selfEmployed": "عمل حر",
+          "traveler": "مسافر",
+          "landlord": "مؤجر عقار",
+          "retired": "متقاعد",
+          "giving": "العطاء"
         }
       },
       "search": {
@@ -1365,6 +1409,7 @@
       "noVariants": "لا توجد ألوان متاحة للسمة الحالية"
     },
     "dateRange": {
+      "monthPickerTitle": "اختر شهراً",
       "yearPlaceholder": "اختر السنة",
       "title": "اختر النطاق",
       "commonOptions": "خيارات شائعة",
@@ -1428,10 +1473,6 @@
     "searchInput": {
       "placeholder": "بحث..."
     },
-    "inlineCategoryPicker": {
-      "noCategories": "لا توجد فئات بعد",
-      "createCategory": "إنشاء فئة"
-    },
     "currencyAccountSelector": {
       "currencyLabel": "العملة",
       "accountsLabel": "الحسابات",
@@ -1441,6 +1482,18 @@
       "noAccountsForCurrency": "لا توجد حسابات لهذه العملة",
       "accountsClearedTitle": "تم مسح الحسابات",
       "accountsClearedDescription": "تم إزالة الحسابات المحددة لأنها لا تتطابق مع {{currency}}."
+    },
+    "categoryPicker": {
+      "title": "اختر فئة",
+      "titleMulti": "اختر الفئات",
+      "search": "ابحث في الفئات",
+      "mostUsed": "الأكثر استخدامًا",
+      "all": "كل الفئات",
+      "allChip": "الكل ({{count}})",
+      "newCategory": "فئة جديدة",
+      "noResults": "لا توجد فئات",
+      "selectAll": "تحديد الكل",
+      "deselectAll": "إلغاء تحديد الكل"
     }
   },
   "validation": {
