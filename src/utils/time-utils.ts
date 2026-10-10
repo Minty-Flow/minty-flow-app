@@ -31,9 +31,16 @@ import {
   subWeeks,
 } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
+import { getCalendars } from "expo-localization"
 
 import i18n from "~/i18n/config"
 import { LangCodeEnum, type LangCodeType } from "~/i18n/language.constants"
+import {
+  type ClockFormatPreference,
+  type DateOrderPreference,
+  type DateStylePreference,
+  useCalendarFormatStore,
+} from "~/stores/calendar-format.store"
 
 import { getWeekStartsOn } from "./get-week-start-on"
 
@@ -62,33 +69,204 @@ type DateInput = Date | string | number | undefined | null
  * p = localized time (12:00 AM)
  * PPpp = localized date and time
  */
-const FORMAT = {
+const STATIC_FORMAT = {
   DAY_NAME: "EEEE",
   ORDINAL_DAY: "do",
-  MONTH_DAY: "MMMM d",
   DATE_KEY: "yyyy-MM-dd",
-  DATE_TITLE: "EEEE, MMM d",
   HOUR_KEY: "yyyy-MM-dd-HH",
-  HOUR_TITLE: "MMM d, yyyy h a",
   WEEK_KEY: "RRRR-'W'II",
-  WEEK_TITLE_SHORT: "MMM d",
-  SHORT_MONTH_DAY: "MMM d",
   MONTH_KEY: "yyyy-MM",
   MONTH_TITLE: "MMMM yyyy",
   YEAR: "yyyy",
-  FRIENDLY_FALLBACK: "P",
-  CREATED_AT: "PPpp",
-  READABLE_TIME: "p",
-  LOAN_DATE: "PP",
   MONTH_NAME: "LLLL",
   MONTH_NAME_YEAR: "LLLL yyyy",
   SHORT_MONTH_NAME: "MMM",
   DAY_YEAR: "d, yyyy",
-  SHORT_MONTH_DAY_YEAR: "MMM d, yyyy",
   SHORT_DAY_NAME: "EEE",
   DAY_INITIAL: "EEEEE",
   DAY_OF_MONTH: "d",
 } as const
+
+type ResolvedDateOrder = Exclude<DateOrderPreference, "default">
+
+const NUMERIC_PATTERN: Record<ResolvedDateOrder, string> = {
+  mdy: "MM/dd/yyyy",
+  dmy: "dd/MM/yyyy",
+  ymd: "yyyy/MM/dd",
+  ydm: "yyyy/dd/MM",
+}
+/** Spelled-out day, current year left off: "October 10" / "10 October". */
+const WORDS_PATTERN: Record<ResolvedDateOrder, string> = {
+  mdy: "MMMM d",
+  dmy: "d MMMM",
+  ymd: "MMMM d",
+  ydm: "d MMMM",
+}
+/** Spelled-out day with the year: "October 10, 2025". */
+const WORDS_YEAR_PATTERN: Record<ResolvedDateOrder, string> = {
+  mdy: "MMMM d, yyyy",
+  dmy: "d MMMM yyyy",
+  ymd: "yyyy MMMM d",
+  ydm: "yyyy d MMMM",
+}
+
+/** "default" follows the app language: Arabic reads day-first, English month-first. */
+function resolveDateOrder(order: DateOrderPreference): ResolvedDateOrder {
+  if (order !== "default") return order
+  return i18n.language === LangCodeEnum.AR ? "dmy" : "mdy"
+}
+
+function dateOrder(): ResolvedDateOrder {
+  return resolveDateOrder(useCalendarFormatStore.getState().dateOrder)
+}
+
+/** The device's 12h/24h clock setting, or undefined when it can't be read. */
+function deviceUses24HourClock(): boolean | undefined {
+  try {
+    return getCalendars()[0]?.uses24hourClock ?? undefined
+  } catch {
+    return undefined
+  }
+}
+
+export function resolveClockFormat(pref: ClockFormatPreference): "12h" | "24h" {
+  if (pref !== "auto") return pref
+  return deviceUses24HourClock() ? "24h" : "12h"
+}
+
+/** Clock part, honouring the 12h / 24h preference. */
+function timePattern(): string {
+  const pref = useCalendarFormatStore.getState().clockFormat
+  if (pref === "auto" && deviceUses24HourClock() === undefined) return "p"
+  return resolveClockFormat(pref) === "24h" ? "HH:mm" : "h:mm a"
+}
+
+function relativeDayWord(date: Date): string | null {
+  if (isToday(date)) return t("dates.today")
+  if (isYesterday(date)) return t("dates.yesterday")
+  if (isTomorrow(date)) return t("dates.tomorrow")
+  return null
+}
+
+/**
+ * The app's day label in the user's date style and order. Full and Numeric show
+ * just "Today" / "Yesterday" / "Tomorrow" on those days (no date after it) and
+ * the date otherwise; Date only and Numeric only always show the date, e.g.
+ * "October 10" or "10/10/2026". Spelled-out dates leave the year off for the
+ * current year.
+ */
+function buildDateLabel(
+  date: Date,
+  style: DateStylePreference,
+  orderPref: DateOrderPreference,
+): string {
+  const order = resolveDateOrder(orderPref)
+  const spelledOut = style === "full" || style === "dateOnly"
+  const sameYear = date.getFullYear() === new Date().getFullYear()
+  const body = spelledOut
+    ? fmt(date, sameYear ? WORDS_PATTERN[order] : WORDS_YEAR_PATTERN[order])
+    : fmt(date, NUMERIC_PATTERN[order])
+  const relative =
+    style === "full" || style === "numeric" ? relativeDayWord(date) : null
+  return relative ?? body
+}
+
+/** A full date for places that always show the year (loans, created-at). */
+function buildDateWithYear(date: Date): string {
+  const { dateStyle } = useCalendarFormatStore.getState()
+  const order = dateOrder()
+  const spelledOut = dateStyle === "full" || dateStyle === "dateOnly"
+  return fmt(
+    date,
+    spelledOut ? WORDS_YEAR_PATTERN[order] : NUMERIC_PATTERN[order],
+  )
+}
+
+/**
+ * Preview of a style/order pair for the settings UI, built from the current date
+ * so it is never stale. Relative styles show both forms: "Today · October 10";
+ * the "only" styles show just the date: "October 10" / "10/10/2026".
+ */
+export function formatDatePreview(
+  date: Date,
+  style: DateStylePreference,
+  order: DateOrderPreference,
+): string {
+  const o = resolveDateOrder(order)
+  const spelledOut = style === "full" || style === "dateOnly"
+  const sameYear = date.getFullYear() === new Date().getFullYear()
+  const body = spelledOut
+    ? fmt(date, sameYear ? WORDS_PATTERN[o] : WORDS_YEAR_PATTERN[o])
+    : fmt(date, NUMERIC_PATTERN[o])
+  const relative =
+    style === "full" || style === "numeric" ? relativeDayWord(date) : null
+  return relative ? `${relative} · ${body}` : body
+}
+
+/**
+ * The clock split into its visible parts, for the form's time button:
+ * 12h -> { hour: "11", minute: "26", period: "PM" }, 24h -> no period.
+ */
+export function formatTimeParts(date: DateInput): {
+  hour: string
+  minute: string
+  period: string | null
+} {
+  const dateObj = toDate(date)
+  if (!dateObj) return { hour: "--", minute: "--", period: null }
+  const is24h =
+    resolveClockFormat(useCalendarFormatStore.getState().clockFormat) === "24h"
+  return {
+    hour: fmt(dateObj, is24h ? "HH" : "h"),
+    minute: fmt(dateObj, "mm"),
+    period: is24h ? null : fmt(dateObj, "a"),
+  }
+}
+
+/** Preview of a clock format for the settings screen. */
+export function formatClockPreview(date: Date, format: "12h" | "24h"): string {
+  return fmt(date, format === "24h" ? "HH:mm" : "h:mm a")
+}
+
+/**
+ * Format patterns. The date/time ones are getters so they follow the user's
+ * calendar-format settings at the moment they are read (never cached).
+ * date-fns tokens: P = localized date, PP = medium date, p = localized time.
+ */
+const FORMAT = {
+  ...STATIC_FORMAT,
+  get READABLE_TIME() {
+    return timePattern()
+  },
+  get FRIENDLY_FALLBACK() {
+    return NUMERIC_PATTERN[dateOrder()]
+  },
+  get SHORT_MONTH_DAY() {
+    return dateOrder() === "dmy" || dateOrder() === "ydm" ? "d MMM" : "MMM d"
+  },
+  get WEEK_TITLE_SHORT(): string {
+    return dateOrder() === "dmy" || dateOrder() === "ydm" ? "d MMM" : "MMM d"
+  },
+  get MONTH_DAY() {
+    return WORDS_PATTERN[dateOrder()]
+  },
+  get DATE_TITLE() {
+    return dateOrder() === "dmy" || dateOrder() === "ydm"
+      ? "EEEE, d MMM"
+      : "EEEE, MMM d"
+  },
+  get SHORT_MONTH_DAY_YEAR() {
+    return WORDS_YEAR_PATTERN[dateOrder()].replace(/MMMM/g, "MMM")
+  },
+  get HOUR_TITLE() {
+    const hour =
+      resolveClockFormat(useCalendarFormatStore.getState().clockFormat) ===
+      "24h"
+        ? "HH:00"
+        : "h a"
+    return `${WORDS_YEAR_PATTERN[dateOrder()].replace(/MMMM/g, "MMM")} ${hour}`
+  },
+}
 
 // Helper to get the current locale object from the store
 /**
@@ -172,31 +350,38 @@ export function formatFriendlyDate(date: DateInput): string {
   const dateObj = toDate(date)
   if (!dateObj) return t("dates.unknown")
 
-  if (isToday(dateObj)) return t("dates.today")
-  if (isYesterday(dateObj)) return t("dates.yesterday")
-  if (isTomorrow(dateObj)) return t("dates.tomorrow")
+  const { dateStyle, dateOrder: orderPref } = useCalendarFormatStore.getState()
 
-  const now = new Date()
-
-  if (isThisWeek(dateObj, { weekStartsOn: getWeekStartsOn() as Day })) {
-    return t("dates.thisDay", {
-      day: fmt(dateObj, FORMAT.DAY_NAME),
-    })
+  // Today / Yesterday / Tomorrow follow the user's date style.
+  if (relativeDayWord(dateObj)) {
+    return buildDateLabel(dateObj, dateStyle, orderPref)
   }
 
-  if (isSameAppWeek(dateObj, startOfAppWeek(subWeeks(now, 1)))) {
-    return t("dates.lastDay", {
-      day: fmt(dateObj, FORMAT.DAY_NAME),
-    })
+  // Weekday names ("This Wednesday") belong to the Full style only; the other
+  // styles always show the date itself.
+  if (dateStyle === "full") {
+    const now = new Date()
+
+    if (isThisWeek(dateObj, { weekStartsOn: getWeekStartsOn() as Day })) {
+      return t("dates.thisDay", {
+        day: fmt(dateObj, FORMAT.DAY_NAME),
+      })
+    }
+
+    if (isSameAppWeek(dateObj, startOfAppWeek(subWeeks(now, 1)))) {
+      return t("dates.lastDay", {
+        day: fmt(dateObj, FORMAT.DAY_NAME),
+      })
+    }
+
+    if (isSameAppWeek(dateObj, startOfAppWeek(addWeeks(now, 1)))) {
+      return t("dates.nextDay", {
+        day: fmt(dateObj, FORMAT.DAY_NAME),
+      })
+    }
   }
 
-  if (isSameAppWeek(dateObj, startOfAppWeek(addWeeks(now, 1)))) {
-    return t("dates.nextDay", {
-      day: fmt(dateObj, FORMAT.DAY_NAME),
-    })
-  }
-
-  return fmt(dateObj, FORMAT.FRIENDLY_FALLBACK)
+  return buildDateLabel(dateObj, dateStyle, orderPref)
 }
 
 /**
@@ -281,38 +466,28 @@ export function formatSectionDateTitle(date: DateInput): string {
 export function formatCreatedAt(date: DateInput): string {
   const dateObj = toDate(date)
   if (!dateObj) return t("dates.unknown")
-  return formatWithPattern(dateObj, FORMAT.CREATED_AT)
+  return `${buildDateWithYear(dateObj)} ${fmt(dateObj, FORMAT.READABLE_TIME)}`
 }
 
-/**
- * Transaction date + time for the form's date row:
- * "Today 3:42 PM", "Yesterday 9:00 AM", "Mar 4 3:42 PM", and
- * "Mar 4, 2027 3:42 PM" only when the year differs from the current year.
- */
+/** The day half of the form's date button, in the user's date style and order. */
+export function formatTransactionDay(date: DateInput): string {
+  const dateObj = toDate(date)
+  if (!dateObj) return t("dates.unknown")
+  const { dateStyle, dateOrder: orderPref } = useCalendarFormatStore.getState()
+  return buildDateLabel(dateObj, dateStyle, orderPref)
+}
+
+/** Day + time in one string: "Today 3:42 PM", "Mar 4 3:42 PM". */
 export function formatTransactionDateTime(date: DateInput): string {
   const dateObj = toDate(date)
   if (!dateObj) return t("dates.unknown")
-
-  const time = fmt(dateObj, FORMAT.READABLE_TIME)
-
-  let day: string
-  if (isToday(dateObj)) day = t("dates.today")
-  else if (isYesterday(dateObj)) day = t("dates.yesterday")
-  else if (isTomorrow(dateObj)) day = t("dates.tomorrow")
-  else {
-    const sameYear = dateObj.getFullYear() === new Date().getFullYear()
-    day = fmt(
-      dateObj,
-      sameYear ? FORMAT.SHORT_MONTH_DAY : FORMAT.SHORT_MONTH_DAY_YEAR,
-    )
-  }
-
-  return `${day} ${time}`
+  return `${formatTransactionDay(dateObj)} ${fmt(dateObj, FORMAT.READABLE_TIME)}`
 }
 
 /** LOAN DATE: Localized medium date (Feb 15, 2024) */
 export function formatLoanDate(date: DateInput): string {
-  return formatWithPattern(date, FORMAT.LOAN_DATE)
+  const dateObj = toDate(date)
+  return dateObj ? buildDateWithYear(dateObj) : ""
 }
 
 /**

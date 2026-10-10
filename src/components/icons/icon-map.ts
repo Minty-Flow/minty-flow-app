@@ -310,6 +310,7 @@ import Brush from "./outline/Brush"
 import Building from "./outline/Building"
 import BuildingBank from "./outline/BuildingBank"
 import CalendarOutline from "./outline/Calendar"
+import CalendarCog from "./outline/CalendarCog"
 import CalendarRepeat from "./outline/CalendarRepeat"
 import CameraOutline from "./outline/Camera"
 import CaretDown from "./outline/CaretDown"
@@ -902,6 +903,7 @@ const ICON_MAP = {
   // Outline chrome variants (navigation, settings, preferences)
   "bell-outline": BellOutline,
   "calendar-outline": CalendarOutline,
+  "calendar-cog": CalendarCog,
   "credit-card-outline": CreditCardOutline,
   "archive-outline": ArchiveOutline,
   "camera-outline": CameraOutline,
