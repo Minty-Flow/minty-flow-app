@@ -1,14 +1,13 @@
 import * as Location from "expo-location"
 import { useTranslation } from "react-i18next"
 import { Linking, ScrollView } from "react-native"
-import { StyleSheet } from "react-native-unistyles"
 
+import {
+  SettingsSwitchRow,
+  settingsStyles,
+} from "~/components/settings/settings-list"
 import { InfoBanner } from "~/components/ui/info-banner"
-import { ListItem } from "~/components/ui/list-item"
 import { PermissionBanner } from "~/components/ui/permission-banner"
-import { Switch } from "~/components/ui/switch"
-import { Text } from "~/components/ui/text"
-import { View } from "~/components/ui/view"
 import { useLocationPermissionStatus } from "~/hooks/use-location-permission-status"
 import { useTransactionLocationStore } from "~/stores/transaction-location.store"
 
@@ -31,7 +30,10 @@ export default function TransactionLocationScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={settingsStyles.screen}
+      contentContainerStyle={settingsStyles.content}
+    >
       <PermissionBanner
         message={t(
           "screens.settings.preferences.transactionLocation.permissionWarning",
@@ -40,42 +42,28 @@ export default function TransactionLocationScreen() {
         showBanner={showBanner}
       />
 
-      <ListItem
-        style={styles.settingRow}
-        onPress={() => setIsEnabled(!isEnabled)}
-      >
-        <View style={styles.labelContainer}>
-          <Text variant="p" style={styles.settingLabel}>
-            {t("screens.settings.preferences.transactionLocation.enable.label")}
-          </Text>
-          <Text variant="small" style={styles.settingLabelDescription}>
-            {t(
-              "screens.settings.preferences.transactionLocation.enable.description",
-            )}
-          </Text>
-        </View>
-        <Switch value={isEnabled} onValueChange={setIsEnabled} />
-      </ListItem>
+      <SettingsSwitchRow
+        label={t(
+          "screens.settings.preferences.transactionLocation.enable.label",
+        )}
+        description={t(
+          "screens.settings.preferences.transactionLocation.enable.description",
+        )}
+        value={isEnabled}
+        onValueChange={setIsEnabled}
+      />
 
       {isEnabled && (
-        <ListItem
-          style={styles.settingRow}
-          onPress={() => setAutoAttach(!autoAttach)}
-        >
-          <View style={styles.labelContainer}>
-            <Text variant="p" style={styles.settingLabel}>
-              {t(
-                "screens.settings.preferences.transactionLocation.autoAttach.label",
-              )}
-            </Text>
-            <Text variant="small" style={styles.settingLabelDescription}>
-              {t(
-                "screens.settings.preferences.transactionLocation.autoAttach.description",
-              )}
-            </Text>
-          </View>
-          <Switch value={autoAttach} onValueChange={setAutoAttach} />
-        </ListItem>
+        <SettingsSwitchRow
+          label={t(
+            "screens.settings.preferences.transactionLocation.autoAttach.label",
+          )}
+          description={t(
+            "screens.settings.preferences.transactionLocation.autoAttach.description",
+          )}
+          value={autoAttach}
+          onValueChange={setAutoAttach}
+        />
       )}
 
       <InfoBanner
@@ -86,29 +74,3 @@ export default function TransactionLocationScreen() {
     </ScrollView>
   )
 }
-
-const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  content: {
-    paddingBottom: 40,
-  },
-  settingRow: {
-    justifyContent: "space-between",
-    gap: 16,
-  },
-  labelContainer: {
-    flex: 1,
-  },
-  settingLabel: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-    fontWeight: "600",
-  },
-  settingLabelDescription: {
-    fontSize: theme.typography.bodyMedium.fontSize,
-    fontWeight: "400",
-    color: theme.colors.semantic.semi,
-  },
-}))

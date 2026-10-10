@@ -4,7 +4,6 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
 import { BottomSheet } from "~/components/ui/bottom-sheet"
-import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
 
 import {
@@ -57,10 +56,6 @@ export function KindInfoSheet({ visible, onRequestClose }: Props) {
             </View>
           ))}
         </ScrollView>
-
-        <Button variant="default" onPress={onRequestClose}>
-          <Text variant="default">{t("common.actions.ok")}</Text>
-        </Button>
       </View>
     </BottomSheet>
   )

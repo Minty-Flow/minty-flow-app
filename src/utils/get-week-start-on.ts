@@ -14,7 +14,15 @@ export const getWeekStartsOn = (): 0 | 1 | 2 | 3 | 4 | 5 | 6 => {
   if (preference === "saturday") return 6
   if (preference === "sunday") return 0
   if (preference === "monday") return 1
+  return getDeviceWeekStartsOn()
+}
 
+/**
+ * The device's own first day of the week (0=Sunday … 6=Saturday), ignoring the
+ * user's choice. This is what "Default" means, so the settings screen can show
+ * it even while another day is selected.
+ */
+export const getDeviceWeekStartsOn = (): 0 | 1 | 2 | 3 | 4 | 5 | 6 => {
   // Primary: expo-localization
   try {
     const calendars = getCalendars()

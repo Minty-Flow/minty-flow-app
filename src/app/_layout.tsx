@@ -677,6 +677,14 @@ function AppRootLayout() {
                   }}
                 />
                 <Stack.Screen
+                  name="settings/preferences/calendar-formatting"
+                  options={{
+                    title: t(
+                      "screens.settings.preferences.calendarFormat.title",
+                    ),
+                  }}
+                />
+                <Stack.Screen
                   name="settings/preferences/transaction-location"
                   options={{
                     title: t(
@@ -695,12 +703,6 @@ function AppRootLayout() {
                 <Stack.Screen
                   name="settings/preferences/transfers"
                   options={{ title: t("screens.settings.transfers.title") }}
-                />
-                <Stack.Screen
-                  name="settings/preferences/week-start"
-                  options={{
-                    title: t("screens.settings.preferences.weekStart.label"),
-                  }}
                 />
                 <Stack.Screen
                   name="settings/preferences/transaction-appearance"

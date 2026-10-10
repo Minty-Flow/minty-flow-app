@@ -3,25 +3,28 @@ import ExpoDateTimePicker, {
 } from "@expo/ui/community/datetime-picker"
 import { getLocales } from "expo-localization"
 
+import { useCalendarFormatStore } from "~/stores/calendar-format.store"
 import { useLanguageStore } from "~/stores/language.store"
+import { resolveClockFormat } from "~/utils/time-utils"
 
 type DateTimePickerProps = ExpoDateTimePickerProps
 
 /**
  * Project-wide DateTimePicker wrapper around `@expo/ui/community/datetime-picker`.
- * Defaults `is24Hour=false`, and forwards the active i18n
- * locale. All defaults are overridable per-call.
+ * Defaults `is24Hour` to the user's clock-format preference (device setting when
+ * "auto") and forwards the active i18n locale. All defaults are overridable per-call.
  */
 export function DateTimePicker({
-  is24Hour = false,
+  is24Hour,
   locale,
   ...rest
 }: DateTimePickerProps) {
   const languageCode = useLanguageStore((s) => s.languageCode)
+  const clockFormat = useCalendarFormatStore((s) => s.clockFormat)
 
   return (
     <ExpoDateTimePicker
-      is24Hour={is24Hour}
+      is24Hour={is24Hour ?? resolveClockFormat(clockFormat) === "24h"}
       locale={locale ?? resolveLocale(languageCode)}
       {...rest}
     />

@@ -1,27 +1,33 @@
-import { useRouter } from "expo-router"
+/**
+ * Category field: a wrapping row of quick-pick chips (most used first, full
+ * names, never truncated) followed by an "All" chip that opens the searchable
+ * category sheet. A choice made in the sheet joins the chips as the first one.
+ */
+import { useFocusEffect, useRouter } from "expo-router"
+import { useCallback, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ScrollView, useWindowDimensions } from "react-native"
-import { useUnistyles } from "react-native-unistyles"
 
+import { CategoryPickerSheet } from "~/components/category-picker/category-picker-sheet"
+import { getMostUsedCategories } from "~/components/category-picker/most-used"
 import { DynamicIcon } from "~/components/dynamic-icon"
-import { Pressable } from "~/components/ui/pressable"
-import { Text } from "~/components/ui/text"
+import { IconSvg } from "~/components/icons"
+import { Chip } from "~/components/ui/chips"
 import { View } from "~/components/ui/view"
 import { getThemeStrict } from "~/styles/theme/registry"
-import type { Category } from "~/types/categories"
+import type { Category, CategoryType } from "~/types/categories"
 
-import {
-  CATEGORY_CELL_SIZE,
-  CATEGORY_GAP,
-  H_PAD,
-  transactionFormStyles,
-} from "./form.styles"
+import { transactionFormStyles } from "./form.styles"
+
+/** How many quick-pick chips sit in the form before "All". */
+const QUICK_COUNT = 5
 
 type Props = {
   categories: Category[]
   categoryId: string | null | undefined
   onSelect: (id: string) => void
   onClear: () => void
+  /** Type used by the sheet's "New category" shortcut. */
+  categoryType?: CategoryType
 }
 
 export function FormCategoryPicker({
@@ -29,99 +35,102 @@ export function FormCategoryPicker({
   categoryId,
   onSelect,
   onClear,
+  categoryType,
 }: Props) {
   const { t } = useTranslation()
-  const { theme } = useUnistyles()
   const router = useRouter()
-  const { width: windowWidth } = useWindowDimensions()
+  const [sheetVisible, setSheetVisible] = useState(false)
+  // True while the create-category screen is open: reopen the sheet on return.
+  const reopenOnFocusRef = useRef(false)
+
+  useFocusEffect(
+    useCallback(() => {
+      if (reopenOnFocusRef.current) {
+        reopenOnFocusRef.current = false
+        setSheetVisible(true)
+      }
+    }, []),
+  )
+
+  if (categories.length === 0) {
+    return (
+      <View style={transactionFormStyles.fieldBlock}>
+        <View style={transactionFormStyles.tagsWrapGrid}>
+          <Chip
+            label={t("components.transactionForm.fields.addCategories")}
+            leading="plus-outline"
+            onPress={() => router.push("/settings/categories")}
+            accessibilityLabel={t(
+              "components.transactionForm.a11y.addCategories",
+            )}
+          />
+        </View>
+      </View>
+    )
+  }
+
+  // Quick picks stay in a stable order; a selection from the sheet that isn't
+  // among them takes the first slot so the current choice is always visible.
+  const top = getMostUsedCategories(categories, QUICK_COUNT)
+  const selected = categories.find((c) => c.id === categoryId)
+  const quick =
+    selected && !top.some((c) => c.id === selected.id)
+      ? [selected, ...top.slice(0, QUICK_COUNT - 1)]
+      : top
+  const hasMore = categories.length > quick.length
 
   return (
     <View style={transactionFormStyles.fieldBlock}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={transactionFormStyles.categoryScrollContent}
-      >
-        {categories.length === 0 ? (
-          <View
-            style={[
-              transactionFormStyles.categoryGrid,
-              { width: CATEGORY_CELL_SIZE },
-            ]}
-          >
-            <Pressable
-              style={transactionFormStyles.categoryCell}
-              onPress={() => router.push("/settings/categories")}
+      <View style={transactionFormStyles.tagsWrapGrid}>
+        {quick.map((category) => {
+          const isSelected = category.id === categoryId
+          return (
+            <Chip
+              key={category.id}
+              label={category.name}
+              selected={isSelected}
+              hideCheck
+              onPress={() => (isSelected ? onClear() : onSelect(category.id))}
+              accessibilityRole="radio"
               accessibilityLabel={t(
-                "components.transactionForm.a11y.addCategories",
+                "components.transactionForm.a11y.selectCategory",
+                { name: category.name },
               )}
-            >
-              <DynamicIcon
-                icon="plus-outline"
-                size={32}
-                colorScheme={theme?.colors}
-                variant="badge"
-              />
-              <Text
-                variant="small"
-                style={transactionFormStyles.categoryCellLabel}
-                numberOfLines={1}
-              >
-                {t("components.transactionForm.fields.addCategories")}
-              </Text>
-            </Pressable>
-          </View>
-        ) : (
-          <View
-            style={[
-              transactionFormStyles.categoryGrid,
-              {
-                width: Math.max(
-                  windowWidth - H_PAD * 2,
-                  Math.ceil(categories.length / 2) *
-                    (CATEGORY_CELL_SIZE + CATEGORY_GAP) -
-                    CATEGORY_GAP,
-                ),
-              },
-            ]}
-          >
-            {categories.map((category) => {
-              const isSelected = category.id === categoryId
-              return (
-                <Pressable
-                  key={category.id}
-                  style={[
-                    transactionFormStyles.categoryCell,
-                    isSelected && transactionFormStyles.categoryCellSelected,
-                  ]}
-                  onPress={() =>
-                    isSelected ? onClear() : onSelect(category.id)
-                  }
-                  accessibilityLabel={t(
-                    "components.transactionForm.a11y.selectCategory",
-                    { name: category.name },
-                  )}
-                  accessibilityState={{ selected: isSelected }}
-                >
-                  <DynamicIcon
-                    icon={category.icon || "category-outline"}
-                    size={32}
-                    colorScheme={getThemeStrict(category.colorSchemeName)}
-                    variant="badge"
-                  />
-                  <Text
-                    variant="small"
-                    style={transactionFormStyles.categoryCellLabel}
-                    numberOfLines={1}
-                  >
-                    {category.name}
-                  </Text>
-                </Pressable>
-              )
+              accessibilityState={{ checked: isSelected }}
+              leading={
+                <DynamicIcon
+                  icon={category.icon || "category-outline"}
+                  size={16}
+                  colorScheme={getThemeStrict(category.colorSchemeName)}
+                  variant="badge"
+                />
+              }
+            />
+          )
+        })}
+        {hasMore ? (
+          <Chip
+            label={t("components.categoryPicker.allChip", {
+              count: categories.length,
             })}
-          </View>
-        )}
-      </ScrollView>
+            onPress={() => setSheetVisible(true)}
+            trailing={<IconSvg name="chevron-down-outline" size={16} />}
+          />
+        ) : null}
+      </View>
+
+      <CategoryPickerSheet
+        visible={sheetVisible}
+        categories={categories}
+        mode="single"
+        selectedIds={categoryId ? [categoryId] : []}
+        onApply={(ids) => (ids[0] ? onSelect(ids[0]) : onClear())}
+        onClose={() => setSheetVisible(false)}
+        newCategoryType={categoryType}
+        onNewCategory={() => {
+          reopenOnFocusRef.current = true
+        }}
+      />
     </View>
   )
 }

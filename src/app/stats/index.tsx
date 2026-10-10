@@ -171,8 +171,10 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
     gap: 12,
   },
+  // Both cards always share one height: the row stretches them to the taller.
   halfRow: {
     flexDirection: "row",
+    alignItems: "stretch",
     gap: 12,
   },
   bottomSpacer: {

@@ -3,10 +3,13 @@ import { ScrollView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { IconSvg, type IconSvgName } from "~/components/icons"
+import {
+  SettingsSection,
+  SettingsSwitchRow,
+  settingsStyles,
+} from "~/components/settings/settings-list"
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
-import { ListItem } from "~/components/ui/list-item"
-import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
@@ -147,157 +150,104 @@ export default function TransactionAppearanceScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
+      style={settingsStyles.screen}
+      contentContainerStyle={settingsStyles.content}
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
     >
-      {/* ── Preview ─────────────────────────────────────────────────── */}
-      <View native style={[styles.sectionLabel, styles.sectionLabelFirst]}>
-        <Text style={styles.sectionLabelText}>
-          {t(
-            "screens.settings.preferences.appearance.transactionStyle.sections.preview",
-          )}
-        </Text>
-      </View>
-
-      <View native style={styles.previewCard}>
+      <SettingsSection
+        title={t(
+          "screens.settings.preferences.appearance.transactionStyle.sections.preview",
+        )}
+      >
         <TransactionItem transactionWithRelations={PREVIEW_ITEM_1} />
         <View native style={styles.divider} />
         <TransactionItem transactionWithRelations={PREVIEW_ITEM_2} />
-      </View>
+      </SettingsSection>
 
-      {/* ── Category display ─────────────────────────────────────────── */}
-      <View native style={styles.sectionLabel}>
-        <Text style={styles.sectionLabelText}>
-          {t(
-            "screens.settings.preferences.appearance.transactionStyle.sections.categoryDisplay",
+      <SettingsSection
+        title={t(
+          "screens.settings.preferences.appearance.transactionStyle.sections.categoryDisplay",
+        )}
+      >
+        <SettingsSwitchRow
+          label={t(
+            "screens.settings.preferences.appearance.transactionStyle.showForUntitled.label",
           )}
-        </Text>
-      </View>
+          description={t(
+            "screens.settings.preferences.appearance.transactionStyle.showForUntitled.description",
+          )}
+          value={showUntitledForBlankTitle}
+          onValueChange={setShowUntitledForBlankTitle}
+        />
+        <SettingsSwitchRow
+          label={t(
+            "screens.settings.preferences.appearance.transactionStyle.showAfterAccount.label",
+          )}
+          description={t(
+            "screens.settings.preferences.appearance.transactionStyle.showAfterAccount.description",
+          )}
+          value={showCategory}
+          onValueChange={setShowCategory}
+        />
+      </SettingsSection>
 
-      <View native style={styles.toggleCard}>
-        <ListItem
-          style={styles.toggleRow}
-          onPress={() =>
-            setShowUntitledForBlankTitle(!showUntitledForBlankTitle)
-          }
-        >
-          <View native style={styles.toggleRowContent}>
-            <Text style={styles.toggleLabel}>
+      <SettingsSection
+        title={t(
+          "screens.settings.preferences.appearance.transactionStyle.sections.layout",
+        )}
+      >
+        <SettingsSwitchRow
+          label={t(
+            "screens.settings.preferences.appearance.transactionStyle.lessDense.label",
+          )}
+          description={t(
+            "screens.settings.preferences.appearance.transactionStyle.lessDense.description",
+          )}
+          value={isLessDense}
+          onValueChange={(v) => setVariant(v ? "elevated" : "compact")}
+        />
+      </SettingsSection>
+
+      <SettingsSection
+        title={t(
+          "screens.settings.preferences.appearance.transactionStyle.sections.leadingIcon",
+        )}
+      >
+        <View native style={styles.leadingIconCard}>
+          <View native style={styles.leadingIconInfo}>
+            <Text style={settingsStyles.rowLabel}>
               {t(
-                "screens.settings.preferences.appearance.transactionStyle.showForUntitled.label",
+                "screens.settings.preferences.appearance.transactionStyle.iconSource.label",
               )}
             </Text>
-            <Text style={styles.toggleDescription}>
+            <Text variant="small" style={settingsStyles.rowDescription}>
               {t(
-                "screens.settings.preferences.appearance.transactionStyle.showForUntitled.description",
+                "screens.settings.preferences.appearance.transactionStyle.iconSource.description",
               )}
             </Text>
           </View>
-          <Switch
-            value={showUntitledForBlankTitle}
-            onValueChange={setShowUntitledForBlankTitle}
-          />
-        </ListItem>
 
-        <View native style={styles.divider} />
-
-        <ListItem
-          style={styles.toggleRow}
-          onPress={() => setShowCategory(!showCategory)}
-        >
-          <View native style={styles.toggleRowContent}>
-            <Text style={styles.toggleLabel}>
-              {t(
-                "screens.settings.preferences.appearance.transactionStyle.showAfterAccount.label",
+          <View native style={styles.leadingOptions}>
+            <LeadingIconOption
+              label={t(
+                "screens.settings.preferences.appearance.transactionStyle.options.category",
               )}
-            </Text>
-            <Text style={styles.toggleDescription}>
-              {t(
-                "screens.settings.preferences.appearance.transactionStyle.showAfterAccount.description",
+              icon="category-outline"
+              selected={leadingIcon === "category"}
+              onPress={() => setLeadingIcon("category")}
+            />
+            <LeadingIconOption
+              label={t(
+                "screens.settings.preferences.appearance.transactionStyle.options.account",
               )}
-            </Text>
+              icon="wallet-outline"
+              selected={leadingIcon === "account"}
+              onPress={() => setLeadingIcon("account")}
+            />
           </View>
-          <Switch value={showCategory} onValueChange={setShowCategory} />
-        </ListItem>
-      </View>
-
-      {/* ── Layout ──────────────────────────────────────────────────── */}
-      <View native style={styles.sectionLabel}>
-        <Text style={styles.sectionLabelText}>
-          {t(
-            "screens.settings.preferences.appearance.transactionStyle.sections.layout",
-          )}
-        </Text>
-      </View>
-
-      <View native style={styles.toggleCard}>
-        <ListItem
-          style={styles.toggleRow}
-          onPress={() => setVariant(isLessDense ? "compact" : "elevated")}
-        >
-          <View native style={styles.toggleRowContent}>
-            <Text style={styles.toggleLabel}>
-              {t(
-                "screens.settings.preferences.appearance.transactionStyle.lessDense.label",
-              )}
-            </Text>
-            <Text style={styles.toggleDescription}>
-              {t(
-                "screens.settings.preferences.appearance.transactionStyle.lessDense.description",
-              )}
-            </Text>
-          </View>
-          <Switch
-            value={isLessDense}
-            onValueChange={(v) => setVariant(v ? "elevated" : "compact")}
-          />
-        </ListItem>
-      </View>
-
-      {/* ── Leading icon ─────────────────────────────────────────────── */}
-      <View native style={styles.sectionLabel}>
-        <Text style={styles.sectionLabelText}>
-          {t(
-            "screens.settings.preferences.appearance.transactionStyle.sections.leadingIcon",
-          )}
-        </Text>
-      </View>
-
-      <View native style={styles.leadingIconCard}>
-        <View native style={styles.leadingIconInfo}>
-          <Text style={styles.toggleLabel}>
-            {t(
-              "screens.settings.preferences.appearance.transactionStyle.iconSource.label",
-            )}
-          </Text>
-          <Text style={styles.toggleDescription}>
-            {t(
-              "screens.settings.preferences.appearance.transactionStyle.iconSource.description",
-            )}
-          </Text>
         </View>
-
-        <View native style={styles.leadingOptions}>
-          <LeadingIconOption
-            label={t(
-              "screens.settings.preferences.appearance.transactionStyle.options.category",
-            )}
-            icon="category-outline"
-            selected={leadingIcon === "category"}
-            onPress={() => setLeadingIcon("category")}
-          />
-          <LeadingIconOption
-            label={t(
-              "screens.settings.preferences.appearance.transactionStyle.options.account",
-            )}
-            icon="wallet-outline"
-            selected={leadingIcon === "account"}
-            onPress={() => setLeadingIcon("account")}
-          />
-        </View>
-      </View>
+      </SettingsSection>
 
       {/* ── Info note ────────────────────────────────────────────────── */}
       <View native style={styles.infoRow}>
@@ -315,62 +265,10 @@ export default function TransactionAppearanceScreen() {
 }
 
 const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  content: {
-    paddingHorizontal: 0,
-    paddingTop: 12,
-    paddingBottom: 48,
-  },
-
-  sectionLabel: {
-    paddingHorizontal: 20,
-    marginBottom: 8,
-    marginTop: 28,
-  },
-  sectionLabelFirst: {
-    marginTop: 8,
-  },
-  sectionLabelText: {
-    fontSize: theme.typography.labelXSmall.fontSize,
-    fontWeight: "600",
-    letterSpacing: 0.8,
-    color: theme.colors.semantic.semi,
-  },
-
-  // Preview card
-  previewCard: {},
-
   divider: {
     height: 0.5,
     backgroundColor: theme.colors.semantic.semi,
     opacity: 0.4,
-  },
-
-  // Toggle card
-  toggleCard: {
-    overflow: "hidden",
-  },
-  toggleRow: {
-    justifyContent: "space-between",
-    minHeight: 56,
-  },
-  toggleRowContent: {
-    flex: 1,
-    gap: 3,
-    paddingRight: 12,
-  },
-  toggleLabel: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-    fontWeight: "500",
-    color: theme.colors.onSurface,
-  },
-  toggleDescription: {
-    fontSize: theme.typography.labelMedium.fontSize,
-    color: theme.colors.semantic.semi,
-    lineHeight: 16,
   },
 
   // Leading icon card
@@ -381,7 +279,7 @@ const styles = StyleSheet.create((theme) => ({
     gap: 14,
   },
   leadingIconInfo: {
-    gap: 3,
+    gap: 2,
   },
   leadingOptions: {
     flexDirection: "row",

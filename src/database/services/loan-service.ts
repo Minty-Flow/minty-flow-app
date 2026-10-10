@@ -12,6 +12,7 @@ import { runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
 import { generateId } from "~/database/utils/generate-id"
 import { getBalanceDelta } from "~/database/utils/get-balance-delta"
+import { hasAttachmentsFromExtra } from "~/database/utils/has-attachments-from-extra"
 import {
   getKindForLoanType,
   getOpeningTypeForLoan,
@@ -316,6 +317,8 @@ export type OpeningEntryInput = {
   transactionDate: Date
   tags?: string[]
   location?: string | null
+  /** Same shape as a transaction's `extra` (e.g. `{ attachments }`). */
+  extra?: Record<string, string> | null
 }
 
 /**
@@ -376,8 +379,8 @@ export async function createLoanWithOpeningEntry(
         accountBalanceBefore: account.balance,
         subtype: null,
         kind: getKindForLoanType(loan.loanType),
-        extra: null,
-        hasAttachments: 0,
+        extra: opening.extra ? JSON.stringify(opening.extra) : null,
+        hasAttachments: hasAttachmentsFromExtra(opening.extra ?? null) ? 1 : 0,
         recurringId: null,
         location: opening.location ?? null,
         goalId: null,

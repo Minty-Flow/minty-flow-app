@@ -8,6 +8,10 @@ import { ActionItem } from "~/components/action-item"
 import { ExternalLink } from "~/components/external-link"
 import type { IconSvgName } from "~/components/icons"
 import { ProfileSection } from "~/components/profile/profile-section"
+import {
+  SettingsSection,
+  settingsStyles,
+} from "~/components/settings/settings-list"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { AppData } from "~/constants/app-data"
@@ -113,7 +117,10 @@ export default function SettingsScreen() {
   const { t } = useTranslation()
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={settingsStyles.screen}
+      contentContainerStyle={styles.content}
+    >
       {/* Header */}
       {/* <View style={styles.header}>
         <Text variant="h2" style={styles.headerTitle}>
@@ -125,28 +132,20 @@ export default function SettingsScreen() {
       <ProfileSection />
 
       {settingsGroups.map((group) => (
-        <View
+        <SettingsSection
           key={group.labelKey ?? "overview"}
-          style={[
-            styles.section,
-            group.labelKey ? styles.labelledSection : null,
-          ]}
+          title={group.labelKey ? t(group.labelKey) : undefined}
         >
-          {group.labelKey ? (
-            <Text style={styles.sectionTitle}>{t(group.labelKey)}</Text>
-          ) : null}
-          <View>
-            {group.items.map((item) => (
-              <ActionItem
-                key={item.titleKey}
-                icon={item.icon}
-                title={t(item.titleKey)}
-                onPress={() => router.push(item.route)}
-                soon={item.soon}
-              />
-            ))}
-          </View>
-        </View>
+          {group.items.map((item) => (
+            <ActionItem
+              key={item.titleKey}
+              icon={item.icon}
+              title={t(item.titleKey)}
+              onPress={() => router.push(item.route)}
+              soon={item.soon}
+            />
+          ))}
+        </SettingsSection>
       ))}
 
       {/* Maker credit + version */}
@@ -183,28 +182,9 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
   content: {
     marginVertical: 50,
     paddingBottom: 150,
-  },
-  section: {
-    marginBottom: 20,
-  },
-  labelledSection: {
-    marginTop: 8,
-  },
-  sectionTitle: {
-    paddingHorizontal: 20,
-    ...theme.typography.labelXSmall,
-    fontWeight: "600",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    color: theme.colors.semantic.semi,
-    marginBottom: 8,
   },
   footer: {
     alignItems: "center",

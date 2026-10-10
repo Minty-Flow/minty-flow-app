@@ -207,7 +207,7 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
     <View style={styles.headerCard}>
       <View style={styles.headerTopRow}>
         <DynamicIcon
-          icon={loan.icon ?? "hand-coins"}
+          icon={loan.icon ?? "scale-outline"}
           size={24}
           colorScheme={loan.colorScheme}
           variant="badge"

@@ -74,18 +74,22 @@ function toFileName(type: ExportType, baseName?: string): string {
  * survives the trip to JS. Note Android itself forbids granting access to the Download
  * root — users must pick another folder (Documents, or a Download subfolder).
  *
- * @returns false if the user cancelled or the copy failed.
+ * @returns "cancelled" if the user backed out of the picker / share sheet.
+ * @throws if the file could not be written (callers show the error toast).
  */
-async function saveToDevice(uri: string, fileName: string): Promise<boolean> {
+async function saveToDevice(
+  uri: string,
+  fileName: string,
+): Promise<"saved" | "cancelled"> {
   if (Platform.OS !== "android") {
-    await Share.share({ url: uri })
-    return true
+    const result = await Share.share({ url: uri })
+    return result.action === Share.dismissedAction ? "cancelled" : "saved"
   }
 
   try {
     const { StorageAccessFramework: SAF } = FileSystem
     const permission = await SAF.requestDirectoryPermissionsAsync()
-    if (!permission.granted) return false
+    if (!permission.granted) return "cancelled"
 
     const ext = getFileExtension(fileName)
     const targetUri = await SAF.createFileAsync(
@@ -104,13 +108,32 @@ async function saveToDevice(uri: string, fileName: string): Promise<boolean> {
         : FileSystem.EncodingType.UTF8
     const content = await FileSystem.readAsStringAsync(uri, { encoding })
     await SAF.writeAsStringAsync(targetUri, content, { encoding })
-    return true
+    return "saved"
   } catch (e) {
     logger.error("Save to device failed", {
       message: e instanceof Error ? e.message : String(e),
     })
-    return false
+    throw e
   }
+}
+
+/**
+ * Hand a freshly generated export to the user. Nothing is left behind unless the
+ * export really was saved: a cancel or a failure deletes the app-local copy.
+ */
+async function saveGeneratedExport(
+  uri: string,
+  fileName: string,
+): Promise<SavedExport> {
+  let outcome: "saved" | "cancelled"
+  try {
+    outcome = await saveToDevice(uri, fileName)
+  } catch (e) {
+    await deleteExportFile(uri)
+    throw e
+  }
+  if (outcome === "cancelled") await deleteExportFile(uri)
+  return { uri, fileName, savedToDevice: outcome === "saved" }
 }
 
 // ─── Export ──────────────────────────────────────────────────────────────────
@@ -205,8 +228,7 @@ export async function saveJsonToDevice(
   baseName?: string,
 ): Promise<SavedExport> {
   const { uri, fileName } = await generateJsonBackup(baseName)
-  const savedToDevice = await saveToDevice(uri, fileName)
-  return { uri, fileName, savedToDevice }
+  return saveGeneratedExport(uri, fileName)
 }
 
 async function generateZipBackup(
@@ -245,8 +267,7 @@ async function generateZipBackup(
 
 export async function saveZipToDevice(baseName?: string): Promise<SavedExport> {
   const { uri, fileName } = await generateZipBackup(baseName)
-  const savedToDevice = await saveToDevice(uri, fileName)
-  return { uri, fileName, savedToDevice }
+  return saveGeneratedExport(uri, fileName)
 }
 
 /**
@@ -390,8 +411,7 @@ async function generateCsvExport(
 
 export async function saveCsvToDevice(baseName?: string): Promise<SavedExport> {
   const { uri, fileName } = await generateCsvExport(baseName)
-  const savedToDevice = await saveToDevice(uri, fileName)
-  return { uri, fileName, savedToDevice }
+  return saveGeneratedExport(uri, fileName)
 }
 
 export async function saveExistingFileToDevice(
@@ -400,7 +420,7 @@ export async function saveExistingFileToDevice(
 ): Promise<boolean> {
   const info = await FileSystem.getInfoAsync(uri)
   if (!info.exists) throw new Error("file_not_found")
-  return saveToDevice(uri, fileName)
+  return (await saveToDevice(uri, fileName)) === "saved"
 }
 
 // ponytail: leaves the export's now-empty parent folder behind. Delete the folder too

@@ -1,13 +1,16 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
-import { StyleSheet, useUnistyles } from "react-native-unistyles"
+import { StyleSheet } from "react-native-unistyles"
 
 import { ConfirmSheet } from "~/components/confirm-sheet"
-import { IconSvg } from "~/components/icons"
+import {
+  SettingsOptionRow,
+  SettingsSection,
+  SettingsSwitchRow,
+  settingsStyles,
+} from "~/components/settings/settings-list"
 import { Button } from "~/components/ui/button"
-import { ListItem } from "~/components/ui/list-item"
-import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import {
@@ -18,7 +21,6 @@ import { Toast } from "~/utils/toast"
 
 export default function ToastStyleScreen() {
   const { t } = useTranslation()
-  const { theme } = useUnistyles()
   const positionOptions: Array<{
     value: ToastPosition
     label: string
@@ -112,134 +114,87 @@ export default function ToastStyleScreen() {
       />
 
       <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
+        style={settingsStyles.screen}
+        contentContainerStyle={settingsStyles.content}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
       >
-        {/* Position */}
-        <View native style={[styles.sectionLabel, styles.sectionLabelFirst]}>
-          <Text variant="small" style={styles.sectionLabelText}>
-            {t("screens.settings.preferences.appearance.toast.position.label")}
-          </Text>
-        </View>
-        <View native style={styles.card}>
-          {positionOptions.map((option, index) => {
-            const isSelected = position === option.value
-            const isLast = index === positionOptions.length - 1
-            return (
-              <View key={option.value} native>
-                <ListItem
-                  style={styles.row}
-                  onPress={() => setPosition(option.value)}
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: isSelected }}
-                >
-                  <View native style={styles.rowContent}>
-                    <Text style={styles.rowLabel}>{option.label}</Text>
-                    <Text variant="small" style={styles.rowDescription}>
-                      {option.description}
-                    </Text>
-                  </View>
-                  {isSelected ? (
-                    <IconSvg
-                      name="check-outline"
-                      size={20}
-                      color={theme.colors.primary}
-                    />
-                  ) : null}
-                </ListItem>
-                {!isLast ? <View native style={styles.divider} /> : null}
-              </View>
-            )
-          })}
-        </View>
-
-        {/* Options */}
-        <View native style={styles.sectionLabel}>
-          <Text variant="small" style={styles.sectionLabelText}>
-            {t("screens.settings.preferences.appearance.toast.optionsLabel")}
-          </Text>
-        </View>
-        <View native style={styles.toggleCard}>
-          <ListItem
-            style={styles.toggleRow}
-            onPress={() => setShowProgressBar(!showProgressBar)}
-          >
-            <View native style={styles.toggleRowContent}>
-              <Text style={styles.toggleLabel}>
-                {t(
-                  "screens.settings.preferences.appearance.toast.progressBar.label",
-                )}
-              </Text>
-              <Text variant="small" style={styles.toggleDescription}>
-                {t(
-                  "screens.settings.preferences.appearance.toast.progressBar.description",
-                )}
-              </Text>
-            </View>
-            <Switch
-              value={showProgressBar}
-              onValueChange={setShowProgressBar}
+        <SettingsSection
+          title={t(
+            "screens.settings.preferences.appearance.toast.position.label",
+          )}
+        >
+          {positionOptions.map((option) => (
+            <SettingsOptionRow
+              key={option.value}
+              label={option.label}
+              description={option.description}
+              selected={position === option.value}
+              onPress={() => setPosition(option.value)}
             />
-          </ListItem>
-          <View native style={styles.divider} />
-          <ListItem
-            style={styles.toggleRow}
-            onPress={() => setShowCloseIcon(!showCloseIcon)}
-          >
-            <View native style={styles.toggleRowContent}>
-              <Text style={styles.toggleLabel}>
-                {t(
-                  "screens.settings.preferences.appearance.toast.closeIcon.label",
-                )}
-              </Text>
-              <Text variant="small" style={styles.toggleDescription}>
-                {t(
-                  "screens.settings.preferences.appearance.toast.closeIcon.description",
-                )}
-              </Text>
-            </View>
-            <Switch value={showCloseIcon} onValueChange={setShowCloseIcon} />
-          </ListItem>
-        </View>
+          ))}
+        </SettingsSection>
 
-        {/* Preview */}
-        <View native style={styles.sectionLabel}>
-          <Text variant="small" style={styles.sectionLabelText}>
-            {t("screens.settings.preferences.appearance.toast.preview.label")}
-          </Text>
-          <Text variant="small" style={styles.previewDescription}>
-            {t(
-              "screens.settings.preferences.appearance.toast.preview.description",
+        <SettingsSection
+          title={t(
+            "screens.settings.preferences.appearance.toast.optionsLabel",
+          )}
+        >
+          <SettingsSwitchRow
+            label={t(
+              "screens.settings.preferences.appearance.toast.progressBar.label",
             )}
-          </Text>
-        </View>
+            description={t(
+              "screens.settings.preferences.appearance.toast.progressBar.description",
+            )}
+            value={showProgressBar}
+            onValueChange={setShowProgressBar}
+          />
+          <SettingsSwitchRow
+            label={t(
+              "screens.settings.preferences.appearance.toast.closeIcon.label",
+            )}
+            description={t(
+              "screens.settings.preferences.appearance.toast.closeIcon.description",
+            )}
+            value={showCloseIcon}
+            onValueChange={setShowCloseIcon}
+          />
+        </SettingsSection>
 
-        <View native style={styles.previewButtons}>
-          <Button
-            variant="default"
-            style={styles.previewBtnPrimary}
-            onPress={handleShowDemoToasts}
-          >
-            <Text style={styles.previewBtnPrimaryText}>
-              {t(
-                "screens.settings.preferences.appearance.toast.preview.showDemo",
-              )}
-            </Text>
-          </Button>
-          <Button
-            variant="outline"
-            style={styles.previewBtnOutline}
-            onPress={() => Toast.hideAll()}
-          >
-            <Text style={styles.previewBtnOutlineText}>
-              {t(
-                "screens.settings.preferences.appearance.toast.preview.hideAll",
-              )}
-            </Text>
-          </Button>
-        </View>
+        <SettingsSection
+          title={t(
+            "screens.settings.preferences.appearance.toast.preview.label",
+          )}
+          description={t(
+            "screens.settings.preferences.appearance.toast.preview.description",
+          )}
+        >
+          <View native style={styles.previewButtons}>
+            <Button
+              variant="default"
+              style={styles.previewBtnPrimary}
+              onPress={handleShowDemoToasts}
+            >
+              <Text style={styles.previewBtnPrimaryText}>
+                {t(
+                  "screens.settings.preferences.appearance.toast.preview.showDemo",
+                )}
+              </Text>
+            </Button>
+            <Button
+              variant="outline"
+              style={styles.previewBtnOutline}
+              onPress={() => Toast.hideAll()}
+            >
+              <Text style={styles.previewBtnOutlineText}>
+                {t(
+                  "screens.settings.preferences.appearance.toast.preview.hideAll",
+                )}
+              </Text>
+            </Button>
+          </View>
+        </SettingsSection>
 
         {/* Reset */}
         <View native style={styles.resetSection}>
@@ -259,86 +214,11 @@ export default function ToastStyleScreen() {
 }
 
 const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  content: {
-    paddingHorizontal: 0,
-    paddingTop: 12,
-    paddingBottom: 48,
-  },
-
-  sectionLabel: {
-    paddingHorizontal: 20,
-    marginBottom: 8,
-    marginTop: 28,
-  },
-  sectionLabelFirst: {
-    marginTop: 8,
-  },
-  sectionLabelText: {
-    fontSize: theme.typography.labelXSmall.fontSize,
-    fontWeight: "600",
-    letterSpacing: 0.8,
-    color: theme.colors.semantic?.semi,
-  },
-
-  card: {
-    overflow: "hidden",
-  },
-  row: {
-    justifyContent: "space-between",
-    minHeight: 56,
-  },
-  rowContent: {
-    flex: 1,
-    gap: 2,
-  },
-  rowLabel: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-    fontWeight: "500",
-    color: theme.colors.onSurface,
-  },
-  rowDescription: {
-    fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.semantic?.semi,
-  },
-  divider: {
-    height: 0.5,
-    backgroundColor: theme.colors.semantic?.semi,
-    opacity: 0.4,
-  },
-
-  toggleCard: {
-    overflow: "hidden",
-  },
-  toggleRow: {
-    justifyContent: "space-between",
-    minHeight: 56,
-  },
-  toggleRowContent: {
-    flex: 1,
-    gap: 2,
-  },
-  toggleLabel: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-    fontWeight: "500",
-    color: theme.colors.onSurface,
-  },
-  toggleDescription: {
-    fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.semantic.semi,
-  },
-
-  previewDescription: {
-    fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.semantic?.semi,
-  },
   previewButtons: {
     flexDirection: "row",
     gap: 10,
     paddingHorizontal: 20,
+    marginTop: 12,
   },
   previewBtnPrimary: {
     flex: 1,
