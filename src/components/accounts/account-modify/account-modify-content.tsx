@@ -5,7 +5,7 @@ import { AccountTypeInline } from "~/components/accounts/account-type-inline"
 import { ChangeIconInline } from "~/components/change-icon-inline"
 import { ColorVariantInline } from "~/components/color-variant-inline"
 import { IconSvg } from "~/components/icons"
-import { CurrencySelectorModal } from "~/components/selector-modals/currency-selector-modal"
+import { CurrencySelectorSheet } from "~/components/selectors/currency-selector-sheet"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
@@ -19,7 +19,7 @@ import { NewEnum } from "~/types/new"
 
 import { AccountDeleteSection } from "./account-delete-section"
 import { AccountFormFooter } from "./account-form-footer"
-import { AccountFormModals } from "./account-form-modals"
+import { AccountFormSheets } from "./account-form-sheets"
 import { accountModifyStyles } from "./account-modify.styles"
 import { AccountSwitchesSection } from "./account-switches-section"
 import type { AccountModifyContentProps } from "./types"
@@ -44,9 +44,9 @@ export function AccountModifyContent({
     formCurrencyCode,
     formIsPrimary,
     currentColorScheme,
-    unsavedModalVisible,
-    deleteModalVisible,
-    archiveModalVisible,
+    unsavedSheetVisible,
+    deleteSheetVisible,
+    archiveSheetVisible,
     allowNavigation,
     handleGoBack,
     setValue,
@@ -57,11 +57,11 @@ export function AccountModifyContent({
     handleColorSelected,
     handleColorCleared,
     handleCurrencySelected,
-    openDeleteModal,
-    closeDeleteModal,
-    closeUnsavedModal,
-    openArchiveModal,
-    closeArchiveModal,
+    openDeleteSheet,
+    closeDeleteSheet,
+    closeUnsavedSheet,
+    openArchiveSheet,
+    closeArchiveSheet,
   } = useAccountForm({ accountId, account })
 
   if (!isAddMode && !account) {
@@ -136,9 +136,10 @@ export function AccountModifyContent({
           </View>
 
           <View style={accountModifyStyles.settingsList}>
-            <CurrencySelectorModal
+            <CurrencySelectorSheet
               selectedCurrencyCode={formCurrencyCode}
               onCurrencySelected={handleCurrencySelected}
+              editable={isAddMode}
             />
 
             <AccountTypeInline
@@ -173,7 +174,7 @@ export function AccountModifyContent({
           <View style={accountModifyStyles.deleteSection}>
             <Button
               variant="ghost"
-              onPress={openArchiveModal}
+              onPress={openArchiveSheet}
               style={accountModifyStyles.actionButton}
             >
               <IconSvg
@@ -190,7 +191,7 @@ export function AccountModifyContent({
 
             <AccountDeleteSection
               account={account}
-              onDeletePress={openDeleteModal}
+              onDeletePress={openDeleteSheet}
             />
           </View>
         )}
@@ -206,20 +207,20 @@ export function AccountModifyContent({
         onSave={handleSubmit}
       />
 
-      <AccountFormModals
-        deleteModalVisible={deleteModalVisible}
-        archiveModalVisible={archiveModalVisible}
-        unsavedModalVisible={unsavedModalVisible}
+      <AccountFormSheets
+        deleteSheetVisible={deleteSheetVisible}
+        archiveSheetVisible={archiveSheetVisible}
+        unsavedSheetVisible={unsavedSheetVisible}
         isAddMode={isAddMode}
         account={account}
         transactionCount={transactionCount}
-        onCloseDeleteModal={closeDeleteModal}
-        onCloseArchiveModal={closeArchiveModal}
-        onCloseUnsavedModal={closeUnsavedModal}
+        onCloseDeleteSheet={closeDeleteSheet}
+        onCloseArchiveSheet={closeArchiveSheet}
+        onCloseUnsavedSheet={closeUnsavedSheet}
         onConfirmDelete={handleDelete}
         onConfirmArchive={handleArchive}
         onDiscardAndNavigate={() => {
-          closeUnsavedModal()
+          closeUnsavedSheet()
           allowNavigation()
           handleGoBack()
         }}

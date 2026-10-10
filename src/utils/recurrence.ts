@@ -1,64 +1,76 @@
-import { RRule, type RRuleSet, rrulestr } from "rrule"
+import { endOfDay } from "date-fns"
+import type { RRuleSet } from "rrule"
+import * as rruleNs from "rrule"
 
-import type { RecurringFrequency } from "~/types/transactions"
+import type { Recurrence, RecurrenceUnit } from "~/types/transactions"
+
+// rrule publishes a CJS bundle flagged `__esModule` with no genuine default
+// export. Metro surfaces its members on the namespace object; Node's ESM loader
+// (used by scripts/checks/verify-recurrence.mts) nests them under `.default`.
+// Normalise to one shape so both runtimes work.
+type RRuleModule = typeof import("rrule")
+const rrulePkg: RRuleModule =
+  "RRule" in rruleNs
+    ? (rruleNs as RRuleModule)
+    : (rruleNs as unknown as { default: RRuleModule }).default
+const { RRule, rrulestr } = rrulePkg
+type RRule = InstanceType<typeof RRule>
 
 interface TimeRange {
   from: number // Unix ms
   to: number // Unix ms
 }
 
-const FREQ_MAP: Record<NonNullable<RecurringFrequency>, number> = {
-  daily: RRule.DAILY,
-  weekly: RRule.WEEKLY,
-  biweekly: RRule.WEEKLY,
-  monthly: RRule.MONTHLY,
-  yearly: RRule.YEARLY,
+const FREQ_BY_UNIT: Record<RecurrenceUnit, number> = {
+  day: RRule.DAILY,
+  week: RRule.WEEKLY,
+  month: RRule.MONTHLY,
+  year: RRule.YEARLY,
+}
+
+const UNIT_BY_FREQ: Record<number, RecurrenceUnit> = {
+  [RRule.DAILY]: "day",
+  [RRule.WEEKLY]: "week",
+  [RRule.MONTHLY]: "month",
+  [RRule.YEARLY]: "year",
+}
+
+/** Clamp any number to an integer in 1..999. */
+export function clampInterval(n: number): number {
+  if (!Number.isFinite(n)) return 1
+  return Math.min(999, Math.max(1, Math.floor(n)))
 }
 
 /**
- * Build an RRULE string from the form's recurring frequency, start date, and optional end conditions.
- * - For "biweekly" we use WEEKLY with interval 2.
- * - `until` and `count` are mutually exclusive in RRULE spec.
- * - RRule handles month-end (e.g. Jan 31 → Feb 28/29); avoid raw setMonth/setDate for intervals.
+ * Build an RRULE string from "every {interval} {unit}", a start date, and an
+ * optional end date. `until` is normalised to end-of-day (device-local) so an
+ * "until Oct 16" rule includes every occurrence that falls on Oct 16.
+ * RRule handles month-end roll-over (Jan 31 -> Feb 28/29); never do raw
+ * setMonth/setDate arithmetic for intervals.
  */
 export function buildRRuleString(opts: {
-  frequency: NonNullable<RecurringFrequency>
+  interval: number
+  unit: RecurrenceUnit
   startDate: Date
-  endDate?: Date | null
-  count?: number | null
+  until?: Date | null
 }): string {
-  const freq = FREQ_MAP[opts.frequency]
-  const interval = opts.frequency === "biweekly" ? 2 : 1
-
   const rule = new RRule({
-    freq,
-    interval,
+    freq: FREQ_BY_UNIT[opts.unit],
+    interval: clampInterval(opts.interval),
     dtstart: opts.startDate,
-    ...(opts.endDate ? { until: opts.endDate } : {}),
-    ...(opts.count ? { count: opts.count } : {}),
+    ...(opts.until ? { until: endOfDay(opts.until) } : {}),
   })
-
   return rule.toString()
 }
 
 /**
  * Safely parse an RRULE string that may contain a DTSTART line.
- *
- * `RRule.fromString` can silently drop the DTSTART prefix in some versions
- * of the rrule library.  `rrulestr()` handles the full RFC format correctly
- * and always preserves the DTSTART, so we prefer it.  Fall back to
- * `RRule.fromString` only when `rrulestr` is unavailable or fails.
+ * `rrulestr` handles the full RFC format; fall back to `RRule.fromString`.
  */
 function parseRRule(ruleString: string): RRule {
   try {
-    // rrulestr handles multi-line "DTSTART:…\nRRULE:…" correctly
     const result = rrulestr(ruleString)
-    // rrulestr may return an RRuleSet when there are multiple rules;
-    // for our purposes we always store a single rule, so unwrap if needed.
     if (result instanceof RRule) return result
-    // rrulestr may return an RRuleSet for multi-line DTSTART+RRULE strings.
-    // The typings declare only RRule so we cast via unknown; use the public
-    // rrules() API instead of the private _rrule field.
     const rules = (result as unknown as RRuleSet).rrules()
     if (rules.length > 0) return rules[0]
     throw new Error(`rrulestr produced empty RRuleSet for: ${ruleString}`)
@@ -68,38 +80,51 @@ function parseRRule(ruleString: string): RRule {
 }
 
 /**
- * Count how many times a recurrence occurs between startDate (inclusive) and endDate (inclusive).
- * Uses the same frequency/interval logic as buildRRuleString (e.g. biweekly = every 2 weeks).
+ * How many times the recurrence fires between `startDate` and `endDate`,
+ * **inclusive of both ends and of the first occurrence** — exactly what
+ * `synchronizeRecurringTransaction` spawns through `endDate`.
  */
 export function countOccurrencesBetween(
   startDate: Date,
   endDate: Date,
-  frequency: NonNullable<RecurringFrequency>,
+  recurrence: Recurrence,
 ): number {
   if (endDate.getTime() < startDate.getTime()) return 0
-  const freq = FREQ_MAP[frequency]
-  const interval = frequency === "biweekly" ? 2 : 1
   const rule = new RRule({
-    freq,
-    interval,
+    freq: FREQ_BY_UNIT[recurrence.unit],
+    interval: clampInterval(recurrence.interval),
     dtstart: startDate,
     until: endDate,
   })
-  // rule.between() avoids materializing an unbounded array; inc=true makes both ends inclusive.
-  const occurrences = rule.between(startDate, endDate, true)
-  return occurrences.length
+  return rule.between(startDate, endDate, true).length
 }
 
 /**
- * Get the next occurrence **strictly after** `anchor` that falls within
- * the given range.  Returns null if no next occurrence exists in range.
- *
- * Matches the Flutter `Recurrence.nextAbsoluteOccurrence(anchor, subrange:)`
- * behaviour:
- * - When anchor < range.from → use inclusive search from range.from so the
- *   first occurrence itself is not skipped.
- * - When anchor >= range.from → exclusive search so we skip the already-
- *   generated occurrence at anchor.
+ * Read the interval+unit back out of a stored RRULE string, for the edit
+ * screen. Never throws into render:
+ *  - missing INTERVAL   -> interval = 1
+ *  - FREQ absent / unrecognised, or unparseable string -> { interval: 1, unit: "month" }
+ *  - INTERVAL non-integer / < 1 -> Math.max(1, Math.floor(n)); > 999 -> 999
+ */
+export function parseRecurrence(ruleString: string): Recurrence {
+  const fallback: Recurrence = { interval: 1, unit: "month" }
+  if (!ruleString?.trim()) return fallback
+  try {
+    const rule = parseRRule(ruleString)
+    const unit = UNIT_BY_FREQ[rule.options.freq]
+    if (!unit) return fallback
+    const raw = rule.options.interval
+    const interval = raw == null ? 1 : clampInterval(raw)
+    return { interval, unit }
+  } catch {
+    return fallback
+  }
+}
+
+/**
+ * Next occurrence strictly after `anchor` within `range`, or null.
+ * (Unchanged from the pre-Slice-2 implementation — the synchroniser relies on
+ * the inclusive/exclusive `after()` behaviour described below.)
  */
 export function nextAbsoluteOccurrence(
   ruleStrings: string[],
@@ -113,10 +138,6 @@ export function nextAbsoluteOccurrence(
   const toDate = new Date(range.to)
   if (anchor.getTime() > toDate.getTime()) return null
 
-  // When anchor < fromDate we need inclusive search (inc=true) so we don't
-  // miss an occurrence that falls exactly on fromDate.
-  // When anchor >= fromDate we need exclusive search (inc=false) to skip
-  // the already-generated occurrence at anchor.
   const anchorBeforeRange = anchor.getTime() < fromDate.getTime()
   const start = anchorBeforeRange ? fromDate : anchor
   const next = rrule.after(start, anchorBeforeRange)

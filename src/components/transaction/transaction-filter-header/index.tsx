@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next"
 import { ScrollView, View } from "react-native"
 import { useUnistyles } from "react-native-unistyles"
 
-import { DateRangePresetModal } from "~/components/date-range-preset-modal"
+import { DateRangePresetSheet } from "~/components/date-range-preset-sheet"
 import { IconSvg, type IconSvgName } from "~/components/icons"
 import { Chip } from "~/components/ui/chips"
 import type {
@@ -60,14 +60,14 @@ export function TransactionFilterHeader({
   const [expandedPanel, setExpandedPanel] = useState<FilterPanelKey | null>(
     null,
   )
-  const [dateModalVisible, setDateModalVisible] = useState(false)
+  const [dateSheetVisible, setDateSheetVisible] = useState(false)
   const { theme } = useUnistyles()
   const togglePanel = (key: FilterPanelKey) => {
     setExpandedPanel((prev) => (prev === key ? null : key))
   }
   const handleDatePress = () => {
     setExpandedPanel(null)
-    setDateModalVisible(true)
+    setDateSheetVisible(true)
   }
   const handleSearchChange = (text: string) => {
     const next = { ...searchState, query: text }
@@ -247,7 +247,7 @@ export function TransactionFilterHeader({
     },
     {
       key: "date",
-      icon: "calendar-outline",
+      icon: "calendar-month",
       label: dateLabel,
       active: isDateActive,
     },
@@ -430,15 +430,15 @@ export function TransactionFilterHeader({
         </View>
       ) : null}
 
-      <DateRangePresetModal
-        visible={dateModalVisible}
+      <DateRangePresetSheet
+        visible={dateSheetVisible}
         initialStart={selectedRange?.start}
         initialEnd={selectedRange?.end}
         onSave={(start, end) => {
           onDateRangeChange?.({ start, end })
-          setDateModalVisible(false)
+          setDateSheetVisible(false)
         }}
-        onRequestClose={() => setDateModalVisible(false)}
+        onRequestClose={() => setDateSheetVisible(false)}
       />
     </View>
   )

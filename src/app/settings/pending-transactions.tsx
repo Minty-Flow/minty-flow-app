@@ -8,7 +8,7 @@ import { StyleSheet } from "react-native-unistyles"
 import { IconSvg } from "~/components/icons"
 import { MonthYearPicker } from "~/components/month-year-picker"
 import { RouteLoadingState } from "~/components/route-load-state"
-import { DeleteRecurringModal } from "~/components/transaction/delete-recurring-modal"
+import { DeleteRecurringSheet } from "~/components/transaction/delete-recurring-sheet"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
@@ -164,7 +164,7 @@ export default function PendingTransactionsScreen() {
       />
 
       {recurringToDelete && recurringRule && (
-        <DeleteRecurringModal
+        <DeleteRecurringSheet
           visible
           transaction={recurringToDelete}
           recurringRule={recurringRule}

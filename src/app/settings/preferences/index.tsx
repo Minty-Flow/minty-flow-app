@@ -5,12 +5,9 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { ActionItem } from "~/components/action-item"
 import type { IconSvgName } from "~/components/icons"
-import { ToggleItem } from "~/components/toggle-item"
-import { InfoBanner } from "~/components/ui/info-banner"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TranslationKey } from "~/i18n/config"
-import { useAndroidSoundStore } from "~/stores/android-sound.store"
 import { useWeekStartStore } from "~/stores/week-start.store"
 import { getWeekStartsOn } from "~/utils/get-week-start-on"
 
@@ -20,7 +17,13 @@ interface PreferenceItem {
   icon: IconSvgName
 }
 
-const appearanceItems: PreferenceItem[] = [
+// Basic app-wide preferences.
+const basicItems: PreferenceItem[] = [
+  {
+    titleKey: "screens.settings.preferences.language.title",
+    route: "/settings/preferences/language",
+    icon: "language-outline",
+  },
   {
     titleKey: "screens.settings.preferences.appearance.theme.title",
     route: "/settings/preferences/theme",
@@ -31,29 +34,10 @@ const appearanceItems: PreferenceItem[] = [
     route: "/settings/preferences/money-formatting",
     icon: "hash-outline",
   },
-  {
-    titleKey: "screens.settings.preferences.appearance.toast.title",
-    route: "/settings/preferences/toast-style",
-    icon: "alert-square-rounded-outline",
-  },
-  {
-    titleKey: "screens.settings.preferences.appearance.transactionStyle.title",
-    route: "/settings/preferences/transaction-appearance",
-    icon: "list-details-outline",
-  },
-  {
-    titleKey: "screens.settings.preferences.appearance.buttonPlacement.title",
-    route: "/settings/preferences/button-placement",
-    icon: "circles-outline",
-  },
 ]
 
-const otherPreferenceItems: PreferenceItem[] = [
-  {
-    titleKey: "screens.settings.preferences.language.title",
-    route: "/settings/preferences/language",
-    icon: "language-outline",
-  },
+// How the financial system behaves.
+const behaviorItems: PreferenceItem[] = [
   {
     titleKey: "screens.settings.transfers.title",
     route: "/settings/preferences/transfers",
@@ -70,16 +54,6 @@ const otherPreferenceItems: PreferenceItem[] = [
     icon: "wallet-outline",
   },
   {
-    titleKey: "screens.settings.trash.title",
-    route: "/settings/preferences/trash-bin",
-    icon: "trash-outline",
-  },
-  {
-    titleKey: "screens.settings.privacy.title",
-    route: "/settings/preferences/privacy",
-    icon: "shield-exclamation-outline",
-  },
-  {
     titleKey: "screens.settings.preferences.transactionLocation.title",
     route: "/settings/preferences/transaction-location",
     icon: "map-pin-outline",
@@ -91,11 +65,42 @@ const otherPreferenceItems: PreferenceItem[] = [
   },
 ]
 
+// Administrative destinations.
+const adminItems: PreferenceItem[] = [
+  {
+    titleKey: "screens.settings.privacy.title",
+    route: "/settings/preferences/privacy",
+    icon: "shield-exclamation-outline",
+  },
+  {
+    titleKey: "screens.settings.trash.title",
+    route: "/settings/preferences/trash-bin",
+    icon: "trash-outline",
+  },
+]
+
+// UI customization.
+const customizationItems: PreferenceItem[] = [
+  {
+    titleKey: "screens.settings.preferences.appearance.transactionStyle.title",
+    route: "/settings/preferences/transaction-appearance",
+    icon: "list-details-outline",
+  },
+  {
+    titleKey: "screens.settings.preferences.appearance.toast.title",
+    route: "/settings/preferences/toast-style",
+    icon: "alert-square-rounded-outline",
+  },
+  {
+    titleKey: "screens.settings.preferences.appearance.buttonPlacement.title",
+    route: "/settings/preferences/button-placement",
+    icon: "circles-outline",
+  },
+]
+
 export default function PreferencesScreen() {
   const router = useRouter()
   const { t } = useTranslation()
-  const setSoundEnabled = useAndroidSoundStore((s) => s.setSoundEnabled)
-  const disableSound = useAndroidSoundStore((s) => s.disableSound)
   const weekStart = useWeekStartStore((s) => s.weekStart)
 
   const weekStartTitle = (() => {
@@ -111,75 +116,53 @@ export default function PreferencesScreen() {
     return `${t("screens.settings.preferences.weekStart.label")} · ${dayLabel}`
   })()
 
+  const renderItem = (item: PreferenceItem) => (
+    <ActionItem
+      key={item.titleKey}
+      icon={item.icon}
+      title={t(item.titleKey)}
+      onPress={() => router.push(item.route)}
+    />
+  )
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Other Preferences */}
-      <View style={styles.section}>
-        <View style={styles.itemsList}>
-          {otherPreferenceItems.map((item) => (
-            <ActionItem
-              key={item.titleKey}
-              icon={item.icon}
-              title={t(item.titleKey)}
-              onPress={() => router.push(item.route)}
-            />
-          ))}
-          <ActionItem
-            icon="calendar-week"
-            title={weekStartTitle}
-            onPress={() => router.push("/settings/preferences/week-start")}
-          />
-        </View>
+      <View style={styles.group}>
+        {basicItems.map(renderItem)}
+        <ActionItem
+          icon="calendar-week"
+          title={weekStartTitle}
+          onPress={() => router.push("/settings/preferences/week-start")}
+        />
       </View>
 
-      {/* Appearance Section */}
-      <View style={styles.section}>
+      <View style={[styles.group, styles.groupGap]}>
         <Text style={styles.sectionTitle}>
-          {t("screens.settings.preferences.appearance.label")}
+          {t("screens.settings.preferences.groups.behavior")}
         </Text>
-        <View style={styles.itemsList}>
-          {appearanceItems.map((item) => (
-            <ActionItem
-              key={item.titleKey}
-              icon={item.icon}
-              title={t(item.titleKey)}
-              onPress={() => router.push(item.route)}
-            />
-          ))}
-        </View>
+        {behaviorItems.map(renderItem)}
+        {Platform.OS === "android" && (
+          <ActionItem
+            icon="device-mobile-vibration-outline"
+            title={t("screens.settings.preferences.sound.title")}
+            onPress={() => router.push("/settings/preferences/sound")}
+          />
+        )}
       </View>
 
-      {/* Feedback Section */}
-      {Platform.OS === "android" && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t("screens.settings.preferences.buttonFeedback.label")}
-          </Text>
+      <View style={[styles.group, styles.groupGap]}>
+        <Text style={styles.sectionTitle}>
+          {t("screens.settings.preferences.groups.system")}
+        </Text>
+        {adminItems.map(renderItem)}
+      </View>
 
-          <View style={styles.itemsList}>
-            <ToggleItem
-              icon={
-                disableSound
-                  ? "device-mobile-off-outline"
-                  : "device-mobile-vibration-outline"
-              }
-              title={t(
-                "screens.settings.preferences.buttonFeedback.soundHaptic.title",
-              )}
-              value={!disableSound}
-              onValueChange={(enabled) => setSoundEnabled(enabled)}
-            />
-
-            {!disableSound && (
-              <InfoBanner
-                text={t(
-                  "screens.settings.preferences.buttonFeedback.systemInfo",
-                )}
-              />
-            )}
-          </View>
-        </View>
-      )}
+      <View style={[styles.group, styles.groupGap]}>
+        <Text style={styles.sectionTitle}>
+          {t("screens.settings.preferences.groups.customization")}
+        </Text>
+        {customizationItems.map(renderItem)}
+      </View>
     </ScrollView>
   )
 }
@@ -190,21 +173,22 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.surface,
   },
   content: {
+    paddingVertical: 12,
     paddingBottom: 40,
   },
-  section: {
-    marginVertical: 10,
+  group: {
+    gap: 0,
+  },
+  groupGap: {
+    marginTop: 18,
   },
   sectionTitle: {
-    fontSize: theme.typography.labelXSmall.fontSize,
+    paddingHorizontal: 20,
+    ...theme.typography.labelXSmall,
     fontWeight: "600",
     letterSpacing: 0.8,
     textTransform: "uppercase",
     color: theme.colors.semantic.semi,
-    paddingHorizontal: 20,
     marginBottom: 8,
-  },
-  itemsList: {
-    gap: 0,
   },
 }))

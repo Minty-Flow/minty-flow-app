@@ -22,7 +22,7 @@ import { NewEnum } from "~/types/new"
 
 import { Button } from "../ui/button"
 
-// Mirror the constants from transaction-form-v3/form.styles.ts
+// Mirror the constants from transaction-form-v4/form.styles.ts
 const H_PAD = 20
 const SMALL_GAP = 4
 const CATEGORY_CELL_SIZE = 74

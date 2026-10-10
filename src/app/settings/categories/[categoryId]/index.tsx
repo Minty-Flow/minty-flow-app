@@ -84,12 +84,7 @@ export default function CategoryDetailsScreen() {
         r.type === TransactionTypeEnum.INCOME && !r.isPending && !r.isDeleted,
     )
     .reduce((sum, r) => {
-      if (
-        r.subtype === TransactionSubTypeEnum.LOAN_BORROWED ||
-        r.subtype === TransactionSubTypeEnum.LOAN_RECEIVED
-      ) {
-        return sum
-      }
+      if (r.loanId != null) return sum
       return sum + r.amount
     }, 0)
   const monthOut = transactionsFull
@@ -98,12 +93,7 @@ export default function CategoryDetailsScreen() {
         r.type === TransactionTypeEnum.EXPENSE && !r.isPending && !r.isDeleted,
     )
     .reduce((sum, r) => {
-      if (
-        r.subtype === TransactionSubTypeEnum.LOAN_REPAYMENT ||
-        r.subtype === TransactionSubTypeEnum.LOAN_LENT
-      ) {
-        return sum
-      }
+      if (r.loanId != null) return sum
       if (r.subtype === TransactionSubTypeEnum.REFUND) {
         return sum - r.amount
       }

@@ -5,9 +5,9 @@ import { FlatList } from "react-native"
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
 import { StyleSheet } from "react-native-unistyles"
 
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { IconSvg } from "~/components/icons"
-import { InfoModal } from "~/components/info-modal"
+import { InfoSheet } from "~/components/info-sheet"
 import { MonthYearPicker } from "~/components/month-year-picker"
 import { RouteLoadingState } from "~/components/route-load-state"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
@@ -205,18 +205,18 @@ export default function TrashScreen() {
         keyExtractor={keyExtractor}
         renderItem={renderItem}
       />
-      <ConfirmModal
+      <ConfirmSheet
         visible={pendingDestroyItem !== null}
         onRequestClose={() => setPendingDestroyItem(null)}
         onConfirm={handleConfirmDestroy}
-        title={t("common.modals.deletePermanently")}
-        description={t("components.transactionForm.destroyModal.description")}
+        title={t("common.sheets.deletePermanently")}
+        description={t("components.transactionForm.destroySheet.description")}
         confirmLabel={t("common.actions.delete")}
         cancelLabel={t("common.actions.cancel")}
         variant="destructive"
         icon="trash-outline"
       />
-      <InfoModal
+      <InfoSheet
         visible={showSwipeInfo}
         onRequestClose={() => setShowSwipeInfo(false)}
         title={t("screens.settings.trash.swipeInfo.title")}

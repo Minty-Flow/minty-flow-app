@@ -1,0 +1,283 @@
+/**
+ * Contact selector: trigger row (shared style) + bottom sheet with
+ * search and FlatList. Tap a contact to select and close. Uses Suspense +
+ * contacts promise so the sheet opens instantly and the list loads asynchronously.
+ */
+import * as Contacts from "expo-contacts/legacy"
+import i18n from "i18next"
+import { Suspense, use, useState } from "react"
+import { useTranslation } from "react-i18next"
+import { FlatList, View } from "react-native"
+import { StyleSheet } from "react-native-unistyles"
+
+import { IconSvg } from "~/components/icons"
+import { SearchInput } from "~/components/search-input"
+import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
+import { BottomSheet } from "~/components/ui/bottom-sheet"
+import { ChevronIcon } from "~/components/ui/chevron-icon"
+import { EmptyState } from "~/components/ui/empty-state"
+import { ListItem } from "~/components/ui/list-item"
+import { Text } from "~/components/ui/text"
+import { Toast } from "~/utils/toast"
+
+import { sheetHeaderStyles, sheetStyles, triggerStyles } from "./styles"
+
+function createContactsPromise(onPermissionDenied?: () => void): Promise<{
+  contacts: Contacts.Contact[]
+  hasPermission: boolean
+}> {
+  return (async () => {
+    try {
+      const { status } = await Contacts.requestPermissionsAsync()
+      const granted = status === "granted"
+      if (!granted) {
+        onPermissionDenied?.()
+        Toast.warn({
+          title: i18n.t("components.selectors.contacts.permissionRequired"),
+          description: i18n.t(
+            "components.selectors.contacts.permissionDescription",
+          ),
+        })
+        return { contacts: [], hasPermission: false }
+      }
+      const { data } = await Contacts.getContactsAsync({
+        fields: [
+          Contacts.Fields.PhoneNumbers,
+          Contacts.Fields.Emails,
+          Contacts.Fields.FirstName,
+        ],
+        sort: Contacts.SortTypes.FirstName,
+      })
+      return { contacts: data, hasPermission: true }
+    } catch {
+      return { contacts: [], hasPermission: false }
+    }
+  })()
+}
+interface ContactSelectorSheetProps {
+  onContactSelected: (contact: Contacts.Contact) => void
+  onPermissionDenied?: () => void
+  editable?: boolean
+}
+interface ContactListContentProps {
+  contactsPromise: Promise<{
+    contacts: Contacts.Contact[]
+    hasPermission: boolean
+  }>
+  searchQuery: string
+  onSelectContact: (contact: Contacts.Contact) => void
+}
+function ContactListContent({
+  contactsPromise,
+  searchQuery,
+  onSelectContact,
+}: ContactListContentProps) {
+  const { t } = useTranslation()
+  const { contacts, hasPermission } = use(contactsPromise)
+  const filtered = (() => {
+    if (!searchQuery.trim()) return contacts
+    const q = searchQuery.toLowerCase().trim()
+    return contacts.filter(
+      (c) =>
+        c.name?.toLowerCase().includes(q) ||
+        c.phoneNumbers?.some((p) => p.number?.toLowerCase().includes(q)) ||
+        c.emails?.some((e) => e.email?.toLowerCase().includes(q)),
+    )
+  })()
+  const renderItem = ({ item }: { item: Contacts.Contact }) => (
+    <ContactItem contact={item} onPress={onSelectContact} />
+  )
+  const keyExtractor = (item: Contacts.Contact, index: number) =>
+    `${item.firstName ?? ""}-${item.phoneNumbers?.[0]?.number ?? ""}-${index}`
+  const ListEmpty = (
+    <EmptyState
+      variant="compact"
+      icon={!hasPermission ? "shield-lock" : "user-question-outline"}
+      title={
+        !hasPermission
+          ? t("components.selectors.contacts.permissionDenied")
+          : t("components.selectors.contacts.noContacts")
+      }
+    />
+  )
+  return (
+    <FlatList
+      data={filtered}
+      keyExtractor={keyExtractor}
+      renderItem={renderItem}
+      ListEmptyComponent={ListEmpty}
+      initialNumToRender={14}
+      maxToRenderPerBatch={20}
+      windowSize={11}
+      keyboardShouldPersistTaps="always"
+      style={sheetStyles.list}
+      contentContainerStyle={sheetStyles.listContent}
+      showsVerticalScrollIndicator
+    />
+  )
+}
+function ContactItem({
+  contact,
+  onPress,
+}: {
+  contact: Contacts.Contact
+  onPress: (contact: Contacts.Contact) => void
+}) {
+  const initials = contact.name
+    ? contact.name
+        .split(" ")
+        .filter(Boolean)
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "?"
+  return (
+    <ListItem
+      style={({ pressed }: { pressed: boolean }) => [
+        sheetStyles.item,
+        contactItemStyles.itemGap,
+        pressed && sheetStyles.itemPressed,
+      ]}
+      onPress={() => onPress(contact)}
+    >
+      <View style={contactItemStyles.avatar}>
+        <Text style={contactItemStyles.avatarText}>{initials}</Text>
+      </View>
+      <View style={contactItemStyles.itemContent}>
+        <Text variant="large" style={contactItemStyles.contactName}>
+          {contact.name}
+        </Text>
+        {contact.phoneNumbers && contact.phoneNumbers.length > 0 && (
+          <Text variant="muted" style={contactItemStyles.phoneNumber}>
+            {contact.phoneNumbers[0].number}
+          </Text>
+        )}
+      </View>
+    </ListItem>
+  )
+}
+const contactItemStyles = StyleSheet.create((theme) => ({
+  itemGap: {
+    gap: 12,
+  },
+  itemContent: {
+    flex: 1,
+    gap: 2,
+  },
+  contactName: {
+    ...theme.typography.headlineSmall,
+  },
+  phoneNumber: {
+    fontSize: theme.typography.labelLarge.fontSize,
+    opacity: 0.7,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.colors.secondary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: {
+    color: theme.colors.onSecondary,
+    ...theme.typography.titleSmall,
+  },
+}))
+export function ContactSelectorSheet({
+  onContactSelected,
+  onPermissionDenied,
+  editable = true,
+}: ContactSelectorSheetProps) {
+  const { t } = useTranslation()
+  const [visible, setVisible] = useState(false)
+  const [contactsPromise, setContactsPromise] = useState<Promise<{
+    contacts: Contacts.Contact[]
+    hasPermission: boolean
+  }> | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const open = () => {
+    if (!editable) return
+    setSearchQuery("")
+    setContactsPromise(createContactsPromise(onPermissionDenied))
+    setVisible(true)
+  }
+  const close = () => {
+    setVisible(false)
+    setContactsPromise(null)
+  }
+  const handleSelectContact = (contact: Contacts.Contact) => {
+    onContactSelected(contact)
+    close()
+  }
+  return (
+    <>
+      <View style={triggerStyles.wrapper}>
+        <ListItem
+          style={triggerStyles.triggerRow}
+          onPress={open}
+          disabled={!editable}
+        >
+          <View style={triggerStyles.triggerLeft}>
+            <IconSvg name="address-book-outline" size={24} />
+            <Text variant="default" style={triggerStyles.triggerLabel}>
+              {t("components.selectors.contacts.triggerLabel")}
+            </Text>
+          </View>
+          {editable && (
+            <ChevronIcon
+              direction="trailing"
+              size={20}
+              style={triggerStyles.chevronIcon}
+            />
+          )}
+        </ListItem>
+      </View>
+
+      <BottomSheet
+        isPresented={visible}
+        onDismiss={close}
+        contentPadding={0}
+        heightFraction={0.75}
+      >
+        <View style={{ flex: 1 }}>
+          <View style={sheetHeaderStyles.header}>
+            <Text variant="default" style={sheetHeaderStyles.title}>
+              {t("components.selectors.contacts.title")}
+            </Text>
+          </View>
+          <View style={sheetStyles.searchContainer}>
+            <SearchInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onClear={() => setSearchQuery("")}
+              placeholder={t("components.selectors.contacts.searchPlaceholder")}
+            />
+          </View>
+          <View style={sheetStyles.listWrapper}>
+            {contactsPromise ? (
+              <Suspense
+                fallback={
+                  <View style={sheetStyles.loadingContainer}>
+                    <ActivityIndicatorMinty size="small" />
+                  </View>
+                }
+              >
+                <ContactListContent
+                  contactsPromise={contactsPromise}
+                  searchQuery={searchQuery}
+                  onSelectContact={handleSelectContact}
+                />
+              </Suspense>
+            ) : (
+              <View style={sheetStyles.loadingContainer}>
+                <ActivityIndicatorMinty size="small" />
+              </View>
+            )}
+          </View>
+        </View>
+      </BottomSheet>
+    </>
+  )
+}

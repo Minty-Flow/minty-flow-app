@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
@@ -24,7 +23,6 @@ export const TransactionItemLeft = ({
   subtitleText,
   isRefund,
 }: TransactionItemLeftProps) => {
-  const { t } = useTranslation()
   const { theme } = useUnistyles()
   return (
     <View style={transactionItemStyles.leftSection}>
@@ -48,7 +46,7 @@ export const TransactionItemLeft = ({
             style={[transactionItemStyles.title, { flexShrink: 1 }]}
             numberOfLines={1}
           >
-            {displayTitle || t("common.transaction.untitledTransaction")}
+            {displayTitle}
           </Text>
         </View>
         <View style={transactionItemStyles.subtitleRow}>

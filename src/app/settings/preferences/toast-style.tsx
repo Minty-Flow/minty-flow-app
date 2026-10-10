@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { IconSvg } from "~/components/icons"
 import { Button } from "~/components/ui/button"
 import { ListItem } from "~/components/ui/list-item"
@@ -39,7 +39,7 @@ export default function ToastStyleScreen() {
       ),
     },
   ]
-  const [resetModalVisible, setResetModalVisible] = useState(false)
+  const [resetSheetVisible, setResetSheetVisible] = useState(false)
   const {
     position,
     showProgressBar,
@@ -89,14 +89,14 @@ export default function ToastStyleScreen() {
     )
   }
 
-  const handleResetToDefaults = () => setResetModalVisible(true)
+  const handleResetToDefaults = () => setResetSheetVisible(true)
   const handleConfirmReset = () => resetToDefaults()
 
   return (
     <>
-      <ConfirmModal
-        visible={resetModalVisible}
-        onRequestClose={() => setResetModalVisible(false)}
+      <ConfirmSheet
+        visible={resetSheetVisible}
+        onRequestClose={() => setResetSheetVisible(false)}
         onConfirm={handleConfirmReset}
         title={t("screens.settings.preferences.appearance.toast.reset.title")}
         description={t(

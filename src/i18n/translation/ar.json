@@ -28,7 +28,7 @@
     "developmentNotice": {
       "message": "Minty Flow ما زال قيد التطوير، لذلك قد يحدث فقدان للبيانات. أعتذر عن ذلك. ابتداءً من هذا الإصدار، أركز على الاستقرار ونسخ احتياطية أكثر أماناً في التحديثات القادمة."
     },
-    "modals": {
+    "sheets": {
       "unsavedDescription": "سيتم فقدان كافة التغييرات.",
       "closeWithoutSaving": "إغلاق دون حفظ؟",
       "deletePermanently": "حذف نهائي",
@@ -55,6 +55,20 @@
         "expense": "مصروف",
         "income": "دخل",
         "transfer": "تحويل"
+      },
+      "tabs": {
+        "lent": "أقرضت",
+        "borrowed": "اقترضت",
+        "paid": "مدفوع",
+        "collected": "محصّل"
+      },
+      "kinds": {
+        "default": "قياسي",
+        "upcoming": "قادم",
+        "subscription": "اشتراك",
+        "repetitive": "متكرر",
+        "lent": "أقرضت",
+        "borrowed": "اقترضت"
       },
       "untitledTransaction": "معاملة بدون عنوان",
       "uncategorized": "غير مصنف"
@@ -108,18 +122,18 @@
         "header": "القادمة",
         "seeAll": "عرض الكل",
         "recurringCount": "{{count}} متكررة",
-        "pendingCount": "{{count}} معلقة",
+        "pendingCount": "{{count}} قادمة",
         "subHeaderRecurring": "متكررة",
         "confirmAll": {
           "button": "تأكيد الكل",
-          "modalTitle": "تأكيد الكل؟",
-          "modalDescription": "سيتم تأكيد جميع المعاملات المعلقة. لا يمكن التراجع عن ذلك."
+          "sheetTitle": "تأكيد الكل؟",
+          "sheetDescription": "سيتم تأكيد جميع المعاملات المعلقة. لا يمكن التراجع عن ذلك."
         },
         "chips": {
           "daysCount": "خلال الـ {{count}} أيام القادمة"
         },
         "a11y": {
-          "header": "معلقة",
+          "header": "القادمة",
           "confirm": "تأكيد المعاملة",
           "confirmAll": "تأكيد جميع المعاملات",
           "confirmAllButton": "تأكيد الكل",
@@ -166,13 +180,13 @@
         "archivedBannerText": "هذا الحساب مؤرشف. استعده لإجراء التعديلات.",
         "deleteLabel": "حذف الحساب نهائياً",
         "typeLabel": "نوع الحساب",
-        "archiveModal": {
+        "archiveSheet": {
           "archiveTitle": "أرشفة هذا الحساب؟",
           "archiveConfirm": "أرشفة",
           "unarchiveTitle": "استعادة هذا الحساب؟",
           "unarchiveConfirm": "استعادة"
         },
-        "deleteModal": {
+        "deleteSheet": {
           "title": "حذف {{name}} نهائياً؟",
           "descriptionWithCount_one": "يحتوي هذا الحساب على {{count}} معاملة. سيؤدي الحذف النهائي إلى حذفها أيضاً. لا يمكن التراجع عن هذا الإجراء.",
           "descriptionWithCount_other": "يحتوي هذا الحساب على {{count}} معاملة. سيؤدي الحذف النهائي إلى حذفها جميعاً. لا يمكن التراجع عن هذا الإجراء.",
@@ -201,7 +215,7 @@
         "title": "لا توجد بيانات لهذه الفترة",
         "description": "أضف معاملات لرؤية إحصائياتك",
         "addFirst": "أضف معاملتك الأولى",
-        "allPending": "جميع المعاملات معلقة",
+        "allPending": "جميع المعاملات مجدولة",
         "allTransfers": "جميع المعاملات هي التحويلات",
         "noTransactionsEver": "لا توجد معاملات حتى الآن"
       },
@@ -302,7 +316,7 @@
         "less": "أقل",
         "more": "أكثر"
       },
-      "pendingNotice": "{{count}} المعاملات المعلقة مستبعدة من الإحصائيات",
+      "pendingNotice": "{{count}} المعاملات المجدولة مستبعدة من الإحصائيات",
       "pieToggle": {
         "expenses": "نفقات",
         "income": "دخل",
@@ -310,8 +324,10 @@
       }
     },
     "settings": {
-      "sections": {
-        "other": "أخرى"
+      "groups": {
+        "planning": "التخطيط",
+        "organization": "التنظيم",
+        "system": "النظام"
       },
       "about": {
         "version": "v{{version}}",
@@ -320,8 +336,12 @@
       },
       "preferences": {
         "title": "التفضيلات",
+        "groups": {
+          "behavior": "السلوك",
+          "system": "النظام",
+          "customization": "التخصيص"
+        },
         "appearance": {
-          "label": "المظهر",
           "theme": {
             "title": "السمة",
             "selectThemePlaceholder": "اختر سمة",
@@ -394,8 +414,8 @@
               "leadingIcon": "الأيقونة الأمامية"
             },
             "showForUntitled": {
-              "label": "إظهار الفئة للمعاملات بدون اسم",
-              "description": "استخدام اسم الفئة كعنوان عندما لا يكون للمعاملة اسم"
+              "label": "إظهار «بدون عنوان» للمعاملات بلا اسم",
+              "description": "عندما لا يكون للمعاملة اسم، تُعرض «بدون عنوان» بدلاً من اسم الفئة"
             },
             "showAfterAccount": {
               "label": "إظهار الفئة بعد الحساب",
@@ -431,23 +451,20 @@
           "basedOnDevice": "بناءً على إعدادات جهازك"
         },
         "buttonFeedback": {
-          "label": "استجابة الأزرار",
           "soundHaptic": {
             "title": "الصوت / الاهتزاز عند الضغط"
           },
           "systemInfo": "يعتمد هذا على إعدادات نظام هاتفك. تأكد من تفعيل خيار \"تفاعلات اللمس\" في إعدادات الصوت."
         },
+        "sound": {
+          "title": "الصوت"
+        },
         "language": {
           "title": "اللغة",
-          "sectionLabel": "تغيير اللغة",
-          "rtlReloadConfirm": {
-            "title": "إعادة التشغيل مطلوبة",
-            "description": "يتطلب التبديل إلى هذه اللغة إعادة تشغيل التطبيق لتطبيق اتجاه النص الجديد.",
-            "confirmLabel": "إعادة التشغيل"
-          }
+          "sectionLabel": "تغيير اللغة"
         },
         "transactionLocation": {
-          "title": "موقع المعاملة",
+          "title": "تتبّع موقع المعاملة",
           "permissionWarning": "لم يتم منح إذن الموقع",
           "enable": {
             "label": "تمكين",
@@ -476,7 +493,7 @@
         "empty": {
           "noTransactions": "لا توجد معاملات محذوفة",
           "label": "إفراغ سلة المحذوفات",
-          "modal": {
+          "sheet": {
             "title": "إفراغ سلة المحذوفات",
             "description": "سيتم حذف جميع العناصر الموجودة في سلة المحذوفات نهائياً. لا يمكن التراجع عن هذا الإجراء.",
             "confirm": "إفراغ السلة",
@@ -501,18 +518,22 @@
         }
       },
       "pending": {
-        "title": "المعاملات المعلقة",
-        "empty": "لا توجد معاملات معلقة",
-        "caption": "لن يتم احتساب المعاملات المعلقة ضمن الدخل والمصاريف ورصيد الحساب.",
+        "title": "المعاملات المجدولة",
+        "empty": "لا توجد معاملات مجدولة",
+        "caption": "لن يتم احتساب المعاملات المجدولة ضمن الدخل والمصاريف ورصيد الحساب.",
         "settings": {
           "showOnHome": "عرض في الصفحة الرئيسية",
-          "requireConfirmation": {
-            "label": "يتطلب تأكيداً",
-            "description": "عند التفعيل، ستحتاج المعاملات المخطط لها حديثاً إلى موافقتك قبل احتسابها. ستحتفظ المعاملات الحالية بوضعها الأصلي."
+          "autoPaySubscriptions": {
+            "label": "تأكيد الاشتراكات تلقائيًا",
+            "description": "عند التفعيل، يُؤكَّد أي اشتراك تجاوز تاريخه تلقائيًا عند فتح التطبيق في المرة التالية."
           },
-          "updateDateOnConfirm": {
-            "label": "تحديث التاريخ عند التأكيد",
-            "description": "قم بالتعطيل للاحتفاظ بتاريخ المعاملة الأصلي."
+          "autoPayRepetitive": {
+            "label": "تأكيد المعاملات المتكررة تلقائيًا",
+            "description": "عند التفعيل، تُؤكَّد أي معاملة متكررة تجاوز تاريخها تلقائيًا عند فتح التطبيق في المرة التالية."
+          },
+          "autoPayUpcoming": {
+            "label": "تأكيد المعاملات القادمة تلقائيًا",
+            "description": "عند التفعيل، تُؤكَّد أي معاملة قادمة تجاوز تاريخها تلقائيًا عند فتح التطبيق في المرة التالية. اتركه معطّلًا لتأكيد كل معاملة يدويًا عبر «تحديد كمدفوعة»."
           },
           "notify": {
             "label": "أشعرني",
@@ -566,7 +587,7 @@
           "title": "هدف",
           "transactions": "المعاملات",
           "noTransactions": "لا توجد معاملات مرتبطة بهذا الهدف",
-          "pendingNotice": "المعاملات المعلقة غير مشمولة في التقدم"
+          "pendingNotice": "المعاملات المجدولة غير مشمولة في التقدم"
         },
         "form": {
           "title": {
@@ -586,7 +607,7 @@
           "deleteLabel": "حذف الهدف",
           "archiveLabel": "أرشفة الهدف",
           "unarchiveLabel": "استعادة الهدف",
-          "archiveModal": {
+          "archiveSheet": {
             "archiveTitle": "أرشفة هذا الهدف؟",
             "archiveConfirm": "أرشفة",
             "unarchiveTitle": "استعادة هذا الهدف؟",
@@ -680,6 +701,11 @@
           "lent": "مُقرَض",
           "borrowed": "مُقترَض"
         },
+        "term": {
+          "label": "النوع الزمني",
+          "oneTime": "لمرة واحدة",
+          "longTerm": "طويل الأجل"
+        },
         "card": {
           "paid": "مدفوع",
           "paidBack": "تم سداد",
@@ -696,7 +722,8 @@
         },
         "form": {
           "amountLabel": "المبلغ الأصلي",
-          "deleteLabel": "حذف القرض"
+          "deleteLabel": "حذف القرض",
+          "dueDateLabel": "تاريخ الاستحقاق"
         },
         "detail": {
           "title": "قرض",
@@ -746,7 +773,7 @@
           "placeholderContact": "محمد علي",
           "placeholderLocation": "المنزل، العمل، المقهى...",
           "deleteLabel": "حذف نهائي",
-          "deleteModal": {
+          "deleteSheet": {
             "title": "حذف {{name}} نهائياً؟",
             "descriptionWithCount_one": "يُستخدم هذا الوسم في {{count}} معاملة. سيؤدي الحذف النهائي إلى إلغاء ارتباطه وإزالته. لا يمكن التراجع عن ذلك.",
             "descriptionWithCount_other": "يُستخدم هذا الوسم في {{count}} معاملة. سيؤدي الحذف النهائي إلى إلغاء ارتباطه من جميعها وإزالته. لا يمكن التراجع عن ذلك.",
@@ -823,7 +850,7 @@
         "loading": "جاري تحميل أسعار الصرف...",
         "searchPlaceholder": "البحث عن العملات...",
         "instructionCaption": "اختر أحد المدخلات لتعيين سعر صرف مخصص. ملاحظة: جميع حسابات أسعار الصرف تعتمد على الدولار الأمريكي كمرجع.",
-        "infoModal": {
+        "infoSheet": {
           "title": "أسعار الصرف",
           "description": "تُعرض الأسعار كقيمة مقابل 1 دولار أمريكي. اختر عملة لتعيين سعر مخصص. تعتمد جميع الحسابات على الدولار الأمريكي كمرجع أساسي.",
           "ok": "حسناً"
@@ -909,7 +936,7 @@
         }
       },
       "reminders": {
-        "title": "التذكير",
+        "title": "التذكيرات",
         "testNotification": "اضغط لاختبار الإشعار",
         "remindDaily": {
           "label": "تذكير يومي",
@@ -987,18 +1014,28 @@
         "budget": "الميزانية",
         "loan": "القرض",
         "location": "موقع",
-        "refundLabel": "استرداد"
+        "refundLabel": "استرداد",
+        "deleteLoan": "حذف القرض"
       },
-      "recurring": {
-        "label": "معاملة متكررة",
-        "recurrence": "التكرار",
-        "startsOn": "تبدأ في",
-        "endsOn": "تنتهي في",
-        "never": "أبداً",
-        "onADate": "في تاريخ محدد",
-        "occurrences": "المرات",
-        "timesCount_one": "مرة واحدة",
-        "timesCount_other": "{{count}} مرات"
+      "recurrence": {
+        "every": "التكرار كل",
+        "unitTitle": "وحدة التكرار",
+        "unit": {
+          "day_one": "يوم",
+          "day_other": "أيام",
+          "week_one": "أسبوع",
+          "week_other": "أسابيع",
+          "month_one": "شهر",
+          "month_other": "أشهر",
+          "year_one": "سنة",
+          "year_other": "سنوات"
+        },
+        "until": "حتى",
+        "forever": "للأبد",
+        "reset": "إعادة تعيين",
+        "increment": "زيادة الفاصل",
+        "decrement": "إنقاص الفاصل",
+        "untilBeforeStart": "تاريخ الانتهاء قبل تاريخ البدء — لا تكرارات."
       },
       "addFiles": {
         "label": "إضافة ملفات",
@@ -1017,7 +1054,7 @@
         "title": "حذف الملف",
         "description": "هل أنت متأكد من إزالة هذا المرفق؟"
       },
-      "destroyModal": {
+      "destroySheet": {
         "description": "ستُزال هذه المعاملة نهائياً ولا يمكن استعادتها."
       },
       "amountInput": {
@@ -1038,7 +1075,7 @@
         }
       },
       "attachments": {
-        "openFileModal": "فتح الملف",
+        "openFileSheet": "فتح الملف",
         "a11y": {
           "removeAttachment": "إزالة المرفق",
           "addFiles": "إضافة ملفات",
@@ -1074,7 +1111,11 @@
         "deletedDescription": "تم حذف المعاملة نهائياً.",
         "deleteFailed": "فشل حذف المعاملة.",
         "rateLoading": "لا يزال السعر قيد التحميل، يرجى الانتظار",
-        "setDifferentCurrencies": "يرجى تحديد المبلغ المحول لعملات مختلفة"
+        "setDifferentCurrencies": "يرجى تحديد المبلغ المحول لعملات مختلفة",
+        "recurringUntilBeforeStart": "تاريخ الانتهاء قبل تاريخ البدء",
+        "loanAmountExceedsRemaining": "المبلغ أكبر مما يدين به هذا القرض",
+        "loanNeedsCategory": "اختر فئة قبل إنشاء القرض",
+        "loanDeleted": "تم حذف القرض"
       },
       "a11y": {
         "closePreview": "إغلاق المعاينة",
@@ -1093,18 +1134,40 @@
         "allTagsSelected": "تم تحديد جميع الوسوم",
         "amountInput": "إدخال المبلغ"
       },
-      "notFoundTransaction": "لم يتم العثور على المعاملة."
+      "notFoundTransaction": "لم يتم العثور على المعاملة.",
+      "searchTags": "ابحث عن الوسوم...",
+      "createNewTag": "وسم جديد",
+      "selectTags": "اختيار الوسوم",
+      "clearSelection": "مسح التحديد",
+      "kind": {
+        "label": "النوع",
+        "info": {
+          "a11yOpen": "عن أنواع المعاملات",
+          "title": "أنواع المعاملات",
+          "default": "معاملة عادية. تُحتسب في مجاميعك فوراً.",
+          "upcoming": "معاملة لمرة واحدة لم تدفعها بعد. تبقى خارج مجاميعك حتى تحدّدها كمدفوعة أو مستلمة.",
+          "subscription": "معاملة متكررة تظهر أيضاً في شاشة المجدولة. تبقى كل معاملة خارج مجاميعك حتى تُحدَّد كمدفوعة أو مستلمة، وعند إنهاء المعاملة الحالية تُضاف التالية.",
+          "repetitive": "معاملة متكررة. تبقى كل معاملة خارج مجاميعك حتى تُحدَّد كمدفوعة أو مستلمة، وعند إنهاء المعاملة الحالية تُضاف التالية.",
+          "lent": "مال أقرضته. يُحتسب تدفقاً نقدياً سالباً حتى تحدّده كمُحصَّل.",
+          "borrowed": "مال اقترضته. يُحتسب تدفقاً نقدياً موجباً حتى تحدّده كمُسدَّد."
+        }
+      },
+      "upcoming": {
+        "banner": "قادمة — لا تُحتسب في رصيدك أو إحصاءاتك بعد.",
+        "markPaid": "تحديد كمدفوعة",
+        "markDeposited": "تحديد كمُودعة"
+      },
+      "loan": {
+        "nameLabel": "اسم القرض",
+        "dueDateLabel": "تاريخ الاستحقاق"
+      },
+      "deleteLoanSheet": {
+        "title": "حذف هذا القرض؟",
+        "description": "يُحذف القرض. تبقى معاملاته في سجلّك دون ارتباط بأي قرض."
+      }
     },
     "recurring": {
-      "frequency": {
-        "none": "لا شيء",
-        "daily": "كل يوم",
-        "weekly": "كل أسبوع، {{day}}",
-        "biweekly": "كل أسبوعين، {{day}}",
-        "monthly": "كل شهر، {{date}}",
-        "yearly": "كل عام، {{date}}"
-      },
-      "deleteModal": {
+      "deleteSheet": {
         "title": "حذف المعاملة المتكررة",
         "subtitle": "اختر المعاملات المراد إزالتها",
         "optionThis": "هذه المعاملة",
@@ -1118,7 +1181,7 @@
         "cancel": "إلغاء",
         "delete": "حذف"
       },
-      "editModal": {
+      "editSheet": {
         "title": "تعديل المعاملة المتكررة",
         "subtitle": "اختر مدى تطبيق التغييرات",
         "optionThis": "هذه المعاملة",
@@ -1194,7 +1257,7 @@
         "namePlaceholder": "بقالة، مطاعم، إلخ.",
         "typeLabel": "النوع",
         "deleteLabel": "حذف نهائي",
-        "deleteModal": {
+        "deleteSheet": {
           "title": "حذف {{name}}؟",
           "descriptionWithCount_one": "تستخدم هذه الفئة في {{count}} معاملة. سيؤدي الحذف إلى إلغاء الارتباط. لا يمكن التراجع عن ذلك.",
           "descriptionWithCount_other": "تستخدم هذه الفئة في {{count}} معاملة. سيؤدي الحذف إلى إلغاء ارتباطها. لا يمكن التراجع عن ذلك.",
@@ -1245,7 +1308,7 @@
         "currencyCount_one": "عملة واحدة",
         "currencyCount_other": "{{count}} عملات",
         "attachments": "المرفقات",
-        "pendingStatus": "حالة المعلقة",
+        "pendingStatus": "حالة الجدولة",
         "thisMonth": "هذا الشهر",
         "untitled": "بدون عنوان",
         "typeCount": "عدد النوع"
@@ -1256,8 +1319,8 @@
       },
       "pendingOptions": {
         "all": "الكل",
-        "pending": "معلقة",
-        "notPending": "غير معلقة"
+        "pending": "مجدولة",
+        "notPending": "غير مجدولة"
       },
       "groupByOptions": {
         "hour": "الساعة",
@@ -1321,6 +1384,9 @@
     "locationPicker": {
       "title": "اختر الموقع",
       "gettingLocation": "جاري تحديد الموقع...",
+      "permissionDenied": "الإذن بالوصول إلى الموقع مطلوب",
+      "servicesOff": "يرجى تفعيل خدمات الموقع",
+      "unavailable": "تعذر تحديد موقعك",
       "tapOrDrag": "حرك الخريطة لتحديد الموقع",
       "tapToEdit": "اضغط على الخريطة للتعديل",
       "addLocation": "إضافة موقع",
@@ -1337,7 +1403,7 @@
         "permissionDescription": "يرجى منح الإذن للوصول إلى جهات اتصالك لاختيار جهة اتصال من هاتفك."
       },
       "currency": {
-        "title": "العملة",
+        "title": "اختر عملة",
         "triggerLabel": "العملة",
         "searchPlaceholder": "البحث عن العملات...",
         "noCurrenciesFound": "لا توجد عملات",
@@ -1347,7 +1413,7 @@
     },
     "transactionItem": {
       "recurring": "متكررة",
-      "pending": "معلقة",
+      "upcoming": "القادمة",
       "canceled": "تم إلغاء المعاملة",
       "failedToDelete": "فشل الحذف"
     },
@@ -1401,6 +1467,9 @@
     },
     "endDate": {
       "requiredForCustom": "تاريخ الانتهاء مطلوب للفترة المخصصة"
+    },
+    "transaction": {
+      "kindTypeMismatch": "هذا النوع غير مسموح به للفئة المحددة"
     }
   },
   "onboarding": {

@@ -68,21 +68,11 @@ function AccountsScreen() {
         out: 0,
         net: 0,
       }
+      // Loan cash flows (opening entry + repayments) are not generic income/expense.
+      if (t.loanId != null) continue
       if (t.type === TransactionTypeEnum.INCOME) {
-        if (
-          t.subtype === TransactionSubTypeEnum.LOAN_BORROWED ||
-          t.subtype === TransactionSubTypeEnum.LOAN_RECEIVED
-        ) {
-          continue
-        }
         cur.in += t.amount
       } else if (t.type === TransactionTypeEnum.EXPENSE) {
-        if (
-          t.subtype === TransactionSubTypeEnum.LOAN_REPAYMENT ||
-          t.subtype === TransactionSubTypeEnum.LOAN_LENT
-        ) {
-          continue
-        }
         if (t.subtype === TransactionSubTypeEnum.REFUND) {
           cur.out -= t.amount
         } else {

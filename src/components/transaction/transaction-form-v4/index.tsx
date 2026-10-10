@@ -1,0 +1,364 @@
+import { Controller } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import { useUnistyles } from "react-native-unistyles"
+
+import { DynamicIcon } from "~/components/dynamic-icon"
+import { FormLocationPicker } from "~/components/location/form-location-picker"
+import { SmartAmountInput } from "~/components/smart-amount-input"
+import { Input } from "~/components/ui/input"
+import { ListItem } from "~/components/ui/list-item"
+import { Switch } from "~/components/ui/switch"
+import { Text } from "~/components/ui/text"
+import { View } from "~/components/ui/view"
+import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
+import type { TranslationKey } from "~/i18n/config"
+import { useTransactionItemAppearanceStore } from "~/stores/transaction-item-appearance.store"
+import { TransactionTypeEnum } from "~/types/transactions"
+
+import { transactionFormStyles } from "./form.styles"
+import { FormAccountPicker } from "./form-account-picker"
+import { FormAttachmentsSection } from "./form-attachments-section"
+import { FormBudgetPicker } from "./form-budget-picker"
+import { FormCategoryPicker } from "./form-category-picker"
+import { FormConversionSection } from "./form-conversion-section"
+import { FormDateSection } from "./form-date-section"
+import { FormDeleteActions } from "./form-delete-actions"
+import { FormFooter } from "./form-footer"
+import { FormGoalPicker } from "./form-goal-picker"
+import { FormKindCard } from "./form-kind-card"
+import { FormKindSelector } from "./form-kind-selector"
+import { FormLoanPicker } from "./form-loan-picker"
+import { FormNotesSection } from "./form-notes-section"
+import { FormOverlays } from "./form-overlays"
+import { FormTagsPicker } from "./form-tags-picker"
+import { FormToAccountPicker } from "./form-to-account-picker"
+import { TransactionTopTabs } from "./transaction-top-tabs"
+import type { TransactionFormV4Props } from "./types"
+import { UpcomingBanner } from "./upcoming-banner"
+import { useTransactionForm } from "./use-transaction-form"
+
+export function TransactionFormV4(props: TransactionFormV4Props) {
+  const { transaction, accounts, categories, tags, transactionType } = props
+  const { t } = useTranslation()
+  const { theme } = useUnistyles()
+  const f = useTransactionForm(props)
+
+  const showUntitledForBlankTitle = useTransactionItemAppearanceStore(
+    (s) => s.showUntitledForBlankTitle,
+  )
+  const untitledLabel = t("common.transaction.untitledTransaction")
+  // For the loan kinds the title IS the loan name; otherwise mirror the list
+  // display rule — a blank title falls back to the category name unless the
+  // user opted to keep the literal "Untitled" label.
+  const titlePlaceholder = f.isLoanKind
+    ? t("components.transactionForm.loan.nameLabel")
+    : f.derivedTransferTitle ||
+      (showUntitledForBlankTitle
+        ? untitledLabel
+        : (categories.find((c) => c.id === f.categoryId)?.name ??
+          untitledLabel))
+
+  return (
+    <View style={transactionFormStyles.container}>
+      <View style={transactionFormStyles.header}>
+        <TransactionTopTabs
+          labels={f.tabLabels}
+          icons={f.tabIcons}
+          value={f.topTabType}
+          onChange={f.onTopTabChange}
+          hiddenSlots={f.tabHiddenSlots}
+        />
+      </View>
+
+      <UpcomingBanner transaction={transaction} />
+
+      <ScrollIntoViewProvider
+        contentContainerStyle={transactionFormStyles.content}
+        scrollViewProps={{
+          keyboardShouldPersistTaps: "handled",
+          showsVerticalScrollIndicator: false,
+        }}
+      >
+        <View style={transactionFormStyles.form}>
+          {/* Amount */}
+          <View style={transactionFormStyles.balanceSection}>
+            <SmartAmountInput
+              valueMinor={f.amount ?? 0}
+              onChangeMinor={(value) =>
+                f.setValue("amount", value, { shouldDirty: true })
+              }
+              currencyCode={f.selectedAccount?.currencyCode ?? "USD"}
+              error={f.amountError}
+              label={t("components.transactionForm.fields.amountLabel")}
+              placeholder="0"
+              type={transactionType}
+            />
+          </View>
+
+          <FormAccountPicker
+            accounts={accounts}
+            accountId={f.accountId}
+            toAccountId={f.toAccountId}
+            setValue={f.setValue}
+            selectedAccount={f.selectedAccount}
+            balanceAtTransaction={f.balanceAtTransaction}
+            transaction={transaction}
+            accountError={f.accountError}
+            onAccountChange={f.handleAccountChange}
+          />
+
+          {/* Transfer: to-account sits right under from-account, then the
+              conversion rate. FormToAccountPicker renders null otherwise. */}
+          <FormToAccountPicker
+            accounts={accounts}
+            toAccountId={f.toAccountId}
+            accountId={f.accountId}
+            setValue={f.setValue}
+            selectedToAccount={f.selectedToAccount}
+            transactionType={transactionType}
+          />
+
+          {transactionType === TransactionTypeEnum.TRANSFER &&
+            f.selectedAccount &&
+            f.selectedToAccount &&
+            f.selectedAccount.currencyCode !==
+              f.selectedToAccount.currencyCode && (
+              <FormConversionSection
+                amount={f.amount ?? 0}
+                conversionRate={f.conversionRate}
+                onConversionRateChange={f.setConversionRate}
+                selectedAccount={f.selectedAccount}
+                selectedToAccount={f.selectedToAccount}
+              />
+            )}
+
+          {/* Category: hidden for transfers */}
+          {transactionType !== TransactionTypeEnum.TRANSFER && (
+            <FormCategoryPicker
+              categories={categories}
+              categoryId={f.categoryId}
+              onSelect={f.handleCategorySelect}
+              onClear={f.handleCategoryClear}
+            />
+          )}
+
+          {/* Date + Pending: hidden for subscription/repetitive kinds.
+                For loan kinds this row is the loan's due date. */}
+          {!f.isRecurringKind && (
+            <FormDateSection
+              date={f.date}
+              control={f.control}
+              onDatePress={() => f.openDatePicker("transaction")}
+              dueDateMode={f.isLoanKind}
+            />
+          )}
+
+          <FormKindSelector
+            kind={f.kind}
+            onSelect={f.setKind}
+            disabled={!f.canEditKind}
+          />
+          <FormKindCard
+            kind={f.kind}
+            recurrence={f.recurring.recurrence}
+            until={f.recurring.until}
+            occurrenceCount={f.occurrenceCount}
+            onIntervalChange={(n) =>
+              f.setRecurring({
+                recurrence: { ...f.recurring.recurrence, interval: n },
+              })
+            }
+            onUnitChange={(u) =>
+              f.setRecurring({
+                recurrence: { ...f.recurring.recurrence, unit: u },
+              })
+            }
+            onUntilPress={() => f.openDatePicker("recurringEnd")}
+            onUntilReset={() => f.setRecurring({ until: null })}
+          />
+
+          <View style={transactionFormStyles.nameSection}>
+            <Controller
+              control={f.control}
+              name="title"
+              render={({ field: { value, onChange } }) => (
+                <Input
+                  value={value ?? ""}
+                  onChangeText={onChange}
+                  placeholder={titlePlaceholder}
+                  variant="title"
+                  placeholderTextColor={theme.colors.semantic.semi}
+                />
+              )}
+            />
+            {f.titleErrorKey ? (
+              <Text style={transactionFormStyles.fieldError}>
+                {t(f.titleErrorKey as TranslationKey)}
+              </Text>
+            ) : null}
+          </View>
+
+          <FormNotesSection
+            description={f.description}
+            descriptionErrorKey={f.descriptionErrorKey}
+            notesModalVisible={f.overlays.notesModalVisible}
+            onOpenModal={() => f.setOverlays({ notesModalVisible: true })}
+            onCloseModal={() => f.setOverlays({ notesModalVisible: false })}
+            onSave={(html) =>
+              f.setValue("description", html, { shouldDirty: true })
+            }
+          />
+
+          {/* Goal: hidden for transfers, filtered by selected account */}
+          {transactionType !== TransactionTypeEnum.TRANSFER && (
+            <FormGoalPicker
+              goals={f.accountGoals}
+              goalId={f.goalId}
+              onSelect={(id) => f.setValue("goalId", id, { shouldDirty: true })}
+              onClear={() => f.setValue("goalId", null, { shouldDirty: true })}
+            />
+          )}
+
+          {/* Budget: hidden for transfers, filtered by account + category */}
+          {transactionType !== TransactionTypeEnum.TRANSFER && (
+            <FormBudgetPicker
+              budgets={f.accountBudgets}
+              budgetId={f.budgetId}
+              onSelect={(id) =>
+                f.setValue("budgetId", id, { shouldDirty: true })
+              }
+              onClear={() =>
+                f.setValue("budgetId", null, { shouldDirty: true })
+              }
+            />
+          )}
+
+          {/* Loan link: hidden for transfers and for the loan kinds (the
+                loan card owns linking there). */}
+          {transactionType !== TransactionTypeEnum.TRANSFER &&
+            f.kind !== "lent" &&
+            f.kind !== "borrowed" && (
+              <FormLoanPicker
+                loans={f.accountLoans}
+                loanId={f.loanId}
+                onSelect={(id) =>
+                  f.setValue("loanId", id, { shouldDirty: true })
+                }
+                onClear={() =>
+                  f.setValue("loanId", null, { shouldDirty: true })
+                }
+              />
+            )}
+
+          <FormTagsPicker
+            tags={tags}
+            tagIds={f.tagIds}
+            setTags={f.setTags}
+            removeTag={f.removeTag}
+          />
+
+          {transactionType === TransactionTypeEnum.EXPENSE &&
+            f.kind !== "subscription" &&
+            f.kind !== "repetitive" && (
+              <ListItem
+                style={transactionFormStyles.switchRow}
+                onPress={f.handleRefundToggle}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: f.isRefund }}
+              >
+                <View style={transactionFormStyles.switchLeft}>
+                  <DynamicIcon
+                    icon="receipt-refund-outline"
+                    size={20}
+                    color={theme.colors.primary}
+                    variant="badge"
+                  />
+                  <Text
+                    variant="default"
+                    style={transactionFormStyles.switchLabel}
+                  >
+                    {t("components.transactionForm.fields.refundLabel")}
+                  </Text>
+                </View>
+                <Switch value={f.isRefund} />
+              </ListItem>
+            )}
+
+          <FormAttachmentsSection
+            list={f.attachmentState.list}
+            preview={f.attachmentState.preview}
+            fileToOpen={f.attachmentState.fileToOpen}
+            toRemove={f.attachmentState.toRemove}
+            addFilesExpanded={f.attachmentState.addFilesExpanded}
+            onToggleAddFiles={() =>
+              f.setAttachmentState({
+                addFilesExpanded: !f.attachmentState.addFilesExpanded,
+              })
+            }
+            onClosePreview={() => f.setAttachmentState({ preview: null })}
+            onCancelFileOpen={() => f.setAttachmentState({ fileToOpen: null })}
+            onPreview={(a) => f.setAttachmentState({ preview: a })}
+            onOpenExternal={(a) => f.setAttachmentState({ fileToOpen: a })}
+            onRemoveRequest={(a) => f.setAttachmentState({ toRemove: a })}
+            onRemoveConfirm={f.removeAttachment}
+            onRemoveCancel={() => f.setAttachmentState({ toRemove: null })}
+            onSelectFromFiles={f.handleSelectFromFiles}
+            onTakePhoto={f.handleTakePhoto}
+            onSelectMultipleMedia={f.handleSelectMultipleMedia}
+            onSelectSinglePhoto={f.handleSelectSinglePhoto}
+          />
+
+          {f.locationEnabled && (
+            <View style={transactionFormStyles.fieldBlock}>
+              <FormLocationPicker
+                location={f.location}
+                isCapturingLocation={f.isCapturingLocation}
+                onPress={() => f.setOverlays({ locationPickerVisible: true })}
+                onClear={f.handleClearLocation}
+              />
+            </View>
+          )}
+
+          {!f.isNew && transaction && (
+            <FormDeleteActions
+              transaction={transaction}
+              isSaving={f.isSaving}
+              isLoanOpeningEntry={f.isLoanOpeningEntry}
+              onRestore={f.handleRestore}
+              onDelete={f.handleDeleteConfirm}
+              onDestroy={f.handleDestroy}
+            />
+          )}
+        </View>
+      </ScrollIntoViewProvider>
+
+      <FormFooter
+        isNew={f.isNew}
+        isSaving={f.isSaving}
+        isDirty={f.isDirty}
+        onCancel={f.handleCancelPress}
+        onSave={f.submit}
+      />
+
+      {f.datePickerAndroidElement}
+
+      <FormOverlays
+        overlays={f.overlays}
+        setOverlays={f.setOverlays}
+        datePicker={f.datePicker}
+        location={f.location}
+        transaction={transaction}
+        recurringRule={f.recurringRule}
+        recurrenceForEdit={f.recurring.recurrence}
+        untilForEdit={f.recurring.until}
+        onConfirmExit={f.handleConfirmExit}
+        onDestroyConfirm={f.handleDestroyConfirm}
+        onDeleteLoanConfirm={f.handleDeleteLoanConfirm}
+        onLocationConfirm={f.handleLocationConfirm}
+        onLocationDelete={f.handleClearLocation}
+        onIosDateConfirm={f.confirmIosDate}
+        onDatePickerClose={() => f.setDatePicker({ visible: false })}
+      />
+    </View>
+  )
+}

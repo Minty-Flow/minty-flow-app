@@ -1,6 +1,8 @@
 import { z } from "zod"
 
+import { isKindTypeValid } from "~/domain/transaction-kind"
 import {
+  TransactionKindEnum,
   TransactionSubTypeEnum,
   TransactionTypeEnum,
 } from "~/types/transactions"
@@ -11,6 +13,7 @@ export const transactionSchema = z
       .number()
       .int("validation.amount.invalid")
       .gt(0, "validation.amount.positive"),
+    kind: z.enum(TransactionKindEnum).optional(),
     type: z.enum(TransactionTypeEnum),
     transactionDate: z.date(),
     accountId: z.string().min(1, "validation.required.accountForTransaction"),
@@ -20,6 +23,10 @@ export const transactionSchema = z
     title: z.string().max(255).nullable().optional(),
     description: z.string().max(1000).nullable().optional(),
     isPending: z.boolean().default(false),
+    /**
+     * @deprecated Superseded by the per-kind auto-pay switches. No UI sets this;
+     * new rows persist `0`. Kept for legacy/imported rows' permanent opt-out.
+     */
     requiresManualConfirmation: z.boolean().nullable().optional(),
     tags: z.array(z.string()).default([]),
     goalId: z.string().nullable().optional(),
@@ -33,6 +40,14 @@ export const transactionSchema = z
     conversionRate: z.number().positive().nullable().optional(),
   })
   .superRefine((data, ctx) => {
+    const kind = data.kind ?? "default"
+    if (!isKindTypeValid(kind, data.type)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "validation.transaction.kindTypeMismatch",
+        path: ["type"],
+      })
+    }
     if (data.type === TransactionTypeEnum.TRANSFER && !data.toAccountId) {
       ctx.addIssue({
         code: "custom",

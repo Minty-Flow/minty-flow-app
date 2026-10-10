@@ -1,6 +1,6 @@
 import type { Account } from "~/types/accounts"
 import type { Category } from "~/types/categories"
-import type { Loan, LoanType } from "~/types/loans"
+import type { Loan, LoanTerm, LoanType } from "~/types/loans"
 
 export interface LoanPrefill {
   name?: string
@@ -8,6 +8,7 @@ export interface LoanPrefill {
   accountId?: string
   principalAmount?: number
   loanType?: LoanType
+  term?: LoanTerm
 }
 
 export interface LoanModifyContentProps {
@@ -27,13 +28,13 @@ export interface LoanFormFooterProps {
   onSave: () => void
 }
 
-export interface LoanFormModalsProps {
-  deleteModalVisible: boolean
-  unsavedModalVisible: boolean
+export interface LoanFormSheetsProps {
+  deleteSheetVisible: boolean
+  unsavedSheetVisible: boolean
   isAddMode: boolean
   loan?: Loan
-  onCloseDeleteModal: () => void
-  onCloseUnsavedModal: () => void
+  onCloseDeleteSheet: () => void
+  onCloseUnsavedSheet: () => void
   onConfirmDelete: () => void
   onDiscardAndNavigate: () => void
 }
