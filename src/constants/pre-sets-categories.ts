@@ -1,326 +1,141 @@
 import type { IconSvgName } from "~/components/icons"
 import type { TranslationKey } from "~/i18n/config"
-import type { Category } from "~/types/categories"
+import type { CategoryType } from "~/types/categories"
 
-export type CategoryPreset = Omit<
-  Category,
-  "id" | "colorScheme" | "isArchived" | "name" | "icon"
-> & {
-  name: TranslationKey // translation key
+export type CategoryPreset = {
+  name: TranslationKey
+  type: CategoryType
   icon: IconSvgName
+  colorSchemeName: string
+}
+
+export type CategoryPresetPack = {
+  id: string
+  name: TranslationKey
+  icon: IconSvgName
+  presets: CategoryPreset[]
 }
 
 /**
- * Preset expense categories for quick setup.
- *
- * @remarks
- * These are default categories that users can use when setting up their account.
+ * A preset is identified by icon + type: that is how an already-created
+ * category is recognised, so a retained preset must keep its icon.
  */
-export const ExpensePresets: CategoryPreset[] = [
+export const presetKey = (preset: CategoryPreset) =>
+  `${preset.icon}:${preset.type}`
+
+const expense = (key: string, icon: IconSvgName): CategoryPreset => ({
+  name: `components.categories.presets.expense.${key}` as TranslationKey,
+  type: "expense",
+  icon,
+  colorSchemeName: "",
+})
+
+const income = (key: string, icon: IconSvgName): CategoryPreset => ({
+  name: `components.categories.presets.income.${key}` as TranslationKey,
+  type: "income",
+  icon,
+  colorSchemeName: "",
+})
+
+/** The broad categories almost everyone needs. Pre-selected in onboarding. */
+const CORE_PRESETS: CategoryPreset[] = [
+  expense("groceries", "basket"),
+  expense("dining", "pizza"),
+  expense("transportation", "car"),
+  expense("housing", "building-outline"),
+  expense("utilities", "plug-outline"),
+  expense("shopping", "shopping-cart"),
+  expense("healthcare", "heart"),
+  expense("entertainment", "headphones"),
+
+  income("salary", "wallet-outline"),
+  income("freelance", "briefcase"),
+  income("investment", "trending-up-outline"),
+  income("gift", "gift"),
+  income("cashback", "coins-outline"),
+]
+
+/** Optional extras grouped by life situation. Each preset is in one pack. */
+const PRESET_PACKS: CategoryPresetPack[] = [
   {
-    name: "components.categories.presets.expense.groceries",
-    type: "expense",
-    icon: "basket",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.expense.transportation",
-    type: "expense",
-    icon: "car",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.expense.healthcare",
-    type: "expense",
-    icon: "heart",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.expense.education",
-    type: "expense",
+    id: "student",
+    name: "components.categories.presets.packs.student",
     icon: "school",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    presets: [
+      expense("education", "school"),
+      income("allowance", "cash-banknote"),
+    ],
   },
   {
-    name: "components.categories.presets.expense.shopping",
-    type: "expense",
-    icon: "shopping-cart",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    id: "family",
+    name: "components.categories.presets.packs.family",
+    icon: "users-outline",
+    presets: [expense("kids", "baby-carriage"), expense("insurance", "shield")],
   },
   {
-    name: "components.categories.presets.expense.dining",
-    type: "expense",
-    icon: "pizza",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    id: "car",
+    name: "components.categories.presets.packs.car",
+    icon: "car",
+    presets: [
+      expense("fuel", "gas-station"),
+      expense("carMaintenance", "car-suv"),
+    ],
   },
   {
-    name: "components.categories.presets.expense.entertainment",
-    type: "expense",
-    icon: "headphones",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.expense.housing",
-    type: "expense",
-    icon: "building-outline",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.expense.fitness",
-    type: "expense",
-    icon: "activity-outline",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.expense.utilities",
-    type: "expense",
-    icon: "plug-outline",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.expense.travel",
-    type: "expense",
-    icon: "plane",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.expense.personalCare",
-    type: "expense",
-    icon: "sparkles",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.expense.clothing",
-    type: "expense",
-    icon: "shirt",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.expense.subscriptions",
-    type: "expense",
-    icon: "refresh-outline",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.expense.insurance",
-    type: "expense",
-    icon: "shield",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.expense.pets",
-    type: "expense",
+    id: "pets",
+    name: "components.categories.presets.packs.pets",
     icon: "paw-print-outline",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    presets: [expense("pets", "paw-print-outline")],
   },
   {
-    name: "components.categories.presets.expense.coffee",
-    type: "expense",
-    icon: "coffee-outline",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    id: "selfEmployed",
+    name: "components.categories.presets.packs.selfEmployed",
+    icon: "briefcase",
+    presets: [
+      expense("businessExpenses", "briefcase"),
+      expense("taxes", "receipt-outline"),
+      income("business", "building-bank-outline"),
+    ],
   },
   {
-    name: "components.categories.presets.expense.charity",
-    type: "expense",
+    id: "traveler",
+    name: "components.categories.presets.packs.traveler",
+    icon: "plane",
+    presets: [expense("travel", "plane")],
+  },
+  {
+    id: "landlord",
+    name: "components.categories.presets.packs.landlord",
+    icon: "home-share-outline",
+    presets: [
+      expense("homeMaintenance", "home"),
+      income("rental", "home-share-outline"),
+    ],
+  },
+  {
+    id: "retired",
+    name: "components.categories.presets.packs.retired",
+    icon: "clock",
+    presets: [income("pension", "clock")],
+  },
+  {
+    id: "giving",
+    name: "components.categories.presets.packs.giving",
     icon: "heart-handshake-outline",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    presets: [expense("charity", "heart-handshake-outline")],
   },
 ]
 
-/**
- * Preset income categories for quick setup.
- *
- * @remarks
- * These are default categories that users can use when setting up their account.
- */
-export const IncomePresets: CategoryPreset[] = [
-  {
-    name: "components.categories.presets.income.salary",
-    type: "income",
-    icon: "wallet-outline",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.income.freelance",
-    type: "income",
-    icon: "briefcase",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.income.investment",
-    type: "income",
-    icon: "trending-up-outline",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.income.business",
-    type: "income",
-    icon: "building-bank-outline",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.income.gift",
-    type: "income",
-    icon: "gift",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.income.rental",
-    type: "income",
-    icon: "home-share-outline",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.income.dividends",
-    type: "income",
-    icon: "coin-pound",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.income.bonus",
-    type: "income",
-    icon: "star",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.income.sideIncome",
-    type: "income",
-    icon: "affiliate-outline",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.income.pension",
-    type: "income",
-    icon: "clock",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.income.taxRefund",
-    type: "income",
-    icon: "receipt-outline",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.income.cashback",
-    type: "income",
-    icon: "coins-outline",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.income.commission",
-    type: "income",
-    icon: "percentage-outline",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.income.allowance",
-    type: "income",
-    icon: "cash-banknote",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    name: "components.categories.presets.income.overtime",
-    type: "income",
-    icon: "hourglass",
-    colorSchemeName: "",
-    transactionCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-]
+/** Core presets and the packs (with at least one preset) for one type. */
+export function getPresetGroups(type: CategoryType): {
+  core: CategoryPreset[]
+  packs: CategoryPresetPack[]
+} {
+  return {
+    core: CORE_PRESETS.filter((p) => p.type === type),
+    packs: PRESET_PACKS.map((pack) => ({
+      ...pack,
+      presets: pack.presets.filter((p) => p.type === type),
+    })).filter((pack) => pack.presets.length > 0),
+  }
+}

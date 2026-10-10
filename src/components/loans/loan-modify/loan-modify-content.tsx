@@ -338,6 +338,9 @@ export function LoanModifyContent({
             {/* Category picker — single selection, filtered by loan type */}
             <FormCategoryPicker
               categories={filteredCategories}
+              categoryType={
+                formLoanType === LoanTypeEnum.LENT ? "expense" : "income"
+              }
               categoryId={formCategoryId || null}
               onSelect={(id) =>
                 setValue("categoryId", id, { shouldDirty: true })
