@@ -1,15 +1,14 @@
 import { type Href, useRouter } from "expo-router"
 import { useTranslation } from "react-i18next"
 import { Platform, ScrollView } from "react-native"
-import { StyleSheet } from "react-native-unistyles"
 
 import { ActionItem } from "~/components/action-item"
 import type { IconSvgName } from "~/components/icons"
-import { Text } from "~/components/ui/text"
-import { View } from "~/components/ui/view"
+import {
+  SettingsSection,
+  settingsStyles,
+} from "~/components/settings/settings-list"
 import type { TranslationKey } from "~/i18n/config"
-import { useWeekStartStore } from "~/stores/week-start.store"
-import { getWeekStartsOn } from "~/utils/get-week-start-on"
 
 interface PreferenceItem {
   titleKey: TranslationKey
@@ -33,6 +32,11 @@ const basicItems: PreferenceItem[] = [
     titleKey: "screens.settings.preferences.appearance.moneyFormatting.title",
     route: "/settings/preferences/money-formatting",
     icon: "hash-outline",
+  },
+  {
+    titleKey: "screens.settings.preferences.calendarFormat.title",
+    route: "/settings/preferences/calendar-formatting",
+    icon: "calendar-cog",
   },
 ]
 
@@ -101,21 +105,6 @@ const customizationItems: PreferenceItem[] = [
 export default function PreferencesScreen() {
   const router = useRouter()
   const { t } = useTranslation()
-  const weekStart = useWeekStartStore((s) => s.weekStart)
-
-  const weekStartTitle = (() => {
-    const numToPref: Record<number, string> = {
-      0: "sunday",
-      1: "monday",
-      6: "saturday",
-    }
-    const pref = weekStart === "auto" ? numToPref[getWeekStartsOn()] : weekStart
-    const dayLabel = pref
-      ? t(`screens.settings.preferences.weekStart.${pref}` as TranslationKey)
-      : ""
-    return `${t("screens.settings.preferences.weekStart.label")} · ${dayLabel}`
-  })()
-
   const renderItem = (item: PreferenceItem) => (
     <ActionItem
       key={item.titleKey}
@@ -126,20 +115,15 @@ export default function PreferencesScreen() {
   )
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.group}>
-        {basicItems.map(renderItem)}
-        <ActionItem
-          icon="calendar-week"
-          title={weekStartTitle}
-          onPress={() => router.push("/settings/preferences/week-start")}
-        />
-      </View>
+    <ScrollView
+      style={settingsStyles.screen}
+      contentContainerStyle={settingsStyles.content}
+    >
+      <SettingsSection>{basicItems.map(renderItem)}</SettingsSection>
 
-      <View style={[styles.group, styles.groupGap]}>
-        <Text style={styles.sectionTitle}>
-          {t("screens.settings.preferences.groups.behavior")}
-        </Text>
+      <SettingsSection
+        title={t("screens.settings.preferences.groups.behavior")}
+      >
         {behaviorItems.map(renderItem)}
         {Platform.OS === "android" && (
           <ActionItem
@@ -148,47 +132,17 @@ export default function PreferencesScreen() {
             onPress={() => router.push("/settings/preferences/sound")}
           />
         )}
-      </View>
+      </SettingsSection>
 
-      <View style={[styles.group, styles.groupGap]}>
-        <Text style={styles.sectionTitle}>
-          {t("screens.settings.preferences.groups.system")}
-        </Text>
+      <SettingsSection title={t("screens.settings.preferences.groups.system")}>
         {adminItems.map(renderItem)}
-      </View>
+      </SettingsSection>
 
-      <View style={[styles.group, styles.groupGap]}>
-        <Text style={styles.sectionTitle}>
-          {t("screens.settings.preferences.groups.customization")}
-        </Text>
+      <SettingsSection
+        title={t("screens.settings.preferences.groups.customization")}
+      >
         {customizationItems.map(renderItem)}
-      </View>
+      </SettingsSection>
     </ScrollView>
   )
 }
-
-const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  content: {
-    paddingVertical: 12,
-    paddingBottom: 40,
-  },
-  group: {
-    gap: 0,
-  },
-  groupGap: {
-    marginTop: 18,
-  },
-  sectionTitle: {
-    paddingHorizontal: 20,
-    ...theme.typography.labelXSmall,
-    fontWeight: "600",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    color: theme.colors.semantic.semi,
-    marginBottom: 8,
-  },
-}))

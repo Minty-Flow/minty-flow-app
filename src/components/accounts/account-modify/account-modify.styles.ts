@@ -19,7 +19,7 @@ export const accountModifyStyles = StyleSheet.create((theme) => ({
     paddingBottom: 100,
   },
   form: {
-    gap: 10,
+    gap: 4,
   },
   label: {
     ...theme.typography.labelMedium,

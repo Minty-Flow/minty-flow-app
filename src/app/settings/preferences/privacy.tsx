@@ -7,6 +7,7 @@ import { StyleSheet } from "react-native-unistyles"
 import type { IconSvgName } from "~/components/icons"
 import { IconSvg } from "~/components/icons"
 import { InfoSheet } from "~/components/info-sheet"
+import { settingsStyles } from "~/components/settings/settings-list"
 import { ListItem } from "~/components/ui/list-item"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
@@ -101,10 +102,10 @@ export default function PrivacyScreen() {
   return (
     <>
       <ScrollView
-        style={styles.scrollContainer}
-        contentContainerStyle={styles.content}
+        style={settingsStyles.screen}
+        contentContainerStyle={settingsStyles.content}
       >
-        <View style={styles.container}>
+        <View>
           {settings.map((setting) => (
             <ListItem
               key={setting.id}
@@ -151,16 +152,6 @@ export default function PrivacyScreen() {
 }
 
 const styles = StyleSheet.create((theme) => ({
-  scrollContainer: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  content: {
-    paddingBottom: 40,
-  },
-  container: {
-    marginBlock: 10,
-  },
   settingRow: {
     justifyContent: "space-between",
     gap: 16,

@@ -1,10 +1,13 @@
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
-import { StyleSheet, useUnistyles } from "react-native-unistyles"
+import { StyleSheet } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
-import { ListItem } from "~/components/ui/list-item"
+import {
+  SettingsOptionRow,
+  SettingsSection,
+  settingsStyles,
+} from "~/components/settings/settings-list"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import {
@@ -13,30 +16,13 @@ import {
   useMoneyFormattingStore,
 } from "~/stores/money-formatting.store"
 
-const formatOptions: Array<{
-  value: MoneyFormatType
-  label: string
-  description: string
-}> = [
-  {
-    value: MoneyFormatEnum.SYMBOL,
-    label: "Symbol",
-    description: "e.g., $, €, £",
-  },
-  {
-    value: MoneyFormatEnum.CODE,
-    label: "Code",
-    description: "e.g., USD, EUR, GBP",
-  },
-  {
-    value: MoneyFormatEnum.NAME,
-    label: "Name",
-    description: "e.g., US Dollar, Euro",
-  },
+const formatOptions: MoneyFormatType[] = [
+  MoneyFormatEnum.SYMBOL,
+  MoneyFormatEnum.CODE,
+  MoneyFormatEnum.NAME,
 ]
 
 export default function MoneyFormattingScreen() {
-  const { theme } = useUnistyles()
   const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
   const setCurrencyLook = useMoneyFormattingStore((s) => s.setCurrencyLook)
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
@@ -45,8 +31,8 @@ export default function MoneyFormattingScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
+      style={settingsStyles.screen}
+      contentContainerStyle={settingsStyles.content}
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
     >
@@ -63,63 +49,30 @@ export default function MoneyFormattingScreen() {
         />
       </View>
 
-      <View native style={styles.sectionLabel}>
-        <Text variant="small" style={styles.sectionLabelText}>
-          {t(
-            "screens.settings.preferences.appearance.moneyFormatting.displayFormatLabel",
-          )}
-        </Text>
-      </View>
-      <View native style={styles.card}>
-        {formatOptions.map((option, index) => {
-          const isSelected = currencyLook === option.value
-          const isLast = index === formatOptions.length - 1
-          return (
-            <View key={option.value} native>
-              <ListItem
-                style={styles.row}
-                onPress={() => setCurrencyLook(option.value)}
-              >
-                <View native style={styles.rowContent}>
-                  <Text style={styles.rowLabel}>
-                    {t(
-                      `screens.settings.preferences.appearance.moneyFormatting.options.${option.value}.label`,
-                    )}
-                  </Text>
-                  <Text variant="small" style={styles.rowDescription}>
-                    {t(
-                      `screens.settings.preferences.appearance.moneyFormatting.options.${option.value}.description`,
-                    )}
-                  </Text>
-                </View>
-                {isSelected ? (
-                  <IconSvg
-                    name="check-outline"
-                    size={20}
-                    color={theme.colors.primary}
-                  />
-                ) : null}
-              </ListItem>
-              {!isLast ? <View native style={styles.divider} /> : null}
-            </View>
-          )
-        })}
-      </View>
+      <SettingsSection
+        title={t(
+          "screens.settings.preferences.appearance.moneyFormatting.displayFormatLabel",
+        )}
+      >
+        {formatOptions.map((value) => (
+          <SettingsOptionRow
+            key={value}
+            label={t(
+              `screens.settings.preferences.appearance.moneyFormatting.options.${value}.label`,
+            )}
+            description={t(
+              `screens.settings.preferences.appearance.moneyFormatting.options.${value}.description`,
+            )}
+            selected={currencyLook === value}
+            onPress={() => setCurrencyLook(value)}
+          />
+        ))}
+      </SettingsSection>
     </ScrollView>
   )
 }
 
 const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  content: {
-    paddingHorizontal: 0,
-    paddingTop: 12,
-    paddingBottom: 48,
-  },
-
   previewSection: {
     alignItems: "center",
     paddingVertical: 28,
@@ -131,43 +84,5 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "600",
     letterSpacing: 1,
     opacity: 0.5,
-  },
-
-  sectionLabel: {
-    paddingHorizontal: 20,
-    marginBottom: 8,
-    marginTop: 8,
-  },
-  sectionLabelText: {
-    fontSize: theme.typography.labelXSmall.fontSize,
-    fontWeight: "600",
-    letterSpacing: 0.8,
-    opacity: 0.5,
-  },
-
-  card: {
-    overflow: "hidden",
-  },
-  row: {
-    justifyContent: "space-between",
-    minHeight: 56,
-  },
-  rowContent: {
-    flex: 1,
-    gap: 2,
-  },
-  rowLabel: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-    fontWeight: "500",
-    color: theme.colors.onSurface,
-  },
-  rowDescription: {
-    fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.semantic.semi,
-  },
-  divider: {
-    height: 0.5,
-    backgroundColor: theme.colors.semantic?.semi,
-    opacity: 0.4,
   },
 }))
