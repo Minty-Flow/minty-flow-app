@@ -376,6 +376,9 @@ export function TransactionFilterHeader({
               categoriesByType={categoriesByType}
               selectedIds={filterState.categoryIds}
               onToggle={toggleCategory}
+              onSetSelection={(ids) =>
+                onFilterChange({ ...filterState, categoryIds: ids })
+              }
               onClear={clearCategories}
               onDone={handleDone}
             />
