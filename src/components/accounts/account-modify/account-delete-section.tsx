@@ -1,12 +1,9 @@
 import { useTranslation } from "react-i18next"
 
-import { IconSvg } from "~/components/icons"
-import { Button } from "~/components/ui/button"
-import { Text } from "~/components/ui/text"
+import { FormDeleteButton } from "~/components/modify-form/form-fields"
+import { modifyFormStyles } from "~/components/modify-form/modify-form.styles"
 import { View } from "~/components/ui/view"
 import type { Account } from "~/types/accounts"
-
-import { accountModifyStyles } from "./account-modify.styles"
 
 interface AccountDeleteSectionProps {
   account: Account | undefined
@@ -22,21 +19,11 @@ export function AccountDeleteSection({
   if (!account?.isArchived) return null
 
   return (
-    <View style={accountModifyStyles.deleteSection}>
-      <Button
-        variant="ghost"
+    <View style={modifyFormStyles.deleteSection}>
+      <FormDeleteButton
+        label={t("screens.accounts.form.deleteLabel")}
         onPress={onDeletePress}
-        style={accountModifyStyles.actionButton}
-      >
-        <IconSvg
-          name="trash-outline"
-          size={20}
-          color={accountModifyStyles.deleteIcon.color}
-        />
-        <Text variant="default" style={accountModifyStyles.deleteText}>
-          {t("screens.accounts.form.deleteLabel")}
-        </Text>
-      </Button>
+      />
     </View>
   )
 }

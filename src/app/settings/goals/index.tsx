@@ -2,21 +2,20 @@ import { useNavigation, useRouter } from "expo-router"
 import { useLayoutEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
-import { StyleSheet, useUnistyles } from "react-native-unistyles"
+import { StyleSheet } from "react-native-unistyles"
 
 import { GoalCard } from "~/components/goals/goal-card"
 import { IconSvg } from "~/components/icons"
 import { RouteLoadingState } from "~/components/route-load-state"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
-import { Pressable } from "~/components/ui/pressable"
+import { Fab } from "~/components/ui/fab"
 import { View } from "~/components/ui/view"
 import { useAllGoalsQuery } from "~/database/drizzle/read-models/goal-read-model"
 import type { Goal } from "~/types/goals"
 import { NewEnum } from "~/types/new"
 export default function GoalsScreen() {
   const { data: goals, status } = useAllGoalsQuery()
-  const { theme } = useUnistyles()
   const { t } = useTranslation()
   const router = useRouter()
   const navigation = useNavigation()
@@ -57,15 +56,11 @@ export default function GoalsScreen() {
           />
         }
         renderItem={renderGoalItem}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
-      <Pressable
+      <Fab
         onPress={handleAddGoal}
-        style={styles.fab}
         accessibilityLabel={t("screens.settings.goals.addNew")}
-      >
-        <IconSvg name="plus-outline" size={24} color={theme.colors.onPrimary} />
-      </Pressable>
+      />
     </View>
   )
 }
@@ -78,24 +73,5 @@ const styles = StyleSheet.create((t) => ({
     padding: 20,
     paddingBottom: 96,
     gap: 12,
-  },
-  separator: {
-    height: 0,
-  },
-  fab: {
-    position: "absolute",
-    bottom: 24,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: t.radius,
-    backgroundColor: t.colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: t.colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
   },
 }))

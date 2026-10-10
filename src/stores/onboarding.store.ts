@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 const onboardingStorage = createMMKV({ id: "onboarding-storage" })
 
@@ -17,11 +19,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
     }),
     {
       name: "onboarding-store",
-      storage: createJSONStorage(() => ({
-        getItem: (name) => onboardingStorage.getString(name) ?? null,
-        setItem: (name, value) => onboardingStorage.set(name, value),
-        removeItem: (name) => onboardingStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(onboardingStorage),
     },
   ),
 )

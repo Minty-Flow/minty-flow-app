@@ -1,4 +1,5 @@
 import { useLocalSearchParams } from "expo-router"
+import { useTranslation } from "react-i18next"
 
 import { LoanModifyContent } from "~/components/loans/loan-modify/loan-modify-content"
 import {
@@ -12,6 +13,7 @@ import { useModifyRouteLoader } from "~/hooks/use-modify-route-loader"
 import { type LoanTerm, type LoanType, LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
 export default function LoanModifyScreen() {
+  const { t } = useTranslation()
   const params = useLocalSearchParams<{
     loanId: string
     prefillName?: string
@@ -27,8 +29,7 @@ export default function LoanModifyScreen() {
     id: loanId,
     data: loansQuery.data,
     updatedAt: loansQuery.updatedAt,
-    find: (item, id) => item.id === id,
-    notFoundMessage: "Loan not found.",
+    notFoundMessage: t("common.notFound.loan"),
   })
   const accounts = useActiveAccounts()
   const categories = useCategories()

@@ -10,17 +10,14 @@ import { useTranslation } from "react-i18next"
 import { FlatList, View } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/icons"
-import { SearchInput } from "~/components/search-input"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
-import { BottomSheet } from "~/components/ui/bottom-sheet"
-import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { EmptyState } from "~/components/ui/empty-state"
 import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { Toast } from "~/utils/toast"
 
-import { sheetHeaderStyles, sheetStyles, triggerStyles } from "./styles"
+import { SearchSheet, SelectorTrigger } from "./selector-parts"
+import { sheetStyles } from "./styles"
 
 function createContactsPromise(onPermissionDenied?: () => void): Promise<{
   contacts: Contacts.Contact[]
@@ -213,71 +210,40 @@ export function ContactSelectorSheet({
   }
   return (
     <>
-      <View style={triggerStyles.wrapper}>
-        <ListItem
-          style={triggerStyles.triggerRow}
-          onPress={open}
-          disabled={!editable}
-        >
-          <View style={triggerStyles.triggerLeft}>
-            <IconSvg name="address-book-outline" size={24} />
-            <Text variant="default" style={triggerStyles.triggerLabel}>
-              {t("components.selectors.contacts.triggerLabel")}
-            </Text>
-          </View>
-          {editable && (
-            <ChevronIcon
-              direction="trailing"
-              size={20}
-              style={triggerStyles.chevronIcon}
-            />
-          )}
-        </ListItem>
-      </View>
-
-      <BottomSheet
-        isPresented={visible}
-        onDismiss={close}
-        contentPadding={0}
-        heightFraction={0.75}
+      <SelectorTrigger
+        icon="address-book-outline"
+        label={t("components.selectors.contacts.triggerLabel")}
+        editable={editable}
+        onPress={open}
+      />
+      <SearchSheet
+        visible={visible}
+        onClose={close}
+        title={t("components.selectors.contacts.title")}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder={t("components.selectors.contacts.searchPlaceholder")}
       >
-        <View style={{ flex: 1 }}>
-          <View style={sheetHeaderStyles.header}>
-            <Text variant="default" style={sheetHeaderStyles.title}>
-              {t("components.selectors.contacts.title")}
-            </Text>
-          </View>
-          <View style={sheetStyles.searchContainer}>
-            <SearchInput
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onClear={() => setSearchQuery("")}
-              placeholder={t("components.selectors.contacts.searchPlaceholder")}
-            />
-          </View>
-          <View style={sheetStyles.listWrapper}>
-            {contactsPromise ? (
-              <Suspense
-                fallback={
-                  <View style={sheetStyles.loadingContainer}>
-                    <ActivityIndicatorMinty size="small" />
-                  </View>
-                }
-              >
-                <ContactListContent
-                  contactsPromise={contactsPromise}
-                  searchQuery={searchQuery}
-                  onSelectContact={handleSelectContact}
-                />
-              </Suspense>
-            ) : (
+        {contactsPromise ? (
+          <Suspense
+            fallback={
               <View style={sheetStyles.loadingContainer}>
                 <ActivityIndicatorMinty size="small" />
               </View>
-            )}
+            }
+          >
+            <ContactListContent
+              contactsPromise={contactsPromise}
+              searchQuery={searchQuery}
+              onSelectContact={handleSelectContact}
+            />
+          </Suspense>
+        ) : (
+          <View style={sheetStyles.loadingContainer}>
+            <ActivityIndicatorMinty size="small" />
           </View>
-        </View>
-      </BottomSheet>
+        )}
+      </SearchSheet>
     </>
   )
 }

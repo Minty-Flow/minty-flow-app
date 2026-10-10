@@ -15,6 +15,7 @@
 import {
   addWeeks,
   type Day,
+  endOfMonth,
   endOfWeek,
   type FormatOptions,
   format,
@@ -27,6 +28,7 @@ import {
   isValid,
   isYesterday,
   type Locale,
+  startOfMonth,
   startOfWeek,
   subWeeks,
 } from "date-fns"
@@ -394,21 +396,6 @@ export function formatDateKey(date: DateInput): string {
   return formatWithPattern(date, FORMAT.DATE_KEY)
 }
 
-/** Day name (e.g. "Wednesday") — for recurrence labels. */
-export function formatDayName(date: DateInput): string {
-  return formatWithPattern(date, FORMAT.DAY_NAME)
-}
-
-/** Ordinal day (e.g. "15th") — for recurrence labels. */
-export function formatOrdinalDay(date: DateInput): string {
-  return formatWithPattern(date, FORMAT.ORDINAL_DAY)
-}
-
-/** Month and day (e.g. "January 15") — for recurrence labels. */
-export function formatMonthDay(date: DateInput): string {
-  return formatWithPattern(date, FORMAT.MONTH_DAY)
-}
-
 /** Hour-grouping key (e.g. "2025-02-15-14"). */
 export function formatHourKey(date: DateInput): string {
   return formatWithPattern(date, FORMAT.HOUR_KEY)
@@ -566,4 +553,16 @@ export function formatCustomPeriodRange(
   const start = formatShortMonthDay(startDate)
   const end = endDate ? formatShortMonthDay(endDate) : "?"
   return `${start} – ${end}`
+}
+
+/** Start / end (epoch ms) of a calendar month; `month` is 0-based. */
+export function getMonthRange(
+  year: number,
+  month: number,
+): { fromDate: number; toDate: number } {
+  const d = new Date(year, month, 1)
+  return {
+    fromDate: startOfMonth(d).getTime(),
+    toDate: endOfMonth(d).getTime(),
+  }
 }

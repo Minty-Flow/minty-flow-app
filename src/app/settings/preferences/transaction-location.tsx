@@ -8,7 +8,7 @@ import {
 } from "~/components/settings/settings-list"
 import { InfoBanner } from "~/components/ui/info-banner"
 import { PermissionBanner } from "~/components/ui/permission-banner"
-import { useLocationPermissionStatus } from "~/hooks/use-location-permission-status"
+import { useLocationPermissionStatus } from "~/hooks/use-permission-status"
 import { useTransactionLocationStore } from "~/stores/transaction-location.store"
 
 export default function TransactionLocationScreen() {

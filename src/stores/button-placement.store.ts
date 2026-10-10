@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 export type FabButtonType = "income" | "expense" | "transfer"
 
@@ -34,11 +36,7 @@ export const useButtonPlacementStore = create<ButtonPlacementStore>()(
     }),
     {
       name: "button-placement-store",
-      storage: createJSONStorage(() => ({
-        getItem: (name) => buttonPlacementStorage.getString(name) ?? null,
-        setItem: (name, value) => buttonPlacementStorage.set(name, value),
-        removeItem: (name) => buttonPlacementStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(buttonPlacementStorage),
     },
   ),
 )

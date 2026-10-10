@@ -10,9 +10,11 @@ import { RouteLoadingState } from "~/components/route-load-state"
 import { TabsMinty } from "~/components/tabs-minty"
 import { Chip } from "~/components/ui/chips"
 import { EmptyState } from "~/components/ui/empty-state"
+import { Fab } from "~/components/ui/fab"
 import { Pressable } from "~/components/ui/pressable"
 import { View } from "~/components/ui/view"
-import { useAllLoansQuery } from "~/database/drizzle/read-models/loan-read-model"
+import { useAccounts } from "~/database/drizzle/read-models/account-read-model"
+import { useLoansQuery } from "~/database/drizzle/read-models/loan-read-model"
 import { useLoanTermReconcile } from "~/hooks/use-loan-term-reconcile"
 import type { Loan, LoanTerm } from "~/types/loans"
 import { LoanTypeEnum } from "~/types/loans"
@@ -20,8 +22,10 @@ import { NewEnum } from "~/types/new"
 
 type LoanTypeFilter = "all" | "lent" | "borrowed"
 export default function LoansScreen() {
-  const { data: loans, status } = useAllLoansQuery()
+  const { data: loans, status } = useLoansQuery()
   useLoanTermReconcile(loans)
+  const accounts = useAccounts()
+  const accountById = new Map(accounts.map((a) => [a.id, a]))
   const { theme } = useUnistyles()
   const { t } = useTranslation()
   const router = useRouter()
@@ -63,7 +67,11 @@ export default function LoansScreen() {
     router.push(`/settings/loans/${loanId}`)
   }
   const renderLoanItem = ({ item }: { item: Loan }) => (
-    <LoanCard loan={item} onPress={() => handleLoanPress(item.id)} />
+    <LoanCard
+      loan={item}
+      account={accountById.get(item.accountId)}
+      onPress={() => handleLoanPress(item.id)}
+    />
   )
   const filteredLoans = (() => {
     const byTerm = loans.filter((l) => l.term === activeTerm)
@@ -133,13 +141,10 @@ export default function LoansScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
 
-      <Pressable
+      <Fab
         onPress={handleAddLoan}
-        style={styles.fab}
         accessibilityLabel={t("screens.settings.loans.addNew")}
-      >
-        <IconSvg name="plus-outline" size={24} color={theme.colors.onPrimary} />
-      </Pressable>
+      />
     </View>
   )
 }
@@ -171,21 +176,5 @@ const styles = StyleSheet.create((t) => ({
     padding: 6,
     borderRadius: t.radius,
     marginRight: 4,
-  },
-  fab: {
-    position: "absolute",
-    bottom: 24,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: t.radius,
-    backgroundColor: t.colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: t.colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
   },
 }))

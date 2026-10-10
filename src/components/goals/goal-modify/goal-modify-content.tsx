@@ -9,9 +9,15 @@ import { ChangeIconInline } from "~/components/change-icon-inline"
 import { ColorVariantInline } from "~/components/color-variant-inline"
 import { CurrencyAccountSelector } from "~/components/currency-account-selector"
 import { IconSvg } from "~/components/icons"
+import {
+  FormDeleteButton,
+  FormNameField,
+} from "~/components/modify-form/form-fields"
+import { modifyFormStyles } from "~/components/modify-form/modify-form.styles"
+import { ModifyFormFooter } from "~/components/modify-form/modify-form-footer"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { TabsMinty } from "~/components/tabs-minty"
-import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import {
   DateTimePickerSheet,
@@ -42,7 +48,6 @@ import { rescaleMinorUnits } from "~/utils/money"
 import { formatShortMonthDayYear } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
-import { GoalFormFooter } from "./goal-form-footer"
 import { GoalFormSheets } from "./goal-form-sheets"
 import { goalModifyStyles } from "./goal-modify.styles"
 import type { GoalModifyContentProps } from "./types"
@@ -189,21 +194,15 @@ export function GoalModifyContent({
     ? formatShortMonthDayYear(formTargetDate)
     : null
   if (!isAddMode && !goal) {
-    return (
-      <View style={goalModifyStyles.container}>
-        <View style={goalModifyStyles.loadingContainer}>
-          <ActivityIndicatorMinty />
-        </View>
-      </View>
-    )
+    return <RouteLoadingState />
   }
   return (
-    <View style={goalModifyStyles.container}>
+    <View style={modifyFormStyles.container}>
       <ScrollIntoViewProvider
-        scrollViewStyle={goalModifyStyles.scrollView}
-        contentContainerStyle={goalModifyStyles.scrollContent}
+        scrollViewStyle={modifyFormStyles.scrollView}
+        contentContainerStyle={modifyFormStyles.scrollContent}
       >
-        <View style={goalModifyStyles.form} key={goal?.id ?? NewEnum.NEW}>
+        <View style={modifyFormStyles.form} key={goal?.id ?? NewEnum.NEW}>
           {/* Goal type selector */}
           <TabsMinty<GoalType>
             items={[
@@ -231,33 +230,16 @@ export function GoalModifyContent({
           />
 
           {/* Name input */}
-          <View style={goalModifyStyles.nameSection}>
-            <Text variant="small" style={goalModifyStyles.label}>
-              {t("screens.settings.goals.form.nameLabel")}
-            </Text>
-            <Controller
-              control={control}
-              name="name"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  placeholder={t("screens.settings.goals.form.namePlaceholder")}
-                  error={!!errors.name}
-                />
-              )}
-            />
-            {errors.name && (
-              <Text variant="small" style={goalModifyStyles.errorText}>
-                {t(errors.name.message as TranslationKey)}
-              </Text>
-            )}
-          </View>
+          <FormNameField
+            control={control}
+            label={t("screens.settings.goals.form.nameLabel")}
+            placeholder={t("screens.settings.goals.form.namePlaceholder")}
+            error={errors.name}
+          />
 
           {/* Description input (optional, multiline) */}
           <View style={goalModifyStyles.descriptionSection}>
-            <Text variant="small" style={goalModifyStyles.label}>
+            <Text variant="small" style={modifyFormStyles.label}>
               {t("screens.settings.goals.form.descriptionLabel")}
             </Text>
             <Controller
@@ -380,11 +362,11 @@ export function GoalModifyContent({
 
         {/* Archive / delete buttons — edit mode only */}
         {!isAddMode && (
-          <View style={goalModifyStyles.deleteSection}>
+          <View style={modifyFormStyles.deleteSection}>
             <Button
               variant="ghost"
               onPress={() => setArchiveSheetVisible(true)}
-              style={goalModifyStyles.actionButton}
+              style={modifyFormStyles.actionButton}
             >
               <IconSvg
                 name={
@@ -399,25 +381,15 @@ export function GoalModifyContent({
                   : t("screens.settings.goals.form.archiveLabel")}
               </Text>
             </Button>
-            <Button
-              variant="ghost"
+            <FormDeleteButton
+              label={t("screens.settings.goals.form.deleteLabel")}
               onPress={() => setDeleteSheetVisible(true)}
-              style={goalModifyStyles.actionButton}
-            >
-              <IconSvg
-                name="trash-outline"
-                size={20}
-                color={goalModifyStyles.deleteIcon.color}
-              />
-              <Text variant="default" style={goalModifyStyles.deleteText}>
-                {t("screens.settings.goals.form.deleteLabel")}
-              </Text>
-            </Button>
+            />
           </View>
         )}
       </ScrollIntoViewProvider>
 
-      <GoalFormFooter
+      <ModifyFormFooter
         formName={formName}
         isAddMode={isAddMode}
         isDirty={isDirty}

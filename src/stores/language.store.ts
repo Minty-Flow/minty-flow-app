@@ -1,7 +1,7 @@
 import { I18nManager } from "react-native"
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
 
 import i18n from "~/i18n/config"
 import {
@@ -10,6 +10,7 @@ import {
   LangCodeEnum,
   type LangCodeType,
 } from "~/i18n/language.constants"
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 const LanguageStorage = createMMKV({
   id: "language-preferences-storage",
@@ -81,11 +82,7 @@ export const useLanguageStore = create<LanguageStore>()(
     },
     {
       name: "language-preferences-store",
-      storage: createJSONStorage(() => ({
-        getItem: (name) => LanguageStorage.getString(name) ?? null,
-        setItem: (name, value) => LanguageStorage.set(name, value),
-        removeItem: (name) => LanguageStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(LanguageStorage),
       onRehydrateStorage: () => (state) => {
         if (state?.languageCode) {
           // Validate that the rehydrated language code is actually supported

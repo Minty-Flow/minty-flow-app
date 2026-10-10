@@ -5,10 +5,9 @@
  * Used by both the home screen and the account detail screen.
  */
 import { useRouter } from "expo-router"
-import { type ComponentType, Fragment, type ReactElement, useRef } from "react"
+import { type ComponentType, Fragment, type ReactElement } from "react"
 import { useTranslation } from "react-i18next"
 import { SectionList } from "react-native"
-import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
 import { StyleSheet } from "react-native-unistyles"
 
 import { Money } from "~/components/money"
@@ -18,6 +17,7 @@ import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
+import { useSingleOpenSwipeable } from "~/hooks/use-transaction-list-state"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import type {
   SearchState,
@@ -56,7 +56,8 @@ export function TransactionSectionList({
 }: TransactionSectionListProps) {
   const { t } = useTranslation()
   const router = useRouter()
-  const openSwipeableRef = useRef<SwipeableMethods | null>(null)
+  const { onWillOpen: handleWillOpen, closeOpen: closeOpenSwipeable } =
+    useSingleOpenSwipeable()
   const list = transactionsFull ?? []
   const transferLayout = useTransfersPreferencesStore((s) => s.layout)
   // Pending rows live in the Upcoming section only under "all"; the "pending"
@@ -89,7 +90,7 @@ export function TransactionSectionList({
   }
   // TransactionItem handles transfer vs non-transfer delete (modal + deleteTransfer or deleteTransactionModel); we only close the swipeable.
   const handleDeleteDone = () => {
-    openSwipeableRef.current?.close()
+    closeOpenSwipeable()
   }
   const renderHeader = () => (
     <>
@@ -121,12 +122,7 @@ export function TransactionSectionList({
       transactionWithRelations={item as TransactionWithRelations}
       onPress={() => handleOnTransactionPress(item.id)}
       onDelete={handleDeleteDone}
-      onWillOpen={(methods) => {
-        if (openSwipeableRef.current !== methods) {
-          openSwipeableRef.current?.close()
-        }
-        openSwipeableRef.current = methods
-      }}
+      onWillOpen={handleWillOpen}
     />
   )
   const keyExtractor = (item: TransactionWithRelations) => item.id

@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 const UPCOMING_SECTION_STORE_KEY = "upcoming-section-store"
 const UPCOMING_SECTION_MMKV_KEY = "upcoming-section-storage"
@@ -27,11 +29,7 @@ export const useUpcomingSectionStore = create<UpcomingSectionStore>()(
     }),
     {
       name: UPCOMING_SECTION_STORE_KEY,
-      storage: createJSONStorage(() => ({
-        getItem: (name) => upcomingSectionStorage.getString(name) ?? null,
-        setItem: (name, value) => upcomingSectionStorage.set(name, value),
-        removeItem: (name) => upcomingSectionStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(upcomingSectionStorage),
     },
   ),
 )

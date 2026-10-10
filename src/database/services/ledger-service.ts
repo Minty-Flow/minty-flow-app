@@ -3,10 +3,6 @@ import { and, sql as drizzleSql, eq, gte, inArray, lt, or } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
 import {
-  getTransactionById as getTransactionByIdFromReadModel,
-  type TransactionWithRelations,
-} from "~/database/drizzle/read-models/transaction-read-model"
-import {
   accounts,
   transactions,
   transactionTags,
@@ -1229,18 +1225,33 @@ export async function confirmTransaction(
 
 // ── Recurring scope helpers ───────────────────────────────────────────────────
 
+/** Live (non-deleted) transactions of a recurring rule, optionally from a date / pending only. */
+function getRuleInstanceIds(
+  ruleId: string,
+  opts: { fromDate?: Date; pendingOnly?: boolean } = {},
+): string[] {
+  return drizzleDb
+    .select({ id: transactions.id })
+    .from(transactions)
+    .where(
+      and(
+        eq(transactions.recurringId, ruleId),
+        opts.fromDate
+          ? gte(transactions.transactionDate, opts.fromDate.toISOString())
+          : undefined,
+        opts.pendingOnly ? eq(transactions.isPending, 1) : undefined,
+        eq(transactions.isDeleted, 0),
+      ),
+    )
+    .all()
+    .map((row) => row.id)
+}
+
 export async function deleteAllRecurringInstances(
   ruleId: string,
 ): Promise<void> {
-  const instances = drizzleDb
-    .select(txSelection)
-    .from(transactions)
-    .where(
-      and(eq(transactions.recurringId, ruleId), eq(transactions.isDeleted, 0)),
-    )
-    .all()
-  for (const tx of instances) {
-    await deleteTransaction(tx.id)
+  for (const id of getRuleInstanceIds(ruleId)) {
+    await deleteTransaction(id)
   }
 }
 
@@ -1248,19 +1259,8 @@ export async function deleteFutureRecurringInstances(
   ruleId: string,
   fromDate: Date,
 ): Promise<void> {
-  const instances = drizzleDb
-    .select(txSelection)
-    .from(transactions)
-    .where(
-      and(
-        eq(transactions.recurringId, ruleId),
-        gte(transactions.transactionDate, fromDate.toISOString()),
-        eq(transactions.isDeleted, 0),
-      ),
-    )
-    .all()
-  for (const tx of instances) {
-    await deleteTransaction(tx.id)
+  for (const id of getRuleInstanceIds(ruleId, { fromDate })) {
+    await deleteTransaction(id)
   }
 }
 
@@ -1279,20 +1279,11 @@ export async function updateFutureRecurringInstances(
   fromDate: Date,
   payload: RecurringEditPayload,
 ): Promise<void> {
-  const instances = drizzleDb
-    .select(txSelection)
-    .from(transactions)
-    .where(
-      and(
-        eq(transactions.recurringId, ruleId),
-        gte(transactions.transactionDate, fromDate.toISOString()),
-        eq(transactions.isPending, 1),
-        eq(transactions.isDeleted, 0),
-      ),
-    )
-    .all()
-  for (const tx of instances) {
-    await updateTransaction(tx.id, {
+  for (const id of getRuleInstanceIds(ruleId, {
+    fromDate,
+    pendingOnly: true,
+  })) {
+    await updateTransaction(id, {
       amount: payload.amount,
       type: payload.type,
       transactionDate: payload.transactionDate,
@@ -1352,12 +1343,6 @@ export async function autoPurgeTrash(retentionValue: string): Promise<void> {
   }
 }
 
-export async function getTransactionById(
-  id: string,
-): Promise<TransactionWithRelations | null> {
-  return getTransactionByIdFromReadModel(id)
-}
-
 export async function getConversionRateForTransaction(tx: {
   id: string
 }): Promise<number | null> {
@@ -1372,13 +1357,4 @@ export async function getConversionRateForTransaction(tx: {
     )
     .get()
   return row?.conversionRate ?? null
-}
-
-export async function getTagIdsForTransaction(txId: string): Promise<string[]> {
-  return drizzleDb
-    .select({ tagId: transactionTags.tagId })
-    .from(transactionTags)
-    .where(eq(transactionTags.transactionId, txId))
-    .all()
-    .map((r) => r.tagId)
 }

@@ -1,15 +1,9 @@
 import { useTranslation } from "react-i18next"
-import { View } from "react-native"
 
-import { Chip } from "~/components/ui/chips"
 import type { TransactionType } from "~/types/transactions"
 import { TransactionTypeEnum } from "~/types/transactions"
 
-import { filterHeaderStyles } from "../filter-header.styles"
-import { PanelClearButton } from "../panel-clear-button"
-import { PanelDoneButton } from "../panel-done-button"
-import { CHIPS_PER_ROW } from "../types"
-import { chunk } from "../utils"
+import { ChipOptionsPanel } from "./chip-options-panel"
 
 interface TypePanelProps {
   value: TransactionType[]
@@ -42,32 +36,13 @@ export function TypePanel({
   ]
 
   return (
-    <View>
-      {chunk(options, CHIPS_PER_ROW).map((row) => (
-        <View
-          key={row.map((o) => o.id).join(",")}
-          style={[
-            filterHeaderStyles.chipScrollRow,
-            filterHeaderStyles.categoryRow,
-          ]}
-        >
-          {row.map((opt) => (
-            <Chip
-              key={opt.id}
-              label={opt.label}
-              selected={selectedValueSet.has(opt.id)}
-              onPress={() => onToggle(opt.id)}
-            />
-          ))}
-        </View>
-      ))}
-      <View style={filterHeaderStyles.panelHeader}>
-        <View />
-        <View style={filterHeaderStyles.panelHeaderActions}>
-          <PanelClearButton onPress={onClear} disabled={value.length === 0} />
-          <PanelDoneButton onPress={onDone} />
-        </View>
-      </View>
-    </View>
+    <ChipOptionsPanel
+      options={options}
+      isSelected={(id) => selectedValueSet.has(id)}
+      onPress={onToggle}
+      onClear={onClear}
+      clearDisabled={value.length === 0}
+      onDone={onDone}
+    />
   )
 }

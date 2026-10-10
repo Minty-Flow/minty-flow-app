@@ -1,6 +1,5 @@
-import { count, eq } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 
-import { drizzleDb } from "~/database/drizzle/db"
 import { tags, transactionTags } from "~/database/drizzle/schema"
 import { runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
@@ -53,17 +52,4 @@ export async function deleteTagById(id: string): Promise<void> {
     db.delete(transactionTags).where(eq(transactionTags.tagId, id)).run()
     db.delete(tags).where(eq(tags.id, id)).run()
   })
-}
-
-export async function getTagTransactionCounts(): Promise<Map<string, number>> {
-  const rows = drizzleDb
-    .select({ tagId: transactionTags.tagId, cnt: count() })
-    .from(transactionTags)
-    .groupBy(transactionTags.tagId)
-    .all()
-  const map = new Map<string, number>()
-  for (const row of rows) {
-    map.set(row.tagId, row.cnt)
-  }
-  return map
 }

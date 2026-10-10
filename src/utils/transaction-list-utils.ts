@@ -25,22 +25,6 @@ import {
   TransactionTypeEnum,
 } from "~/types/transactions"
 
-/** Mirror of the service-layer attachment check, for in-memory (post-query) filtering. */
-function transactionHasAttachments(
-  extra: Record<string, string> | null,
-): boolean {
-  if (!extra?.attachments) return false
-  try {
-    const parsed = JSON.parse(extra.attachments) as unknown
-    if (Array.isArray(parsed)) return parsed.length > 0
-    if (typeof parsed === "object" && parsed !== null)
-      return Object.keys(parsed).length > 0
-    return false
-  } catch {
-    return extra.attachments.length > 0
-  }
-}
-
 /**
  * Apply the UI filter state to an already-loaded transaction list (in memory).
  * The DB query only narrows by date range, so every structural filter
@@ -77,7 +61,7 @@ export function applyTransactionFilters(
   }
   if (filterState.attachmentFilter !== AttachmentsOptionsEnum.ALL) {
     const wantHas = filterState.attachmentFilter === AttachmentsOptionsEnum.HAS
-    out = out.filter((r) => transactionHasAttachments(r.extra) === wantHas)
+    out = out.filter((r) => hasAttachmentsFromExtra(r.extra) === wantHas)
   }
 
   return out
@@ -122,6 +106,7 @@ export function applyTransferLayout(
   })
 }
 
+import { hasAttachmentsFromExtra } from "~/database/utils/has-attachments-from-extra"
 import {
   formatDateKey,
   formatHourKey,

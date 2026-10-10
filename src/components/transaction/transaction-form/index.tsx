@@ -16,7 +16,7 @@ import { useTransactionItemAppearanceStore } from "~/stores/transaction-item-app
 import { TransactionTypeEnum } from "~/types/transactions"
 
 import { transactionFormStyles } from "./form.styles"
-import { FormAccountPicker } from "./form-account-picker"
+import { FormAccountPicker, FormToAccountPicker } from "./form-account-picker"
 import { FormAttachmentsSection } from "./form-attachments-section"
 import { FormBudgetPicker } from "./form-budget-picker"
 import { FormCategoryPicker } from "./form-category-picker"
@@ -31,13 +31,12 @@ import { FormLoanPicker } from "./form-loan-picker"
 import { FormNotesSection } from "./form-notes-section"
 import { FormOverlays } from "./form-overlays"
 import { FormTagsPicker } from "./form-tags-picker"
-import { FormToAccountPicker } from "./form-to-account-picker"
 import { TransactionTopTabs } from "./transaction-top-tabs"
-import type { TransactionFormV4Props } from "./types"
+import type { TransactionFormProps } from "./types"
 import { UpcomingBanner } from "./upcoming-banner"
 import { useTransactionForm } from "./use-transaction-form"
 
-export function TransactionFormV4(props: TransactionFormV4Props) {
+export function TransactionForm(props: TransactionFormProps) {
   const { transaction, accounts, categories, tags, transactionType } = props
   const { t } = useTranslation()
   const { theme } = useUnistyles()

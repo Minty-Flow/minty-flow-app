@@ -69,11 +69,3 @@ export function useBudgetsQuery(): LiveReadModelResult<Budget[]> {
 export function useAllBudgets(): Budget[] {
   return useBudgetsQuery().data
 }
-
-export function useAllBudgetsQuery(): LiveReadModelResult<Budget[]> {
-  return useBudgetsQuery()
-}
-
-export function useBudget(id: string): Budget | undefined {
-  return useAllBudgets().find((budget) => budget.id === id)
-}

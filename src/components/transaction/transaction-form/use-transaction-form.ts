@@ -58,7 +58,7 @@ import { onKindChange } from "./on-kind-change"
 import type {
   OverlayState,
   RecurringState,
-  TransactionFormV4Props,
+  TransactionFormProps,
 } from "./types"
 import { useFormAttachments } from "./use-form-attachments"
 import { useFormConversionRate } from "./use-form-conversion-rate"
@@ -78,7 +78,7 @@ export function useTransactionForm({
   initialTagIds = EMPTY_TAG_IDS,
   initialKind,
   prefill,
-}: TransactionFormV4Props) {
+}: TransactionFormProps) {
   const router = useRouter()
   const navigation = useNavigation()
   const { t } = useTranslation()

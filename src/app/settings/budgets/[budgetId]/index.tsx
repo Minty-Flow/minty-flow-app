@@ -1,26 +1,30 @@
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useLayoutEffect, useRef } from "react"
+import { useLayoutEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { type DimensionValue, FlatList, View as RNView } from "react-native"
-import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
+import { planningDetailStyles } from "~/components/planning/planning-detail.styles"
+import {
+  RouteLoadingState,
+  RouteNotFoundState,
+} from "~/components/route-load-state"
 import { TransactionItem } from "~/components/transaction/transaction-item"
-import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
-import { useBudget } from "~/database/drizzle/read-models/budget-read-model"
+import { useBudgetsQuery } from "~/database/drizzle/read-models/budget-read-model"
 import { useCategories } from "~/database/drizzle/read-models/category-read-model"
 import {
   type TransactionWithRelations,
   useTransactions,
 } from "~/database/drizzle/read-models/transaction-read-model"
+import { useSingleOpenSwipeable } from "~/hooks/use-transaction-list-state"
 import type { TranslationKey } from "~/i18n/config"
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
@@ -45,8 +49,10 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
   const isRTL = useLanguageStore((s) => s.isRTL)
   const privacyMode = useMoneyFormattingStore((s) => s.privacyMode)
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
-  const openSwipeableRef = useRef<SwipeableMethods | null>(null)
-  const budget = useBudget(budgetId)
+  const { onWillOpen: handleWillOpen, closeOpen: closeOpenSwipeable } =
+    useSingleOpenSwipeable()
+  const budgetsQuery = useBudgetsQuery()
+  const budget = budgetsQuery.data.find((item) => item.id === budgetId)
   const weekStart = useWeekStartStore((s) => s.weekStart)
   const allAccounts = useActiveAccounts()
   const allCategories = useCategories()
@@ -91,13 +97,7 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
     router.push({ pathname: "/transaction/[id]", params: { id } })
   }
   const handleDeleteDone = () => {
-    openSwipeableRef.current?.close()
-  }
-  const handleWillOpen = (methods: SwipeableMethods) => {
-    if (openSwipeableRef.current !== methods) {
-      openSwipeableRef.current?.close()
-    }
-    openSwipeableRef.current = methods
+    closeOpenSwipeable()
   }
   const renderTransactionItem = ({
     item,
@@ -131,12 +131,10 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
     })
   }, [navigation, router, budgetId, t])
   if (!budget) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicatorMinty />
-        </View>
-      </View>
+    return budgetsQuery.status === "loading" ? (
+      <RouteLoadingState />
+    ) : (
+      <RouteNotFoundState message={t("common.notFound.budget")} />
     )
   }
   const {
@@ -204,7 +202,7 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
   const segmentPct = (n: number) =>
     limit > 0 ? Math.min((n / limit) * 100, 100) : 0
   const headerContent = (
-    <View style={styles.headerCard}>
+    <View style={planningDetailStyles.headerCard}>
       <View style={styles.titleRow}>
         <View style={styles.titleLeft}>
           <View style={styles.nameRow}>
@@ -354,21 +352,21 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
     </View>
   )
   return (
-    <View style={styles.container}>
+    <View style={planningDetailStyles.container}>
       <FlatList
         data={transactionsFull}
         keyExtractor={(item) => item.id}
         renderItem={renderTransactionItem}
         ListHeaderComponent={headerContent}
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
+          <View style={planningDetailStyles.emptyContainer}>
             <EmptyState
               icon="receipt-outline"
               title={t("screens.settings.budgets.detail.noTransactions")}
             />
           </View>
         }
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={planningDetailStyles.listContent}
       />
     </View>
   )
@@ -387,23 +385,7 @@ export default function BudgetDetailScreen() {
 /* Styles                                                             */
 /* ------------------------------------------------------------------ */
 const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  listContent: {
-    paddingBottom: 40,
-  },
   // Header card
-  headerCard: {
-    padding: 20,
-    gap: 14,
-  },
   titleRow: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -532,9 +514,5 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "600",
     color: theme.colors.onSurface,
     marginTop: 6,
-  },
-  emptyContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 40,
   },
 }))
