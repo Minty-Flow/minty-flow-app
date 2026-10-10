@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native-gesture-handler"
 import { StyleSheet } from "react-native-unistyles"
 
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { IconSvg } from "~/components/icons"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { ChoiceChips } from "~/components/ui/chips"
@@ -27,7 +27,7 @@ const RetentionPeriodEnum = {
 } as const
 export default function TrashBinScreen() {
   const router = useRouter()
-  const [confirmModalVisible, setConfirmModalVisible] = useState<boolean>(false)
+  const [confirmSheetVisible, setConfirmSheetVisible] = useState<boolean>(false)
   const retentionPeriod = useTrashBinStore((s) => s.retentionPeriod)
   const setRetentionPeriod = useTrashBinStore((s) => s.setRetentionPeriod)
   const { t } = useTranslation()
@@ -115,7 +115,7 @@ export default function TrashBinScreen() {
       <ListItem
         style={styles.actionItem}
         onPress={() => {
-          setConfirmModalVisible(true)
+          setConfirmSheetVisible(true)
         }}
       >
         <View style={styles.actionItemLeft}>
@@ -135,14 +135,14 @@ export default function TrashBinScreen() {
       </ListItem>
 
       {/* Empty Trash Modal */}
-      <ConfirmModal
-        visible={confirmModalVisible}
-        onRequestClose={() => setConfirmModalVisible(false)}
+      <ConfirmSheet
+        visible={confirmSheetVisible}
+        onRequestClose={() => setConfirmSheetVisible(false)}
         onConfirm={handleEmptyConfirmed}
-        title={t("screens.settings.trash.empty.modal.title")}
-        description={t("screens.settings.trash.empty.modal.description")}
-        confirmLabel={t("screens.settings.trash.empty.modal.confirm")}
-        cancelLabel={t("screens.settings.trash.empty.modal.cancel")}
+        title={t("screens.settings.trash.empty.sheet.title")}
+        description={t("screens.settings.trash.empty.sheet.description")}
+        confirmLabel={t("screens.settings.trash.empty.sheet.confirm")}
+        cancelLabel={t("screens.settings.trash.empty.sheet.cancel")}
         variant="destructive"
         icon="trash-outline"
       />

@@ -1,0 +1,31 @@
+import type { DateRangePresetId } from "~/utils/time-utils"
+
+export interface DateRangePresetSheetProps {
+  visible: boolean
+  initialStart?: Date
+  initialEnd?: Date
+  onSave: (start: Date, end: Date, source: DateRangePresetId) => void
+  onRequestClose: () => void
+}
+
+export type PresetButtonId =
+  | "last30"
+  | "thisWeek"
+  | "thisMonth"
+  | "thisYear"
+  | "allTime"
+
+export interface PresetOption {
+  id: DateRangePresetId
+  label: string
+  getRange: () => { start: Date; end: Date }
+}
+
+export type ExpandedSection = "byMonth" | "byYear" | "custom" | null
+
+export interface DateRangePresetSheetContentProps {
+  initialStart?: Date
+  initialEnd?: Date
+  onSave: (start: Date, end: Date, source: DateRangePresetId) => void
+  onRequestClose: () => void
+}

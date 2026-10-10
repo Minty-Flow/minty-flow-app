@@ -4,7 +4,7 @@ import { Linking, Platform, ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import {
-  DateTimePickerModal,
+  DateTimePickerSheet,
   useDateTimePicker,
 } from "~/components/ui/date-time-picker"
 import { InfoBanner } from "~/components/ui/info-banner"
@@ -157,7 +157,7 @@ export default function ReminderScreen() {
             </Pressable>
 
             {timePicker.pickerElement}
-            <DateTimePickerModal {...timePicker.modalProps} />
+            <DateTimePickerSheet {...timePicker.sheetProps} />
 
             {/* For Testing  */}
             {/* <Button

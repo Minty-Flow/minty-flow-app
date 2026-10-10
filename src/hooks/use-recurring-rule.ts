@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 
 import {
   findRecurringById,
-  type RecurringTransactionTemplate,
+  type RecurringRuleDetails,
 } from "~/database/services/recurring-transaction-service"
 
 /**
@@ -11,8 +11,8 @@ import {
  */
 export function useRecurringRule(
   ruleId: string | null,
-): RecurringTransactionTemplate | null {
-  const [rule, setRule] = useState<RecurringTransactionTemplate | null>(null)
+): RecurringRuleDetails | null {
+  const [rule, setRule] = useState<RecurringRuleDetails | null>(null)
 
   useEffect(() => {
     if (!ruleId) {

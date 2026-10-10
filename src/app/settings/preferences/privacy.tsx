@@ -1,10 +1,12 @@
 import * as LocalAuthentication from "expo-local-authentication"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Alert, ScrollView } from "react-native"
+import { ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import type { IconSvgName } from "~/components/icons"
 import { IconSvg } from "~/components/icons"
+import { InfoSheet } from "~/components/info-sheet"
 import { ListItem } from "~/components/ui/list-item"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
@@ -27,6 +29,7 @@ export default function PrivacyScreen() {
   const setHideOnStartup = useMoneyFormattingStore((s) => s.setHideOnStartup)
   const maskOnShake = useMoneyFormattingStore((s) => s.maskOnShake)
   const setMaskOnShake = useMoneyFormattingStore((s) => s.setMaskOnShake)
+  const [deviceLockInfoVisible, setDeviceLockInfoVisible] = useState(false)
   const lockAppEnabled = useAppLockStore((s) => s.lockAppEnabled)
   const setLockAppEnabled = useAppLockStore((s) => s.setLockAppEnabled)
   const lockAfterClosing = useAppLockStore((s) => s.lockAfterClosing)
@@ -41,10 +44,7 @@ export default function PrivacyScreen() {
         level === LocalAuthentication.SecurityLevel.BIOMETRIC_WEAK ||
         level === LocalAuthentication.SecurityLevel.BIOMETRIC_STRONG
       if (!hasDeviceAuth) {
-        Alert.alert(
-          t("screens.settings.privacy.alert.deviceLockRequired.title"),
-          t("screens.settings.privacy.alert.deviceLockRequired.message"),
-        )
+        setDeviceLockInfoVisible(true)
         return
       }
       const result = await LocalAuthentication.authenticateAsync({
@@ -99,42 +99,54 @@ export default function PrivacyScreen() {
   ]
 
   return (
-    <ScrollView
-      style={styles.scrollContainer}
-      contentContainerStyle={styles.content}
-    >
-      <View style={styles.container}>
-        {settings.map((setting) => (
-          <ListItem
-            key={setting.id}
-            style={[
-              styles.settingRow,
-              setting.disabled && styles.settingRowDisabled,
-            ]}
-            onPress={() =>
-              !setting.disabled && setting.onValueChange(!setting.value)
-            }
-            disabled={setting.disabled}
-          >
-            <View style={styles.iconContainer}>
-              <IconSvg name={setting.icon} size={24} />
-            </View>
-            <View style={styles.labelContainer}>
-              <Text variant="p" style={styles.settingLabel}>
-                {t(
-                  `screens.settings.privacy.settings.${setting.id}` as TranslationKey,
-                )}
-              </Text>
-            </View>
-            <Switch
-              value={setting.value}
-              onValueChange={setting.onValueChange}
+    <>
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.content}
+      >
+        <View style={styles.container}>
+          {settings.map((setting) => (
+            <ListItem
+              key={setting.id}
+              style={[
+                styles.settingRow,
+                setting.disabled && styles.settingRowDisabled,
+              ]}
+              onPress={() =>
+                !setting.disabled && setting.onValueChange(!setting.value)
+              }
               disabled={setting.disabled}
-            />
-          </ListItem>
-        ))}
-      </View>
-    </ScrollView>
+            >
+              <View style={styles.iconContainer}>
+                <IconSvg name={setting.icon} size={24} />
+              </View>
+              <View style={styles.labelContainer}>
+                <Text variant="p" style={styles.settingLabel}>
+                  {t(
+                    `screens.settings.privacy.settings.${setting.id}` as TranslationKey,
+                  )}
+                </Text>
+              </View>
+              <Switch
+                value={setting.value}
+                onValueChange={setting.onValueChange}
+                disabled={setting.disabled}
+              />
+            </ListItem>
+          ))}
+        </View>
+      </ScrollView>
+
+      <InfoSheet
+        visible={deviceLockInfoVisible}
+        onRequestClose={() => setDeviceLockInfoVisible(false)}
+        icon="lock-outline"
+        title={t("screens.settings.privacy.alert.deviceLockRequired.title")}
+        description={t(
+          "screens.settings.privacy.alert.deviceLockRequired.message",
+        )}
+      />
+    </>
   )
 }
 

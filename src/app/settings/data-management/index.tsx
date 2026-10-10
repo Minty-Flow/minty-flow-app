@@ -5,7 +5,7 @@ import { ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { ActionItem } from "~/components/action-item"
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { IconSvg, type IconSvgName } from "~/components/icons"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Input } from "~/components/ui/input"
@@ -32,7 +32,7 @@ import {
 } from "~/stores/export-history.store"
 import { Toast } from "~/utils/toast"
 
-interface ImportModalState {
+interface ImportSheetState {
   visible: boolean
   backup: MintyFlowBackup | null
   recordCount: number
@@ -89,7 +89,7 @@ export default function DataManagementScreen() {
     null,
   )
   const [isPickingFile, setIsPickingFile] = useState(false)
-  const [importModal, setImportModal] = useState<ImportModalState>({
+  const [importSheet, setImportSheet] = useState<ImportSheetState>({
     visible: false,
     backup: null,
     recordCount: 0,
@@ -107,6 +107,10 @@ export default function DataManagementScreen() {
   ) {
     setSavingType(type)
 
+    // NOTE: not solid yet. Cancelling the Android folder picker makes
+    // saveToDevice() resolve `false` (no file written to the device), but this
+    // still records the export and shows a *success* toast ("saved locally"),
+    // because the app-local copy exists. A cancel should show no success toast.
     Promise.resolve(save(baseName.trim() || undefined))
       .then(({ uri, fileName, savedToDevice }) => {
         addExport({ uri, fileName, type, exportedAt: new Date().toISOString() })
@@ -150,7 +154,7 @@ export default function DataManagementScreen() {
         }
 
         const { total, tableCount } = countBackupRecords(result.backup)
-        setImportModal({
+        setImportSheet({
           visible: true,
           backup: result.backup,
           recordCount: total,
@@ -166,9 +170,9 @@ export default function DataManagementScreen() {
       })
   }
 
-  // Returns the promise so ConfirmModal can own the spinner and close on resolve.
+  // Returns the promise so ConfirmSheet can own the spinner and close on resolve.
   function handleConfirmImport() {
-    const { backup, stagingDir } = importModal
+    const { backup, stagingDir } = importSheet
     if (!backup) return
 
     return Promise.resolve(importBackup(backup))
@@ -198,8 +202,8 @@ export default function DataManagementScreen() {
   }
 
   function handleCancelImport() {
-    if (importModal.stagingDir) deleteStagingDir(importModal.stagingDir)
-    setImportModal((s) => ({
+    if (importSheet.stagingDir) deleteStagingDir(importSheet.stagingDir)
+    setImportSheet((s) => ({
       ...s,
       visible: false,
       backup: null,
@@ -315,15 +319,15 @@ export default function DataManagementScreen() {
         </>
       )}
 
-      <ConfirmModal
-        visible={importModal.visible}
+      <ConfirmSheet
+        visible={importSheet.visible}
         variant="destructive"
         icon="alert-triangle"
         title={t("screens.settings.dataManagement.importConfirm.title")}
         description={t("screens.settings.dataManagement.importConfirm.warning")}
         note={t("screens.settings.dataManagement.importConfirm.recordSummary", {
-          count: importModal.recordCount,
-          tables: importModal.tableCount,
+          count: importSheet.recordCount,
+          tables: importSheet.tableCount,
         })}
         confirmLabel={t(
           "screens.settings.dataManagement.importConfirm.confirm",

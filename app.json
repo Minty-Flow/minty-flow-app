@@ -9,6 +9,9 @@
     "owner": "adelefaells-organization",
     "icon": "./src/assets/images/icon.png",
     "scheme": "mintyflow",
+    "updates": {
+      "enabled": false
+    },
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,

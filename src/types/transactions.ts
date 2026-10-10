@@ -1,20 +1,10 @@
-export type RecurringFrequency =
-  | "daily"
-  | "weekly"
-  | "biweekly"
-  | "monthly"
-  | "yearly"
-  | null
+export type RecurrenceUnit = "day" | "week" | "month" | "year"
 
-export const RecurringEndEnum = {
-  NEVER: "never",
-  DATE: "date",
-  OCCURRENCES: "occurrences",
+/** "every {interval} {unit}"; interval is an integer 1..999. */
+export interface Recurrence {
+  interval: number
+  unit: RecurrenceUnit
 }
-
-/** How a recurring transaction ends: never, on a specific date, or after N occurrences */
-export type RecurringEndType =
-  (typeof RecurringEndEnum)[keyof typeof RecurringEndEnum]
 
 /** Attachment metadata for transaction extra (e.g. file attachments) */
 export interface TransactionAttachment {
@@ -40,14 +30,23 @@ export const TransactionTypeEnum = {
 export type TransactionType =
   (typeof TransactionTypeEnum)[keyof typeof TransactionTypeEnum]
 
+export const TransactionKindEnum = {
+  DEFAULT: "default",
+  UPCOMING: "upcoming",
+  SUBSCRIPTION: "subscription",
+  REPETITIVE: "repetitive",
+  LENT: "lent",
+  BORROWED: "borrowed",
+} as const
+
+export type TransactionKind =
+  (typeof TransactionKindEnum)[keyof typeof TransactionKindEnum]
+
+// `refund` is the only live subtype. Recurring / one-time / loan classification
+// moved to `kind` (Slices 1–4). Legacy rows may still carry the retired string
+// values in `subtype`; they are tolerated at read time and dropped on next save.
 export const TransactionSubTypeEnum = {
-  RECURRING: "recurring",
-  ONE_TIME: "one-time",
   REFUND: "refund",
-  LOAN_BORROWED: "loan_borrowed",
-  LOAN_REPAYMENT: "loan_repayment",
-  LOAN_LENT: "loan_lent",
-  LOAN_RECEIVED: "loan_received",
 } as const
 
 export type TransactionSubType =
@@ -71,6 +70,7 @@ export interface TransactionLocation {
 export interface Transaction {
   id: string
   type: TransactionType // "expense" | "income" | "transfer"
+  kind: TransactionKind
   transactionDate: Date
   isDeleted: boolean
   deletedAt: Date | null
@@ -78,6 +78,12 @@ export interface Transaction {
   description: string | null
   amount: number
   isPending: boolean
+  /**
+   * @deprecated The per-kind auto-pay switches (autoPaySubscriptions /
+   * autoPayRepetitive / autoPayUpcoming) are the live control surface. No UI
+   * sets this any more; new rows persist `0`. Retained only so legacy and
+   * imported rows keep their permanent opt-out via `isPreapproved`.
+   */
   requiresManualConfirmation: boolean
 
   subtype: TransactionSubType | null // More specific classification

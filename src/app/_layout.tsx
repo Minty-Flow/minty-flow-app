@@ -13,7 +13,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context"
 import { UnistylesRuntime, useUnistyles } from "react-native-unistyles"
 
 import { AppLockGate } from "~/components/app-lock-gate"
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { RouteErrorBoundary } from "~/components/route-error-boundary"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
@@ -31,9 +31,9 @@ import {
 import { saveExistingFileToDevice } from "~/database/services/data-management-service"
 import { useImportRecovery } from "~/hooks/use-import-recovery"
 import { useNotificationSync } from "~/hooks/use-notification-sync"
-import { useRecurringTransactionSync } from "~/hooks/use-recurring-transaction-sync"
 import { useRetentionCleanup } from "~/hooks/use-retention-cleanup"
 import { useShakeListener } from "~/hooks/use-shake-listener"
+import { useTransactionLifecycleSync } from "~/hooks/use-transaction-lifecycle-sync"
 import { DirectionEnum } from "~/i18n/language.constants"
 import { useDbMigrationStore } from "~/stores/db-migration.store"
 import {
@@ -196,7 +196,7 @@ function ForcedMigrationGate() {
           busy={busy}
           onAction={() => setBackupPromptVisible(true)}
         />
-        <ConfirmModal
+        <ConfirmSheet
           visible={backupPromptVisible && !busy}
           onRequestClose={exitApp}
           onConfirm={async () => {
@@ -242,7 +242,7 @@ function ForcedMigrationGate() {
             setBackupPromptVisible(true)
           }}
         />
-        <ConfirmModal
+        <ConfirmSheet
           visible={backupPromptVisible && !busy}
           onRequestClose={exitApp}
           onConfirm={async () => {
@@ -380,7 +380,7 @@ function AppRootLayout() {
 
   useShakeListener()
   useRetentionCleanup()
-  useRecurringTransactionSync()
+  useTransactionLifecycleSync()
   useNotificationSync()
   useImportRecovery()
 
@@ -653,6 +653,12 @@ function AppRootLayout() {
                 <Stack.Screen
                   name="settings/preferences/reminder"
                   options={{ title: t("screens.settings.reminders.title") }}
+                />
+                <Stack.Screen
+                  name="settings/preferences/sound"
+                  options={{
+                    title: t("screens.settings.preferences.sound.title"),
+                  }}
                 />
                 <Stack.Screen
                   name="settings/preferences/pending-transactions"

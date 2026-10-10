@@ -29,7 +29,7 @@
     "developmentNotice": {
       "message": "Minty Flow is still in development, so data loss may happen. I'm sorry for that. Starting with this release, I'm focused on stability and safer backups for future updates."
     },
-    "modals": {
+    "sheets": {
       "unsavedDescription": "All changes will be lost.",
       "closeWithoutSaving": "Close without saving?",
       "deletePermanently": "Delete permanently",
@@ -56,6 +56,20 @@
         "expense": "Expense",
         "income": "Income",
         "transfer": "Transfer"
+      },
+      "tabs": {
+        "lent": "Lent",
+        "borrowed": "Borrowed",
+        "paid": "Paid",
+        "collected": "Collected"
+      },
+      "kinds": {
+        "default": "Standard",
+        "upcoming": "Upcoming",
+        "subscription": "Subscription",
+        "repetitive": "Repeating",
+        "lent": "Lent",
+        "borrowed": "Borrowed"
       },
       "untitledTransaction": "Untitled Transaction",
       "uncategorized": "uncategorized"
@@ -108,18 +122,18 @@
         "header": "Upcoming",
         "seeAll": "See all",
         "recurringCount": "{{count}} recurring",
-        "pendingCount": "{{count}} pending",
+        "pendingCount": "{{count}} upcoming",
         "subHeaderRecurring": "RECURRING",
         "confirmAll": {
           "button": "Confirm all",
-          "modalTitle": "Confirm all?",
-          "modalDescription": "All transactions awaiting confirmation will be confirmed. This cannot be undone."
+          "sheetTitle": "Confirm all?",
+          "sheetDescription": "All transactions awaiting confirmation will be confirmed. This cannot be undone."
         },
         "chips": {
           "daysCount": "Next {{count}} day(s)"
         },
         "a11y": {
-          "header": "Pending",
+          "header": "Upcoming",
           "confirm": "Confirm transaction",
           "confirmAll": "Confirm all transactions",
           "confirmAllButton": "Confirm all",
@@ -166,14 +180,13 @@
         "archivedBannerText": "This account is archived. Restore it to make changes.",
         "deleteLabel": "Permanently delete account",
         "typeLabel": "Account type",
-
-        "archiveModal": {
+        "archiveSheet": {
           "archiveTitle": "Archive this account?",
           "archiveConfirm": "Archive",
           "unarchiveTitle": "Restore this account?",
           "unarchiveConfirm": "Restore"
         },
-        "deleteModal": {
+        "deleteSheet": {
           "title": "Permanently delete {{name}}?",
           "descriptionWithCount_one": "This account has {{count}} transaction. Permanently deleting the account will also delete it. This action cannot be undone.",
           "descriptionWithCount_other": "This account has {{count}} transactions. Permanently deleting the account will also delete them. This action cannot be undone.",
@@ -295,12 +308,12 @@
       "emptyState": {
         "title": "No data for this period",
         "description": "Add transactions to see your stats",
-        "allPending": "All transactions are pending",
+        "allPending": "All transactions are scheduled",
         "allTransfers": "All transactions are transfers",
         "noTransactionsEver": "No transactions yet",
         "addFirst": "Add your first transaction"
       },
-      "pendingNotice": "{{count}} pending transactions excluded from stats",
+      "pendingNotice": "{{count}} scheduled transactions excluded from stats",
       "balance": {
         "title": "Net Balance",
         "opening": "Opening",
@@ -311,8 +324,10 @@
       }
     },
     "settings": {
-      "sections": {
-        "other": "Other"
+      "groups": {
+        "planning": "Planning",
+        "organization": "Organization",
+        "system": "System"
       },
       "about": {
         "version": "v{{version}}",
@@ -321,8 +336,12 @@
       },
       "preferences": {
         "title": "Preferences",
+        "groups": {
+          "behavior": "Behavior",
+          "system": "System",
+          "customization": "Customization"
+        },
         "appearance": {
-          "label": "Appearance",
           "theme": {
             "title": "Theme",
             "selectThemePlaceholder": "Select a theme",
@@ -395,8 +414,8 @@
               "leadingIcon": "Leading Icon"
             },
             "showForUntitled": {
-              "label": "Show category for untitled",
-              "description": "Use the category name as the title when a transaction has no name"
+              "label": "Show “Untitled” for blank titles",
+              "description": "When a transaction has no name, show “Untitled” instead of its category name"
             },
             "showAfterAccount": {
               "label": "Show category after account",
@@ -432,23 +451,20 @@
           "basedOnDevice": "Based on your device settings"
         },
         "buttonFeedback": {
-          "label": "Button Feedback",
           "soundHaptic": {
             "title": "Sound / haptic feedback upon click"
           },
           "systemInfo": "This depends on your phone's system settings. Make sure \"Touch interactions\" is enabled in Sound settings."
         },
+        "sound": {
+          "title": "Sound"
+        },
         "language": {
           "title": "Language",
-          "sectionLabel": "change language",
-          "rtlReloadConfirm": {
-            "title": "Restart required",
-            "description": "Switching to this language requires a restart to apply the new text direction.",
-            "confirmLabel": "Restart"
-          }
+          "sectionLabel": "change language"
         },
         "transactionLocation": {
-          "title": "Transaction Location",
+          "title": "Transaction Location Tracking",
           "permissionWarning": "Location permission not granted",
           "enable": {
             "label": "Enable",
@@ -477,7 +493,7 @@
         "empty": {
           "noTransactions": "No deleted transactions",
           "label": "Empty trash bin",
-          "modal": {
+          "sheet": {
             "title": "Empty Trash",
             "description": "All items in the trash will be permanently deleted. This action cannot be undone.",
             "confirm": "Empty Trash",
@@ -502,18 +518,22 @@
         }
       },
       "pending": {
-        "title": "Pending Transactions",
-        "empty": "No pending transactions",
-        "caption": "Pending transactions will not be counted towards income, expenses, and account balance.",
+        "title": "Scheduled Transactions",
+        "empty": "No scheduled transactions",
+        "caption": "Scheduled transactions will not be counted towards income, expenses, and account balance.",
         "settings": {
           "showOnHome": "Show on home",
-          "requireConfirmation": {
-            "label": "Require confirmation",
-            "description": "When on, new planned transactions need your approval before they count. Existing transactions keep their original mode."
+          "autoPaySubscriptions": {
+            "label": "Auto-confirm subscriptions",
+            "description": "While on, a subscription entry that is already past its date is confirmed on its own the next time you open the app."
           },
-          "updateDateOnConfirm": {
-            "label": "Update date on confirm",
-            "description": "Disable to retain original transaction date."
+          "autoPayRepetitive": {
+            "label": "Auto-confirm repeating",
+            "description": "While on, a repeating entry that is already past its date is confirmed on its own the next time you open the app."
+          },
+          "autoPayUpcoming": {
+            "label": "Auto-confirm upcoming",
+            "description": "While on, an upcoming entry that is already past its date is confirmed on its own the next time you open the app. Leave it off to clear each one yourself with Mark paid."
           },
           "notify": {
             "label": "Notify me",
@@ -567,7 +587,7 @@
           "title": "Goal",
           "transactions": "Transactions",
           "noTransactions": "No transactions linked to this goal yet",
-          "pendingNotice": "Pending transactions are not included in progress"
+          "pendingNotice": "Scheduled transactions are not included in progress"
         },
         "form": {
           "title": {
@@ -587,8 +607,7 @@
           "deleteLabel": "Delete Goal",
           "archiveLabel": "Archive Goal",
           "unarchiveLabel": "Restore Goal",
-
-          "archiveModal": {
+          "archiveSheet": {
             "archiveTitle": "Archive this goal?",
             "archiveConfirm": "Archive",
             "unarchiveTitle": "Restore this goal?",
@@ -665,7 +684,6 @@
           "duplicateLabel": "Duplicate Budget",
           "duplicateSuccess": "Budget duplicated",
           "deleteLabel": "Delete Budget",
-
           "toast": {
             "notFound": "Budget not found.",
             "createFailed": "Failed to create budget.",
@@ -683,6 +701,11 @@
           "lent": "Lent",
           "borrowed": "Borrowed"
         },
+        "term": {
+          "label": "Term",
+          "oneTime": "One time",
+          "longTerm": "Long term"
+        },
         "card": {
           "paid": "Paid",
           "paidBack": "Paid back",
@@ -699,7 +722,8 @@
         },
         "form": {
           "amountLabel": "Principal Amount",
-          "deleteLabel": "Delete Loan"
+          "deleteLabel": "Delete Loan",
+          "dueDateLabel": "Due Date"
         },
         "detail": {
           "title": "Loan",
@@ -747,8 +771,7 @@
           "placeholderGeneric": "Work, Shopping...",
           "placeholderContact": "John Doe",
           "deleteLabel": "Permanently delete",
-
-          "deleteModal": {
+          "deleteSheet": {
             "title": "Permanently delete {{name}}?",
             "descriptionWithCount_one": "This tag is used by {{count}} transaction. Permanently deleting the tag will unlink it and remove it permanently. This cannot be undone.",
             "descriptionWithCount_other": "This tag is used by {{count}} transactions. Permanently deleting the tag will unlink it from all of them and remove it permanently. This cannot be undone.",
@@ -827,7 +850,7 @@
         "loading": "Loading exchange rates…",
         "searchPlaceholder": "Search currencies...",
         "instructionCaption": "Select an entry to set a custom exchange rate. Note: All exchange rate calculations use USD as a reference.",
-        "infoModal": {
+        "infoSheet": {
           "title": "Exchange Rates",
           "description": "Rates are shown as amount per 1 USD. Select an entry to set a custom rate. All calculations use USD as reference.",
           "ok": "OK"
@@ -913,7 +936,7 @@
         }
       },
       "reminders": {
-        "title": "Reminder",
+        "title": "Reminders",
         "testNotification": "Press Test Notification",
         "remindDaily": {
           "label": "Remind daily",
@@ -963,6 +986,28 @@
         "edit": "Edit Transaction"
       },
       "notFoundTransaction": "Transaction not found.",
+      "searchTags": "Search tags...",
+      "createNewTag": "New tag",
+      "selectTags": "Select tags",
+      "clearSelection": "Clear selection",
+      "kind": {
+        "label": "Kind",
+        "info": {
+          "a11yOpen": "About transaction types",
+          "title": "Transaction types",
+          "default": "A normal transaction. Counts toward your totals straight away.",
+          "upcoming": "A one-off you have not paid yet. Stays out of your totals until you mark it paid or received.",
+          "subscription": "A recurring entry that also appears on the Scheduled screen. Each one stays out of your totals until marked paid or received; clearing the current entry queues the next.",
+          "repetitive": "A recurring entry. Each one stays out of your totals until marked paid or received; clearing the current entry queues the next.",
+          "lent": "Money you lent out. Counts as negative cash flow until you mark it collected.",
+          "borrowed": "Money you borrowed. Counts as positive cash flow until you mark it settled."
+        }
+      },
+      "upcoming": {
+        "banner": "Upcoming — not counted in your balance or stats yet.",
+        "markPaid": "Mark paid",
+        "markDeposited": "Mark deposited"
+      },
       "fields": {
         "transferTitle": "Transfer",
         "transferTitleFull": "From {{from}} to {{to}}",
@@ -992,18 +1037,28 @@
         "moveToTrash": "Move to trash",
         "restore": "Restore",
         "location": "Location",
-        "refundLabel": "Refund"
+        "refundLabel": "Refund",
+        "deleteLoan": "Delete loan"
       },
-      "recurring": {
-        "label": "Recurring transaction",
-        "recurrence": "Recurrence",
-        "startsOn": "Starts on",
-        "endsOn": "Ends on",
-        "never": "Never",
-        "onADate": "On a date",
-        "occurrences": "Occurrences",
-        "timesCount_one": "{{count}} time",
-        "timesCount_other": "{{count}} times"
+      "recurrence": {
+        "every": "Repeat every",
+        "unitTitle": "Repeat unit",
+        "unit": {
+          "day_one": "day",
+          "day_other": "days",
+          "week_one": "week",
+          "week_other": "weeks",
+          "month_one": "month",
+          "month_other": "months",
+          "year_one": "year",
+          "year_other": "years"
+        },
+        "until": "Until",
+        "forever": "Forever",
+        "reset": "Reset",
+        "increment": "Increase interval",
+        "decrement": "Decrease interval",
+        "untilBeforeStart": "End date is before the start date — no occurrences."
       },
       "addFiles": {
         "label": "Add files",
@@ -1022,7 +1077,7 @@
         "title": "Delete file",
         "description": "Are you sure you want to remove this attachment?"
       },
-      "destroyModal": {
+      "destroySheet": {
         "description": "This transaction will be removed forever and cannot be restored."
       },
       "amountInput": {
@@ -1043,7 +1098,7 @@
         }
       },
       "attachments": {
-        "openFileModal": "Open file",
+        "openFileSheet": "Open file",
         "a11y": {
           "removeAttachment": "Remove attachment",
           "addFiles": "Add files",
@@ -1079,7 +1134,11 @@
         "deletedDescription": "Transaction permanently removed.",
         "deleteFailed": "Failed to delete transaction.",
         "rateLoading": "Rate is still loading, please wait",
-        "setDifferentCurrencies": "Please set the converted amount for different currencies"
+        "setDifferentCurrencies": "Please set the converted amount for different currencies",
+        "recurringUntilBeforeStart": "The end date is before the start date",
+        "loanAmountExceedsRemaining": "Amount is more than this loan still owes",
+        "loanNeedsCategory": "Pick a category before creating the loan",
+        "loanDeleted": "Loan deleted"
       },
       "a11y": {
         "closePreview": "Close preview",
@@ -1097,18 +1156,18 @@
         "noTagsFound": "No tags found",
         "allTagsSelected": "All tags selected",
         "amountInput": "Amount input"
+      },
+      "loan": {
+        "nameLabel": "Loan name",
+        "dueDateLabel": "Due date"
+      },
+      "deleteLoanSheet": {
+        "title": "Delete this loan?",
+        "description": "This removes the loan. Its transactions stay in your history, no longer linked to a loan."
       }
     },
     "recurring": {
-      "frequency": {
-        "none": "None",
-        "daily": "Every day",
-        "weekly": "Every week, {{day}}",
-        "biweekly": "Every 2 weeks, {{day}}",
-        "monthly": "Every month, {{date}}",
-        "yearly": "Every year, {{date}}"
-      },
-      "deleteModal": {
+      "deleteSheet": {
         "title": "Delete recurring transaction",
         "subtitle": "Choose which transactions to remove",
         "optionThis": "This transaction",
@@ -1122,7 +1181,7 @@
         "cancel": "Cancel",
         "delete": "Delete"
       },
-      "editModal": {
+      "editSheet": {
         "title": "Edit recurring transaction",
         "subtitle": "Choose how far to apply your changes",
         "optionThis": "This transaction",
@@ -1198,8 +1257,7 @@
         "namePlaceholder": "Groceries, Dining out, etc.",
         "typeLabel": "Type",
         "deleteLabel": "Permanently delete",
-
-        "deleteModal": {
+        "deleteSheet": {
           "title": "Delete {{name}}?",
           "descriptionWithCount_one": "This category is used by {{count}} transaction. Deleting will unlink it. This cannot be undone.",
           "descriptionWithCount_other": "This category is used by {{count}} transactions. Deleting will unlink them. This cannot be undone.",
@@ -1250,7 +1308,7 @@
         "currencyCount_one": "{{count}} currency",
         "currencyCount_other": "{{count}} currencies",
         "attachments": "Attachments",
-        "pendingStatus": "Pending Status",
+        "pendingStatus": "Scheduled Status",
         "thisMonth": "This month",
         "untitled": "Untitled",
         "typeCount": "type count"
@@ -1261,8 +1319,8 @@
       },
       "pendingOptions": {
         "all": "All",
-        "pending": "Pending",
-        "notPending": "Not Pending"
+        "pending": "Scheduled",
+        "notPending": "Not Scheduled"
       },
       "groupByOptions": {
         "hour": "Hour",
@@ -1326,6 +1384,9 @@
     "locationPicker": {
       "title": "Pick Location",
       "gettingLocation": "Getting location...",
+      "permissionDenied": "Location permission needed",
+      "servicesOff": "Turn on location services",
+      "unavailable": "Couldn't get your location",
       "tapOrDrag": "Pan map to position pin",
       "tapToEdit": "Tap on the map to edit",
       "addLocation": "Add a location",
@@ -1342,7 +1403,7 @@
         "permissionDescription": "Please grant permission to access your contacts in order to select a contact from your phone."
       },
       "currency": {
-        "title": "Currency",
+        "title": "Select a currency",
         "triggerLabel": "Currency",
         "searchPlaceholder": "Search currencies...",
         "noCurrenciesFound": "No currencies found",
@@ -1352,7 +1413,7 @@
     },
     "transactionItem": {
       "recurring": "Recurring",
-      "pending": "Pending",
+      "upcoming": "Upcoming",
       "canceled": "Transaction canceled",
       "failedToDelete": "Failed to delete"
     },
@@ -1406,6 +1467,9 @@
     },
     "endDate": {
       "requiredForCustom": "End date is required for custom period"
+    },
+    "transaction": {
+      "kindTypeMismatch": "This type is not allowed for the selected kind"
     }
   },
   "onboarding": {

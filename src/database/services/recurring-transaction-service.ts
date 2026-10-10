@@ -1,4 +1,5 @@
-import { and, count, eq } from "drizzle-orm"
+import { endOfDay } from "date-fns"
+import { and, count, desc, eq } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
 import { recurringTransactions, transactions } from "~/database/drizzle/schema"
@@ -8,10 +9,18 @@ import type {
   RecurringEditPayload,
   TransactionFormValues,
 } from "~/schemas/transactions.schema"
-import type { TransactionSubType } from "~/types/transactions"
+import type {
+  Recurrence,
+  TransactionKind,
+  TransactionSubType,
+} from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { assertMinorUnits } from "~/utils/money"
-import { nextAbsoluteOccurrence } from "~/utils/recurrence"
+import {
+  buildRRuleString,
+  nextAbsoluteOccurrence,
+  parseRecurrence,
+} from "~/utils/recurrence"
 
 // ── Row types ─────────────────────────────────────────────────────────────────
 
@@ -54,6 +63,13 @@ export interface RecurringTransactionTemplate {
   subtype: TransactionSubType | null
   tags: string[] | null
   extra: Record<string, string> | null
+  kind: TransactionKind
+}
+
+/** Template plus the raw scheduling columns, for the edit screen. */
+export interface RecurringRuleDetails extends RecurringTransactionTemplate {
+  rules: string[]
+  range: RecurringTimeRange
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -64,7 +80,7 @@ function parseTemplate(row: RowRecurring): RecurringTransactionTemplate {
       RecurringTransactionTemplate,
       "id"
     >
-    return { id: row.id, ...template }
+    return { id: row.id, ...template, kind: template.kind ?? "repetitive" }
   } catch {
     return {
       id: row.id,
@@ -77,6 +93,7 @@ function parseTemplate(row: RowRecurring): RecurringTransactionTemplate {
       subtype: null,
       tags: null,
       extra: null,
+      kind: "repetitive",
     }
   }
 }
@@ -136,6 +153,7 @@ interface CreateRecurringRuleInput {
   range: { from: number; to: number }
   rules: string[]
   transferToAccountId?: string | null
+  kind: TransactionKind
 }
 
 export async function createRecurringRule(
@@ -155,6 +173,7 @@ export async function createRecurringRule(
     subtype: data.subtype,
     tags: data.tags,
     extra: null,
+    kind: data.kind,
   }
 
   await runInTransaction("recurring.create", (db) => {
@@ -229,6 +248,65 @@ export async function updateRecurringRuleTemplate(
   })
 }
 
+const FOREVER_MS = new Date(2099, 11, 31).getTime()
+
+/**
+ * ES-8 — rewrite a rule's recurrence (interval/unit) and/or its "until".
+ * Keeps `range.from` (RS-2). Resets `last_generated_transaction_date` to the
+ * latest live occurrence (past or future) so the next sync continues without
+ * stalling. Handles future-dated edited instances by anchoring to the max of
+ * all instances, preventing effectiveLast guard from pinning the cursor below
+ * new-cadence occurrences. Never touches the template fields.
+ */
+export async function updateRecurringRule(
+  ruleId: string,
+  opts: { recurrence: Recurrence; until: Date | null },
+): Promise<void> {
+  const rule = drizzleDb
+    .select(recurringSelection)
+    .from(recurringTransactions)
+    .where(eq(recurringTransactions.id, ruleId))
+    .get()
+  if (!rule) throw new Error(`Recurring rule ${ruleId} not found`)
+
+  const range = parseTimeRange(rule) // keeps range.from
+  const untilEod = opts.until ? endOfDay(opts.until) : null
+  const nextRange = {
+    from: range.from,
+    to: untilEod?.getTime() ?? FOREVER_MS,
+  }
+  const rrule = buildRRuleString({
+    interval: opts.recurrence.interval,
+    unit: opts.recurrence.unit,
+    startDate: new Date(range.from),
+    until: opts.until ?? null,
+  })
+
+  // Get the latest live instance (past or future) to anchor the cursor.
+  // This prevents stalling when the edited instance is future-dated (pending).
+  const lastLive = drizzleDb
+    .select({ d: transactions.transactionDate })
+    .from(transactions)
+    .where(
+      and(eq(transactions.recurringId, ruleId), eq(transactions.isDeleted, 0)),
+    )
+    .orderBy(desc(transactions.transactionDate))
+    .get()
+
+  await runInTransaction("recurring.updateRule", (db) => {
+    db.update(recurringTransactions)
+      .set({
+        rules: JSON.stringify([rrule]),
+        range: JSON.stringify(nextRange),
+        lastGeneratedTransactionDate: lastLive?.d ?? null,
+      })
+      .where(eq(recurringTransactions.id, ruleId))
+      .run()
+  })
+
+  await synchronizeAllRecurringTransactions()
+}
+
 export type RecurringEditScope = "this" | "this_and_future"
 export type RecurringDeleteScope = "this" | "all" | "this_and_future"
 
@@ -238,15 +316,23 @@ export async function applyRecurringEditScope({
   transactionDate,
   ruleId,
   payload,
+  recurrence,
+  until,
 }: {
   scope: RecurringEditScope
   transactionId: string
   transactionDate: Date
   ruleId: string
   payload: RecurringEditPayload
+  recurrence?: Recurrence
+  until?: Date | null
 }): Promise<void> {
-  const { detachFromRule, updateFutureRecurringInstances, updateTransaction } =
-    await import("./ledger-service")
+  const {
+    deleteFutureRecurringInstances,
+    detachFromRule,
+    updateFutureRecurringInstances,
+    updateTransaction,
+  } = await import("./ledger-service")
 
   if (scope === "this") {
     await detachFromRule(transactionId)
@@ -254,7 +340,34 @@ export async function applyRecurringEditScope({
     return
   }
 
-  await updateFutureRecurringInstances(ruleId, transactionDate, payload)
+  // Detect real cadence change by comparing incoming values against stored rule.
+  // Field-only edits (amount/title/category only) must not trigger delete + regenerate.
+  const storedRule = await findRecurringById(ruleId)
+  const storedRec = storedRule
+    ? parseRecurrence(storedRule.rules[0] ?? "")
+    : null
+  const incomingUntilMs = until ? endOfDay(until).getTime() : FOREVER_MS
+  const recurrenceChanged =
+    !!recurrence &&
+    !!storedRec &&
+    !!storedRule &&
+    (recurrence.interval !== storedRec.interval ||
+      recurrence.unit !== storedRec.unit ||
+      incomingUntilMs !== storedRule.range.to)
+
+  if (recurrenceChanged && recurrence) {
+    // Delete forward instances FIRST when cadence changes.
+    // Cutoff: fromDate = transactionDate + 1ms spares the edited instance.
+    // deleteFutureRecurringInstances filters gte(transactionDate, fromDate),
+    // so +1ms ensures the edited instance's timestamp is strictly less.
+    const fromDate = new Date(transactionDate.getTime() + 1)
+    await deleteFutureRecurringInstances(ruleId, fromDate)
+  } else if (!recurrenceChanged) {
+    // Pure field-only edit: update field values on future instances.
+    await updateFutureRecurringInstances(ruleId, transactionDate, payload)
+  }
+
+  // Update template fields.
   await updateRecurringRuleTemplate(ruleId, {
     amount: payload.amount,
     title: payload.title,
@@ -262,6 +375,17 @@ export async function applyRecurringEditScope({
     accountId: payload.accountId,
     type: payload.type,
   })
+
+  // Update recurrence/until if cadence changed.
+  // With forward instances deleted, effectiveLast no longer stalls the sync.
+  if (recurrenceChanged && recurrence) {
+    await updateRecurringRule(ruleId, {
+      recurrence,
+      until: until ?? null,
+    })
+  }
+
+  // Update the edited instance.
   await updateTransaction(transactionId, payload)
 }
 
@@ -468,6 +592,7 @@ async function synchronizeRecurringTransaction(
           recurringId: ruleId,
           extra,
           isPending,
+          kind: template.kind,
         }
 
         const { createTransaction } = await import("./ledger-service")
@@ -496,6 +621,7 @@ async function synchronizeRecurringTransaction(
             isPending,
             subtype: template.subtype ?? null,
             extra,
+            kind: template.kind,
           },
         )
       }
@@ -554,11 +680,16 @@ export async function synchronizeAllRecurringTransactions(
 
 export async function findRecurringById(
   id: string,
-): Promise<RecurringTransactionTemplate | null> {
+): Promise<RecurringRuleDetails | null> {
   const row = drizzleDb
     .select(recurringSelection)
     .from(recurringTransactions)
     .where(eq(recurringTransactions.id, id))
     .get()
-  return row ? parseTemplate(row) : null
+  if (!row) return null
+  return {
+    ...parseTemplate(row),
+    rules: parseRules(row),
+    range: parseTimeRange(row),
+  }
 }

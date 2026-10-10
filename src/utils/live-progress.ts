@@ -1,7 +1,6 @@
 import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
 import type { Budget } from "~/types/budgets"
 import type { Goal } from "~/types/goals"
-import type { Loan } from "~/types/loans"
 import {
   TransactionSubTypeEnum,
   TransactionTypeEnum,
@@ -71,25 +70,5 @@ export function getLiveGoalProgress(
       return sum
     }
     return sum + transaction.amount
-  }, 0)
-}
-
-export function getLiveLoanProgress(
-  loan: Loan,
-  transactions: TransactionWithRelations[],
-): number {
-  const type =
-    loan.loanType === "lent"
-      ? TransactionTypeEnum.INCOME
-      : TransactionTypeEnum.EXPENSE
-  return transactions.reduce((sum, transaction) => {
-    if (
-      transaction.isPending ||
-      transaction.type !== type ||
-      transaction.accountId !== loan.accountId
-    ) {
-      return sum
-    }
-    return sum + Math.abs(transaction.amount)
   }, 0)
 }

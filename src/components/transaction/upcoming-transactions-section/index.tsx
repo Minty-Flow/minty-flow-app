@@ -1,9 +1,9 @@
 import { useRouter } from "expo-router"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { IconSvg } from "~/components/icons"
 import { Button } from "~/components/ui/button"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
@@ -16,7 +16,6 @@ import { useRecurringRule } from "~/hooks/use-recurring-rule"
 import { useMinuteTick } from "~/hooks/use-time-reactivity"
 import {
   autoConfirmationService,
-  isPreapproved,
   useAutoConfirmVersion,
 } from "~/services/auto-confirmation-service"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
@@ -26,7 +25,7 @@ import { confirmable } from "~/utils/pending-transactions"
 import { Toast } from "~/utils/toast"
 import { applyTransferLayout } from "~/utils/transaction-list-utils"
 
-import { DeleteRecurringModal } from "../delete-recurring-modal"
+import { DeleteRecurringSheet } from "../delete-recurring-sheet"
 import { TransactionItem } from "../transaction-item"
 import type { UpcomingTransactionsSectionProps } from "./types"
 import { upcomingSectionStyles as sectionStyles } from "./upcoming-transactions-section.styles"
@@ -38,10 +37,6 @@ export function UpcomingTransactionsSection({
 }: UpcomingTransactionsSectionProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
-  const isHydrated = usePendingTransactionsStore((s) => s.isHydrated)
-  const requireConfirmation = usePendingTransactionsStore(
-    (s) => s.requireConfirmation,
-  )
   const updateDateUponConfirmation = usePendingTransactionsStore(
     (s) => s.updateDateUponConfirmation,
   )
@@ -58,58 +53,26 @@ export function UpcomingTransactionsSection({
     return transactions.filter((r) => !r.isDeleted && isUpcoming(r))
   })()
   const upcomingForDisplay = applyTransferLayout(upcoming, transferLayout)
-  const { recurring, pending, toAutoConfirm } = (() => {
+  // Pure split for display. Auto-confirmation is owned entirely by
+  // autoConfirmationService (driven from useTransactionLifecycleSync); a
+  // confirmed row leaves this list via the live query, no effect here.
+  const { recurring, pending } = (() => {
     void autoConfirmVersion
     void foregroundVersion
     const recurringList: TransactionWithRelations[] = []
     const pendingList: TransactionWithRelations[] = []
-    const toAutoConfirmList: string[] = []
     for (const row of upcomingForDisplay) {
-      const canConfirm = confirmable(row, nowMs)
-      const preapproved = isPreapproved(row, requireConfirmation)
-      if (preapproved && canConfirm) {
-        toAutoConfirmList.push(row.id)
+      if (row.extra?.recurringId) {
+        recurringList.push(row)
       } else {
-        if (row.extra?.recurringId) {
-          recurringList.push(row)
-        } else {
-          pendingList.push(row)
-        }
+        pendingList.push(row)
       }
     }
-    return {
-      recurring: recurringList,
-      pending: pendingList,
-      toAutoConfirm: toAutoConfirmList,
-    }
+    return { recurring: recurringList, pending: pendingList }
   })()
-  useEffect(() => {
-    for (const txId of toAutoConfirm) {
-      void confirmTransaction(txId, {
-        updateTransactionDate: updateDateUponConfirmation,
-      })
-    }
-  }, [toAutoConfirm, updateDateUponConfirmation])
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional extra deps
-  useEffect(() => {
-    if (!isHydrated) return
-    // Configure must run before start (start throws if config is null)
-    autoConfirmationService.configure({
-      requireConfirmation,
-      updateDateUponConfirmation,
-    })
-    autoConfirmationService.start()
-    autoConfirmationService.scheduleTransactions(upcoming)
-  }, [
-    upcoming,
-    requireConfirmation,
-    updateDateUponConfirmation,
-    autoConfirmVersion,
-    isHydrated,
-  ])
   const router = useRouter()
   const { collapsed, setCollapsed } = useUpcomingSectionStore()
-  const [confirmAllModalVisible, setConfirmAllModalVisible] = useState(false)
+  const [confirmAllSheetVisible, setConfirmAllSheetVisible] = useState(false)
   const [recurringToDelete, setRecurringToDelete] =
     useState<TransactionWithRelations | null>(null)
   const recurringRule = useRecurringRule(
@@ -141,8 +104,8 @@ export function UpcomingTransactionsSection({
       })
     }
   }
-  const openConfirmAllModal = () => setConfirmAllModalVisible(true)
-  const closeConfirmAllModal = () => setConfirmAllModalVisible(false)
+  const openConfirmAllSheet = () => setConfirmAllSheetVisible(true)
+  const closeConfirmAllSheet = () => setConfirmAllSheetVisible(false)
   const handleBeforeDelete = (row: TransactionWithRelations) => {
     if (row.extra?.recurringId) {
       setRecurringToDelete(row)
@@ -160,12 +123,12 @@ export function UpcomingTransactionsSection({
   ).length
   return (
     <View style={sectionStyles.wrapper}>
-      <ConfirmModal
-        visible={confirmAllModalVisible}
-        onRequestClose={closeConfirmAllModal}
+      <ConfirmSheet
+        visible={confirmAllSheetVisible}
+        onRequestClose={closeConfirmAllSheet}
         onConfirm={handleConfirmAll}
-        title={t("screens.home.upcoming.confirmAll.modalTitle")}
-        description={t("screens.home.upcoming.confirmAll.modalDescription")}
+        title={t("screens.home.upcoming.confirmAll.sheetTitle")}
+        description={t("screens.home.upcoming.confirmAll.sheetDescription")}
         confirmLabel={t("screens.home.upcoming.confirmAll.button")}
         cancelLabel={t("common.actions.cancel")}
         variant="default"
@@ -173,7 +136,7 @@ export function UpcomingTransactionsSection({
       />
 
       {recurringToDelete && recurringRule && (
-        <DeleteRecurringModal
+        <DeleteRecurringSheet
           visible={true}
           transaction={recurringToDelete}
           recurringRule={recurringRule}
@@ -355,7 +318,7 @@ export function UpcomingTransactionsSection({
                   {manualConfirmableCount > 1 && (
                     <Button
                       variant="ghost"
-                      onPress={openConfirmAllModal}
+                      onPress={openConfirmAllSheet}
                       style={sectionStyles.confirmAllButton}
                       accessibilityLabel={t(
                         "screens.home.upcoming.a11y.confirmAll",

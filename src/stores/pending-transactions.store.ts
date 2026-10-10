@@ -11,8 +11,12 @@ const pendingTransactionsStorage = createMMKV({
 })
 
 interface PendingTransactionsPreferences {
-  /** If true, planned (future) transactions require user to confirm; when creating a future transaction, set isPending: true. */
-  requireConfirmation: boolean
+  /** Auto-confirm `subscription` recurring instances once their date passes. */
+  autoPaySubscriptions: boolean
+  /** Auto-confirm `repetitive` recurring instances once their date passes. */
+  autoPayRepetitive: boolean
+  /** Auto-confirm user-created `upcoming` transactions once their date passes. Off = confirm each via Mark paid. */
+  autoPayUpcoming: boolean
   /** Number of days of planned transactions to show in home/list. */
   homeTimeframe: number
   /** When user confirms, set transactionDate to current time; if false, keep original date. */
@@ -27,7 +31,9 @@ interface PendingTransactionsPreferences {
 }
 
 const DEFAULTS: PendingTransactionsPreferences = {
-  requireConfirmation: false,
+  autoPaySubscriptions: true,
+  autoPayRepetitive: true,
+  autoPayUpcoming: false,
   homeTimeframe: 3,
   updateDateUponConfirmation: false,
   notify: false,
@@ -36,7 +42,9 @@ const DEFAULTS: PendingTransactionsPreferences = {
 
 interface PendingTransactionsStore extends PendingTransactionsPreferences {
   isHydrated: boolean
-  setRequireConfirmation: (value: boolean) => void
+  setAutoPaySubscriptions: (value: boolean) => void
+  setAutoPayRepetitive: (value: boolean) => void
+  setAutoPayUpcoming: (value: boolean) => void
   setHomeTimeframe: (value: number) => void
   setUpdateDateUponConfirmation: (value: boolean) => void
   setNotify: (value: boolean) => void
@@ -49,7 +57,9 @@ export const usePendingTransactionsStore = create<PendingTransactionsStore>()(
       ...DEFAULTS,
       isHydrated: false,
 
-      setRequireConfirmation: (value) => set({ requireConfirmation: value }),
+      setAutoPaySubscriptions: (value) => set({ autoPaySubscriptions: value }),
+      setAutoPayRepetitive: (value) => set({ autoPayRepetitive: value }),
+      setAutoPayUpcoming: (value) => set({ autoPayUpcoming: value }),
       setHomeTimeframe: (value) => set({ homeTimeframe: value }),
       setUpdateDateUponConfirmation: (value) =>
         set({ updateDateUponConfirmation: value }),

@@ -14,7 +14,7 @@ import { TabsMinty } from "~/components/tabs-minty"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import {
-  DateTimePickerModal,
+  DateTimePickerSheet,
   useDateTimePicker,
 } from "~/components/ui/date-time-picker"
 import { Input } from "~/components/ui/input"
@@ -43,7 +43,7 @@ import { formatShortMonthDayYear } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
 import { GoalFormFooter } from "./goal-form-footer"
-import { GoalFormModals } from "./goal-form-modals"
+import { GoalFormSheets } from "./goal-form-sheets"
 import { goalModifyStyles } from "./goal-modify.styles"
 import type { GoalModifyContentProps } from "./types"
 export function GoalModifyContent({
@@ -87,14 +87,14 @@ export function GoalModifyContent({
   const formTargetAmount = watch("targetAmount")
   const formTargetDate = watch("targetDate")
   const navigation = useNavigation()
-  const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
+  const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSubmitting,
-    onBlock: () => setUnsavedModalVisible(true),
+    onBlock: () => setUnsavedSheetVisible(true),
   })
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-  const [archiveModalVisible, setArchiveModalVisible] = useState(false)
+  const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
+  const [archiveSheetVisible, setArchiveSheetVisible] = useState(false)
   const targetDatePicker = useDateTimePicker({
     onConfirm: (date) =>
       setValue("targetDate", date.getTime(), { shouldDirty: true }),
@@ -331,7 +331,7 @@ export function GoalModifyContent({
             }
           >
             <View style={goalModifyStyles.targetDateLeft}>
-              <IconSvg name="calendar-outline" size={24} />
+              <IconSvg name="calendar-month" size={24} />
               <Text variant="default" style={goalModifyStyles.switchLabel}>
                 {t("screens.settings.goals.form.targetDateLabel")}
               </Text>
@@ -383,7 +383,7 @@ export function GoalModifyContent({
           <View style={goalModifyStyles.deleteSection}>
             <Button
               variant="ghost"
-              onPress={() => setArchiveModalVisible(true)}
+              onPress={() => setArchiveSheetVisible(true)}
               style={goalModifyStyles.actionButton}
             >
               <IconSvg
@@ -401,7 +401,7 @@ export function GoalModifyContent({
             </Button>
             <Button
               variant="ghost"
-              onPress={() => setDeleteModalVisible(true)}
+              onPress={() => setDeleteSheetVisible(true)}
               style={goalModifyStyles.actionButton}
             >
               <IconSvg
@@ -426,26 +426,26 @@ export function GoalModifyContent({
         onSave={handleSubmit}
       />
 
-      <GoalFormModals
-        deleteModalVisible={deleteModalVisible}
-        archiveModalVisible={archiveModalVisible}
-        unsavedModalVisible={unsavedModalVisible}
+      <GoalFormSheets
+        deleteSheetVisible={deleteSheetVisible}
+        archiveSheetVisible={archiveSheetVisible}
+        unsavedSheetVisible={unsavedSheetVisible}
         isAddMode={isAddMode}
         goal={goal}
-        onCloseDeleteModal={() => setDeleteModalVisible(false)}
-        onCloseArchiveModal={() => setArchiveModalVisible(false)}
-        onCloseUnsavedModal={() => setUnsavedModalVisible(false)}
+        onCloseDeleteSheet={() => setDeleteSheetVisible(false)}
+        onCloseArchiveSheet={() => setArchiveSheetVisible(false)}
+        onCloseUnsavedSheet={() => setUnsavedSheetVisible(false)}
         onConfirmDelete={handleDelete}
         onConfirmArchive={handleArchive}
         onDiscardAndNavigate={() => {
-          setUnsavedModalVisible(false)
+          setUnsavedSheetVisible(false)
           allowNavigation()
           handleGoBack()
         }}
       />
 
       {targetDatePicker.pickerElement}
-      <DateTimePickerModal {...targetDatePicker.modalProps} />
+      <DateTimePickerSheet {...targetDatePicker.sheetProps} />
     </View>
   )
 }

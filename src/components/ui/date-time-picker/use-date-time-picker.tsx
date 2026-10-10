@@ -13,14 +13,14 @@ type UseDatePickerOptions = {
  *
  * - Android: renders @expo/ui DateTimePicker with presentation="dialog" via
  *   `pickerElement`. Consumers must render `{picker.pickerElement}`.
- * - iOS: tracks visibility + starting value and returns `modalProps` to spread
- *   onto a <DateTimePickerModal />.
+ * - iOS: tracks visibility + starting value and returns `sheetProps` to spread
+ *   onto a <DateTimePickerSheet />.
  *
  * Usage:
  *   const picker = useDateTimePicker({ onConfirm: (date) => doSomething(date) })
  *   <Pressable onPress={() => picker.open(currentDate)} />
  *   {picker.pickerElement}
- *   <DateTimePickerModal {...picker.modalProps} />
+ *   <DateTimePickerSheet {...picker.sheetProps} />
  */
 export function useDateTimePicker({
   mode = "date",
@@ -68,7 +68,7 @@ export function useDateTimePicker({
   return {
     open,
     pickerElement,
-    modalProps: {
+    sheetProps: {
       visible,
       mode,
       value,

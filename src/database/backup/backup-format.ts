@@ -49,7 +49,19 @@ export type ValidateBackupResult =
       message: string
     }
 
-export const SCHEMA_VERSION = 3
+// v4: transactions carry `kind` (DM-1). A `kind`-less transaction row (older or
+// hand-edited snapshot) is backfilled on import via deriveKind.
+// v5: loans carry `term` (one_time | long_term). A `term`-less loan row (v4 or
+// earlier snapshot) is backfilled to `long_term` on import — every loan created
+// before Slice 4 was a screen-created progress loan.
+export const SCHEMA_VERSION = 5
+
+// v3 is accepted for one release so users can still restore a backup taken
+// before the `kind` migration (local-first: no server copy to fall back on).
+// v3 → v4 differs only by the additive `transactions.kind` column, which the
+// importer backfills. Drop this back to `SCHEMA_VERSION` once v3 exports have
+// aged out.
+export const MIN_SUPPORTED_SCHEMA_VERSION = 3
 export const BACKUP_JSON_NAME = "backup.json"
 
 export const DATE_COLUMNS = new Set([
@@ -143,6 +155,7 @@ export const ALLOWED_COLUMNS: Record<string, string[]> = {
     "description",
     "principal_amount",
     "loan_type",
+    "term",
     "due_date",
     "account_id",
     "category_id",
@@ -157,6 +170,7 @@ export const ALLOWED_COLUMNS: Record<string, string[]> = {
     "category_id",
     "amount",
     "type",
+    "kind",
     "transaction_date",
     "title",
     "description",
@@ -317,13 +331,15 @@ export function validateBackup(json: string): ValidateBackupResult {
     }
     if (
       typeof meta.schemaVersion !== "number" ||
-      meta.schemaVersion !== SCHEMA_VERSION
+      meta.schemaVersion < MIN_SUPPORTED_SCHEMA_VERSION ||
+      meta.schemaVersion > SCHEMA_VERSION
     ) {
       const schemaVersion =
         typeof meta.schemaVersion === "number" ? meta.schemaVersion : undefined
       const msg =
-        schemaVersion === undefined || schemaVersion < SCHEMA_VERSION
-          ? `Backup uses schema v${schemaVersion}. App is v${SCHEMA_VERSION}. Create a new backup with a current app version before restoring here.`
+        schemaVersion === undefined ||
+        schemaVersion < MIN_SUPPORTED_SCHEMA_VERSION
+          ? `Backup uses schema v${schemaVersion}. App supports v${MIN_SUPPORTED_SCHEMA_VERSION}–v${SCHEMA_VERSION}. Create a new backup with a current app version before restoring here.`
           : `Backup schema version ${schemaVersion} is newer than app schema version ${SCHEMA_VERSION}. Update the app first.`
       return {
         success: false,

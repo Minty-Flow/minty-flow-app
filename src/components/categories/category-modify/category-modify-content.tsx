@@ -33,7 +33,7 @@ import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
 import { CategoryFormFooter } from "./category-form-footer"
-import { CategoryFormModals } from "./category-form-modals"
+import { CategoryFormSheets } from "./category-form-sheets"
 import { categoryModifyStyles } from "./category-modify.styles"
 import type { CategoryModifyContentProps } from "./types"
 export function CategoryModifyContent({
@@ -70,13 +70,13 @@ export function CategoryModifyContent({
   const formColorSchemeName = watch("colorSchemeName")
   const formType = watch("type")
   const navigation = useNavigation()
-  const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
+  const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSubmitting,
-    onBlock: () => setUnsavedModalVisible(true),
+    onBlock: () => setUnsavedSheetVisible(true),
   })
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
   const onSubmit = async (data: AddCategoriesFormSchema) => {
     const trimmedName = data.name.trim()
     try {
@@ -222,7 +222,7 @@ export function CategoryModifyContent({
           <View style={categoryModifyStyles.deleteSection}>
             <Button
               variant="ghost"
-              onPress={() => setDeleteModalVisible(true)}
+              onPress={() => setDeleteSheetVisible(true)}
               style={categoryModifyStyles.actionButton}
             >
               <IconSvg
@@ -247,16 +247,16 @@ export function CategoryModifyContent({
         onSave={handleSubmit}
       />
 
-      <CategoryFormModals
-        deleteModalVisible={deleteModalVisible}
-        unsavedModalVisible={unsavedModalVisible}
+      <CategoryFormSheets
+        deleteSheetVisible={deleteSheetVisible}
+        unsavedSheetVisible={unsavedSheetVisible}
         isAddMode={isAddMode}
         category={category}
-        onCloseDeleteModal={() => setDeleteModalVisible(false)}
-        onCloseUnsavedModal={() => setUnsavedModalVisible(false)}
+        onCloseDeleteSheet={() => setDeleteSheetVisible(false)}
+        onCloseUnsavedSheet={() => setUnsavedSheetVisible(false)}
         onConfirmDelete={handleDelete}
         onDiscardAndNavigate={() => {
-          setUnsavedModalVisible(false)
+          setUnsavedSheetVisible(false)
           allowNavigation()
           handleGoBack()
         }}

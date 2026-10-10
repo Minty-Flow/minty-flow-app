@@ -27,7 +27,7 @@ export function CalendarCard({
   return (
     <StatCard
       title={t("screens.stats.dashboard.calendar")}
-      icon="calendar-outline"
+      icon="calendar-month"
       onPress={onPress}
     >
       {hasSpending ? (

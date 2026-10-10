@@ -23,6 +23,7 @@ import { FAB_BUTTON_STYLE } from "~/constants/fab-button"
 import { DirectionEnum } from "~/i18n/language.constants"
 import { useButtonPlacementStore } from "~/stores/button-placement.store"
 import {
+  hideDevelopmentNoticeForSession,
   isDevelopmentNoticeHiddenForSession,
   useDevelopmentNoticeStore,
 } from "~/stores/development-notice.store"
@@ -108,6 +109,10 @@ const AnimatedFABOption = ({
     const p = progress.value
     return {
       opacity: p,
+      // Only tappable once the option has visibly moved out from behind the
+      // center "+" — otherwise a fast second tap right after expanding lands on
+      // an invisible option stacked under the "+" and opens a transaction.
+      pointerEvents: p > 0.6 ? "auto" : "none",
       transform: [
         { translateX: pos.left * (p - 1) },
         { translateY: pos.top * (p - 1) },
@@ -119,7 +124,6 @@ const AnimatedFABOption = ({
     <AnimatedPressable
       {...tooltipProps}
       onPress={option.onPress}
-      pointerEvents={isExpanded ? "auto" : "none"}
       style={[
         styles.fabOptionWrapper,
         pos,
@@ -240,6 +244,9 @@ const TabLayout = () => {
     if (developmentNoticeDismissed || isDevelopmentNoticeHiddenForSession()) {
       return
     }
+    // Once per session: this layout remounts after a restore/navigation, which
+    // would otherwise show the notice again (the root upgrade gate does the same).
+    hideDevelopmentNoticeForSession()
     Alert.alert("A quick note", t("common.developmentNotice.message"), [
       {
         text: "Don't show again",
@@ -335,6 +342,7 @@ const TabLayout = () => {
               tooltipText={t("navigation.tabs.addTransaction")}
               size="icon"
               onPress={toggleFab}
+              hitSlop={{ top: 16, left: 16, right: 16, bottom: 8 }}
               style={[
                 styles.centerButton,
                 { backgroundColor: theme.colors.primary },

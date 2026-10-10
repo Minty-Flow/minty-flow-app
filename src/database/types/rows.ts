@@ -40,6 +40,7 @@ export interface RowTransaction {
   requires_manual_confirmation: number // 0 | 1 (DEFAULT 0)
   account_balance_before: number
   subtype: string | null
+  kind: string
   extra: string | null // JSON
   has_attachments: number // 0 | 1
   recurring_id: string | null
@@ -187,6 +188,7 @@ export interface RowLoan {
   description: string | null
   principal_amount: number
   loan_type: string
+  term: string
   due_date: string | null // UTC ISO
   account_id: string
   category_id: string
