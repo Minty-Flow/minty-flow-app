@@ -12,7 +12,7 @@ import { useOnboardingStore } from "~/stores/onboarding.store"
 export default function OnboardingStartScreen() {
   const { t } = useTranslation()
   const router = useRouter()
-  const { setCompleted } = useOnboardingStore()
+  const setCompleted = useOnboardingStore((s) => s.setCompleted)
 
   const handleImport = () => {
     setCompleted()

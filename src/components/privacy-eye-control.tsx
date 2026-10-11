@@ -4,8 +4,8 @@ import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { Button } from "./ui/button"
 
 export const PrivacyEyeControl = () => {
-  const { privacyMode: privacyModeEnabled, togglePrivacyMode: togglePrivacy } =
-    useMoneyFormattingStore()
+  const privacyModeEnabled = useMoneyFormattingStore((s) => s.privacyMode)
+  const togglePrivacy = useMoneyFormattingStore((s) => s.togglePrivacyMode)
   return (
     <Button variant="ghost" onPress={togglePrivacy}>
       <IconSvg

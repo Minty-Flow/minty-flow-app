@@ -3,7 +3,7 @@ import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
-import i18n from "~/i18n/config"
+import i18n, { ensureLanguageLoaded } from "~/i18n/config"
 import {
   DirectionEnum,
   type DirectionType,
@@ -50,6 +50,7 @@ export const useLanguageStore = create<LanguageStore>()(
             value === LangCodeEnum.AR ? DirectionEnum.RTL : DirectionEnum.LTR
           const shouldBeRTL = newDirection === DirectionEnum.RTL
 
+          ensureLanguageLoaded(value)
           i18n.changeLanguage(value)
           i18n.dir(newDirection)
 
@@ -95,6 +96,7 @@ export const useLanguageStore = create<LanguageStore>()(
             state.isLTR = true
           }
 
+          ensureLanguageLoaded(state.languageCode)
           i18n.changeLanguage(state.languageCode)
 
           const isRTL = state.direction === DirectionEnum.RTL

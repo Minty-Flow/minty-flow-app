@@ -9,10 +9,11 @@ import type { Recurrence, RecurrenceUnit } from "~/types/transactions"
 // (used by scripts/checks/verify-recurrence.mts) nests them under `.default`.
 // Normalise to one shape so both runtimes work.
 type RRuleModule = typeof import("rrule")
+type RRuleNamespace = typeof rruleNs
 const rrulePkg: RRuleModule =
   "RRule" in rruleNs
     ? (rruleNs as RRuleModule)
-    : (rruleNs as unknown as { default: RRuleModule }).default
+    : (rruleNs as RRuleNamespace & { default: RRuleModule }).default
 const { RRule, rrulestr } = rrulePkg
 type RRule = InstanceType<typeof RRule>
 
@@ -71,6 +72,7 @@ function parseRRule(ruleString: string): RRule {
   try {
     const result = rrulestr(ruleString)
     if (result instanceof RRule) return result
+    // rrulestr is typed as RRule but returns an RRuleSet for multi-rule strings.
     const rules = (result as unknown as RRuleSet).rrules()
     if (rules.length > 0) return rules[0]
     throw new Error(`rrulestr produced empty RRuleSet for: ${ruleString}`)

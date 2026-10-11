@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-11T07:55:49.908Z
+Generated on: 2026-10-11T12:41:35.389Z
 ```
 ./
 ├── .github/
@@ -48,10 +48,12 @@ Generated on: 2026-10-11T07:55:49.908Z
 │   │   ├── _journal.json
 │   │   ├── 0000_snapshot.json
 │   │   ├── 0001_snapshot.json
-│   │   └── 0002_snapshot.json
+│   │   ├── 0002_snapshot.json
+│   │   └── 0003_snapshot.json
 │   ├── 0000_safe_maximus.sql
 │   ├── 0001_deep_daredevil.sql
 │   ├── 0002_famous_bastion.sql
+│   ├── 0003_transaction_composite_indexes.sql
 │   ├── migrations.d.ts
 │   └── migrations.js
 ├── plugins/
@@ -405,12 +407,12 @@ Generated on: 2026-10-11T07:55:49.908Z
 │   │   ├── dynamic-icon.tsx
 │   │   ├── external-link.tsx
 │   │   ├── filter-toggle-button.tsx
-│   │   ├── forced-migration-gate.tsx
 │   │   ├── info-sheet.tsx
 │   │   ├── keyboard-sticky-view-minty.tsx
 │   │   ├── money.tsx
 │   │   ├── month-picker-sheet.tsx
 │   │   ├── month-year-picker.tsx
+│   │   ├── pre-update-backup-gate.tsx
 │   │   ├── preset-list-item.tsx
 │   │   ├── privacy-eye-control.tsx
 │   │   ├── reorderable-list.tsx
@@ -442,11 +444,13 @@ Generated on: 2026-10-11T07:55:49.908Z
 │   │   │   │   ├── entity-read-model.ts
 │   │   │   │   ├── goal-read-model.ts
 │   │   │   │   ├── loan-read-model.ts
+│   │   │   │   ├── progress-read-model.ts
 │   │   │   │   ├── stats-data.ts
 │   │   │   │   ├── stats-read-model.ts
 │   │   │   │   ├── tag-read-model.ts
 │   │   │   │   └── transaction-read-model.ts
 │   │   │   ├── db.ts
+│   │   │   ├── live-query.ts
 │   │   │   └── schema.ts
 │   │   ├── mappers/
 │   │   │   ├── account.mapper.ts
@@ -471,7 +475,7 @@ Generated on: 2026-10-11T07:55:49.908Z
 │   │   │   ├── has-attachments-from-extra.ts
 │   │   │   └── import-snapshot.ts
 │   │   ├── db.ts
-│   │   ├── forced-migration.ts
+│   │   ├── pending-migrations.ts
 │   │   ├── transaction.ts
 │   │   └── write-queue.ts
 │   ├── domain/
@@ -493,6 +497,7 @@ Generated on: 2026-10-11T07:55:49.908Z
 │   │   ├── use-retention-cleanup.ts
 │   │   ├── use-scroll-into-view.ts
 │   │   ├── use-shake-listener.ts
+│   │   ├── use-tab-visibility.tsx
 │   │   ├── use-time-reactivity.ts
 │   │   ├── use-transaction-lifecycle-sync.ts
 │   │   └── use-transaction-list-state.ts
@@ -521,7 +526,6 @@ Generated on: 2026-10-11T07:55:49.908Z
 │   │   ├── bill-splitter.store.ts
 │   │   ├── button-placement.store.ts
 │   │   ├── calendar-format.store.ts
-│   │   ├── db-migration.store.ts
 │   │   ├── development-notice.store.ts
 │   │   ├── exchange-rates-preferences.store.ts
 │   │   ├── export-history.store.ts

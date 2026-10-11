@@ -9,6 +9,7 @@ import Animated, {
 } from "react-native-reanimated"
 import { StyleSheet } from "react-native-unistyles"
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets"
+import { useShallow } from "zustand/react/shallow"
 
 import type { IconSvgName } from "~/components/icons"
 import { IconSvg } from "~/components/icons"
@@ -209,7 +210,9 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
   )
 }
 export const ToastManager = () => {
-  const { toasts, hide } = useToastStore()
+  const { toasts, hide } = useToastStore(
+    useShallow((s) => ({ toasts: s.toasts, hide: s.hide })),
+  )
   if (toasts.length === 0) {
     return null
   }

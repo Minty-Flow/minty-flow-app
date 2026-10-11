@@ -1,4 +1,4 @@
-import { count } from "drizzle-orm"
+import { count, sql } from "drizzle-orm"
 import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 
 import { getThemeStrict } from "~/styles/theme/registry"
@@ -11,7 +11,12 @@ import {
   type LiveReadModelResult,
 } from "./entity-read-model"
 
-export function useTagsQuery(): LiveReadModelResult<Tag[]> {
+/**
+ * `withCounts` fills `transactionCount`. Off by default because the count
+ * query re-runs on every tag link write; enable it only where the count is
+ * shown or checked (delete warning). Without it `transactionCount` is 0.
+ */
+export function useTagsQuery(withCounts = false): LiveReadModelResult<Tag[]> {
   const tagsResult = useLiveQuery(
     drizzleDb.select().from(tags).orderBy(tags.name),
   )
@@ -22,7 +27,9 @@ export function useTagsQuery(): LiveReadModelResult<Tag[]> {
         count: count(),
       })
       .from(transactionTags)
+      .where(withCounts ? undefined : sql`1 = 0`)
       .groupBy(transactionTags.tagId),
+    [withCounts],
   )
   const counts = new Map(countsResult.data.map((row) => [row.tagId, row.count]))
 
@@ -41,6 +48,6 @@ export function useTagsQuery(): LiveReadModelResult<Tag[]> {
   return createLiveReadModelResult(data, [tagsResult, countsResult])
 }
 
-export function useTags(): Tag[] {
-  return useTagsQuery().data
+export function useTags(withCounts = false): Tag[] {
+  return useTagsQuery(withCounts).data
 }

@@ -17,15 +17,11 @@ import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
-import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
+import { useAccountPeriodTotals } from "~/database/drizzle/read-models/progress-read-model"
 import { updateAccountsOrder } from "~/database/services/account-service"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import type { Account } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
-import {
-  TransactionSubTypeEnum,
-  TransactionTypeEnum,
-} from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { getMonthRange } from "~/utils/time-utils"
 
@@ -43,49 +39,14 @@ function AccountsScreen() {
     const now = new Date()
     return getMonthRange(now.getFullYear(), now.getMonth())
   })()
-  const { items: transactionsFull, status: transactionsStatus } =
-    useTransactions({
-      from: new Date(fromDate).toISOString(),
-      to: new Date(toDate).toISOString(),
-    })
-  if (transactionsStatus === "loading" && transactionsFull.length === 0)
-    return <RouteLoadingState />
+  const { totals: totalsByAccount, isReady: totalsReady } =
+    useAccountPeriodTotals(
+      new Date(fromDate),
+      new Date(toDate),
+      excludeFromTotals,
+    )
+  if (!totalsReady) return <RouteLoadingState />
   const accountsWithMonthTotals = (() => {
-    const totalsByAccount = new Map<
-      string,
-      {
-        in: number
-        out: number
-        net: number
-      }
-    >()
-    for (const t of transactionsFull) {
-      if (t.isDeleted || t.isPending) continue
-      const cur = totalsByAccount.get(t.accountId) ?? {
-        in: 0,
-        out: 0,
-        net: 0,
-      }
-      // Loan cash flows (opening entry + repayments) are not generic income/expense.
-      if (t.loanId != null) continue
-      if (t.type === TransactionTypeEnum.INCOME) {
-        cur.in += t.amount
-      } else if (t.type === TransactionTypeEnum.EXPENSE) {
-        if (t.subtype === TransactionSubTypeEnum.REFUND) {
-          cur.out -= t.amount
-        } else {
-          cur.out += t.amount
-        }
-      } else if (
-        !excludeFromTotals &&
-        (t.type === TransactionTypeEnum.TRANSFER || t.isTransfer)
-      ) {
-        if (t.amount > 0) cur.in += t.amount
-        else cur.out += Math.abs(t.amount)
-      }
-      cur.net = cur.in - cur.out
-      totalsByAccount.set(t.accountId, cur)
-    }
     return accounts.map((account) => {
       const totals = totalsByAccount.get(account.id) ?? {
         in: 0,

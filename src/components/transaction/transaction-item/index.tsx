@@ -5,6 +5,7 @@ import Swipeable, {
 } from "react-native-gesture-handler/ReanimatedSwipeable"
 import type { SharedValue } from "react-native-reanimated"
 import { useUnistyles } from "react-native-unistyles"
+import { useShallow } from "zustand/react/shallow"
 
 import { IconSvg } from "~/components/icons"
 import { Pressable } from "~/components/ui/pressable"
@@ -49,6 +50,35 @@ interface TransactionItemProps {
   leftActionAccessibilityLabel?: string
   variant?: TransactionItemVariant
 }
+/**
+ * Own component so the time-based confirmable check (a scheduler subscription
+ * per row) only exists for upcoming rows that can show the button.
+ */
+const ConfirmButton = ({
+  transaction,
+  onConfirm,
+}: {
+  transaction: TransactionWithRelations
+  onConfirm: () => void
+}) => {
+  const { t } = useTranslation()
+  const { theme } = useUnistyles()
+  const isConfirmable = useIsConfirmable(transaction)
+  if (!isConfirmable) return null
+  return (
+    <Pressable
+      style={[
+        transactionItemStyles.confirmButton,
+        { backgroundColor: theme.colors.semantic.success },
+      ]}
+      onPress={onConfirm}
+      accessibilityLabel={t("screens.home.upcoming.a11y.confirm")}
+    >
+      <IconSvg name="check" size={18} color={theme.colors.onError} />
+    </Pressable>
+  )
+}
+
 export const TransactionItem = ({
   transactionWithRelations,
   onPress,
@@ -119,15 +149,18 @@ export const TransactionItem = ({
       ? TransactionTypeEnum.INCOME
       : type
   // ── Appearance preferences ──────────────────────────────────────────────
-  const appearanceVariant = useTransactionItemAppearanceStore((s) => s.variant)
-  const showCategoryInSubtitle = useTransactionItemAppearanceStore(
-    (s) => s.showCategory,
-  )
-  const showUntitledForBlankTitle = useTransactionItemAppearanceStore(
-    (s) => s.showUntitledForBlankTitle,
-  )
-  const leadingIconPref = useTransactionItemAppearanceStore(
-    (s) => s.leadingIcon,
+  const {
+    variant: appearanceVariant,
+    showCategory: showCategoryInSubtitle,
+    showUntitledForBlankTitle,
+    leadingIcon: leadingIconPref,
+  } = useTransactionItemAppearanceStore(
+    useShallow((s) => ({
+      variant: s.variant,
+      showCategory: s.showCategory,
+      showUntitledForBlankTitle: s.showUntitledForBlankTitle,
+      leadingIcon: s.leadingIcon,
+    })),
   )
   const untitledLabel = t("common.transaction.untitledTransaction")
   const trimmedTitle = title?.trim() || undefined
@@ -140,13 +173,14 @@ export const TransactionItem = ({
     leadingIconPref === "account" ? (account?.icon ?? icon) : icon
   const displayColorScheme =
     leadingIconPref === "account" ? account?.colorScheme : category?.colorScheme
-  const autoPaySubscriptions = usePendingTransactionsStore(
-    (s) => s.autoPaySubscriptions,
-  )
-  const autoPayRepetitive = usePendingTransactionsStore(
-    (s) => s.autoPayRepetitive,
-  )
-  const autoPayUpcoming = usePendingTransactionsStore((s) => s.autoPayUpcoming)
+  const { autoPaySubscriptions, autoPayRepetitive, autoPayUpcoming } =
+    usePendingTransactionsStore(
+      useShallow((s) => ({
+        autoPaySubscriptions: s.autoPaySubscriptions,
+        autoPayRepetitive: s.autoPayRepetitive,
+        autoPayUpcoming: s.autoPayUpcoming,
+      })),
+    )
   // Show the manual confirm affordance only for rows that will NOT auto-pay.
   const requireConfirmation = !isPreapproved(transactionWithRelations, {
     autoPaySubscriptions,
@@ -154,7 +188,6 @@ export const TransactionItem = ({
     autoPayUpcoming,
   })
   const isUpcoming = variant === "upcoming"
-  const isConfirmable = useIsConfirmable(transactionWithRelations)
   const isAutoRecurring = Boolean(extra?.recurringId)
   const accountLabel =
     isCombinedTransfer && relatedAccount
@@ -281,17 +314,11 @@ export const TransactionItem = ({
         />
       </Pressable>
 
-      {isUpcoming && isConfirmable && requireConfirmation && onConfirm && (
-        <Pressable
-          style={[
-            transactionItemStyles.confirmButton,
-            { backgroundColor: theme.colors.semantic.success },
-          ]}
-          onPress={onConfirm}
-          accessibilityLabel={t("screens.home.upcoming.a11y.confirm")}
-        >
-          <IconSvg name="check" size={18} color={theme.colors.onError} />
-        </Pressable>
+      {isUpcoming && requireConfirmation && onConfirm && (
+        <ConfirmButton
+          transaction={transactionWithRelations}
+          onConfirm={onConfirm}
+        />
       )}
     </View>
   )

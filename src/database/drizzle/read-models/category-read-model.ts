@@ -12,7 +12,15 @@ import {
   type LiveReadModelResult,
 } from "./entity-read-model"
 
-export function useCategoriesQuery(): LiveReadModelResult<Category[]> {
+/**
+ * `withCounts` fills `transactionCount`. It defaults to off because the count
+ * query re-runs on every transaction write; leave it off unless the screen
+ * shows or checks the count (category list, edit/delete warnings). Without it
+ * `transactionCount` is 0.
+ */
+export function useCategoriesQuery(
+  withCounts = false,
+): LiveReadModelResult<Category[]> {
   const categoriesResult = useLiveQuery(
     drizzleDb.select().from(categories).orderBy(categories.name),
   )
@@ -24,9 +32,12 @@ export function useCategoriesQuery(): LiveReadModelResult<Category[]> {
       })
       .from(transactions)
       .where(
-        sql`${transactions.categoryId} IS NOT NULL AND ${transactions.isDeleted} = 0`,
+        withCounts
+          ? sql`${transactions.categoryId} IS NOT NULL AND ${transactions.isDeleted} = 0`
+          : sql`1 = 0`,
       )
       .groupBy(transactions.categoryId),
+    [withCounts],
   )
   const counts = new Map(
     countsResult.data.map((row) => [row.categoryId, row.count]),
@@ -69,14 +80,20 @@ export function useCategoriesByTypeMap(): Record<TransactionType, Category[]> {
 
 export function useCategoriesByTypeQuery(
   type: string,
+  withCounts = false,
 ): LiveReadModelResult<Category[]> {
-  const result = useCategoriesQuery()
+  const result = useCategoriesQuery(withCounts)
   return {
     ...result,
     data: result.data.filter((category) => category.type === type),
   }
 }
 
-export function useCategory(id: string): Category | undefined {
-  return useCategories().find((category) => category.id === id)
+export function useCategory(
+  id: string,
+  withCounts = false,
+): Category | undefined {
+  return useCategoriesQuery(withCounts).data.find(
+    (category) => category.id === id,
+  )
 }

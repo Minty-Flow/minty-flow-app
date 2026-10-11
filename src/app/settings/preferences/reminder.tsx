@@ -2,6 +2,7 @@ import * as Notifications from "expo-notifications"
 import { useTranslation } from "react-i18next"
 import { Linking, Platform, ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
+import { useShallow } from "zustand/react/shallow"
 
 import {
   SettingsSwitchRow,
@@ -40,7 +41,14 @@ export default function ReminderScreen() {
     dailyReminderTime,
     setDailyReminderEnabled,
     setDailyReminderTime,
-  } = useNotificationStore()
+  } = useNotificationStore(
+    useShallow((s) => ({
+      isDailyReminderEnabled: s.isDailyReminderEnabled,
+      dailyReminderTime: s.dailyReminderTime,
+      setDailyReminderEnabled: s.setDailyReminderEnabled,
+      setDailyReminderTime: s.setDailyReminderTime,
+    })),
+  )
 
   const { t } = useTranslation()
 

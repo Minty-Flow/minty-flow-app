@@ -42,8 +42,3 @@ export function getDb(): SQLite.SQLiteDatabase {
 
   return db
 }
-
-export function closeDbSync(): void {
-  DB?.closeSync()
-  DB = null
-}

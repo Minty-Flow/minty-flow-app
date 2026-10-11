@@ -26,7 +26,19 @@
     "errorBoundary": {
       "title": "Something went wrong"
     },
+    "preUpdateBackup": {
+      "checking": "Checking your data...",
+      "title": "Save a backup first",
+      "description": "This update changes your database. Save a backup to your phone before it starts so you have a recovery copy. If you continue without one and the update fails, your data may be lost.",
+      "note": "Keep Minty Flow open until the update finishes.",
+      "saveBackup": "Save backup",
+      "continueWithout": "Continue without backup",
+      "failed": "Couldn't save the backup. Try again."
+    },
     "developmentNotice": {
+      "title": "A quick note",
+      "dontShowAgain": "Don't show again",
+
       "message": "Minty Flow is still in development, so data loss may happen. I'm sorry for that. Starting with this release, I'm focused on stability and safer backups for future updates."
     },
     "sheets": {

@@ -1,5 +1,11 @@
 import { useRouter } from "expo-router"
-import { type ComponentProps, Fragment, useEffect, useState } from "react"
+import {
+  type ComponentProps,
+  Fragment,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 import { useTranslation } from "react-i18next"
 import { Alert, View as RNView } from "react-native"
 import { usePagerView } from "react-native-pager-view"
@@ -20,6 +26,7 @@ import { Pressable } from "~/components/ui/pressable"
 import { useTooltipTrigger } from "~/components/ui/tooltip"
 import { View } from "~/components/ui/view"
 import { FAB_BUTTON_STYLE } from "~/constants/fab-button"
+import { ActiveTabContext, TabIndexContext } from "~/hooks/use-tab-visibility"
 import { DirectionEnum } from "~/i18n/language.constants"
 import { useButtonPlacementStore } from "~/stores/button-placement.store"
 import {
@@ -185,6 +192,10 @@ const TabLayout = () => {
     onPageScroll,
     onPageScrollStateChanged,
   } = usePagerView()
+  // Tabs mount on first visit and stay mounted, so hidden tabs don't run their
+  // queries (or re-run them on every DB write) until the user opens them.
+  const mountedTabs = useRef(new Set([0]))
+  mountedTabs.current.add(activePage)
   const [fabExpanded, setFabExpanded] = useState(false)
   const { rotateStyle, overlayStyle } = useFabAnimation(fabExpanded)
   const router = useRouter()
@@ -247,32 +258,44 @@ const TabLayout = () => {
     // Once per session: this layout remounts after a restore/navigation, which
     // would otherwise show the notice again (the root upgrade gate does the same).
     hideDevelopmentNoticeForSession()
-    Alert.alert("A quick note", t("common.developmentNotice.message"), [
-      {
-        text: "Don't show again",
-        onPress: dismissDevelopmentNotice,
-      },
-      { text: t("common.actions.ok") },
-    ])
+    Alert.alert(
+      t("common.developmentNotice.title"),
+      t("common.developmentNotice.message"),
+      [
+        {
+          text: t("common.developmentNotice.dontShowAgain"),
+          onPress: dismissDevelopmentNotice,
+        },
+        { text: t("common.actions.ok") },
+      ],
+    )
   }, [developmentNoticeDismissed, dismissDevelopmentNotice, t])
 
   return (
     <View style={styles.container}>
       {/* PAGER */}
-      <AnimatedPagerView
-        collapsable={false}
-        ref={ref}
-        style={styles.pager}
-        initialPage={0}
-        layoutDirection={isRTL ? DirectionEnum.RTL : DirectionEnum.LTR}
-        onPageSelected={onPageSelected}
-        onPageScroll={onPageScroll}
-        onPageScrollStateChanged={onPageScrollStateChanged}
-      >
-        {TABS.map((tab) => (
-          <tab.component key={tab.key} />
-        ))}
-      </AnimatedPagerView>
+      <ActiveTabContext.Provider value={activePage}>
+        <AnimatedPagerView
+          collapsable={false}
+          ref={ref}
+          style={styles.pager}
+          initialPage={0}
+          layoutDirection={isRTL ? DirectionEnum.RTL : DirectionEnum.LTR}
+          onPageSelected={onPageSelected}
+          onPageScroll={onPageScroll}
+          onPageScrollStateChanged={onPageScrollStateChanged}
+        >
+          {TABS.map((tab, i) =>
+            mountedTabs.current.has(i) ? (
+              <TabIndexContext.Provider key={tab.key} value={i}>
+                <tab.component />
+              </TabIndexContext.Provider>
+            ) : (
+              <RNView key={tab.key} collapsable={false} />
+            ),
+          )}
+        </AnimatedPagerView>
+      </ActiveTabContext.Provider>
 
       <RNView
         collapsable={false}

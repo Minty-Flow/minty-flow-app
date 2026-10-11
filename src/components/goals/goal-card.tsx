@@ -8,11 +8,10 @@ import { Money } from "~/components/money"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
+import { useGoalProgress } from "~/database/drizzle/read-models/progress-read-model"
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { Goal } from "~/types/goals"
-import { getLiveGoalProgress } from "~/utils/live-progress"
 
 interface GoalCardProps {
   goal: Goal
@@ -20,8 +19,7 @@ interface GoalCardProps {
 }
 
 export function GoalCard({ goal, onPress }: GoalCardProps) {
-  const { items: progressTransactions } = useTransactions({ goalId: goal.id })
-  const currentAmount = getLiveGoalProgress(goal, progressTransactions)
+  const currentAmount = useGoalProgress(goal)
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const isRTL = useLanguageStore((s) => s.isRTL)

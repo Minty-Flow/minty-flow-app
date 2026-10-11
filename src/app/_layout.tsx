@@ -14,9 +14,9 @@ import { UnistylesRuntime, useUnistyles } from "react-native-unistyles"
 
 import { AppLockGate } from "~/components/app-lock-gate"
 import {
-  ForcedMigrationGate,
   MigrationState,
-} from "~/components/forced-migration-gate"
+  PreUpdateBackupGate,
+} from "~/components/pre-update-backup-gate"
 import { RouteErrorBoundary } from "~/components/route-error-boundary"
 import { ToastManager } from "~/components/ui/toast"
 import { TooltipProvider } from "~/components/ui/tooltip"
@@ -38,9 +38,9 @@ import migrations from "../../drizzle/migrations"
 
 export default function RootLayout() {
   return (
-    <ForcedMigrationGate>
+    <PreUpdateBackupGate>
       <DrizzleMigratedApp />
-    </ForcedMigrationGate>
+    </PreUpdateBackupGate>
   )
 }
 
@@ -84,8 +84,6 @@ function AppRootLayout() {
     }
   }, [isOnboardingCompleted, segments, router])
 
-  // Ports to reality: retention cleanup and recurring sync (effects live in domain hooks)
-  // Rehydrate shake listener on app start if mask-on-shake was enabled (store-owned subscription)
   useEffect(() => {
     if (Platform.OS === "android") {
       Notifications.setNotificationChannelAsync("transaction-reminders", {
@@ -142,7 +140,6 @@ function AppRootLayout() {
                     paddingBottom: UnistylesRuntime.insets.bottom, // Global horizontal gutter
                     backgroundColor: theme.colors.surface, // Ensure background matches
                   },
-                  // animation: "fade",
                   // if you decided to use this some screens wont have the edit pen in them so be careful
                   // header: (props) =>   <ScreenSharedHeader props={props} />,
                 }}

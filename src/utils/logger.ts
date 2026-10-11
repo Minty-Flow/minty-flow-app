@@ -32,7 +32,10 @@ const base = (level: LogLevel, msg: string, meta?: Record<string, unknown>) => {
 }
 
 export const logger = {
-  debug: (msg: string, meta?: Record<string, unknown>) => base("debug", msg, meta),
+  // Skipped outside dev so release builds don't build or serialize debug output.
+  debug: (msg: string, meta?: Record<string, unknown>) => {
+    if (__DEV__) base("debug", msg, meta)
+  },
   info: (msg: string, meta?: Record<string, unknown>) => base("info", msg, meta),
   warn: (msg: string, meta?: Record<string, unknown>) => base("warn", msg, meta),
   error: (msg: string, meta?: Record<string, unknown>) => base("error", msg, meta),

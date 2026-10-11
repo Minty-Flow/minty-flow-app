@@ -1,5 +1,5 @@
 import { Group, Paint } from "@shopify/react-native-skia"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
   Easing,
@@ -106,7 +106,10 @@ export function StatsCategoryPie({
     selectedIndexSv.value = selectedSlice?.index ?? -1
   }, [selectedSlice, selectedIndexSv])
   // Randomized once per theme category (re-shuffles only when the user switches theme category)
-  const fallbackPalette = shuffleArray(getThemeVariantPalette(theme.name))
+  const fallbackPalette = useMemo(
+    () => shuffleArray(getThemeVariantPalette(theme.name)),
+    [theme.name],
+  )
   const { pieData, legendItems, total } = (() => {
     if (breakdown.length === 0) {
       return { pieData: [], legendItems: [], total: 0 }

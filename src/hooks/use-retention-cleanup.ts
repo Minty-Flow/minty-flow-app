@@ -22,13 +22,23 @@ export function useRetentionCleanup(): void {
     if (now - lastPurgeRef.current < PURGE_THROTTLE_MS) return
     if (isRunningRef.current) return
     isRunningRef.current = true
-    autoPurgeTrash(retentionPeriod)
-      .then(() => {
-        lastPurgeRef.current = Date.now()
-      })
-      .catch((e) => logger.error("Trash purge failed", { error: String(e) }))
-      .finally(() => {
-        isRunningRef.current = false
-      })
+    // Keep the purge out of the first render and its transitions.
+    let started = false
+    const handle = requestIdleCallback(() => {
+      started = true
+      autoPurgeTrash(retentionPeriod)
+        .then(() => {
+          lastPurgeRef.current = Date.now()
+        })
+        .catch((e) => logger.error("Trash purge failed", { error: String(e) }))
+        .finally(() => {
+          isRunningRef.current = false
+        })
+    })
+    return () => {
+      // Cancelled before it ran: release the guard (a running purge releases it itself).
+      cancelIdleCallback(handle)
+      if (!started) isRunningRef.current = false
+    }
   }, [retentionPeriod])
 }

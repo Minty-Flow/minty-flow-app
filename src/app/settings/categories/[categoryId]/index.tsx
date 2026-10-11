@@ -39,7 +39,7 @@ export default function CategoryDetailsScreen() {
     showFilters,
     toggleFilters,
   } = useTransactionListFilters()
-  const category = useCategory(categoryId ?? "")
+  const category = useCategory(categoryId ?? "", true)
   const { items: transactionsFull } = useTransactions(
     categoryId
       ? {
