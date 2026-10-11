@@ -1,9 +1,8 @@
-import { useLiveQuery } from "drizzle-orm/expo-sqlite"
-
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Goal, GoalType } from "~/types/goals"
 
 import { drizzleDb } from "../db"
+import { useLiveQuery } from "../live-query"
 import { goalAccounts, goals } from "../schema"
 import {
   createLiveReadModelResult,

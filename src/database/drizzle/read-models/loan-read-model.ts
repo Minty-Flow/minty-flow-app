@@ -1,11 +1,11 @@
 import { and, eq, isNotNull, sql } from "drizzle-orm"
-import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 
 import { getRepaymentTypeForLoan } from "~/domain/transaction-kind"
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Loan, LoanTerm, LoanType } from "~/types/loans"
 
 import { drizzleDb } from "../db"
+import { useLiveQuery } from "../live-query"
 import { loans, transactions } from "../schema"
 import {
   createLiveReadModelResult,
