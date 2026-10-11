@@ -1,5 +1,6 @@
-import { and, eq, gte, inArray, lte, sql } from "drizzle-orm"
+import { and, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm"
 import { useLiveQuery } from "drizzle-orm/expo-sqlite"
+import { useMemo } from "react"
 
 import type { Budget } from "~/types/budgets"
 import type { Goal } from "~/types/goals"
@@ -89,4 +90,60 @@ export function useGoalProgress(goal: Goal): number {
     [goal.id, goal.currencyCode, type],
   )
   return data[0]?.total ?? 0
+}
+
+export interface AccountPeriodTotals {
+  in: number
+  out: number
+  net: number
+}
+
+/**
+ * Per-account money in/out for `[from, to]` in one grouped query, instead of
+ * hydrating every transaction of the period. Loan cash flows are excluded;
+ * refunds reduce `out`; transfer legs count by sign unless `excludeTransfers`.
+ */
+export function useAccountPeriodTotals(
+  from: Date,
+  to: Date,
+  excludeTransfers: boolean,
+): Map<string, AccountPeriodTotals> {
+  const fromIso = from.toISOString()
+  const toIso = to.toISOString()
+  const transferIn = excludeTransfers
+    ? sql`0`
+    : sql`CASE WHEN ${transactions.type} = ${TransactionTypeEnum.TRANSFER} AND ${transactions.amount} > 0 THEN ${transactions.amount} ELSE 0 END`
+  const transferOut = excludeTransfers
+    ? sql`0`
+    : sql`CASE WHEN ${transactions.type} = ${TransactionTypeEnum.TRANSFER} AND ${transactions.amount} <= 0 THEN -${transactions.amount} ELSE 0 END`
+  const { data } = useLiveQuery(
+    drizzleDb
+      .select({
+        accountId: transactions.accountId,
+        in: sql<number>`COALESCE(SUM(CASE WHEN ${transactions.type} = ${TransactionTypeEnum.INCOME} THEN ${transactions.amount} ELSE 0 END + ${transferIn}), 0)`,
+        out: sql<number>`COALESCE(SUM(CASE WHEN ${transactions.type} = ${TransactionTypeEnum.EXPENSE} THEN (CASE WHEN ${transactions.subtype} = ${TransactionSubTypeEnum.REFUND} THEN -${transactions.amount} ELSE ${transactions.amount} END) ELSE 0 END + ${transferOut}), 0)`,
+      })
+      .from(transactions)
+      .where(
+        and(
+          eq(transactions.isDeleted, 0),
+          eq(transactions.isPending, 0),
+          isNull(transactions.loanId),
+          gte(transactions.transactionDate, fromIso),
+          lte(transactions.transactionDate, toIso),
+        ),
+      )
+      .groupBy(transactions.accountId),
+    [fromIso, toIso, excludeTransfers],
+  )
+  return useMemo(
+    () =>
+      new Map(
+        data.map((row) => [
+          row.accountId,
+          { in: row.in, out: row.out, net: row.in - row.out },
+        ]),
+      ),
+    [data],
+  )
 }
