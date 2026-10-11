@@ -57,10 +57,12 @@ function resolveTransactionKind(
 }
 
 export async function resetDatabaseForBackupImport(): Promise<void> {
+  // One statement per run(): expo-sqlite prepares a single statement, so a
+  // joined "DELETE ...; DELETE ..." script would only clear the first table.
   await runInTransaction("import.reset", (db) => {
-    db.run(
-      sql.raw(RESET_ORDER.map((table) => `DELETE FROM ${table}`).join(";\n")),
-    )
+    for (const table of RESET_ORDER) {
+      db.run(sql.raw(`DELETE FROM ${table}`))
+    }
   })
 }
 
