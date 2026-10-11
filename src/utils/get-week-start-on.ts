@@ -38,10 +38,9 @@ export const getDeviceWeekStartsOn = (): 0 | 1 | 2 | 3 | 4 | 5 | 6 => {
       Intl.DateTimeFormat().resolvedOptions().locale,
     )
 
+    // `weekInfo` is not in the standard lib typings yet.
     const weekInfo = (
-      locale as unknown as {
-        weekInfo?: { firstDay?: number }
-      }
+      locale as Intl.Locale & { weekInfo?: { firstDay?: number } }
     ).weekInfo
 
     if (weekInfo?.firstDay != null) {
