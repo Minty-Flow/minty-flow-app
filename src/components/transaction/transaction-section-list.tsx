@@ -41,6 +41,7 @@ import {
   applyTransactionFilters,
   applyTransferLayout,
   buildTransactionSections,
+  type TransactionSection,
 } from "~/utils/transaction-list-utils"
 
 interface TransactionSectionListProps {
@@ -172,7 +173,7 @@ export function TransactionSectionList({
     [handleOnTransactionPress, handleDeleteDone, handleWillOpen],
   )
   return (
-    <SectionList
+    <SectionList<TransactionWithRelations, TransactionSection>
       sections={sections}
       ListHeaderComponent={header}
       ListEmptyComponent={emptyList}
@@ -182,11 +183,7 @@ export function TransactionSectionList({
       maxToRenderPerBatch={10}
       renderItem={renderItem}
       renderSectionHeader={({ section }) => {
-        const s = section as unknown as {
-          title: string
-          data: TransactionWithRelations[]
-          totals: Record<string, number>
-        }
+        const s = section
         if (!s.title && s.data.length === 0) return null
         return (
           <View style={styles.sectionHeader}>
