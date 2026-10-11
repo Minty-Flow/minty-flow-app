@@ -118,33 +118,16 @@ async function fetchStatsTransactions(
      FROM transactions t
      WHERE t.is_deleted = 0
        AND t.is_pending = 0
-       AND t.id NOT IN (SELECT from_transaction_id FROM transfers UNION SELECT to_transaction_id FROM transfers)
+       AND NOT EXISTS (SELECT 1 FROM transfers tr WHERE tr.from_transaction_id = t.id OR tr.to_transaction_id = t.id)
        AND t.transaction_date >= ${from}
        AND t.transaction_date <= ${to}`)
 
   if (rows.length === 0) return []
 
-  const accountIds = [...new Set(rows.map((r) => r.account_id))]
-  const categoryIds = [
-    ...new Set(rows.flatMap((r) => (r.category_id ? [r.category_id] : []))),
-  ]
-
-  const [accountRows, categoryRows] = await Promise.all([
-    drizzleDb.all<RowAccount>(
-      sql`SELECT * FROM accounts WHERE id IN (${sql.join(
-        accountIds.map((id) => sql`${id}`),
-        sql`, `,
-      )})`,
-    ),
-    categoryIds.length > 0
-      ? drizzleDb.all<RowCategory>(
-          sql`SELECT * FROM categories WHERE id IN (${sql.join(
-            categoryIds.map((id) => sql`${id}`),
-            sql`, `,
-          )})`,
-        )
-      : Promise.resolve([] as RowCategory[]),
-  ])
+  // Whole tables, not `IN (?, ?, ...)`: both are small, and one bound
+  // parameter per id breaks past SQLite's variable limit.
+  const accountRows = drizzleDb.all<RowAccount>(sql`SELECT * FROM accounts`)
+  const categoryRows = drizzleDb.all<RowCategory>(sql`SELECT * FROM categories`)
 
   const accountMap = new Map(accountRows.map((a) => [a.id, a]))
   const categoryMap = new Map(categoryRows.map((c) => [c.id, c]))
@@ -197,13 +180,7 @@ async function fetchBalanceTimeline(
 
   if (rows.length === 0) return []
 
-  const accountIds = [...new Set(rows.map((r) => r.account_id))]
-  const accountRows = drizzleDb.all<RowAccount>(
-    sql`SELECT * FROM accounts WHERE id IN (${sql.join(
-      accountIds.map((id) => sql`${id}`),
-      sql`, `,
-    )})`,
-  )
+  const accountRows = drizzleDb.all<RowAccount>(sql`SELECT * FROM accounts`)
   const accountMap = new Map(accountRows.map((a) => [a.id, a]))
 
   return rows.map((tx) => ({
@@ -236,18 +213,14 @@ async function fetchPendingSummary(
      FROM transactions t
      WHERE t.is_deleted = 0
        AND t.is_pending = 1
-       AND t.id NOT IN (SELECT from_transaction_id FROM transfers UNION SELECT to_transaction_id FROM transfers)
+       AND NOT EXISTS (SELECT 1 FROM transfers tr WHERE tr.from_transaction_id = t.id OR tr.to_transaction_id = t.id)
        AND t.transaction_date >= ${from}
        AND t.transaction_date <= ${to}`)
 
   if (rows.length === 0) return new Map()
 
-  const accountIds = [...new Set(rows.map((r) => r.account_id))]
   const accountRows = drizzleDb.all<Pick<RowAccount, "id" | "currency_code">>(
-    sql`SELECT id, currency_code FROM accounts WHERE id IN (${sql.join(
-      accountIds.map((id) => sql`${id}`),
-      sql`, `,
-    )})`,
+    sql`SELECT id, currency_code FROM accounts`,
   )
   const accountMap = new Map(accountRows.map((a) => [a.id, a.currency_code]))
 
@@ -599,25 +572,36 @@ function computeForecast(
   }
 }
 
+const TAG_QUERY_CHUNK = 500
+
+interface TxTagRow {
+  transaction_id: string
+  tag_id: string
+  name: string
+  icon: string | null
+}
+
 async function computeTopTags(rows: StatsRawRow[]): Promise<TopTagItem[]> {
   const expenseRows = rows.filter(isRealExpense)
   if (expenseRows.length === 0) return []
 
   const txIds = expenseRows.map((r) => r.transactionId)
 
-  const txTagRows = drizzleDb.all<{
-    transaction_id: string
-    tag_id: string
-    name: string
-    icon: string | null
-  }>(sql`
+  // Chunked so a large range never exceeds SQLite's bound-variable limit.
+  const txTagRows: TxTagRow[] = []
+  for (let i = 0; i < txIds.length; i += TAG_QUERY_CHUNK) {
+    const chunk = txIds.slice(i, i + TAG_QUERY_CHUNK)
+    txTagRows.push(
+      ...drizzleDb.all<TxTagRow>(sql`
     SELECT tt.transaction_id, tt.tag_id, tg.name, tg.icon
      FROM transaction_tags tt
      JOIN tags tg ON tt.tag_id = tg.id
      WHERE tt.transaction_id IN (${sql.join(
-       txIds.map((id) => sql`${id}`),
+       chunk.map((id) => sql`${id}`),
        sql`, `,
-     )})`)
+     )})`),
+    )
+  }
 
   if (txTagRows.length === 0) return []
 
