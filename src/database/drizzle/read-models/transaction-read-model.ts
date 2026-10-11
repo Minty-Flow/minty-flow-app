@@ -236,54 +236,59 @@ function hydrateTransactionRows({
   })
 }
 
+/**
+ * The five queries a hydrated transaction list needs, shared by the live hook
+ * and the one-off loader. Tags and transfers are scoped to the loaded
+ * transactions with a subquery (not an id list, which would hit SQLite's
+ * bound-variable limit).
+ */
+function buildTransactionQueries(filters: TransactionFilters) {
+  const conditions = getConditions(filters)
+  const matching = () =>
+    drizzleDb
+      .select({ id: transactions.id })
+      .from(transactions)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(desc(transactions.transactionDate), desc(transactions.createdAt))
+      .limit(filters.limit ?? -1)
+      .offset(filters.offset ?? 0)
+  return {
+    rows: drizzleDb
+      .select(txSelection)
+      .from(transactions)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(desc(transactions.transactionDate), desc(transactions.createdAt))
+      .limit(filters.limit ?? -1)
+      .offset(filters.offset ?? 0),
+    accounts: drizzleDb.select(accountSelection).from(accounts),
+    categories: drizzleDb.select(categorySelection).from(categories),
+    tags: drizzleDb
+      .select(tagSelection)
+      .from(transactionTags)
+      .where(inArray(transactionTags.transactionId, matching())),
+    transfers: drizzleDb
+      .select(transferSelection)
+      .from(transfers)
+      .where(
+        or(
+          inArray(transfers.fromTransactionId, matching()),
+          inArray(transfers.toTransactionId, matching()),
+        ),
+      ),
+  }
+}
+
 export function useTransactions(filters: TransactionFilters): {
   items: TransactionWithRelations[]
   status: "idle" | "loading" | "ready" | "error"
 } {
   const filterHash = stableFilterHash(filters)
-  const conditions = getConditions(filters)
-  const orderedRows = drizzleDb
-    .select(txSelection)
-    .from(transactions)
-    .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(desc(transactions.transactionDate), desc(transactions.createdAt))
-    .limit(filters.limit ?? -1)
-    .offset(filters.offset ?? 0)
-  const transactionsResult = useLiveQuery(orderedRows, [filterHash])
-  const accountsResult = useLiveQuery(
-    drizzleDb.select(accountSelection).from(accounts),
-  )
-  const categoriesResult = useLiveQuery(
-    drizzleDb.select(categorySelection).from(categories),
-  )
-  // Tags and transfers are scoped to the loaded transactions with a subquery
-  // (not an id list, which would hit SQLite's bound-variable limit).
-  const loadedIds = drizzleDb
-    .select({ id: transactions.id })
-    .from(transactions)
-    .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(desc(transactions.transactionDate), desc(transactions.createdAt))
-    .limit(filters.limit ?? -1)
-    .offset(filters.offset ?? 0)
-  const tagLinksResult = useLiveQuery(
-    drizzleDb
-      .select(tagSelection)
-      .from(transactionTags)
-      .where(inArray(transactionTags.transactionId, loadedIds)),
-    [filterHash],
-  )
-  const transfersResult = useLiveQuery(
-    drizzleDb
-      .select(transferSelection)
-      .from(transfers)
-      .where(
-        or(
-          inArray(transfers.fromTransactionId, loadedIds),
-          inArray(transfers.toTransactionId, loadedIds),
-        ),
-      ),
-    [filterHash],
-  )
+  const queries = buildTransactionQueries(filters)
+  const transactionsResult = useLiveQuery(queries.rows, [filterHash])
+  const accountsResult = useLiveQuery(queries.accounts)
+  const categoriesResult = useLiveQuery(queries.categories)
+  const tagLinksResult = useLiveQuery(queries.tags, [filterHash])
+  const transfersResult = useLiveQuery(queries.transfers, [filterHash])
 
   const items = useMemo(
     () =>
@@ -325,46 +330,13 @@ export function useTransactions(filters: TransactionFilters): {
 async function getTransactions(
   filters: TransactionFilters,
 ): Promise<TransactionWithRelations[]> {
-  const conditions = getConditions(filters)
-  const rows = drizzleDb
-    .select(txSelection)
-    .from(transactions)
-    .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(desc(transactions.transactionDate), desc(transactions.createdAt))
-    .limit(filters.limit ?? -1)
-    .offset(filters.offset ?? 0)
-    .all()
-  const txIds = rows.map((row) => row.id)
-  const [accountRows, categoryRows, tagRows, transferRows] = [
-    drizzleDb.select(accountSelection).from(accounts).all(),
-    drizzleDb.select(categorySelection).from(categories).all(),
-    txIds.length
-      ? drizzleDb
-          .select(tagSelection)
-          .from(transactionTags)
-          .where(inArray(transactionTags.transactionId, txIds))
-          .all()
-      : [],
-    txIds.length
-      ? drizzleDb
-          .select(transferSelection)
-          .from(transfers)
-          .where(
-            or(
-              inArray(transfers.fromTransactionId, txIds),
-              inArray(transfers.toTransactionId, txIds),
-            ),
-          )
-          .all()
-      : [],
-  ]
-
+  const queries = buildTransactionQueries(filters)
   return hydrateTransactionRows({
-    rows,
-    accountRows,
-    categoryRows,
-    tagRows,
-    transferRows,
+    rows: queries.rows.all(),
+    accountRows: queries.accounts.all(),
+    categoryRows: queries.categories.all(),
+    tagRows: queries.tags.all(),
+    transferRows: queries.transfers.all(),
   })
 }
 
