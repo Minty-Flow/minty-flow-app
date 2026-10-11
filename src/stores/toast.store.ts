@@ -42,7 +42,9 @@ interface ToastStore {
  *
  * @example
  * ```tsx
- * const { show, hide } = useToastStore()
+ * // Subscribe per field (or useShallow) so unrelated changes don't re-render.
+ * const show = useToastStore((s) => s.show)
+ * const hide = useToastStore((s) => s.hide)
  *
  * // Show a success toast
  * show({ type: 'success', title: 'Success!', description: 'Operation completed' })

@@ -44,7 +44,9 @@ interface ProfileStore {
  *
  * @example
  * ```tsx
- * const { name, imageUri, setName, setImageUri } = useProfileStore()
+ * // Subscribe per field (or useShallow) so unrelated changes don't re-render.
+ * const name = useProfileStore((s) => s.name)
+ * const setName = useProfileStore((s) => s.setName)
  *
  * // Update name
  * setName("John Doe")

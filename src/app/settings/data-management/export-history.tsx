@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList, Share } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
+import { useShallow } from "zustand/react/shallow"
 
 import { ConfirmSheet } from "~/components/confirm-sheet"
 import { IconSvg, type IconSvgName } from "~/components/icons"
@@ -183,7 +184,13 @@ interface ConfirmState {
 }
 export default function ExportHistoryScreen() {
   const { t } = useTranslation()
-  const { exports, removeExport, clearAll } = useExportHistoryStore()
+  const { exports, removeExport, clearAll } = useExportHistoryStore(
+    useShallow((s) => ({
+      exports: s.exports,
+      removeExport: s.removeExport,
+      clearAll: s.clearAll,
+    })),
+  )
   const [fileSizes, setFileSizes] = useState<Record<string, number | null>>({})
   const [actionId, setActionId] = useState<string | null>(null)
   const [confirm, setConfirm] = useState<ConfirmState>({
