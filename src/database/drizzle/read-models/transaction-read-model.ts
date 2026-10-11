@@ -1,4 +1,5 @@
 import { and, desc, eq, gte, inArray, lte, or, type SQL } from "drizzle-orm"
+import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 import { useMemo } from "react"
 
 import { mapAccount } from "~/database/mappers/account.mapper"
@@ -15,7 +16,6 @@ import type { Category } from "~/types/categories"
 import type { Transaction } from "~/types/transactions"
 
 import { drizzleDb } from "../db"
-import { useLiveQuery } from "../live-query"
 import {
   accounts,
   categories,

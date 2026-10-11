@@ -1,8 +1,9 @@
+import { useLiveQuery } from "drizzle-orm/expo-sqlite"
+
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Budget, BudgetPeriod } from "~/types/budgets"
 
 import { drizzleDb } from "../db"
-import { useLiveQuery } from "../live-query"
 import { budgetAccounts, budgetCategories, budgets } from "../schema"
 import {
   createLiveReadModelResult,
