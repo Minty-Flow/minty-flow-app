@@ -1,7 +1,7 @@
 {
   "name": "minty-flow-app",
   "main": "index.ts",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "scripts": {
     "android": "expo run:android",
     "android:emu": "expo run:android --device Pixel_10",
@@ -10,6 +10,7 @@
     "build": "cd android && ./gradlew bundleRelease assembleRelease",
     "types": "tsc --noEmit",
     "prepare": "husky",
+    "verify": "pnpm lint && pnpm check-number-formatting && pnpm types",
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "lint:fix-unsafe": "biome check --write --unsafe",
