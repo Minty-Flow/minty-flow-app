@@ -24,6 +24,8 @@ interface MoneyProps {
   disablePrivacyMode?: boolean
   variant?: TextVariant
   native?: boolean
+  /** One line that shrinks to fit its container instead of clipping or wrapping. */
+  fit?: boolean
 }
 export const Money: FC<MoneyProps> = ({
   value,
@@ -39,6 +41,7 @@ export const Money: FC<MoneyProps> = ({
   disablePrivacyMode = false,
   variant = "p",
   native = false,
+  fit = false,
 }) => {
   // Preferences
   const privacyModeActive = useMoneyFormattingStore((s) => s.privacyMode)
@@ -106,6 +109,13 @@ export const Money: FC<MoneyProps> = ({
       variant={variant}
       style={[toneStyles, { fontWeight: "600" }, style]}
       native={native}
+      {...(fit
+        ? {
+            numberOfLines: 1,
+            adjustsFontSizeToFit: true,
+            minimumFontScale: 0.6,
+          }
+        : null)}
     >
       {shouldHide ? privacyMasked : formatted}
     </Text>

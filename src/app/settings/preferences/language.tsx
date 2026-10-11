@@ -1,21 +1,18 @@
-import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ScrollView } from "react-native"
-import RNRestart from "react-native-restart"
-import { StyleSheet, useUnistyles } from "react-native-unistyles"
+import { Platform, ScrollView } from "react-native"
 
-import { ConfirmModal } from "~/components/confirm-modal"
-import { IconSvg } from "~/components/icons"
-import { ListItem } from "~/components/ui/list-item"
-import { Text } from "~/components/ui/text"
-import { View } from "~/components/ui/view"
+import {
+  SettingsOptionRow,
+  SettingsSection,
+  settingsStyles,
+} from "~/components/settings/settings-list"
 import {
   DirectionEnum,
   LangCodeEnum,
   type LangCodeType,
 } from "~/i18n/language.constants"
 import { useLanguageStore } from "~/stores/language.store"
-import { logger } from "~/utils/logger"
+import { reloadApp } from "~/utils/reload-app"
 
 const languageOptions: {
   value: LangCodeType
@@ -33,147 +30,40 @@ const languageOptions: {
 
 export default function LanguageOptionsScreen() {
   const { t } = useTranslation()
-  const { theme } = useUnistyles()
   const languageCode = useLanguageStore((s) => s.languageCode)
   const direction = useLanguageStore((s) => s.direction)
   const setLanguageCode = useLanguageStore((s) => s.setLanguageCode)
 
-  const [pendingLang, setPendingLang] = useState<LangCodeType | null>(null)
-
-  const handleSelectLanguage = (code: LangCodeType) => {
+  const handleSelectLanguage = async (code: LangCodeType) => {
     const newDirection =
       code === LangCodeEnum.AR ? DirectionEnum.RTL : DirectionEnum.LTR
-
-    // setLanguageCode(code)
-
-    // if the app needs restart/reload use this code commented code instead
-    // If the direction is changing (LTR <-> RTL), show the modal first
-    if (newDirection !== direction) {
-      setPendingLang(code)
-    } else {
-      // If it's just a language change (e.g., EN to FR), just swap it
-      setLanguageCode(code)
-    }
-  }
-
-  const handleConfirmReload = async () => {
-    if (pendingLang) {
-      // Finalize the choice in the store right before the app restarts
-      setLanguageCode(pendingLang)
-
-      try {
-        RNRestart.restart()
-      } catch {
-        logger.warn("this wont work in development")
-      }
-    }
-  }
-
-  const handleCancelReload = () => {
-    setPendingLang(null)
+    // Strings switch live. forceRTL (called by the store) only takes effect on a
+    // JS reload, so a direction change reloads the app, with no confirmation.
+    // The persisted store already holds the new language when the reload runs.
+    setLanguageCode(code)
+    if (Platform.OS === "web" || newDirection === direction) return
+    await reloadApp()
   }
 
   return (
-    <>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        contentInsetAdjustmentBehavior="automatic"
-        showsVerticalScrollIndicator={false}
+    <ScrollView
+      style={settingsStyles.screen}
+      contentContainerStyle={settingsStyles.content}
+      contentInsetAdjustmentBehavior="automatic"
+      showsVerticalScrollIndicator={false}
+    >
+      <SettingsSection
+        title={t("screens.settings.preferences.language.sectionLabel")}
       >
-        <View native style={styles.sectionLabel}>
-          <Text variant="small" style={styles.sectionLabelText}>
-            {t("screens.settings.preferences.language.sectionLabel")}
-          </Text>
-        </View>
-        <View native style={styles.card}>
-          {languageOptions.map((option, index) => {
-            const isSelected = languageCode === option.value
-            const isLast = index === languageOptions.length - 1
-            return (
-              <View key={option.value} native>
-                <ListItem
-                  style={styles.row}
-                  onPress={() => handleSelectLanguage(option.value)}
-                >
-                  <View native style={styles.rowContent}>
-                    <Text style={styles.rowLabel}>{option.label}</Text>
-                  </View>
-                  {isSelected ? (
-                    <IconSvg
-                      name="check-outline"
-                      size={20}
-                      color={theme.colors.primary}
-                    />
-                  ) : null}
-                </ListItem>
-                {!isLast ? <View native style={styles.divider} /> : null}
-              </View>
-            )
-          })}
-        </View>
-      </ScrollView>
-
-      <ConfirmModal
-        visible={pendingLang !== null}
-        onRequestClose={handleCancelReload}
-        onConfirm={handleConfirmReload}
-        title={t(
-          "screens.settings.preferences.language.rtlReloadConfirm.title",
-        )}
-        description={t(
-          "screens.settings.preferences.language.rtlReloadConfirm.description",
-        )}
-        confirmLabel={t(
-          "screens.settings.preferences.language.rtlReloadConfirm.confirmLabel",
-        )}
-        icon="repeat-outline"
-      />
-    </>
+        {languageOptions.map((option) => (
+          <SettingsOptionRow
+            key={option.value}
+            label={option.label}
+            selected={languageCode === option.value}
+            onPress={() => handleSelectLanguage(option.value)}
+          />
+        ))}
+      </SettingsSection>
+    </ScrollView>
   )
 }
-
-const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  content: {
-    paddingHorizontal: 0,
-    paddingTop: 12,
-    paddingBottom: 48,
-  },
-
-  sectionLabel: {
-    paddingHorizontal: 20,
-    marginBottom: 8,
-    marginTop: 8,
-  },
-  sectionLabelText: {
-    ...theme.typography.labelXSmall,
-    fontWeight: "600",
-    letterSpacing: 0.8,
-    color: theme.colors.semantic?.semi,
-  },
-
-  card: {
-    overflow: "hidden",
-  },
-  row: {
-    justifyContent: "space-between",
-    minHeight: 56,
-  },
-  rowContent: {
-    flex: 1,
-    gap: 2,
-  },
-  rowLabel: {
-    ...theme.typography.titleSmall,
-    color: theme.colors.onSurface,
-  },
-  divider: {
-    height: 0.5,
-    backgroundColor: theme.colors.semantic?.semi,
-    opacity: 0.4,
-  },
-}))

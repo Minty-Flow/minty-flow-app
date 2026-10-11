@@ -8,6 +8,10 @@ import { ActionItem } from "~/components/action-item"
 import { ExternalLink } from "~/components/external-link"
 import type { IconSvgName } from "~/components/icons"
 import { ProfileSection } from "~/components/profile/profile-section"
+import {
+  SettingsSection,
+  settingsStyles,
+} from "~/components/settings/settings-list"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { AppData } from "~/constants/app-data"
@@ -20,69 +24,91 @@ interface SettingsItem {
   soon?: boolean
 }
 
-const moneyManagementItems: SettingsItem[] = [
-  {
-    titleKey: "screens.settings.insights.title",
-    route: "/stats/insights" as Href,
-    icon: "sparkles",
-  },
-  {
-    titleKey: "screens.accounts.title",
-    route: "/settings/all-accounts",
-    icon: "wallet-outline",
-  },
-  {
-    titleKey: "components.categories.title",
-    route: "/settings/categories",
-    icon: "category-2-outline",
-  },
-  {
-    titleKey: "screens.settings.tags.title",
-    route: "/settings/tags",
-    icon: "tags-outline",
-  },
-  {
-    titleKey: "screens.settings.trash.title",
-    route: "/settings/trash",
-    icon: "trash-outline",
-  },
-  {
-    titleKey: "screens.settings.loans.title",
-    route: "/settings/loans",
-    icon: "scale-outline",
-  },
-  {
-    titleKey: "screens.settings.goals.title",
-    route: "/settings/goals",
-    icon: "target-outline",
-  },
-  {
-    titleKey: "screens.settings.budgets.title",
-    route: "/settings/budgets",
-    icon: "chart-pie-outline",
-  },
-  {
-    titleKey: "screens.settings.pending.title",
-    route: "/settings/pending-transactions",
-    icon: "history-toggle-outline",
-  },
-  {
-    titleKey: "screens.settings.billSplitter.title",
-    route: "/settings/bill-splitter",
-    icon: "page-break-outline",
-  },
-]
+interface SettingsGroup {
+  labelKey?: TranslationKey
+  items: SettingsItem[]
+}
 
-const otherSettingsItems: SettingsItem[] = [
+// Understand -> Plan -> Organize -> System.
+const settingsGroups: SettingsGroup[] = [
   {
-    titleKey: "screens.settings.preferences.title",
-    route: "/settings/preferences",
-    icon: "puzzle-outline",
+    items: [
+      {
+        titleKey: "screens.settings.insights.title",
+        route: "/stats/insights" as Href,
+        icon: "sparkles",
+      },
+      {
+        titleKey: "screens.accounts.title",
+        route: "/settings/all-accounts",
+        icon: "wallet-outline",
+      },
+    ],
   },
   {
-    titleKey: "screens.settings.dataManagement.title",
-    route: "/settings/data-management",
-    icon: "database-outline",
+    labelKey: "screens.settings.groups.planning",
+    items: [
+      {
+        titleKey: "screens.settings.budgets.title",
+        route: "/settings/budgets",
+        icon: "chart-pie-outline",
+      },
+      {
+        titleKey: "screens.settings.goals.title",
+        route: "/settings/goals",
+        icon: "target-outline",
+      },
+      {
+        titleKey: "screens.settings.pending.title",
+        route: "/settings/pending-transactions",
+        icon: "history-toggle-outline",
+      },
+      {
+        titleKey: "screens.settings.billSplitter.title",
+        route: "/settings/bill-splitter",
+        icon: "page-break-outline",
+      },
+    ],
+  },
+  {
+    labelKey: "screens.settings.groups.organization",
+    items: [
+      {
+        titleKey: "components.categories.title",
+        route: "/settings/categories",
+        icon: "category-2-outline",
+      },
+      {
+        titleKey: "screens.settings.tags.title",
+        route: "/settings/tags",
+        icon: "tags-outline",
+      },
+      {
+        titleKey: "screens.settings.loans.title",
+        route: "/settings/loans",
+        icon: "scale-outline",
+      },
+      {
+        titleKey: "screens.settings.trash.title",
+        route: "/settings/trash",
+        icon: "trash-outline",
+      },
+    ],
+  },
+  {
+    labelKey: "screens.settings.groups.system",
+    items: [
+      {
+        titleKey: "screens.settings.preferences.title",
+        route: "/settings/preferences",
+        icon: "puzzle-outline",
+      },
+      {
+        titleKey: "screens.settings.dataManagement.title",
+        route: "/settings/data-management",
+        icon: "database-outline",
+      },
+    ],
   },
 ]
 
@@ -91,7 +117,10 @@ export default function SettingsScreen() {
   const { t } = useTranslation()
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={settingsStyles.screen}
+      contentContainerStyle={styles.content}
+    >
       {/* Header */}
       {/* <View style={styles.header}>
         <Text variant="h2" style={styles.headerTitle}>
@@ -102,10 +131,12 @@ export default function SettingsScreen() {
       {/* User Profile Section */}
       <ProfileSection />
 
-      {/* Money Management Section */}
-      <View style={styles.section}>
-        <View>
-          {moneyManagementItems.map((item) => (
+      {settingsGroups.map((group) => (
+        <SettingsSection
+          key={group.labelKey ?? "overview"}
+          title={group.labelKey ? t(group.labelKey) : undefined}
+        >
+          {group.items.map((item) => (
             <ActionItem
               key={item.titleKey}
               icon={item.icon}
@@ -114,26 +145,8 @@ export default function SettingsScreen() {
               soon={item.soon}
             />
           ))}
-        </View>
-      </View>
-
-      {/* Other Settings Section */}
-      <View style={styles.section}>
-        <Text variant="small" style={styles.sectionTitle}>
-          {t("screens.settings.sections.other")}
-        </Text>
-        <View>
-          {otherSettingsItems.map((item) => (
-            <ActionItem
-              key={item.titleKey}
-              icon={item.icon}
-              title={t(item.titleKey)}
-              soon={item.soon}
-              onPress={() => router.push(item.route)}
-            />
-          ))}
-        </View>
-      </View>
+        </SettingsSection>
+      ))}
 
       {/* Maker credit + version */}
       <View style={styles.footer}>
@@ -169,24 +182,9 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
   content: {
     marginVertical: 50,
     paddingBottom: 150,
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    paddingHorizontal: 20,
-    ...theme.typography.labelXSmall,
-    fontWeight: "600",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    color: theme.colors.semantic.semi,
   },
   footer: {
     alignItems: "center",

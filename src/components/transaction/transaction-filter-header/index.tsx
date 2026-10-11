@@ -8,9 +8,11 @@ import { useTranslation } from "react-i18next"
 import { ScrollView, View } from "react-native"
 import { useUnistyles } from "react-native-unistyles"
 
-import { DateRangePresetModal } from "~/components/date-range-preset-modal"
+import { DateRangePresetSheet } from "~/components/date-range-preset-sheet"
 import { IconSvg, type IconSvgName } from "~/components/icons"
 import { Chip } from "~/components/ui/chips"
+import { useCategoriesByTypeMap } from "~/database/drizzle/read-models/category-read-model"
+import { useTags } from "~/database/drizzle/read-models/tag-read-model"
 import type {
   AttachmentsOptionsType,
   GroupByOption,
@@ -45,8 +47,6 @@ import {
 } from "./types"
 export function TransactionFilterHeader({
   accounts,
-  categoriesByType,
-  tags,
   filterState,
   onFilterChange,
   selectedRange = null,
@@ -56,18 +56,20 @@ export function TransactionFilterHeader({
   hiddenFilters = EMPTY_HIDDEN_FILTERS,
 }: TransactionFilterHeaderProps) {
   const { t } = useTranslation()
+  const categoriesByType = useCategoriesByTypeMap()
+  const tags = useTags()
   const searchState = propSearchState ?? DEFAULT_SEARCH_STATE
   const [expandedPanel, setExpandedPanel] = useState<FilterPanelKey | null>(
     null,
   )
-  const [dateModalVisible, setDateModalVisible] = useState(false)
+  const [dateSheetVisible, setDateSheetVisible] = useState(false)
   const { theme } = useUnistyles()
   const togglePanel = (key: FilterPanelKey) => {
     setExpandedPanel((prev) => (prev === key ? null : key))
   }
   const handleDatePress = () => {
     setExpandedPanel(null)
-    setDateModalVisible(true)
+    setDateSheetVisible(true)
   }
   const handleSearchChange = (text: string) => {
     const next = { ...searchState, query: text }
@@ -247,7 +249,7 @@ export function TransactionFilterHeader({
     },
     {
       key: "date",
-      icon: "calendar-outline",
+      icon: "calendar-month",
       label: dateLabel,
       active: isDateActive,
     },
@@ -376,6 +378,9 @@ export function TransactionFilterHeader({
               categoriesByType={categoriesByType}
               selectedIds={filterState.categoryIds}
               onToggle={toggleCategory}
+              onSetSelection={(ids) =>
+                onFilterChange({ ...filterState, categoryIds: ids })
+              }
               onClear={clearCategories}
               onDone={handleDone}
             />
@@ -430,15 +435,15 @@ export function TransactionFilterHeader({
         </View>
       ) : null}
 
-      <DateRangePresetModal
-        visible={dateModalVisible}
+      <DateRangePresetSheet
+        visible={dateSheetVisible}
         initialStart={selectedRange?.start}
         initialEnd={selectedRange?.end}
         onSave={(start, end) => {
           onDateRangeChange?.({ start, end })
-          setDateModalVisible(false)
+          setDateSheetVisible(false)
         }}
-        onRequestClose={() => setDateModalVisible(false)}
+        onRequestClose={() => setDateSheetVisible(false)}
       />
     </View>
   )

@@ -6,7 +6,7 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { ExternalLink } from "~/components/external-link"
 import { IconSvg } from "~/components/icons"
-import { InfoModal } from "~/components/info-modal"
+import { InfoSheet } from "~/components/info-sheet"
 import { SearchInput } from "~/components/search-input"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
@@ -268,7 +268,7 @@ export default function ExchangeRatesScreen() {
     editorReducer,
     INITIAL_EDITOR_STATE,
   )
-  const [infoModalVisible, setInfoModalVisible] = useState(false)
+  const [infoSheetVisible, setInfoSheetVisible] = useState(false)
   const handleRetry = () => {
     setRatesPromise(createRatesPromise())
   }
@@ -277,7 +277,7 @@ export default function ExchangeRatesScreen() {
       headerRight: () => (
         <Button
           variant="ghost"
-          onPress={() => setInfoModalVisible(true)}
+          onPress={() => setInfoSheetVisible(true)}
           accessibilityLabel={t("screens.settings.exchangeRates.a11y.info")}
         >
           <IconSvg name="info-circle-outline" size={24} />
@@ -304,12 +304,12 @@ export default function ExchangeRatesScreen() {
           dispatch={dispatch}
         />
       </Suspense>
-      <InfoModal
-        visible={infoModalVisible}
-        onRequestClose={() => setInfoModalVisible(false)}
-        title={t("screens.settings.exchangeRates.infoModal.title")}
-        description={t("screens.settings.exchangeRates.infoModal.description")}
-        okLabel={t("screens.settings.exchangeRates.infoModal.ok")}
+      <InfoSheet
+        visible={infoSheetVisible}
+        onRequestClose={() => setInfoSheetVisible(false)}
+        title={t("screens.settings.exchangeRates.infoSheet.title")}
+        description={t("screens.settings.exchangeRates.infoSheet.description")}
+        okLabel={t("screens.settings.exchangeRates.infoSheet.ok")}
       />
     </>
   )

@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 export type DbMigrationPhase =
   | "idle"
@@ -63,11 +65,7 @@ export const useDbMigrationStore = create<DbMigrationState>()(
     }),
     {
       name: "db-migration-store",
-      storage: createJSONStorage(() => ({
-        getItem: (name) => migrationStorage.getString(name) ?? null,
-        setItem: (name, value) => migrationStorage.set(name, value),
-        removeItem: (name) => migrationStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(migrationStorage),
     },
   ),
 )

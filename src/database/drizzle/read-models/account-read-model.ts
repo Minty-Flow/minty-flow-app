@@ -54,18 +54,6 @@ export function useActiveAccountsQuery(): LiveReadModelResult<Account[]> {
   }
 }
 
-export function useArchivedAccounts(): Account[] {
-  return useAccounts().filter((account) => account.isArchived)
-}
-
-export function useArchivedAccountsQuery(): LiveReadModelResult<Account[]> {
-  const result = useAccountsQuery()
-  return {
-    ...result,
-    data: result.data.filter((account) => account.isArchived),
-  }
-}
-
 export function useAccount(id: string): Account | undefined {
   return useAccounts().find((account) => account.id === id)
 }

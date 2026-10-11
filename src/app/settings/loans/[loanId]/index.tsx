@@ -1,36 +1,36 @@
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useLayoutEffect, useRef, useState } from "react"
+import { useLayoutEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { type DimensionValue, FlatList, View as RNView } from "react-native"
-import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
-import { LoanActionModal } from "~/components/loans/loan-action-modal"
+import { LoanActionSheet } from "~/components/loans/loan-action-sheet"
+import { getLoanDisplay } from "~/components/loans/loan-display"
 import { Money } from "~/components/money"
+import { planningDetailStyles } from "~/components/planning/planning-detail.styles"
+import {
+  RouteLoadingState,
+  RouteNotFoundState,
+} from "~/components/route-load-state"
 import { TransactionItem } from "~/components/transaction/transaction-item"
-import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useAccount } from "~/database/drizzle/read-models/account-read-model"
-import { useLoan } from "~/database/drizzle/read-models/loan-read-model"
+import { useLoansQuery } from "~/database/drizzle/read-models/loan-read-model"
 import {
   type TransactionWithRelations,
   useTransactions,
 } from "~/database/drizzle/read-models/transaction-read-model"
 import { createTransaction } from "~/database/services/ledger-service"
+import { useLoanTermReconcile } from "~/hooks/use-loan-term-reconcile"
+import { useSingleOpenSwipeable } from "~/hooks/use-transaction-list-state"
 import { useLanguageStore } from "~/stores/language.store"
-import {
-  TransactionSubTypeEnum,
-  TransactionTypeEnum,
-} from "~/types/transactions"
-import { getLiveLoanProgress } from "~/utils/live-progress"
+import { TransactionTypeEnum } from "~/types/transactions"
 import { logger } from "~/utils/logger"
-import { getLoanProgressModel } from "~/utils/planning-progress"
-import { formatShortMonthDay } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
 /* ------------------------------------------------------------------ */
@@ -42,24 +42,24 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
   const navigation = useNavigation()
   const { theme } = useUnistyles()
   const isRTL = useLanguageStore((s) => s.isRTL)
-  const [actionModalVisible, setActionModalVisible] = useState(false)
+  const [actionSheetVisible, setActionSheetVisible] = useState(false)
   const [isCreatingTransaction, setIsCreatingTransaction] = useState(false)
-  const openSwipeableRef = useRef<SwipeableMethods | null>(null)
-  const loan = useLoan(loanId)
+  const { onWillOpen: handleWillOpen, closeOpen: closeOpenSwipeable } =
+    useSingleOpenSwipeable()
+  const loansQuery = useLoansQuery()
+  const loan = loansQuery.data.find((item) => item.id === loanId)
+  const reconcileLoans = useMemo(() => (loan ? [loan] : []), [loan])
+  useLoanTermReconcile(reconcileLoans)
   const account = useAccount(loan?.accountId ?? "")
-  const { items: transactionsFull } = useTransactions(loan ? { loanId } : {})
-  const paidAmount = loan ? getLiveLoanProgress(loan, transactionsFull) : 0
+  // Filter by loanId so the list shows only this loan's rows. Progress itself
+  // comes from the loan read-model (loan.repaidAmount), not this list.
+  const { items: transactionsFull, status: transactionsStatus } =
+    useTransactions({ loanId })
   const handleTransactionPress = (id: string) => {
     router.push({ pathname: "/transaction/[id]", params: { id } })
   }
   const handleDeleteDone = () => {
-    openSwipeableRef.current?.close()
-  }
-  const handleWillOpen = (methods: SwipeableMethods) => {
-    if (openSwipeableRef.current !== methods) {
-      openSwipeableRef.current?.close()
-    }
-    openSwipeableRef.current = methods
+    closeOpenSwipeable()
   }
   const renderTransactionItem = ({
     item,
@@ -92,15 +92,16 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
       ),
     })
   }, [navigation, router, loanId, t])
+  const transactionsPending =
+    transactionsStatus !== "ready" && transactionsStatus !== "error"
   if (!loan) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicatorMinty />
-        </View>
-      </View>
+    return loansQuery.status === "loading" ? (
+      <RouteLoadingState />
+    ) : (
+      <RouteNotFoundState message={t("common.notFound.loan")} />
     )
   }
+  if (transactionsPending) return <RouteLoadingState />
   const {
     isLent,
     paid,
@@ -108,36 +109,17 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
     clampedProgress,
     isPaid,
     remaining,
-    dueDays,
-  } = getLoanProgressModel(loan, paidAmount)
-  const accentColor = loan.colorScheme?.primary ?? theme.colors.primary
-  const accentTint = loan.colorScheme?.secondary ?? `${theme.colors.primary}20`
-  const mutedColor = theme.colors.onSecondary
-  const progressBarColor = isPaid ? mutedColor : accentColor
-  const dueText = (): string => {
-    if (isPaid) return t("screens.settings.loans.card.settled")
-    if (dueDays === null || !loan.dueDate)
-      return t("screens.settings.loans.card.noDueDate")
-    if (dueDays === 0) return t("screens.settings.loans.card.dueToday")
-    if (dueDays === 1) return t("screens.settings.loans.card.dueTomorrow")
-    if (dueDays > 1 && dueDays <= 14)
-      return t("screens.settings.loans.card.dueInDays", { count: dueDays })
-    return t("screens.settings.loans.card.dueDate", {
-      date: formatShortMonthDay(loan.dueDate),
-    })
-  }
-  const subtitleParts = [account?.name, dueText()].filter(Boolean)
-  const subtitleColor =
-    loan.isOverdue && !isPaid ? theme.colors.semantic.expense : mutedColor
-  const badgeLabel = isPaid
-    ? t("screens.settings.loans.card.statusPaid")
-    : isLent
-      ? t("screens.settings.loans.type.lent")
-      : t("screens.settings.loans.type.borrowed")
-  const badgeIcon =
-    isLent || isPaid ? "arrow-up-right-outline" : "arrow-down-left-outline"
-  const badgeColor = isPaid ? mutedColor : accentColor
-  const badgeBg = isPaid ? theme.colors.secondary : accentTint
+    accentColor,
+    mutedColor,
+    subtitleParts,
+    subtitleColor,
+    badgeLabel,
+    badgeIcon,
+    badgeColor,
+    badgeBg,
+    progressBarColor,
+    isLongTerm,
+  } = getLoanDisplay(loan, account, t, theme)
   const currencyCode = account?.currencyCode ?? ""
   const handleFullAction = () => {
     if (!loan || remaining <= 0) return
@@ -155,9 +137,7 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
       createTransaction({
         amount: remaining,
         type: transactionType,
-        subtype: isLent
-          ? TransactionSubTypeEnum.LOAN_RECEIVED
-          : TransactionSubTypeEnum.LOAN_REPAYMENT,
+        kind: loan.loanType,
         transactionDate: new Date(),
         accountId: loan.accountId,
         categoryId: loan.categoryId,
@@ -169,7 +149,7 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
       }),
     )
       .then(() => {
-        setActionModalVisible(false)
+        setActionSheetVisible(false)
         Toast.success({ title: successTitle })
       })
       .catch((error) => {
@@ -182,7 +162,7 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
   }
   const handlePartialAction = () => {
     if (!loan) return
-    setActionModalVisible(false)
+    setActionSheetVisible(false)
     router.push({
       pathname: "/transaction/[id]",
       params: {
@@ -195,15 +175,15 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
     })
   }
   const headerContent = (
-    <View style={styles.headerCard}>
-      <View style={styles.headerTopRow}>
+    <View style={planningDetailStyles.headerCard}>
+      <View style={planningDetailStyles.headerTopRow}>
         <DynamicIcon
-          icon={loan.icon ?? "hand-coins"}
+          icon={loan.icon ?? "scale-outline"}
           size={24}
           colorScheme={loan.colorScheme}
           variant="badge"
         />
-        <View style={styles.headerInfo}>
+        <View style={planningDetailStyles.headerInfo}>
           <Text style={styles.loanName} numberOfLines={1}>
             {loan.name}
           </Text>
@@ -234,61 +214,102 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
       </View>
 
       {loan.description ? (
-        <Text style={styles.description}>{loan.description}</Text>
+        <Text style={planningDetailStyles.description}>{loan.description}</Text>
       ) : null}
 
-      <View style={styles.progressSection}>
-        <View style={styles.progressTrack}>
-          <RNView
-            style={[
-              styles.progressFill,
-              {
-                width: `${clampedProgress * 100}%` as DimensionValue,
-                backgroundColor: progressBarColor,
-              },
-            ]}
-          />
-        </View>
-        <View style={styles.amountRow}>
-          <Text style={styles.amountText}>
-            {isLent
-              ? t("screens.settings.loans.card.received")
-              : t("screens.settings.loans.card.paidBack")}{" "}
-            <Money
-              value={paid}
-              currency={currencyCode}
-              tone="transfer"
-              hideSign
-            />{" "}
-            {t("screens.settings.loans.card.of")}{" "}
-            <Money
-              value={principal}
-              currency={currencyCode}
-              tone="transfer"
-              hideSign
+      {isLongTerm ? (
+        <View style={planningDetailStyles.progressSection}>
+          <View style={planningDetailStyles.progressTrack}>
+            <RNView
+              style={[
+                planningDetailStyles.progressFill,
+                {
+                  width: `${clampedProgress * 100}%` as DimensionValue,
+                  backgroundColor: progressBarColor,
+                },
+              ]}
             />
-          </Text>
-          {isPaid ? (
-            <Text style={[styles.remainingText, { color: mutedColor }]}>
-              {t("screens.settings.loans.card.settled")}
+          </View>
+          <View style={planningDetailStyles.amountRow}>
+            <Text style={planningDetailStyles.amountText}>
+              {isLent
+                ? t("screens.settings.loans.card.received")
+                : t("screens.settings.loans.card.paidBack")}{" "}
+              <Money
+                value={paid}
+                currency={currencyCode}
+                tone="transfer"
+                hideSign
+              />{" "}
+              {t("screens.settings.loans.card.of")}{" "}
+              <Money
+                value={principal}
+                currency={currencyCode}
+                tone="transfer"
+                hideSign
+              />
             </Text>
-          ) : (
-            <Money
-              value={remaining}
-              currency={currencyCode}
-              tone="transfer"
-              hideSign
-              style={[styles.remainingText, { color: accentColor }]}
-            />
-          )}
+            {isPaid ? (
+              <Text
+                style={[
+                  planningDetailStyles.remainingText,
+                  { color: mutedColor },
+                ]}
+              >
+                {t("screens.settings.loans.card.settled")}
+              </Text>
+            ) : (
+              <Money
+                value={remaining}
+                currency={currencyCode}
+                tone="transfer"
+                hideSign
+                style={[
+                  planningDetailStyles.remainingText,
+                  { color: accentColor },
+                ]}
+              />
+            )}
+          </View>
         </View>
-      </View>
+      ) : (
+        <View style={planningDetailStyles.progressSection}>
+          <View style={planningDetailStyles.amountRow}>
+            <Text style={planningDetailStyles.amountText}>
+              {isLent
+                ? t("screens.settings.loans.type.lent")
+                : t("screens.settings.loans.type.borrowed")}
+            </Text>
+            {isPaid ? (
+              <Text
+                style={[
+                  planningDetailStyles.remainingText,
+                  { color: mutedColor },
+                ]}
+              >
+                {t("screens.settings.loans.card.settled")}
+              </Text>
+            ) : (
+              <Money
+                value={principal}
+                currency={currencyCode}
+                tone="transfer"
+                hideSign
+                style={[
+                  planningDetailStyles.remainingText,
+                  { color: accentColor },
+                ]}
+              />
+            )}
+          </View>
+        </View>
+      )}
 
       {/* Collect / Settle button */}
       {!isPaid && (
         <Button
           variant="default"
-          onPress={() => setActionModalVisible(true)}
+          onPress={() => setActionSheetVisible(true)}
           style={styles.collectSettleButton}
         >
           <IconSvg
@@ -313,29 +334,29 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
     </View>
   )
   return (
-    <View style={styles.container}>
+    <View style={planningDetailStyles.container}>
       <FlatList
         data={transactionsFull}
         keyExtractor={(item) => item.id}
         renderItem={renderTransactionItem}
         ListHeaderComponent={headerContent}
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
+          <View style={planningDetailStyles.emptyContainer}>
             <EmptyState
               icon="receipt-outline"
               title={t("screens.settings.loans.detail.noTransactions")}
             />
           </View>
         }
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={planningDetailStyles.listContent}
       />
-      <LoanActionModal
-        visible={actionModalVisible}
+      <LoanActionSheet
+        visible={actionSheetVisible}
         loanType={loan.loanType}
         isLoading={isCreatingTransaction}
         onFullAction={handleFullAction}
         onPartialAction={handlePartialAction}
-        onClose={() => setActionModalVisible(false)}
+        onClose={() => setActionSheetVisible(false)}
       />
     </View>
   )
@@ -354,33 +375,7 @@ export default function LoanDetailScreen() {
 /* Styles                                                             */
 /* ------------------------------------------------------------------ */
 const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  listContent: {
-    paddingBottom: 40,
-  },
   // Header card
-  headerCard: {
-    padding: 20,
-    gap: 14,
-  },
-  headerTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  headerInfo: {
-    flex: 1,
-    gap: 2,
-    minWidth: 0,
-  },
   loanName: {
     fontSize: theme.typography.titleMedium.fontSize,
     fontWeight: "700",
@@ -410,51 +405,12 @@ const styles = StyleSheet.create((theme) => ({
   badgeIconRTL: {
     transform: [{ scaleX: -1 }],
   },
-  description: {
-    fontSize: theme.typography.labelLarge.fontSize,
-    color: theme.colors.onSecondary,
-    lineHeight: 20,
-  },
-  // Progress
-  progressSection: {
-    gap: 8,
-  },
-  progressTrack: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: theme.colors.secondary,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 4,
-  },
-  amountRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  amountText: {
-    fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.onSecondary,
-    flex: 1,
-    marginRight: 8,
-  },
-  remainingText: {
-    fontSize: theme.typography.bodyMedium.fontSize,
-    flexShrink: 0,
-    fontWeight: "600",
-  },
   // Transactions
   transactionsLabel: {
     fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
     marginTop: 6,
-  },
-  emptyContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 40,
   },
   // Collect / Settle button
   collectSettleButton: {

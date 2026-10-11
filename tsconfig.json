@@ -18,7 +18,6 @@
     "scripts/check-missing-i18n-keys.mts",
     "scripts/check-number-formatting.mts",
     "scripts/find-unused-styles.mts",
-    "scripts/generate-structure.mts",
-    "scripts/run-android-usb.mts"
+    "scripts/generate-structure.mts"
   ]
 }

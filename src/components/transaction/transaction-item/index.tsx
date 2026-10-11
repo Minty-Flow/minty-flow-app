@@ -15,10 +15,12 @@ import {
   deleteTransfer,
 } from "~/database/services/ledger-service"
 import { useIsConfirmable } from "~/hooks/use-time-reactivity"
+import { isPreapproved } from "~/services/auto-confirmation-service"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { useTransactionItemAppearanceStore } from "~/stores/transaction-item-appearance.store"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import {
+  TransactionKindEnum,
   TransactionSubTypeEnum,
   TransactionTypeEnum,
 } from "~/types/transactions"
@@ -26,9 +28,8 @@ import { convertMinorUnits } from "~/utils/money"
 import { formatFriendlyDate, formatReadableTime } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
-import { LeftAction } from "./left-action"
-import { RightAction } from "./right-action"
 import { transactionItemStyles } from "./styles"
+import { SwipeAction } from "./swipe-action"
 import { TransactionItemLeft } from "./transaction-item-left"
 import { TransactionItemRight } from "./transaction-item-right"
 
@@ -74,11 +75,11 @@ export const TransactionItem = ({
     amount,
     title,
     transactionDate,
-    requiresManualConfirmation,
     extra,
     isDeleted,
     transferId,
     subtype,
+    kind,
   } = transactionWithRelations
   const isTransfer = txIsTransfer || type === TransactionTypeEnum.TRANSFER
   const transferLayout = useTransfersPreferencesStore((s) => s.layout)
@@ -122,28 +123,36 @@ export const TransactionItem = ({
   const showCategoryInSubtitle = useTransactionItemAppearanceStore(
     (s) => s.showCategory,
   )
-  const showCategoryForUntitled = useTransactionItemAppearanceStore(
-    (s) => s.showCategoryForUntitled,
+  const showUntitledForBlankTitle = useTransactionItemAppearanceStore(
+    (s) => s.showUntitledForBlankTitle,
   )
   const leadingIconPref = useTransactionItemAppearanceStore(
     (s) => s.leadingIcon,
   )
   const untitledLabel = t("common.transaction.untitledTransaction")
-  const trimmedTitle = title?.trim()
-  const isUntitled = !trimmedTitle
+  const trimmedTitle = title?.trim() || undefined
   const displayTitle =
-    showCategoryForUntitled && isUntitled
-      ? (category?.name ?? untitledLabel)
-      : (trimmedTitle ?? untitledLabel)
+    trimmedTitle ??
+    (showUntitledForBlankTitle
+      ? untitledLabel
+      : (category?.name ?? untitledLabel))
   const displayIcon =
     leadingIconPref === "account" ? (account?.icon ?? icon) : icon
   const displayColorScheme =
     leadingIconPref === "account" ? account?.colorScheme : category?.colorScheme
-  const globalRequireConfirmation = usePendingTransactionsStore(
-    (s) => s.requireConfirmation,
+  const autoPaySubscriptions = usePendingTransactionsStore(
+    (s) => s.autoPaySubscriptions,
   )
-  const requireConfirmation =
-    requiresManualConfirmation ?? globalRequireConfirmation
+  const autoPayRepetitive = usePendingTransactionsStore(
+    (s) => s.autoPayRepetitive,
+  )
+  const autoPayUpcoming = usePendingTransactionsStore((s) => s.autoPayUpcoming)
+  // Show the manual confirm affordance only for rows that will NOT auto-pay.
+  const requireConfirmation = !isPreapproved(transactionWithRelations, {
+    autoPaySubscriptions,
+    autoPayRepetitive,
+    autoPayUpcoming,
+  })
   const isUpcoming = variant === "upcoming"
   const isConfirmable = useIsConfirmable(transactionWithRelations)
   const isAutoRecurring = Boolean(extra?.recurringId)
@@ -162,7 +171,11 @@ export const TransactionItem = ({
     : ` • ${formatReadableTime(transactionDate)}`
   const subtitleText = `${accountLabel}${categorySegment}${timeSegment}`
   const showRecurringBadge = isUpcoming && isAutoRecurring
-  const showPendingBadge = isUpcoming && !isAutoRecurring
+  // CSI-2: the "Upcoming" chip follows `kind`, not the section variant, so it
+  // also shows in the main list. Pending recurring instances keep the recurring
+  // indicator instead (their kind is subscription/repetitive, not upcoming).
+  const showUpcomingBadge =
+    kind === TransactionKindEnum.UPCOMING && !isAutoRecurring
   const handleRestorePress = async (closeSwipe: () => void) => {
     closeSwipe()
     await Promise.resolve(onRestore?.())
@@ -174,9 +187,10 @@ export const TransactionItem = ({
       close: () => void
     },
   ) => (
-    <LeftAction
+    <SwipeAction
+      kind="restore"
       progress={progress}
-      onRestorePress={() => {
+      onPress={() => {
         void handleRestorePress(swipeableMethods.close)
       }}
       accessibilityLabel={leftActionAccessibilityLabel}
@@ -226,10 +240,14 @@ export const TransactionItem = ({
       close: () => void
     },
   ) => (
-    <RightAction
+    <SwipeAction
+      kind="trash"
       progress={progress}
-      onTrashPress={() => handleTrashPress(swipeableMethods.close)}
-      accessibilityLabel={rightActionAccessibilityLabel}
+      onPress={() => handleTrashPress(swipeableMethods.close)}
+      accessibilityLabel={
+        rightActionAccessibilityLabel ??
+        t("screens.settings.trash.a11y.moveToTrash")
+      }
     />
   )
   const content = (
@@ -259,7 +277,7 @@ export const TransactionItem = ({
           otherCurrencyAmount={otherCurrencyAmount}
           relatedAccountCurrencyCode={relatedAccount?.currencyCode}
           showRecurringBadge={showRecurringBadge}
-          showPendingBadge={showPendingBadge}
+          showUpcomingBadge={showUpcomingBadge}
         />
       </Pressable>
 

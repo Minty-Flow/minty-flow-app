@@ -3,35 +3,29 @@ import { useLayoutEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { DynamicIcon } from "~/components/dynamic-icon"
+import { FilterToggleButton } from "~/components/filter-toggle-button"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { MonthYearPicker } from "~/components/month-year-picker"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionSectionList } from "~/components/transaction/transaction-section-list"
-import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useAccount } from "~/database/drizzle/read-models/account-read-model"
-import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
-import { useTags } from "~/database/drizzle/read-models/tag-read-model"
 import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import {
   destroyAccount,
-  getMonthRange,
   unarchiveAccount,
 } from "~/database/services/account-service"
-import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
-import type {
-  SearchState,
-  TransactionListFilterState,
-} from "~/types/transaction-filters"
 import {
-  DEFAULT_SEARCH_STATE,
-  DEFAULT_TRANSACTION_LIST_FILTER_STATE,
-} from "~/types/transaction-filters"
+  useSelectedMonth,
+  useTransactionListFilters,
+} from "~/hooks/use-transaction-list-state"
+import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import {
   TransactionSubTypeEnum,
   TransactionTypeEnum,
@@ -46,35 +40,27 @@ export default function AccountDetailsScreen() {
   const router = useRouter()
   const navigation = useNavigation()
   const { theme } = useUnistyles()
-  const [selectedYear, setSelectedYear] = useState(() =>
-    new Date().getFullYear(),
-  )
-  const [selectedMonth, setSelectedMonth] = useState(() =>
-    new Date().getMonth(),
-  )
-  const [filterState, setFilterState] = useState<TransactionListFilterState>(
-    DEFAULT_TRANSACTION_LIST_FILTER_STATE,
-  )
-  const [searchState, setSearchState] =
-    useState<SearchState>(DEFAULT_SEARCH_STATE)
-  const [showFilters, setShowFilters] = useState(false)
-  const [unarchiveModalVisible, setUnarchiveModalVisible] = useState(false)
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  const month = useSelectedMonth()
+  const {
+    filterState,
+    setFilterState,
+    searchState,
+    setSearchState,
+    showFilters,
+    toggleFilters,
+  } = useTransactionListFilters()
+  const [unarchiveSheetVisible, setUnarchiveSheetVisible] = useState(false)
+  const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
   const account = useAccount(accountId ?? "")
-  const categoriesExpense = useCategoriesByType(TransactionTypeEnum.EXPENSE)
-  const categoriesIncome = useCategoriesByType(TransactionTypeEnum.INCOME)
-  const categoriesTransfer = useCategoriesByType(TransactionTypeEnum.TRANSFER)
-  const tags = useTags()
   const excludeFromTotals = useTransfersPreferencesStore(
     (s) => s.excludeFromTotals,
   )
-  const { fromDate, toDate } = getMonthRange(selectedYear, selectedMonth)
   const { items: transactionsFull } = useTransactions(
     accountId
       ? {
           accountIds: [accountId],
-          from: new Date(fromDate).toISOString(),
-          to: new Date(toDate).toISOString(),
+          from: month.from,
+          to: month.to,
         }
       : {},
   )
@@ -83,21 +69,11 @@ export default function AccountDetailsScreen() {
     let out = 0
     for (const t of transactionsFull) {
       if (t.isPending || t.isDeleted) continue
+      // Loan cash flows (opening entry + repayments) are not generic income/expense.
+      if (t.loanId != null) continue
       if (t.type === TransactionTypeEnum.INCOME) {
-        if (
-          t.subtype === TransactionSubTypeEnum.LOAN_BORROWED ||
-          t.subtype === TransactionSubTypeEnum.LOAN_RECEIVED
-        ) {
-          continue
-        }
         in_ += t.amount
       } else if (t.type === TransactionTypeEnum.EXPENSE) {
-        if (
-          t.subtype === TransactionSubTypeEnum.LOAN_REPAYMENT ||
-          t.subtype === TransactionSubTypeEnum.LOAN_LENT
-        ) {
-          continue
-        }
         if (t.subtype === TransactionSubTypeEnum.REFUND) {
           out -= t.amount
         } else {
@@ -110,11 +86,6 @@ export default function AccountDetailsScreen() {
     }
     return { monthIn: in_, monthOut: out, monthNet: in_ - out }
   })()
-  const categoriesByType = {
-    expense: categoriesExpense,
-    income: categoriesIncome,
-    transfer: categoriesTransfer,
-  }
   const isArchived = account?.isArchived ?? false
   const handleDelete = async () => {
     if (!accountId) return
@@ -144,29 +115,20 @@ export default function AccountDetailsScreen() {
       title: account?.name ?? "",
       headerRight: () => (
         <View style={{ flexDirection: "row", gap: 4, alignItems: "center" }}>
-          <Button
-            variant={"ghost"}
-            size="icon"
-            onPress={() => setShowFilters((v) => !v)}
-          >
-            <IconSvg
-              name={showFilters ? "filter-2-x-outline" : "filter-2-outline"}
-              size={20}
-            />
-          </Button>
+          <FilterToggleButton active={showFilters} onPress={toggleFilters} />
           {isArchived ? (
             <>
               <Button
                 variant="ghost"
                 size="icon"
-                onPress={() => setDeleteModalVisible(true)}
+                onPress={() => setDeleteSheetVisible(true)}
               >
                 <IconSvg name="trash-outline" size={20} />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                onPress={() => setUnarchiveModalVisible(true)}
+                onPress={() => setUnarchiveSheetVisible(true)}
               >
                 <IconSvg name="archive-off-outline" size={20} />
               </Button>
@@ -188,15 +150,17 @@ export default function AccountDetailsScreen() {
         </View>
       ),
     })
-  }, [navigation, router, account?.id, account?.name, showFilters, isArchived])
+  }, [
+    navigation,
+    router,
+    account?.id,
+    account?.name,
+    showFilters,
+    isArchived,
+    toggleFilters,
+  ])
   if (!account) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicatorMinty />
-        </View>
-      </View>
-    )
+    return <RouteLoadingState />
   }
   const typeLabel = account.type.charAt(0).toUpperCase() + account.type.slice(1)
   const headerContent = (
@@ -299,19 +263,14 @@ export default function AccountDetailsScreen() {
   return (
     <View style={styles.container}>
       <MonthYearPicker
-        initialYear={selectedYear}
-        initialMonth={selectedMonth}
-        onSelect={(y, m) => {
-          setSelectedYear(y)
-          setSelectedMonth(m)
-        }}
+        initialYear={month.year}
+        initialMonth={month.month}
+        onSelect={month.onSelect}
       />
 
       {showFilters && (
         <TransactionFilterHeader
           accounts={[]}
-          categoriesByType={categoriesByType}
-          tags={tags}
           filterState={filterState}
           onFilterChange={setFilterState}
           searchState={searchState}
@@ -328,26 +287,26 @@ export default function AccountDetailsScreen() {
         ListHeaderComponent={headerContent}
       />
 
-      <ConfirmModal
-        visible={unarchiveModalVisible}
-        onRequestClose={() => setUnarchiveModalVisible(false)}
+      <ConfirmSheet
+        visible={unarchiveSheetVisible}
+        onRequestClose={() => setUnarchiveSheetVisible(false)}
         onConfirm={handleUnarchive}
-        title={t("screens.accounts.form.archiveModal.unarchiveTitle")}
+        title={t("screens.accounts.form.archiveSheet.unarchiveTitle")}
         description={account.name}
-        confirmLabel={t("screens.accounts.form.archiveModal.unarchiveConfirm")}
+        confirmLabel={t("screens.accounts.form.archiveSheet.unarchiveConfirm")}
         cancelLabel={t("common.actions.cancel")}
         variant="default"
         icon="archive-off-outline"
       />
 
-      <ConfirmModal
-        visible={deleteModalVisible}
-        onRequestClose={() => setDeleteModalVisible(false)}
+      <ConfirmSheet
+        visible={deleteSheetVisible}
+        onRequestClose={() => setDeleteSheetVisible(false)}
         onConfirm={handleDelete}
-        title={t("screens.accounts.form.deleteModal.title", {
+        title={t("screens.accounts.form.deleteSheet.title", {
           name: account.name,
         })}
-        description={t("screens.accounts.form.deleteModal.descriptionEmpty")}
+        description={t("screens.accounts.form.deleteSheet.descriptionEmpty")}
         confirmLabel={t("common.actions.delete")}
         cancelLabel={t("common.actions.cancel")}
         variant="destructive"
@@ -360,11 +319,6 @@ const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.surface,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
   // ── Header Card ──────────────────────────────────────────────
   headerCard: {

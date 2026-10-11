@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 const moneyFormattingStorage = createMMKV({
   id: "money-formatting-storage",
@@ -74,11 +76,7 @@ export const useMoneyFormattingStore = create<MoneyFormattingStore>()(
     }),
     {
       name: "money-formatting-store",
-      storage: createJSONStorage(() => ({
-        getItem: (name) => moneyFormattingStorage.getString(name) ?? null,
-        setItem: (name, value) => moneyFormattingStorage.set(name, value),
-        removeItem: (name) => moneyFormattingStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(moneyFormattingStorage),
 
       /* THE MAGIC PART: 
             As soon as the store rehydrates (synchronously with MMKV), 

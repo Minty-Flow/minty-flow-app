@@ -33,7 +33,6 @@ export default function ArchivedGoalsScreen() {
           />
         }
         renderItem={renderGoalItem}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
     </View>
   )
@@ -47,8 +46,5 @@ const styles = StyleSheet.create((t) => ({
     padding: 16,
     paddingBottom: 32,
     gap: 12,
-  },
-  separator: {
-    height: 0,
   },
 }))

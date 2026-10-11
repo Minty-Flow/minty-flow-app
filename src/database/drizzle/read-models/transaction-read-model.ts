@@ -76,6 +76,7 @@ const txSelection = {
   requires_manual_confirmation: transactions.requiresManualConfirmation,
   account_balance_before: transactions.accountBalanceBefore,
   subtype: transactions.subtype,
+  kind: transactions.kind,
   extra: transactions.extra,
   has_attachments: transactions.hasAttachments,
   recurring_id: transactions.recurringId,
@@ -288,7 +289,7 @@ export function useTransactions(filters: TransactionFilters): {
   }
 }
 
-export async function getTransactions(
+async function getTransactions(
   filters: TransactionFilters,
 ): Promise<TransactionWithRelations[]> {
   const conditions = getConditions(filters)
@@ -336,11 +337,4 @@ export async function getTransactions(
 
 export function getPendingTransactions(): Promise<TransactionWithRelations[]> {
   return getTransactions({ isPending: true, deletedOnly: false })
-}
-
-export async function getTransactionById(
-  id: string,
-): Promise<TransactionWithRelations | null> {
-  const [transaction] = await getTransactions({ id, includeDeleted: true })
-  return transaction ?? null
 }

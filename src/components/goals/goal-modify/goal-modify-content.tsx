@@ -9,12 +9,18 @@ import { ChangeIconInline } from "~/components/change-icon-inline"
 import { ColorVariantInline } from "~/components/color-variant-inline"
 import { CurrencyAccountSelector } from "~/components/currency-account-selector"
 import { IconSvg } from "~/components/icons"
+import {
+  FormDeleteButton,
+  FormNameField,
+} from "~/components/modify-form/form-fields"
+import { modifyFormStyles } from "~/components/modify-form/modify-form.styles"
+import { ModifyFormFooter } from "~/components/modify-form/modify-form-footer"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { TabsMinty } from "~/components/tabs-minty"
-import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import {
-  DateTimePickerModal,
+  DateTimePickerSheet,
   useDateTimePicker,
 } from "~/components/ui/date-time-picker"
 import { Input } from "~/components/ui/input"
@@ -42,8 +48,7 @@ import { rescaleMinorUnits } from "~/utils/money"
 import { formatShortMonthDayYear } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
-import { GoalFormFooter } from "./goal-form-footer"
-import { GoalFormModals } from "./goal-form-modals"
+import { GoalFormSheets } from "./goal-form-sheets"
 import { goalModifyStyles } from "./goal-modify.styles"
 import type { GoalModifyContentProps } from "./types"
 export function GoalModifyContent({
@@ -87,14 +92,14 @@ export function GoalModifyContent({
   const formTargetAmount = watch("targetAmount")
   const formTargetDate = watch("targetDate")
   const navigation = useNavigation()
-  const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
+  const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSubmitting,
-    onBlock: () => setUnsavedModalVisible(true),
+    onBlock: () => setUnsavedSheetVisible(true),
   })
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-  const [archiveModalVisible, setArchiveModalVisible] = useState(false)
+  const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
+  const [archiveSheetVisible, setArchiveSheetVisible] = useState(false)
   const targetDatePicker = useDateTimePicker({
     onConfirm: (date) =>
       setValue("targetDate", date.getTime(), { shouldDirty: true }),
@@ -189,21 +194,15 @@ export function GoalModifyContent({
     ? formatShortMonthDayYear(formTargetDate)
     : null
   if (!isAddMode && !goal) {
-    return (
-      <View style={goalModifyStyles.container}>
-        <View style={goalModifyStyles.loadingContainer}>
-          <ActivityIndicatorMinty />
-        </View>
-      </View>
-    )
+    return <RouteLoadingState />
   }
   return (
-    <View style={goalModifyStyles.container}>
+    <View style={modifyFormStyles.container}>
       <ScrollIntoViewProvider
-        scrollViewStyle={goalModifyStyles.scrollView}
-        contentContainerStyle={goalModifyStyles.scrollContent}
+        scrollViewStyle={modifyFormStyles.scrollView}
+        contentContainerStyle={modifyFormStyles.scrollContent}
       >
-        <View style={goalModifyStyles.form} key={goal?.id ?? NewEnum.NEW}>
+        <View style={modifyFormStyles.form} key={goal?.id ?? NewEnum.NEW}>
           {/* Goal type selector */}
           <TabsMinty<GoalType>
             items={[
@@ -231,33 +230,16 @@ export function GoalModifyContent({
           />
 
           {/* Name input */}
-          <View style={goalModifyStyles.nameSection}>
-            <Text variant="small" style={goalModifyStyles.label}>
-              {t("screens.settings.goals.form.nameLabel")}
-            </Text>
-            <Controller
-              control={control}
-              name="name"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  placeholder={t("screens.settings.goals.form.namePlaceholder")}
-                  error={!!errors.name}
-                />
-              )}
-            />
-            {errors.name && (
-              <Text variant="small" style={goalModifyStyles.errorText}>
-                {t(errors.name.message as TranslationKey)}
-              </Text>
-            )}
-          </View>
+          <FormNameField
+            control={control}
+            label={t("screens.settings.goals.form.nameLabel")}
+            placeholder={t("screens.settings.goals.form.namePlaceholder")}
+            error={errors.name}
+          />
 
           {/* Description input (optional, multiline) */}
           <View style={goalModifyStyles.descriptionSection}>
-            <Text variant="small" style={goalModifyStyles.label}>
+            <Text variant="small" style={modifyFormStyles.label}>
               {t("screens.settings.goals.form.descriptionLabel")}
             </Text>
             <Controller
@@ -331,7 +313,7 @@ export function GoalModifyContent({
             }
           >
             <View style={goalModifyStyles.targetDateLeft}>
-              <IconSvg name="calendar-outline" size={24} />
+              <IconSvg name="calendar-month" size={24} />
               <Text variant="default" style={goalModifyStyles.switchLabel}>
                 {t("screens.settings.goals.form.targetDateLabel")}
               </Text>
@@ -380,11 +362,11 @@ export function GoalModifyContent({
 
         {/* Archive / delete buttons — edit mode only */}
         {!isAddMode && (
-          <View style={goalModifyStyles.deleteSection}>
+          <View style={modifyFormStyles.deleteSection}>
             <Button
               variant="ghost"
-              onPress={() => setArchiveModalVisible(true)}
-              style={goalModifyStyles.actionButton}
+              onPress={() => setArchiveSheetVisible(true)}
+              style={modifyFormStyles.actionButton}
             >
               <IconSvg
                 name={
@@ -399,25 +381,15 @@ export function GoalModifyContent({
                   : t("screens.settings.goals.form.archiveLabel")}
               </Text>
             </Button>
-            <Button
-              variant="ghost"
-              onPress={() => setDeleteModalVisible(true)}
-              style={goalModifyStyles.actionButton}
-            >
-              <IconSvg
-                name="trash-outline"
-                size={20}
-                color={goalModifyStyles.deleteIcon.color}
-              />
-              <Text variant="default" style={goalModifyStyles.deleteText}>
-                {t("screens.settings.goals.form.deleteLabel")}
-              </Text>
-            </Button>
+            <FormDeleteButton
+              label={t("screens.settings.goals.form.deleteLabel")}
+              onPress={() => setDeleteSheetVisible(true)}
+            />
           </View>
         )}
       </ScrollIntoViewProvider>
 
-      <GoalFormFooter
+      <ModifyFormFooter
         formName={formName}
         isAddMode={isAddMode}
         isDirty={isDirty}
@@ -426,26 +398,26 @@ export function GoalModifyContent({
         onSave={handleSubmit}
       />
 
-      <GoalFormModals
-        deleteModalVisible={deleteModalVisible}
-        archiveModalVisible={archiveModalVisible}
-        unsavedModalVisible={unsavedModalVisible}
+      <GoalFormSheets
+        deleteSheetVisible={deleteSheetVisible}
+        archiveSheetVisible={archiveSheetVisible}
+        unsavedSheetVisible={unsavedSheetVisible}
         isAddMode={isAddMode}
         goal={goal}
-        onCloseDeleteModal={() => setDeleteModalVisible(false)}
-        onCloseArchiveModal={() => setArchiveModalVisible(false)}
-        onCloseUnsavedModal={() => setUnsavedModalVisible(false)}
+        onCloseDeleteSheet={() => setDeleteSheetVisible(false)}
+        onCloseArchiveSheet={() => setArchiveSheetVisible(false)}
+        onCloseUnsavedSheet={() => setUnsavedSheetVisible(false)}
         onConfirmDelete={handleDelete}
         onConfirmArchive={handleArchive}
         onDiscardAndNavigate={() => {
-          setUnsavedModalVisible(false)
+          setUnsavedSheetVisible(false)
           allowNavigation()
           handleGoBack()
         }}
       />
 
       {targetDatePicker.pickerElement}
-      <DateTimePickerModal {...targetDatePicker.modalProps} />
+      <DateTimePickerSheet {...targetDatePicker.sheetProps} />
     </View>
   )
 }

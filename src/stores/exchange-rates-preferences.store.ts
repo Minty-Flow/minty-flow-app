@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 /**
  * MMKV storage for custom exchange rate overrides.
@@ -65,13 +67,7 @@ export const useExchangeRatesPreferencesStore =
       }),
       {
         name: PERSIST_NAME,
-        storage: createJSONStorage(() => ({
-          getItem: (name) =>
-            exchangeRatesPreferencesStorage.getString(name) ?? null,
-          setItem: (name, value) =>
-            exchangeRatesPreferencesStorage.set(name, value),
-          removeItem: (name) => exchangeRatesPreferencesStorage.remove(name),
-        })),
+        storage: mmkvJSONStorage(exchangeRatesPreferencesStorage),
       },
     ),
   )

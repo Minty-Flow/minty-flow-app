@@ -5,14 +5,15 @@ import { FlatList, View as RNView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { BillItemCard } from "~/components/bill-splitter/bill-item-card"
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
-import { InfoModal } from "~/components/info-modal"
+import { InfoSheet } from "~/components/info-sheet"
 import { Money } from "~/components/money"
 import { RouteLoadingState } from "~/components/route-load-state"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
+import { Fab } from "~/components/ui/fab"
 import { Input } from "~/components/ui/input"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -326,22 +327,20 @@ export default function BillSplitterScreen() {
       )}
 
       {/* FAB — positioned above the summary button when visible */}
-      <Pressable
+      <Fab
         onPress={() => router.push("/settings/bill-splitter/add-item")}
-        style={[styles.fab, hasItems && styles.fabAboveSummary]}
         accessibilityLabel={t("screens.settings.billSplitter.actions.addItem")}
-      >
-        <IconSvg name="plus-outline" size={24} color={theme.colors.onPrimary} />
-      </Pressable>
+        style={hasItems && styles.fabAboveSummary}
+      />
 
-      {/* Modals */}
-      <InfoModal
+      {/* Sheets */}
+      <InfoSheet
         visible={infoVisible}
         onRequestClose={() => setInfoVisible(false)}
         title={t("screens.settings.billSplitter.info.title")}
         description={t("screens.settings.billSplitter.info.description")}
       />
-      <ConfirmModal
+      <ConfirmSheet
         visible={clearVisible}
         onRequestClose={() => setClearVisible(false)}
         onConfirm={clearBill}
@@ -549,22 +548,6 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onPrimary,
   },
   // FAB
-  fab: {
-    position: "absolute",
-    bottom: 24,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: theme.radius,
-    backgroundColor: theme.colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
-  },
   // Raise FAB above the summary button strip (height 88 = 48 button + 20 pad + 8 top pad + 12 gap)
   fabAboveSummary: {
     bottom: 100,

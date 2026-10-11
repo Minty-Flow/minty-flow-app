@@ -30,13 +30,15 @@ export const SummarySection = ({
   const excludeFromTotals = useTransfersPreferencesStore(
     (s) => s.excludeFromTotals,
   )
-  const incomeRows = transactionsWithRelations.filter(
+  // CSI-3: pending (upcoming / not-yet-due recurring) rows never contribute to totals.
+  const settledRows = transactionsWithRelations.filter((row) => !row.isPending)
+  const incomeRows = settledRows.filter(
     (row) => row.type === TransactionTypeEnum.INCOME,
   )
-  const expenseRows = transactionsWithRelations.filter(
+  const expenseRows = settledRows.filter(
     (row) => row.type === TransactionTypeEnum.EXPENSE,
   )
-  const transferRows = transactionsWithRelations.filter(
+  const transferRows = settledRows.filter(
     (row) => row.type === TransactionTypeEnum.TRANSFER || row.isTransfer,
   )
   const extraIncomeByCurrency = (() => {
@@ -108,24 +110,14 @@ const Card = ({
     rows.forEach((row) => {
       const currency = row.account?.currencyCode ?? ""
       if (!currency) return
+      // Loan cash flows (opening entry + repayments) are not generic income/expense.
+      if (row.loanId != null) return
       let amount = row.amount || 0
-      if (type === TransactionTypeEnum.EXPENSE) {
-        if (
-          row.subtype === TransactionSubTypeEnum.LOAN_REPAYMENT ||
-          row.subtype === TransactionSubTypeEnum.LOAN_LENT
-        ) {
-          return
-        }
-        if (row.subtype === TransactionSubTypeEnum.REFUND) {
-          amount = -amount
-        }
-      } else if (type === TransactionTypeEnum.INCOME) {
-        if (
-          row.subtype === TransactionSubTypeEnum.LOAN_BORROWED ||
-          row.subtype === TransactionSubTypeEnum.LOAN_RECEIVED
-        ) {
-          return
-        }
+      if (
+        type === TransactionTypeEnum.EXPENSE &&
+        row.subtype === TransactionSubTypeEnum.REFUND
+      ) {
+        amount = -amount
       }
       totals[currency] = (totals[currency] || 0) + amount
     })

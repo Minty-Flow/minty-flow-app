@@ -59,6 +59,9 @@ export function StatCard({
 const styles = StyleSheet.create((theme) => ({
   card: {
     flex: 1,
+    // In a side-by-side row the cards stretch to the same height; the content
+    // spreads so the shorter one doesn't look empty.
+    justifyContent: "space-between",
     backgroundColor: theme.colors.secondary,
     borderRadius: theme.radius,
     padding: 16,

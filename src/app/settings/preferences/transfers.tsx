@@ -3,10 +3,13 @@ import { ScrollView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
+import {
+  SettingsOptionRow,
+  SettingsSection,
+  SettingsSwitchRow,
+  settingsStyles,
+} from "~/components/settings/settings-list"
 import { InfoBanner } from "~/components/ui/info-banner"
-import { ListItem } from "~/components/ui/list-item"
-import { Switch } from "~/components/ui/switch"
-import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import {
   TransferLayoutEnum,
@@ -14,21 +17,9 @@ import {
   useTransfersPreferencesStore,
 } from "~/stores/transfers-preferences.store"
 
-const layoutOptions: Array<{
-  value: TransferLayoutType
-  label: string
-  description: string
-}> = [
-  {
-    value: TransferLayoutEnum.COMBINE,
-    label: "Combine",
-    description: "Single net amount",
-  },
-  {
-    value: TransferLayoutEnum.SEPARATE,
-    label: "Separate",
-    description: "Outgoing and incoming shown separately",
-  },
+const layoutOptions: TransferLayoutType[] = [
+  TransferLayoutEnum.COMBINE,
+  TransferLayoutEnum.SEPARATE,
 ]
 
 function LayoutPreview({ variant }: { variant: TransferLayoutType }) {
@@ -68,7 +59,6 @@ function LayoutPreview({ variant }: { variant: TransferLayoutType }) {
 }
 
 export default function TransfersPreferencesScreen() {
-  const { theme } = useUnistyles()
   const { t } = useTranslation()
   const layout = useTransfersPreferencesStore((s) => s.layout)
   const setLayout = useTransfersPreferencesStore((s) => s.setLayout)
@@ -81,167 +71,49 @@ export default function TransfersPreferencesScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
+      style={settingsStyles.screen}
+      contentContainerStyle={settingsStyles.content}
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
     >
-      {/* Layout */}
-      <View native style={[styles.sectionLabel, styles.sectionLabelFirst]}>
-        <Text variant="small" style={styles.sectionLabelText}>
-          {t("screens.settings.transfers.layout.subtitle")}
-        </Text>
-      </View>
-      <View native style={styles.card}>
-        {layoutOptions.map((option, index) => {
-          const isSelected = layout === option.value
-          const isLast = index === layoutOptions.length - 1
+      <SettingsSection title={t("screens.settings.transfers.layout.subtitle")}>
+        {layoutOptions.map((value) => {
+          const key =
+            value === TransferLayoutEnum.COMBINE ? "combine" : "separate"
           return (
-            <View key={option.value} native>
-              <ListItem
-                style={styles.row}
-                onPress={() => setLayout(option.value)}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: isSelected }}
-              >
-                <View native style={styles.rowContent}>
-                  <Text style={styles.rowLabel}>
-                    {t(
-                      `screens.settings.transfers.layout.options.${
-                        option.value === TransferLayoutEnum.COMBINE
-                          ? "combine"
-                          : "separate"
-                      }.label`,
-                    )}
-                  </Text>
-                  <Text variant="small" style={styles.rowDescription}>
-                    {t(
-                      `screens.settings.transfers.layout.options.${
-                        option.value === TransferLayoutEnum.COMBINE
-                          ? "combine"
-                          : "separate"
-                      }.description`,
-                    )}
-                  </Text>
-                  <LayoutPreview variant={option.value} />
-                </View>
-                {isSelected ? (
-                  <IconSvg
-                    name="check-outline"
-                    size={20}
-                    color={theme.colors.primary}
-                  />
-                ) : null}
-              </ListItem>
-              {!isLast ? <View native style={styles.divider} /> : null}
-            </View>
+            <SettingsOptionRow
+              key={value}
+              label={t(
+                `screens.settings.transfers.layout.options.${key}.label`,
+              )}
+              description={t(
+                `screens.settings.transfers.layout.options.${key}.description`,
+              )}
+              selected={layout === value}
+              onPress={() => setLayout(value)}
+            >
+              <LayoutPreview variant={value} />
+            </SettingsOptionRow>
           )
         })}
-      </View>
+      </SettingsSection>
       <InfoBanner text={t("screens.settings.transfers.layout.caption")} />
 
-      {/* Exclude from totals */}
-      <View native style={styles.sectionLabel}>
-        <Text variant="small" style={styles.sectionLabelText}>
-          {t("screens.settings.transfers.totals.subtitle")}
-        </Text>
-      </View>
-      <View native style={styles.toggleCard}>
-        <ListItem
-          style={styles.toggleRow}
-          onPress={() => setExcludeFromTotals(!excludeFromTotals)}
-        >
-          <View native style={styles.toggleRowContent}>
-            <Text style={styles.toggleLabel}>
-              {t("screens.settings.transfers.totals.excludeToggle.label")}
-            </Text>
-            <Text variant="small" style={styles.toggleDescription}>
-              {t("screens.settings.transfers.totals.excludeToggle.description")}
-            </Text>
-          </View>
-          <Switch
-            value={excludeFromTotals}
-            onValueChange={setExcludeFromTotals}
-          />
-        </ListItem>
-      </View>
+      <SettingsSection title={t("screens.settings.transfers.totals.subtitle")}>
+        <SettingsSwitchRow
+          label={t("screens.settings.transfers.totals.excludeToggle.label")}
+          description={t(
+            "screens.settings.transfers.totals.excludeToggle.description",
+          )}
+          value={excludeFromTotals}
+          onValueChange={setExcludeFromTotals}
+        />
+      </SettingsSection>
     </ScrollView>
   )
 }
 
 const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  content: {
-    paddingHorizontal: 0,
-    paddingTop: 12,
-    paddingBottom: 48,
-  },
-
-  sectionLabel: {
-    paddingHorizontal: 20,
-    marginBottom: 8,
-    marginTop: 28,
-  },
-  sectionLabelFirst: {
-    marginTop: 8,
-  },
-  sectionLabelText: {
-    fontSize: theme.typography.labelXSmall.fontSize,
-    fontWeight: "600",
-    letterSpacing: 0.8,
-    opacity: 0.5,
-  },
-
-  card: {
-    overflow: "hidden",
-  },
-  row: {
-    justifyContent: "space-between",
-    minHeight: 56,
-  },
-  rowContent: {
-    flex: 1,
-    gap: 2,
-  },
-  rowLabel: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-    fontWeight: "500",
-    color: theme.colors.onSurface,
-  },
-  rowDescription: {
-    fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.semantic?.semi,
-  },
-  divider: {
-    height: 0.5,
-    backgroundColor: theme.colors.semantic?.semi,
-    opacity: 0.4,
-  },
-
-  toggleCard: {
-    overflow: "hidden",
-  },
-  toggleRow: {
-    justifyContent: "space-between",
-    minHeight: 56,
-  },
-  toggleRowContent: {
-    flex: 1,
-    gap: 2,
-  },
-  toggleLabel: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-    fontWeight: "500",
-    color: theme.colors.onSurface,
-  },
-  toggleDescription: {
-    fontSize: theme.typography.bodyMedium.fontSize,
-    color: theme.colors.semantic.semi,
-  },
-
   previewRow: {
     flexDirection: "row",
     alignItems: "center",

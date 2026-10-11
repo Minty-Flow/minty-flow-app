@@ -3,9 +3,10 @@ import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { AddNameModal } from "~/components/bill-splitter/add-name-modal"
+import { AddNameSheet } from "~/components/bill-splitter/add-name-sheet"
 import { IconSvg } from "~/components/icons"
 import { EmptyState } from "~/components/ui/empty-state"
+import { Fab } from "~/components/ui/fab"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -17,7 +18,7 @@ export default function NamesScreen() {
   const participants = useBillSplitterStore((s) => s.participants)
   const addParticipant = useBillSplitterStore((s) => s.addParticipant)
   const removeParticipant = useBillSplitterStore((s) => s.removeParticipant)
-  const [addModalVisible, setAddModalVisible] = useState(false)
+  const [addSheetVisible, setAddSheetVisible] = useState(false)
   const renderItem = ({ item }: { item: Participant }) => (
     <View style={styles.nameRow}>
       <Text style={styles.nameText} numberOfLines={1}>
@@ -56,18 +57,15 @@ export default function NamesScreen() {
       />
 
       {/* FAB */}
-      <Pressable
-        onPress={() => setAddModalVisible(true)}
-        style={styles.fab}
+      <Fab
+        onPress={() => setAddSheetVisible(true)}
         accessibilityLabel={t("screens.settings.billSplitter.names.addName")}
-      >
-        <IconSvg name="plus-outline" size={24} color={theme.colors.onPrimary} />
-      </Pressable>
+      />
 
-      <AddNameModal
-        visible={addModalVisible}
+      <AddNameSheet
+        visible={addSheetVisible}
         onAdd={addParticipant}
-        onClose={() => setAddModalVisible(false)}
+        onClose={() => setAddSheetVisible(false)}
       />
     </View>
   )
@@ -109,21 +107,5 @@ const styles = StyleSheet.create((theme) => ({
   },
   deleteButton: {
     padding: 4,
-  },
-  fab: {
-    position: "absolute",
-    bottom: 24,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: theme.radius,
-    backgroundColor: theme.colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
   },
 }))

@@ -1,4 +1,5 @@
 import { useLocalSearchParams } from "expo-router"
+import { useTranslation } from "react-i18next"
 
 import { LoanModifyContent } from "~/components/loans/loan-modify/loan-modify-content"
 import {
@@ -9,9 +10,10 @@ import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-m
 import { useCategories } from "~/database/drizzle/read-models/category-read-model"
 import { useLoansQuery } from "~/database/drizzle/read-models/loan-read-model"
 import { useModifyRouteLoader } from "~/hooks/use-modify-route-loader"
-import { type LoanType, LoanTypeEnum } from "~/types/loans"
+import { type LoanTerm, type LoanType, LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
 export default function LoanModifyScreen() {
+  const { t } = useTranslation()
   const params = useLocalSearchParams<{
     loanId: string
     prefillName?: string
@@ -19,6 +21,7 @@ export default function LoanModifyScreen() {
     prefillAccountId?: string
     prefillAmount?: string
     prefillLoanType?: string
+    prefillTerm?: string
   }>()
   const loanId = params.loanId ?? NewEnum.NEW
   const loansQuery = useLoansQuery()
@@ -26,16 +29,20 @@ export default function LoanModifyScreen() {
     id: loanId,
     data: loansQuery.data,
     updatedAt: loansQuery.updatedAt,
-    find: (item, id) => item.id === id,
-    notFoundMessage: "Loan not found.",
+    notFoundMessage: t("common.notFound.loan"),
   })
   const accounts = useActiveAccounts()
   const categories = useCategories()
   const prefill = (() => {
+    const term =
+      params.prefillTerm === "one_time" || params.prefillTerm === "long_term"
+        ? (params.prefillTerm as LoanTerm)
+        : undefined
     if (
       !params.prefillName &&
       !params.prefillAccountId &&
-      !params.prefillAmount
+      !params.prefillAmount &&
+      !term
     )
       return undefined
     return {
@@ -52,6 +59,7 @@ export default function LoanModifyScreen() {
       )
         ? (params.prefillLoanType as LoanType)
         : undefined,
+      term,
     }
   })()
   if (loadState.mode === "new") {

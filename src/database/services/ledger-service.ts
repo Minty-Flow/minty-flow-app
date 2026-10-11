@@ -3,10 +3,6 @@ import { and, sql as drizzleSql, eq, gte, inArray, lt, or } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
 import {
-  getTransactionById as getTransactionByIdFromReadModel,
-  type TransactionWithRelations,
-} from "~/database/drizzle/read-models/transaction-read-model"
-import {
   accounts,
   transactions,
   transactionTags,
@@ -16,13 +12,14 @@ import { runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
 import { generateId } from "~/database/utils/generate-id"
 import { getBalanceDelta } from "~/database/utils/get-balance-delta"
+import { hasAttachmentsFromExtra } from "~/database/utils/has-attachments-from-extra"
 import type {
   CreateTransferParams,
   EditTransferFields,
   RecurringEditPayload,
   TransactionFormValues,
 } from "~/schemas/transactions.schema"
-import type { TransactionType } from "~/types/transactions"
+import type { TransactionKind, TransactionType } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import {
   assertMinorUnits,
@@ -30,18 +27,18 @@ import {
   toMajorUnits,
 } from "~/utils/money"
 
-function hasAttachmentsFromExtra(
-  extra: Record<string, string> | null,
-): boolean {
-  if (!extra?.attachments) return false
-  try {
-    const parsed = JSON.parse(extra.attachments) as unknown
-    if (Array.isArray(parsed)) return parsed.length > 0
-    if (typeof parsed === "object" && parsed !== null)
-      return Object.keys(parsed).length > 0
-    return false
-  } catch {
-    return extra.attachments.length > 0
+// CSI-2: a pending transaction may only carry a kind that represents a
+// legitimately un-applied state. Anything else is a form/caller bug.
+function assertPendingKindAllowed(isPending: boolean, kind: string): void {
+  if (
+    isPending &&
+    kind !== "upcoming" &&
+    kind !== "subscription" &&
+    kind !== "repetitive"
+  ) {
+    const msg = `Refusing to persist pending transaction with kind='${kind}'`
+    if (__DEV__) throw new Error(msg)
+    logger.error(msg, { kind })
   }
 }
 
@@ -62,6 +59,7 @@ const txSelection = {
   requires_manual_confirmation: transactions.requiresManualConfirmation,
   account_balance_before: transactions.accountBalanceBefore,
   subtype: transactions.subtype,
+  kind: transactions.kind,
   extra: transactions.extra,
   has_attachments: transactions.hasAttachments,
   recurring_id: transactions.recurringId,
@@ -285,6 +283,9 @@ export async function createTransaction(
   const extraJson = extra ? JSON.stringify(extra) : null
   const hasAttachments = hasAttachmentsFromExtra(extra) ? 1 : 0
 
+  const kind = data.kind ?? "default"
+  assertPendingKindAllowed(!!data.isPending, kind)
+
   const txId = await runInTransaction("transaction.create", (db) => {
     const balanceBefore = data.isPending
       ? 0
@@ -310,6 +311,7 @@ export async function createTransaction(
         requiresManualConfirmation: data.requiresManualConfirmation ? 1 : 0,
         accountBalanceBefore: balanceBefore,
         subtype: data.subtype ?? null,
+        kind,
         extra: extraJson,
         hasAttachments,
         recurringId: data.recurringId ?? null,
@@ -355,6 +357,7 @@ export async function createTransfer(
     isPending: boolean
     subtype?: string | null
     extra?: Record<string, string> | null
+    kind?: TransactionKind
   },
 ): Promise<void> {
   assertMinorUnits(params.amount)
@@ -427,6 +430,8 @@ export async function createTransfer(
         requiresManualConfirmation: 0,
         accountBalanceBefore: isPending ? 0 : fromAcc.balance,
         subtype: recurringOptions?.subtype ?? null,
+        // transfers are pending+default by design (migration 0001 & deriveKind exclude type='transfer' from 'upcoming') — CSI-2 assert intentionally not applied here
+        kind: recurringOptions?.kind ?? "default",
         extra: extraJson,
         hasAttachments: 0,
         recurringId: recurringOptions?.recurringId ?? null,
@@ -455,6 +460,7 @@ export async function createTransfer(
         requiresManualConfirmation: 0,
         accountBalanceBefore: isPending ? 0 : toAcc.balance,
         subtype: recurringOptions?.subtype ?? null,
+        kind: recurringOptions?.kind ?? "default",
         extra: extraJson,
         hasAttachments: 0,
         recurringId: recurringOptions?.recurringId ?? null,
@@ -518,16 +524,30 @@ export async function updateTransaction(
     const oldAccountId = tx.account_id
     const oldCategoryId = tx.category_id
 
+    // ES-5: a loan-linked row's kind / type / account / loan link are locked.
+    // The form disables these fields; this is defence in depth — silently keep
+    // the stored value rather than throwing.
+    const isLoanLinked = tx.loan_id != null
+    const nextKind =
+      data.kind !== undefined && !isLoanLinked
+        ? data.kind
+        : (tx.kind ?? "default")
+
     const newPending =
       data.isPending !== undefined ? data.isPending : oldPending
     const newAmount = data.amount !== undefined ? data.amount : oldAmount
-    const newType = data.type !== undefined ? data.type : oldType
+    const newType =
+      data.type !== undefined && !isLoanLinked ? data.type : oldType
     const newSubtype =
       data.subtype !== undefined ? (data.subtype ?? null) : oldSubtype
     const newAccountId =
-      data.accountId !== undefined ? data.accountId : oldAccountId
+      data.accountId !== undefined && !isLoanLinked
+        ? data.accountId
+        : oldAccountId
     const newCategoryId =
       data.categoryId !== undefined ? data.categoryId : oldCategoryId
+
+    assertPendingKindAllowed(newPending, nextKind)
 
     // -- Balance reconciliation --
     const oldDelta = !oldPending
@@ -633,7 +653,10 @@ export async function updateTransaction(
     db.update(transactions)
       .set({
         ...(data.amount !== undefined ? { amount: data.amount } : {}),
-        ...(data.type !== undefined ? { type: data.type } : {}),
+        ...(data.type !== undefined && !isLoanLinked
+          ? { type: data.type }
+          : {}),
+        kind: nextKind,
         ...(data.transactionDate !== undefined
           ? { transactionDate: data.transactionDate.toISOString() }
           : {}),
@@ -654,7 +677,9 @@ export async function updateTransaction(
         ...(data.categoryId !== undefined
           ? { categoryId: newCategoryId ?? null }
           : {}),
-        ...(data.accountId !== undefined ? { accountId: data.accountId } : {}),
+        ...(data.accountId !== undefined && !isLoanLinked
+          ? { accountId: data.accountId }
+          : {}),
         accountBalanceBefore: newBalanceBefore,
         ...(data.extra !== undefined
           ? {
@@ -677,7 +702,9 @@ export async function updateTransaction(
         ...(data.budgetId !== undefined
           ? { budgetId: data.budgetId ?? null }
           : {}),
-        ...(data.loanId !== undefined ? { loanId: data.loanId ?? null } : {}),
+        ...(data.loanId !== undefined && !isLoanLinked
+          ? { loanId: data.loanId ?? null }
+          : {}),
         updatedAt: now,
       })
       .where(eq(transactions.id, id))
@@ -1152,6 +1179,7 @@ export async function confirmTransaction(
         db.update(transactions)
           .set({
             isPending: 0,
+            kind: leg.kind === "upcoming" ? "default" : leg.kind,
             accountBalanceBefore: balanceByAccountId.get(leg.account_id) ?? 0,
             ...(options.updateTransactionDate ? { transactionDate: now } : {}),
             updatedAt: now,
@@ -1174,7 +1202,20 @@ export async function confirmTransaction(
           .where(eq(accounts.id, leg.account_id))
           .run()
         db.update(transactions)
-          .set({ isPending: 1, accountBalanceBefore: 0, updatedAt: now })
+          .set({
+            isPending: 1,
+            // Mirror the confirm branch in reverse: a re-pended default leg
+            // that isn't a transfer or recurring instance goes back to
+            // 'upcoming' so it never lands in the CSI-2-forbidden
+            // kind='default' && is_pending=1 state.
+            ...(leg.kind === "default" &&
+            leg.type !== "transfer" &&
+            leg.recurring_id == null
+              ? { kind: "upcoming" }
+              : {}),
+            accountBalanceBefore: 0,
+            updatedAt: now,
+          })
           .where(eq(transactions.id, leg.id))
           .run()
       }
@@ -1184,18 +1225,33 @@ export async function confirmTransaction(
 
 // ── Recurring scope helpers ───────────────────────────────────────────────────
 
+/** Live (non-deleted) transactions of a recurring rule, optionally from a date / pending only. */
+function getRuleInstanceIds(
+  ruleId: string,
+  opts: { fromDate?: Date; pendingOnly?: boolean } = {},
+): string[] {
+  return drizzleDb
+    .select({ id: transactions.id })
+    .from(transactions)
+    .where(
+      and(
+        eq(transactions.recurringId, ruleId),
+        opts.fromDate
+          ? gte(transactions.transactionDate, opts.fromDate.toISOString())
+          : undefined,
+        opts.pendingOnly ? eq(transactions.isPending, 1) : undefined,
+        eq(transactions.isDeleted, 0),
+      ),
+    )
+    .all()
+    .map((row) => row.id)
+}
+
 export async function deleteAllRecurringInstances(
   ruleId: string,
 ): Promise<void> {
-  const instances = drizzleDb
-    .select(txSelection)
-    .from(transactions)
-    .where(
-      and(eq(transactions.recurringId, ruleId), eq(transactions.isDeleted, 0)),
-    )
-    .all()
-  for (const tx of instances) {
-    await deleteTransaction(tx.id)
+  for (const id of getRuleInstanceIds(ruleId)) {
+    await deleteTransaction(id)
   }
 }
 
@@ -1203,19 +1259,8 @@ export async function deleteFutureRecurringInstances(
   ruleId: string,
   fromDate: Date,
 ): Promise<void> {
-  const instances = drizzleDb
-    .select(txSelection)
-    .from(transactions)
-    .where(
-      and(
-        eq(transactions.recurringId, ruleId),
-        gte(transactions.transactionDate, fromDate.toISOString()),
-        eq(transactions.isDeleted, 0),
-      ),
-    )
-    .all()
-  for (const tx of instances) {
-    await deleteTransaction(tx.id)
+  for (const id of getRuleInstanceIds(ruleId, { fromDate })) {
+    await deleteTransaction(id)
   }
 }
 
@@ -1234,20 +1279,11 @@ export async function updateFutureRecurringInstances(
   fromDate: Date,
   payload: RecurringEditPayload,
 ): Promise<void> {
-  const instances = drizzleDb
-    .select(txSelection)
-    .from(transactions)
-    .where(
-      and(
-        eq(transactions.recurringId, ruleId),
-        gte(transactions.transactionDate, fromDate.toISOString()),
-        eq(transactions.isPending, 1),
-        eq(transactions.isDeleted, 0),
-      ),
-    )
-    .all()
-  for (const tx of instances) {
-    await updateTransaction(tx.id, {
+  for (const id of getRuleInstanceIds(ruleId, {
+    fromDate,
+    pendingOnly: true,
+  })) {
+    await updateTransaction(id, {
       amount: payload.amount,
       type: payload.type,
       transactionDate: payload.transactionDate,
@@ -1307,12 +1343,6 @@ export async function autoPurgeTrash(retentionValue: string): Promise<void> {
   }
 }
 
-export async function getTransactionById(
-  id: string,
-): Promise<TransactionWithRelations | null> {
-  return getTransactionByIdFromReadModel(id)
-}
-
 export async function getConversionRateForTransaction(tx: {
   id: string
 }): Promise<number | null> {
@@ -1327,13 +1357,4 @@ export async function getConversionRateForTransaction(tx: {
     )
     .get()
   return row?.conversionRate ?? null
-}
-
-export async function getTagIdsForTransaction(txId: string): Promise<string[]> {
-  return drizzleDb
-    .select({ tagId: transactionTags.tagId })
-    .from(transactionTags)
-    .where(eq(transactionTags.transactionId, txId))
-    .all()
-    .map((r) => r.tagId)
 }

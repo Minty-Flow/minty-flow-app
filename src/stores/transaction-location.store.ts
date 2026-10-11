@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 /**
  * MMKV storage instance for transaction location preferences.
@@ -33,11 +35,7 @@ export const useTransactionLocationStore = create<TransactionLocationStore>()(
     }),
     {
       name: "transaction-location-preferences-store",
-      storage: createJSONStorage(() => ({
-        getItem: (name) => transactionLocationStorage.getString(name) ?? null,
-        setItem: (name, value) => transactionLocationStorage.set(name, value),
-        removeItem: (name) => transactionLocationStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(transactionLocationStorage),
     },
   ),
 )

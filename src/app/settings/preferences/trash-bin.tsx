@@ -4,8 +4,12 @@ import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native-gesture-handler"
 import { StyleSheet } from "react-native-unistyles"
 
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { IconSvg } from "~/components/icons"
+import {
+  SettingsRow,
+  settingsStyles,
+} from "~/components/settings/settings-list"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { ChoiceChips } from "~/components/ui/chips"
 import { ListItem } from "~/components/ui/list-item"
@@ -27,7 +31,7 @@ const RetentionPeriodEnum = {
 } as const
 export default function TrashBinScreen() {
   const router = useRouter()
-  const [confirmModalVisible, setConfirmModalVisible] = useState<boolean>(false)
+  const [confirmSheetVisible, setConfirmSheetVisible] = useState<boolean>(false)
   const retentionPeriod = useTrashBinStore((s) => s.retentionPeriod)
   const setRetentionPeriod = useTrashBinStore((s) => s.setRetentionPeriod)
   const { t } = useTranslation()
@@ -73,7 +77,10 @@ export default function TrashBinScreen() {
       })
   } // Added 't' to dependencies
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={settingsStyles.screen}
+      contentContainerStyle={settingsStyles.content}
+    >
       {/* Retention Period Choices */}
       <ChoiceChips
         title={t("screens.settings.trash.retention.title")}
@@ -93,29 +100,23 @@ export default function TrashBinScreen() {
       />
 
       {/* View Removed List */}
-      <ListItem style={styles.actionItem} onPress={handleView}>
-        <View style={styles.actionItemLeft}>
-          <View style={styles.actionItemContent}>
-            <View style={styles.titleRow}>
-              <Text variant="default" style={styles.actionItemTitle}>
-                {t("screens.settings.trash.viewRemovedList")}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <ChevronIcon
-          direction={"trailing"}
-          size={18}
-          color={styles.actionItemIcon.color}
-        />
-      </ListItem>
+      <SettingsRow
+        label={t("screens.settings.trash.viewRemovedList")}
+        onPress={handleView}
+        trailing={
+          <ChevronIcon
+            direction="trailing"
+            size={18}
+            color={styles.actionItemIcon.color}
+          />
+        }
+      />
 
       {/* Empty Trash Bin */}
       <ListItem
         style={styles.actionItem}
         onPress={() => {
-          setConfirmModalVisible(true)
+          setConfirmSheetVisible(true)
         }}
       >
         <View style={styles.actionItemLeft}>
@@ -135,14 +136,14 @@ export default function TrashBinScreen() {
       </ListItem>
 
       {/* Empty Trash Modal */}
-      <ConfirmModal
-        visible={confirmModalVisible}
-        onRequestClose={() => setConfirmModalVisible(false)}
+      <ConfirmSheet
+        visible={confirmSheetVisible}
+        onRequestClose={() => setConfirmSheetVisible(false)}
         onConfirm={handleEmptyConfirmed}
-        title={t("screens.settings.trash.empty.modal.title")}
-        description={t("screens.settings.trash.empty.modal.description")}
-        confirmLabel={t("screens.settings.trash.empty.modal.confirm")}
-        cancelLabel={t("screens.settings.trash.empty.modal.cancel")}
+        title={t("screens.settings.trash.empty.sheet.title")}
+        description={t("screens.settings.trash.empty.sheet.description")}
+        confirmLabel={t("screens.settings.trash.empty.sheet.confirm")}
+        cancelLabel={t("screens.settings.trash.empty.sheet.cancel")}
         variant="destructive"
         icon="trash-outline"
       />
@@ -150,10 +151,6 @@ export default function TrashBinScreen() {
   )
 }
 const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
   actionItem: {
     justifyContent: "space-between",
   },
@@ -170,11 +167,6 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-  },
-  actionItemTitle: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-    fontWeight: "600",
-    color: theme.colors.onSurface,
   },
   actionTrashItemTitle: {
     fontSize: theme.typography.bodyLarge.fontSize,

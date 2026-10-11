@@ -4,27 +4,23 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
+import { getLoanDisplay } from "~/components/loans/loan-display"
 import { Money } from "~/components/money"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useAccount } from "~/database/drizzle/read-models/account-read-model"
-import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import { useLanguageStore } from "~/stores/language.store"
+import type { Account } from "~/types/accounts"
 import type { Loan } from "~/types/loans"
-import { getLiveLoanProgress } from "~/utils/live-progress"
-import { getLoanProgressModel } from "~/utils/planning-progress"
-import { formatShortMonthDay } from "~/utils/time-utils"
 
 interface LoanCardProps {
   loan: Loan
+  /** The loan's account, looked up once by the list instead of per card. */
+  account: Account | undefined
   onPress: () => void
 }
 
-export function LoanCard({ loan, onPress }: LoanCardProps) {
-  const account = useAccount(loan.accountId)
-  const { items: progressTransactions } = useTransactions({ loanId: loan.id })
-  const paidAmount = getLiveLoanProgress(loan, progressTransactions)
+export function LoanCard({ loan, account, onPress }: LoanCardProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const isRTL = useLanguageStore((s) => s.isRTL)
@@ -36,41 +32,17 @@ export function LoanCard({ loan, onPress }: LoanCardProps) {
     clampedProgress,
     isPaid,
     remaining,
-    dueDays,
-  } = getLoanProgressModel(loan, paidAmount)
-
-  const accentColor = loan.colorScheme?.primary ?? theme.colors.primary
-  const accentTint = loan.colorScheme?.secondary ?? `${theme.colors.primary}20`
-  const mutedColor = theme.colors.onSecondary
-
-  const dueText = (): string => {
-    if (isPaid) return t("screens.settings.loans.card.settled")
-    if (dueDays === null || !loan.dueDate)
-      return t("screens.settings.loans.card.noDueDate")
-    if (dueDays === 0) return t("screens.settings.loans.card.dueToday")
-    if (dueDays === 1) return t("screens.settings.loans.card.dueTomorrow")
-    if (dueDays > 1 && dueDays <= 14)
-      return t("screens.settings.loans.card.dueInDays", { count: dueDays })
-    return t("screens.settings.loans.card.dueDate", {
-      date: formatShortMonthDay(loan.dueDate),
-    })
-  }
-
-  const subtitleParts = [account?.name, dueText()].filter(Boolean)
-  const subtitleColor =
-    loan.isOverdue && !isPaid ? theme.colors.semantic.expense : mutedColor
-
-  const badgeLabel = isPaid
-    ? t("screens.settings.loans.card.statusPaid")
-    : isLent
-      ? t("screens.settings.loans.type.lent")
-      : t("screens.settings.loans.type.borrowed")
-  const badgeIcon =
-    isLent || isPaid ? "arrow-up-right-outline" : "arrow-down-left-outline"
-  const badgeColor = isPaid ? mutedColor : accentColor
-  const badgeBg = isPaid ? theme.colors.secondary : accentTint
-
-  const progressBarColor = isPaid ? mutedColor : accentColor
+    accentColor,
+    mutedColor,
+    subtitleParts,
+    subtitleColor,
+    badgeLabel,
+    badgeIcon,
+    badgeColor,
+    badgeBg,
+    progressBarColor,
+    isLongTerm,
+  } = getLoanDisplay(loan, account, t, theme)
   const progressPercent = Math.round(clampedProgress * 1000) / 10
 
   return (
@@ -120,58 +92,78 @@ export function LoanCard({ loan, onPress }: LoanCardProps) {
         </View>
       </View>
 
-      <View style={styles.progressTrack}>
-        <RNView
-          style={[
-            styles.progressFill,
-            {
-              width: `${progressPercent}%` as DimensionValue,
-              backgroundColor: progressBarColor,
-            },
-          ]}
-        />
-      </View>
+      {isLongTerm ? (
+        <>
+          <View style={styles.progressTrack}>
+            <RNView
+              style={[
+                styles.progressFill,
+                {
+                  width: `${progressPercent}%` as DimensionValue,
+                  backgroundColor: progressBarColor,
+                },
+              ]}
+            />
+          </View>
 
-      <View style={styles.row3}>
-        <Text variant="small" style={styles.paidLabel}>
-          {isLent
-            ? t("screens.settings.loans.card.received")
-            : t("screens.settings.loans.card.paidBack")}{" "}
-          <Money
-            value={paid}
-            currency={account?.currencyCode ?? ""}
-            variant="small"
-            tone="transfer"
-            hideSign
-          />{" "}
-          {t("screens.settings.loans.card.of")}{" "}
+          <View style={styles.row3}>
+            <Text variant="small" style={styles.paidLabel}>
+              {isLent
+                ? t("screens.settings.loans.card.received")
+                : t("screens.settings.loans.card.paidBack")}{" "}
+              <Money
+                value={paid}
+                currency={account?.currencyCode ?? ""}
+                variant="small"
+                tone="transfer"
+                hideSign
+              />{" "}
+              {t("screens.settings.loans.card.of")}{" "}
+              <Money
+                value={principal}
+                currency={account?.currencyCode ?? ""}
+                variant="small"
+                tone="transfer"
+                hideSign
+              />
+            </Text>
+
+            {isPaid ? (
+              <Text
+                variant="small"
+                style={[styles.rightText, { color: mutedColor }]}
+              >
+                {t("screens.settings.loans.card.settled")}
+              </Text>
+            ) : (
+              <Money
+                value={remaining}
+                currency={account?.currencyCode ?? ""}
+                variant="small"
+                tone="transfer"
+                hideSign
+                style={{ color: accentColor }}
+              />
+            )}
+          </View>
+        </>
+      ) : (
+        <View style={styles.row3}>
+          <Text variant="small" style={styles.paidLabel}>
+            {isLent
+              ? t("screens.settings.loans.type.lent")
+              : t("screens.settings.loans.type.borrowed")}
+          </Text>
           <Money
             value={principal}
             currency={account?.currencyCode ?? ""}
             variant="small"
             tone="transfer"
             hideSign
+            style={isPaid ? { color: mutedColor } : { color: accentColor }}
           />
-        </Text>
-
-        {isPaid ? (
-          <Text
-            variant="small"
-            style={[styles.rightText, { color: mutedColor }]}
-          >
-            {t("screens.settings.loans.card.settled")}
-          </Text>
-        ) : (
-          <Money
-            value={remaining}
-            currency={account?.currencyCode ?? ""}
-            variant="small"
-            tone="transfer"
-            hideSign
-            style={{ color: accentColor }}
-          />
-        )}
-      </View>
+        </View>
+      )}
     </Pressable>
   )
 }

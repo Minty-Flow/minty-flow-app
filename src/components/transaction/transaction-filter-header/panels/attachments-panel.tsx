@@ -1,14 +1,11 @@
 import { useTranslation } from "react-i18next"
-import { View } from "react-native"
 
-import { Chip } from "~/components/ui/chips"
 import {
   AttachmentsOptionsEnum,
   type AttachmentsOptionsType,
 } from "~/types/transaction-filters"
 
-import { filterHeaderStyles } from "../filter-header.styles"
-import { PanelDoneButton } from "../panel-done-button"
+import { ChipOptionsPanel } from "./chip-options-panel"
 
 interface AttachmentsPanelProps {
   value: AttachmentsOptionsType
@@ -38,25 +35,11 @@ export function AttachmentsPanel({
   ]
 
   return (
-    <View>
-      <View
-        style={[filterHeaderStyles.chipWrap, filterHeaderStyles.categoryRow]}
-      >
-        {options.map((opt) => (
-          <Chip
-            key={opt.id}
-            label={opt.label}
-            selected={value === opt.id}
-            onPress={() => onSelect(opt.id)}
-          />
-        ))}
-      </View>
-      <View style={filterHeaderStyles.panelHeader}>
-        <View />
-        <View style={filterHeaderStyles.panelHeaderActions}>
-          <PanelDoneButton onPress={onDone} />
-        </View>
-      </View>
-    </View>
+    <ChipOptionsPanel
+      options={options}
+      isSelected={(id) => value === id}
+      onPress={onSelect}
+      onDone={onDone}
+    />
   )
 }

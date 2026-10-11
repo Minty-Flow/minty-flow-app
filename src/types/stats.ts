@@ -92,12 +92,6 @@ export interface ForecastSummary {
   forecastedNet: number
 }
 
-export interface ExpenseBySubtype {
-  recurring: number
-  oneTime: number
-  unclassified: number
-}
-
 export interface TopTagItem {
   tagId: string
   tagName: string
@@ -159,8 +153,6 @@ export interface CurrencyStats {
   spendingByDayOfWeek: DayOfWeekPoint[]
   /** Forecast for in-progress ranges; null for historical ranges */
   forecast: ForecastSummary | null
-  /** Expense split by transaction subtype */
-  expenseBySubtype: ExpenseBySubtype
   /** Top tags by expense */
   topTags: TopTagItem[]
   /** Per-account breakdown */
@@ -220,8 +212,10 @@ export interface StatsRawRow {
   accountId: string
   /** Balance snapshot before this transaction was applied */
   accountBalanceBefore: number
-  /** Transaction subtype: 'recurring' | 'one-time' | null */
+  /** Transaction subtype: 'recurring' | 'one-time' | 'refund' | null */
   subtype: string | null
+  /** Non-null when the row is a loan opening entry or repayment (excluded from generic totals). */
+  loanId: string | null
   /** Transaction title/description */
   title: string | null | undefined
 }

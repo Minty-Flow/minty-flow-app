@@ -9,12 +9,18 @@ import { ColorVariantInline } from "~/components/color-variant-inline"
 import { CurrencyAccountSelector } from "~/components/currency-account-selector"
 import { IconSvg } from "~/components/icons"
 import { InlineCategoryPicker } from "~/components/inline-category-picker"
+import {
+  FormDeleteButton,
+  FormNameField,
+} from "~/components/modify-form/form-fields"
+import { modifyFormStyles } from "~/components/modify-form/modify-form.styles"
+import { ModifyFormFooter } from "~/components/modify-form/modify-form-footer"
+import { RouteLoadingState } from "~/components/route-load-state"
 import { SmartAmountInput } from "~/components/smart-amount-input"
-import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import { Chip } from "~/components/ui/chips"
 import {
-  DateTimePickerModal,
+  DateTimePickerSheet,
   useDateTimePicker,
 } from "~/components/ui/date-time-picker"
 import { Input } from "~/components/ui/input"
@@ -44,8 +50,7 @@ import { rescaleMinorUnits } from "~/utils/money"
 import { formatShortMonthDayYear } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
-import { BudgetFormFooter } from "./budget-form-footer"
-import { BudgetFormModals } from "./budget-form-modals"
+import { BudgetFormSheets } from "./budget-form-sheets"
 import { budgetModifyStyles } from "./budget-modify.styles"
 import type { BudgetModifyContentProps } from "./types"
 
@@ -105,13 +110,13 @@ export function BudgetModifyContent({
   const watchedEndDate = watch("endDate")
   const isActive = watch("isActive")
   const navigation = useNavigation()
-  const [unsavedModalVisible, setUnsavedModalVisible] = useState(false)
+  const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
     navigation,
     when: isDirty && !isSubmitting,
-    onBlock: () => setUnsavedModalVisible(true),
+    onBlock: () => setUnsavedSheetVisible(true),
   })
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
   const startDatePicker = useDateTimePicker({
     onConfirm: (date) =>
       setValue("startDate", date.getTime(), { shouldDirty: true }),
@@ -203,21 +208,15 @@ export function BudgetModifyContent({
     ? formatShortMonthDayYear(watchedEndDate)
     : null
   if (!isAddMode && !budget) {
-    return (
-      <View style={budgetModifyStyles.container}>
-        <View style={budgetModifyStyles.loadingContainer}>
-          <ActivityIndicatorMinty />
-        </View>
-      </View>
-    )
+    return <RouteLoadingState />
   }
   return (
-    <View style={budgetModifyStyles.container}>
+    <View style={modifyFormStyles.container}>
       <ScrollIntoViewProvider
-        scrollViewStyle={budgetModifyStyles.scrollView}
-        contentContainerStyle={budgetModifyStyles.scrollContent}
+        scrollViewStyle={modifyFormStyles.scrollView}
+        contentContainerStyle={modifyFormStyles.scrollContent}
       >
-        <View style={budgetModifyStyles.form} key={budget?.id ?? NewEnum.NEW}>
+        <View style={modifyFormStyles.form} key={budget?.id ?? NewEnum.NEW}>
           {/* Icon picker */}
           <ChangeIconInline
             currentIcon={formIcon}
@@ -226,31 +225,12 @@ export function BudgetModifyContent({
           />
 
           {/* Name section */}
-          <View style={budgetModifyStyles.nameSection}>
-            <Text variant="small" style={budgetModifyStyles.label}>
-              {t("screens.settings.budgets.form.nameLabel")}
-            </Text>
-            <Controller
-              control={control}
-              name="name"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  placeholder={t(
-                    "screens.settings.budgets.form.namePlaceholder",
-                  )}
-                  error={!!errors.name}
-                />
-              )}
-            />
-            {errors.name && (
-              <Text variant="small" style={budgetModifyStyles.errorText}>
-                {t(errors.name.message as TranslationKey)}
-              </Text>
-            )}
-          </View>
+          <FormNameField
+            control={control}
+            label={t("screens.settings.budgets.form.nameLabel")}
+            placeholder={t("screens.settings.budgets.form.namePlaceholder")}
+            error={errors.name}
+          />
 
           {/* Settings list: currency/accounts, amount, category, color, period, date pickers, isActive, alert threshold */}
           <View style={budgetModifyStyles.settingsList}>
@@ -342,7 +322,7 @@ export function BudgetModifyContent({
                   }
                 >
                   <View style={budgetModifyStyles.switchLeft}>
-                    <IconSvg name="calendar-outline" size={24} />
+                    <IconSvg name="calendar-month" size={24} />
                     <Text
                       variant="default"
                       style={budgetModifyStyles.switchLabel}
@@ -368,7 +348,7 @@ export function BudgetModifyContent({
                   }
                 >
                   <View style={budgetModifyStyles.switchLeft}>
-                    <IconSvg name="calendar-outline" size={24} />
+                    <IconSvg name="calendar-month" size={24} />
                     <Text
                       variant="default"
                       style={budgetModifyStyles.switchLabel}
@@ -384,7 +364,7 @@ export function BudgetModifyContent({
                   </Text>
                 </ListItem>
                 {errors.endDate && (
-                  <Text variant="small" style={budgetModifyStyles.errorText}>
+                  <Text variant="small" style={modifyFormStyles.errorText}>
                     {t(errors.endDate.message as TranslationKey)}
                   </Text>
                 )}
@@ -393,7 +373,7 @@ export function BudgetModifyContent({
 
             {/* Alert threshold input (optional %) */}
             <View style={budgetModifyStyles.amountSection}>
-              <Text variant="small" style={budgetModifyStyles.label}>
+              <Text variant="small" style={modifyFormStyles.label}>
                 {t("screens.settings.budgets.form.alertThresholdLabel")}
               </Text>
               <Controller
@@ -422,7 +402,7 @@ export function BudgetModifyContent({
                 )}
               />
               {errors.alertThreshold && (
-                <Text variant="small" style={budgetModifyStyles.errorText}>
+                <Text variant="small" style={modifyFormStyles.errorText}>
                   {t(errors.alertThreshold.message as TranslationKey)}
                 </Text>
               )}
@@ -457,25 +437,15 @@ export function BudgetModifyContent({
 
         {/* Delete + Duplicate buttons (edit mode only) */}
         {!isAddMode && (
-          <View style={budgetModifyStyles.deleteSection}>
-            <Button
-              variant="ghost"
-              onPress={() => setDeleteModalVisible(true)}
-              style={budgetModifyStyles.actionButton}
-            >
-              <IconSvg
-                name="trash-outline"
-                size={20}
-                color={budgetModifyStyles.deleteIcon.color}
-              />
-              <Text variant="default" style={budgetModifyStyles.deleteText}>
-                {t("screens.settings.budgets.form.deleteLabel")}
-              </Text>
-            </Button>
+          <View style={modifyFormStyles.deleteSection}>
+            <FormDeleteButton
+              label={t("screens.settings.budgets.form.deleteLabel")}
+              onPress={() => setDeleteSheetVisible(true)}
+            />
             <Button
               variant="ghost"
               onPress={handleDuplicate}
-              style={budgetModifyStyles.actionButton}
+              style={modifyFormStyles.actionButton}
             >
               <IconSvg
                 name="copy-outline"
@@ -490,7 +460,7 @@ export function BudgetModifyContent({
         )}
       </ScrollIntoViewProvider>
 
-      <BudgetFormFooter
+      <ModifyFormFooter
         formName={formName}
         isAddMode={isAddMode}
         isDirty={isDirty}
@@ -499,16 +469,16 @@ export function BudgetModifyContent({
         onSave={handleSubmit}
       />
 
-      <BudgetFormModals
-        deleteModalVisible={deleteModalVisible}
-        unsavedModalVisible={unsavedModalVisible}
+      <BudgetFormSheets
+        deleteSheetVisible={deleteSheetVisible}
+        unsavedSheetVisible={unsavedSheetVisible}
         isAddMode={isAddMode}
         budget={budget}
-        onCloseDeleteModal={() => setDeleteModalVisible(false)}
-        onCloseUnsavedModal={() => setUnsavedModalVisible(false)}
+        onCloseDeleteSheet={() => setDeleteSheetVisible(false)}
+        onCloseUnsavedSheet={() => setUnsavedSheetVisible(false)}
         onConfirmDelete={handleDelete}
         onDiscardAndNavigate={() => {
-          setUnsavedModalVisible(false)
+          setUnsavedSheetVisible(false)
           allowNavigation()
           handleGoBack()
         }}
@@ -516,8 +486,8 @@ export function BudgetModifyContent({
 
       {startDatePicker.pickerElement}
       {endDatePicker.pickerElement}
-      <DateTimePickerModal {...startDatePicker.modalProps} />
-      <DateTimePickerModal {...endDatePicker.modalProps} />
+      <DateTimePickerSheet {...startDatePicker.sheetProps} />
+      <DateTimePickerSheet {...endDatePicker.sheetProps} />
     </View>
   )
 }

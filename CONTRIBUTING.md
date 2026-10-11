@@ -31,11 +31,32 @@ work.
 
 ## Branch and PR flow
 
-1. Fork the repo and branch off `main` (`feat/…`, `fix/…`, `docs/…`).
-2. Keep the change focused — one logical change per PR.
-3. Make sure the checks below pass before pushing.
-4. Open the PR against `main` with a clear description of what changed and why.
-   Link the issue it closes.
+`main` holds what has shipped. `dev` is the integration and testing branch.
+Work happens on short-lived `feat/*`, `fix/*`, `chore/*` branches.
+
+```
+issue (Backlog → Ready)
+  └─ feat/xyz ── draft PR → dev ──▶ In progress
+       └─ merge into dev ─────────▶ In review   (test on dev build)
+            └─ dev → main PR (Closes #n) ──▶ Done
+```
+
+1. **Start.** `git switch dev && git pull && git switch -c feat/xyz`. Open a
+   draft PR into `dev` with `Closes #n` in the body (moves the card to
+   *In progress*).
+2. **Work.** Conventional Commits, one logical change per PR. There is no CI,
+   so run `pnpm verify` (lint, number-formatting check, `tsc --noEmit`) before
+   merging.
+3. **Merge to dev.** Mark the PR ready and merge (squash is fine). The card
+   moves to *In review*. Delete the temp branch and test from `dev`.
+4. **Release.** When `dev` is validated, open a PR `dev → main` repeating the
+   `Closes #n` lines (omit issues still waiting). Merging closes the issues
+   and the project sets them to *Done*.
+5. **Hotfix.** Branch off `main` as `fix/*`, PR into `main`, then merge `main`
+   back into `dev`.
+
+Only `Closes #n` in a PR into `main` closes an issue; the `board-sync`
+workflow reads those lines on PRs into `dev` to move the board cards.
 
 ## Checks
 

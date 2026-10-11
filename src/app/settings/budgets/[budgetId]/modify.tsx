@@ -1,4 +1,5 @@
 import { useLocalSearchParams } from "expo-router"
+import { useTranslation } from "react-i18next"
 
 import { BudgetModifyContent } from "~/components/budgets/budget-modify/budget-modify-content"
 import {
@@ -13,6 +14,7 @@ import { NewEnum } from "~/types/new"
 import { TransactionTypeEnum } from "~/types/transactions"
 
 export default function ModifyBudgetScreen() {
+  const { t } = useTranslation()
   const params = useLocalSearchParams<{ budgetId: string }>()
   const budgetId = params.budgetId
 
@@ -21,8 +23,7 @@ export default function ModifyBudgetScreen() {
     id: budgetId,
     data: budgetsQuery.data,
     updatedAt: budgetsQuery.updatedAt,
-    find: (item, id) => item.id === id,
-    notFoundMessage: "Budget not found.",
+    notFoundMessage: t("common.notFound.budget"),
   })
   const accounts = useActiveAccounts()
   const categories = useCategoriesByType(TransactionTypeEnum.EXPENSE)

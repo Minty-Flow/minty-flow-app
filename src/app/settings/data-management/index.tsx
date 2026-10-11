@@ -1,13 +1,14 @@
-import { useLocalSearchParams, useRouter } from "expo-router"
-import { useState } from "react"
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
+import { useLayoutEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { ActionItem } from "~/components/action-item"
-import { ConfirmModal } from "~/components/confirm-modal"
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { IconSvg, type IconSvgName } from "~/components/icons"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
+import { Button } from "~/components/ui/button"
 import { Input } from "~/components/ui/input"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -32,7 +33,7 @@ import {
 } from "~/stores/export-history.store"
 import { Toast } from "~/utils/toast"
 
-interface ImportModalState {
+interface ImportSheetState {
   visible: boolean
   backup: MintyFlowBackup | null
   recordCount: number
@@ -84,18 +85,41 @@ export default function DataManagementScreen() {
   const { mode } = useLocalSearchParams<{ mode?: string }>()
   const importOnly = mode === "import"
 
+  // The custom file-name field is hidden until the header button reveals it.
   const [baseName, setBaseName] = useState("")
+  const [showFileName, setShowFileName] = useState(false)
   const [savingType, setSavingType] = useState<ExportRecord["type"] | null>(
     null,
   )
   const [isPickingFile, setIsPickingFile] = useState(false)
-  const [importModal, setImportModal] = useState<ImportModalState>({
+  const navigation = useNavigation()
+  const [importSheet, setImportSheet] = useState<ImportSheetState>({
     visible: false,
     backup: null,
     recordCount: 0,
     tableCount: 0,
     stagingDir: null,
   })
+
+  // Header button: reveals / hides the custom file-name field (export only).
+  useLayoutEffect(() => {
+    if (importOnly) return
+    navigation.setOptions({
+      headerRight: () => (
+        <Button
+          variant={showFileName ? "secondary" : "ghost"}
+          size="icon"
+          onPress={() => setShowFileName((v) => !v)}
+          accessibilityLabel={t(
+            "screens.settings.dataManagement.fileNameLabel",
+          )}
+          accessibilityState={{ expanded: showFileName }}
+        >
+          <IconSvg name="pencil-outline" size={20} />
+        </Button>
+      ),
+    })
+  }, [navigation, importOnly, showFileName, t])
 
   function runExport(
     save: (baseName?: string) => Promise<{
@@ -109,13 +133,12 @@ export default function DataManagementScreen() {
 
     Promise.resolve(save(baseName.trim() || undefined))
       .then(({ uri, fileName, savedToDevice }) => {
+        // Cancelling the folder picker / share sheet is not an export: no toast,
+        // no history entry (the service already removed the temporary copy).
+        if (!savedToDevice) return
         addExport({ uri, fileName, type, exportedAt: new Date().toISOString() })
         Toast.success({
-          title: t(
-            savedToDevice
-              ? "screens.settings.dataManagement.exportSaved"
-              : "screens.settings.dataManagement.exportSavedLocally",
-          ),
+          title: t("screens.settings.dataManagement.exportSaved"),
         })
       })
       .catch(() => {
@@ -150,7 +173,7 @@ export default function DataManagementScreen() {
         }
 
         const { total, tableCount } = countBackupRecords(result.backup)
-        setImportModal({
+        setImportSheet({
           visible: true,
           backup: result.backup,
           recordCount: total,
@@ -166,9 +189,9 @@ export default function DataManagementScreen() {
       })
   }
 
-  // Returns the promise so ConfirmModal can own the spinner and close on resolve.
+  // Returns the promise so ConfirmSheet can own the spinner and close on resolve.
   function handleConfirmImport() {
-    const { backup, stagingDir } = importModal
+    const { backup, stagingDir } = importSheet
     if (!backup) return
 
     return Promise.resolve(importBackup(backup))
@@ -198,8 +221,8 @@ export default function DataManagementScreen() {
   }
 
   function handleCancelImport() {
-    if (importModal.stagingDir) deleteStagingDir(importModal.stagingDir)
-    setImportModal((s) => ({
+    if (importSheet.stagingDir) deleteStagingDir(importSheet.stagingDir)
+    setImportSheet((s) => ({
       ...s,
       visible: false,
       backup: null,
@@ -214,48 +237,50 @@ export default function DataManagementScreen() {
           <Text style={styles.sectionHeader}>
             {t("screens.settings.dataManagement.sections.export")}
           </Text>
-          <View style={styles.field}>
-            <View style={styles.fieldLabelRow}>
-              <Text style={styles.fieldLabel}>
-                {t("screens.settings.dataManagement.fileNameLabel")}
-              </Text>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.clearBtn,
-                  baseName.length === 0 && styles.clearBtnDisabled,
-                  pressed && styles.clearBtnPressed,
-                ]}
-                onPress={() => setBaseName("")}
-                disabled={baseName.length === 0}
-                hitSlop={12}
-                accessibilityLabel={t("common.actions.clear")}
-              >
-                <IconSvg
-                  name="x-outline"
-                  size={14}
-                  color={styles.clearBtnText.color}
-                />
-                <Text style={styles.clearBtnText}>
-                  {t("common.actions.clear")}
+          {showFileName && (
+            <View style={styles.field}>
+              <View style={styles.fieldLabelRow}>
+                <Text style={styles.fieldLabel}>
+                  {t("screens.settings.dataManagement.fileNameLabel")}
                 </Text>
-              </Pressable>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.clearBtn,
+                    baseName.length === 0 && styles.clearBtnDisabled,
+                    pressed && styles.clearBtnPressed,
+                  ]}
+                  onPress={() => setBaseName("")}
+                  disabled={baseName.length === 0}
+                  hitSlop={12}
+                  accessibilityLabel={t("common.actions.clear")}
+                >
+                  <IconSvg
+                    name="x-outline"
+                    size={14}
+                    color={styles.clearBtnText.color}
+                  />
+                  <Text style={styles.clearBtnText}>
+                    {t("common.actions.clear")}
+                  </Text>
+                </Pressable>
+              </View>
+              <Input
+                value={baseName}
+                onChangeText={setBaseName}
+                placeholder={defaultExportBaseName("zip")}
+                autoCapitalize="none"
+                autoCorrect={false}
+                maxLength={100}
+                returnKeyType="done"
+                accessibilityLabel={t(
+                  "screens.settings.dataManagement.fileNameLabel",
+                )}
+              />
+              <Text style={styles.fieldHelper}>
+                {t("screens.settings.dataManagement.fileNameHelper")}
+              </Text>
             </View>
-            <Input
-              value={baseName}
-              onChangeText={setBaseName}
-              placeholder={defaultExportBaseName("zip")}
-              autoCapitalize="none"
-              autoCorrect={false}
-              maxLength={100}
-              returnKeyType="done"
-              accessibilityLabel={t(
-                "screens.settings.dataManagement.fileNameLabel",
-              )}
-            />
-            <Text style={styles.fieldHelper}>
-              {t("screens.settings.dataManagement.fileNameHelper")}
-            </Text>
-          </View>
+          )}
           <View style={styles.grid}>
             <DataCard
               icon="file-zip-outline"
@@ -315,15 +340,15 @@ export default function DataManagementScreen() {
         </>
       )}
 
-      <ConfirmModal
-        visible={importModal.visible}
+      <ConfirmSheet
+        visible={importSheet.visible}
         variant="destructive"
         icon="alert-triangle"
         title={t("screens.settings.dataManagement.importConfirm.title")}
         description={t("screens.settings.dataManagement.importConfirm.warning")}
         note={t("screens.settings.dataManagement.importConfirm.recordSummary", {
-          count: importModal.recordCount,
-          tables: importModal.tableCount,
+          count: importSheet.recordCount,
+          tables: importSheet.tableCount,
         })}
         confirmLabel={t(
           "screens.settings.dataManagement.importConfirm.confirm",
@@ -337,24 +362,6 @@ export default function DataManagementScreen() {
 }
 
 const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  content: {
-    padding: 20,
-    paddingTop: 12,
-    paddingBottom: 60,
-  },
-  sectionHeader: {
-    fontSize: theme.typography.labelXSmall.fontSize,
-    fontWeight: "600",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    color: theme.colors.semantic.semi,
-    marginBottom: 12,
-    paddingHorizontal: 4,
-  },
   field: {
     gap: 6,
     marginBottom: 16,
@@ -369,7 +376,6 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSurface,
     paddingHorizontal: 4,
   },
-  // Taken out of flow so toggling disabled can't reflow the label row or the cards below it.
   clearBtn: {
     position: "absolute",
     end: 0,
@@ -396,6 +402,25 @@ const styles = StyleSheet.create((theme) => ({
     lineHeight: 16,
     paddingHorizontal: 4,
   },
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.surface,
+  },
+  content: {
+    padding: 20,
+    paddingTop: 12,
+    paddingBottom: 60,
+  },
+  sectionHeader: {
+    fontSize: theme.typography.labelXSmall.fontSize,
+    fontWeight: "600",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    color: theme.colors.semantic.semi,
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  // Taken out of flow so toggling disabled can't reflow the label row or the cards below it.
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",

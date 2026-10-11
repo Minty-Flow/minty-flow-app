@@ -1,6 +1,8 @@
 import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { persist } from "zustand/middleware"
+
+import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
 const developmentNoticeStorage = createMMKV({
   id: "development-notice-storage",
@@ -34,11 +36,7 @@ export const useDevelopmentNoticeStore = create<DevelopmentNoticeStore>()(
     }),
     {
       name: "development-notice-store",
-      storage: createJSONStorage(() => ({
-        getItem: (name) => developmentNoticeStorage.getString(name) ?? null,
-        setItem: (name, value) => developmentNoticeStorage.set(name, value),
-        removeItem: (name) => developmentNoticeStorage.remove(name),
-      })),
+      storage: mmkvJSONStorage(developmentNoticeStorage),
     },
   ),
 )

@@ -96,6 +96,7 @@ export const transactions = sqliteTable(
       .notNull()
       .default(0),
     subtype: text("subtype"),
+    kind: text("kind").notNull().default("default"),
     extra: text("extra"),
     hasAttachments: integer("has_attachments")
       .notNull()
@@ -139,6 +140,10 @@ export const transactions = sqliteTable(
     check(
       "transactions_subtype_check",
       sql`${table.subtype} IS NULL OR ${table.subtype} IN ('recurring', 'one-time', 'refund', 'loan_borrowed', 'loan_repayment', 'loan_lent', 'loan_received')`,
+    ),
+    check(
+      "transactions_kind_check",
+      sql`${table.kind} IN ('default','upcoming','subscription','repetitive','lent','borrowed')`,
     ),
     check(
       "transactions_has_attachments_check",
@@ -275,6 +280,7 @@ export const loans = sqliteTable(
     description: text("description"),
     principalAmount: integer("principal_amount").notNull(),
     loanType: text("loan_type").notNull(),
+    term: text("term").notNull().default("one_time"),
     dueDate: text("due_date"),
     accountId: text("account_id")
       .notNull()
@@ -296,6 +302,7 @@ export const loans = sqliteTable(
       "loans_loan_type_check",
       sql`${table.loanType} IN ('lent', 'borrowed')`,
     ),
+    check("loans_term_check", sql`${table.term} IN ('one_time', 'long_term')`),
     index("idx_loan_account").on(table.accountId),
     index("idx_loan_category").on(table.categoryId),
   ],
