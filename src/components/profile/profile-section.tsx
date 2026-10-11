@@ -10,7 +10,8 @@ import { getInitials } from "~/utils/string-utils"
 
 export const ProfileSection = () => {
   const router = useRouter()
-  const { name, imageUri } = useProfileStore()
+  const name = useProfileStore((s) => s.name)
+  const imageUri = useProfileStore((s) => s.imageUri)
 
   const { theme } = useUnistyles()
 

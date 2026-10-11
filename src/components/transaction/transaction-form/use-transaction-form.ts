@@ -86,8 +86,8 @@ export function useTransactionForm({
     id: string
   }>()
   const isNew = id === NewEnum.NEW
-  const { isEnabled: locationEnabled, autoAttach } =
-    useTransactionLocationStore()
+  const locationEnabled = useTransactionLocationStore((s) => s.isEnabled)
+  const autoAttach = useTransactionLocationStore((s) => s.autoAttach)
   const usdCurrency = currencyRegistryService.getCurrencyByCode("USD")
   const usdCode = usdCurrency?.code ?? "USD"
   const [overlays, setOverlays] = useReducer(mergeReducer<OverlayState>, {

@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react"
+import { useCallback, useSyncExternalStore } from "react"
 
 /* ------------------------------------------------------------------ */
 /* Precise Minute Ticker (fires exactly at minute boundaries)         */
@@ -95,11 +95,12 @@ const timestampScheduler = new TimestampScheduler()
  */
 function useHasPassed(date: Date): boolean {
   const timestamp = date.getTime()
-  return useSyncExternalStore(
-    (callback) => timestampScheduler.subscribe(timestamp, callback),
-    () => Date.now() >= timestamp,
-    () => Date.now() >= timestamp,
+  const subscribe = useCallback(
+    (callback: () => void) => timestampScheduler.subscribe(timestamp, callback),
+    [timestamp],
   )
+  const getSnapshot = useCallback(() => Date.now() >= timestamp, [timestamp])
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 }
 /* ------------------------------------------------------------------ */
 /* Transaction-Specific Hooks                                          */
