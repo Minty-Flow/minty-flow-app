@@ -55,11 +55,11 @@ export function ForcedMigrationGate({ children }: { children: ReactNode }) {
     if (!developmentNotice.dismissed) {
       hideDevelopmentNoticeForSession()
       Alert.alert(
-        "Your data is ready",
-        `Your backup is saved and your data is ready.\n\n${t("common.developmentNotice.message")}`,
+        t("common.developmentNotice.dataReadyTitle"),
+        `${t("common.developmentNotice.dataReadyMessage")}\n\n${t("common.developmentNotice.message")}`,
         [
           {
-            text: "Don't show again",
+            text: t("common.developmentNotice.dontShowAgain"),
             onPress: developmentNotice.dismiss,
           },
           { text: t("common.actions.ok") },
@@ -68,9 +68,9 @@ export function ForcedMigrationGate({ children }: { children: ReactNode }) {
       return
     }
     Alert.alert(
-      "Your data is ready",
-      "Your backup is saved and your data is ready.",
-      [{ text: "OK" }],
+      t("common.developmentNotice.dataReadyTitle"),
+      t("common.developmentNotice.dataReadyMessage"),
+      [{ text: t("common.actions.ok") }],
     )
   }, [t])
 

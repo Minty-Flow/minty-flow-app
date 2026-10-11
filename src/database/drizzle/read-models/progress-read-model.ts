@@ -107,7 +107,7 @@ export function useAccountPeriodTotals(
   from: Date,
   to: Date,
   excludeTransfers: boolean,
-): Map<string, AccountPeriodTotals> {
+): { totals: Map<string, AccountPeriodTotals>; isReady: boolean } {
   const fromIso = from.toISOString()
   const toIso = to.toISOString()
   const transferIn = excludeTransfers
@@ -116,7 +116,7 @@ export function useAccountPeriodTotals(
   const transferOut = excludeTransfers
     ? sql`0`
     : sql`CASE WHEN ${transactions.type} = ${TransactionTypeEnum.TRANSFER} AND ${transactions.amount} <= 0 THEN -${transactions.amount} ELSE 0 END`
-  const { data } = useLiveQuery(
+  const { data, updatedAt } = useLiveQuery(
     drizzleDb
       .select({
         accountId: transactions.accountId,
@@ -136,7 +136,7 @@ export function useAccountPeriodTotals(
       .groupBy(transactions.accountId),
     [fromIso, toIso, excludeTransfers],
   )
-  return useMemo(
+  const totals = useMemo(
     () =>
       new Map(
         data.map((row) => [
@@ -146,4 +146,5 @@ export function useAccountPeriodTotals(
       ),
     [data],
   )
+  return { totals, isReady: updatedAt !== undefined }
 }
