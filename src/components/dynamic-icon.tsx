@@ -1,4 +1,5 @@
 import { Image } from "expo-image"
+import { useMemo } from "react"
 import { Text as RNText } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
@@ -23,6 +24,19 @@ export function DynamicIcon({
   color: explicitColor,
   variant = "badge",
 }: DynamicIconProps) {
+  // Stable source object and a one-off classification: both used to be rebuilt
+  // on every render of every list row (the emoji check uses Intl.Segmenter).
+  const imageSource = useMemo(
+    () =>
+      icon && (isImageUrl(icon) || icon.startsWith("file://"))
+        ? { uri: icon }
+        : undefined,
+    [icon],
+  )
+  const isEmojiOrLetter = useMemo(
+    () => !imageSource && !!icon && isSingleEmojiOrLetter(icon),
+    [imageSource, icon],
+  )
   const color = explicitColor || colorScheme?.primary || undefined
   const bgColor = colorScheme?.secondary || undefined
   const containerSize = size * 1.5
@@ -32,13 +46,14 @@ export function DynamicIcon({
   // ---------- Image ----------
   // Local picked images (profile/avatars) arrive as file:// URIs, which isImageUrl
   // rejects on purpose (clipboard-paste guard). They're trusted here, so accept them.
-  if (icon && (isImageUrl(icon) || icon.startsWith("file://"))) {
+  if (imageSource) {
     if (isRaw) {
       return (
         <Image
-          source={{ uri: icon }}
+          source={imageSource}
           style={[styles.image, { width: size, height: size }]}
           contentFit="contain"
+          cachePolicy="memory-disk"
         />
       )
     }
@@ -52,16 +67,17 @@ export function DynamicIcon({
         ]}
       >
         <Image
-          source={{ uri: icon }}
+          source={imageSource}
           style={styles.image}
           contentFit="contain"
+          cachePolicy="memory-disk"
         />
       </View>
     )
   }
 
   // ---------- Emoji / Letter ----------
-  if (icon && isSingleEmojiOrLetter(icon)) {
+  if (icon && isEmojiOrLetter) {
     if (isRaw) {
       return (
         <RNText
