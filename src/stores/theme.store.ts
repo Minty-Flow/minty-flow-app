@@ -48,7 +48,9 @@ interface ThemeStore {
  *
  * @example
  * ```tsx
- * const { themeMode, setThemeMode } = useThemeStore()
+ * // Subscribe per field (or useShallow) so unrelated changes don't re-render.
+ * const themeMode = useThemeStore((s) => s.themeMode)
+ * const setThemeMode = useThemeStore((s) => s.setThemeMode)
  *
  * // Set to device adaptive
  * setThemeMode("device")

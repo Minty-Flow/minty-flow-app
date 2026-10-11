@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
+import { useShallow } from "zustand/react/shallow"
 
 import { ConfirmSheet } from "~/components/confirm-sheet"
 import {
@@ -50,7 +51,17 @@ export default function ToastStyleScreen() {
     setShowProgressBar,
     setShowCloseIcon,
     resetToDefaults,
-  } = useToastStyleStore()
+  } = useToastStyleStore(
+    useShallow((s) => ({
+      position: s.position,
+      showProgressBar: s.showProgressBar,
+      showCloseIcon: s.showCloseIcon,
+      setPosition: s.setPosition,
+      setShowProgressBar: s.setShowProgressBar,
+      setShowCloseIcon: s.setShowCloseIcon,
+      resetToDefaults: s.resetToDefaults,
+    })),
+  )
 
   const handleShowDemoToasts = () => {
     Toast.success({

@@ -6,6 +6,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
+import { useShallow } from "zustand/react/shallow"
 
 import { IconSvg } from "~/components/icons"
 import { KeyboardStickyViewMinty } from "~/components/keyboard-sticky-view-minty"
@@ -25,8 +26,15 @@ export default function EditProfileScreen() {
   const { t } = useTranslation()
   const { fromOnboarding } = useLocalSearchParams<{ fromOnboarding?: string }>()
   const isFromOnboarding = fromOnboarding === "true"
-  const { setCompleted } = useOnboardingStore()
-  const { name, imageUri, setName, setImageUri } = useProfileStore()
+  const setCompleted = useOnboardingStore((s) => s.setCompleted)
+  const { name, imageUri, setName, setImageUri } = useProfileStore(
+    useShallow((s) => ({
+      name: s.name,
+      imageUri: s.imageUri,
+      setName: s.setName,
+      setImageUri: s.setImageUri,
+    })),
+  )
 
   const [localName, setLocalName] = useState(() => name)
   const [localImageUri, setLocalImageUri] = useState<string | null>(

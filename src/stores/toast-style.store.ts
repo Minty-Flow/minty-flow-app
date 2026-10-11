@@ -60,7 +60,9 @@ interface ToastStyleStore {
  *
  * @example
  * ```tsx
- * const { position, showProgressBar, setPosition } = useToastStyleStore()
+ * // Subscribe per field (or useShallow) so unrelated changes don't re-render.
+ * const position = useToastStyleStore((s) => s.position)
+ * const setPosition = useToastStyleStore((s) => s.setPosition)
  *
  * // Set default position to bottom
  * setPosition("bottom")

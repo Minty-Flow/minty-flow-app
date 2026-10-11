@@ -78,7 +78,7 @@ function DataCard({
 export default function DataManagementScreen() {
   const { t } = useTranslation()
   const router = useRouter()
-  const { addExport } = useExportHistoryStore()
+  const addExport = useExportHistoryStore((s) => s.addExport)
 
   // Onboarding sends the user here purely to restore a backup — exporting and browsing
   // past exports are meaningless before any data exists.

@@ -1,6 +1,7 @@
 import * as Location from "expo-location"
 import { useTranslation } from "react-i18next"
 import { Linking, ScrollView } from "react-native"
+import { useShallow } from "zustand/react/shallow"
 
 import {
   SettingsSwitchRow,
@@ -15,7 +16,14 @@ export default function TransactionLocationScreen() {
   const { permissionStatus, refreshPermissionStatus } =
     useLocationPermissionStatus()
   const { isEnabled, autoAttach, setIsEnabled, setAutoAttach } =
-    useTransactionLocationStore()
+    useTransactionLocationStore(
+      useShallow((s) => ({
+        isEnabled: s.isEnabled,
+        autoAttach: s.autoAttach,
+        setIsEnabled: s.setIsEnabled,
+        setAutoAttach: s.setAutoAttach,
+      })),
+    )
   const { t } = useTranslation()
 
   const isGranted = permissionStatus === Location.PermissionStatus.GRANTED
