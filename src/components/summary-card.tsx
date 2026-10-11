@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
@@ -30,41 +31,58 @@ export const SummarySection = ({
   const excludeFromTotals = useTransfersPreferencesStore(
     (s) => s.excludeFromTotals,
   )
-  // CSI-3: pending (upcoming / not-yet-due recurring) rows never contribute to totals.
-  const settledRows = transactionsWithRelations.filter((row) => !row.isPending)
-  const incomeRows = settledRows.filter(
-    (row) => row.type === TransactionTypeEnum.INCOME,
-  )
-  const expenseRows = settledRows.filter(
-    (row) => row.type === TransactionTypeEnum.EXPENSE,
-  )
-  const transferRows = settledRows.filter(
-    (row) => row.type === TransactionTypeEnum.TRANSFER || row.isTransfer,
-  )
-  const extraIncomeByCurrency = (() => {
-    if (excludeFromTotals || transferRows.length === 0) return {}
-    const byCurrency: Record<string, number> = {}
-    transferRows.forEach((row) => {
-      const amount = row.amount
-      if (amount <= 0) return
-      const currency = row.account?.currencyCode ?? ""
-      if (!currency) return
-      byCurrency[currency] = (byCurrency[currency] ?? 0) + amount
-    })
-    return byCurrency
-  })()
-  const extraExpenseByCurrency = (() => {
-    if (excludeFromTotals || transferRows.length === 0) return {}
-    const byCurrency: Record<string, number> = {}
-    transferRows.forEach((row) => {
-      const amount = row.amount
-      if (amount >= 0) return
-      const currency = row.account?.currencyCode ?? ""
-      if (!currency) return
-      byCurrency[currency] = (byCurrency[currency] ?? 0) + Math.abs(amount)
-    })
-    return byCurrency
-  })()
+  const {
+    incomeRows,
+    expenseRows,
+    extraIncomeByCurrency,
+    extraExpenseByCurrency,
+  } = useMemo(() => {
+    // CSI-3: pending (upcoming / not-yet-due recurring) rows never contribute to totals.
+    const settledRows = transactionsWithRelations.filter(
+      (row) => !row.isPending,
+    )
+    const incomeRows = settledRows.filter(
+      (row) => row.type === TransactionTypeEnum.INCOME,
+    )
+    const expenseRows = settledRows.filter(
+      (row) => row.type === TransactionTypeEnum.EXPENSE,
+    )
+    const transferRows = settledRows.filter(
+      (row) => row.type === TransactionTypeEnum.TRANSFER || row.isTransfer,
+    )
+    const extraIncomeByCurrency = (() => {
+      if (excludeFromTotals || transferRows.length === 0)
+        return EMPTY_EXTRA_BY_CURRENCY
+      const byCurrency: Record<string, number> = {}
+      transferRows.forEach((row) => {
+        const amount = row.amount
+        if (amount <= 0) return
+        const currency = row.account?.currencyCode ?? ""
+        if (!currency) return
+        byCurrency[currency] = (byCurrency[currency] ?? 0) + amount
+      })
+      return byCurrency
+    })()
+    const extraExpenseByCurrency = (() => {
+      if (excludeFromTotals || transferRows.length === 0)
+        return EMPTY_EXTRA_BY_CURRENCY
+      const byCurrency: Record<string, number> = {}
+      transferRows.forEach((row) => {
+        const amount = row.amount
+        if (amount >= 0) return
+        const currency = row.account?.currencyCode ?? ""
+        if (!currency) return
+        byCurrency[currency] = (byCurrency[currency] ?? 0) + Math.abs(amount)
+      })
+      return byCurrency
+    })()
+    return {
+      incomeRows,
+      expenseRows,
+      extraIncomeByCurrency,
+      extraExpenseByCurrency,
+    }
+  }, [transactionsWithRelations, excludeFromTotals])
   return (
     <View style={styles.sectionContainer}>
       <Card
@@ -89,12 +107,12 @@ interface CardProps {
   /** Extra amounts to add per currency (e.g. transfer contributions when excludeFromTotals is false). */
   extraByCurrency?: Record<string, number>
 }
-const Card = ({
+const Card = memo(function Card({
   type,
   rows,
   label,
   extraByCurrency = EMPTY_EXTRA_BY_CURRENCY,
-}: CardProps) => {
+}: CardProps) {
   const { theme } = useUnistyles()
   const preferredCurrency = useMoneyFormattingStore(
     (state) => state.preferredCurrency,
@@ -105,7 +123,7 @@ const Card = ({
     : "arrow-up-right-outline"
   const colorStyle = isIncome ? styles.incomeText : styles.expenseText
   // Sum by currency (from account), then add extra (e.g. transfer amounts when not excluded)
-  const currencyTotals = (() => {
+  const currencyTotals = useMemo(() => {
     const totals: Record<string, number> = {}
     rows.forEach((row) => {
       const currency = row.account?.currencyCode ?? ""
@@ -125,7 +143,7 @@ const Card = ({
       if (amount !== 0) totals[currency] = (totals[currency] ?? 0) + amount
     })
     return Object.entries(totals).sort(([a], [b]) => a.localeCompare(b))
-  })()
+  }, [rows, type, extraByCurrency])
   return (
     <View style={styles.card}>
       <View style={styles.cardContent}>
@@ -192,7 +210,7 @@ const Card = ({
       </View>
     </View>
   )
-}
+})
 const styles = StyleSheet.create((theme) => ({
   sectionContainer: {
     flexDirection: "row",
