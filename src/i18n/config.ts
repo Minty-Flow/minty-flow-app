@@ -3,7 +3,6 @@ import { initReactI18next } from "react-i18next"
 
 import { LangCodeEnum } from "~/i18n/language.constants"
 
-import ar from "./translation/ar.json" with { type: "json" }
 import en from "./translation/en.json" with { type: "json" }
 
 type Primitive = string | number | boolean | bigint | symbol | null | undefined
@@ -30,12 +29,28 @@ export type TranslationKey = NestedKeyOf<TranslationShape>
 // ✅ Enforce other languages have the same keys as English
 const En = en satisfies TranslationShape
 
-const Ar = ar satisfies TranslationShape
+// ✅ Same check for Arabic, without importing the file at startup
+type ArabicShape = typeof import("./translation/ar.json")
+const _arabicMatchesEnglish: ArabicShape extends TranslationShape
+  ? true
+  : never = true
+void _arabicMatchesEnglish
 
-// ✅ Resources for i18next
+// ✅ English ships at startup; other languages load on first use
 const LanguageResources = {
   [LangCodeEnum.EN]: { translation: En },
-  [LangCodeEnum.AR]: { translation: Ar },
+}
+
+/** Load a language's strings before switching to it (no-op if already loaded). */
+export function ensureLanguageLoaded(code: string): void {
+  if (i18n.hasResourceBundle(code, "translation")) return
+  if (code === LangCodeEnum.AR) {
+    i18n.addResourceBundle(
+      code,
+      "translation",
+      require("./translation/ar.json"),
+    )
+  }
 }
 
 // ✅ Update i18next typing for full IntelliSense

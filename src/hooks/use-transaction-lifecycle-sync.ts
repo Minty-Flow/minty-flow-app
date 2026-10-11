@@ -1,5 +1,5 @@
-import { useCallback, useEffect } from "react"
-import { AppState } from "react-native"
+import { useCallback, useEffect, useRef } from "react"
+import { AppState, InteractionManager } from "react-native"
 
 import { synchronizeAllRecurringTransactions } from "~/database/services/recurring-transaction-service"
 import { useDebouncedCallback } from "~/hooks/use-debounced-callback"
@@ -14,6 +14,12 @@ import { logger } from "~/utils/logger"
  * recurring-transaction rows and redundant sweeps.
  */
 const SYNC_DEBOUNCE_MS = 1_000
+
+/**
+ * Minimum gap between foreground-triggered syncs. The auto-confirm service has
+ * its own 60s tick, so quick app switches need not rescan everything.
+ */
+const FOREGROUND_SYNC_MIN_GAP_MS = 60_000
 
 /**
  * The single owner of the transaction lifecycle. On mount and on every app
@@ -62,7 +68,9 @@ export function useTransactionLifecycleSync(): void {
     updateDateUponConfirmation,
   ])
 
+  const lastSyncAtRef = useRef(0)
   const sync = useCallback(async () => {
+    lastSyncAtRef.current = Date.now()
     try {
       await synchronizeAllRecurringTransactions()
 
@@ -93,14 +101,22 @@ export function useTransactionLifecycleSync(): void {
     updateDateUponConfirmation,
   ])
   const debouncedSync = useDebouncedCallback(() => {
-    void sync()
+    // After the first frame and any running transition, not during them.
+    InteractionManager.runAfterInteractions(() => {
+      void sync()
+    })
   }, SYNC_DEBOUNCE_MS)
 
   useEffect(() => {
     debouncedSync()
 
     const sub = AppState.addEventListener("change", (state) => {
-      if (state === "active") debouncedSync()
+      if (
+        state === "active" &&
+        Date.now() - lastSyncAtRef.current >= FOREGROUND_SYNC_MIN_GAP_MS
+      ) {
+        debouncedSync()
+      }
     })
 
     return () => {

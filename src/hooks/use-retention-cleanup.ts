@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react"
+import { InteractionManager } from "react-native"
 
 import { autoPurgeTrash } from "~/database/services/ledger-service"
 import { useTrashBinStore } from "~/stores/trash-bin.store"
@@ -22,13 +23,23 @@ export function useRetentionCleanup(): void {
     if (now - lastPurgeRef.current < PURGE_THROTTLE_MS) return
     if (isRunningRef.current) return
     isRunningRef.current = true
-    autoPurgeTrash(retentionPeriod)
-      .then(() => {
-        lastPurgeRef.current = Date.now()
-      })
-      .catch((e) => logger.error("Trash purge failed", { error: String(e) }))
-      .finally(() => {
-        isRunningRef.current = false
-      })
+    // Keep the purge out of the first render and its transitions.
+    let started = false
+    const task = InteractionManager.runAfterInteractions(() => {
+      started = true
+      autoPurgeTrash(retentionPeriod)
+        .then(() => {
+          lastPurgeRef.current = Date.now()
+        })
+        .catch((e) => logger.error("Trash purge failed", { error: String(e) }))
+        .finally(() => {
+          isRunningRef.current = false
+        })
+    })
+    return () => {
+      // Cancelled before it ran: release the guard (a running purge releases it itself).
+      task.cancel()
+      if (!started) isRunningRef.current = false
+    }
   }, [retentionPeriod])
 }
