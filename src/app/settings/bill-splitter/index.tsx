@@ -274,7 +274,7 @@ export default function BillSplitterScreen() {
                 <View
                   style={[
                     styles.progressFill,
-                    { width: `${progressPercent}%` as unknown as number },
+                    { width: `${progressPercent}%` },
                   ]}
                 />
               </View>

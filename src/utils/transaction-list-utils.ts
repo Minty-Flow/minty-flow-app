@@ -237,7 +237,7 @@ function getSectionKeyAndTitle(
   }
 }
 
-interface TransactionSection {
+export interface TransactionSection {
   title: string
   data: TransactionWithRelations[]
   totals: Record<string, number>
