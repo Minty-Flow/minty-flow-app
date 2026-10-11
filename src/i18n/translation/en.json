@@ -27,6 +27,10 @@
       "title": "Something went wrong"
     },
     "developmentNotice": {
+      "title": "A quick note",
+      "dontShowAgain": "Don't show again",
+      "dataReadyTitle": "Your data is ready",
+      "dataReadyMessage": "Your backup is saved and your data is ready.",
       "message": "Minty Flow is still in development, so data loss may happen. I'm sorry for that. Starting with this release, I'm focused on stability and safer backups for future updates."
     },
     "sheets": {

@@ -257,13 +257,17 @@ const TabLayout = () => {
     // Once per session: this layout remounts after a restore/navigation, which
     // would otherwise show the notice again (the root upgrade gate does the same).
     hideDevelopmentNoticeForSession()
-    Alert.alert("A quick note", t("common.developmentNotice.message"), [
-      {
-        text: "Don't show again",
-        onPress: dismissDevelopmentNotice,
-      },
-      { text: t("common.actions.ok") },
-    ])
+    Alert.alert(
+      t("common.developmentNotice.title"),
+      t("common.developmentNotice.message"),
+      [
+        {
+          text: t("common.developmentNotice.dontShowAgain"),
+          onPress: dismissDevelopmentNotice,
+        },
+        { text: t("common.actions.ok") },
+      ],
+    )
   }, [developmentNoticeDismissed, dismissDevelopmentNotice, t])
 
   return (
