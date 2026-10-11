@@ -26,6 +26,7 @@ import { Pressable } from "~/components/ui/pressable"
 import { useTooltipTrigger } from "~/components/ui/tooltip"
 import { View } from "~/components/ui/view"
 import { FAB_BUTTON_STYLE } from "~/constants/fab-button"
+import { ActiveTabContext, TabIndexContext } from "~/hooks/use-tab-visibility"
 import { DirectionEnum } from "~/i18n/language.constants"
 import { useButtonPlacementStore } from "~/stores/button-placement.store"
 import {
@@ -273,24 +274,28 @@ const TabLayout = () => {
   return (
     <View style={styles.container}>
       {/* PAGER */}
-      <AnimatedPagerView
-        collapsable={false}
-        ref={ref}
-        style={styles.pager}
-        initialPage={0}
-        layoutDirection={isRTL ? DirectionEnum.RTL : DirectionEnum.LTR}
-        onPageSelected={onPageSelected}
-        onPageScroll={onPageScroll}
-        onPageScrollStateChanged={onPageScrollStateChanged}
-      >
-        {TABS.map((tab, i) =>
-          mountedTabs.current.has(i) ? (
-            <tab.component key={tab.key} />
-          ) : (
-            <RNView key={tab.key} collapsable={false} />
-          ),
-        )}
-      </AnimatedPagerView>
+      <ActiveTabContext.Provider value={activePage}>
+        <AnimatedPagerView
+          collapsable={false}
+          ref={ref}
+          style={styles.pager}
+          initialPage={0}
+          layoutDirection={isRTL ? DirectionEnum.RTL : DirectionEnum.LTR}
+          onPageSelected={onPageSelected}
+          onPageScroll={onPageScroll}
+          onPageScrollStateChanged={onPageScrollStateChanged}
+        >
+          {TABS.map((tab, i) =>
+            mountedTabs.current.has(i) ? (
+              <TabIndexContext.Provider key={tab.key} value={i}>
+                <tab.component />
+              </TabIndexContext.Provider>
+            ) : (
+              <RNView key={tab.key} collapsable={false} />
+            ),
+          )}
+        </AnimatedPagerView>
+      </ActiveTabContext.Provider>
 
       <RNView
         collapsable={false}

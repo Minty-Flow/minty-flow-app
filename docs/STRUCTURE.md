@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-11T11:38:49.264Z
+Generated on: 2026-10-11T11:39:06.847Z
 ```
 ./
 ├── .github/
@@ -499,6 +499,7 @@ Generated on: 2026-10-11T11:38:49.264Z
 │   │   ├── use-retention-cleanup.ts
 │   │   ├── use-scroll-into-view.ts
 │   │   ├── use-shake-listener.ts
+│   │   ├── use-tab-visibility.tsx
 │   │   ├── use-time-reactivity.ts
 │   │   ├── use-transaction-lifecycle-sync.ts
 │   │   └── use-transaction-list-state.ts

@@ -16,6 +16,7 @@ import {
   tags,
   transactions,
 } from "~/database/drizzle/schema"
+import { useIsActiveTab } from "~/hooks/use-tab-visibility"
 import { useWeekStartStore } from "~/stores/week-start.store"
 import type { Account } from "~/types/accounts"
 import type {
@@ -147,7 +148,18 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
   const activeFetchCountRef = useRef(0)
   const accounts = useAccounts()
   const dbChangeSignal = useStatsDatabaseChangeSignal()
-  const supplementByCurrency = computeSupplements(accounts)
+  // `accounts` is rebuilt every render, so key the supplements on its content.
+  const accountsSignature = accounts
+    .map(
+      (a) =>
+        `${a.id}:${a.balance}:${a.currencyCode}:${a.excludeFromBalance}:${a.name}:${a.icon}:${a.colorSchemeName}`,
+    )
+    .join("|")
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on accountsSignature
+  const supplementByCurrency = useMemo(
+    () => computeSupplements(accounts),
+    [accountsSignature],
+  )
   const _weekStart = useWeekStartStore((s) => s.weekStart)
   const weekStartsOn = getWeekStartsOn()
   const dateRange = useMemo(
@@ -183,12 +195,15 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
     }
   }, [])
   const isFocused = useIsFocused()
+  const isTabActive = useIsActiveTab()
+  const isVisible = isFocused && isTabActive
   const lastFetchedRef = useRef<
     { range: StatsDateRange; signal: string } | undefined
   >(undefined)
   useEffect(() => {
-    // Skip while another screen covers this one; the fetch runs on refocus.
-    if (!isFocused) return
+    // Skip while another screen covers this one or another tab is showing;
+    // the fetch runs when it becomes visible again.
+    if (!isVisible) return
     const last = lastFetchedRef.current
     if (last && last.range === dateRange && last.signal === dbChangeSignal) {
       return
@@ -209,8 +224,8 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
     return () => {
       clearTimeout(timer)
     }
-  }, [dateRange, dbChangeSignal, fetchData, isFocused])
-  const setPreset = (preset: StatsDateRangePreset) => {
+  }, [dateRange, dbChangeSignal, fetchData, isVisible])
+  const setPreset = useCallback((preset: StatsDateRangePreset) => {
     setIsLoading(true)
     setActivePreset(preset)
     if (preset === "thisWeek") {
@@ -218,49 +233,55 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
     } else {
       setRange(buildStatsDateRange(preset))
     }
-  }
-  const setCustomRange = (from: Date, to: Date, source?: DateRangePresetId) => {
-    setIsLoading(true)
-    const mappedPreset: StatsDateRangePreset =
-      source === "thisWeek" ||
-      source === "thisMonth" ||
-      source === "thisYear" ||
-      source === "last30" ||
-      source === "allTime"
-        ? source
-        : "custom"
-    setActivePreset(source ?? "custom")
-    if (source === "byMonth") {
-      setRange(buildMonthRange(from.getFullYear(), from.getMonth()))
-    } else if (mappedPreset === "thisWeek") {
-      setWeekAnchor(new Date(from))
-    } else if (mappedPreset !== "custom") {
-      setRange(buildStatsDateRange(mappedPreset))
-    } else {
-      setRange(buildStatsDateRange("custom", from, to))
-    }
-    setActiveYear(from.getFullYear())
-    setActiveMonth(from.getMonth())
-  }
-  const setMonthRange = (year: number, month: number) => {
+  }, [])
+  const setCustomRange = useCallback(
+    (from: Date, to: Date, source?: DateRangePresetId) => {
+      setIsLoading(true)
+      const mappedPreset: StatsDateRangePreset =
+        source === "thisWeek" ||
+        source === "thisMonth" ||
+        source === "thisYear" ||
+        source === "last30" ||
+        source === "allTime"
+          ? source
+          : "custom"
+      setActivePreset(source ?? "custom")
+      if (source === "byMonth") {
+        setRange(buildMonthRange(from.getFullYear(), from.getMonth()))
+      } else if (mappedPreset === "thisWeek") {
+        setWeekAnchor(new Date(from))
+      } else if (mappedPreset !== "custom") {
+        setRange(buildStatsDateRange(mappedPreset))
+      } else {
+        setRange(buildStatsDateRange("custom", from, to))
+      }
+      setActiveYear(from.getFullYear())
+      setActiveMonth(from.getMonth())
+    },
+    [],
+  )
+  const setMonthRange = useCallback((year: number, month: number) => {
     setIsLoading(true)
     setActiveYear(year)
     setActiveMonth(month)
     setActivePreset("byMonth")
     setRange(buildMonthRange(year, month))
-  }
-  const navigate = (direction: "prev" | "next") => {
-    setIsLoading(true)
-    if (activePreset === "thisWeek") {
-      setWeekAnchor((prev) => addWeeks(prev, direction === "next" ? 1 : -1))
-      return
-    }
-    setRange((prev) => navigateRange(prev, activePreset, direction))
-  }
-  const refetch = () => {
+  }, [])
+  const navigate = useCallback(
+    (direction: "prev" | "next") => {
+      setIsLoading(true)
+      if (activePreset === "thisWeek") {
+        setWeekAnchor((prev) => addWeeks(prev, direction === "next" ? 1 : -1))
+        return
+      }
+      setRange((prev) => navigateRange(prev, activePreset, direction))
+    },
+    [activePreset],
+  )
+  const refetch = useCallback(() => {
     setIsLoading(true)
     return fetchData(dateRange)
-  }
+  }, [dateRange, fetchData])
   return {
     byCurrency,
     supplementByCurrency,
