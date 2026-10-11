@@ -1,0 +1,14 @@
+name: Notify site
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger site redeploy
+        run: gh api repos/Minty-Flow/minty-flow.github.io/dispatches -f event_type=release-published
+        env:
+          GH_TOKEN: ${{ secrets.SITE_DISPATCH_TOKEN }}
