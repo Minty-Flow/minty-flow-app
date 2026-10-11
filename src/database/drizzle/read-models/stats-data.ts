@@ -727,28 +727,39 @@ async function fetchHistoricalOpenings(
 ): Promise<Map<string, number>> {
   const before = beforeDate.toISOString()
 
-  const entries = await Promise.all(
-    accounts.map((account) => {
-      const lastTx = drizzleDb.get<{
+  // Latest confirmed entry before the date, per account, in one pass.
+  const lastByAccount = new Map(
+    drizzleDb
+      .all<{
+        account_id: string
         account_balance_before: number
         amount: number
       }>(sql`
-        SELECT account_balance_before, amount
-         FROM transactions
-         WHERE account_id = ${account.id}
-           AND is_deleted = 0
-           AND is_pending = 0
-           AND transaction_date < ${before}
-         ORDER BY transaction_date DESC, created_at DESC
-         LIMIT 1`)
+        SELECT account_id, account_balance_before, amount
+         FROM (
+           SELECT account_id, account_balance_before, amount,
+                  ROW_NUMBER() OVER (
+                    PARTITION BY account_id
+                    ORDER BY transaction_date DESC, created_at DESC
+                  ) AS rn
+            FROM transactions
+            WHERE is_deleted = 0
+              AND is_pending = 0
+              AND transaction_date < ${before}
+         )
+         WHERE rn = 1`)
+      .map((row) => [row.account_id, row] as const),
+  )
+
+  return new Map(
+    accounts.map((account) => {
+      const lastTx = lastByAccount.get(account.id)
       const opening = lastTx
         ? lastTx.account_balance_before + lastTx.amount
         : account.balance
       return [account.id, opening] as const
     }),
   )
-
-  return new Map(entries)
 }
 
 /* ------------------------------------------------------------------ */
