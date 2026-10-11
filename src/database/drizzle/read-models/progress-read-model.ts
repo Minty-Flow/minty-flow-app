@@ -1,5 +1,4 @@
 import { and, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm"
-import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 import { useMemo } from "react"
 
 import type { Budget } from "~/types/budgets"
@@ -10,6 +9,7 @@ import {
 } from "~/types/transactions"
 
 import { drizzleDb } from "../db"
+import { useLiveQuery } from "../live-query"
 import { accounts, transactions } from "../schema"
 
 // Live queries only re-run when the FROM table changes, so these join

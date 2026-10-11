@@ -1,10 +1,10 @@
 import { count, sql } from "drizzle-orm"
-import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Tag, TagKindType } from "~/types/tags"
 
 import { drizzleDb } from "../db"
+import { useLiveQuery } from "../live-query"
 import { tags, transactionTags } from "../schema"
 import {
   createLiveReadModelResult,

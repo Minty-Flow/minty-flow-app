@@ -1,6 +1,5 @@
 import { addWeeks } from "date-fns"
 import { sql } from "drizzle-orm"
-import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 import { useIsFocused } from "expo-router"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
@@ -34,6 +33,8 @@ import {
   navigateRange,
 } from "~/utils/stats-date-range"
 import type { DateRangePresetId } from "~/utils/time-utils"
+
+import { useLiveQuery } from "../live-query"
 
 export interface UseStatsInit {
   preset?: DateRangePresetId
