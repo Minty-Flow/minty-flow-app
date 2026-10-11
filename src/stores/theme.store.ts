@@ -6,7 +6,7 @@ import { persist } from "zustand/middleware"
 import type { ThemeKey } from "~/styles/unistyles"
 import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
-export const DEFAULT_THEME = "coastalTrim"
+export const DEFAULT_THEME = "catppuccinGreenFrappe"
 const THEME_PERSIST_STORE_KEY = "theme-preferences-store"
 const THEME_PERSIST_MMKV_KEY = "theme-preferences-storage"
 
@@ -86,7 +86,7 @@ export function getStoredTheme(
 export const useThemeStore = create<ThemeStore>()(
   persist(
     (set) => ({
-      // Default to first dark theme (electricLavender)
+      // Default to the Catppuccin Frappé green theme
       themeMode: DEFAULT_THEME,
 
       // Actions
