@@ -41,7 +41,7 @@ export function ColorVariantInline({
   onClearSelection,
 }: ColorVariantInlineProps) {
   const { t } = useTranslation()
-  const { themeMode } = useThemeStore()
+  const themeMode = useThemeStore((s) => s.themeMode)
   const { wrapperRef, scrollIntoView } = useScrollIntoView()
   const [expanded, setExpanded] = useState(false)
   const [internalSelectedSchemeName, setInternalSelectedSchemeName] = useState<

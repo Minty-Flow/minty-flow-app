@@ -74,7 +74,8 @@ export function UpcomingTransactionsSection({
     return { recurring: recurringList, pending: pendingList }
   })()
   const router = useRouter()
-  const { collapsed, setCollapsed } = useUpcomingSectionStore()
+  const collapsed = useUpcomingSectionStore((s) => s.collapsed)
+  const setCollapsed = useUpcomingSectionStore((s) => s.setCollapsed)
   const [confirmAllSheetVisible, setConfirmAllSheetVisible] = useState(false)
   const [recurringToDelete, setRecurringToDelete] =
     useState<TransactionWithRelations | null>(null)
