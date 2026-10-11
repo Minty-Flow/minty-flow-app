@@ -30,7 +30,6 @@ import { FormKindSelector } from "./form-kind-selector"
 import { FormLoanPicker } from "./form-loan-picker"
 import { FormNotesSection } from "./form-notes-section"
 import { FormOverlays } from "./form-overlays"
-import { FormRecurringPause } from "./form-recurring-pause"
 import { FormTagsPicker } from "./form-tags-picker"
 import { TransactionTopTabs } from "./transaction-top-tabs"
 import type { TransactionFormProps } from "./types"
@@ -184,12 +183,6 @@ export function TransactionForm(props: TransactionFormProps) {
             onUntilPress={() => f.openDatePicker("recurringEnd")}
             onUntilReset={() => f.setRecurring({ until: null })}
           />
-          {f.isRecurringKind && f.recurringRule && (
-            <FormRecurringPause
-              key={f.recurringRule.id}
-              rule={f.recurringRule}
-            />
-          )}
 
           <View style={transactionFormStyles.nameSection}>
             <Controller

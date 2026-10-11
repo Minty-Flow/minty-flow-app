@@ -1,1 +1,0 @@
-ALTER TABLE `recurring_transactions` ADD `paused` integer DEFAULT 0 NOT NULL;

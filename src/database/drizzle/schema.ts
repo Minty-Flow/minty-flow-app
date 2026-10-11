@@ -331,8 +331,6 @@ export const recurringTransactions = sqliteTable(
     rules: text("rules").notNull(),
     lastGeneratedTransactionDate: text("last_generated_transaction_date"),
     disabled: integer("disabled").notNull().default(0).$type<0 | 1>(),
-    // User-controlled pause. `disabled` means the rule has ended on its own.
-    paused: integer("paused").notNull().default(0).$type<0 | 1>(),
     createdAt: text("created_at").notNull(),
   },
   (table) => [

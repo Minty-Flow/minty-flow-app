@@ -32,7 +32,6 @@ interface RowRecurring {
   rules: string
   last_generated_transaction_date: string | null
   disabled: number // 0 | 1
-  paused: number // 0 | 1
   created_at: string
 }
 
@@ -45,7 +44,6 @@ const recurringSelection = {
   last_generated_transaction_date:
     recurringTransactions.lastGeneratedTransactionDate,
   disabled: recurringTransactions.disabled,
-  paused: recurringTransactions.paused,
   created_at: recurringTransactions.createdAt,
 }
 
@@ -72,7 +70,6 @@ export interface RecurringTransactionTemplate {
 export interface RecurringRuleDetails extends RecurringTransactionTemplate {
   rules: string[]
   range: RecurringTimeRange
-  paused: boolean
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -207,43 +204,6 @@ async function disableRecurringRule(ruleId: string): Promise<void> {
       .where(eq(recurringTransactions.id, ruleId))
       .run()
   })
-}
-
-/** Stop generating new instances. Existing instances are left alone. */
-export async function pauseRecurringRule(ruleId: string): Promise<void> {
-  await runInTransaction("recurring.pause", (db) => {
-    db.update(recurringTransactions)
-      .set({ paused: 1 })
-      .where(eq(recurringTransactions.id, ruleId))
-      .run()
-  })
-}
-
-/**
- * Resume a paused rule from its next future occurrence. The cursor jumps to
- * now, so the paused period is not backfilled.
- */
-export async function resumeRecurringRule(ruleId: string): Promise<void> {
-  const now = new Date()
-  await runInTransaction("recurring.resume", (db) => {
-    const rule = db
-      .select({ last: recurringTransactions.lastGeneratedTransactionDate })
-      .from(recurringTransactions)
-      .where(eq(recurringTransactions.id, ruleId))
-      .get()
-    const last = rule?.last ? new Date(rule.last) : null
-    db.update(recurringTransactions)
-      .set({
-        paused: 0,
-        lastGeneratedTransactionDate: (last && last > now
-          ? last
-          : now
-        ).toISOString(),
-      })
-      .where(eq(recurringTransactions.id, ruleId))
-      .run()
-  })
-  await synchronizeAllRecurringTransactions()
 }
 
 type RecurringRuleTemplateUpdate = Partial<{
@@ -484,7 +444,7 @@ async function synchronizeRecurringTransaction(
     .where(eq(recurringTransactions.id, ruleId))
     .get()
 
-  if (!rule || rule.disabled || rule.paused) return
+  if (!rule || rule.disabled) return
 
   try {
     const range = parseTimeRange(rule)
@@ -708,12 +668,7 @@ export async function synchronizeAllRecurringTransactions(
     const rules = drizzleDb
       .select(recurringSelection)
       .from(recurringTransactions)
-      .where(
-        and(
-          eq(recurringTransactions.disabled, 0),
-          eq(recurringTransactions.paused, 0),
-        ),
-      )
+      .where(eq(recurringTransactions.disabled, 0))
       .all()
     for (const rule of rules) {
       await synchronizeRecurringTransaction(rule.id, anchor)
@@ -736,6 +691,5 @@ export async function findRecurringById(
     ...parseTemplate(row),
     rules: parseRules(row),
     range: parseTimeRange(row),
-    paused: row.paused === 1,
   }
 }
