@@ -39,9 +39,8 @@ export const isSingleEmojiOrLetter = (str: string): boolean => {
   if (emojiRegex.test(trimmed)) {
     // Verify exactly one grapheme cluster (handles multi-codepoint sequences)
     try {
-      const Segmenter = (
-        Intl as unknown as { Segmenter?: typeof Intl.Segmenter }
-      ).Segmenter
+      // Absent on some JS engines even though the lib types declare it.
+      const Segmenter: typeof Intl.Segmenter | undefined = Intl.Segmenter
       if (typeof Segmenter === "function") {
         return (
           [
@@ -70,8 +69,7 @@ export function getLastGrapheme(str: string): string {
   const trimmed = str.trim()
   if (!trimmed) return ""
   try {
-    const Segmenter = (Intl as unknown as { Segmenter?: typeof Intl.Segmenter })
-      .Segmenter
+    const Segmenter: typeof Intl.Segmenter | undefined = Intl.Segmenter
     if (typeof Segmenter === "function") {
       const segmenter = new Segmenter(LangCodeEnum.EN, {
         granularity: "grapheme",
