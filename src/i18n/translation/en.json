@@ -1026,11 +1026,6 @@
   },
   "components": {
     "transactionForm": {
-      "recurringPause": {
-        "title": "Pause recurring",
-        "description": "Stops creating new entries until you resume. The paused period is not backfilled.",
-        "failed": "Couldn't change the recurring rule"
-      },
       "title": {
         "create": "Create Transaction",
         "edit": "Edit Transaction"
