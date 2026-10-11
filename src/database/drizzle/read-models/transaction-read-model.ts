@@ -242,27 +242,47 @@ export function useTransactions(filters: TransactionFilters): {
 } {
   const filterHash = stableFilterHash(filters)
   const conditions = getConditions(filters)
-  const transactionsResult = useLiveQuery(
-    drizzleDb
-      .select(txSelection)
-      .from(transactions)
-      .where(conditions.length ? and(...conditions) : undefined)
-      .orderBy(desc(transactions.transactionDate), desc(transactions.createdAt))
-      .limit(filters.limit ?? -1)
-      .offset(filters.offset ?? 0),
-    [filterHash],
-  )
+  const orderedRows = drizzleDb
+    .select(txSelection)
+    .from(transactions)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(desc(transactions.transactionDate), desc(transactions.createdAt))
+    .limit(filters.limit ?? -1)
+    .offset(filters.offset ?? 0)
+  const transactionsResult = useLiveQuery(orderedRows, [filterHash])
   const accountsResult = useLiveQuery(
     drizzleDb.select(accountSelection).from(accounts),
   )
   const categoriesResult = useLiveQuery(
     drizzleDb.select(categorySelection).from(categories),
   )
+  // Tags and transfers are scoped to the loaded transactions with a subquery
+  // (not an id list, which would hit SQLite's bound-variable limit).
+  const loadedIds = drizzleDb
+    .select({ id: transactions.id })
+    .from(transactions)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(desc(transactions.transactionDate), desc(transactions.createdAt))
+    .limit(filters.limit ?? -1)
+    .offset(filters.offset ?? 0)
   const tagLinksResult = useLiveQuery(
-    drizzleDb.select(tagSelection).from(transactionTags),
+    drizzleDb
+      .select(tagSelection)
+      .from(transactionTags)
+      .where(inArray(transactionTags.transactionId, loadedIds)),
+    [filterHash],
   )
   const transfersResult = useLiveQuery(
-    drizzleDb.select(transferSelection).from(transfers),
+    drizzleDb
+      .select(transferSelection)
+      .from(transfers)
+      .where(
+        or(
+          inArray(transfers.fromTransactionId, loadedIds),
+          inArray(transfers.toTransactionId, loadedIds),
+        ),
+      ),
+    [filterHash],
   )
 
   const items = useMemo(

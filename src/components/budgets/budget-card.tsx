@@ -9,7 +9,7 @@ import { Money } from "~/components/money"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
+import { useBudgetSpent } from "~/database/drizzle/read-models/progress-read-model"
 import { useMinuteTick } from "~/hooks/use-time-reactivity"
 import type { TranslationKey } from "~/i18n/config"
 import { useLanguageStore } from "~/stores/language.store"
@@ -17,7 +17,6 @@ import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { useWeekStartStore } from "~/stores/week-start.store"
 import type { Budget } from "~/types/budgets"
 import type { Category } from "~/types/categories"
-import { getLiveBudgetSpent } from "~/utils/live-progress"
 import { roundToSafeInteger } from "~/utils/money"
 import { formatMoney, formatPercent } from "~/utils/number-format"
 import {
@@ -80,12 +79,11 @@ export function BudgetCard({ budget, categories, onPress }: BudgetCardProps) {
     void weekStart
     return getBudgetProgressModel(budget, 0)
   })()
-  const { items: progressTransactions } = useTransactions({
-    accountIds: budget.accountIds.length > 0 ? budget.accountIds : ["__none__"],
-    from: progressWindow.periodStart.toISOString(),
-    to: progressWindow.periodEnd.toISOString(),
-  })
-  const spentAmount = getLiveBudgetSpent(budget, progressTransactions)
+  const spentAmount = useBudgetSpent(
+    budget,
+    progressWindow.periodStart,
+    progressWindow.periodEnd,
+  )
   const progress = getBudgetProgressModel(budget, spentAmount)
   const {
     spent,
