@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-11T12:41:35.389Z
+Generated on: 2026-10-11T21:29:08.061Z
 ```
 ./
 ├── .github/
@@ -450,7 +450,6 @@ Generated on: 2026-10-11T12:41:35.389Z
 │   │   │   │   ├── tag-read-model.ts
 │   │   │   │   └── transaction-read-model.ts
 │   │   │   ├── db.ts
-│   │   │   ├── live-query.ts
 │   │   │   └── schema.ts
 │   │   ├── mappers/
 │   │   │   ├── account.mapper.ts
