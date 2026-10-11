@@ -11,7 +11,10 @@ import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
-import { confirmTransaction } from "~/database/services/ledger-service"
+import {
+  confirmTransaction,
+  confirmTransactions,
+} from "~/database/services/ledger-service"
 import { useRecurringRule } from "~/hooks/use-recurring-rule"
 import { useMinuteTick } from "~/hooks/use-time-reactivity"
 import {
@@ -97,7 +100,7 @@ export function UpcomingTransactionsSection({
     const ids = toConfirm.map((r) => r.id)
     const opts = { updateTransactionDate: updateDateUponConfirmation }
     try {
-      await Promise.all(ids.map((id) => confirmTransaction(id, opts)))
+      await confirmTransactions(ids, opts)
     } catch {
       Toast.error({
         title: t("components.transactionForm.toast.upcomingConfirmAllFailed"),
