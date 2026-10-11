@@ -19,6 +19,26 @@ export type DbTransaction = Parameters<
 let txDepth = 0
 
 /**
+ * Drizzle's expo-sqlite transactions are synchronous: a callback that returns
+ * a promise would commit before its awaited work runs, and the global depth
+ * counter above would let other callers slip past the write queue meanwhile.
+ * Fail (and roll back) instead of silently misbehaving.
+ */
+function assertSynchronous<T>(
+  fn: (db: DbTransaction) => T,
+): (db: DbTransaction) => T {
+  return (db) => {
+    const result = fn(db)
+    if (typeof (result as { then?: unknown } | null)?.then === "function") {
+      throw new Error(
+        "runInTransaction callbacks must be synchronous (no async/await or returned promises)",
+      )
+    }
+    return result
+  }
+}
+
+/**
  * Run `fn` inside an exclusive SQLite transaction, serialised through the
  * global write queue.
  *
@@ -46,7 +66,7 @@ export async function runInTransaction<T>(
   if (txDepth > 0) {
     txDepth++
     try {
-      return drizzleDb.transaction(fn)
+      return drizzleDb.transaction(assertSynchronous(fn))
     } finally {
       txDepth--
     }
@@ -56,7 +76,7 @@ export async function runInTransaction<T>(
     txDepth++
 
     try {
-      return drizzleDb.transaction(fn)
+      return drizzleDb.transaction(assertSynchronous(fn))
     } finally {
       txDepth--
     }
