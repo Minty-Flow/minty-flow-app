@@ -342,8 +342,18 @@ function hasAllRequiredTablesAndColumns(): boolean {
   )
 }
 
-function latestMigrationMs(migrations: DrizzleMigrationBundle): number {
-  return Math.max(...migrations.journal.entries.map((entry) => entry.when))
+/**
+ * Number of migrations (0000-0002) that shipped with the Drizzle rollout. A
+ * database that has applied them is a Drizzle database; anything newer is the
+ * normal migrator's job. Comparing against the *latest* migration instead made
+ * every future migration look like a legacy database and re-ran the forced
+ * in-place upgrade. Do not raise this when adding migrations.
+ */
+const BASELINE_MIGRATION_COUNT = 3
+
+function baselineMigrationMs(migrations: DrizzleMigrationBundle): number {
+  const entries = migrations.journal.entries
+  return entries[Math.min(BASELINE_MIGRATION_COUNT, entries.length) - 1].when
 }
 
 function isDrizzleBaselineApplied(migrations: DrizzleMigrationBundle): boolean {
@@ -355,7 +365,7 @@ function isDrizzleBaselineApplied(migrations: DrizzleMigrationBundle): boolean {
     const row = getDb().getFirstSync<{ created_at: number | string | null }>(
       `SELECT created_at FROM "__drizzle_migrations" ORDER BY created_at DESC LIMIT 1`,
     )
-    return Number(row?.created_at ?? 0) >= latestMigrationMs(migrations)
+    return Number(row?.created_at ?? 0) >= baselineMigrationMs(migrations)
   } catch {
     return false
   }
