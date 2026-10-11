@@ -160,9 +160,6 @@ const REQUIRED_INDEXES = [
   "idx_tx_date",
   "idx_tx_account",
   "idx_tx_category",
-  "idx_tx_is_deleted",
-  "idx_tx_is_pending",
-  "idx_tx_type",
   "idx_tx_goal",
   "idx_tx_budget",
   "idx_tx_loan",
@@ -173,6 +170,23 @@ const REQUIRED_INDEXES = [
   "idx_transfer_to_tx",
   "transfers_from_transaction_id_unique",
   "transfers_to_transaction_id_unique",
+] as const
+
+/**
+ * Indexes that no longer ship (dropped by migration 0003) or only exist after
+ * it. Not part of REQUIRED_INDEXES: that list decides whether a database is
+ * already a Drizzle one, so it must hold only indexes present both before and
+ * after the latest migrations. They are still dropped before a legacy rebuild
+ * recreates the current schema.
+ */
+const SUPERSEDED_INDEXES = [
+  "idx_tx_is_deleted",
+  "idx_tx_is_pending",
+  "idx_tx_type",
+  "idx_tx_deleted_date",
+  "idx_tx_account_state_date",
+  "idx_tx_deleted_at",
+  "idx_tx_category_deleted",
 ] as const
 
 const REBUILD_ORDER = [
@@ -929,7 +943,7 @@ function renameLegacyTables(db: SQLite.SQLiteDatabase): void {
 }
 
 function dropLegacyIndexes(db: SQLite.SQLiteDatabase): void {
-  for (const index of REQUIRED_INDEXES) {
+  for (const index of [...REQUIRED_INDEXES, ...SUPERSEDED_INDEXES]) {
     execSync(db, `DROP INDEX IF EXISTS ${quoteIdentifier(index)};`)
   }
 }

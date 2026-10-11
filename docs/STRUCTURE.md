@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-11T09:43:15.349Z
+Generated on: 2026-10-11T09:44:35.486Z
 ```
 ./
 ├── .github/
@@ -48,10 +48,12 @@ Generated on: 2026-10-11T09:43:15.349Z
 │   │   ├── _journal.json
 │   │   ├── 0000_snapshot.json
 │   │   ├── 0001_snapshot.json
-│   │   └── 0002_snapshot.json
+│   │   ├── 0002_snapshot.json
+│   │   └── 0003_snapshot.json
 │   ├── 0000_safe_maximus.sql
 │   ├── 0001_deep_daredevil.sql
 │   ├── 0002_famous_bastion.sql
+│   ├── 0003_transaction_composite_indexes.sql
 │   ├── migrations.d.ts
 │   └── migrations.js
 ├── plugins/
