@@ -1,5 +1,11 @@
 import { useRouter } from "expo-router"
-import { type ComponentProps, Fragment, useEffect, useState } from "react"
+import {
+  type ComponentProps,
+  Fragment,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 import { useTranslation } from "react-i18next"
 import { Alert, View as RNView } from "react-native"
 import { usePagerView } from "react-native-pager-view"
@@ -185,6 +191,10 @@ const TabLayout = () => {
     onPageScroll,
     onPageScrollStateChanged,
   } = usePagerView()
+  // Tabs mount on first visit and stay mounted, so hidden tabs don't run their
+  // queries (or re-run them on every DB write) until the user opens them.
+  const mountedTabs = useRef(new Set([0]))
+  mountedTabs.current.add(activePage)
   const [fabExpanded, setFabExpanded] = useState(false)
   const { rotateStyle, overlayStyle } = useFabAnimation(fabExpanded)
   const router = useRouter()
@@ -269,9 +279,13 @@ const TabLayout = () => {
         onPageScroll={onPageScroll}
         onPageScrollStateChanged={onPageScrollStateChanged}
       >
-        {TABS.map((tab) => (
-          <tab.component key={tab.key} />
-        ))}
+        {TABS.map((tab, i) =>
+          mountedTabs.current.has(i) ? (
+            <tab.component key={tab.key} />
+          ) : (
+            <RNView key={tab.key} collapsable={false} />
+          ),
+        )}
       </AnimatedPagerView>
 
       <RNView
