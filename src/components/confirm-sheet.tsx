@@ -37,6 +37,11 @@ interface ConfirmSheetProps {
   note?: string
   /** Keep the sheet mounted/owned by the parent after confirm resolves. */
   closeOnConfirm?: boolean
+  /**
+   * false blocks backdrop tap, swipe-down and back press, so the sheet closes
+   * only through its buttons. Default true.
+   */
+  dismissable?: boolean
 }
 export function ConfirmSheet({
   visible,
@@ -50,6 +55,7 @@ export function ConfirmSheet({
   icon,
   note,
   closeOnConfirm = true,
+  dismissable = true,
 }: ConfirmSheetProps) {
   const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
@@ -70,7 +76,7 @@ export function ConfirmSheet({
     <BottomSheet
       isPresented={visible}
       onDismiss={onRequestClose}
-      dismissable={!loading}
+      dismissable={dismissable && !loading}
     >
       <View style={styles.card}>
         {icon ? (

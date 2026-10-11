@@ -14,9 +14,9 @@ import { UnistylesRuntime, useUnistyles } from "react-native-unistyles"
 
 import { AppLockGate } from "~/components/app-lock-gate"
 import {
-  ForcedMigrationGate,
   MigrationState,
-} from "~/components/forced-migration-gate"
+  PreUpdateBackupGate,
+} from "~/components/pre-update-backup-gate"
 import { RouteErrorBoundary } from "~/components/route-error-boundary"
 import { ToastManager } from "~/components/ui/toast"
 import { TooltipProvider } from "~/components/ui/tooltip"
@@ -38,9 +38,9 @@ import migrations from "../../drizzle/migrations"
 
 export default function RootLayout() {
   return (
-    <ForcedMigrationGate>
+    <PreUpdateBackupGate>
       <DrizzleMigratedApp />
-    </ForcedMigrationGate>
+    </PreUpdateBackupGate>
   )
 }
 
