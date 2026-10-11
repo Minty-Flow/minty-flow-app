@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-11T12:36:10.023Z
+Generated on: 2026-10-11T12:36:32.857Z
 ```
 ./
 ├── .github/
@@ -407,12 +407,12 @@ Generated on: 2026-10-11T12:36:10.023Z
 │   │   ├── dynamic-icon.tsx
 │   │   ├── external-link.tsx
 │   │   ├── filter-toggle-button.tsx
-│   │   ├── forced-migration-gate.tsx
 │   │   ├── info-sheet.tsx
 │   │   ├── keyboard-sticky-view-minty.tsx
 │   │   ├── money.tsx
 │   │   ├── month-picker-sheet.tsx
 │   │   ├── month-year-picker.tsx
+│   │   ├── pre-update-backup-gate.tsx
 │   │   ├── preset-list-item.tsx
 │   │   ├── privacy-eye-control.tsx
 │   │   ├── reorderable-list.tsx
@@ -474,7 +474,7 @@ Generated on: 2026-10-11T12:36:10.023Z
 │   │   │   ├── has-attachments-from-extra.ts
 │   │   │   └── import-snapshot.ts
 │   │   ├── db.ts
-│   │   ├── forced-migration.ts
+│   │   ├── pending-migrations.ts
 │   │   ├── transaction.ts
 │   │   └── write-queue.ts
 │   ├── domain/
@@ -525,7 +525,6 @@ Generated on: 2026-10-11T12:36:10.023Z
 │   │   ├── bill-splitter.store.ts
 │   │   ├── button-placement.store.ts
 │   │   ├── calendar-format.store.ts
-│   │   ├── db-migration.store.ts
 │   │   ├── development-notice.store.ts
 │   │   ├── exchange-rates-preferences.store.ts
 │   │   ├── export-history.store.ts
