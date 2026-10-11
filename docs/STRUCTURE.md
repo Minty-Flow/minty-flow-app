@@ -1,10 +1,11 @@
 # Project Structure
-Generated on: 2026-10-11T07:28:12.232Z
+Generated on: 2026-10-11T07:29:54.876Z
 ```
 ./
 ├── .github/
 │   └── workflows/
-│       └── board-sync.yml
+│       ├── board-sync.yml
+│       └── ci.yml
 ├── .husky/
 │   ├── _/
 │   │   ├── .gitignore

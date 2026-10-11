@@ -15,7 +15,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
       ORG: ${{ github.repository_owner }}
-      PROJECT_NUMBER: "1" # change to the project's number
+      PROJECT_NUMBER: "3"
       PR_BODY: ${{ github.event.pull_request.body }}
       TARGET: ${{ github.event.action == 'closed' && 'In review' || 'In progress' }}
     steps:
