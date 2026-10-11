@@ -5,7 +5,15 @@
  * Used by both the home screen and the account detail screen.
  */
 import { useRouter } from "expo-router"
-import { type ComponentType, Fragment, type ReactElement } from "react"
+import {
+  type ComponentProps,
+  type ComponentType,
+  Fragment,
+  memo,
+  type ReactElement,
+  useCallback,
+  useMemo,
+} from "react"
 import { useTranslation } from "react-i18next"
 import { SectionList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
@@ -47,6 +55,37 @@ interface TransactionSectionListProps {
   /** Additional content rendered at the top of the list (before upcoming). */
   ListHeaderComponent?: ComponentType<unknown> | ReactElement | null
 }
+interface TransactionRowProps {
+  item: TransactionWithRelations
+  onPressId: (transactionId: string) => void
+  onDelete: () => void
+  onWillOpen: ComponentProps<typeof TransactionItem>["onWillOpen"]
+}
+
+// Stable props let React skip rows whose data did not change (search typing,
+// filter toggles, unrelated parent state).
+const TransactionRow = memo(function TransactionRow({
+  item,
+  onPressId,
+  onDelete,
+  onWillOpen,
+}: TransactionRowProps) {
+  const handlePress = useCallback(
+    () => onPressId(item.id),
+    [onPressId, item.id],
+  )
+  return (
+    <TransactionItem
+      transactionWithRelations={item}
+      onPress={handlePress}
+      onDelete={onDelete}
+      onWillOpen={onWillOpen}
+    />
+  )
+})
+
+const keyExtractor = (item: TransactionWithRelations) => item.id
+
 export function TransactionSectionList({
   transactionsFull,
   filterState,
@@ -58,41 +97,45 @@ export function TransactionSectionList({
   const router = useRouter()
   const { onWillOpen: handleWillOpen, closeOpen: closeOpenSwipeable } =
     useSingleOpenSwipeable()
-  const list = transactionsFull ?? []
   const transferLayout = useTransfersPreferencesStore((s) => s.layout)
   // Pending rows live in the Upcoming section only under "all"; the "pending"
   // and "notPending" filters route them through the main list (or hide them),
   // so the Upcoming section is suppressed to avoid rendering a row twice.
   const upcomingVisible =
     showUpcoming && filterState.pendingFilter === PendingOptionsEnum.ALL
+  const allTimeLabel = t("components.filters.groupByOptions.allTime")
   // Recurring instances render in the upcoming section, never the main list.
   // Pending visibility follows the pending filter; structural filters apply on top.
-  const filtered = (() => {
-    const withoutRecurring = list.filter((r) => !r.extra?.recurringId)
+  const sections = useMemo(() => {
+    const withoutRecurring = transactionsFull.filter(
+      (r) => !r.extra?.recurringId,
+    )
     const byPending = applyPendingFilter(
       withoutRecurring,
       filterState.pendingFilter,
     )
     const byFilters = applyTransactionFilters(byPending, filterState)
-    return applySearch(byFilters, searchState)
-  })()
-  const listForSections = applyTransferLayout(filtered, transferLayout)
-  const sections = buildTransactionSections(
-    listForSections,
-    filterState.groupBy,
-    t("components.filters.groupByOptions.allTime"),
+    const filtered = applySearch(byFilters, searchState)
+    return buildTransactionSections(
+      applyTransferLayout(filtered, transferLayout),
+      filterState.groupBy,
+      allTimeLabel,
+    )
+  }, [transactionsFull, filterState, searchState, transferLayout, allTimeLabel])
+  const handleOnTransactionPress = useCallback(
+    (transactionId: string) => {
+      router.push({
+        pathname: "/transaction/[id]",
+        params: { id: transactionId },
+      })
+    },
+    [router],
   )
-  const handleOnTransactionPress = (transactionId: string) => {
-    router.push({
-      pathname: "/transaction/[id]",
-      params: { id: transactionId },
-    })
-  }
   // TransactionItem handles transfer vs non-transfer delete (modal + deleteTransfer or deleteTransactionModel); we only close the swipeable.
-  const handleDeleteDone = () => {
-    closeOpenSwipeable()
-  }
-  const renderHeader = () => (
+  const handleDeleteDone = closeOpenSwipeable
+  // Elements, not render functions: a new function type each render would
+  // remount the header and lose its state (summary, upcoming sheets).
+  const header = (
     <>
       {ListHeaderComponent != null &&
         (typeof ListHeaderComponent === "function" ? (
@@ -102,13 +145,13 @@ export function TransactionSectionList({
         ))}
       {upcomingVisible && (
         <UpcomingTransactionsSection
-          transactions={transactionsFull ?? []}
+          transactions={transactionsFull}
           onTransactionPress={handleOnTransactionPress}
         />
       )}
     </>
   )
-  const renderEmptyList = () => (
+  const emptyList = (
     <View style={styles.emptyStateWrapper}>
       <EmptyState
         icon="receipt-outline"
@@ -117,21 +160,26 @@ export function TransactionSectionList({
       />
     </View>
   )
-  const renderItem = ({ item }: { item: TransactionWithRelations }) => (
-    <TransactionItem
-      transactionWithRelations={item as TransactionWithRelations}
-      onPress={() => handleOnTransactionPress(item.id)}
-      onDelete={handleDeleteDone}
-      onWillOpen={handleWillOpen}
-    />
+  const renderItem = useCallback(
+    ({ item }: { item: TransactionWithRelations }) => (
+      <TransactionRow
+        item={item}
+        onPressId={handleOnTransactionPress}
+        onDelete={handleDeleteDone}
+        onWillOpen={handleWillOpen}
+      />
+    ),
+    [handleOnTransactionPress, handleDeleteDone, handleWillOpen],
   )
-  const keyExtractor = (item: TransactionWithRelations) => item.id
   return (
     <SectionList
       sections={sections}
-      ListHeaderComponent={renderHeader}
-      ListEmptyComponent={renderEmptyList}
+      ListHeaderComponent={header}
+      ListEmptyComponent={emptyList}
       keyExtractor={keyExtractor}
+      initialNumToRender={12}
+      windowSize={7}
+      maxToRenderPerBatch={10}
       renderItem={renderItem}
       renderSectionHeader={({ section }) => {
         const s = section as unknown as {

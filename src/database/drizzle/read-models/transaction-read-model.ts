@@ -1,5 +1,6 @@
 import { and, desc, eq, gte, inArray, lte, or, type SQL } from "drizzle-orm"
 import { useLiveQuery } from "drizzle-orm/expo-sqlite"
+import { useMemo } from "react"
 
 import { mapAccount } from "~/database/mappers/account.mapper"
 import { mapCategory } from "~/database/mappers/category.mapper"
@@ -264,14 +265,26 @@ export function useTransactions(filters: TransactionFilters): {
     drizzleDb.select(transferSelection).from(transfers),
   )
 
+  const items = useMemo(
+    () =>
+      hydrateTransactionRows({
+        rows: transactionsResult.data,
+        accountRows: accountsResult.data,
+        categoryRows: categoriesResult.data,
+        tagRows: tagLinksResult.data,
+        transferRows: transfersResult.data,
+      }),
+    [
+      transactionsResult.data,
+      accountsResult.data,
+      categoriesResult.data,
+      tagLinksResult.data,
+      transfersResult.data,
+    ],
+  )
+
   return {
-    items: hydrateTransactionRows({
-      rows: transactionsResult.data,
-      accountRows: accountsResult.data,
-      categoryRows: categoriesResult.data,
-      tagRows: tagLinksResult.data,
-      transferRows: transfersResult.data,
-    }),
+    items,
     status:
       (transactionsResult.error ??
       accountsResult.error ??
