@@ -172,7 +172,7 @@ export default function EditTagScreen() {
   const { tagId } = useLocalSearchParams<{
     tagId: string
   }>()
-  const tagsQuery = useTagsQuery()
+  const tagsQuery = useTagsQuery(true)
   const loadState = useModifyRouteLoader({
     id: tagId,
     data: tagsQuery.data,

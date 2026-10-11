@@ -18,7 +18,7 @@ export default function EditCategoryScreen() {
     initialType: CategoryType
   }>()
 
-  const categoriesQuery = useCategoriesQuery()
+  const categoriesQuery = useCategoriesQuery(true)
   const loadState = useModifyRouteLoader({
     id: params.categoryId,
     data: categoriesQuery.data,

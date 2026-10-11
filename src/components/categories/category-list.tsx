@@ -65,7 +65,7 @@ export const CategoryList = ({
   deletedCategory,
   searchQuery = "",
 }: CategoryListProps) => {
-  const { data: categories, status } = useCategoriesByTypeQuery(type)
+  const { data: categories, status } = useCategoriesByTypeQuery(type, true)
   const router = useRouter()
   const { t } = useTranslation()
   const typeLabel = t(`components.categories.types.${type}`)
