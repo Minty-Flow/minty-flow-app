@@ -1,0 +1,46 @@
+name: board-sync
+
+on:
+  pull_request:
+    types: [opened, reopened, edited, closed]
+    branches: [dev]
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    if: github.event.action != 'closed' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+      ORG: ${{ github.repository_owner }}
+      PROJECT_NUMBER: "1" # change to the project's number
+      PR_BODY: ${{ github.event.pull_request.body }}
+      TARGET: ${{ github.event.action == 'closed' && 'In review' || 'In progress' }}
+    steps:
+      - name: Require the project token
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::Repository secret PROJECT_TOKEN is missing."
+            exit 1
+          fi
+      - name: Move the named issues
+        run: |
+          issues=$(printf '%s' "$PR_BODY" | grep -oiE '(close[sd]?|fix(e[sd])?|resolve[sd]?) +#[0-9]+' | grep -oE '[0-9]+' | sort -un)
+          if [ -z "$issues" ]; then echo "No closing keywords in the PR body."; exit 0; fi
+          project_id=$(gh project view "$PROJECT_NUMBER" --owner "$ORG" --format json -q .id)
+          fields=$(gh project field-list "$PROJECT_NUMBER" --owner "$ORG" --format json)
+          field_id=$(jq -r '.fields[] | select(.name=="Status") | .id' <<<"$fields")
+          option_id=$(jq -r --arg t "$TARGET" '.fields[] | select(.name=="Status") | .options[] | select(.name==$t) | .id' <<<"$fields")
+          for n in $issues; do
+            item=$(gh project item-add "$PROJECT_NUMBER" --owner "$ORG" \
+              --url "https://github.com/${GITHUB_REPOSITORY}/issues/${n}" --format json -q .id)
+            current=$(gh api graphql -f query='query($id:ID!){node(id:$id){... on ProjectV2Item{fieldValueByName(name:"Status"){... on ProjectV2ItemFieldSingleSelectValue{name}}}}}' -f id="$item" -q .data.node.fieldValueByName.name)
+            if [ "$TARGET" = "In progress" ] && [ "$current" != "Backlog" ] && [ "$current" != "Ready" ] && [ -n "$current" ]; then
+              echo "#${n} stays ${current}"; continue
+            fi
+            gh project item-edit --project-id "$project_id" --id "$item" \
+              --field-id "$field_id" --single-select-option-id "$option_id"
+            echo "#${n}: ${current} -> ${TARGET}"
+          done
