@@ -1,4 +1,4 @@
-import { type Href, router } from "expo-router"
+import { router } from "expo-router"
 import { StyleSheet } from "react-native-unistyles"
 
 import { CashFlowCard } from "~/components/stats/dashboard/cash-flow-card"
@@ -13,14 +13,12 @@ import { StatsPendingNotice } from "~/components/stats/stats-pending-notice"
 import { View } from "~/components/ui/view"
 
 export default function StatsScreen() {
-  type ScreensType = Extract<
-    Href,
+  type ScreensType =
     | "/stats/categories"
     | "/stats/wrapped"
     | "/stats/cash-flow"
     | "/stats/net-worth"
     | "/stats/calendar"
-  >
 
   return (
     <StatsDetailShell variant="dashboard" emptyScenario="noTransactionsEver">
