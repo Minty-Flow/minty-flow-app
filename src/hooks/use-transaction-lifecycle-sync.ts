@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react"
-import { AppState, InteractionManager } from "react-native"
+import { AppState } from "react-native"
 
 import { synchronizeAllRecurringTransactions } from "~/database/services/recurring-transaction-service"
 import { useDebouncedCallback } from "~/hooks/use-debounced-callback"
@@ -101,8 +101,8 @@ export function useTransactionLifecycleSync(): void {
     updateDateUponConfirmation,
   ])
   const debouncedSync = useDebouncedCallback(() => {
-    // After the first frame and any running transition, not during them.
-    InteractionManager.runAfterInteractions(() => {
+    // When the JS thread is idle, not during the first frames or a transition.
+    requestIdleCallback(() => {
       void sync()
     })
   }, SYNC_DEBOUNCE_MS)
