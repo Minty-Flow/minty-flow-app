@@ -1,5 +1,7 @@
 import { addWeeks } from "date-fns"
+import { sql } from "drizzle-orm"
 import { useLiveQuery } from "drizzle-orm/expo-sqlite"
+import { useIsFocused } from "expo-router"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { drizzleDb } from "~/database/drizzle/db"
@@ -58,25 +60,16 @@ export interface UseWrappedInsightsReturn {
   isLoading: boolean
 }
 
+// Only the live query's `updatedAt` is read (it moves on any write to the
+// table), so each query returns one count row instead of every id.
+const STATS_REFETCH_DEBOUNCE_MS = 300
+
 function useStatsDatabaseChangeSignal(): string {
-  const tx = useLiveQuery(
-    drizzleDb
-      .select({ id: transactions.id, updatedAt: transactions.updatedAt })
-      .from(transactions),
-  )
-  const account = useLiveQuery(
-    drizzleDb
-      .select({ id: accounts.id, updatedAt: accounts.updatedAt })
-      .from(accounts),
-  )
-  const category = useLiveQuery(
-    drizzleDb
-      .select({ id: categories.id, updatedAt: categories.updatedAt })
-      .from(categories),
-  )
-  const tag = useLiveQuery(
-    drizzleDb.select({ id: tags.id, updatedAt: tags.updatedAt }).from(tags),
-  )
+  const count = sql<number>`count(*)`
+  const tx = useLiveQuery(drizzleDb.select({ n: count }).from(transactions))
+  const account = useLiveQuery(drizzleDb.select({ n: count }).from(accounts))
+  const category = useLiveQuery(drizzleDb.select({ n: count }).from(categories))
+  const tag = useLiveQuery(drizzleDb.select({ n: count }).from(tags))
 
   return [
     tx.updatedAt?.getTime() ?? 0,
@@ -189,14 +182,34 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
       throw error
     }
   }, [])
+  const isFocused = useIsFocused()
+  const lastFetchedRef = useRef<
+    { range: StatsDateRange; signal: string } | undefined
+  >(undefined)
   useEffect(() => {
-    void dbChangeSignal
-    setIsLoading(true)
-    void fetchData(dateRange)
-    return () => {
-      fetchIdRef.current++
+    // Skip while another screen covers this one; the fetch runs on refocus.
+    if (!isFocused) return
+    const last = lastFetchedRef.current
+    if (last && last.range === dateRange && last.signal === dbChangeSignal) {
+      return
     }
-  }, [dateRange, dbChangeSignal, fetchData])
+    // A range change (user action) fetches now; a data change is debounced so
+    // a burst of writes refetches once. Background refetches keep the stale
+    // data on screen: setters already flip isLoading for range changes.
+    const rangeChanged = !last || last.range !== dateRange
+    const timer = setTimeout(
+      () => {
+        lastFetchedRef.current = { range: dateRange, signal: dbChangeSignal }
+        fetchData(dateRange).catch((error) =>
+          logger.error("stats fetch failed", error),
+        )
+      },
+      rangeChanged ? 0 : STATS_REFETCH_DEBOUNCE_MS,
+    )
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [dateRange, dbChangeSignal, fetchData, isFocused])
   const setPreset = (preset: StatsDateRangePreset) => {
     setIsLoading(true)
     setActivePreset(preset)
