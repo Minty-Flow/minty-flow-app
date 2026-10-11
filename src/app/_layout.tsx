@@ -84,8 +84,6 @@ function AppRootLayout() {
     }
   }, [isOnboardingCompleted, segments, router])
 
-  // Ports to reality: retention cleanup and recurring sync (effects live in domain hooks)
-  // Rehydrate shake listener on app start if mask-on-shake was enabled (store-owned subscription)
   useEffect(() => {
     if (Platform.OS === "android") {
       Notifications.setNotificationChannelAsync("transaction-reminders", {
@@ -142,7 +140,6 @@ function AppRootLayout() {
                     paddingBottom: UnistylesRuntime.insets.bottom, // Global horizontal gutter
                     backgroundColor: theme.colors.surface, // Ensure background matches
                   },
-                  // animation: "fade",
                   // if you decided to use this some screens wont have the edit pen in them so be careful
                   // header: (props) =>   <ScreenSharedHeader props={props} />,
                 }}
