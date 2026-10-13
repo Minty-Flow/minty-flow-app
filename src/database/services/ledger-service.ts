@@ -525,6 +525,8 @@ function updateTransactionInTx(
   const now = new Date().toISOString()
 
   const tx = requireTx(db, id)
+  // A trashed row is not part of any balance; editing it would move one.
+  if (tx.is_deleted) throw new Error(`Transaction ${id} is in the trash`)
 
   const oldPending = !!tx.is_pending
   const oldAmount = tx.amount
@@ -724,6 +726,9 @@ export async function editTransfer(
       .where(eq(transactions.id, partnerInfo.partnerId))
       .get()
     if (!paired) throw new Error("Paired transfer leg not found.")
+    if (tx.is_deleted || paired.is_deleted) {
+      throw new Error(`Transfer ${txId} is in the trash`)
+    }
 
     const debitRow = tx.amount < 0 ? tx : paired
     const creditRow = tx.amount > 0 ? tx : paired
@@ -1132,6 +1137,8 @@ function confirmTransactionInTx(
 
   const tx = requireTx(db, id)
 
+  // A trashed row never touches a balance, however it is asked to move.
+  if (tx.is_deleted) return
   if (shouldConfirm && !tx.is_pending) return
   if (!shouldConfirm && tx.is_pending) return
 

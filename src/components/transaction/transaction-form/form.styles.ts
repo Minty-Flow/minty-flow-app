@@ -28,6 +28,13 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   form: {
     gap: FORM_GAP,
   },
+  readOnlyFields: {
+    opacity: 0.6,
+  },
+  trashedNotice: {
+    marginHorizontal: H_PAD,
+    marginTop: FORM_GAP,
+  },
   nameSection: {
     paddingHorizontal: H_PAD,
   },

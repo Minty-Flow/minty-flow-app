@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-13T12:17:01.973Z
+Generated on: 2026-10-13T12:24:02.329Z
 ```
 ./
 ├── __tests__/
@@ -21,7 +21,8 @@ Generated on: 2026-10-13T12:17:01.973Z
 │   │   │   ├── recurring-sync-concurrency.test.ts
 │   │   │   ├── recurring-sync.test.ts
 │   │   │   ├── recurring-template-refs.test.ts
-│   │   │   └── recurring-transaction-service.test.ts
+│   │   │   ├── recurring-transaction-service.test.ts
+│   │   │   └── trashed-transactions-read-only.test.ts
 │   │   └── utils/
 │   │       └── get-balance-delta.test.ts
 │   ├── helpers/

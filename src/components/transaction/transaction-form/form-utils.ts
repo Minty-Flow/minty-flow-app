@@ -85,3 +85,13 @@ export function getDefaultValues(
 export function mergeReducer<S>(state: S, update: Partial<S>): S {
   return { ...state, ...update }
 }
+
+/**
+ * A trashed transaction can only be restored or deleted for good. Editing or
+ * confirming it would move a balance for a row that is not part of any balance.
+ */
+export function isFormReadOnly(
+  transaction: { isDeleted: boolean } | null,
+): boolean {
+  return transaction?.isDeleted === true
+}

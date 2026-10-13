@@ -12,6 +12,8 @@ type Props = {
   isNew: boolean
   isSaving: boolean
   isDirty: boolean
+  /** A trashed transaction: nothing to save, only a way out. */
+  readOnly?: boolean
   onCancel: () => void
   onSave: () => void
 }
@@ -20,6 +22,7 @@ export function FormFooter({
   isNew,
   isSaving,
   isDirty,
+  readOnly = false,
   onCancel,
   onSave,
 }: Props) {
@@ -36,30 +39,32 @@ export function FormFooter({
         disabled={isSaving}
       >
         <Text style={transactionFormStyles.cancelText}>
-          {t("common.actions.cancel")}
+          {readOnly ? t("common.actions.close") : t("common.actions.cancel")}
         </Text>
       </Button>
-      <Button
-        variant="default"
-        size="lg"
-        onPress={onSave}
-        style={transactionFormStyles.footerButton}
-        disabled={isSaving || (!isNew && !isDirty)}
-      >
-        {isSaving ? (
-          <ActivityIndicatorMinty
-            size="small"
-            color={theme.colors.onPrimary}
-            style={transactionFormStyles.saveSpinner}
-          />
-        ) : (
-          <Text style={transactionFormStyles.saveText}>
-            {isNew
-              ? t("components.transactionForm.create")
-              : t("components.transactionForm.save")}
-          </Text>
-        )}
-      </Button>
+      {readOnly ? null : (
+        <Button
+          variant="default"
+          size="lg"
+          onPress={onSave}
+          style={transactionFormStyles.footerButton}
+          disabled={isSaving || (!isNew && !isDirty)}
+        >
+          {isSaving ? (
+            <ActivityIndicatorMinty
+              size="small"
+              color={theme.colors.onPrimary}
+              style={transactionFormStyles.saveSpinner}
+            />
+          ) : (
+            <Text style={transactionFormStyles.saveText}>
+              {isNew
+                ? t("components.transactionForm.create")
+                : t("components.transactionForm.save")}
+            </Text>
+          )}
+        </Button>
+      )}
     </View>
   )
 }
