@@ -45,7 +45,7 @@ issue (Backlog → Ready)
    draft PR into `dev` with `Closes #n` in the body (moves the card to
    *In progress*).
 2. **Work.** Conventional Commits, one logical change per PR. There is no CI,
-   so run `pnpm verify` (lint, number-formatting check, `tsc --noEmit`) before
+   so run `pnpm verify` (lint, number-formatting check, `tsc --noEmit`, tests) before
    merging.
 3. **Merge to dev.** Mark the PR ready and merge (squash is fine). The card
    moves to *In review*. Delete the temp branch and test from `dev`.
@@ -67,9 +67,14 @@ pnpm structure                # regenerate docs/STRUCTURE.md
 pnpm lint:fix                 # Biome check + autofix
 pnpm check-number-formatting  # centralized money-formatting rules
 pnpm types                    # tsc --noEmit
+pnpm test                     # Vitest
 ```
 
-There is no test framework set up; verify changes by running the app.
+Tests run with Vitest and live next to the code as `*.test.ts`. They cover
+pure data-layer logic and services against an in-memory SQLite; UI is verified
+by running the app. To test a service, mock `~/database/drizzle/db` with
+`createTestDb()` from `src/database/test-utils/create-test-db.ts` (see
+`balance-service.test.ts`). Add a regression test with every data-layer fix.
 
 ## Translation guide
 

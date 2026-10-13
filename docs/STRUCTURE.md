@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-11T22:47:50.143Z
+Generated on: 2026-10-13T08:40:35.104Z
 ```
 ./
 ├── .github/
@@ -29,7 +29,8 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   └── pre-commit
 ├── docs/
 │   ├── adr/
-│   │   └── 0001-transaction-kind-axis.md
+│   │   ├── 0001-transaction-kind-axis.md
+│   │   └── 0002-vitest-with-in-memory-sqlite.md
 │   ├── agents/
 │   │   ├── domain.md
 │   │   ├── issue-tracker.md
@@ -458,6 +459,7 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   │   │   └── transaction.mapper.ts
 │   │   ├── services/
 │   │   │   ├── account-service.ts
+│   │   │   ├── balance-service.test.ts
 │   │   │   ├── balance-service.ts
 │   │   │   ├── budget-service.ts
 │   │   │   ├── category-service.ts
@@ -467,10 +469,14 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   │   │   ├── loan-service.ts
 │   │   │   ├── recurring-transaction-service.ts
 │   │   │   └── tag-service.ts
+│   │   ├── test-utils/
+│   │   │   ├── create-test-db.test.ts
+│   │   │   └── create-test-db.ts
 │   │   ├── types/
 │   │   │   └── rows.ts
 │   │   ├── utils/
 │   │   │   ├── generate-id.ts
+│   │   │   ├── get-balance-delta.test.ts
 │   │   │   ├── get-balance-delta.ts
 │   │   │   ├── has-attachments-from-extra.ts
 │   │   │   └── import-snapshot.ts
@@ -586,6 +592,7 @@ Generated on: 2026-10-11T22:47:50.143Z
 │       ├── live-progress.ts
 │       ├── logger.ts
 │       ├── mmkv-storage.ts
+│       ├── money.test.ts
 │       ├── money.ts
 │       ├── notify-format-change.ts
 │       ├── number-format.ts
@@ -593,6 +600,7 @@ Generated on: 2026-10-11T22:47:50.143Z
 │       ├── parse-math-expression.ts
 │       ├── pending-transactions.ts
 │       ├── planning-progress.ts
+│       ├── recurrence.test.ts
 │       ├── recurrence.ts
 │       ├── reload-app.ts
 │       ├── stats-date-range.ts
@@ -621,6 +629,7 @@ Generated on: 2026-10-11T22:47:50.143Z
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml
 ├── README.md
-└── tsconfig.json
+├── tsconfig.json
+└── vitest.config.mts
 
 ```
