@@ -301,7 +301,7 @@ export function useTransactionForm({
     : null
 
   // RS-1: a new subscription/repetitive starts at the form's transactionDate
-  // (which is `new Date()` at open for these kinds — Date field is hidden).
+  // (`new Date()` at open, editable through the Date field).
   useEffect(() => {
     if (isNew && isRecurringKind && recurring.startDate !== date) {
       setRecurring({ startDate: date })

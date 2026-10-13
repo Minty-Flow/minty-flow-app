@@ -146,17 +146,16 @@ export function TransactionForm(props: TransactionFormProps) {
             />
           )}
 
-          {/* Date + Pending: hidden for subscription/repetitive kinds.
+          {/* Date + Pending: shown for every kind. For subscription/repetitive
+                it is the rule's start date (new) or the instance's date (edit).
                 For loan kinds this row is the loan's due date. */}
-          {!f.isRecurringKind && (
-            <FormDateSection
-              date={f.date}
-              control={f.control}
-              onDatePress={() => f.openDatePicker("transaction", "date")}
-              onTimePress={() => f.openDatePicker("transaction", "time")}
-              dueDateMode={f.isLoanKind}
-            />
-          )}
+          <FormDateSection
+            date={f.date}
+            control={f.control}
+            onDatePress={() => f.openDatePicker("transaction", "date")}
+            onTimePress={() => f.openDatePicker("transaction", "time")}
+            dueDateMode={f.isLoanKind}
+          />
 
           <FormKindSelector
             kind={f.kind}
