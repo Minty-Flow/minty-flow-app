@@ -439,8 +439,13 @@ export async function applyRecurringDeleteScope({
 
 // ── Sync ──────────────────────────────────────────────────────────────────────
 
-/* Concurrency lock — prevents parallel sync from creating duplicates. */
-let syncRunning = false
+/*
+ * Concurrency control — prevents parallel sync from creating duplicates.
+ * `currentPass` is the pass running now; `queuedPass` is the single rerun that
+ * callers arriving meanwhile share (see synchronizeAllRecurringTransactions).
+ */
+let currentPass: Promise<RecurringSyncFailure[]> | null = null
+let queuedPass: Promise<RecurringSyncFailure[]> | null = null
 
 /** A rule the sync turned off because it can never generate. */
 export interface RecurringSyncFailure {
@@ -696,32 +701,53 @@ async function synchronizeRecurringTransaction(
   }
 }
 
+async function runSyncPass(anchor: Date): Promise<RecurringSyncFailure[]> {
+  const failures: RecurringSyncFailure[] = []
+  const rules = drizzleDb
+    .select(recurringSelection)
+    .from(recurringTransactions)
+    .where(eq(recurringTransactions.disabled, 0))
+    .all()
+  for (const rule of rules) {
+    const failure = await synchronizeRecurringTransaction(rule.id, anchor)
+    if (failure) failures.push(failure)
+  }
+  return failures
+}
+
 /**
  * Runs synchronizeRecurringTransaction for every active (non-disabled) rule.
- * Module-level lock prevents concurrent sync passes from creating duplicates.
+ * Only one pass runs at a time, so parallel passes cannot create duplicates.
+ *
+ * A call that arrives while a pass is running waits for it and then runs one
+ * more pass. The running pass loaded its rule list before the caller's change
+ * (a rule just created, say), so it would otherwise miss it. Every call that
+ * arrives meanwhile shares that one rerun.
+ *
  * Returns the rules it turned off, so the caller can tell the user.
  */
-export async function synchronizeAllRecurringTransactions(
+export function synchronizeAllRecurringTransactions(
   anchor: Date = new Date(),
 ): Promise<RecurringSyncFailure[]> {
-  if (syncRunning) return []
-  syncRunning = true
-  const failures: RecurringSyncFailure[] = []
-
-  try {
-    const rules = drizzleDb
-      .select(recurringSelection)
-      .from(recurringTransactions)
-      .where(eq(recurringTransactions.disabled, 0))
-      .all()
-    for (const rule of rules) {
-      const failure = await synchronizeRecurringTransaction(rule.id, anchor)
-      if (failure) failures.push(failure)
-    }
-    return failures
-  } finally {
-    syncRunning = false
+  if (currentPass) {
+    // Rerun even if the running pass threw, and never leave a settled
+    // promise behind in `queuedPass`.
+    queuedPass ??= currentPass
+      .catch(() => undefined)
+      .then(() => {
+        queuedPass = null
+        return synchronizeAllRecurringTransactions(anchor)
+      })
+    return queuedPass
   }
+
+  const pass: Promise<RecurringSyncFailure[]> = runSyncPass(anchor).finally(
+    () => {
+      if (currentPass === pass) currentPass = null
+    },
+  )
+  currentPass = pass
+  return pass
 }
 
 export async function findRecurringById(
