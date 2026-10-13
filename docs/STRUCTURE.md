@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-13T09:25:20.953Z
+Generated on: 2026-10-13T09:29:57.511Z
 ```
 ./
 ├── __tests__/
@@ -10,6 +10,7 @@ Generated on: 2026-10-13T09:25:20.953Z
 │   │   ├── services/
 │   │   │   ├── balance-service.test.ts
 │   │   │   ├── recurring-sync.test.ts
+│   │   │   ├── recurring-template-refs.test.ts
 │   │   │   └── recurring-transaction-service.test.ts
 │   │   └── utils/
 │   │       └── get-balance-delta.test.ts
@@ -68,11 +69,13 @@ Generated on: 2026-10-13T09:25:20.953Z
 │   │   ├── 0000_snapshot.json
 │   │   ├── 0001_snapshot.json
 │   │   ├── 0002_snapshot.json
-│   │   └── 0003_snapshot.json
+│   │   ├── 0003_snapshot.json
+│   │   └── 0004_snapshot.json
 │   ├── 0000_safe_maximus.sql
 │   ├── 0001_deep_daredevil.sql
 │   ├── 0002_famous_bastion.sql
 │   ├── 0003_transaction_composite_indexes.sql
+│   ├── 0004_repair_recurring_template_refs.sql
 │   ├── migrations.d.ts
 │   └── migrations.js
 ├── plugins/
@@ -491,7 +494,8 @@ Generated on: 2026-10-13T09:25:20.953Z
 │   │   │   ├── generate-id.ts
 │   │   │   ├── get-balance-delta.ts
 │   │   │   ├── has-attachments-from-extra.ts
-│   │   │   └── import-snapshot.ts
+│   │   │   ├── import-snapshot.ts
+│   │   │   └── recurring-template-refs.ts
 │   │   ├── db.ts
 │   │   ├── pending-migrations.ts
 │   │   ├── transaction.ts
