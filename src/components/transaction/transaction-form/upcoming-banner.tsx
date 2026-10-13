@@ -13,6 +13,8 @@ import { usePendingTransactionsStore } from "~/stores/pending-transactions.store
 import { TransactionKindEnum, TransactionTypeEnum } from "~/types/transactions"
 import { Toast } from "~/utils/toast"
 
+import { isFormReadOnly } from "./form-utils"
+
 /**
  * Shown only when editing a transaction whose `kind` is `upcoming`. Confirms the
  * row in place (applies the balance delta, flips it to `default`) without making
@@ -31,6 +33,8 @@ export function UpcomingBanner({
   const [confirming, setConfirming] = useState(false)
 
   if (transaction?.kind !== TransactionKindEnum.UPCOMING) return null
+  // Confirming a trashed row would apply its amount to the balance.
+  if (isFormReadOnly(transaction)) return null
 
   const isExpense = transaction.type === TransactionTypeEnum.EXPENSE
   const markLabel = isExpense
