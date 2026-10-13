@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { assertMinorUnits, roundToSafeInteger } from "./money"
+import { assertMinorUnits, roundToSafeInteger } from "~/utils/money"
 
 describe("assertMinorUnits", () => {
   it("accepts a safe integer", () => {

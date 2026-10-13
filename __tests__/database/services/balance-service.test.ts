@@ -1,14 +1,13 @@
 import { describe, expect, it, vi } from "vitest"
 
 vi.mock("~/database/drizzle/db", async () => {
-  const { createTestDb } = await import("~/database/test-utils/create-test-db")
+  const { createTestDb } = await import("@tests/helpers/create-test-db")
   return { drizzleDb: await createTestDb() }
 })
 
 import { drizzleDb } from "~/database/drizzle/db"
 import { accounts, transactions } from "~/database/drizzle/schema"
-
-import { getBalanceAtTransaction } from "./balance-service"
+import { getBalanceAtTransaction } from "~/database/services/balance-service"
 
 const now = "2026-01-01T00:00:00.000Z"
 

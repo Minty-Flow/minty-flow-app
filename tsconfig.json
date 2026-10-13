@@ -6,7 +6,8 @@
     "useDefineForClassFields": false,
     "types": ["node"],
     "paths": {
-      "~/*": ["./src/*"]
+      "~/*": ["./src/*"],
+      "@tests/*": ["./__tests__/*"]
     }
   },
   "include": [

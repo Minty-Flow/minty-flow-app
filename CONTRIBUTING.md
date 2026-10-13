@@ -70,11 +70,17 @@ pnpm types                    # tsc --noEmit
 pnpm test                     # Vitest
 ```
 
-Tests run with Vitest and live next to the code as `*.test.ts`. They cover
-pure data-layer logic and services against an in-memory SQLite; UI is verified
-by running the app. To test a service, mock `~/database/drizzle/db` with
-`createTestDb()` from `src/database/test-utils/create-test-db.ts` (see
-`balance-service.test.ts`). Add a regression test with every data-layer fix.
+Tests run with Vitest. They live in a root `__tests__/` folder that mirrors
+`src/` (`src/utils/money.ts` is tested by `__tests__/utils/money.test.ts`), the
+layout Expo recommends. Nothing test-related sits in `src/`, and `src/app` stays
+route-only. Shared helpers go in `__tests__/helpers/`, imported as
+`@tests/helpers/...`.
+
+Tests cover pure data-layer logic and services against an in-memory SQLite; UI
+is verified by running the app. To test a service, mock `~/database/drizzle/db`
+with `createTestDb()` from `@tests/helpers/create-test-db` (see
+`__tests__/database/services/balance-service.test.ts`). Add a regression test
+with every data-layer fix.
 
 ## Translation guide
 

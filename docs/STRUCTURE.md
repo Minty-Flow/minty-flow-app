@@ -1,7 +1,23 @@
 # Project Structure
-Generated on: 2026-10-13T09:01:00.457Z
+Generated on: 2026-10-13T09:03:44.782Z
 ```
 ./
+├── __tests__/
+│   ├── database/
+│   │   ├── drizzle/
+│   │   │   └── read-models/
+│   │   │       └── stats-data.test.ts
+│   │   ├── services/
+│   │   │   ├── balance-service.test.ts
+│   │   │   └── recurring-transaction-service.test.ts
+│   │   └── utils/
+│   │       └── get-balance-delta.test.ts
+│   ├── helpers/
+│   │   ├── create-test-db.test.ts
+│   │   └── create-test-db.ts
+│   └── utils/
+│       ├── money.test.ts
+│       └── recurrence.test.ts
 ├── .github/
 │   └── workflows/
 │       ├── board-sync.yml
@@ -447,7 +463,6 @@ Generated on: 2026-10-13T09:01:00.457Z
 │   │   │   │   ├── goal-read-model.ts
 │   │   │   │   ├── loan-read-model.ts
 │   │   │   │   ├── progress-read-model.ts
-│   │   │   │   ├── stats-data.test.ts
 │   │   │   │   ├── stats-data.ts
 │   │   │   │   ├── stats-read-model.ts
 │   │   │   │   ├── tag-read-model.ts
@@ -460,7 +475,6 @@ Generated on: 2026-10-13T09:01:00.457Z
 │   │   │   └── transaction.mapper.ts
 │   │   ├── services/
 │   │   │   ├── account-service.ts
-│   │   │   ├── balance-service.test.ts
 │   │   │   ├── balance-service.ts
 │   │   │   ├── budget-service.ts
 │   │   │   ├── category-service.ts
@@ -468,17 +482,13 @@ Generated on: 2026-10-13T09:01:00.457Z
 │   │   │   ├── goal-service.ts
 │   │   │   ├── ledger-service.ts
 │   │   │   ├── loan-service.ts
-│   │   │   ├── recurring-transaction-service.test.ts
 │   │   │   ├── recurring-transaction-service.ts
 │   │   │   └── tag-service.ts
 │   │   ├── test-utils/
-│   │   │   ├── create-test-db.test.ts
-│   │   │   └── create-test-db.ts
 │   │   ├── types/
 │   │   │   └── rows.ts
 │   │   ├── utils/
 │   │   │   ├── generate-id.ts
-│   │   │   ├── get-balance-delta.test.ts
 │   │   │   ├── get-balance-delta.ts
 │   │   │   ├── has-attachments-from-extra.ts
 │   │   │   └── import-snapshot.ts
@@ -594,7 +604,6 @@ Generated on: 2026-10-13T09:01:00.457Z
 │       ├── live-progress.ts
 │       ├── logger.ts
 │       ├── mmkv-storage.ts
-│       ├── money.test.ts
 │       ├── money.ts
 │       ├── notify-format-change.ts
 │       ├── number-format.ts
@@ -602,7 +611,6 @@ Generated on: 2026-10-13T09:01:00.457Z
 │       ├── parse-math-expression.ts
 │       ├── pending-transactions.ts
 │       ├── planning-progress.ts
-│       ├── recurrence.test.ts
 │       ├── recurrence.ts
 │       ├── reload-app.ts
 │       ├── stats-date-range.ts

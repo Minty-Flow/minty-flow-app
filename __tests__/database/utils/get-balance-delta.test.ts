@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { getBalanceDelta } from "./get-balance-delta"
+import { getBalanceDelta } from "~/database/utils/get-balance-delta"
 
 describe("getBalanceDelta", () => {
   it("adds income", () => {
