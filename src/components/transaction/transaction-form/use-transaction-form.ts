@@ -187,8 +187,8 @@ export function useTransactionForm({
     ? budgets.filter(
         (b) =>
           b.accountIds.includes(accountId) &&
-          (b.categoryIds.length === 0 ||
-            (categoryId && b.categoryIds.includes(categoryId))),
+          categoryId &&
+          b.categoryIds.includes(categoryId),
       )
     : []
   // Clear goalId/budgetId/loanId when account changes and current selection is no longer valid
@@ -772,9 +772,7 @@ export function useTransactionForm({
     // Clear budget if it no longer matches the new category
     if (budgetId) {
       const valid = budgets.some(
-        (b) =>
-          b.id === budgetId &&
-          (b.categoryIds.length === 0 || b.categoryIds.includes(id)),
+        (b) => b.id === budgetId && b.categoryIds.includes(id),
       )
       if (!valid) {
         setValue("budgetId", null, { shouldDirty: false })

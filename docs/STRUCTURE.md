@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-13T13:39:24.198Z
+Generated on: 2026-10-13T13:45:00.166Z
 ```
 ./
 ├── __tests__/
@@ -24,6 +24,7 @@ Generated on: 2026-10-13T13:39:24.198Z
 │   │   │   ├── account-balance-adjustment.test.ts
 │   │   │   ├── backup-after-account-delete.test.ts
 │   │   │   ├── balance-service.test.ts
+│   │   │   ├── budget-category-delete.test.ts
 │   │   │   ├── destroy-account-with-loans.test.ts
 │   │   │   ├── empty-trash.test.ts
 │   │   │   ├── loan-type-switch.test.ts
@@ -47,6 +48,7 @@ Generated on: 2026-10-13T13:39:24.198Z
 │   │   ├── exchange-rates.test.ts
 │   │   └── pending-transaction-notifications.test.ts
 │   └── utils/
+│       ├── live-progress.test.ts
 │       ├── money.test.ts
 │       └── recurrence.test.ts
 ├── .github/

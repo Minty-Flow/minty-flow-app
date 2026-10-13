@@ -30,13 +30,15 @@ const notTransferLeg = sql`NOT EXISTS (
 export function useBudgetSpent(budget: Budget, from: Date, to: Date): number {
   const accountIds =
     budget.accountIds.length > 0 ? budget.accountIds : ["__none__"]
+  const categoryIds =
+    budget.categoryIds.length > 0 ? budget.categoryIds : ["__none__"]
   const fromIso = from.toISOString()
   const toIso = to.toISOString()
   const key = JSON.stringify([
     budget.id,
     budget.currencyCode,
     accountIds,
-    budget.categoryIds,
+    categoryIds,
     fromIso,
     toIso,
   ])
@@ -56,9 +58,7 @@ export function useBudgetSpent(budget: Budget, from: Date, to: Date): number {
           inArray(transactions.accountId, accountIds),
           gte(transactions.transactionDate, fromIso),
           lte(transactions.transactionDate, toIso),
-          budget.categoryIds.length > 0
-            ? inArray(transactions.categoryId, budget.categoryIds)
-            : undefined,
+          inArray(transactions.categoryId, categoryIds),
           notTransferLeg,
         ),
       ),

@@ -1,7 +1,12 @@
-import { eq } from "drizzle-orm"
+import { and, eq, inArray, sql } from "drizzle-orm"
 
-import { categories, transactions } from "~/database/drizzle/schema"
-import { runInTransaction } from "~/database/transaction"
+import {
+  budgetCategories,
+  budgets,
+  categories,
+  transactions,
+} from "~/database/drizzle/schema"
+import { type DbTransaction, runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
 import { clearCategoryFromRecurringTemplates } from "~/database/utils/recurring-template-refs"
 import type {
@@ -53,8 +58,41 @@ export async function updateCategoryById(
   })
 }
 
+/**
+ * A budget needs at least one category, and the cascade on `budget_categories`
+ * removes the link when the category goes. Switch off every active budget
+ * whose only category is `categoryId` so it does not sit there with none.
+ * Call it before the category row is deleted.
+ */
+function deactivateBudgetsLosingTheirLastCategory(
+  db: DbTransaction,
+  categoryId: string,
+): void {
+  db.update(budgets)
+    .set({ isActive: 0, updatedAt: new Date().toISOString() })
+    .where(
+      and(
+        eq(budgets.isActive, 1),
+        inArray(
+          budgets.id,
+          db
+            .select({ id: budgetCategories.budgetId })
+            .from(budgetCategories)
+            .where(eq(budgetCategories.categoryId, categoryId)),
+        ),
+        sql`NOT EXISTS (
+          SELECT 1 FROM ${budgetCategories}
+          WHERE ${budgetCategories.budgetId} = ${budgets.id}
+            AND ${budgetCategories.categoryId} <> ${categoryId}
+        )`,
+      ),
+    )
+    .run()
+}
+
 export async function deleteCategoryById(id: string): Promise<void> {
   await runInTransaction("category.delete", (db) => {
+    deactivateBudgetsLosingTheirLastCategory(db, id)
     db.update(transactions)
       .set({ categoryId: null, updatedAt: new Date().toISOString() })
       .where(eq(transactions.categoryId, id))
