@@ -1297,12 +1297,16 @@ export async function detachFromRule(id: string): Promise<void> {
  * Apply the edited fields to every pending instance of a rule from `fromDate`
  * on. Each instance keeps its own date; `dateShiftMs` moves all of them by the
  * same amount when the user changed the edited instance's date.
+ *
+ * Instances stay pending: `isPending` belongs to the edited instance, and
+ * copying it would confirm future instances early. The manual-confirmation
+ * flag is copied only when `applyManualConfirmation` is set.
  */
 export async function updateFutureRecurringInstances(
   ruleId: string,
   fromDate: Date,
-  payload: Omit<RecurringEditPayload, "transactionDate">,
-  dateShiftMs = 0,
+  payload: Omit<RecurringEditPayload, "transactionDate" | "isPending">,
+  { dateShiftMs = 0, applyManualConfirmation = false } = {},
 ): Promise<void> {
   const rows = drizzleDb
     .select({
@@ -1333,8 +1337,9 @@ export async function updateFutureRecurringInstances(
         accountId: payload.accountId,
         title: payload.title,
         description: payload.description,
-        isPending: payload.isPending,
-        requiresManualConfirmation: payload.requiresManualConfirmation,
+        requiresManualConfirmation: applyManualConfirmation
+          ? payload.requiresManualConfirmation
+          : undefined,
         tags: payload.tags,
         extra: payload.extra,
         subtype: payload.subtype,

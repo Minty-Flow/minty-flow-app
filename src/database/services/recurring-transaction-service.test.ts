@@ -24,7 +24,14 @@ const now = "2026-01-01T00:00:00.000Z"
 const DAY_MS = 24 * 60 * 60 * 1000
 const EDITED = new Date("2026-02-15T00:00:00.000Z")
 
-function seedRule(ruleId: string) {
+type SeedOptions = {
+  /** The edited (first) instance is already confirmed, the rest are pending. */
+  confirmedFirst?: boolean
+  /** `requires_manual_confirmation` stored on the future instances. */
+  futureManual?: 0 | 1
+}
+
+function seedRule(ruleId: string, options: SeedOptions = {}) {
   drizzleDb
     .insert(recurringTransactions)
     .values({
@@ -55,7 +62,10 @@ function seedRule(ruleId: string) {
         amount: 1_000,
         type: "expense",
         kind: "subscription",
-        isPending: 1 as const,
+        isPending:
+          options.confirmedFirst && i === 0 ? (0 as const) : (1 as const),
+        requiresManualConfirmation:
+          i === 0 ? (0 as const) : (options.futureManual ?? 0),
         recurringId: ruleId,
         transactionDate: `${d}T00:00:00.000Z`,
         createdAt: now,
@@ -65,7 +75,10 @@ function seedRule(ruleId: string) {
     .run()
 }
 
-function editPayload(transactionDate: Date): RecurringEditPayload {
+function editPayload(
+  transactionDate: Date,
+  overrides: Partial<RecurringEditPayload> = {},
+): RecurringEditPayload {
   return {
     amount: 1_500,
     type: "expense",
@@ -74,7 +87,28 @@ function editPayload(transactionDate: Date): RecurringEditPayload {
     accountId: "acc-1",
     title: "Netflix 4K",
     isPending: true,
+    ...overrides,
   } as RecurringEditPayload
+}
+
+function rowsOf(ruleId: string) {
+  return drizzleDb
+    .select({
+      isPending: transactions.isPending,
+      manual: transactions.requiresManualConfirmation,
+    })
+    .from(transactions)
+    .where(eq(transactions.recurringId, ruleId))
+    .orderBy(transactions.transactionDate)
+    .all()
+}
+
+function accountBalance() {
+  return drizzleDb
+    .select({ balance: accounts.balance })
+    .from(accounts)
+    .where(eq(accounts.id, "acc-1"))
+    .get()?.balance
 }
 
 function datesOf(ruleId: string) {
@@ -135,6 +169,54 @@ describe("applyRecurringEditScope this_and_future", () => {
       "2026-02-17T00:00:00.000Z",
       "2026-03-17T00:00:00.000Z",
       "2026-04-17T00:00:00.000Z",
+    ])
+  })
+
+  it("leaves future instances pending when a confirmed instance is edited", async () => {
+    seedRule("rule-pending", { confirmedFirst: true })
+    const before = accountBalance()
+
+    await applyRecurringEditScope({
+      scope: "this_and_future",
+      transactionId: "rule-pending-t0",
+      transactionDate: EDITED,
+      ruleId: "rule-pending",
+      payload: editPayload(EDITED, { isPending: false }),
+    })
+
+    expect(rowsOf("rule-pending").map((r) => r.isPending)).toEqual([0, 1, 1])
+    // Only the edited instance's amount change (-1000 -> -1500) reaches the
+    // balance; pending future instances do not.
+    expect(accountBalance()).toBe((before ?? 0) - 500)
+  })
+
+  it("does not copy the manual-confirmation flag when it is unchanged", async () => {
+    seedRule("rule-manual-same", { futureManual: 1 })
+
+    await applyRecurringEditScope({
+      scope: "this_and_future",
+      transactionId: "rule-manual-same-t0",
+      transactionDate: EDITED,
+      ruleId: "rule-manual-same",
+      payload: editPayload(EDITED, { requiresManualConfirmation: false }),
+    })
+
+    expect(rowsOf("rule-manual-same").map((r) => r.manual)).toEqual([0, 1, 1])
+  })
+
+  it("copies the manual-confirmation flag when the user changed it", async () => {
+    seedRule("rule-manual-changed")
+
+    await applyRecurringEditScope({
+      scope: "this_and_future",
+      transactionId: "rule-manual-changed-t0",
+      transactionDate: EDITED,
+      ruleId: "rule-manual-changed",
+      payload: editPayload(EDITED, { requiresManualConfirmation: true }),
+    })
+
+    expect(rowsOf("rule-manual-changed").map((r) => r.manual)).toEqual([
+      1, 1, 1,
     ])
   })
 })
