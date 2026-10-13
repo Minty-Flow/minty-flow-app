@@ -301,7 +301,7 @@ export function useTransactionForm({
     : null
 
   // RS-1: a new subscription/repetitive starts at the form's transactionDate
-  // (which is `new Date()` at open for these kinds — Date field is hidden).
+  // (`new Date()` at open, editable through the Date field).
   useEffect(() => {
     if (isNew && isRecurringKind && recurring.startDate !== date) {
       setRecurring({ startDate: date })
@@ -449,9 +449,11 @@ export function useTransactionForm({
         router.back()
         return
       }
-      const effectiveDate = isRecurringKind
-        ? recurring.startDate
-        : data.transactionDate
+      // Only a new rule starts at the recurrence card's start date. An edited
+      // instance keeps its own date; `recurring.startDate` is the rule's first
+      // date there.
+      const effectiveDate =
+        isNew && isRecurringKind ? recurring.startDate : data.transactionDate
       const attachmentsJson =
         attachmentState.list.length > 0
           ? JSON.stringify(attachmentState.list.map(toStoredAttachment))

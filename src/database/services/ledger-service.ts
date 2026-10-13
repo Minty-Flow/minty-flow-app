@@ -1293,19 +1293,42 @@ export async function detachFromRule(id: string): Promise<void> {
   })
 }
 
+/**
+ * Apply the edited fields to every pending instance of a rule from `fromDate`
+ * on. Each instance keeps its own date; `dateShiftMs` moves all of them by the
+ * same amount when the user changed the edited instance's date.
+ */
 export async function updateFutureRecurringInstances(
   ruleId: string,
   fromDate: Date,
-  payload: RecurringEditPayload,
+  payload: Omit<RecurringEditPayload, "transactionDate">,
+  dateShiftMs = 0,
 ): Promise<void> {
-  const ids = getRuleInstanceIds(ruleId, { fromDate, pendingOnly: true })
+  const rows = drizzleDb
+    .select({
+      id: transactions.id,
+      transactionDate: transactions.transactionDate,
+    })
+    .from(transactions)
+    .where(
+      and(
+        eq(transactions.recurringId, ruleId),
+        gte(transactions.transactionDate, fromDate.toISOString()),
+        eq(transactions.isPending, 1),
+        eq(transactions.isDeleted, 0),
+      ),
+    )
+    .all()
   if (payload.amount !== undefined) assertMinorUnits(payload.amount)
   await runInTransaction("recurring.updateFuture", (db) => {
-    for (const id of ids) {
+    for (const { id, transactionDate } of rows) {
       updateTransactionInTx(db, id, {
         amount: payload.amount,
         type: payload.type,
-        transactionDate: payload.transactionDate,
+        transactionDate:
+          dateShiftMs === 0
+            ? undefined
+            : new Date(new Date(transactionDate).getTime() + dateShiftMs),
         categoryId: payload.categoryId,
         accountId: payload.accountId,
         title: payload.title,

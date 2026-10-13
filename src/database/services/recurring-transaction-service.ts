@@ -364,7 +364,12 @@ export async function applyRecurringEditScope({
     await deleteFutureRecurringInstances(ruleId, fromDate)
   } else if (!recurrenceChanged) {
     // Pure field-only edit: update field values on future instances.
-    await updateFutureRecurringInstances(ruleId, transactionDate, payload)
+    await updateFutureRecurringInstances(
+      ruleId,
+      transactionDate,
+      payload,
+      payload.transactionDate.getTime() - transactionDate.getTime(),
+    )
   }
 
   // Update template fields.
