@@ -193,7 +193,6 @@ const styles = StyleSheet.create((theme) => ({
     ...theme.typography.labelMedium,
     color: theme.colors.error,
     marginTop: 4,
-    textAlign: "center",
   },
   settingsList: {
     gap: 0,

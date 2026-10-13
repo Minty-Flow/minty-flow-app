@@ -6,6 +6,11 @@ export const budgetModifyStyles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
     paddingTop: 12,
   },
+  // Inset of a validation message under a full-width row, so it lines up with
+  // the row's text.
+  rowError: {
+    paddingHorizontal: 20,
+  },
   periodSection: {
     paddingHorizontal: 20,
     gap: 8,

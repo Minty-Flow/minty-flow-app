@@ -698,7 +698,8 @@
           "left": "left",
           "allAccounts": "All Accounts",
           "alertThresholdReached": "Alert threshold reached",
-          "disabled": "Disabled",
+          "inactive": "Inactive",
+          "needsCategory": "Needs a category",
           "dayOf": "day {{current}}/{{total}}",
           "dayXofY": "Day {{current}} of {{total}}",
           "uncategorized": "Uncategorized",
@@ -1342,15 +1343,17 @@
         "deleteLabel": "Permanently delete",
         "deleteSheet": {
           "title": "Delete {{name}}?",
-          "descriptionWithCount_one": "This category is used by {{count}} transaction. Deleting will unlink it. This cannot be undone.",
-          "descriptionWithCount_other": "This category is used by {{count}} transactions. Deleting will unlink them. This cannot be undone.",
+          "descriptionWithCount_one": "This category is used by {{count}} transaction. Deleting it removes the category from that transaction, which becomes uncategorized. This cannot be undone.",
+          "descriptionWithCount_other": "This category is used by {{count}} transactions. Deleting it removes the category from them, and they become uncategorized. This cannot be undone.",
+          "descriptionBudgets_one": "The budget {{names}} uses this category as its only one and will be switched off until you give it a category.",
+          "descriptionBudgets_other": "The budgets {{names}} use this category as their only one and will be switched off until you give each a category.",
+          "deleteAnyway": "Delete anyway",
           "descriptionEmpty": "Deleting this category cannot be undone."
         },
         "toast": {
           "notFound": "Category not found",
           "cannotDelete": "Cannot delete category",
-          "cannotDeleteDescription_one": "This category has {{count}} transaction. Please remove or reassign all transactions before deleting.",
-          "cannotDeleteDescription_other": "This category has {{count}} transactions. Please remove or reassign all transactions before deleting.",
+          "cannotDeleteLoans": "Loans use this category: {{names}}. Change the category of those loans first.",
           "deleteFailed": "Failed to delete category. Please try again.",
           "createFailed": "Failed to create category. Please try again.",
           "updateFailed": "Failed to update category. Please try again."

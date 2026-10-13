@@ -229,7 +229,9 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
             ) : (
               <View style={styles.disabledBadge}>
                 <Text style={styles.disabledText}>
-                  {t("screens.settings.budgets.card.disabled")}
+                  {budget.categoryIds.length === 0
+                    ? t("screens.settings.budgets.card.needsCategory")
+                    : t("screens.settings.budgets.card.inactive")}
                 </Text>
               </View>
             )}
