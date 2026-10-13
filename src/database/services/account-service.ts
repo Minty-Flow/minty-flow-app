@@ -276,10 +276,34 @@ export async function unarchiveAccount(id: string): Promise<void> {
 
 // ── Destroy (cascading) ───────────────────────────────────────────────────────
 
+/**
+ * Thrown by {@link destroyAccount} when the account still holds loans. A loan
+ * cannot be deleted along with its account without taking its transactions
+ * too, so the caller must move or delete the loans first.
+ */
+export class AccountHasLoansError extends Error {
+  readonly loanNames: string[]
+
+  constructor(loanNames: string[]) {
+    super(`Account has ${loanNames.length} loan(s): ${loanNames.join(", ")}`)
+    this.name = "AccountHasLoansError"
+    this.loanNames = loanNames
+  }
+}
+
 export async function destroyAccount(id: string): Promise<void> {
   const now = new Date().toISOString()
 
   await runInTransaction("account.destroy", (db) => {
+    const accountLoans = db
+      .select({ name: loans.name })
+      .from(loans)
+      .where(eq(loans.accountId, id))
+      .all()
+    if (accountLoans.length > 0) {
+      throw new AccountHasLoansError(accountLoans.map((loan) => loan.name))
+    }
+
     const txs = db
       .select()
       .from(transactions)
