@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-13T12:38:31.126Z
+Generated on: 2026-10-13T12:50:37.155Z
 ```
 ./
 ├── __tests__/
@@ -11,11 +11,14 @@ Generated on: 2026-10-13T12:38:31.126Z
 │   │           ├── transfer-edit-from-credit-leg.test.ts
 │   │           └── transfer-rate.test.ts
 │   ├── database/
+│   │   ├── backup/
+│   │   │   └── backup-format.test.ts
 │   │   ├── drizzle/
 │   │   │   └── read-models/
 │   │   │       └── stats-data.test.ts
 │   │   ├── services/
 │   │   │   ├── account-balance-adjustment.test.ts
+│   │   │   ├── backup-after-account-delete.test.ts
 │   │   │   ├── balance-service.test.ts
 │   │   │   ├── destroy-account-with-loans.test.ts
 │   │   │   ├── empty-trash.test.ts

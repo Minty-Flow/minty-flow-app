@@ -430,7 +430,12 @@ export function validateBackup(json: string): ValidateBackupResult {
           String(row.json_transaction_template),
         ) as RawRow
         assertMinorUnits(template.amount as number)
-        if (!accountIds.has(String(template.accountId))) {
+        // Deleting an account turns its recurring rules off but keeps them, with
+        // the dead account id in the template, so a backup taken afterwards has
+        // such rules. A disabled rule never reads its account again; only an
+        // enabled one needs the account to exist.
+        const disabled = row.disabled === 1 || row.disabled === true
+        if (!disabled && !accountIds.has(String(template.accountId))) {
           throw new Error("Unknown recurring account")
         }
       } catch {
