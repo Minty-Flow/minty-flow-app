@@ -1,23 +1,21 @@
-import { and, eq, lt, or, sql } from "drizzle-orm"
+import { and, eq, gt, or, sql } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
-import { transactions } from "~/database/drizzle/schema"
-import type { RowTransaction } from "~/database/types/rows"
+import { accounts, transactions } from "~/database/drizzle/schema"
 import { getBalanceDelta } from "~/database/utils/get-balance-delta"
 import type { Transaction, TransactionType } from "~/types/transactions"
 
 /**
  * Compute the account's running balance AFTER a given transaction.
  *
- * Sums all non-pending, non-deleted transactions on the account up to and
- * including the target transaction (ordered by transaction_date, created_at).
- * O(k) where k = transactions before this one in the account.
+ * Starts from the account's current balance (which already includes its
+ * initial balance and every confirmed row) and takes off the confirmed,
+ * non-deleted rows that come after the target (ordered by transaction_date,
+ * created_at). Pending rows never touch the balance, so a pending target shows
+ * the balance at its position. O(k) where k = transactions after this one.
  */
 export async function getBalanceAtTransaction(
-  transaction: Pick<
-    Transaction,
-    "id" | "accountId" | "transactionDate" | "amount" | "type"
-  >,
+  transaction: Pick<Transaction, "id" | "accountId" | "transactionDate">,
 ): Promise<number> {
   const targetDate = transaction.transactionDate.toISOString()
   const target = drizzleDb
@@ -25,15 +23,17 @@ export async function getBalanceAtTransaction(
     .from(transactions)
     .where(eq(transactions.id, transaction.id))
     .get()
+  const account = drizzleDb
+    .select({ balance: accounts.balance })
+    .from(accounts)
+    .where(eq(accounts.id, transaction.accountId))
+    .get()
 
-  const rows = drizzleDb
+  const laterRows = drizzleDb
     .select({
-      id: transactions.id,
       amount: transactions.amount,
       type: transactions.type,
       subtype: transactions.subtype,
-      transaction_date: transactions.transactionDate,
-      created_at: transactions.createdAt,
     })
     .from(transactions)
     .where(
@@ -42,30 +42,24 @@ export async function getBalanceAtTransaction(
         eq(transactions.isPending, 0),
         eq(transactions.isDeleted, 0),
         or(
-          lt(transactions.transactionDate, targetDate),
+          gt(transactions.transactionDate, targetDate),
           and(
             eq(transactions.transactionDate, targetDate),
-            lt(transactions.createdAt, target?.createdAt ?? ""),
+            gt(transactions.createdAt, target?.createdAt ?? ""),
           ),
         ),
         sql`${transactions.id} != ${transaction.id}`,
       ),
     )
-    .orderBy(transactions.transactionDate, transactions.createdAt)
-    .all() satisfies Pick<
-    RowTransaction,
-    "id" | "amount" | "type" | "subtype" | "transaction_date" | "created_at"
-  >[]
+    .all()
 
-  let balance = 0
-  for (const row of rows) {
-    balance += getBalanceDelta(
+  let balance = account?.balance ?? 0
+  for (const row of laterRows) {
+    balance -= getBalanceDelta(
       row.amount,
       row.type as TransactionType,
       row.subtype,
     )
   }
-  // Add target transaction itself
-  balance += getBalanceDelta(transaction.amount, transaction.type)
   return balance
 }

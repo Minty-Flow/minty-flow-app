@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-13T09:03:44.782Z
+Generated on: 2026-10-13T09:06:32.036Z
 ```
 ./
 ├── __tests__/
@@ -484,7 +484,6 @@ Generated on: 2026-10-13T09:03:44.782Z
 │   │   │   ├── loan-service.ts
 │   │   │   ├── recurring-transaction-service.ts
 │   │   │   └── tag-service.ts
-│   │   ├── test-utils/
 │   │   ├── types/
 │   │   │   └── rows.ts
 │   │   ├── utils/
