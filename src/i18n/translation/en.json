@@ -1170,6 +1170,8 @@
         "transferUpdated": "Transfer updated",
         "recurringCreated": "Recurring transaction created",
         "recurringCreateFailed": "Failed to create recurring transaction",
+        "recurringStopped": "Recurring transaction stopped",
+        "recurringStoppedDescription": "\"{{title}}\" could not be generated and was turned off. Check its account and category.",
         "transactionCreated": "Transaction created",
         "transactionUpdated": "Transaction updated",
         "saveFailed": "Failed to save transaction",

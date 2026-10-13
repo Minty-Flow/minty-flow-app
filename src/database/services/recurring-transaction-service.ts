@@ -442,10 +442,25 @@ export async function applyRecurringDeleteScope({
 /* Concurrency lock — prevents parallel sync from creating duplicates. */
 let syncRunning = false
 
+/** A rule the sync turned off because it can never generate. */
+export interface RecurringSyncFailure {
+  ruleId: string
+  title: string | null
+}
+
+/**
+ * Whether a sync error will repeat on every sync: a broken reference or
+ * constraint, or a transfer rule without a destination. Anything else (a busy
+ * database, say) is left to retry.
+ */
+export function isPermanentRuleError(message: string): boolean {
+  return /constraint failed|missing transferToAccountId/i.test(message)
+}
+
 async function synchronizeRecurringTransaction(
   ruleId: string,
   anchor: Date = new Date(),
-): Promise<void> {
+): Promise<RecurringSyncFailure | null> {
   /**
    * Safety valve:
    * We want to fully catch up normal offline periods (days/months),
@@ -460,7 +475,7 @@ async function synchronizeRecurringTransaction(
     .where(eq(recurringTransactions.id, ruleId))
     .get()
 
-  if (!rule || rule.disabled) return
+  if (!rule || rule.disabled) return null
 
   try {
     const range = parseTimeRange(rule)
@@ -481,7 +496,7 @@ async function synchronizeRecurringTransaction(
       // If we've already generated up to (or beyond) the anchor,
       // there is nothing left to do.
       if (lastGenerated && lastGenerated.getTime() >= anchor.getTime()) {
-        return
+        return null
       }
 
       const fromDate = new Date(range.from)
@@ -496,7 +511,7 @@ async function synchronizeRecurringTransaction(
 
       const nextOccurrence = nextAbsoluteOccurrence(rules, range, nextAnchor)
 
-      if (!nextOccurrence) return
+      if (!nextOccurrence) return null
 
       /**
        * Defensive guard:
@@ -506,7 +521,7 @@ async function synchronizeRecurringTransaction(
         lastGenerated &&
         nextOccurrence.getTime() <= lastGenerated.getTime()
       ) {
-        return
+        return null
       }
 
       // ------------------------------------------------------------------
@@ -537,7 +552,7 @@ async function synchronizeRecurringTransaction(
         const effectiveLastMs = Math.max(...initialDates)
 
         if (nextOccurrence.getTime() <= effectiveLastMs) {
-          return
+          return null
         }
       }
 
@@ -657,26 +672,41 @@ async function synchronizeRecurringTransaction(
       processed,
       limit: MAX_CATCH_UP_OCCURRENCES,
     })
+    return null
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
     logger.error(
       "[RecurringSync] failed to synchronize recurring transaction",
-      {
-        ruleId,
-        error: err instanceof Error ? err.message : String(err),
-      },
+      { ruleId, error: message },
     )
+    // A transient error (busy database) retries on the next sync. A rule that
+    // can never generate would fail on every sync, so turn it off.
+    if (!isPermanentRuleError(message)) return null
+    try {
+      await disableRecurringRule(ruleId)
+    } catch (disableErr) {
+      logger.error("[RecurringSync] failed to disable a failing rule", {
+        ruleId,
+        error:
+          disableErr instanceof Error ? disableErr.message : String(disableErr),
+      })
+      return null
+    }
+    return { ruleId, title: parseTemplate(rule).title }
   }
 }
 
 /**
  * Runs synchronizeRecurringTransaction for every active (non-disabled) rule.
  * Module-level lock prevents concurrent sync passes from creating duplicates.
+ * Returns the rules it turned off, so the caller can tell the user.
  */
 export async function synchronizeAllRecurringTransactions(
   anchor: Date = new Date(),
-): Promise<void> {
-  if (syncRunning) return
+): Promise<RecurringSyncFailure[]> {
+  if (syncRunning) return []
   syncRunning = true
+  const failures: RecurringSyncFailure[] = []
 
   try {
     const rules = drizzleDb
@@ -685,8 +715,10 @@ export async function synchronizeAllRecurringTransactions(
       .where(eq(recurringTransactions.disabled, 0))
       .all()
     for (const rule of rules) {
-      await synchronizeRecurringTransaction(rule.id, anchor)
+      const failure = await synchronizeRecurringTransaction(rule.id, anchor)
+      if (failure) failures.push(failure)
     }
+    return failures
   } finally {
     syncRunning = false
   }
