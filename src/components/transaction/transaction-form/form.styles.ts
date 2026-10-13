@@ -111,6 +111,12 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     paddingVertical: TRIGGER_PAD,
     paddingHorizontal: H_PAD,
   },
+  conversionAttribution: {
+    ...theme.typography.bodyMedium,
+    color: theme.colors.onSecondary,
+    opacity: 0.7,
+    textDecorationLine: "underline",
+  },
   conversionRateSummaryLabel: {
     ...theme.typography.bodyMedium,
     fontWeight: "600",

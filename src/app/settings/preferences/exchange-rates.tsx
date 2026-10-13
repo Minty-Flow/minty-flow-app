@@ -28,6 +28,10 @@ import {
   INITIAL_EDITOR_STATE,
 } from "../../../hooks/exchange-rates-editor.reducer"
 
+// Attribution required by the open.er-api.com terms of use.
+const EXCHANGE_RATE_API_URL = "https://www.exchangerate-api.com"
+const EXCHANGE_RATE_API_ATTRIBUTION = "Rates By Exchange Rate API"
+// Fills the codes the primary source lacks (crypto and a few ISO codes).
 const EXCHANGE_API_URL = "https://github.com/fawazahmed0/exchange-api"
 async function createRatesPromise(): Promise<{
   rates: ExchangeRates | null
@@ -210,10 +214,24 @@ function ExchangeRatesContent({
   }
   const listHeader = (
     <View style={styles.listHeader}>
-      <ExternalLink href={EXCHANGE_API_URL} pressableStyle={styles.apiCard}>
+      <ExternalLink
+        href={EXCHANGE_RATE_API_URL}
+        pressableStyle={styles.apiCard}
+      >
         <View style={styles.apiCardContent}>
           <Text style={styles.apiTitle}>
             {t("screens.settings.exchangeRates.apiTitle")}
+          </Text>
+          <Text style={styles.apiUrl}>{EXCHANGE_RATE_API_ATTRIBUTION}</Text>
+        </View>
+      </ExternalLink>
+      <ExternalLink
+        href={EXCHANGE_API_URL}
+        pressableStyle={[styles.apiCard, styles.apiCardStacked]}
+      >
+        <View style={styles.apiCardContent}>
+          <Text style={styles.apiTitle}>
+            {t("screens.settings.exchangeRates.apiTitleSecondary")}
           </Text>
           <Text style={styles.apiUrl}>{EXCHANGE_API_URL}</Text>
         </View>
@@ -332,6 +350,10 @@ const styles = StyleSheet.create((theme) => ({
     marginHorizontal: 20,
     marginTop: 16,
     marginBottom: 20,
+  },
+  // Sits directly under the first source card.
+  apiCardStacked: {
+    marginTop: 0,
   },
   apiCardContent: {
     flexDirection: "column",
