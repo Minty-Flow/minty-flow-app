@@ -164,6 +164,7 @@
       }
     },
     "accounts": {
+      "balanceAdjustmentTitle": "تعديل الرصيد",
       "title": "جميع الحسابات",
       "addNew": "إضافة حساب جديد",
       "addNewAccount": "حساب جديد",

@@ -1,9 +1,11 @@
 # Project Structure
-Generated on: 2026-10-13T12:24:02.329Z
+Generated on: 2026-10-13T12:32:52.919Z
 ```
 ./
 ├── __tests__/
 │   ├── components/
+│   │   ├── accounts/
+│   │   │   └── account-update-payload.test.ts
 │   │   └── transaction/
 │   │       └── transaction-form/
 │   │           ├── transfer-edit-from-credit-leg.test.ts
@@ -13,6 +15,7 @@ Generated on: 2026-10-13T12:24:02.329Z
 │   │   │   └── read-models/
 │   │   │       └── stats-data.test.ts
 │   │   ├── services/
+│   │   │   ├── account-balance-adjustment.test.ts
 │   │   │   ├── balance-service.test.ts
 │   │   │   ├── destroy-account-with-loans.test.ts
 │   │   │   ├── empty-trash.test.ts
@@ -28,6 +31,8 @@ Generated on: 2026-10-13T12:24:02.329Z
 │   ├── helpers/
 │   │   ├── create-test-db.test.ts
 │   │   └── create-test-db.ts
+│   ├── schemas/
+│   │   └── accounts.schema.test.ts
 │   ├── services/
 │   │   ├── exchange-rate-sources.test.ts
 │   │   ├── exchange-rates.test.ts
@@ -208,6 +213,7 @@ Generated on: 2026-10-13T12:24:02.329Z
 │   │   │   │   ├── account-modify-content.tsx
 │   │   │   │   ├── account-modify.styles.ts
 │   │   │   │   ├── account-switches-section.tsx
+│   │   │   │   ├── account-update-payload.ts
 │   │   │   │   ├── types.ts
 │   │   │   │   └── use-account-form.ts
 │   │   │   ├── account-card.tsx
