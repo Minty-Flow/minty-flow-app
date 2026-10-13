@@ -11,7 +11,7 @@ import {
   normalizeMajorUnitInput,
   parseMajorUnits,
 } from "~/utils/money"
-import { formatEditableNumber, formatMoney } from "~/utils/number-format"
+import { formatEditableNumber } from "~/utils/number-format"
 import {
   exceedsFractionDigits,
   type MathErrorCode,
@@ -24,6 +24,7 @@ import { View } from "../ui/view"
 import { AmountInputRow } from "./amount-input-row"
 import { AmountLabelRow } from "./amount-label-row"
 import { AmountLivePreview } from "./amount-preview-chip"
+import { formatAmountPreview, formatAmountText } from "./format-amount"
 import { MathToolbar } from "./math-toolbar"
 import {
   hasMathOperation,
@@ -78,12 +79,7 @@ export const SmartAmountInput = ({
     currencyRegistryService.getCurrencySymbol(currencyCode) ?? currencyCode
   const displayValue = isEditing
     ? inputValue
-    : valueMinor === 0
-      ? ""
-      : formatMoney(valueMinor, currencyCode, {
-          hideSign: true,
-          hideSymbol: true,
-        })
+    : formatAmountText(valueMinor, currencyCode)
   const previewResult = (() => {
     if (!hasMathOperation(displayValue)) return null
     const normalized = normalizeMajorUnitInput(displayValue)
@@ -224,9 +220,7 @@ export const SmartAmountInput = ({
   }
   const displayPreview =
     previewMinor !== null
-      ? formatMoney(previewMinor, currencyCode, {
-          hideSign: true,
-        })
+      ? formatAmountPreview(previewMinor, currencyCode)
       : null
   const formattedExpression = (() => {
     if (!isEditing || displayValue.trim() === "") return null

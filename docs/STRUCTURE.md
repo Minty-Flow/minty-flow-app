@@ -1,11 +1,13 @@
 # Project Structure
-Generated on: 2026-10-13T13:22:50.112Z
+Generated on: 2026-10-13T13:39:24.198Z
 ```
 ./
 ├── __tests__/
 │   ├── components/
 │   │   ├── accounts/
 │   │   │   └── account-update-payload.test.ts
+│   │   ├── smart-amount-input/
+│   │   │   └── format-amount.test.ts
 │   │   └── transaction/
 │   │       └── transaction-form/
 │   │           ├── transfer-edit-from-credit-leg.test.ts
@@ -310,6 +312,7 @@ Generated on: 2026-10-13T13:22:50.112Z
 │   │   │   ├── amount-input-row.tsx
 │   │   │   ├── amount-label-row.tsx
 │   │   │   ├── amount-preview-chip.tsx
+│   │   │   ├── format-amount.ts
 │   │   │   ├── index.tsx
 │   │   │   ├── math-toolbar.tsx
 │   │   │   ├── math-utils.ts
