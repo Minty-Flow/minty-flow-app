@@ -18,8 +18,10 @@ import { Separator } from "~/components/ui/separator"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
 import {
+  type BudgetLosingLastCategory,
   createCategory,
   deleteCategoryById,
+  getBudgetsLosingLastCategory,
   updateCategoryById,
 } from "~/database/services/category-service"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
@@ -76,6 +78,9 @@ export function CategoryModifyContent({
     onBlock: () => setUnsavedSheetVisible(true),
   })
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
+  const [budgetsLosingCategory, setBudgetsLosingCategory] = useState<
+    BudgetLosingLastCategory[]
+  >([])
   const onSubmit = async (data: AddCategoriesFormSchema) => {
     const trimmedName = data.name.trim()
     try {
@@ -108,6 +113,20 @@ export function CategoryModifyContent({
     }
   }
   const handleSubmit = handleFormSubmit(onSubmit)
+  const handleDeletePress = async () => {
+    try {
+      setBudgetsLosingCategory(
+        await getBudgetsLosingLastCategory(categoryModifyId),
+      )
+      setDeleteSheetVisible(true)
+    } catch (error) {
+      logger.error("Error checking budgets before deleting category", { error })
+      Toast.error({
+        title: t("common.toast.error"),
+        description: t("components.categories.form.toast.deleteFailed"),
+      })
+    }
+  }
   const handleDelete = async () => {
     try {
       if (!category) {
@@ -195,7 +214,7 @@ export function CategoryModifyContent({
           <View style={modifyFormStyles.deleteSection}>
             <FormDeleteButton
               label={t("components.categories.form.deleteLabel")}
-              onPress={() => setDeleteSheetVisible(true)}
+              onPress={handleDeletePress}
             />
           </View>
         )}
@@ -215,6 +234,7 @@ export function CategoryModifyContent({
         unsavedSheetVisible={unsavedSheetVisible}
         isAddMode={isAddMode}
         category={category}
+        budgetsLosingCategory={budgetsLosingCategory}
         onCloseDeleteSheet={() => setDeleteSheetVisible(false)}
         onCloseUnsavedSheet={() => setUnsavedSheetVisible(false)}
         onConfirmDelete={handleDelete}

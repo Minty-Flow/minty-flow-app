@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next"
 
 import { ConfirmSheet } from "~/components/confirm-sheet"
+import type { BudgetLosingLastCategory } from "~/database/services/category-service"
 import type { Category } from "~/types/categories"
 
 interface CategoryFormSheetsProps {
@@ -8,6 +9,8 @@ interface CategoryFormSheetsProps {
   unsavedSheetVisible: boolean
   isAddMode: boolean
   category: Category | undefined
+  /** Active budgets that deleting the category would switch off. */
+  budgetsLosingCategory: BudgetLosingLastCategory[]
   onCloseDeleteSheet: () => void
   onCloseUnsavedSheet: () => void
   onConfirmDelete: () => void
@@ -19,12 +22,17 @@ export function CategoryFormSheets({
   unsavedSheetVisible,
   isAddMode,
   category,
+  budgetsLosingCategory,
   onCloseDeleteSheet,
   onCloseUnsavedSheet,
   onConfirmDelete,
   onDiscardAndNavigate,
 }: CategoryFormSheetsProps) {
   const { t } = useTranslation()
+  // A category that transactions use cannot be deleted at all, so the budget
+  // warning only matters once the delete can go ahead.
+  const warnAboutBudgets =
+    (category?.transactionCount ?? 0) === 0 && budgetsLosingCategory.length > 0
 
   return (
     <>
@@ -42,9 +50,23 @@ export function CategoryFormSheets({
                   "components.categories.form.deleteSheet.descriptionWithCount",
                   { count: category.transactionCount },
                 )
-              : t("components.categories.form.deleteSheet.descriptionEmpty")
+              : warnAboutBudgets
+                ? t(
+                    "components.categories.form.deleteSheet.descriptionBudgets",
+                    {
+                      count: budgetsLosingCategory.length,
+                      names: budgetsLosingCategory
+                        .map((b) => b.name)
+                        .join(", "),
+                    },
+                  )
+                : t("components.categories.form.deleteSheet.descriptionEmpty")
           }
-          confirmLabel={t("common.actions.delete")}
+          confirmLabel={
+            warnAboutBudgets
+              ? t("components.categories.form.deleteSheet.deleteAnyway")
+              : t("common.actions.delete")
+          }
           cancelLabel={t("common.actions.cancel")}
           variant="destructive"
           icon="trash-outline"
