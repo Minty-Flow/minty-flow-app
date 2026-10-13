@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-13T09:45:45.530Z
+Generated on: 2026-10-13T09:49:43.834Z
 ```
 ./
 ├── __tests__/
@@ -9,6 +9,7 @@ Generated on: 2026-10-13T09:45:45.530Z
 │   │   │       └── stats-data.test.ts
 │   │   ├── services/
 │   │   │   ├── balance-service.test.ts
+│   │   │   ├── destroy-account-with-loans.test.ts
 │   │   │   ├── empty-trash.test.ts
 │   │   │   ├── loan-type-switch.test.ts
 │   │   │   ├── recurring-failure-isolation.test.ts
@@ -199,6 +200,7 @@ Generated on: 2026-10-13T09:45:45.530Z
 │   │   │   │   ├── types.ts
 │   │   │   │   └── use-account-form.ts
 │   │   │   ├── account-card.tsx
+│   │   │   ├── account-delete-error.ts
 │   │   │   └── account-type-inline.tsx
 │   │   ├── bill-splitter/
 │   │   │   ├── add-name-sheet.tsx

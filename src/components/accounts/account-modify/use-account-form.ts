@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
+import { getAccountDeleteErrorDescription } from "~/components/accounts/account-delete-error"
 import {
   archiveAccount,
   createAccount,
@@ -140,7 +141,7 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
       logger.error("Error deleting account", { error })
       Toast.error({
         title: t("common.toast.error"),
-        description: t("screens.accounts.form.toast.deleteFailed"),
+        description: getAccountDeleteErrorDescription(error, t),
       })
     }
   }

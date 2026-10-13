@@ -3,6 +3,7 @@ import { useLayoutEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { getAccountDeleteErrorDescription } from "~/components/accounts/account-delete-error"
 import { ConfirmSheet } from "~/components/confirm-sheet"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { FilterToggleButton } from "~/components/filter-toggle-button"
@@ -96,7 +97,7 @@ export default function AccountDetailsScreen() {
       logger.error("Error deleting account", { error })
       Toast.error({
         title: t("common.toast.error"),
-        description: t("screens.accounts.form.toast.deleteFailed"),
+        description: getAccountDeleteErrorDescription(error, t),
       })
     }
   }

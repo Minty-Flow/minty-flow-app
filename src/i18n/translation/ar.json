@@ -214,6 +214,7 @@
         },
         "toast": {
           "deleteFailed": "فشل حذف الحساب.",
+          "deleteBlockedByLoans": "هذا الحساب يحتوي على قروض: {{names}}. انقلها أو احذفها أولاً.",
           "createFailed": "فشل إنشاء الحساب.",
           "updateFailed": "فشل تحديث الحساب."
         }

@@ -214,6 +214,7 @@
         },
         "toast": {
           "deleteFailed": "Failed to delete account.",
+          "deleteBlockedByLoans": "This account has loans: {{names}}. Move or delete them first.",
           "createFailed": "Failed to create account.",
           "updateFailed": "Failed to update account."
         }
