@@ -55,7 +55,12 @@ export function getDefaultValues(
         ? transaction.relatedAccountId
         : ""
   return {
-    amount: Math.abs(transaction.amount),
+    // The form edits a transfer through its debit leg, in the source account's
+    // currency. Opening the credit leg must not put its own amount (in the
+    // destination currency) in that field.
+    amount: isTransfer
+      ? (transaction.transferSourceAmount ?? Math.abs(transaction.amount))
+      : Math.abs(transaction.amount),
     type: transaction.type ?? transactionType,
     transactionDate: transaction.transactionDate,
     accountId: fromId,
