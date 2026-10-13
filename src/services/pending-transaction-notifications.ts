@@ -89,6 +89,15 @@ async function scheduleForPlannedTransaction(
 }
 
 /**
+ * A transfer is two rows, a debit with a negative amount and a credit with a
+ * positive one. Remind about the debit only, so a pending transfer notifies
+ * once.
+ */
+function isCreditLegOfTransfer(transaction: TransactionWithRelations): boolean {
+  return transaction.type === "transfer" && transaction.amount > 0
+}
+
+/**
  * Resync all planned-transaction notifications:
  * - Clear existing transaction reminders
  * - If notify preference is true, query pending transactions and schedule each (skip if transactionDate in the past).
@@ -107,7 +116,7 @@ export async function synchronizePlannedTransactionNotifications(): Promise<void
 
   await Promise.all(
     pending.flatMap((t) =>
-      t.transactionDate.getTime() <= now.getTime()
+      t.transactionDate.getTime() <= now.getTime() || isCreditLegOfTransfer(t)
         ? []
         : [scheduleForPlannedTransaction(t, earlyReminderInSeconds)],
     ),
