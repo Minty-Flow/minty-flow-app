@@ -1143,6 +1143,8 @@
         "transferUpdated": "تم تحديث التحويل",
         "recurringCreated": "تم إنشاء المعاملة المتكررة",
         "recurringCreateFailed": "فشل إنشاء المعاملة المتكررة",
+        "recurringStopped": "تم إيقاف المعاملة المتكررة",
+        "recurringStoppedDescription": "تعذر إنشاء \"{{title}}\" وتم إيقافها. تحقق من حسابها وفئتها.",
         "transactionCreated": "تم إنشاء المعاملة",
         "transactionUpdated": "تم تحديث المعاملة",
         "saveFailed": "فشل حفظ المعاملة",
