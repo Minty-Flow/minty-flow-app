@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-13T09:54:43.150Z
+Generated on: 2026-10-13T10:20:11.694Z
 ```
 ./
 ├── __tests__/
@@ -26,6 +26,9 @@ Generated on: 2026-10-13T09:54:43.150Z
 │   ├── helpers/
 │   │   ├── create-test-db.test.ts
 │   │   └── create-test-db.ts
+│   ├── services/
+│   │   ├── exchange-rate-sources.test.ts
+│   │   └── exchange-rates.test.ts
 │   └── utils/
 │       ├── money.test.ts
 │       └── recurrence.test.ts
@@ -553,6 +556,7 @@ Generated on: 2026-10-13T09:54:43.150Z
 │   ├── services/
 │   │   ├── auto-confirmation-service.ts
 │   │   ├── currency-registry.ts
+│   │   ├── exchange-rate-sources.ts
 │   │   ├── exchange-rates.ts
 │   │   └── pending-transaction-notifications.ts
 │   ├── stores/

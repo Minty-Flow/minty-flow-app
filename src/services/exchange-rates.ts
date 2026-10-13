@@ -10,13 +10,14 @@ import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
 import { currencyRegistryService } from "./currency-registry"
-
-// Types for API response
-// The API returns: { date: string, [baseCurrency]: { [currencyCode]: number } }
-interface ExchangeRatesResponse {
-  date: string
-  [baseCurrency: string]: string | Record<string, number>
-}
+import {
+  fillMissingRates,
+  GAP_FILL_SOURCES,
+  OPEN_ER_API,
+  RATE_SOURCES,
+  type RateSource,
+  type SourceRates,
+} from "./exchange-rate-sources"
 
 // Normalized structure we use internally
 export interface ExchangeRates {
@@ -104,6 +105,47 @@ class ExchangeRatesService {
   }
 
   /**
+   * Tries each source in order and returns the first usable response.
+   *
+   * @returns The rates and the source that answered, or null if none did (or
+   * the request was aborted).
+   */
+  private async fetchFromSources(
+    sources: readonly RateSource[],
+    baseCurrency: string,
+    signal?: AbortSignal,
+  ): Promise<{ source: RateSource; rates: SourceRates } | null> {
+    for (const source of sources) {
+      try {
+        const url = source.url(baseCurrency)
+        logger.debug("Fetching exchange rates", { source: source.name, url })
+        const response = await fetch(url, {
+          method: "GET",
+          headers: { Accept: "application/json" },
+          signal,
+        })
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+        const rates = source.parse(await response.json(), baseCurrency)
+        if (rates) return { source, rates }
+        logger.warn("Exchange rate source returned unusable data", {
+          source: source.name,
+          baseCurrency,
+        })
+      } catch (error) {
+        if (signal?.aborted) return null
+        logger.warn("Failed to fetch exchange rates", {
+          source: source.name,
+          baseCurrency,
+          error: error instanceof Error ? error.message : "Unknown error",
+        })
+      }
+    }
+    return null
+  }
+
+  /**
    * Fetches exchange rates from the API.
    *
    * @remarks
@@ -138,118 +180,41 @@ class ExchangeRatesService {
       return cached
     }
 
-    let apiResponse: ExchangeRatesResponse | null = null
+    const primary = await this.fetchFromSources(
+      RATE_SOURCES,
+      normalizedCurrency,
+      signal,
+    )
+    if (signal?.aborted) return null
 
-    // Try main source first
-    try {
-      const mainUrl = `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${normalizedCurrency}.min.json`
-      logger.debug("Fetching from main source", { url: mainUrl })
-
-      const response = await fetch(mainUrl, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-        },
-        signal,
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-
-      const data = (await response.json()) as ExchangeRatesResponse
-      logger.debug("Successfully fetched rates", {
-        baseCurrency,
-        date: data.date,
-        responseKeys: Object.keys(data),
-        hasBaseCurrency: normalizedCurrency in data,
-        ratesDataExists: typeof data[normalizedCurrency] === "object",
-      })
-      apiResponse = data
-    } catch (error) {
-      if (signal?.aborted) return null
-      logger.warn("Failed to fetch exchange rates from main source", {
-        baseCurrency,
-        error: error instanceof Error ? error.message : "Unknown error",
-      })
-    }
-
-    // Try fallback source if main source failed
-    if (!apiResponse) {
-      try {
-        const fallbackUrl = `https://latest.currency-api.pages.dev/v1/currencies/${normalizedCurrency}.min.json`
-        logger.debug("Trying fallback source", { url: fallbackUrl })
-
-        const response = await fetch(fallbackUrl, {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-          },
-          signal,
-        })
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-        }
-
-        const data = (await response.json()) as ExchangeRatesResponse
-        logger.debug("Successfully fetched rates from fallback", {
-          baseCurrency,
-          date: data.date,
-          responseKeys: Object.keys(data),
-          hasBaseCurrency: normalizedCurrency in data,
-          ratesDataExists: typeof data[normalizedCurrency] === "object",
-        })
-        apiResponse = data
-      } catch (error) {
-        if (signal?.aborted) return null
-        logger.warn("Failed to fetch exchange rates from fallback source", {
-          baseCurrency,
-          error: error instanceof Error ? error.message : "Unknown error",
-        })
-      }
-    }
-
-    if (!apiResponse) {
+    if (!primary) {
       const errorMessage = `Failed to fetch exchange rates for ${baseCurrency} from all sources. Please check your internet connection and try again.`
       this.showToast("screens.settings.exchangeRates.errors.fetchFailed")
       logger.error(errorMessage)
       return null
     }
 
-    // Normalize the response structure
-    // API returns: { date: string, [baseCurrency]: { [currencyCode]: number } }
-    const ratesData = apiResponse[normalizedCurrency]
-
-    if (
-      !ratesData ||
-      typeof ratesData !== "object" ||
-      Array.isArray(ratesData)
-    ) {
-      this.showToast("screens.settings.exchangeRates.errors.invalidData")
-      logger.error("Invalid API response structure", {
-        baseCurrency: normalizedCurrency,
-        responseKeys: Object.keys(apiResponse),
-        ratesDataType: typeof ratesData,
-        isArray: Array.isArray(ratesData),
-      })
-      return null
-    }
+    // open.er-api.com has no crypto and a few ISO codes; fill those from
+    // fawazahmed0 on a best-effort basis. Never needed when a fawazahmed0
+    // source was already the one that answered.
+    const sourceRates =
+      primary.source === OPEN_ER_API
+        ? fillMissingRates(
+            primary.rates,
+            (
+              await this.fetchFromSources(
+                GAP_FILL_SOURCES,
+                normalizedCurrency,
+                signal,
+              )
+            )?.rates ?? null,
+          )
+        : primary.rates
 
     const normalizedRates: ExchangeRates = {
-      date:
-        typeof apiResponse.date === "string"
-          ? apiResponse.date
-          : (new Date().toISOString().split("T")[0] ?? ""),
+      date: sourceRates.date,
       baseCurrency: normalizedCurrency,
-      rates: Object.fromEntries(
-        Object.entries(ratesData as Record<string, unknown>).filter(
-          ([, v]) =>
-            typeof v === "number" &&
-            Number.isFinite(v as number) &&
-            (v as number) > 0,
-        ),
-      ) as Record<string, number>,
+      rates: sourceRates.rates,
     }
 
     logger.debug("Normalized rates", {

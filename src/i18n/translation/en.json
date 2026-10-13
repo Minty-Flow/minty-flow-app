@@ -902,6 +902,7 @@
       "exchangeRates": {
         "title": "Exchange Rates",
         "apiTitle": "Exchange Rates API",
+        "apiTitleSecondary": "Crypto and other rates",
         "loading": "Loading exchange rates…",
         "searchPlaceholder": "Search currencies...",
         "instructionCaption": "Select an entry to set a custom exchange rate. Note: All exchange rate calculations use USD as a reference.",
