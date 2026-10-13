@@ -158,6 +158,7 @@ function ExchangeRatesContent({
     const displayRate = rate ?? 0
     const draftValue = draftRates[item.displayCode] ?? displayRate
     const isInvalidRate = draftValue <= 0
+    const originalRate = rates?.rates?.[item.code] ?? null
     return (
       <View style={styles.entryWrapper}>
         <ListItem
@@ -167,13 +168,31 @@ function ExchangeRatesContent({
           onPress={() => handleSelectEntry(item.displayCode, displayRate)}
         >
           <Text style={styles.entryEquals}>=</Text>
-          <Text style={styles.entryAmount} numberOfLines={1}>
-            {formatNumber(displayRate, {
-              minimumFractionDigits: 14,
-              maximumFractionDigits: 14,
-              useGrouping: false,
-            })}
-          </Text>
+          <View style={styles.entryAmountColumn}>
+            <Text style={styles.entryAmount} numberOfLines={1}>
+              {formatNumber(displayRate, {
+                minimumFractionDigits: 14,
+                maximumFractionDigits: 14,
+                useGrouping: false,
+              })}
+            </Text>
+            {/* A custom rate shows the original one it replaces. */}
+            {item.isCustom && originalRate != null && (
+              <Text style={styles.entryOriginal} numberOfLines={1}>
+                {t("screens.settings.exchangeRates.originalRate", {
+                  rate: formatNumber(originalRate, {
+                    maximumFractionDigits: 6,
+                    useGrouping: false,
+                  }),
+                })}
+              </Text>
+            )}
+          </View>
+          {item.isCustom && (
+            <Text style={styles.entryBadge}>
+              {t("screens.settings.exchangeRates.customBadge")}
+            </Text>
+          )}
           <Text style={styles.entryCode}>{item.displayCode}</Text>
         </ListItem>
         {isEditing && (
@@ -399,10 +418,27 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSurface,
     marginRight: 8,
   },
-  entryAmount: {
+  entryAmountColumn: {
     flex: 1,
+  },
+  entryAmount: {
     fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSurface,
+  },
+  entryOriginal: {
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.semantic.semi,
+    marginTop: 2,
+  },
+  entryBadge: {
+    ...theme.typography.labelSmall,
+    color: theme.colors.onPrimary,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginRight: 8,
+    overflow: "hidden",
   },
   entryCode: {
     fontSize: theme.typography.bodyLarge.fontSize,
