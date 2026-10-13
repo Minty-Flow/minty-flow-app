@@ -29,3 +29,4 @@ jobs:
       - run: pnpm lint
       - run: pnpm check-number-formatting
       - run: pnpm types
+      - run: pnpm test
