@@ -11,14 +11,16 @@ import {
   transactionTags,
   transfers,
 } from "~/database/drizzle/schema"
+import { createTransactionInTx } from "~/database/services/ledger-service"
 import { runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
 import { disableRecurringRulesForAccount } from "~/database/utils/recurring-template-refs"
+import i18n from "~/i18n/config"
 import type {
   AddAccountsFormSchema,
   UpdateAccountsFormSchema,
 } from "~/schemas/accounts.schema"
-import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
+import { TransactionTypeEnum } from "~/types/transactions"
 import { assertMinorUnits, rescaleMinorUnits } from "~/utils/money"
 
 // ── Create ───────────────────────────────────────────────────────────────────
@@ -75,12 +77,8 @@ export async function updateAccount(
 ): Promise<void> {
   if (updates.balance !== undefined) assertMinorUnits(updates.balance)
   const now = new Date().toISOString()
-  let currencyChanged = false
 
-  const balanceAdjustment = await runInTransaction<{
-    amount: number
-    type: TransactionType
-  } | null>("account.update", (db) => {
+  await runInTransaction("account.update", (db) => {
     const existing = db
       .select({
         balance: accounts.balance,
@@ -97,7 +95,6 @@ export async function updateAccount(
       updates.currencyCode !== existing.currencyCode
     ) {
       const nextCurrencyCode = updates.currencyCode
-      currencyChanged = true
       comparableBalance = rescaleMinorUnits(
         existing.balance,
         existing.currencyCode,
@@ -217,39 +214,30 @@ export async function updateAccount(
       .where(eq(accounts.id, id))
       .run()
 
-    // Return balance adjustment info for after commit (avoid nested tx event timing)
+    // `updates.balance` is the balance the caller wants. When it differs from
+    // what the account holds, a compensating transaction closes the gap, in
+    // this same transaction so both the update and the adjustment land or
+    // neither does.
     if (
       updates.balance !== undefined &&
       typeof updates.balance === "number" &&
       updates.balance !== comparableBalance
     ) {
       const delta = updates.balance - comparableBalance
-      return {
+      createTransactionInTx(db, {
         amount: Math.abs(delta),
         type:
           delta > 0 ? TransactionTypeEnum.INCOME : TransactionTypeEnum.EXPENSE,
-      }
+        transactionDate: new Date(),
+        accountId: id,
+        categoryId: null,
+        title: i18n.t("screens.accounts.balanceAdjustmentTitle"),
+        description: null,
+        isPending: false,
+        tags: [],
+      })
     }
-    return null
   })
-
-  // Balance adjustment via compensating transaction (runs after outer tx commits)
-  if (balanceAdjustment) {
-    const { createTransaction } = await import("./ledger-service")
-    await createTransaction({
-      amount: balanceAdjustment.amount,
-      type: balanceAdjustment.type,
-      transactionDate: new Date(),
-      accountId: id,
-      categoryId: null,
-      title: "Balance adjustment",
-      description: null,
-      isPending: false,
-      tags: [],
-    })
-  }
-  if (currencyChanged) {
-  }
 }
 
 // ── Archive / Unarchive ───────────────────────────────────────────────────────
