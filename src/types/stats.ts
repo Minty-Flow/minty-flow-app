@@ -225,6 +225,9 @@ export interface BalanceRawRow {
   date: Date
   accountId: string
   accountBalanceBefore: number
+  /** Raw stored amount: unsigned for income/expense, pre-signed for transfers. */
   amount: number
+  type: TransactionType
+  subtype: string | null
   currencyCode: string
 }

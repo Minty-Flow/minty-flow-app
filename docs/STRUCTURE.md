@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-13T08:56:13.686Z
+Generated on: 2026-10-13T09:01:00.457Z
 ```
 ./
 ├── .github/
@@ -447,6 +447,7 @@ Generated on: 2026-10-13T08:56:13.686Z
 │   │   │   │   ├── goal-read-model.ts
 │   │   │   │   ├── loan-read-model.ts
 │   │   │   │   ├── progress-read-model.ts
+│   │   │   │   ├── stats-data.test.ts
 │   │   │   │   ├── stats-data.ts
 │   │   │   │   ├── stats-read-model.ts
 │   │   │   │   ├── tag-read-model.ts

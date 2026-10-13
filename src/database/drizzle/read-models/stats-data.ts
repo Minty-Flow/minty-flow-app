@@ -9,6 +9,7 @@ import { sql } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
 import type { RowAccount, RowCategory } from "~/database/types/rows"
+import { getBalanceDelta } from "~/database/utils/get-balance-delta"
 import { currencyRegistryService } from "~/services/currency-registry"
 import type {
   AccountBreakdownItem,
@@ -168,10 +169,13 @@ async function fetchBalanceTimeline(
   const rows = drizzleDb.all<{
     account_id: string
     amount: number
+    type: string
+    subtype: string | null
     transaction_date: string
     account_balance_before: number
   }>(sql`
-    SELECT t.account_id, t.amount, t.transaction_date, t.account_balance_before
+    SELECT t.account_id, t.amount, t.type, t.subtype, t.transaction_date,
+           t.account_balance_before
      FROM transactions t
      WHERE t.is_deleted = 0
        AND t.is_pending = 0
@@ -188,6 +192,8 @@ async function fetchBalanceTimeline(
     accountId: tx.account_id,
     accountBalanceBefore: tx.account_balance_before,
     amount: tx.amount,
+    type: tx.type as TransactionType,
+    subtype: tx.subtype,
     currencyCode: accountMap.get(tx.account_id)?.currency_code ?? useCode,
   }))
 }
@@ -438,7 +444,7 @@ function computeCategoryBreakdown(
   return items.sort((a, b) => b.totalExpense - a.totalExpense)
 }
 
-function computeBalanceTimeline(
+export function computeBalanceTimeline(
   balanceRows: BalanceRawRow[],
   accounts: RowAccount[],
   from: Date,
@@ -491,7 +497,11 @@ function computeBalanceTimeline(
         const dayRows = rowsByDay.get(key)
         if (dayRows) {
           const last = dayRows[dayRows.length - 1]
-          if (last) lastBalance = last.accountBalanceBefore + last.amount
+          if (last) {
+            lastBalance =
+              last.accountBalanceBefore +
+              getBalanceDelta(last.amount, last.type, last.subtype)
+          }
         }
         dailyMap.set(key, lastBalance)
       }
@@ -721,7 +731,7 @@ function groupBalanceByCurrency(
 /* Historical opening balance                                          */
 /* ------------------------------------------------------------------ */
 
-async function fetchHistoricalOpenings(
+export async function fetchHistoricalOpenings(
   accounts: RowAccount[],
   beforeDate: Date,
 ): Promise<Map<string, number>> {
@@ -734,10 +744,12 @@ async function fetchHistoricalOpenings(
         account_id: string
         account_balance_before: number
         amount: number
+        type: string
+        subtype: string | null
       }>(sql`
-        SELECT account_id, account_balance_before, amount
+        SELECT account_id, account_balance_before, amount, type, subtype
          FROM (
-           SELECT account_id, account_balance_before, amount,
+           SELECT account_id, account_balance_before, amount, type, subtype,
                   ROW_NUMBER() OVER (
                     PARTITION BY account_id
                     ORDER BY transaction_date DESC, created_at DESC
@@ -755,7 +767,12 @@ async function fetchHistoricalOpenings(
     accounts.map((account) => {
       const lastTx = lastByAccount.get(account.id)
       const opening = lastTx
-        ? lastTx.account_balance_before + lastTx.amount
+        ? lastTx.account_balance_before +
+          getBalanceDelta(
+            lastTx.amount,
+            lastTx.type as TransactionType,
+            lastTx.subtype,
+          )
         : account.balance
       return [account.id, opening] as const
     }),
