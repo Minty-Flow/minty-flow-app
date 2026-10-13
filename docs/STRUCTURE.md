@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-13T13:54:15.564Z
+Generated on: 2026-10-13T14:01:44.448Z
 ```
 ./
 ├── __tests__/
@@ -42,7 +42,8 @@ Generated on: 2026-10-13T13:54:15.564Z
 │   │   ├── create-test-db.test.ts
 │   │   └── create-test-db.ts
 │   ├── schemas/
-│   │   └── accounts.schema.test.ts
+│   │   ├── accounts.schema.test.ts
+│   │   └── budgets.schema.test.ts
 │   ├── services/
 │   │   ├── exchange-rate-sources.test.ts
 │   │   ├── exchange-rates.test.ts
