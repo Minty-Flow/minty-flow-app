@@ -236,12 +236,14 @@ function ExchangeRatesContent({
           <Text style={styles.apiUrl}>{EXCHANGE_API_URL}</Text>
         </View>
       </ExternalLink>
-      <SearchInput
-        value={searchQuery}
-        onChangeText={(query) => dispatch({ type: "SET_SEARCH", query })}
-        onClear={() => dispatch({ type: "SET_SEARCH", query: "" })}
-        placeholder={t("screens.settings.exchangeRates.searchPlaceholder")}
-      />
+      <View style={styles.searchContainer}>
+        <SearchInput
+          value={searchQuery}
+          onChangeText={(query) => dispatch({ type: "SET_SEARCH", query })}
+          onClear={() => dispatch({ type: "SET_SEARCH", query: "" })}
+          placeholder={t("screens.settings.exchangeRates.searchPlaceholder")}
+        />
+      </View>
       <Text style={styles.instruction}>
         {t("screens.settings.exchangeRates.instructionCaption")}
       </Text>
@@ -369,6 +371,10 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.semantic.semi,
   },
+  searchContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
   instruction: {
     fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.semantic.semi,
@@ -404,13 +410,12 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSurface,
   },
   inlineInput: {
-    paddingHorizontal: 0,
+    paddingHorizontal: 20,
     paddingBottom: 8,
   },
   saveButtonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginHorizontal: 20,
     marginVertical: 12,
   },
   centered: {

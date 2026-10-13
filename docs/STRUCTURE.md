@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-13T10:20:11.694Z
+Generated on: 2026-10-13T10:23:43.282Z
 ```
 ./
 ├── __tests__/
@@ -28,7 +28,8 @@ Generated on: 2026-10-13T10:20:11.694Z
 │   │   └── create-test-db.ts
 │   ├── services/
 │   │   ├── exchange-rate-sources.test.ts
-│   │   └── exchange-rates.test.ts
+│   │   ├── exchange-rates.test.ts
+│   │   └── pending-transaction-notifications.test.ts
 │   └── utils/
 │       ├── money.test.ts
 │       └── recurrence.test.ts
