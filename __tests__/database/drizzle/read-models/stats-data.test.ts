@@ -10,17 +10,19 @@ vi.mock("~/stores/calendar-format.store", () => ({
 vi.mock("~/utils/get-week-start-on", () => ({ getWeekStartsOn: () => 1 }))
 
 vi.mock("~/database/drizzle/db", async () => {
-  const { createTestDb } = await import("~/database/test-utils/create-test-db")
+  const { createTestDb } = await import("@tests/helpers/create-test-db")
   return { drizzleDb: await createTestDb() }
 })
 
 import { drizzleDb } from "~/database/drizzle/db"
+import {
+  computeBalanceTimeline,
+  fetchHistoricalOpenings,
+} from "~/database/drizzle/read-models/stats-data"
 import { accounts, transactions } from "~/database/drizzle/schema"
 import type { RowAccount } from "~/database/types/rows"
 import type { BalanceRawRow } from "~/types/stats"
 import type { TransactionType } from "~/types/transactions"
-
-import { computeBalanceTimeline, fetchHistoricalOpenings } from "./stats-data"
 
 const FROM = new Date(2026, 0, 10)
 const TO = new Date(2026, 0, 12, 23, 59)

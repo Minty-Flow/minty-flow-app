@@ -1,8 +1,7 @@
+import { createTestDb } from "@tests/helpers/create-test-db"
 import { describe, expect, it } from "vitest"
 
 import { accounts } from "~/database/drizzle/schema"
-
-import { createTestDb } from "./create-test-db"
 
 describe("createTestDb", () => {
   it("applies the migrations and round-trips a row", async () => {

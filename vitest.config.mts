@@ -6,10 +6,11 @@ export default defineConfig({
   resolve: {
     alias: {
       "~": fileURLToPath(new URL("./src", import.meta.url)),
+      "@tests": fileURLToPath(new URL("./__tests__", import.meta.url)),
     },
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["__tests__/**/*.test.ts"],
   },
 })

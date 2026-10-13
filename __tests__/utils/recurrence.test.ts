@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { countOccurrencesBetween, parseRecurrence } from "./recurrence"
+import { countOccurrencesBetween, parseRecurrence } from "~/utils/recurrence"
 
 describe("countOccurrencesBetween", () => {
   const monthly = { interval: 1, unit: "month" } as const

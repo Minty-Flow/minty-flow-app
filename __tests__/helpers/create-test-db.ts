@@ -7,7 +7,7 @@ import * as schema from "~/database/drizzle/schema"
 import { fileURLToPath } from "node:url"
 
 const MIGRATIONS_FOLDER = fileURLToPath(
-  new URL("../../../drizzle", import.meta.url),
+  new URL("../../drizzle", import.meta.url),
 )
 
 /**
@@ -19,7 +19,7 @@ const MIGRATIONS_FOLDER = fileURLToPath(
  *
  * ```ts
  * vi.mock("~/database/drizzle/db", async () => {
- *   const { createTestDb } = await import("~/database/test-utils/create-test-db")
+ *   const { createTestDb } = await import("@tests/helpers/create-test-db")
  *   return { drizzleDb: await createTestDb() }
  * })
  * ```

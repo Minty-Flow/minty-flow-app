@@ -6,7 +6,7 @@ vi.mock("~/database/utils/generate-id", () => ({
 }))
 
 vi.mock("~/database/drizzle/db", async () => {
-  const { createTestDb } = await import("~/database/test-utils/create-test-db")
+  const { createTestDb } = await import("@tests/helpers/create-test-db")
   return { drizzleDb: await createTestDb() }
 })
 
@@ -16,9 +16,8 @@ import {
   recurringTransactions,
   transactions,
 } from "~/database/drizzle/schema"
+import { applyRecurringEditScope } from "~/database/services/recurring-transaction-service"
 import type { RecurringEditPayload } from "~/schemas/transactions.schema"
-
-import { applyRecurringEditScope } from "./recurring-transaction-service"
 
 const now = "2026-01-01T00:00:00.000Z"
 const DAY_MS = 24 * 60 * 60 * 1000
