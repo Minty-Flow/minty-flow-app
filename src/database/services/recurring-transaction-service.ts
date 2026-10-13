@@ -364,12 +364,23 @@ export async function applyRecurringEditScope({
     await deleteFutureRecurringInstances(ruleId, fromDate)
   } else if (!recurrenceChanged) {
     // Pure field-only edit: update field values on future instances.
-    await updateFutureRecurringInstances(
-      ruleId,
-      transactionDate,
-      payload,
-      payload.transactionDate.getTime() - transactionDate.getTime(),
-    )
+    const edited = drizzleDb
+      .select({
+        requiresManualConfirmation: transactions.requiresManualConfirmation,
+      })
+      .from(transactions)
+      .where(eq(transactions.id, transactionId))
+      .get()
+    await updateFutureRecurringInstances(ruleId, transactionDate, payload, {
+      dateShiftMs:
+        payload.transactionDate.getTime() - transactionDate.getTime(),
+      // Copy the flag only when the user changed it on the edited instance.
+      applyManualConfirmation:
+        !!edited &&
+        payload.requiresManualConfirmation !== undefined &&
+        (payload.requiresManualConfirmation ? 1 : 0) !==
+          edited.requiresManualConfirmation,
+    })
   }
 
   // Update template fields.
