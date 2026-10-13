@@ -698,7 +698,7 @@
           "left": "left",
           "allAccounts": "All Accounts",
           "alertThresholdReached": "Alert threshold reached",
-          "disabled": "Disabled",
+          "inactive": "Inactive",
           "needsCategory": "Needs a category",
           "dayOf": "day {{current}}/{{total}}",
           "dayXofY": "Day {{current}} of {{total}}",

@@ -698,7 +698,7 @@
           "left": "متبقي",
           "allAccounts": "جميع الحسابات",
           "alertThresholdReached": "تم بلوغ حد التنبيه",
-          "disabled": "معطّل",
+          "inactive": "غير نشط",
           "needsCategory": "تحتاج إلى فئة",
           "dayOf": "يوم {{current}}/{{total}}",
           "dayXofY": "اليوم {{current}} من {{total}}",
