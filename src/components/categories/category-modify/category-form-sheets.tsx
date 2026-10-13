@@ -29,10 +29,20 @@ export function CategoryFormSheets({
   onDiscardAndNavigate,
 }: CategoryFormSheetsProps) {
   const { t } = useTranslation()
-  // A category that transactions use cannot be deleted at all, so the budget
-  // warning only matters once the delete can go ahead.
-  const warnAboutBudgets =
-    (category?.transactionCount ?? 0) === 0 && budgetsLosingCategory.length > 0
+  const warnAboutBudgets = budgetsLosingCategory.length > 0
+  const transactionCount = category?.transactionCount ?? 0
+  const usageText =
+    transactionCount > 0
+      ? t("components.categories.form.deleteSheet.descriptionWithCount", {
+          count: transactionCount,
+        })
+      : t("components.categories.form.deleteSheet.descriptionEmpty")
+  const budgetsText = warnAboutBudgets
+    ? t("components.categories.form.deleteSheet.descriptionBudgets", {
+        count: budgetsLosingCategory.length,
+        names: budgetsLosingCategory.map((b) => b.name).join(", "),
+      })
+    : null
 
   return (
     <>
@@ -44,24 +54,7 @@ export function CategoryFormSheets({
           title={t("components.categories.form.deleteSheet.title", {
             name: category.name,
           })}
-          description={
-            category.transactionCount > 0
-              ? t(
-                  "components.categories.form.deleteSheet.descriptionWithCount",
-                  { count: category.transactionCount },
-                )
-              : warnAboutBudgets
-                ? t(
-                    "components.categories.form.deleteSheet.descriptionBudgets",
-                    {
-                      count: budgetsLosingCategory.length,
-                      names: budgetsLosingCategory
-                        .map((b) => b.name)
-                        .join(", "),
-                    },
-                  )
-                : t("components.categories.form.deleteSheet.descriptionEmpty")
-          }
+          description={budgetsText ? `${usageText} ${budgetsText}` : usageText}
           confirmLabel={
             warnAboutBudgets
               ? t("components.categories.form.deleteSheet.deleteAnyway")

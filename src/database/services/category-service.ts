@@ -5,6 +5,7 @@ import {
   budgetCategories,
   budgets,
   categories,
+  loans,
   transactions,
 } from "~/database/drizzle/schema"
 import { runInTransaction } from "~/database/transaction"
@@ -101,8 +102,46 @@ export async function getBudgetsLosingLastCategory(
     .all()
 }
 
+/**
+ * Thrown by {@link deleteCategoryById} when a loan still uses the category. A
+ * loan must have a category, so deleting it would leave the loan without one.
+ */
+export class CategoryHasLoansError extends Error {
+  readonly loanNames: string[]
+
+  constructor(loanNames: string[]) {
+    super(
+      `Category is used by ${loanNames.length} loan(s): ${loanNames.join(", ")}`,
+    )
+    this.name = "CategoryHasLoansError"
+    this.loanNames = loanNames
+  }
+}
+
+/** Names of the loans that use `categoryId`, which block deleting it. */
+export async function getLoansUsingCategory(
+  categoryId: string,
+): Promise<string[]> {
+  return drizzleDb
+    .select({ name: loans.name })
+    .from(loans)
+    .where(eq(loans.categoryId, categoryId))
+    .orderBy(loans.name)
+    .all()
+    .map((loan) => loan.name)
+}
+
 export async function deleteCategoryById(id: string): Promise<void> {
   await runInTransaction("category.delete", (db) => {
+    const categoryLoans = db
+      .select({ name: loans.name })
+      .from(loans)
+      .where(eq(loans.categoryId, id))
+      .orderBy(loans.name)
+      .all()
+    if (categoryLoans.length > 0) {
+      throw new CategoryHasLoansError(categoryLoans.map((loan) => loan.name))
+    }
     // Switch off the budgets that would be left with no category. Do it
     // before the delete: the cascade removes the links.
     db.update(budgets)
