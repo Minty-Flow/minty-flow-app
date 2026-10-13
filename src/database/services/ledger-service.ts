@@ -1,6 +1,7 @@
 import { startOfDay, subDays } from "date-fns"
 import { and, sql as drizzleSql, eq, gte, inArray, lt, or } from "drizzle-orm"
 
+import { getTrashRetentionDays } from "~/constants/trash-retention"
 import { drizzleDb } from "~/database/drizzle/db"
 import {
   accounts,
@@ -1391,12 +1392,8 @@ export async function destroyAllDeletedTransactions(): Promise<void> {
 }
 
 export async function autoPurgeTrash(retentionValue: string): Promise<void> {
-  if (retentionValue === "forever") return
-
-  const match = /^(\d+)days$/.exec(retentionValue)
-  if (!match) return
-  const days = parseInt(match[1], 10)
-  if (!Number.isFinite(days) || days <= 0) return
+  const days = getTrashRetentionDays(retentionValue)
+  if (days === null) return
 
   const cutoff = startOfDay(subDays(new Date(), days)).toISOString()
 

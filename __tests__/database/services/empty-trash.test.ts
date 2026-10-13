@@ -89,7 +89,7 @@ describe("auto-purging the trash with a transfer in it", () => {
       .run()
     const errors = vi.spyOn(logger, "error").mockImplementation(() => {})
 
-    await autoPurgeTrash("30days")
+    await autoPurgeTrash("30 days")
 
     expect(remaining()).toBe(0)
     expect(errors).not.toHaveBeenCalled()
