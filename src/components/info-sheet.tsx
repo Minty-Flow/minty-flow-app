@@ -3,6 +3,7 @@
  * Use for informational messages (replaces Alert.alert for info-only content).
  */
 
+import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { View } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
@@ -25,6 +26,8 @@ interface InfoSheetProps {
   okLabel?: string
   /** Optional icon name shown above the title (e.g. "information"). */
   icon?: IconSvgName
+  /** Optional content shown between the description and the OK button. */
+  children?: ReactNode
 }
 
 export function InfoSheet({
@@ -34,6 +37,7 @@ export function InfoSheet({
   description,
   okLabel,
   icon = "info-circle",
+  children,
 }: InfoSheetProps) {
   const { t } = useTranslation()
   const resolvedOkLabel = okLabel ?? t("common.actions.ok")
@@ -54,6 +58,8 @@ export function InfoSheet({
         <Text variant="p" style={styles.description}>
           {description}
         </Text>
+
+        {children}
 
         <Button
           variant="default"

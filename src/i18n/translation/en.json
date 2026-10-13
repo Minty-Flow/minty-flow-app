@@ -906,7 +906,6 @@
       },
       "exchangeRates": {
         "title": "Exchange Rates",
-        "apiTitle": "Exchange Rates API",
         "apiTitleSecondary": "Crypto and other rates",
         "loading": "Loading exchange rates…",
         "searchPlaceholder": "Search currencies...",
@@ -914,7 +913,8 @@
         "infoSheet": {
           "title": "Exchange Rates",
           "description": "Rates are shown as amount per 1 USD. Select an entry to set a custom rate. All calculations use USD as reference.",
-          "ok": "OK"
+          "ok": "OK",
+          "sources": "Sources"
         },
         "errors": {
           "invalidRate": "Rate must be greater than 0",

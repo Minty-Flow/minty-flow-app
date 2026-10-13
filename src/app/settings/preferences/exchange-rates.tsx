@@ -233,36 +233,6 @@ function ExchangeRatesContent({
   }
   const listHeader = (
     <View style={styles.listHeader}>
-      <ExternalLink
-        href={EXCHANGE_RATE_API_URL}
-        pressableStyle={styles.apiCard}
-      >
-        <View style={styles.apiCardContent}>
-          <Text style={styles.apiTitle}>
-            {t("screens.settings.exchangeRates.apiTitle")}
-          </Text>
-          <Text style={styles.apiUrl}>{EXCHANGE_RATE_API_ATTRIBUTION}</Text>
-        </View>
-      </ExternalLink>
-      <ExternalLink
-        href={EXCHANGE_API_URL}
-        pressableStyle={[styles.apiCard, styles.apiCardStacked]}
-      >
-        <View style={styles.apiCardContent}>
-          <Text style={styles.apiTitle}>
-            {t("screens.settings.exchangeRates.apiTitleSecondary")}
-          </Text>
-          <Text style={styles.apiUrl}>{EXCHANGE_API_URL}</Text>
-        </View>
-      </ExternalLink>
-      <View style={styles.searchContainer}>
-        <SearchInput
-          value={searchQuery}
-          onChangeText={(query) => dispatch({ type: "SET_SEARCH", query })}
-          onClear={() => dispatch({ type: "SET_SEARCH", query: "" })}
-          placeholder={t("screens.settings.exchangeRates.searchPlaceholder")}
-        />
-      </View>
       <Text style={styles.instruction}>
         {t("screens.settings.exchangeRates.instructionCaption")}
       </Text>
@@ -282,16 +252,27 @@ function ExchangeRatesContent({
     )
   }
   return (
-    <FlatList
-      data={filteredEntries}
-      keyExtractor={(item) => item.displayCode}
-      renderItem={renderItem}
-      ListHeaderComponent={listHeader}
-      contentContainerStyle={styles.listContent}
-      keyboardShouldPersistTaps="handled"
-      style={styles.list}
-      contentInsetAdjustmentBehavior="automatic"
-    />
+    <View style={styles.container}>
+      {/* Outside the list so it stays put while the rates scroll. */}
+      <View style={styles.searchContainer}>
+        <SearchInput
+          value={searchQuery}
+          onChangeText={(query) => dispatch({ type: "SET_SEARCH", query })}
+          onClear={() => dispatch({ type: "SET_SEARCH", query: "" })}
+          placeholder={t("screens.settings.exchangeRates.searchPlaceholder")}
+        />
+      </View>
+      <FlatList
+        data={filteredEntries}
+        keyExtractor={(item) => item.displayCode}
+        renderItem={renderItem}
+        ListHeaderComponent={listHeader}
+        contentContainerStyle={styles.listContent}
+        keyboardShouldPersistTaps="handled"
+        style={styles.list}
+        contentInsetAdjustmentBehavior="automatic"
+      />
+    </View>
   )
 }
 export default function ExchangeRatesScreen() {
@@ -349,11 +330,43 @@ export default function ExchangeRatesScreen() {
         title={t("screens.settings.exchangeRates.infoSheet.title")}
         description={t("screens.settings.exchangeRates.infoSheet.description")}
         okLabel={t("screens.settings.exchangeRates.infoSheet.ok")}
-      />
+      >
+        <View style={styles.sources}>
+          <Text variant="small" style={styles.sourcesLabel}>
+            {t("screens.settings.exchangeRates.infoSheet.sources")}
+          </Text>
+          <ExternalLink
+            href={EXCHANGE_RATE_API_URL}
+            pressableStyle={styles.sourceLink}
+            textStyle={styles.sourceUrl}
+          >
+            <Text style={styles.sourceTitle}>
+              {EXCHANGE_RATE_API_ATTRIBUTION}
+            </Text>
+            {"\n"}
+            {EXCHANGE_RATE_API_URL}
+          </ExternalLink>
+          <ExternalLink
+            href={EXCHANGE_API_URL}
+            pressableStyle={styles.sourceLink}
+            textStyle={styles.sourceUrl}
+          >
+            <Text style={styles.sourceTitle}>
+              {t("screens.settings.exchangeRates.apiTitleSecondary")}
+            </Text>
+            {"\n"}
+            {EXCHANGE_API_URL}
+          </ExternalLink>
+        </View>
+      </InfoSheet>
     </>
   )
 }
 const styles = StyleSheet.create((theme) => ({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.surface,
+  },
   list: {
     flex: 1,
     backgroundColor: theme.colors.surface,
@@ -364,34 +377,30 @@ const styles = StyleSheet.create((theme) => ({
   listHeader: {
     paddingBottom: 4,
   },
-  apiCard: {
+  sources: {
+    gap: 8,
+  },
+  sourcesLabel: {
+    color: theme.colors.semantic.semi,
+    textAlign: "center",
+  },
+  sourceLink: {
     backgroundColor: theme.colors.secondary,
     borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 20,
+    padding: 12,
   },
-  // Sits directly under the first source card.
-  apiCardStacked: {
-    marginTop: 0,
-  },
-  apiCardContent: {
-    flexDirection: "column",
-    backgroundColor: theme.colors.secondary,
-  },
-  apiTitle: {
+  sourceTitle: {
     fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "700",
     color: theme.colors.onSurface,
-    marginBottom: 4,
   },
-  apiUrl: {
+  sourceUrl: {
     fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.semantic.semi,
   },
   searchContainer: {
     paddingHorizontal: 20,
+    paddingTop: 16,
     marginBottom: 12,
   },
   instruction: {
