@@ -109,13 +109,12 @@ async function fetchStatsTransactions(
     amount: number
     type: string
     transaction_date: string
-    account_balance_before: number
     subtype: string | null
     title: string | null
     loan_id: string | null
   }>(sql`
     SELECT t.id, t.account_id, t.category_id, t.amount, t.type, t.transaction_date,
-            t.account_balance_before, t.subtype, t.title, t.loan_id
+            t.subtype, t.title, t.loan_id
      FROM transactions t
      WHERE t.is_deleted = 0
        AND t.is_pending = 0
@@ -148,7 +147,6 @@ async function fetchStatsTransactions(
       categoryIcon: category?.icon ?? null,
       categoryColorSchemeName: category?.color_scheme_name ?? null,
       accountId: tx.account_id,
-      accountBalanceBefore: tx.account_balance_before,
       subtype: tx.subtype,
       loanId: tx.loan_id ?? null,
       title: tx.title,
@@ -156,12 +154,13 @@ async function fetchStatsTransactions(
   })
 }
 
-async function fetchBalanceTimeline(
-  fromDate: Date,
-  toDate: Date,
-): Promise<BalanceRawRow[]> {
+/**
+ * Every confirmed, non-deleted row dated on or after `fromDate`, with no upper
+ * bound: the chart walks back from each account's live balance, so it needs the
+ * rows after the range as well as the rows inside it.
+ */
+async function fetchBalanceTimeline(fromDate: Date): Promise<BalanceRawRow[]> {
   const from = fromDate.toISOString()
-  const to = toDate.toISOString()
 
   const usdCurrency = currencyRegistryService.getCurrencyByCode("USD")
   const useCode = usdCurrency?.code ?? "USD"
@@ -172,15 +171,12 @@ async function fetchBalanceTimeline(
     type: string
     subtype: string | null
     transaction_date: string
-    account_balance_before: number
   }>(sql`
-    SELECT t.account_id, t.amount, t.type, t.subtype, t.transaction_date,
-           t.account_balance_before
+    SELECT t.account_id, t.amount, t.type, t.subtype, t.transaction_date
      FROM transactions t
      WHERE t.is_deleted = 0
        AND t.is_pending = 0
-       AND t.transaction_date >= ${from}
-       AND t.transaction_date <= ${to}`)
+       AND t.transaction_date >= ${from}`)
 
   if (rows.length === 0) return []
 
@@ -190,7 +186,6 @@ async function fetchBalanceTimeline(
   return rows.map((tx) => ({
     date: new Date(tx.transaction_date),
     accountId: tx.account_id,
-    accountBalanceBefore: tx.account_balance_before,
     amount: tx.amount,
     type: tx.type as TransactionType,
     subtype: tx.subtype,
@@ -444,12 +439,22 @@ function computeCategoryBreakdown(
   return items.sort((a, b) => b.totalExpense - a.totalExpense)
 }
 
+/**
+ * Balance over the days of `[from, to]`, summed across `accounts`.
+ *
+ * Each account's balance is rebuilt from its live balance, which already holds
+ * every confirmed row, by taking back the rows that came later. That stays
+ * right after a backdated, edited, deleted or restored transaction, unlike the
+ * `account_balance_before` snapshot stored on each row when it was written.
+ *
+ * `balanceRows` are the confirmed rows dated on or after `from`; rows dated
+ * after `to` only move the closing balance.
+ */
 export function computeBalanceTimeline(
   balanceRows: BalanceRawRow[],
   accounts: RowAccount[],
   from: Date,
   to: Date,
-  historicalOpenings?: Map<string, number>,
 ): { timeline: BalanceTimelinePoint[]; opening: number; closing: number } {
   const buckets = generateDateBuckets(from, to, "day")
 
@@ -462,51 +467,39 @@ export function computeBalanceTimeline(
     else byAccount.set(row.accountId, [row])
   }
 
+  const toMs = to.getTime()
   const accountDailyMaps: Map<string, number>[] = []
   let openingSum = 0
+  let closingSum = 0
 
   for (const account of accounts) {
-    const rows = byAccount.get(account.id)
-    const dailyMap = new Map<string, number>()
-
-    if (!rows || rows.length === 0) {
-      const openingBalance =
-        historicalOpenings?.get(account.id) ?? account.balance
-      openingSum += openingBalance
-      for (const bucket of buckets) {
-        dailyMap.set(toDateKey(bucket), openingBalance)
+    // End of the range: the live balance minus everything dated after it.
+    let closing = account.balance
+    const deltaByDay = new Map<string, number>()
+    let inRange = 0
+    for (const row of byAccount.get(account.id) ?? []) {
+      const delta = getBalanceDelta(row.amount, row.type, row.subtype)
+      if (row.date.getTime() > toMs) {
+        closing -= delta
+        continue
       }
-    } else {
-      const sorted = rows
-        .slice()
-        .sort((a, b) => a.date.getTime() - b.date.getTime())
-      const accountOpening = sorted[0]?.accountBalanceBefore ?? 0
-      openingSum += accountOpening
-
-      const rowsByDay = new Map<string, BalanceRawRow[]>()
-      for (const row of sorted) {
-        const k = toDateKey(row.date)
-        const list = rowsByDay.get(k) ?? []
-        list.push(row)
-        rowsByDay.set(k, list)
-      }
-
-      let lastBalance = accountOpening
-      for (const bucket of buckets) {
-        const key = toDateKey(bucket)
-        const dayRows = rowsByDay.get(key)
-        if (dayRows) {
-          const last = dayRows[dayRows.length - 1]
-          if (last) {
-            lastBalance =
-              last.accountBalanceBefore +
-              getBalanceDelta(last.amount, last.type, last.subtype)
-          }
-        }
-        dailyMap.set(key, lastBalance)
-      }
+      const key = toDateKey(row.date)
+      deltaByDay.set(key, (deltaByDay.get(key) ?? 0) + delta)
+      inRange += delta
     }
 
+    // Start of the range, then forward day by day.
+    const opening = closing - inRange
+    const dailyMap = new Map<string, number>()
+    let running = opening
+    for (const bucket of buckets) {
+      const key = toDateKey(bucket)
+      running += deltaByDay.get(key) ?? 0
+      dailyMap.set(key, running)
+    }
+
+    openingSum += opening
+    closingSum += closing
     accountDailyMaps.push(dailyMap)
   }
 
@@ -518,8 +511,7 @@ export function computeBalanceTimeline(
     timeline.push({ date: bucket, balance: total })
   }
 
-  const closing = timeline.at(-1)?.balance ?? openingSum
-  return { timeline, opening: openingSum, closing }
+  return { timeline, opening: openingSum, closing: closingSum }
 }
 
 function computeSpendingByDayOfWeek(
@@ -728,58 +720,6 @@ function groupBalanceByCurrency(
 }
 
 /* ------------------------------------------------------------------ */
-/* Historical opening balance                                          */
-/* ------------------------------------------------------------------ */
-
-export async function fetchHistoricalOpenings(
-  accounts: RowAccount[],
-  beforeDate: Date,
-): Promise<Map<string, number>> {
-  const before = beforeDate.toISOString()
-
-  // Latest confirmed entry before the date, per account, in one pass.
-  const lastByAccount = new Map(
-    drizzleDb
-      .all<{
-        account_id: string
-        account_balance_before: number
-        amount: number
-        type: string
-        subtype: string | null
-      }>(sql`
-        SELECT account_id, account_balance_before, amount, type, subtype
-         FROM (
-           SELECT account_id, account_balance_before, amount, type, subtype,
-                  ROW_NUMBER() OVER (
-                    PARTITION BY account_id
-                    ORDER BY transaction_date DESC, created_at DESC
-                  ) AS rn
-            FROM transactions
-            WHERE is_deleted = 0
-              AND is_pending = 0
-              AND transaction_date < ${before}
-         )
-         WHERE rn = 1`)
-      .map((row) => [row.account_id, row] as const),
-  )
-
-  return new Map(
-    accounts.map((account) => {
-      const lastTx = lastByAccount.get(account.id)
-      const opening = lastTx
-        ? lastTx.account_balance_before +
-          getBalanceDelta(
-            lastTx.amount,
-            lastTx.type as TransactionType,
-            lastTx.subtype,
-          )
-        : account.balance
-      return [account.id, opening] as const
-    }),
-  )
-}
-
-/* ------------------------------------------------------------------ */
 /* Main export                                                         */
 /* ------------------------------------------------------------------ */
 
@@ -823,21 +763,11 @@ async function computeCurrencyStats(
         (a) => a.currency_code === currency && !a.exclude_from_balance,
       )
 
-      const activeAccountIds = new Set(balRows.map((r) => r.accountId))
-      const zeroActivityAccounts = currencyAccounts.filter(
-        (a) => !activeAccountIds.has(a.id),
-      )
-      const historicalOpenings =
-        zeroActivityAccounts.length > 0
-          ? await fetchHistoricalOpenings(zeroActivityAccounts, range.from)
-          : undefined
-
       const { timeline, opening, closing } = computeBalanceTimeline(
         balRows,
         currencyAccounts,
         range.from,
         range.to,
-        historicalOpenings,
       )
 
       const spendingByDayOfWeek = computeSpendingByDayOfWeek(
@@ -1035,7 +965,7 @@ export async function fetchAllStatsData(range: StatsDateRange) {
       hasPreviousPeriod
         ? fetchStatsTransactions(range.previousFrom, range.previousTo)
         : Promise.resolve<StatsRawRow[]>([]),
-      fetchBalanceTimeline(range.from, range.to),
+      fetchBalanceTimeline(range.from),
       fetchPendingSummary(range.from, range.to),
       drizzleDb.all<RowAccount>(sql.raw("SELECT * FROM accounts")),
     ])
