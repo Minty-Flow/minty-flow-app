@@ -55,6 +55,7 @@ import { EMPTY_TAG_IDS } from "./constants"
 import { getDefaultValues, mergeReducer } from "./form-utils"
 import { KIND_ICONS } from "./kind-info"
 import { onKindChange } from "./on-kind-change"
+import { checkTransferRate } from "./transfer-rate"
 import type {
   OverlayState,
   RecurringState,
@@ -249,13 +250,14 @@ export function useTransactionForm({
     until: null,
     startDate: watch("transactionDate"),
   })
-  const { conversionRate, setConversionRate } = useFormConversionRate(
-    transactionType,
-    selectedAccount,
-    selectedToAccount,
-    transaction,
-    setValue,
-  )
+  const { conversionRate, isConversionRateLoading, setConversionRate } =
+    useFormConversionRate(
+      transactionType,
+      selectedAccount,
+      selectedToAccount,
+      transaction,
+      setValue,
+    )
   const {
     attachmentState,
     setAttachmentState,
@@ -393,33 +395,27 @@ export function useTransactionForm({
           fromAccount &&
           toAccount &&
           fromAccount.currencyCode !== toAccount.currencyCode
-        if (differentCurrencies) {
-          if (
-            conversionRate == null ||
-            conversionRate <= 0 ||
-            conversionRate === 1
-          ) {
-            Toast.error({
-              title:
-                conversionRate === 1
-                  ? t("components.transactionForm.toast.rateLoading")
-                  : t(
-                      "components.transactionForm.toast.setDifferentCurrencies",
-                    ),
-            })
-            return
-          }
+        const rateCheck = checkTransferRate({
+          differentCurrencies: !!differentCurrencies,
+          conversionRate,
+          isLoading: isConversionRateLoading,
+        })
+        if (!rateCheck.ok) {
+          Toast.error({
+            title:
+              rateCheck.reason === "loading"
+                ? t("components.transactionForm.toast.rateLoading")
+                : t("components.transactionForm.toast.setDifferentCurrencies"),
+          })
+          return
         }
         const effectiveDate = data.transactionDate
         const transferPayload = {
           fromAccountId: fromId,
           toAccountId: toId,
           amount: data.amount,
-          ...(differentCurrencies &&
-          conversionRate != null &&
-          conversionRate > 0 &&
-          conversionRate !== 1
-            ? { conversionRate }
+          ...(rateCheck.conversionRate != null
+            ? { conversionRate: rateCheck.conversionRate }
             : {}),
           transactionDate: isNew ? effectiveDate.getTime() : effectiveDate,
           title:
