@@ -17,6 +17,8 @@ type TabsMintyProps<T> = {
   activeValue: T
   onValueChange: (value: T) => void
   variant?: "button" | "segmented"
+  /** Greys the tabs out and ignores presses. */
+  disabled?: boolean
   style?: StyleProp<ViewStyle>
 }
 
@@ -25,6 +27,7 @@ export const TabsMinty = <T,>({
   activeValue,
   onValueChange,
   variant = "button",
+  disabled = false,
   style,
 }: TabsMintyProps<T>) => {
   const isSegmented = variant === "segmented"
@@ -34,6 +37,7 @@ export const TabsMinty = <T,>({
     <View
       style={[
         isSegmented ? styles.segmentedContainer : styles.buttonContainer,
+        disabled && styles.disabled,
         style,
       ]}
     >
@@ -50,6 +54,7 @@ export const TabsMinty = <T,>({
                   ? styles.segmentedTabActive
                   : styles.buttonTabActive),
             ]}
+            disabled={disabled}
             onPress={() => onValueChange(item.value)}
           >
             {item.icon && (
@@ -73,6 +78,9 @@ export const TabsMinty = <T,>({
 }
 
 const styles = StyleSheet.create((theme) => ({
+  disabled: {
+    opacity: 0.5,
+  },
   // Button variant (Variant 1)
   buttonContainer: {
     flexDirection: "row",

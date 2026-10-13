@@ -242,6 +242,9 @@ export function LoanModifyContent({
               },
             ]}
             activeValue={formLoanType}
+            // Repayments tell the opening entry apart by type, so the type
+            // is fixed once any exist.
+            disabled={!isAddMode && (loan?.repaidAmount ?? 0) > 0}
             onValueChange={(v) => {
               setValue("loanType", v, { shouldDirty: true })
               // Reset category selection — the valid set changes when loan type changes
