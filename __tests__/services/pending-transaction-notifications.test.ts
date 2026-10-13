@@ -50,16 +50,25 @@ import { synchronizePlannedTransactionNotifications } from "~/services/pending-t
 
 const inTwoHours = () => new Date(Date.now() + 2 * 60 * 60 * 1000)
 
-const pendingTx = (title: string | null) => ({
+const pendingTx = (
+  title: string | null,
+  extra: { id?: string; type?: string; amount?: number } = {},
+) => ({
   id: "tx-1",
   title,
+  type: "expense",
+  amount: 1_000,
   transactionDate: inTwoHours(),
+  ...extra,
 })
 
 const contents = () =>
   schedule.mock.calls.map(
     ([request]) => request.content as { title: string; body: string },
   )
+
+const scheduleIds = () =>
+  schedule.mock.calls.map(([request]) => request.identifier as string).sort()
 
 beforeEach(() => {
   schedule.mockClear()
@@ -107,5 +116,25 @@ describe("pending transaction notifications", () => {
     await synchronizePlannedTransactionNotifications()
 
     expect(contents().map((c) => c.title)).toContain("معاملة معلّقة")
+  })
+
+  it("notifies once for a pending transfer, not once per leg", async () => {
+    pending.rows = [
+      pendingTx("Move", { id: "debit", type: "transfer", amount: -2_000 }),
+      pendingTx("Move", { id: "credit", type: "transfer", amount: 2_000 }),
+    ]
+
+    await synchronizePlannedTransactionNotifications()
+
+    // The due and the early reminder, for the debit leg only.
+    expect(scheduleIds()).toEqual(["txn-debit", "txn-early-debit"])
+  })
+
+  it("still notifies for pending income, which also has a positive amount", async () => {
+    pending.rows = [pendingTx("Salary", { id: "pay", type: "income" })]
+
+    await synchronizePlannedTransactionNotifications()
+
+    expect(scheduleIds()).toEqual(["txn-early-pay", "txn-pay"])
   })
 })
