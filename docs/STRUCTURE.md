@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-13T12:50:37.155Z
+Generated on: 2026-10-13T13:16:50.012Z
 ```
 ./
 ├── __tests__/
@@ -10,6 +10,8 @@ Generated on: 2026-10-13T12:50:37.155Z
 │   │       └── transaction-form/
 │   │           ├── transfer-edit-from-credit-leg.test.ts
 │   │           └── transfer-rate.test.ts
+│   ├── constants/
+│   │   └── trash-retention.test.ts
 │   ├── database/
 │   │   ├── backup/
 │   │   │   └── backup-format.test.ts
@@ -28,6 +30,7 @@ Generated on: 2026-10-13T12:50:37.155Z
 │   │   │   ├── recurring-sync.test.ts
 │   │   │   ├── recurring-template-refs.test.ts
 │   │   │   ├── recurring-transaction-service.test.ts
+│   │   │   ├── trash-auto-purge.test.ts
 │   │   │   └── trashed-transactions-read-only.test.ts
 │   │   └── utils/
 │   │       └── get-balance-delta.test.ts
@@ -479,7 +482,8 @@ Generated on: 2026-10-13T12:50:37.155Z
 │   │   ├── fab-button.ts
 │   │   ├── minty-icons-selection.ts
 │   │   ├── pre-sets-accounts.ts
-│   │   └── pre-sets-categories.ts
+│   │   ├── pre-sets-categories.ts
+│   │   └── trash-retention.ts
 │   ├── contexts/
 │   │   └── scroll-into-view-context.tsx
 │   ├── database/

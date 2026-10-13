@@ -15,41 +15,32 @@ import { ChoiceChips } from "~/components/ui/chips"
 import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { TRASH_RETENTION_CHOICES } from "~/constants/trash-retention"
 import { destroyAllDeletedTransactions } from "~/database/services/ledger-service"
 import { useTrashBinStore } from "~/stores/trash-bin.store"
 import { Toast } from "~/utils/toast"
 
-const RetentionPeriodEnum = {
-  ONE_DAY: "1 day",
-  SEVEN_DAYS: "7 days",
-  FOURTEEN_DAYS: "14 days",
-  THIRTY_DAYS: "30 days",
-  NINETY_DAYS: "90 days",
-  ONE_EIGHTY_DAYS: "180 days",
-  THREE_SIXTY_FIVE_DAYS: "365 days",
-  FOREVER: "forever",
-} as const
 export default function TrashBinScreen() {
   const router = useRouter()
   const [confirmSheetVisible, setConfirmSheetVisible] = useState<boolean>(false)
   const retentionPeriod = useTrashBinStore((s) => s.retentionPeriod)
   const setRetentionPeriod = useTrashBinStore((s) => s.setRetentionPeriod)
   const { t } = useTranslation()
-  const retentionMapping = Object.values(RetentionPeriodEnum).map((val) => {
-    if (val === "forever") {
+  const retentionMapping = TRASH_RETENTION_CHOICES.map(({ value, days }) => {
+    if (days === null) {
       return {
-        value: val,
+        value,
         label: t("screens.settings.trash.retention.forever"),
       }
     }
-    // Extract the number from the string "30 days" -> 30
-    const count = parseInt(val, 10)
     return {
-      value: val,
+      value,
       label:
-        count === 1
-          ? t("screens.settings.trash.retention.daysCount", { count })
-          : t("screens.settings.trash.retention.daysCountPlural", { count }),
+        days === 1
+          ? t("screens.settings.trash.retention.daysCount", { count: days })
+          : t("screens.settings.trash.retention.daysCountPlural", {
+              count: days,
+            }),
     }
   })
   const choiceLabels = retentionMapping.map((m) => m.label)
