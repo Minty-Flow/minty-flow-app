@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-13T08:40:35.104Z
+Generated on: 2026-10-13T08:51:46.689Z
 ```
 ./
 ├── .github/
@@ -467,6 +467,7 @@ Generated on: 2026-10-13T08:40:35.104Z
 │   │   │   ├── goal-service.ts
 │   │   │   ├── ledger-service.ts
 │   │   │   ├── loan-service.ts
+│   │   │   ├── recurring-transaction-service.test.ts
 │   │   │   ├── recurring-transaction-service.ts
 │   │   │   └── tag-service.ts
 │   │   ├── test-utils/

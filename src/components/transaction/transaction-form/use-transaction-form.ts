@@ -449,9 +449,11 @@ export function useTransactionForm({
         router.back()
         return
       }
-      const effectiveDate = isRecurringKind
-        ? recurring.startDate
-        : data.transactionDate
+      // Only a new rule starts at the recurrence card's start date. An edited
+      // instance keeps its own date; `recurring.startDate` is the rule's first
+      // date there.
+      const effectiveDate =
+        isNew && isRecurringKind ? recurring.startDate : data.transactionDate
       const attachmentsJson =
         attachmentState.list.length > 0
           ? JSON.stringify(attachmentState.list.map(toStoredAttachment))
