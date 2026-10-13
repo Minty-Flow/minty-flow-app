@@ -44,9 +44,9 @@ issue (Backlog → Ready)
 1. **Start.** `git switch dev && git pull && git switch -c feat/xyz`. Open a
    draft PR into `dev` with `Closes #n` in the body (moves the card to
    *In progress*).
-2. **Work.** Conventional Commits, one logical change per PR. There is no CI,
-   so run `pnpm verify` (lint, number-formatting check, `tsc --noEmit`, tests) before
-   merging.
+2. **Work.** Conventional Commits, one logical change per PR. CI runs only on
+   PRs into `main`, not on PRs into `dev`, so run `pnpm verify` (lint,
+   number-formatting check, `tsc --noEmit`, tests) before merging.
 3. **Merge to dev.** Mark the PR ready and merge (squash is fine). The card
    moves to *In review*. Delete the temp branch and test from `dev`.
 4. **Release.** When `dev` is validated, open a PR `dev → main` repeating the
