@@ -58,6 +58,14 @@ issue (Backlog → Ready)
 Only `Closes #n` in a PR into `main` closes an issue; the `board-sync`
 workflow reads those lines on PRs into `dev` to move the board cards.
 
+### Coding agents
+
+- Commit freely on a `feat/*`, `fix/*`, `chore/*` or `perf/*` branch off `dev`.
+  Never commit to `main` or `dev`.
+- Do not push, and do not open or update a PR, until the repository owner has
+  approved. A push is the point where other people can see the work.
+- Open PRs as drafts.
+
 ## Checks
 
 The pre-commit hook (husky) runs these automatically and they must all pass:
