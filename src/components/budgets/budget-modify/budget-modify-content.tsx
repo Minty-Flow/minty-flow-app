@@ -256,7 +256,13 @@ export function BudgetModifyContent({
             {/* The accounts row only exists once a currency is chosen, so the
                 currency error comes first. */}
             {(errors.currencyCode ?? errors.accountIds) && (
-              <Text variant="small" style={modifyFormStyles.errorText}>
+              <Text
+                variant="small"
+                style={[
+                  modifyFormStyles.errorText,
+                  budgetModifyStyles.rowError,
+                ]}
+              >
                 {t(
                   (errors.currencyCode ?? errors.accountIds)
                     ?.message as TranslationKey,
@@ -295,7 +301,13 @@ export function BudgetModifyContent({
               label={t("screens.settings.budgets.form.categoryLabel")}
             />
             {errors.categoryIds && (
-              <Text variant="small" style={modifyFormStyles.errorText}>
+              <Text
+                variant="small"
+                style={[
+                  modifyFormStyles.errorText,
+                  budgetModifyStyles.rowError,
+                ]}
+              >
                 {t(errors.categoryIds.message as TranslationKey)}
               </Text>
             )}
@@ -379,7 +391,13 @@ export function BudgetModifyContent({
                   </Text>
                 </ListItem>
                 {errors.endDate && (
-                  <Text variant="small" style={modifyFormStyles.errorText}>
+                  <Text
+                    variant="small"
+                    style={[
+                      modifyFormStyles.errorText,
+                      budgetModifyStyles.rowError,
+                    ]}
+                  >
                     {t(errors.endDate.message as TranslationKey)}
                   </Text>
                 )}
