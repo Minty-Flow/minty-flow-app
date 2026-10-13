@@ -108,6 +108,49 @@ describe("deleting a category that transactions use", () => {
   })
 })
 
+describe("deleting a category that a budget tags its transactions with", () => {
+  const budgetOf = (transactionId: string) =>
+    drizzleDb
+      .select()
+      .from(transactions)
+      .where(eq(transactions.id, transactionId))
+      .get()?.budgetId
+
+  it("clears the budget of the transactions that lose their category only", async () => {
+    seedAccount("acc-tag")
+    seedCategory("cat-gone")
+    seedCategory("cat-stays")
+    drizzleDb
+      .insert(budgets)
+      .values({
+        id: "budget-tag",
+        name: "budget-tag",
+        amount: 10_000,
+        currencyCode: "USD",
+        period: "monthly",
+        startDate: now,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run()
+    const losing = await createTransaction({
+      ...expense("acc-tag", "cat-gone"),
+      budgetId: "budget-tag",
+    })
+    const keeping = await createTransaction({
+      ...expense("acc-tag", "cat-stays"),
+      budgetId: "budget-tag",
+    })
+
+    await deleteCategoryById("cat-gone")
+
+    expect(categoryOf(losing)).toBeNull()
+    expect(budgetOf(losing)).toBeNull()
+    expect(categoryOf(keeping)).toBe("cat-stays")
+    expect(budgetOf(keeping)).toBe("budget-tag")
+  })
+})
+
 describe("deleting a category that a loan uses", () => {
   it("is refused, naming the loans, and changes nothing", async () => {
     seedAccount("acc-loan")

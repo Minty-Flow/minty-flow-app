@@ -148,8 +148,15 @@ export async function deleteCategoryById(id: string): Promise<void> {
       .set({ isActive: 0, updatedAt: new Date().toISOString() })
       .where(losesLastCategory(id))
       .run()
+    // A budget picks its transactions by category, and the transaction form
+    // only offers a budget whose categories include the transaction's, so an
+    // uncategorized transaction cannot keep its budget either.
     db.update(transactions)
-      .set({ categoryId: null, updatedAt: new Date().toISOString() })
+      .set({
+        categoryId: null,
+        budgetId: null,
+        updatedAt: new Date().toISOString(),
+      })
       .where(eq(transactions.categoryId, id))
       .run()
     clearCategoryFromRecurringTemplates(db, id)
