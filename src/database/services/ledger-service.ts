@@ -1350,6 +1350,19 @@ export async function updateFutureRecurringInstances(
 
 // ── Trash helpers ─────────────────────────────────────────────────────────────
 
+/**
+ * Destroying one leg of a transfer hard-deletes both, so in a batch the second
+ * leg's id may already be gone. Skip it instead of failing the whole batch.
+ */
+function destroyTransactionIfPresent(db: DbTransaction, id: string): void {
+  const exists = db
+    .select({ id: transactions.id })
+    .from(transactions)
+    .where(eq(transactions.id, id))
+    .get()
+  if (exists) destroyTransactionInTx(db, id)
+}
+
 export async function destroyAllDeletedTransactions(): Promise<void> {
   const deleted = drizzleDb
     .select(txSelection)
@@ -1357,7 +1370,7 @@ export async function destroyAllDeletedTransactions(): Promise<void> {
     .where(eq(transactions.isDeleted, 1))
     .all()
   await runInTransaction("trash.destroyAll", (db) => {
-    for (const tx of deleted) destroyTransactionInTx(db, tx.id)
+    for (const tx of deleted) destroyTransactionIfPresent(db, tx.id)
   })
 }
 
@@ -1381,7 +1394,7 @@ export async function autoPurgeTrash(retentionValue: string): Promise<void> {
 
   try {
     await runInTransaction("trash.autoPurge", (db) => {
-      for (const tx of toPurge) destroyTransactionInTx(db, tx.id)
+      for (const tx of toPurge) destroyTransactionIfPresent(db, tx.id)
     })
     return
   } catch (err) {
@@ -1393,7 +1406,9 @@ export async function autoPurgeTrash(retentionValue: string): Promise<void> {
   // One bad row rolled the batch back; isolate it so the rest still purge.
   for (const tx of toPurge) {
     try {
-      await destroyTransaction(tx.id)
+      await runInTransaction("trash.autoPurgeRow", (db) =>
+        destroyTransactionIfPresent(db, tx.id),
+      )
     } catch (err) {
       logger.error("[autoPurgeTrash] failed to destroy transaction", {
         id: tx.id,
