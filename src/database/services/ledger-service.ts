@@ -360,16 +360,24 @@ export async function createTransaction(
   )
 }
 
-export async function createTransfer(
+type TransferRecurringOptions = {
+  recurringId: string
+  isPending: boolean
+  subtype?: string | null
+  extra?: Record<string, string> | null
+  kind?: TransactionKind
+}
+
+/**
+ * Insert a transfer (both legs and the link) and move both balances inside an
+ * open database transaction, so a caller can make it part of a larger
+ * all-or-nothing write.
+ */
+export function createTransferInTx(
+  db: DbTransaction,
   params: CreateTransferParams,
-  recurringOptions?: {
-    recurringId: string
-    isPending: boolean
-    subtype?: string | null
-    extra?: Record<string, string> | null
-    kind?: TransactionKind
-  },
-): Promise<void> {
+  recurringOptions?: TransferRecurringOptions,
+): void {
   assertMinorUnits(params.amount)
   if (params.fromAccountId === params.toAccountId) {
     throw new Error("Cannot transfer to the same account.")
@@ -392,127 +400,134 @@ export async function createTransfer(
     ? JSON.stringify(recurringOptions.extra)
     : null
 
-  await runInTransaction("transfer.create", (db) => {
-    const fromAcc = db
-      .select({
-        balance: accounts.balance,
-        currencyCode: accounts.currencyCode,
+  const fromAcc = db
+    .select({
+      balance: accounts.balance,
+      currencyCode: accounts.currencyCode,
+    })
+    .from(accounts)
+    .where(eq(accounts.id, params.fromAccountId))
+    .get()
+  const toAcc = db
+    .select({
+      balance: accounts.balance,
+      currencyCode: accounts.currencyCode,
+    })
+    .from(accounts)
+    .where(eq(accounts.id, params.toAccountId))
+    .get()
+
+  if (!fromAcc || !toAcc) throw new Error("One or both accounts not found.")
+
+  const creditAmount =
+    fromAcc.currencyCode !== toAcc.currencyCode &&
+    params.conversionRate != null &&
+    params.conversionRate > 0
+      ? convertMinorUnits(
+          params.amount,
+          fromAcc.currencyCode,
+          toAcc.currencyCode,
+          params.conversionRate,
+        )
+      : params.amount
+
+  db.insert(transactions)
+    .values({
+      id: debitId,
+      accountId: params.fromAccountId,
+      categoryId: null,
+      amount: -params.amount,
+      type: "transfer",
+      transactionDate: dateIso,
+      title,
+      description: params.notes ?? null,
+      isDeleted: 0,
+      deletedAt: null,
+      isPending: isPending ? 1 : 0,
+      requiresManualConfirmation: 0,
+      accountBalanceBefore: isPending ? 0 : fromAcc.balance,
+      subtype: recurringOptions?.subtype ?? null,
+      // transfers are pending+default by design (migration 0001 & deriveKind exclude type='transfer' from 'upcoming') — CSI-2 assert intentionally not applied here
+      kind: recurringOptions?.kind ?? "default",
+      extra: extraJson,
+      hasAttachments: 0,
+      recurringId: recurringOptions?.recurringId ?? null,
+      location: null,
+      goalId: null,
+      budgetId: null,
+      loanId: null,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .run()
+
+  db.insert(transactions)
+    .values({
+      id: creditId,
+      accountId: params.toAccountId,
+      categoryId: null,
+      amount: creditAmount,
+      type: "transfer",
+      transactionDate: dateIso,
+      title,
+      description: params.notes ?? null,
+      isDeleted: 0,
+      deletedAt: null,
+      isPending: isPending ? 1 : 0,
+      requiresManualConfirmation: 0,
+      accountBalanceBefore: isPending ? 0 : toAcc.balance,
+      subtype: recurringOptions?.subtype ?? null,
+      kind: recurringOptions?.kind ?? "default",
+      extra: extraJson,
+      hasAttachments: 0,
+      recurringId: recurringOptions?.recurringId ?? null,
+      location: null,
+      goalId: null,
+      budgetId: null,
+      loanId: null,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .run()
+
+  if (!isPending) {
+    db.update(accounts)
+      .set({
+        balance: drizzleSql`${accounts.balance} - ${params.amount}`,
+        updatedAt: now,
       })
-      .from(accounts)
       .where(eq(accounts.id, params.fromAccountId))
-      .get()
-    const toAcc = db
-      .select({
-        balance: accounts.balance,
-        currencyCode: accounts.currencyCode,
+      .run()
+    db.update(accounts)
+      .set({
+        balance: drizzleSql`${accounts.balance} + ${creditAmount}`,
+        updatedAt: now,
       })
-      .from(accounts)
       .where(eq(accounts.id, params.toAccountId))
-      .get()
-
-    if (!fromAcc || !toAcc) throw new Error("One or both accounts not found.")
-
-    const creditAmount =
-      fromAcc.currencyCode !== toAcc.currencyCode &&
-      params.conversionRate != null &&
-      params.conversionRate > 0
-        ? convertMinorUnits(
-            params.amount,
-            fromAcc.currencyCode,
-            toAcc.currencyCode,
-            params.conversionRate,
-          )
-        : params.amount
-
-    db.insert(transactions)
-      .values({
-        id: debitId,
-        accountId: params.fromAccountId,
-        categoryId: null,
-        amount: -params.amount,
-        type: "transfer",
-        transactionDate: dateIso,
-        title,
-        description: params.notes ?? null,
-        isDeleted: 0,
-        deletedAt: null,
-        isPending: isPending ? 1 : 0,
-        requiresManualConfirmation: 0,
-        accountBalanceBefore: isPending ? 0 : fromAcc.balance,
-        subtype: recurringOptions?.subtype ?? null,
-        // transfers are pending+default by design (migration 0001 & deriveKind exclude type='transfer' from 'upcoming') — CSI-2 assert intentionally not applied here
-        kind: recurringOptions?.kind ?? "default",
-        extra: extraJson,
-        hasAttachments: 0,
-        recurringId: recurringOptions?.recurringId ?? null,
-        location: null,
-        goalId: null,
-        budgetId: null,
-        loanId: null,
-        createdAt: now,
-        updatedAt: now,
-      })
       .run()
+  }
 
-    db.insert(transactions)
-      .values({
-        id: creditId,
-        accountId: params.toAccountId,
-        categoryId: null,
-        amount: creditAmount,
-        type: "transfer",
-        transactionDate: dateIso,
-        title,
-        description: params.notes ?? null,
-        isDeleted: 0,
-        deletedAt: null,
-        isPending: isPending ? 1 : 0,
-        requiresManualConfirmation: 0,
-        accountBalanceBefore: isPending ? 0 : toAcc.balance,
-        subtype: recurringOptions?.subtype ?? null,
-        kind: recurringOptions?.kind ?? "default",
-        extra: extraJson,
-        hasAttachments: 0,
-        recurringId: recurringOptions?.recurringId ?? null,
-        location: null,
-        goalId: null,
-        budgetId: null,
-        loanId: null,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .run()
+  db.insert(transfers)
+    .values({
+      id: generateId(),
+      fromTransactionId: debitId,
+      toTransactionId: creditId,
+      fromAccountId: params.fromAccountId,
+      toAccountId: params.toAccountId,
+      conversionRate: params.conversionRate ?? 1,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .run()
+}
 
-    if (!isPending) {
-      db.update(accounts)
-        .set({
-          balance: drizzleSql`${accounts.balance} - ${params.amount}`,
-          updatedAt: now,
-        })
-        .where(eq(accounts.id, params.fromAccountId))
-        .run()
-      db.update(accounts)
-        .set({
-          balance: drizzleSql`${accounts.balance} + ${creditAmount}`,
-          updatedAt: now,
-        })
-        .where(eq(accounts.id, params.toAccountId))
-        .run()
-    }
-
-    db.insert(transfers)
-      .values({
-        id: generateId(),
-        fromTransactionId: debitId,
-        toTransactionId: creditId,
-        fromAccountId: params.fromAccountId,
-        toAccountId: params.toAccountId,
-        conversionRate: params.conversionRate ?? 1,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .run()
-  })
+export async function createTransfer(
+  params: CreateTransferParams,
+  recurringOptions?: TransferRecurringOptions,
+): Promise<void> {
+  await runInTransaction("transfer.create", (db) =>
+    createTransferInTx(db, params, recurringOptions),
+  )
 }
 
 // ── Update ───────────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@ import { and, count, desc, eq } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
 import { recurringTransactions, transactions } from "~/database/drizzle/schema"
-import { runInTransaction } from "~/database/transaction"
+import { type DbTransaction, runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
 import type {
   RecurringEditPayload,
@@ -112,6 +112,14 @@ function parseRules(row: RowRecurring): string[] {
   } catch {
     return []
   }
+}
+
+/** Move a rule's cursor to `iso`, inside an open database transaction. */
+function advanceCursor(db: DbTransaction, ruleId: string, iso: string): void {
+  db.update(recurringTransactions)
+    .set({ lastGeneratedTransactionDate: iso })
+    .where(eq(recurringTransactions.id, ruleId))
+    .run()
 }
 
 async function getInitialDateMs(txId: string): Promise<number> {
@@ -557,7 +565,16 @@ async function synchronizeRecurringTransaction(
         const effectiveLastMs = Math.max(...initialDates)
 
         if (nextOccurrence.getTime() <= effectiveLastMs) {
-          return null
+          // An instance for this slot, or a later one, already exists, so the
+          // cursor is behind (an interrupted write, or a rewritten rule). Catch
+          // it up and go on. Returning here would leave the cursor where it is
+          // and the rule would never generate again.
+          await runInTransaction("recurring.updateLastGenerated", (db) =>
+            advanceCursor(db, ruleId, nextOccurrence.toISOString()),
+          )
+          lastGenerated = nextOccurrence
+          processed++
+          continue
         }
       }
 
@@ -581,12 +598,9 @@ async function synchronizeRecurringTransaction(
         .get()
 
       if ((alreadyExists?.cnt ?? 0) > 0) {
-        await runInTransaction("recurring.updateLastGenerated", (db) => {
-          db.update(recurringTransactions)
-            .set({ lastGeneratedTransactionDate: nextIso })
-            .where(eq(recurringTransactions.id, ruleId))
-            .run()
-        })
+        await runInTransaction("recurring.updateLastGenerated", (db) =>
+          advanceCursor(db, ruleId, nextIso),
+        )
 
         lastGenerated = nextOccurrence
         processed++
@@ -609,8 +623,14 @@ async function synchronizeRecurringTransaction(
       }
 
       // ------------------------------------------------------------------
-      // Create transaction/transfer and advance cursor atomically.
+      // Create the instance and advance the cursor in ONE database
+      // transaction. Two separate writes left a window where the instance
+      // existed but the cursor did not move, and the rule then stalled.
       // ------------------------------------------------------------------
+
+      const { createTransactionInTx, createTransferInTx } = await import(
+        "./ledger-service"
+      )
 
       if (!isTransfer) {
         const txData: TransactionFormValues = {
@@ -629,9 +649,10 @@ async function synchronizeRecurringTransaction(
           kind: template.kind,
         }
 
-        const { createTransaction } = await import("./ledger-service")
-
-        await createTransaction(txData)
+        await runInTransaction("recurring.generate", (db) => {
+          createTransactionInTx(db, txData)
+          advanceCursor(db, ruleId, nextIso)
+        })
       } else {
         const toAccountId = rule.transfer_to_account_id
 
@@ -639,33 +660,28 @@ async function synchronizeRecurringTransaction(
           throw new Error("Recurring transfer missing transferToAccountId")
         }
 
-        const { createTransfer } = await import("./ledger-service")
-
-        await createTransfer(
-          {
-            fromAccountId: template.accountId,
-            toAccountId,
-            amount: template.amount,
-            transactionDate: nextOccurrence,
-            title: template.title ?? undefined,
-            notes: template.description ?? undefined,
-          },
-          {
-            recurringId: ruleId,
-            isPending,
-            subtype: template.subtype ?? null,
-            extra,
-            kind: template.kind,
-          },
-        )
+        await runInTransaction("recurring.generate", (db) => {
+          createTransferInTx(
+            db,
+            {
+              fromAccountId: template.accountId,
+              toAccountId,
+              amount: template.amount,
+              transactionDate: nextOccurrence,
+              title: template.title ?? undefined,
+              notes: template.description ?? undefined,
+            },
+            {
+              recurringId: ruleId,
+              isPending,
+              subtype: template.subtype ?? null,
+              extra,
+              kind: template.kind,
+            },
+          )
+          advanceCursor(db, ruleId, nextIso)
+        })
       }
-
-      await runInTransaction("recurring.updateLastGenerated", (db) => {
-        db.update(recurringTransactions)
-          .set({ lastGeneratedTransactionDate: nextIso })
-          .where(eq(recurringTransactions.id, ruleId))
-          .run()
-      })
 
       // Advance cursor and continue catch-up.
       lastGenerated = nextOccurrence

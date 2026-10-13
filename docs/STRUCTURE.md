@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-13T13:16:50.012Z
+Generated on: 2026-10-13T13:22:50.112Z
 ```
 ./
 ├── __tests__/
@@ -27,6 +27,7 @@ Generated on: 2026-10-13T13:16:50.012Z
 │   │   │   ├── loan-type-switch.test.ts
 │   │   │   ├── recurring-failure-isolation.test.ts
 │   │   │   ├── recurring-sync-concurrency.test.ts
+│   │   │   ├── recurring-sync-cursor.test.ts
 │   │   │   ├── recurring-sync.test.ts
 │   │   │   ├── recurring-template-refs.test.ts
 │   │   │   ├── recurring-transaction-service.test.ts
