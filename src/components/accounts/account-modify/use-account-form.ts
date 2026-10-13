@@ -16,6 +16,7 @@ import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import {
   type AddAccountsFormSchema,
   addAccountsSchema,
+  editAccountsSchema,
 } from "~/schemas/accounts.schema"
 import { currencyRegistryService } from "~/services/currency-registry"
 import { getThemeStrict } from "~/styles/theme/registry"
@@ -25,6 +26,7 @@ import { logger } from "~/utils/logger"
 import { rescaleMinorUnits } from "~/utils/money"
 import { Toast } from "~/utils/toast"
 
+import { buildAccountUpdate } from "./account-update-payload"
 import type { AccountModifyContentProps } from "./types"
 
 type UseAccountFormProps = Pick<
@@ -43,11 +45,11 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
   const {
     control,
     handleSubmit: handleFormSubmit,
-    formState: { errors, isDirty, isSubmitting },
+    formState: { errors, isDirty, isSubmitting, dirtyFields },
     watch,
     setValue,
   } = useForm({
-    resolver: zodResolver(addAccountsSchema),
+    resolver: zodResolver(isAddMode ? addAccountsSchema : editAccountsSchema),
     defaultValues: {
       name: account?.name || "",
       type: account?.type || AccountTypeEnum.CHECKING,
@@ -91,16 +93,10 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
         allowNavigation()
         handleGoBack()
       } else {
-        await updateAccount(accountId, {
-          name: data.name,
-          type: data.type,
-          balance: data.balance,
-          currencyCode: data.currencyCode,
-          icon: data.icon,
-          colorSchemeName: data.colorSchemeName,
-          isPrimary: data.isPrimary,
-          excludeFromBalance: data.excludeFromBalance,
-        })
+        await updateAccount(
+          accountId,
+          buildAccountUpdate(data, { balanceEdited: !!dirtyFields.balance }),
+        )
         allowNavigation()
         handleGoBack()
       }

@@ -164,6 +164,7 @@
       }
     },
     "accounts": {
+      "balanceAdjustmentTitle": "Balance adjustment",
       "title": "All Accounts",
       "addNew": "Add new account",
       "addNewAccount": "New Account",

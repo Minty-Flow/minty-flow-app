@@ -273,9 +273,14 @@ function destroyTransferById(txId: string, db: Db): void {
 
 // ── Create ───────────────────────────────────────────────────────────────────
 
-export async function createTransaction(
+/**
+ * Insert a transaction and apply its balance delta inside an open database
+ * transaction, so a caller can make it part of a larger all-or-nothing write.
+ */
+export function createTransactionInTx(
+  db: DbTransaction,
   data: TransactionFormValues,
-): Promise<string> {
+): string {
   assertMinorUnits(data.amount)
   const id = generateId()
   const now = new Date().toISOString()
@@ -286,68 +291,72 @@ export async function createTransaction(
   const kind = data.kind ?? "default"
   assertPendingKindAllowed(!!data.isPending, kind)
 
-  const txId = await runInTransaction("transaction.create", (db) => {
-    const balanceBefore = data.isPending
-      ? 0
-      : (db
-          .select({ balance: accounts.balance })
-          .from(accounts)
-          .where(eq(accounts.id, data.accountId))
-          .get()?.balance ?? 0)
+  const balanceBefore = data.isPending
+    ? 0
+    : (db
+        .select({ balance: accounts.balance })
+        .from(accounts)
+        .where(eq(accounts.id, data.accountId))
+        .get()?.balance ?? 0)
 
-    db.insert(transactions)
-      .values({
-        id,
-        accountId: data.accountId,
-        categoryId: data.categoryId ?? null,
-        amount: data.amount,
-        type: data.type,
-        transactionDate: data.transactionDate.toISOString(),
-        title: data.title ?? null,
-        description: data.description ?? null,
-        isDeleted: 0,
-        deletedAt: null,
-        isPending: data.isPending ? 1 : 0,
-        requiresManualConfirmation: data.requiresManualConfirmation ? 1 : 0,
-        accountBalanceBefore: balanceBefore,
-        subtype: data.subtype ?? null,
-        kind,
-        extra: extraJson,
-        hasAttachments,
-        recurringId: data.recurringId ?? null,
-        location: data.location ?? null,
-        goalId: data.goalId ?? null,
-        budgetId: data.budgetId ?? null,
-        loanId: data.loanId ?? null,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .run()
+  db.insert(transactions)
+    .values({
+      id,
+      accountId: data.accountId,
+      categoryId: data.categoryId ?? null,
+      amount: data.amount,
+      type: data.type,
+      transactionDate: data.transactionDate.toISOString(),
+      title: data.title ?? null,
+      description: data.description ?? null,
+      isDeleted: 0,
+      deletedAt: null,
+      isPending: data.isPending ? 1 : 0,
+      requiresManualConfirmation: data.requiresManualConfirmation ? 1 : 0,
+      accountBalanceBefore: balanceBefore,
+      subtype: data.subtype ?? null,
+      kind,
+      extra: extraJson,
+      hasAttachments,
+      recurringId: data.recurringId ?? null,
+      location: data.location ?? null,
+      goalId: data.goalId ?? null,
+      budgetId: data.budgetId ?? null,
+      loanId: data.loanId ?? null,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .run()
 
-    if (!data.isPending) {
-      const delta = getBalanceDelta(data.amount, data.type, data.subtype)
-      if (delta !== 0) {
-        db.update(accounts)
-          .set({
-            balance: drizzleSql`${accounts.balance} + ${delta}`,
-            updatedAt: now,
-          })
-          .where(eq(accounts.id, data.accountId))
-          .run()
-      }
-    }
-
-    if (data.tags?.length) {
-      db.insert(transactionTags)
-        .values(data.tags.map((tagId) => ({ transactionId: id, tagId })))
-        .onConflictDoNothing()
+  if (!data.isPending) {
+    const delta = getBalanceDelta(data.amount, data.type, data.subtype)
+    if (delta !== 0) {
+      db.update(accounts)
+        .set({
+          balance: drizzleSql`${accounts.balance} + ${delta}`,
+          updatedAt: now,
+        })
+        .where(eq(accounts.id, data.accountId))
         .run()
     }
+  }
 
-    return id
-  })
+  if (data.tags?.length) {
+    db.insert(transactionTags)
+      .values(data.tags.map((tagId) => ({ transactionId: id, tagId })))
+      .onConflictDoNothing()
+      .run()
+  }
 
-  return txId
+  return id
+}
+
+export async function createTransaction(
+  data: TransactionFormValues,
+): Promise<string> {
+  return runInTransaction("transaction.create", (db) =>
+    createTransactionInTx(db, data),
+  )
 }
 
 export async function createTransfer(
