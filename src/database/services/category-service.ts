@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm"
 import { categories, transactions } from "~/database/drizzle/schema"
 import { runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
+import { clearCategoryFromRecurringTemplates } from "~/database/utils/recurring-template-refs"
 import type {
   AddCategoriesFormSchema,
   UpdateCategoriesFormSchema,
@@ -58,6 +59,7 @@ export async function deleteCategoryById(id: string): Promise<void> {
       .set({ categoryId: null, updatedAt: new Date().toISOString() })
       .where(eq(transactions.categoryId, id))
       .run()
+    clearCategoryFromRecurringTemplates(db, id)
     db.delete(categories).where(eq(categories.id, id)).run()
   })
 }

@@ -13,6 +13,7 @@ import {
 } from "~/database/drizzle/schema"
 import { runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
+import { disableRecurringRulesForAccount } from "~/database/utils/recurring-template-refs"
 import type {
   AddAccountsFormSchema,
   UpdateAccountsFormSchema,
@@ -396,6 +397,7 @@ export async function destroyAccount(id: string): Promise<void> {
       db.delete(transactions).where(eq(transactions.accountId, id)).run()
     }
 
+    disableRecurringRulesForAccount(db, id)
     db.delete(budgetAccounts).where(eq(budgetAccounts.accountId, id)).run()
     db.delete(goalAccounts).where(eq(goalAccounts.accountId, id)).run()
     db.delete(accounts).where(eq(accounts.id, id)).run()
