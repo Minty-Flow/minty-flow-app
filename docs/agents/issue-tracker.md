@@ -1,8 +1,15 @@
-# Issue tracker: Local Markdown
+# Issue tracker: local markdown or GitHub issues
 
-Issues and specs for this repo live as markdown files in `.scratch/`, tracked
-in git. Nothing goes to GitHub Issues. Skill config (`docs/agents/`) stays
-local and gitignored.
+Issues and specs for this repo live in one of two places:
+
+- **Local markdown** in `.scratch/`, which is gitignored: scratch planning that
+  does not need to be shared.
+- **GitHub issues** on the MintyFlowApp project board (org project 3): work
+  other people should see. A new issue lands in the *Backlog* column on its
+  own.
+
+**Ask the owner which one before writing any ticket, spec or backlog item.**
+Do not pick for them.
 
 ## Conventions
 
@@ -18,8 +25,13 @@ local and gitignored.
 
 ## When a skill says "publish to the issue tracker"
 
-Create a new file under `.scratch/<feature-slug>/` (creating the directory if
-needed). Do **not** call `gh issue create` or push anything to GitHub.
+Ask which tracker to use, then:
+
+- **Local:** create a new file under `.scratch/<feature-slug>/` (creating the
+  directory if needed). Do not push anything to GitHub.
+- **GitHub:** `gh issue create` with a body that follows the shape of #94
+  (Why, Today, Study first, Then, Done when). Issue text carries no AI
+  attribution (see `AGENTS.md`).
 
 ## When a skill says "fetch the relevant ticket"
 
@@ -46,7 +58,5 @@ Used by `/wayfinder`. The **map** is a file with one **child** file per ticket.
 
 ## Existing efforts
 
-- `.scratch/issue-1-account-select-scroll/` … `issue-5-precommit-reenable/` —
-  historical, pre-existing.
-- `.scratch/budget-gaps-easy/`, `budget-gaps-medium/`, `budget-gaps-hard/` —
-  specs from the 2026-08-29 feature-gap research spike.
+None in `.scratch/`. Finished efforts are deleted from it; open work is on the
+project board.
