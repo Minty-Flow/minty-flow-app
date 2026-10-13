@@ -926,7 +926,9 @@
         },
         "a11y": {
           "info": "معلومات عن أسعار الصرف"
-        }
+        },
+        "customBadge": "مخصص",
+        "originalRate": "الأصلي: {{rate}}"
       },
       "dataManagement": {
         "title": "إدارة البيانات",
