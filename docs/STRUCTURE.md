@@ -1,8 +1,12 @@
 # Project Structure
-Generated on: 2026-10-13T09:52:05.250Z
+Generated on: 2026-10-13T09:54:43.150Z
 ```
 ./
 ├── __tests__/
+│   ├── components/
+│   │   └── transaction/
+│   │       └── transaction-form/
+│   │           └── transfer-rate.test.ts
 │   ├── database/
 │   │   ├── drizzle/
 │   │   │   └── read-models/
@@ -377,6 +381,7 @@ Generated on: 2026-10-13T09:52:05.250Z
 │   │   │   │   ├── recurrence-unit-sheet.tsx
 │   │   │   │   ├── tag-picker-sheet.tsx
 │   │   │   │   ├── transaction-top-tabs.tsx
+│   │   │   │   ├── transfer-rate.ts
 │   │   │   │   ├── types.ts
 │   │   │   │   ├── upcoming-banner.tsx
 │   │   │   │   ├── use-form-attachments.ts

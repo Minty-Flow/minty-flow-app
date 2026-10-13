@@ -60,6 +60,9 @@ export function useFormConversionRate(
 ) {
   const [conversionRateState, setConversionRateState] =
     useState<ConversionRateState>(null)
+  // The pair whose lookup has finished, with or without a rate. A rate of 1 is
+  // a real rate (pegged pairs), so it cannot double as "still loading".
+  const [settledKey, setSettledKey] = useState<string | null>(null)
   const getCustomRate = useExchangeRatesPreferencesStore((s) => s.getCustomRate)
   const transactionKey = transaction?.id ?? "new"
   const conversionRatePairKey =
@@ -108,6 +111,12 @@ export function useFormConversionRate(
     }
   }, [conversionRatePairKey, transaction, transactionKey, transactionType])
 
+  const lookupKey = conversionRatePairKey
+    ? `${transactionKey}:${conversionRatePairKey}`
+    : null
+  const isConversionRateLoading =
+    lookupKey !== null && conversionRate === null && settledKey !== lookupKey
+
   useEffect(() => {
     if (transactionType !== "transfer" || !conversionRatePairKey) return
     if (conversionRate !== null) return
@@ -128,12 +137,19 @@ export function useFormConversionRate(
     void exchangeRatesService
       .getRate(fromCurrency, toCurrency, controller.signal)
       .then((rate) => {
-        if (cancelled || rate == null) return
+        if (cancelled) return
+        setSettledKey(`${transactionKey}:${conversionRatePairKey}`)
+        if (rate == null) return
         setConversionRateState({
           sourceKey: transactionKey,
           pairKey: conversionRatePairKey,
           rate,
         })
+      })
+      .catch((error) => {
+        if (cancelled) return
+        logger.warn("Conversion rate lookup failed", { error: String(error) })
+        setSettledKey(`${transactionKey}:${conversionRatePairKey}`)
       })
     return () => {
       cancelled = true
@@ -158,5 +174,5 @@ export function useFormConversionRate(
     })
     setValue("conversionRate", rate, { shouldDirty: true })
   }
-  return { conversionRate, setConversionRate }
+  return { conversionRate, isConversionRateLoading, setConversionRate }
 }
