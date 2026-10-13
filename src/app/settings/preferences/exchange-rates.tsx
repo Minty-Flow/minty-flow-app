@@ -214,14 +214,6 @@ function ExchangeRatesContent({
   }
   const listHeader = (
     <View style={styles.listHeader}>
-      <View style={styles.searchContainer}>
-        <SearchInput
-          value={searchQuery}
-          onChangeText={(query) => dispatch({ type: "SET_SEARCH", query })}
-          onClear={() => dispatch({ type: "SET_SEARCH", query: "" })}
-          placeholder={t("screens.settings.exchangeRates.searchPlaceholder")}
-        />
-      </View>
       <Text style={styles.instruction}>
         {t("screens.settings.exchangeRates.instructionCaption")}
       </Text>
@@ -241,16 +233,27 @@ function ExchangeRatesContent({
     )
   }
   return (
-    <FlatList
-      data={filteredEntries}
-      keyExtractor={(item) => item.displayCode}
-      renderItem={renderItem}
-      ListHeaderComponent={listHeader}
-      contentContainerStyle={styles.listContent}
-      keyboardShouldPersistTaps="handled"
-      style={styles.list}
-      contentInsetAdjustmentBehavior="automatic"
-    />
+    <View style={styles.container}>
+      {/* Outside the list so it stays put while the rates scroll. */}
+      <View style={styles.searchContainer}>
+        <SearchInput
+          value={searchQuery}
+          onChangeText={(query) => dispatch({ type: "SET_SEARCH", query })}
+          onClear={() => dispatch({ type: "SET_SEARCH", query: "" })}
+          placeholder={t("screens.settings.exchangeRates.searchPlaceholder")}
+        />
+      </View>
+      <FlatList
+        data={filteredEntries}
+        keyExtractor={(item) => item.displayCode}
+        renderItem={renderItem}
+        ListHeaderComponent={listHeader}
+        contentContainerStyle={styles.listContent}
+        keyboardShouldPersistTaps="handled"
+        style={styles.list}
+        contentInsetAdjustmentBehavior="automatic"
+      />
+    </View>
   )
 }
 export default function ExchangeRatesScreen() {
@@ -319,10 +322,10 @@ export default function ExchangeRatesScreen() {
             textStyle={styles.sourceUrl}
           >
             <Text style={styles.sourceTitle}>
-              {t("screens.settings.exchangeRates.apiTitle")}
+              {EXCHANGE_RATE_API_ATTRIBUTION}
             </Text>
             {"\n"}
-            {EXCHANGE_RATE_API_ATTRIBUTION}
+            {EXCHANGE_RATE_API_URL}
           </ExternalLink>
           <ExternalLink
             href={EXCHANGE_API_URL}
@@ -341,6 +344,10 @@ export default function ExchangeRatesScreen() {
   )
 }
 const styles = StyleSheet.create((theme) => ({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.surface,
+  },
   list: {
     flex: 1,
     backgroundColor: theme.colors.surface,

@@ -906,7 +906,6 @@
       },
       "exchangeRates": {
         "title": "أسعار الصرف",
-        "apiTitle": "واجهة أسعار الصرف",
         "apiTitleSecondary": "العملات الرقمية وأسعار أخرى",
         "loading": "جاري تحميل أسعار الصرف...",
         "searchPlaceholder": "البحث عن العملات...",
