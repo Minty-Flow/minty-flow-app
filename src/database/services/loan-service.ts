@@ -126,6 +126,38 @@ export async function updateLoanById(
       .get()
     if (!current) throw new Error(`Loan ${id} not found`)
 
+    const typeChanged =
+      data.loanType !== undefined && data.loanType !== current.loanType
+    if (typeChanged) {
+      // The opening entry and the repayments are told apart by `type`, so
+      // flipping the loan type with repayments in place would make them look
+      // like opening entries. Only a loan with nothing but its opening entry
+      // can change type.
+      const openingId = db
+        .select({ id: transactions.id })
+        .from(transactions)
+        .where(
+          and(
+            eq(transactions.loanId, id),
+            eq(
+              transactions.type,
+              getOpeningTypeForLoan(current.loanType as LoanType),
+            ),
+            eq(transactions.isDeleted, 0),
+          ),
+        )
+        .get()?.id
+      const others = db
+        .select({ id: transactions.id })
+        .from(transactions)
+        .where(eq(transactions.loanId, id))
+        .all()
+        .filter((row) => row.id !== openingId)
+      if (others.length > 0) {
+        throw new Error("Cannot change the type of a loan that has repayments")
+      }
+    }
+
     db.update(loans)
       .set({
         ...(data.name !== undefined ? { name: data.name } : {}),
@@ -180,9 +212,8 @@ export async function updateLoanById(
       .get()
     if (!opening) return
 
-    const newOpeningType = getOpeningTypeForLoan(
-      (data.loanType ?? current.loanType) as LoanType,
-    )
+    const newLoanType = (data.loanType ?? current.loanType) as LoanType
+    const newOpeningType = getOpeningTypeForLoan(newLoanType)
     const newAmount = data.principalAmount ?? opening.amount
     const newAccountId = data.accountId ?? opening.accountId
     const newCategoryId =
@@ -217,6 +248,7 @@ export async function updateLoanById(
         categoryId: newCategoryId,
         amount: newAmount,
         type: newOpeningType,
+        kind: getKindForLoanType(newLoanType),
         updatedAt: now,
       })
       .where(eq(transactions.id, opening.id))

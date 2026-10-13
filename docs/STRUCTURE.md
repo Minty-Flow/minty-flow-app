@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-13T09:34:26.914Z
+Generated on: 2026-10-13T09:40:06.989Z
 ```
 ./
 ├── __tests__/
@@ -9,6 +9,7 @@ Generated on: 2026-10-13T09:34:26.914Z
 │   │   │       └── stats-data.test.ts
 │   │   ├── services/
 │   │   │   ├── balance-service.test.ts
+│   │   │   ├── loan-type-switch.test.ts
 │   │   │   ├── recurring-failure-isolation.test.ts
 │   │   │   ├── recurring-sync.test.ts
 │   │   │   ├── recurring-template-refs.test.ts
@@ -71,12 +72,14 @@ Generated on: 2026-10-13T09:34:26.914Z
 │   │   ├── 0001_snapshot.json
 │   │   ├── 0002_snapshot.json
 │   │   ├── 0003_snapshot.json
-│   │   └── 0004_snapshot.json
+│   │   ├── 0004_snapshot.json
+│   │   └── 0005_snapshot.json
 │   ├── 0000_safe_maximus.sql
 │   ├── 0001_deep_daredevil.sql
 │   ├── 0002_famous_bastion.sql
 │   ├── 0003_transaction_composite_indexes.sql
 │   ├── 0004_repair_recurring_template_refs.sql
+│   ├── 0005_align_loan_row_kind.sql
 │   ├── migrations.d.ts
 │   └── migrations.js
 ├── plugins/
