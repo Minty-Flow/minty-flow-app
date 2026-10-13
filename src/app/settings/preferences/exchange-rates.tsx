@@ -214,28 +214,6 @@ function ExchangeRatesContent({
   }
   const listHeader = (
     <View style={styles.listHeader}>
-      <ExternalLink
-        href={EXCHANGE_RATE_API_URL}
-        pressableStyle={styles.apiCard}
-      >
-        <View style={styles.apiCardContent}>
-          <Text style={styles.apiTitle}>
-            {t("screens.settings.exchangeRates.apiTitle")}
-          </Text>
-          <Text style={styles.apiUrl}>{EXCHANGE_RATE_API_ATTRIBUTION}</Text>
-        </View>
-      </ExternalLink>
-      <ExternalLink
-        href={EXCHANGE_API_URL}
-        pressableStyle={[styles.apiCard, styles.apiCardStacked]}
-      >
-        <View style={styles.apiCardContent}>
-          <Text style={styles.apiTitle}>
-            {t("screens.settings.exchangeRates.apiTitleSecondary")}
-          </Text>
-          <Text style={styles.apiUrl}>{EXCHANGE_API_URL}</Text>
-        </View>
-      </ExternalLink>
       <View style={styles.searchContainer}>
         <SearchInput
           value={searchQuery}
@@ -330,7 +308,35 @@ export default function ExchangeRatesScreen() {
         title={t("screens.settings.exchangeRates.infoSheet.title")}
         description={t("screens.settings.exchangeRates.infoSheet.description")}
         okLabel={t("screens.settings.exchangeRates.infoSheet.ok")}
-      />
+      >
+        <View style={styles.sources}>
+          <Text variant="small" style={styles.sourcesLabel}>
+            {t("screens.settings.exchangeRates.infoSheet.sources")}
+          </Text>
+          <ExternalLink
+            href={EXCHANGE_RATE_API_URL}
+            pressableStyle={styles.sourceLink}
+            textStyle={styles.sourceUrl}
+          >
+            <Text style={styles.sourceTitle}>
+              {t("screens.settings.exchangeRates.apiTitle")}
+            </Text>
+            {"\n"}
+            {EXCHANGE_RATE_API_ATTRIBUTION}
+          </ExternalLink>
+          <ExternalLink
+            href={EXCHANGE_API_URL}
+            pressableStyle={styles.sourceLink}
+            textStyle={styles.sourceUrl}
+          >
+            <Text style={styles.sourceTitle}>
+              {t("screens.settings.exchangeRates.apiTitleSecondary")}
+            </Text>
+            {"\n"}
+            {EXCHANGE_API_URL}
+          </ExternalLink>
+        </View>
+      </InfoSheet>
     </>
   )
 }
@@ -345,34 +351,30 @@ const styles = StyleSheet.create((theme) => ({
   listHeader: {
     paddingBottom: 4,
   },
-  apiCard: {
+  sources: {
+    gap: 8,
+  },
+  sourcesLabel: {
+    color: theme.colors.semantic.semi,
+    textAlign: "center",
+  },
+  sourceLink: {
     backgroundColor: theme.colors.secondary,
     borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 20,
+    padding: 12,
   },
-  // Sits directly under the first source card.
-  apiCardStacked: {
-    marginTop: 0,
-  },
-  apiCardContent: {
-    flexDirection: "column",
-    backgroundColor: theme.colors.secondary,
-  },
-  apiTitle: {
+  sourceTitle: {
     fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "700",
     color: theme.colors.onSurface,
-    marginBottom: 4,
   },
-  apiUrl: {
+  sourceUrl: {
     fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.semantic.semi,
   },
   searchContainer: {
     paddingHorizontal: 20,
+    paddingTop: 16,
     marginBottom: 12,
   },
   instruction: {
