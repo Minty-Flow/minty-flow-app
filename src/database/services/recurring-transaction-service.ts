@@ -487,14 +487,12 @@ async function synchronizeRecurringTransaction(
       const fromDate = new Date(range.from)
 
       /**
-       * If we've never generated anything, start from:
-       * - the rule start date
-       * - or "now" (anchor)
-       * whichever is earlier.
+       * If we've never generated anything, look from just before the rule
+       * start date. `nextAbsoluteOccurrence` treats an anchor before the range
+       * as inclusive, so the start date itself becomes the first occurrence.
+       * Anchoring at the start date would skip it.
        */
-      const nextAnchor = lastGenerated
-        ? lastGenerated
-        : new Date(Math.min(anchor.getTime(), fromDate.getTime()))
+      const nextAnchor = lastGenerated ?? new Date(fromDate.getTime() - 1)
 
       const nextOccurrence = nextAbsoluteOccurrence(rules, range, nextAnchor)
 
