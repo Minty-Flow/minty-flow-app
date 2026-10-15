@@ -77,8 +77,11 @@ export function UpcomingTransactionsSection({
   const collapsed = useUpcomingSectionStore((s) => s.collapsed)
   const setCollapsed = useUpcomingSectionStore((s) => s.setCollapsed)
   const [confirmAllSheetVisible, setConfirmAllSheetVisible] = useState(false)
+  // The row stays set after the sheet closes so the sheet keeps its content
+  // while it animates out; the next delete replaces it.
   const [recurringToDelete, setRecurringToDelete] =
     useState<TransactionWithRelations | null>(null)
+  const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
   const recurringRule = useRecurringRule(
     recurringToDelete?.extra?.recurringId ?? null,
   )
@@ -113,6 +116,7 @@ export function UpcomingTransactionsSection({
   const handleBeforeDelete = (row: TransactionWithRelations) => {
     if (row.extra?.recurringId) {
       setRecurringToDelete(row)
+      setDeleteSheetVisible(true)
       return true
     }
     return false
@@ -139,18 +143,20 @@ export function UpcomingTransactionsSection({
         icon="check"
       />
 
-      {recurringToDelete && recurringRule && (
-        <DeleteRecurringSheet
-          visible={true}
-          transaction={recurringToDelete}
-          recurringRule={recurringRule}
-          onRequestClose={() => setRecurringToDelete(null)}
-          onDeleted={() => {
-            autoConfirmationService.cancelSchedule(recurringToDelete.id)
-            setRecurringToDelete(null)
-          }}
-        />
-      )}
+      {recurringToDelete &&
+        recurringRule &&
+        recurringRule.id === recurringToDelete.extra?.recurringId && (
+          <DeleteRecurringSheet
+            visible={deleteSheetVisible}
+            transaction={recurringToDelete}
+            recurringRule={recurringRule}
+            onRequestClose={() => setDeleteSheetVisible(false)}
+            onDeleted={() => {
+              autoConfirmationService.cancelSchedule(recurringToDelete.id)
+              setDeleteSheetVisible(false)
+            }}
+          />
+        )}
 
       <Pressable
         style={sectionStyles.headerRow}

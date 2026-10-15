@@ -10,6 +10,7 @@ import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { clampYear, YearPickerSheet } from "~/components/year-picker-sheet"
+import { useSheetOpenKey } from "~/hooks/use-sheet-open-key"
 import { getMonthNames } from "~/utils/time-utils"
 
 type Props = {
@@ -31,18 +32,20 @@ type Props = {
  * this sheet), month grid, Now / Done. Edits a draft; Done applies it.
  */
 export function MonthPickerSheet(props: Props) {
-  // Mounted only while open so the draft restarts from the current value.
-  if (!props.visible) return null
-  return <MonthPickerSheetInner {...props} />
+  // A new key per open restarts the draft from the current value, while the
+  // sheet stays mounted to animate out.
+  const openKey = useSheetOpenKey(props.visible)
+  return <MonthPickerSheetInner key={openKey} {...props} />
 }
 
 function MonthPickerSheetInner({
+  visible,
   year,
   month,
   onSelect,
   onClose,
   allowFuture = false,
-}: Omit<Props, "visible">) {
+}: Props) {
   const { t } = useTranslation()
   const today = new Date()
   const currentYear = today.getFullYear()
@@ -74,7 +77,7 @@ function MonthPickerSheetInner({
 
   return (
     <>
-      <BottomSheet isPresented onDismiss={onClose}>
+      <BottomSheet isPresented={visible} onDismiss={onClose}>
         <View style={styles.container}>
           <View style={sheetHeaderStyles.header}>
             <Text style={sheetHeaderStyles.title}>

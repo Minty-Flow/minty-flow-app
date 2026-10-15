@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
+import { useSheetOpenKey } from "~/hooks/use-sheet-open-key"
 import type { TranslationKey } from "~/i18n/config"
 
 import { BottomSheet } from "../bottom-sheet"
@@ -26,27 +27,28 @@ type Props = {
   title?: string
 }
 
-export function DateTimePickerSheet({ visible, ...rest }: Props) {
-  if (!visible) return null
-  return <DateTimePickerSheetInner {...rest} />
+export function DateTimePickerSheet(props: Props) {
+  // A new key per open starts from the current value, while the sheet stays
+  // mounted to animate out.
+  const openKey = useSheetOpenKey(props.visible)
+  return <DateTimePickerSheetInner key={openKey} {...props} />
 }
 
-// Mounted only while visible — useState(value) initializes fresh on each open,
-// so no useEffect sync is needed.
 function DateTimePickerSheetInner({
+  visible,
   mode = "date",
   value,
   onClose,
   onConfirm,
   confirmLabel = "common.actions.done",
   title,
-}: Omit<Props, "visible">) {
+}: Props) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const [tempDate, setTempDate] = useState(() => value)
 
   return (
-    <BottomSheet isPresented onDismiss={onClose} contentPadding={0}>
+    <BottomSheet isPresented={visible} onDismiss={onClose} contentPadding={0}>
       <View>
         <View
           style={[

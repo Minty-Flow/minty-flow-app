@@ -8,6 +8,7 @@ import { Button } from "~/components/ui/button"
 import { Input } from "~/components/ui/input"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { useSheetOpenKey } from "~/hooks/use-sheet-open-key"
 
 export const MIN_YEAR = 1970
 export const MAX_YEAR = 2100
@@ -25,16 +26,13 @@ type Props = {
 
 /** "Select a year": a number field with Now / Done. Can stack over another sheet. */
 export function YearPickerSheet(props: Props) {
-  // Mounted only while open so the field starts from the current year each time.
-  if (!props.visible) return null
-  return <YearPickerSheetInner {...props} />
+  // A new key per open restarts the field from the current year, while the
+  // sheet stays mounted to animate out.
+  const openKey = useSheetOpenKey(props.visible)
+  return <YearPickerSheetInner key={openKey} {...props} />
 }
 
-function YearPickerSheetInner({
-  year,
-  onSelect,
-  onClose,
-}: Omit<Props, "visible">) {
+function YearPickerSheetInner({ visible, year, onSelect, onClose }: Props) {
   const { t } = useTranslation()
   const [input, setInput] = useState(String(year))
 
@@ -53,7 +51,7 @@ function YearPickerSheetInner({
   }
 
   return (
-    <BottomSheet isPresented onDismiss={onClose}>
+    <BottomSheet isPresented={visible} onDismiss={onClose}>
       <View style={styles.container}>
         <View style={sheetHeaderStyles.header}>
           <Text style={sheetHeaderStyles.title}>

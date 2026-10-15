@@ -86,49 +86,50 @@ export function CurrencySheet({
             }
           : undefined
       }
-    >
-      {currencies.length === 0 ? (
-        <View style={currencyAccountStyles.emptyPanel}>
-          <Text style={currencyAccountStyles.emptyText}>
-            {t("components.currencyAccountSelector.noAccounts")}
-          </Text>
-          <Pressable
-            style={currencyAccountStyles.createButton}
-            onPress={handleCreateAccount}
-          >
-            <IconSvg
-              name="plus-outline"
-              size={16}
-              color={currencyAccountStyles.createButtonIcon.color}
-            />
-            <Text style={currencyAccountStyles.createButtonText}>
-              {t("components.currencyAccountSelector.createAccount")}
+      data={filtered}
+      keyExtractor={(item) => item.code}
+      renderRow={(item) => (
+        <SingleSelectItem
+          selected={item.code === selectedCurrency}
+          style={currencyAccountStyles.panelRow}
+          onPress={() => handleSelect(item.code)}
+        >
+          <View style={currencyAccountStyles.panelRowLeft}>
+            <SingleSelectLabel variant="large">{item.code}</SingleSelectLabel>
+            <Text variant="muted">
+              {item.accountCount} account{item.accountCount !== 1 ? "s" : ""}
             </Text>
-          </Pressable>
-        </View>
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          variant="compact"
-          icon="search-outline"
-          title={t("components.selectors.currency.noCurrenciesFound")}
-        />
-      ) : (
-        filtered.map((item) => (
-          <SingleSelectItem
-            key={item.code}
-            selected={item.code === selectedCurrency}
-            style={currencyAccountStyles.panelRow}
-            onPress={() => handleSelect(item.code)}
-          >
-            <View style={currencyAccountStyles.panelRowLeft}>
-              <SingleSelectLabel variant="large">{item.code}</SingleSelectLabel>
-              <Text variant="muted">
-                {item.accountCount} account{item.accountCount !== 1 ? "s" : ""}
-              </Text>
-            </View>
-          </SingleSelectItem>
-        ))
+          </View>
+        </SingleSelectItem>
       )}
-    </PickerSheet>
+      empty={
+        currencies.length === 0 ? (
+          <View style={currencyAccountStyles.emptyPanel}>
+            <Text style={currencyAccountStyles.emptyText}>
+              {t("components.currencyAccountSelector.noAccounts")}
+            </Text>
+            <Pressable
+              style={currencyAccountStyles.createButton}
+              onPress={handleCreateAccount}
+            >
+              <IconSvg
+                name="plus-outline"
+                size={16}
+                color={currencyAccountStyles.createButtonIcon.color}
+              />
+              <Text style={currencyAccountStyles.createButtonText}>
+                {t("components.currencyAccountSelector.createAccount")}
+              </Text>
+            </Pressable>
+          </View>
+        ) : (
+          <EmptyState
+            variant="compact"
+            icon="search-outline"
+            title={t("components.selectors.currency.noCurrenciesFound")}
+          />
+        )
+      }
+    />
   )
 }

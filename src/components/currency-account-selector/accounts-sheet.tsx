@@ -102,75 +102,71 @@ export function AccountsSheet({
           </Button>
         ) : undefined
       }
-    >
-      {accounts.length === 0 ? (
-        <EmptyState
-          variant="compact"
-          icon="wallet-outline"
-          title={t("components.currencyAccountSelector.noAccountsForCurrency")}
-        />
-      ) : (
-        <>
-          {accounts.length >= 2 && !q ? (
-            <ListItem
-              style={[
-                currencyAccountStyles.panelRow,
-                currencyAccountStyles.selectAllRow,
-              ]}
-              onPress={handleSelectAll}
-              accessibilityRole="checkbox"
-              accessibilityState={{
-                checked: someSelected ? "mixed" : allSelected,
-              }}
-            >
-              <Text style={currencyAccountStyles.selectAllText}>
-                {t("components.currencyAccountSelector.selectAll", {
-                  currency,
-                })}
-              </Text>
-              <Checkbox checked={allSelected} indeterminate={someSelected} />
-            </ListItem>
-          ) : null}
-          {filtered.length === 0 ? (
-            <EmptyState
-              variant="compact"
-              icon="search-outline"
-              title={t("components.accountPicker.noResults")}
+      data={filtered}
+      keyExtractor={(account) => account.id}
+      listHeader={
+        accounts.length >= 2 && !q ? (
+          <ListItem
+            style={[
+              currencyAccountStyles.panelRow,
+              currencyAccountStyles.selectAllRow,
+            ]}
+            onPress={handleSelectAll}
+            accessibilityRole="checkbox"
+            accessibilityState={{
+              checked: someSelected ? "mixed" : allSelected,
+            }}
+          >
+            <Text style={currencyAccountStyles.selectAllText}>
+              {t("components.currencyAccountSelector.selectAll", { currency })}
+            </Text>
+            <Checkbox checked={allSelected} indeterminate={someSelected} />
+          </ListItem>
+        ) : null
+      }
+      renderRow={(account) => (
+        <ListItem
+          style={currencyAccountStyles.accountRow}
+          onPress={() => handleToggle(account.id)}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: draftSet.has(account.id) }}
+        >
+          <View style={currencyAccountStyles.accountLeft}>
+            <DynamicIcon
+              icon={account.icon}
+              size={20}
+              colorScheme={account.colorScheme}
+              variant="badge"
             />
-          ) : (
-            filtered.map((account) => (
-              <ListItem
-                key={account.id}
-                style={currencyAccountStyles.accountRow}
-                onPress={() => handleToggle(account.id)}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: draftSet.has(account.id) }}
-              >
-                <View style={currencyAccountStyles.accountLeft}>
-                  <DynamicIcon
-                    icon={account.icon}
-                    size={20}
-                    colorScheme={account.colorScheme}
-                    variant="badge"
-                  />
-                  <View>
-                    <Text
-                      style={currencyAccountStyles.accountName}
-                      numberOfLines={1}
-                    >
-                      {account.name}
-                    </Text>
-                    <Text style={currencyAccountStyles.accountCurrency}>
-                      {account.currencyCode}
-                    </Text>
-                  </View>
-                </View>
-                <Checkbox checked={draftSet.has(account.id)} />
-              </ListItem>
-            ))
-          )}
-        </>
+            <View>
+              <Text style={currencyAccountStyles.accountName} numberOfLines={1}>
+                {account.name}
+              </Text>
+              <Text style={currencyAccountStyles.accountCurrency}>
+                {account.currencyCode}
+              </Text>
+            </View>
+          </View>
+          <Checkbox checked={draftSet.has(account.id)} />
+        </ListItem>
       )}
-    </PickerSheet>
+      empty={
+        accounts.length === 0 ? (
+          <EmptyState
+            variant="compact"
+            icon="wallet-outline"
+            title={t(
+              "components.currencyAccountSelector.noAccountsForCurrency",
+            )}
+          />
+        ) : (
+          <EmptyState
+            variant="compact"
+            icon="search-outline"
+            title={t("components.accountPicker.noResults")}
+          />
+        )
+      }
+    />
   )
 }

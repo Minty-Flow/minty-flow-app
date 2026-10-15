@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ScrollView } from "react-native"
+import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
@@ -18,6 +18,7 @@ import {
 } from "~/components/ui/single-select-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { useSheetOpenKey } from "~/hooks/use-sheet-open-key"
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Category, CategoryType } from "~/types/categories"
 import { NewEnum } from "~/types/new"
@@ -27,6 +28,11 @@ import { getMostUsedCategories } from "./most-used"
 /** Show a "Most used" section only once there are enough to browse. */
 const MOST_USED_MIN_TOTAL = 7
 const MOST_USED_COUNT = 5
+
+/** One row of the flattened list: a section title or a category. */
+type Entry =
+  | { type: "title"; key: string; text: string; gap: boolean }
+  | { type: "category"; key: string; category: Category }
 
 type Props = {
   visible: boolean
@@ -43,12 +49,14 @@ type Props = {
 }
 
 export function CategoryPickerSheet(props: Props) {
-  // Mounted only while open so the draft and search reset on every open.
-  if (!props.visible) return null
-  return <CategoryPickerSheetInner {...props} />
+  // A new key per open resets the draft and search, while the sheet stays
+  // mounted to animate out.
+  const openKey = useSheetOpenKey(props.visible)
+  return <CategoryPickerSheetInner key={openKey} {...props} />
 }
 
 function CategoryPickerSheetInner({
+  visible,
   categories,
   mode,
   selectedIds,
@@ -56,7 +64,7 @@ function CategoryPickerSheetInner({
   onClose,
   newCategoryType,
   onNewCategory,
-}: Omit<Props, "visible">) {
+}: Props) {
   const { t } = useTranslation()
   const router = useRouter()
   const [draft, setDraft] = useState<string[]>(selectedIds)
@@ -97,19 +105,52 @@ function CategoryPickerSheetInner({
   const isChecked = (id: string) =>
     mode === "single" ? selectedIds.includes(id) : draft.includes(id)
 
-  const renderRow = (category: Category, keyPrefix: string) => (
-    <CategoryRow
-      key={`${keyPrefix}-${category.id}`}
-      category={category}
-      checked={isChecked(category.id)}
-      multi={mode === "multi"}
-      onPress={() => handlePress(category.id)}
-    />
-  )
+  const entries: Entry[] = [
+    ...(mostUsed.length > 0
+      ? [
+          {
+            type: "title" as const,
+            key: "title-top",
+            text: t("components.categoryPicker.mostUsed"),
+            gap: false,
+          },
+          ...mostUsed.map((category) => ({
+            type: "category" as const,
+            key: `top-${category.id}`,
+            category,
+          })),
+          {
+            type: "title" as const,
+            key: "title-all",
+            text: t("components.categoryPicker.all"),
+            gap: true,
+          },
+        ]
+      : []),
+    ...filtered.map((category) => ({
+      type: "category" as const,
+      key: `all-${category.id}`,
+      category,
+    })),
+  ]
+
+  const renderEntry = ({ item }: { item: Entry }) =>
+    item.type === "title" ? (
+      <Text style={[styles.sectionTitle, item.gap && styles.sectionTitleGap]}>
+        {item.text}
+      </Text>
+    ) : (
+      <CategoryRow
+        category={item.category}
+        checked={isChecked(item.category.id)}
+        multi={mode === "multi"}
+        onPress={() => handlePress(item.category.id)}
+      />
+    )
 
   return (
     <BottomSheet
-      isPresented
+      isPresented={visible}
       onDismiss={onClose}
       contentPadding={0}
       heightFraction={0.75}
@@ -134,43 +175,38 @@ function CategoryPickerSheetInner({
           />
         </View>
 
-        <ScrollView
+        <FlatList
           style={styles.list}
           contentContainerStyle={styles.listContent}
+          data={entries}
+          keyExtractor={(entry) => entry.key}
+          renderItem={renderEntry}
+          extraData={mode === "single" ? selectedIds : draft}
+          // Android detaches off-screen rows by default. Keep them attached so
+          // the list behaves like the ScrollView it replaced inside the sheet.
+          removeClippedSubviews={false}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-        >
-          {mostUsed.length > 0 ? (
-            <>
-              <Text style={styles.sectionTitle}>
-                {t("components.categoryPicker.mostUsed")}
+          ListEmptyComponent={
+            filtered.length === 0 ? (
+              <Text variant="default" style={styles.empty}>
+                {t("components.categoryPicker.noResults")}
               </Text>
-              {mostUsed.map((c) => renderRow(c, "top"))}
-              <Text style={[styles.sectionTitle, styles.sectionTitleGap]}>
-                {t("components.categoryPicker.all")}
-              </Text>
-            </>
-          ) : null}
-
-          {filtered.length === 0 ? (
-            <Text variant="default" style={styles.empty}>
-              {t("components.categoryPicker.noResults")}
-            </Text>
-          ) : (
-            filtered.map((c) => renderRow(c, "all"))
-          )}
-
-          {newCategoryType ? (
-            <ListItem style={styles.row} onPress={handleNewCategory}>
-              <View style={styles.newIcon}>
-                <IconSvg name="plus-outline" size={20} />
-              </View>
-              <Text style={styles.newLabel}>
-                {t("components.categoryPicker.newCategory")}
-              </Text>
-            </ListItem>
-          ) : null}
-        </ScrollView>
+            ) : null
+          }
+          ListFooterComponent={
+            newCategoryType ? (
+              <ListItem style={styles.row} onPress={handleNewCategory}>
+                <View style={styles.newIcon}>
+                  <IconSvg name="plus-outline" size={20} />
+                </View>
+                <Text style={styles.newLabel}>
+                  {t("components.categoryPicker.newCategory")}
+                </Text>
+              </ListItem>
+            ) : null
+          }
+        />
 
         {mode === "multi" ? (
           <View style={styles.footer}>

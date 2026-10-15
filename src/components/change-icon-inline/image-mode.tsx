@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next"
-import { ScrollView, View } from "react-native"
+import { View } from "react-native"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
@@ -29,11 +29,7 @@ export function ImageMode({
 }: ImageModeProps) {
   const { t } = useTranslation()
   return (
-    <ScrollView
-      contentContainerStyle={styles.modeScrollContent}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={styles.modeScrollContent}>
       <View style={styles.modeContent}>
         <Text variant="h3" style={styles.modeTitle}>
           {t("components.iconPicker.imageMode")}
@@ -81,6 +77,6 @@ export function ImageMode({
           </Button>
         </View>
       </View>
-    </ScrollView>
+    </View>
   )
 }
