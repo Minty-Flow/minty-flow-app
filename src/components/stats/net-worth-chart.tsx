@@ -87,9 +87,8 @@ export function NetWorthChart({
   const linePath = line.join(" ")
   const areaPath = area.join(" ")
 
-  const gridValues = Array.from(
-    { length: Y_TICKS },
-    (_, i) => min + (span * i) / (Y_TICKS - 1),
+  const gridValues = Array.from({ length: Y_TICKS }, (_, i) =>
+    Math.round(min + (span * i) / (Y_TICKS - 1)),
   )
   const labelCount = Math.min(MAX_X_LABELS, points.length)
   const labelIndexes = Array.from({ length: labelCount }, (_, i) =>
