@@ -71,7 +71,6 @@ export function AccountPickerSheet({
 
   const renderRow = (account: Account) => (
     <SingleSelectItem
-      key={account.id}
       selected={account.id === selectedId}
       style={styles.row}
       onPress={() => handleSelect(account.id)}
@@ -109,24 +108,28 @@ export function AccountPickerSheet({
             }
           : undefined
       }
-    >
-      {accounts.length === 0 ? (
-        <ListItem style={styles.row} onPress={handleAddAccount}>
-          <View style={styles.addIcon}>
-            <IconSvg name="plus-outline" size={20} />
-          </View>
-          <Text style={styles.addLabel}>{t("screens.accounts.a11y.add")}</Text>
-        </ListItem>
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          variant="compact"
-          icon="search-outline"
-          title={t("components.accountPicker.noResults")}
-        />
-      ) : (
-        filtered.map(renderRow)
-      )}
-    </PickerSheet>
+      data={filtered}
+      keyExtractor={(account) => account.id}
+      renderRow={renderRow}
+      empty={
+        accounts.length === 0 ? (
+          <ListItem style={styles.row} onPress={handleAddAccount}>
+            <View style={styles.addIcon}>
+              <IconSvg name="plus-outline" size={20} />
+            </View>
+            <Text style={styles.addLabel}>
+              {t("screens.accounts.a11y.add")}
+            </Text>
+          </ListItem>
+        ) : (
+          <EmptyState
+            variant="compact"
+            icon="search-outline"
+            title={t("components.accountPicker.noResults")}
+          />
+        )
+      }
+    />
   )
 }
 

@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ScrollView } from "react-native"
+import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
@@ -28,6 +28,11 @@ import { getMostUsedCategories } from "./most-used"
 /** Show a "Most used" section only once there are enough to browse. */
 const MOST_USED_MIN_TOTAL = 7
 const MOST_USED_COUNT = 5
+
+/** One row of the flattened list: a section title or a category. */
+type Entry =
+  | { type: "title"; key: string; text: string; gap: boolean }
+  | { type: "category"; key: string; category: Category }
 
 type Props = {
   visible: boolean
@@ -100,15 +105,48 @@ function CategoryPickerSheetInner({
   const isChecked = (id: string) =>
     mode === "single" ? selectedIds.includes(id) : draft.includes(id)
 
-  const renderRow = (category: Category, keyPrefix: string) => (
-    <CategoryRow
-      key={`${keyPrefix}-${category.id}`}
-      category={category}
-      checked={isChecked(category.id)}
-      multi={mode === "multi"}
-      onPress={() => handlePress(category.id)}
-    />
-  )
+  const entries: Entry[] = [
+    ...(mostUsed.length > 0
+      ? [
+          {
+            type: "title" as const,
+            key: "title-top",
+            text: t("components.categoryPicker.mostUsed"),
+            gap: false,
+          },
+          ...mostUsed.map((category) => ({
+            type: "category" as const,
+            key: `top-${category.id}`,
+            category,
+          })),
+          {
+            type: "title" as const,
+            key: "title-all",
+            text: t("components.categoryPicker.all"),
+            gap: true,
+          },
+        ]
+      : []),
+    ...filtered.map((category) => ({
+      type: "category" as const,
+      key: `all-${category.id}`,
+      category,
+    })),
+  ]
+
+  const renderEntry = ({ item }: { item: Entry }) =>
+    item.type === "title" ? (
+      <Text style={[styles.sectionTitle, item.gap && styles.sectionTitleGap]}>
+        {item.text}
+      </Text>
+    ) : (
+      <CategoryRow
+        category={item.category}
+        checked={isChecked(item.category.id)}
+        multi={mode === "multi"}
+        onPress={() => handlePress(item.category.id)}
+      />
+    )
 
   return (
     <BottomSheet
@@ -137,43 +175,35 @@ function CategoryPickerSheetInner({
           />
         </View>
 
-        <ScrollView
+        <FlatList
           style={styles.list}
           contentContainerStyle={styles.listContent}
+          data={entries}
+          keyExtractor={(entry) => entry.key}
+          renderItem={renderEntry}
+          extraData={mode === "single" ? selectedIds : draft}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-        >
-          {mostUsed.length > 0 ? (
-            <>
-              <Text style={styles.sectionTitle}>
-                {t("components.categoryPicker.mostUsed")}
+          ListEmptyComponent={
+            filtered.length === 0 ? (
+              <Text variant="default" style={styles.empty}>
+                {t("components.categoryPicker.noResults")}
               </Text>
-              {mostUsed.map((c) => renderRow(c, "top"))}
-              <Text style={[styles.sectionTitle, styles.sectionTitleGap]}>
-                {t("components.categoryPicker.all")}
-              </Text>
-            </>
-          ) : null}
-
-          {filtered.length === 0 ? (
-            <Text variant="default" style={styles.empty}>
-              {t("components.categoryPicker.noResults")}
-            </Text>
-          ) : (
-            filtered.map((c) => renderRow(c, "all"))
-          )}
-
-          {newCategoryType ? (
-            <ListItem style={styles.row} onPress={handleNewCategory}>
-              <View style={styles.newIcon}>
-                <IconSvg name="plus-outline" size={20} />
-              </View>
-              <Text style={styles.newLabel}>
-                {t("components.categoryPicker.newCategory")}
-              </Text>
-            </ListItem>
-          ) : null}
-        </ScrollView>
+            ) : null
+          }
+          ListFooterComponent={
+            newCategoryType ? (
+              <ListItem style={styles.row} onPress={handleNewCategory}>
+                <View style={styles.newIcon}>
+                  <IconSvg name="plus-outline" size={20} />
+                </View>
+                <Text style={styles.newLabel}>
+                  {t("components.categoryPicker.newCategory")}
+                </Text>
+              </ListItem>
+            ) : null
+          }
+        />
 
         {mode === "multi" ? (
           <View style={styles.footer}>

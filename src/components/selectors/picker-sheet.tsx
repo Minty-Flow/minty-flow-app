@@ -1,10 +1,10 @@
 /**
  * Frame for list pickers in a bottom sheet: title, optional search, rows, and
  * an optional footer. Without `search` the sheet sizes to its rows; with it the
- * sheet is tall and the rows scroll under the search field.
+ * sheet is tall and the rows scroll (virtualized) under the search field.
  */
-import type { ReactNode } from "react"
-import { ScrollView } from "react-native"
+import { Fragment, type ReactElement, type ReactNode } from "react"
+import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { SearchInput } from "~/components/search-input"
@@ -17,7 +17,7 @@ import { sheetHeaderStyles } from "./styles"
 /** Above this many rows a picker sheet shows a search field. */
 export const PICKER_SEARCH_MIN_ROWS = 8
 
-interface PickerSheetProps {
+interface PickerSheetProps<T> {
   visible: boolean
   onClose: () => void
   title: string
@@ -28,17 +28,27 @@ interface PickerSheetProps {
   }
   /** Pinned below the rows, e.g. a Done button. */
   footer?: ReactNode
-  children: ReactNode
+  data: T[]
+  keyExtractor: (item: T) => string
+  renderRow: (item: T) => ReactElement
+  /** Shown above the rows, e.g. a "Select all" row. */
+  listHeader?: ReactElement | null
+  /** Shown instead of the rows when `data` is empty. */
+  empty?: ReactElement
 }
 
-export function PickerSheet({
+export function PickerSheet<T>({
   visible,
   onClose,
   title,
   search,
   footer,
-  children,
-}: PickerSheetProps) {
+  data,
+  keyExtractor,
+  renderRow,
+  listHeader,
+  empty,
+}: PickerSheetProps<T>) {
   const header = (
     <View style={sheetHeaderStyles.header}>
       <Text variant="default" style={sheetHeaderStyles.title}>
@@ -55,7 +65,12 @@ export function PickerSheet({
         contentPadding={{ horizontal: 0, bottom: 16 }}
       >
         {header}
-        {children}
+        {listHeader}
+        {data.length === 0
+          ? empty
+          : data.map((item) => (
+              <Fragment key={keyExtractor(item)}>{renderRow(item)}</Fragment>
+            ))}
         {footer ? <View style={styles.footer}>{footer}</View> : null}
       </BottomSheet>
     )
@@ -78,13 +93,16 @@ export function PickerSheet({
             placeholder={search.placeholder}
           />
         </View>
-        <ScrollView
+        <FlatList
           style={styles.list}
+          data={data}
+          keyExtractor={keyExtractor}
+          renderItem={({ item }) => renderRow(item)}
+          ListHeaderComponent={listHeader}
+          ListEmptyComponent={empty}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-        >
-          {children}
-        </ScrollView>
+        />
         {footer ? <View style={styles.footer}>{footer}</View> : null}
       </View>
     </BottomSheet>
