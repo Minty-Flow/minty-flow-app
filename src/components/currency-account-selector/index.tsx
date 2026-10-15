@@ -12,11 +12,11 @@ import { useRouter } from "expo-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
-import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { SearchInput } from "~/components/search-input"
+import { Checkbox } from "~/components/ui/checkbox"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { EmptyState } from "~/components/ui/empty-state"
 import { ListItem } from "~/components/ui/list-item"
@@ -52,7 +52,6 @@ const CurrencyPanelRow = function CurrencyPanelRow({
   isSelected,
   onSelect,
 }: CurrencyPanelRowProps) {
-  const { theme } = useUnistyles()
   return (
     <ListItem
       style={[
@@ -60,16 +59,20 @@ const CurrencyPanelRow = function CurrencyPanelRow({
         isSelected && currencyAccountStyles.panelRowSelected,
       ]}
       onPress={() => onSelect(item.code)}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: isSelected }}
     >
       <View style={currencyAccountStyles.panelRowLeft}>
-        <Text variant="large">{item.code}</Text>
+        <Text
+          variant="large"
+          style={isSelected && currencyAccountStyles.selectedText}
+        >
+          {item.code}
+        </Text>
         <Text variant="muted">
           {item.accountCount} account{item.accountCount !== 1 ? "s" : ""}
         </Text>
       </View>
-      {isSelected && (
-        <IconSvg name="check" size={20} color={theme.colors.primary} />
-      )}
     </ListItem>
   )
 }
@@ -86,11 +89,12 @@ const AccountRow = function AccountRow({
   isSelected,
   onToggle,
 }: AccountRowProps) {
-  const { theme } = useUnistyles()
   return (
     <ListItem
       style={currencyAccountStyles.accountRow}
       onPress={() => onToggle(account.id)}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: isSelected }}
     >
       <View style={currencyAccountStyles.accountLeft}>
         <DynamicIcon
@@ -108,11 +112,7 @@ const AccountRow = function AccountRow({
           </Text>
         </View>
       </View>
-      <IconSvg
-        name={isSelected ? "check" : "circle"}
-        size={22}
-        color={isSelected ? theme.colors.primary : theme.colors.onSecondary}
-      />
+      <Checkbox checked={isSelected} />
     </ListItem>
   )
 }
@@ -206,6 +206,8 @@ export function CurrencyAccountSelector({
   const allSelected =
     matchingAccounts.length > 0 &&
     matchingAccounts.every((a) => selectedAccountIdSet.has(a.id))
+  const someSelected =
+    !allSelected && matchingAccounts.some((a) => selectedAccountIdSet.has(a.id))
   // Comma-separated names for the accounts trigger label
   const selectedAccountNames = (() => {
     if (selectedAccountIds.length === 0) return null
@@ -395,15 +397,19 @@ export function CurrencyAccountSelector({
                           currencyAccountStyles.selectAllRow,
                         ]}
                         onPress={handleSelectAll}
+                        accessibilityRole="checkbox"
+                        accessibilityState={{
+                          checked: someSelected ? "mixed" : allSelected,
+                        }}
                       >
                         <Text style={currencyAccountStyles.selectAllText}>
                           {t("components.currencyAccountSelector.selectAll", {
                             currency: selectedCurrency,
                           })}
                         </Text>
-                        <IconSvg
-                          name={allSelected ? "checks-outline" : "check"}
-                          size={20}
+                        <Checkbox
+                          checked={allSelected}
+                          indeterminate={someSelected}
                         />
                       </ListItem>
                     )}

@@ -246,6 +246,9 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     alignItems: "center",
     gap: SECTION_GAP,
   },
+  inlinePickerRowNameSelected: {
+    color: theme.colors.primary,
+  },
   accountPickerRowName: {
     ...theme.typography.bodyLarge,
     flex: 1,

@@ -2,7 +2,7 @@ import { useRouter } from "expo-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
-import { StyleSheet, useUnistyles } from "react-native-unistyles"
+import { StyleSheet } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
@@ -10,6 +10,7 @@ import { SearchInput } from "~/components/search-input"
 import { sheetHeaderStyles } from "~/components/selectors/styles"
 import { BottomSheet } from "~/components/ui/bottom-sheet"
 import { Button } from "~/components/ui/button"
+import { Checkbox } from "~/components/ui/checkbox"
 import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -213,10 +214,9 @@ function CategoryRow({
   multi: boolean
   onPress: () => void
 }) {
-  const { theme } = useUnistyles()
   return (
     <ListItem
-      style={styles.row}
+      style={[styles.row, !multi && checked && styles.rowSelected]}
       onPress={onPress}
       accessibilityRole={multi ? "checkbox" : "radio"}
       accessibilityState={{ checked }}
@@ -227,18 +227,13 @@ function CategoryRow({
         colorScheme={getThemeStrict(category.colorSchemeName)}
         variant="badge"
       />
-      <Text style={styles.rowLabel} numberOfLines={2}>
+      <Text
+        style={[styles.rowLabel, !multi && checked && styles.rowLabelSelected]}
+        numberOfLines={2}
+      >
         {category.name}
       </Text>
-      {multi ? (
-        <IconSvg
-          name={checked ? "square-check-outline" : "square-outline"}
-          size={22}
-          color={checked ? theme.colors.primary : theme.colors.semantic.semi}
-        />
-      ) : checked ? (
-        <IconSvg name="check-outline" size={20} color={theme.colors.primary} />
-      ) : null}
+      {multi ? <Checkbox checked={checked} /> : null}
     </ListItem>
   )
 }
@@ -262,12 +257,16 @@ const styles = StyleSheet.create((theme) => ({
     gap: 12,
     paddingVertical: 10,
   },
+  rowSelected: {
+    backgroundColor: `${theme.colors.primary}15`,
+  },
   rowLabel: {
     flex: 1,
     ...theme.typography.bodyLarge,
     fontWeight: "500",
     color: theme.colors.onSurface,
   },
+  rowLabelSelected: { color: theme.colors.primary },
   newIcon: {
     width: 36,
     height: 36,
