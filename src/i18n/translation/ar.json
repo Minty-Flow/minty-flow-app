@@ -1525,6 +1525,9 @@
       "accountsClearedTitle": "تم مسح الحسابات",
       "accountsClearedDescription": "تم إزالة الحسابات المحددة لأنها لا تتطابق مع {{currency}}."
     },
+    "accountPicker": {
+      "noResults": "لا توجد حسابات"
+    },
     "categoryPicker": {
       "title": "اختر فئة",
       "titleMulti": "اختر الفئات",
