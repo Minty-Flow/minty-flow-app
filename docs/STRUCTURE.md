@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-15T10:32:11.884Z
+Generated on: 2026-10-15T10:46:50.681Z
 ```
 ./
 ├── __tests__/
@@ -268,7 +268,9 @@ Generated on: 2026-10-15T10:32:11.884Z
 │   │   │   ├── mode-selector-list.tsx
 │   │   │   └── types.ts
 │   │   ├── currency-account-selector/
+│   │   │   ├── accounts-sheet.tsx
 │   │   │   ├── currency-account-selector.styles.ts
+│   │   │   ├── currency-sheet.tsx
 │   │   │   ├── index.tsx
 │   │   │   └── types.ts
 │   │   ├── date-range-preset-sheet/
@@ -309,6 +311,7 @@ Generated on: 2026-10-15T10:32:11.884Z
 │   │   ├── selectors/
 │   │   │   ├── contact-selector-sheet.tsx
 │   │   │   ├── currency-selector-sheet.tsx
+│   │   │   ├── picker-sheet.tsx
 │   │   │   ├── selector-parts.tsx
 │   │   │   └── styles.ts
 │   │   ├── settings/
