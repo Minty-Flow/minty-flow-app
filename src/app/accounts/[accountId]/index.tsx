@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useLayoutEffect, useState } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
@@ -52,7 +52,12 @@ export default function AccountDetailsScreen() {
   } = useTransactionListFilters()
   const [unarchiveSheetVisible, setUnarchiveSheetVisible] = useState(false)
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
-  const account = useAccount(accountId ?? "")
+  const liveAccount = useAccount(accountId ?? "")
+  // Keep the account on screen after it is deleted, so the delete sheet is not
+  // unmounted before it has closed and the screen leaves.
+  const lastAccount = useRef(liveAccount)
+  if (liveAccount) lastAccount.current = liveAccount
+  const account = liveAccount ?? lastAccount.current
   const excludeFromTotals = useTransfersPreferencesStore(
     (s) => s.excludeFromTotals,
   )
@@ -89,16 +94,16 @@ export default function AccountDetailsScreen() {
   })()
   const isArchived = account?.isArchived ?? false
   const handleDelete = async () => {
-    if (!accountId) return
+    if (!accountId) return false
     try {
       await destroyAccount(accountId)
-      router.back()
     } catch (error) {
       logger.error("Error deleting account", { error })
       Toast.error({
         title: t("common.toast.error"),
         description: getAccountDeleteErrorDescription(error, t),
       })
+      return false
     }
   }
   const handleUnarchive = async () => {
@@ -304,6 +309,7 @@ export default function AccountDetailsScreen() {
         visible={deleteSheetVisible}
         onRequestClose={() => setDeleteSheetVisible(false)}
         onConfirm={handleDelete}
+        onConfirmed={() => router.back()}
         title={t("screens.accounts.form.deleteSheet.title", {
           name: account.name,
         })}

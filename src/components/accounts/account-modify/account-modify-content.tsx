@@ -53,7 +53,9 @@ export function AccountModifyContent({
     setValue,
     handleSubmit,
     handleDelete,
+    handleDeleted,
     handleArchive,
+    handleArchived,
     handleIconSelected,
     handleColorSelected,
     handleColorCleared,
@@ -197,8 +199,9 @@ export function AccountModifyContent({
         onCloseUnsavedSheet={closeUnsavedSheet}
         onConfirmDelete={handleDelete}
         onConfirmArchive={handleArchive}
+        onDeleted={handleDeleted}
+        onArchived={handleArchived}
         onDiscardAndNavigate={() => {
-          closeUnsavedSheet()
           allowNavigation()
           handleGoBack()
         }}

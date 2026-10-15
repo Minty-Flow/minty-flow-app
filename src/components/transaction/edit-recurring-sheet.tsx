@@ -7,7 +7,7 @@
  *
  * Past confirmed transactions are never retroactively changed.
  */
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
@@ -46,6 +46,10 @@ export function EditRecurringSheet({
   const [loadingScope, setLoadingScope] = useState<EditScope | null>(null)
   const { t } = useTranslation()
   const { theme } = useUnistyles()
+  // The spinner stays on through the exit animation after a successful save.
+  useEffect(() => {
+    if (visible) setLoadingScope(null)
+  }, [visible])
   const handleEdit = async (scope: EditScope) => {
     if (loadingScope || !pendingPayload) return
     setLoadingScope(scope)
@@ -76,8 +80,8 @@ export function EditRecurringSheet({
       Toast.error({
         title: t("components.transactionForm.toast.editRecurringFailed"),
       })
+      setLoadingScope(null)
     }
-    setLoadingScope(null)
   }
   return (
     <ActionChoiceSheet

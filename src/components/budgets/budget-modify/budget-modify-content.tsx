@@ -157,18 +157,22 @@ export function BudgetModifyContent({
           title: t("common.toast.error"),
           description: t("screens.settings.budgets.form.toast.notFound"),
         })
-        return
+        return false
       }
       await deleteBudgetById(budgetModifyId)
-      allowNavigation()
-      router.dismiss(2)
     } catch (error) {
       logger.error("Error deleting budget", { error })
       Toast.error({
         title: t("common.toast.error"),
         description: t("screens.settings.budgets.form.toast.deleteFailed"),
       })
+      return false
     }
+  }
+  // Runs once the delete sheet has closed: leaving earlier tears it down mid-animation.
+  const handleDeleted = () => {
+    allowNavigation()
+    router.dismiss(2)
   }
   const handleDuplicate = async () => {
     try {
@@ -506,12 +510,11 @@ export function BudgetModifyContent({
         deleteSheetVisible={deleteSheetVisible}
         unsavedSheetVisible={unsavedSheetVisible}
         isAddMode={isAddMode}
-        budget={budget}
         onCloseDeleteSheet={() => setDeleteSheetVisible(false)}
         onCloseUnsavedSheet={() => setUnsavedSheetVisible(false)}
         onConfirmDelete={handleDelete}
+        onDeleted={handleDeleted}
         onDiscardAndNavigate={() => {
-          setUnsavedSheetVisible(false)
           allowNavigation()
           handleGoBack()
         }}

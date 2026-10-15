@@ -8,21 +8,22 @@ export function LoanFormSheets({
   deleteSheetVisible,
   unsavedSheetVisible,
   isAddMode,
-  loan,
   onCloseDeleteSheet,
   onCloseUnsavedSheet,
   onConfirmDelete,
+  onDeleted,
   onDiscardAndNavigate,
 }: LoanFormSheetsProps) {
   const { t } = useTranslation()
 
   return (
     <>
-      {!isAddMode && loan && (
+      {!isAddMode && (
         <ConfirmSheet
           visible={deleteSheetVisible}
           onRequestClose={onCloseDeleteSheet}
           onConfirm={onConfirmDelete}
+          onConfirmed={onDeleted}
           title={t("common.sheets.deletePermanently")}
           note={t("common.sheets.deleteNoteLoan")}
           confirmLabel={t("common.actions.delete")}
@@ -35,7 +36,8 @@ export function LoanFormSheets({
       <ConfirmSheet
         visible={unsavedSheetVisible}
         onRequestClose={onCloseUnsavedSheet}
-        onConfirm={onDiscardAndNavigate}
+        onConfirm={() => undefined}
+        onConfirmed={onDiscardAndNavigate}
         title={t("common.sheets.closeWithoutSaving")}
         description={t("common.sheets.unsavedDescription")}
         confirmLabel={t("common.actions.discard")}

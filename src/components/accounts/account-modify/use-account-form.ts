@@ -113,7 +113,7 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
   const handleSubmit = handleFormSubmit(onSubmit)
   const handleArchive = async () => {
     try {
-      if (!account) return
+      if (!account) return false
       if (account.isArchived) {
         await unarchiveAccount(accountId)
         Toast.success({ title: t("screens.accounts.unarchiveSuccess") })
@@ -121,25 +121,33 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
         await archiveAccount(accountId)
         Toast.success({ title: t("screens.accounts.archiveSuccess") })
       }
-      allowNavigation()
-      router.back()
     } catch (error) {
       logger.error("Error archiving account", { error })
       Toast.error({ title: t("common.toast.error") })
+      return false
     }
+  }
+  // Runs once the archive sheet has closed: leaving earlier tears it down mid-animation.
+  const handleArchived = () => {
+    allowNavigation()
+    router.back()
   }
   const handleDelete = async () => {
     try {
       await destroyAccount(accountId)
-      allowNavigation()
-      router.dismiss(2)
     } catch (error) {
       logger.error("Error deleting account", { error })
       Toast.error({
         title: t("common.toast.error"),
         description: getAccountDeleteErrorDescription(error, t),
       })
+      return false
     }
+  }
+  // Runs once the delete sheet has closed: leaving earlier tears it down mid-animation.
+  const handleDeleted = () => {
+    allowNavigation()
+    router.dismiss(2)
   }
   const handleIconSelected = (icon: string | null) => {
     setValue("icon", icon, { shouldDirty: true })
@@ -181,6 +189,8 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
     setValue,
     handleSubmit,
     handleDelete,
+    handleDeleted,
+    handleArchived,
     handleIconSelected,
     handleColorSelected,
     handleColorCleared,

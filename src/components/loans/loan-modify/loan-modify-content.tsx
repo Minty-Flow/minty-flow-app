@@ -189,17 +189,21 @@ export function LoanModifyContent({
         Toast.error({
           title: t("common.toast.error"),
         })
-        return
+        return false
       }
       await deleteLoanById(loanModifyId)
-      allowNavigation()
-      router.dismiss(2)
     } catch (error) {
       logger.error("Error deleting loan", { error })
       Toast.error({
         title: t("common.toast.error"),
       })
+      return false
     }
+  }
+  // Runs once the delete sheet has closed: leaving earlier tears it down mid-animation.
+  const handleDeleted = () => {
+    allowNavigation()
+    router.dismiss(2)
   }
   const handleIconSelected = (icon: string | null) => {
     setValue("icon", icon, { shouldDirty: true })
@@ -445,12 +449,11 @@ export function LoanModifyContent({
         deleteSheetVisible={deleteSheetVisible}
         unsavedSheetVisible={unsavedSheetVisible}
         isAddMode={isAddMode}
-        loan={loan}
         onCloseDeleteSheet={() => setDeleteSheetVisible(false)}
         onCloseUnsavedSheet={() => setUnsavedSheetVisible(false)}
         onConfirmDelete={handleDelete}
+        onDeleted={handleDeleted}
         onDiscardAndNavigate={() => {
-          setUnsavedSheetVisible(false)
           allowNavigation()
           handleGoBack()
         }}

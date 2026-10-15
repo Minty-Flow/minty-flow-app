@@ -7,7 +7,8 @@ interface FormTagSheetsProps {
   deleteSheetVisible: boolean
   setDeleteSheetVisible: (visible: boolean) => void
   tag?: Tag
-  handleDelete: () => void
+  handleDelete: () => Promise<boolean | undefined>
+  onDeleted: () => void
   unsavedSheetVisible: boolean
   setUnsavedSheetVisible: (visible: boolean) => void
   allowNavigation: () => void
@@ -19,6 +20,7 @@ export const FormTagSheets = ({
   setDeleteSheetVisible,
   tag,
   handleDelete,
+  onDeleted,
   unsavedSheetVisible,
   setUnsavedSheetVisible,
   allowNavigation,
@@ -33,6 +35,7 @@ export const FormTagSheets = ({
           visible={deleteSheetVisible}
           onRequestClose={() => setDeleteSheetVisible(false)}
           onConfirm={handleDelete}
+          onConfirmed={onDeleted}
           title={t("screens.settings.tags.form.deleteSheet.title", {
             name: tag.name,
           })}
@@ -54,8 +57,8 @@ export const FormTagSheets = ({
       <ConfirmSheet
         visible={unsavedSheetVisible}
         onRequestClose={() => setUnsavedSheetVisible(false)}
-        onConfirm={() => {
-          setUnsavedSheetVisible(false)
+        onConfirm={() => undefined}
+        onConfirmed={() => {
           allowNavigation()
           handleConfirm()
         }}
