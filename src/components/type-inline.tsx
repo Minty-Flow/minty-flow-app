@@ -94,6 +94,8 @@ export function TypeInline<T extends string>({
                 selectedType === opt.type && styles.optionActive,
               ]}
               onPress={() => handleSelect(opt.type)}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: selectedType === opt.type }}
             >
               <Text
                 variant="default"
@@ -104,13 +106,6 @@ export function TypeInline<T extends string>({
               >
                 {opt.label}
               </Text>
-              {selectedType === opt.type && (
-                <IconSvg
-                  name="check-outline"
-                  size={20}
-                  color={styles.optionCheck.color}
-                />
-              )}
             </Pressable>
           ))}
         </View>
@@ -176,9 +171,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   optionTextActive: {
     fontWeight: "600",
-    color: theme.colors.primary,
-  },
-  optionCheck: {
     color: theme.colors.primary,
   },
 }))

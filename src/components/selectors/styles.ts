@@ -83,6 +83,9 @@ export const sheetStyles = StyleSheet.create((theme) => ({
   itemSelected: {
     backgroundColor: `${theme.colors.primary}20`,
   },
+  itemTextSelected: {
+    color: theme.colors.primary,
+  },
   itemLeft: {
     flex: 1,
     gap: 2,
