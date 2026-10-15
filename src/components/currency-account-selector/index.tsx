@@ -1,119 +1,26 @@
 /**
- * CurrencyAccountSelector — fully inline component (no modals).
- * Renders directly in a form's ScrollView.
+ * CurrencyAccountSelector — two trigger rows that open bottom sheets.
  *
- * Currency section: trigger row toggles an inline panel listing unique
- * currencies derived from the provided accounts prop.
- *
- * Accounts section: multi-select list filtered to accounts matching
- * the selected currency — appears immediately below once a currency is picked.
+ * Currency: single-select sheet listing the unique currencies of the provided
+ * accounts. Accounts: multi-select sheet (with Done) listing the accounts that
+ * match the selected currency; it appears once a currency is picked.
  */
-import { useRouter } from "expo-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ScrollView } from "react-native"
 
-import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
-import { SearchInput } from "~/components/search-input"
-import { Checkbox } from "~/components/ui/checkbox"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
-import { EmptyState } from "~/components/ui/empty-state"
 import { ListItem } from "~/components/ui/list-item"
-import { Pressable } from "~/components/ui/pressable"
-import {
-  SingleSelectItem,
-  SingleSelectLabel,
-} from "~/components/ui/single-select-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { currencyRegistryService } from "~/services/currency-registry"
-import type { Account } from "~/types/accounts"
-import { NewEnum } from "~/types/new"
 import { Toast } from "~/utils/toast"
 
 import { triggerStyles } from "../selectors/styles"
+import { AccountsSheet } from "./accounts-sheet"
 import { currencyAccountStyles } from "./currency-account-selector.styles"
-import type { CurrencyAccountSelectorProps } from "./types"
+import { CurrencySheet } from "./currency-sheet"
+import type { CurrencyAccountSelectorProps, CurrencyItem } from "./types"
 
-// ---------------------------------------------------------------------------
-// Sub-types
-// ---------------------------------------------------------------------------
-interface CurrencyItem {
-  code: string
-  accountCount: number
-}
-// ---------------------------------------------------------------------------
-// Currency row inside the inline panel
-// ---------------------------------------------------------------------------
-interface CurrencyPanelRowProps {
-  item: CurrencyItem
-  isSelected: boolean
-  onSelect: (code: string) => void
-}
-const CurrencyPanelRow = function CurrencyPanelRow({
-  item,
-  isSelected,
-  onSelect,
-}: CurrencyPanelRowProps) {
-  return (
-    <SingleSelectItem
-      selected={isSelected}
-      style={currencyAccountStyles.panelRow}
-      onPress={() => onSelect(item.code)}
-    >
-      <View style={currencyAccountStyles.panelRowLeft}>
-        <SingleSelectLabel variant="large">{item.code}</SingleSelectLabel>
-        <Text variant="muted">
-          {item.accountCount} account{item.accountCount !== 1 ? "s" : ""}
-        </Text>
-      </View>
-    </SingleSelectItem>
-  )
-}
-// ---------------------------------------------------------------------------
-// Account row
-// ---------------------------------------------------------------------------
-interface AccountRowProps {
-  account: Account
-  isSelected: boolean
-  onToggle: (id: string) => void
-}
-const AccountRow = function AccountRow({
-  account,
-  isSelected,
-  onToggle,
-}: AccountRowProps) {
-  return (
-    <ListItem
-      style={currencyAccountStyles.accountRow}
-      onPress={() => onToggle(account.id)}
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked: isSelected }}
-    >
-      <View style={currencyAccountStyles.accountLeft}>
-        <DynamicIcon
-          icon={account.icon}
-          size={20}
-          colorScheme={account.colorScheme}
-          variant="badge"
-        />
-        <View>
-          <Text style={currencyAccountStyles.accountName} numberOfLines={1}>
-            {account.name}
-          </Text>
-          <Text style={currencyAccountStyles.accountCurrency}>
-            {account.currencyCode}
-          </Text>
-        </View>
-      </View>
-      <Checkbox checked={isSelected} />
-    </ListItem>
-  )
-}
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
 export function CurrencyAccountSelector({
   accounts,
   selectedCurrency,
@@ -122,16 +29,9 @@ export function CurrencyAccountSelector({
   onAccountIdsChange,
 }: CurrencyAccountSelectorProps) {
   const { t } = useTranslation()
-  const router = useRouter()
-  const [currencyPanelOpen, setCurrencyPanelOpen] = useState(false)
-  const [accountPanelOpen, setAccountPanelOpen] = useState(false)
-  const [currencySearchQuery, setCurrencySearchQuery] = useState("")
-  const handleCreateAccount = () => {
-    router.push({
-      pathname: "/accounts/[accountId]/modify",
-      params: { accountId: NewEnum.NEW },
-    })
-  }
+  const [currencySheetOpen, setCurrencySheetOpen] = useState(false)
+  const [accountsSheetOpen, setAccountsSheetOpen] = useState(false)
+
   // Derive unique currencies from accounts, sorted alphabetically
   const currencyItems: CurrencyItem[] = (() => {
     const map = new Map<string, number>()
@@ -142,33 +42,12 @@ export function CurrencyAccountSelector({
       .map(([code, accountCount]) => ({ code, accountCount }))
       .sort((a, b) => a.code.localeCompare(b.code))
   })()
-  // Filter by the shared registry search (code/name/symbol/country), scoped
-  // to currencies actually present on the user's accounts.
-  const filteredCurrencyItems = (() => {
-    if (!currencySearchQuery.trim()) return currencyItems
-    const matchedCodes = new Set(
-      currencyRegistryService
-        .searchCurrencies(currencySearchQuery)
-        .map((c) => c.code),
-    )
-    return currencyItems.filter((item) => matchedCodes.has(item.code))
-  })()
   // Accounts matching the selected currency
   const matchingAccounts = selectedCurrency
     ? accounts.filter((a) => a.currencyCode === selectedCurrency)
     : []
-  // ---------------------------------------------------------------------------
-  // Currency panel handlers
-  // ---------------------------------------------------------------------------
-  const handleToggleCurrencyPanel = () => {
-    setCurrencyPanelOpen((prev) => {
-      if (!prev) setCurrencySearchQuery("")
-      return !prev
-    })
-  }
+
   const handleCurrencySelect = (code: string) => {
-    setCurrencyPanelOpen(false)
-    setCurrencySearchQuery("")
     if (code === selectedCurrency) return
     // Clear account selections that belong to the old currency
     const hasStaleAccounts = selectedAccountIds.some((id) => {
@@ -177,7 +56,6 @@ export function CurrencyAccountSelector({
     })
     if (hasStaleAccounts) {
       onAccountIdsChange([])
-      setAccountPanelOpen(false)
       Toast.info({
         title: t("components.currencyAccountSelector.accountsClearedTitle"),
         description: t(
@@ -188,48 +66,16 @@ export function CurrencyAccountSelector({
     }
     onCurrencyChange(code)
   }
-  // ---------------------------------------------------------------------------
-  // Account list handlers
-  // ---------------------------------------------------------------------------
-  const selectedAccountIdSet = new Set(selectedAccountIds)
-  const handleAccountToggle = (id: string) => {
-    const next = selectedAccountIds.includes(id)
-      ? selectedAccountIds.filter((existing) => existing !== id)
-      : [...selectedAccountIds, id]
-    onAccountIdsChange(next)
-  }
-  const allSelected =
-    matchingAccounts.length > 0 &&
-    matchingAccounts.every((a) => selectedAccountIdSet.has(a.id))
-  const someSelected =
-    !allSelected && matchingAccounts.some((a) => selectedAccountIdSet.has(a.id))
+
   // Comma-separated names for the accounts trigger label
   const selectedAccountNames = (() => {
     if (selectedAccountIds.length === 0) return null
+    const selected = new Set(selectedAccountIds)
     return matchingAccounts
-      .flatMap((a) => (selectedAccountIdSet.has(a.id) ? [a.name] : []))
+      .flatMap((a) => (selected.has(a.id) ? [a.name] : []))
       .join(", ")
   })()
-  const handleToggleAccountPanel = () => {
-    setAccountPanelOpen((prev) => !prev)
-  }
-  const handleSelectAll = () => {
-    if (allSelected) {
-      const matchingIds = new Set(matchingAccounts.map((a) => a.id))
-      onAccountIdsChange(
-        selectedAccountIds.filter((id) => !matchingIds.has(id)),
-      )
-    } else {
-      const existing = new Set(selectedAccountIds)
-      for (const a of matchingAccounts) {
-        existing.add(a.id)
-      }
-      onAccountIdsChange(Array.from(existing))
-    }
-  }
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
+
   return (
     <View style={currencyAccountStyles.container}>
       {/* ---- CURRENCY SECTION ---- */}
@@ -238,11 +84,9 @@ export function CurrencyAccountSelector({
           {t("components.currencyAccountSelector.currencyLabel")}
         </Text>
 
-        {/* Currency trigger row */}
         <ListItem
           style={triggerStyles.triggerRow}
-          onPress={handleToggleCurrencyPanel}
-          accessibilityState={{ expanded: currencyPanelOpen }}
+          onPress={() => setCurrencySheetOpen(true)}
         >
           <View style={triggerStyles.triggerLeft}>
             <IconSvg name="currency-outline" size={24} />
@@ -256,172 +100,63 @@ export function CurrencyAccountSelector({
           </View>
           <View style={triggerStyles.triggerRight}>
             <ChevronIcon
-              direction={currencyPanelOpen ? "up" : "trailing"}
+              direction="trailing"
               size={18}
               style={triggerStyles.chevronIcon}
             />
           </View>
         </ListItem>
-
-        {/* Inline currency panel */}
-        {currencyPanelOpen && (
-          <View style={currencyAccountStyles.inlinePanel}>
-            {currencyItems.length > 1 && (
-              <SearchInput
-                value={currencySearchQuery}
-                onChangeText={setCurrencySearchQuery}
-                onClear={() => setCurrencySearchQuery("")}
-                placeholder={t(
-                  "components.selectors.currency.searchPlaceholderEx",
-                )}
-                style={currencyAccountStyles.searchInput}
-              />
-            )}
-            <ScrollView
-              style={currencyAccountStyles.inlinePanelList}
-              nestedScrollEnabled
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-            >
-              {filteredCurrencyItems.length === 0 ? (
-                currencyItems.length === 0 ? (
-                  <View style={currencyAccountStyles.emptyPanel}>
-                    <Text style={currencyAccountStyles.emptyText}>
-                      {t("components.currencyAccountSelector.noAccounts")}
-                    </Text>
-                    <Pressable
-                      style={currencyAccountStyles.createButton}
-                      onPress={handleCreateAccount}
-                    >
-                      <IconSvg
-                        name="plus-outline"
-                        size={16}
-                        color={currencyAccountStyles.createButtonIcon.color}
-                      />
-                      <Text style={currencyAccountStyles.createButtonText}>
-                        {t("components.currencyAccountSelector.createAccount")}
-                      </Text>
-                    </Pressable>
-                  </View>
-                ) : (
-                  <EmptyState
-                    variant="compact"
-                    icon="search-outline"
-                    title={t("components.selectors.currency.noCurrenciesFound")}
-                  />
-                )
-              ) : (
-                filteredCurrencyItems.map((item) => (
-                  <CurrencyPanelRow
-                    key={item.code}
-                    item={item}
-                    isSelected={item.code === selectedCurrency}
-                    onSelect={handleCurrencySelect}
-                  />
-                ))
-              )}
-            </ScrollView>
-          </View>
-        )}
       </View>
 
       {/* ---- ACCOUNTS SECTION (only when currency is selected) ---- */}
       {selectedCurrency !== null && (
-        <>
-          {/* <View style={currencyAccountStyles.divider} /> */}
-
-          <View style={currencyAccountStyles.section}>
-            {/* <Text style={currencyAccountStyles.sectionLabel}>
-              {t(
-                "components.currencyAccountSelector.accountsLabel",
+        <View style={currencyAccountStyles.section}>
+          <ListItem
+            style={triggerStyles.triggerRow}
+            onPress={() => setAccountsSheetOpen(true)}
+          >
+            <View style={triggerStyles.triggerLeft}>
+              <IconSvg name="wallet-outline" size={24} />
+              {selectedAccountNames ? (
+                <Text
+                  numberOfLines={1}
+                  style={currencyAccountStyles.accountTriggerValue}
+                >
+                  {selectedAccountNames}
+                </Text>
+              ) : (
+                <Text style={triggerStyles.triggerValue}>
+                  {t("components.currencyAccountSelector.accountsLabel")}
+                </Text>
               )}
-            </Text> */}
+            </View>
+            <View style={triggerStyles.triggerRight}>
+              <ChevronIcon
+                direction="trailing"
+                size={18}
+                style={triggerStyles.chevronIcon}
+              />
+            </View>
+          </ListItem>
+        </View>
+      )}
 
-            {/* Accounts trigger row */}
-            <ListItem
-              style={triggerStyles.triggerRow}
-              onPress={handleToggleAccountPanel}
-              accessibilityState={{ expanded: accountPanelOpen }}
-            >
-              <View style={triggerStyles.triggerLeft}>
-                <IconSvg name="wallet-outline" size={24} />
-                {selectedAccountNames ? (
-                  <Text
-                    numberOfLines={1}
-                    style={currencyAccountStyles.accountTriggerValue}
-                  >
-                    {selectedAccountNames}
-                  </Text>
-                ) : (
-                  <Text style={triggerStyles.triggerValue}>
-                    {t("components.currencyAccountSelector.accountsLabel")}
-                  </Text>
-                )}
-              </View>
-              <View style={triggerStyles.triggerRight}>
-                <ChevronIcon
-                  direction={accountPanelOpen ? "up" : "trailing"}
-                  size={18}
-                  style={triggerStyles.chevronIcon}
-                />
-              </View>
-            </ListItem>
-
-            {/* Inline accounts panel */}
-            {accountPanelOpen && (
-              <View style={currencyAccountStyles.inlinePanel}>
-                {matchingAccounts.length === 0 ? (
-                  <EmptyState
-                    variant="compact"
-                    icon="wallet-outline"
-                    title={t(
-                      "components.currencyAccountSelector.noAccountsForCurrency",
-                    )}
-                  />
-                ) : (
-                  <ScrollView
-                    style={currencyAccountStyles.inlinePanelList}
-                    nestedScrollEnabled
-                    keyboardShouldPersistTaps="handled"
-                    showsVerticalScrollIndicator={false}
-                  >
-                    {matchingAccounts.length >= 2 && (
-                      <ListItem
-                        style={[
-                          currencyAccountStyles.panelRow,
-                          currencyAccountStyles.selectAllRow,
-                        ]}
-                        onPress={handleSelectAll}
-                        accessibilityRole="checkbox"
-                        accessibilityState={{
-                          checked: someSelected ? "mixed" : allSelected,
-                        }}
-                      >
-                        <Text style={currencyAccountStyles.selectAllText}>
-                          {t("components.currencyAccountSelector.selectAll", {
-                            currency: selectedCurrency,
-                          })}
-                        </Text>
-                        <Checkbox
-                          checked={allSelected}
-                          indeterminate={someSelected}
-                        />
-                      </ListItem>
-                    )}
-                    {matchingAccounts.map((account) => (
-                      <AccountRow
-                        key={account.id}
-                        account={account}
-                        isSelected={selectedAccountIdSet.has(account.id)}
-                        onToggle={handleAccountToggle}
-                      />
-                    ))}
-                  </ScrollView>
-                )}
-              </View>
-            )}
-          </View>
-        </>
+      <CurrencySheet
+        visible={currencySheetOpen}
+        onClose={() => setCurrencySheetOpen(false)}
+        currencies={currencyItems}
+        selectedCurrency={selectedCurrency}
+        onSelect={handleCurrencySelect}
+      />
+      {selectedCurrency !== null && (
+        <AccountsSheet
+          visible={accountsSheetOpen}
+          onClose={() => setAccountsSheetOpen(false)}
+          currency={selectedCurrency}
+          accounts={matchingAccounts}
+          selectedIds={selectedAccountIds}
+          onApply={onAccountIdsChange}
+        />
       )}
     </View>
   )

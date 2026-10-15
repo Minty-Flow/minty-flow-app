@@ -43,7 +43,7 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
     opacity: 0.7,
     marginTop: 2,
   },
-  // Select all row (inside panel)
+  // Select all row (in the accounts sheet)
   selectAllRow: {
     borderBottomWidth: 1,
     borderBottomColor: `${t.colors.onSurface}10`,
@@ -72,22 +72,7 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
     ...t.typography.bodyLarge,
     color: t.colors.onSurface,
   },
-  // Inline currency panel (replaces modal)
-  inlinePanel: {
-    marginHorizontal: 12,
-    marginBottom: 8,
-    backgroundColor: t.colors.secondary,
-    borderRadius: t.radius,
-    overflow: "hidden",
-    maxHeight: 260,
-  },
-  inlinePanelList: {
-    flexGrow: 0,
-  },
-  searchInput: {
-    margin: 8,
-    marginBottom: 0,
-  },
+  // Empty currency list
   emptyPanel: {
     paddingVertical: 24,
     alignItems: "center",
@@ -110,12 +95,13 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
     fontWeight: "600",
     color: t.colors.primary,
   },
-  // Row inside the inline currency panel
+  // Currency row in the currency sheet
   panelRow: {
     justifyContent: "space-between",
     borderBottomWidth: 1,
     borderBottomColor: `${t.colors.onSurface}10`,
   },
+  doneButton: { flex: 1 },
   panelRowLeft: {
     flex: 1,
     gap: 2,

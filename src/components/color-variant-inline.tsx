@@ -23,7 +23,7 @@ import { Button } from "./ui/button"
 import { ChevronIcon } from "./ui/chevron-icon"
 
 interface ColorVariantInlineProps {
-  /** Currently selected scheme name (for controlled component). */
+  /** Currently selected scheme name; none (undefined or null) means the default color. */
   selectedSchemeName?: string | null
   /** Callback when a color variant is selected - returns the scheme name. */
   onColorSelected?: (schemeName: string) => void
@@ -36,7 +36,7 @@ interface ColorVariantInlineProps {
  * Visually matches the old sheet (same styles); only presentation is inline.
  */
 export function ColorVariantInline({
-  selectedSchemeName: controlledSelectedSchemeName,
+  selectedSchemeName,
   onColorSelected,
   onClearSelection,
 }: ColorVariantInlineProps) {
@@ -44,18 +44,10 @@ export function ColorVariantInline({
   const themeMode = useThemeStore((s) => s.themeMode)
   const { wrapperRef, scrollIntoView } = useScrollIntoView()
   const [expanded, setExpanded] = useState(false)
-  const [internalSelectedSchemeName, setInternalSelectedSchemeName] = useState<
-    string | null
-  >(null)
   /** Selection state while panel is open (for checkmark UI). */
   const [pendingSchemeName, setPendingSchemeName] = useState<string | null>(
     null,
   )
-
-  const selectedSchemeName =
-    controlledSelectedSchemeName !== undefined
-      ? controlledSelectedSchemeName
-      : internalSelectedSchemeName
 
   const selectedScheme = selectedSchemeName
     ? getThemeStrict(selectedSchemeName)
@@ -110,18 +102,12 @@ export function ColorVariantInline({
   /** Apply color immediately on select. */
   const handleColorSelect = (scheme: MintyColorScheme) => {
     setPendingSchemeName(scheme.name)
-    if (controlledSelectedSchemeName === undefined) {
-      setInternalSelectedSchemeName(scheme.name)
-    }
     onColorSelected?.(scheme.name)
   }
 
   /** Clear selection immediately. */
   const handleClearPending = () => {
     setPendingSchemeName(null)
-    if (controlledSelectedSchemeName === undefined) {
-      setInternalSelectedSchemeName(null)
-    }
     onClearSelection?.()
   }
 
@@ -155,7 +141,7 @@ export function ColorVariantInline({
           )}
 
           <ChevronIcon
-            direction={expanded ? "up" : "trailing"}
+            direction={expanded ? "up" : "down"}
             size={20}
             style={styles.chevronIcon}
           />
