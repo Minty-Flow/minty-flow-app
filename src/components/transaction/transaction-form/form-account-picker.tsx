@@ -174,7 +174,11 @@ function AccountPickerField({
                 >
                   <Text
                     variant="default"
-                    style={transactionFormStyles.accountPickerRowName}
+                    style={[
+                      transactionFormStyles.accountPickerRowName,
+                      account.id === selectedId &&
+                        transactionFormStyles.inlinePickerRowNameSelected,
+                    ]}
                     numberOfLines={1}
                   >
                     {account.name}

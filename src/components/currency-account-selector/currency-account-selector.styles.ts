@@ -119,6 +119,9 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
   panelRowSelected: {
     backgroundColor: `${t.colors.primary}15`,
   },
+  selectedText: {
+    color: t.colors.primary,
+  },
   panelRowLeft: {
     flex: 1,
     gap: 2,
