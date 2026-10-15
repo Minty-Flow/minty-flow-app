@@ -233,7 +233,11 @@ export default function BillSplitterScreen() {
                         />
                         <View style={styles.accountPickerRowContent} native>
                           <Text
-                            style={styles.accountPickerRowName}
+                            style={[
+                              styles.accountPickerRowName,
+                              account.id === accountId &&
+                                styles.accountPickerRowNameSelected,
+                            ]}
                             numberOfLines={1}
                           >
                             {account.name}
@@ -449,6 +453,9 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: "space-between",
     alignItems: "center",
     gap: 8,
+  },
+  accountPickerRowNameSelected: {
+    color: theme.colors.primary,
   },
   accountPickerRowName: {
     fontSize: theme.typography.bodyLarge.fontSize,

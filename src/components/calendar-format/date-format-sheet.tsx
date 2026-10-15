@@ -1,8 +1,7 @@
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
-import { StyleSheet, useUnistyles } from "react-native-unistyles"
+import { StyleSheet } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/icons"
 import { sheetHeaderStyles } from "~/components/selectors/styles"
 import { BottomSheet } from "~/components/ui/bottom-sheet"
 import { Chip } from "~/components/ui/chips"
@@ -33,7 +32,6 @@ type Props = {
 /** Date style (how the day reads) + order (month / day / year) picker. */
 export function DateFormatSheet({ visible, onClose }: Props) {
   const { t } = useTranslation()
-  const { theme } = useUnistyles()
   const dateStyle = useCalendarFormatStore((s) => s.dateStyle)
   const dateOrder = useCalendarFormatStore((s) => s.dateOrder)
   const setDateStyle = useCalendarFormatStore((s) => s.setDateStyle)
@@ -55,24 +53,24 @@ export function DateFormatSheet({ visible, onClose }: Props) {
         {STYLES.map((style) => (
           <ListItem
             key={style}
-            style={styles.row}
+            style={[styles.row, style === dateStyle && styles.rowSelected]}
             onPress={() => setDateStyle(style)}
             accessibilityRole="radio"
             accessibilityState={{ selected: style === dateStyle }}
           >
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>{t(key(`style.${style}`))}</Text>
+              <Text
+                style={[
+                  styles.rowLabel,
+                  style === dateStyle && styles.rowLabelSelected,
+                ]}
+              >
+                {t(key(`style.${style}`))}
+              </Text>
               <Text variant="muted" style={styles.rowExample}>
                 {formatDatePreview(now, style, dateOrder)}
               </Text>
             </View>
-            {style === dateStyle ? (
-              <IconSvg
-                name="check-outline"
-                size={20}
-                color={theme.colors.primary}
-              />
-            ) : null}
           </ListItem>
         ))}
 
@@ -112,6 +110,8 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 4,
   },
   row: { justifyContent: "space-between", minHeight: 56 },
+  rowSelected: { backgroundColor: `${theme.colors.primary}15` },
+  rowLabelSelected: { color: theme.colors.primary },
   rowContent: { flex: 1, gap: 2 },
   rowLabel: { ...theme.typography.titleSmall, color: theme.colors.onSurface },
   rowExample: { fontSize: theme.typography.labelLarge.fontSize },

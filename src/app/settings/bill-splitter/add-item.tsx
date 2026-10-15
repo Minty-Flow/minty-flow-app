@@ -9,6 +9,7 @@ import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { Button } from "~/components/ui/button"
+import { Checkbox } from "~/components/ui/checkbox"
 import { Input } from "~/components/ui/input"
 import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
@@ -311,21 +312,7 @@ export default function AddItemScreen() {
                 ]}
                 onPress={() => toggleParticipant(split.participantId)}
               >
-                <View style={styles.checkbox}>
-                  {split.selected ? (
-                    <IconSvg
-                      name="square-check-outline"
-                      size={22}
-                      color={theme.colors.primary}
-                    />
-                  ) : (
-                    <IconSvg
-                      name="square-outline"
-                      size={22}
-                      color={theme.colors.onSecondary}
-                    />
-                  )}
-                </View>
+                <Checkbox checked={split.selected} />
 
                 <Text style={styles.participantName} numberOfLines={1}>
                   {participant.name}
@@ -547,10 +534,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   participantRowDeselected: {
     opacity: 0.45,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
   },
   participantName: {
     flex: 1,

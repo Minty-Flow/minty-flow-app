@@ -39,7 +39,10 @@ export function RecurrenceUnitSheet({
             }}
           >
             {/* count:2 so the label reads as a plural noun ("weeks"), not "every 2 week" */}
-            <Text variant="large">
+            <Text
+              variant="large"
+              style={u === value && sheetStyles.itemTextSelected}
+            >
               {t(`components.transactionForm.recurrence.unit.${u}`, {
                 count: 2,
               })}
