@@ -1,6 +1,11 @@
+import { type RefObject, useRef } from "react"
 import { useTranslation } from "react-i18next"
-import { ScrollView, useWindowDimensions } from "react-native"
-import { Gesture, GestureDetector } from "react-native-gesture-handler"
+import { useWindowDimensions } from "react-native"
+import {
+  Gesture,
+  GestureDetector,
+  ScrollView,
+} from "react-native-gesture-handler"
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -46,11 +51,14 @@ function DraggableButton({
   config,
   slotIndex,
   slotPositions,
+  scrollRef,
   onSwap,
 }: {
   config: ButtonConfig
   slotIndex: number
   slotPositions: SlotPos[]
+  /** The page's scroll view: a drag on a button must win over scrolling it. */
+  scrollRef: RefObject<ScrollView | null>
   onSwap: (from: number, to: number) => void
 }) {
   const tx = useSharedValue(0)
@@ -59,6 +67,7 @@ function DraggableButton({
   const isDragging = useSharedValue(false)
   const triggerSwap = (from: number, to: number) => onSwap(from, to)
   const pan = Gesture.Pan()
+    .blocksExternalGesture(scrollRef)
     .onStart(() => {
       "worklet"
       isDragging.value = true
@@ -148,6 +157,7 @@ export default function ButtonPlacementScreen() {
       iconColor: theme.colors.onSecondary,
     },
   }
+  const scrollRef = useRef<ScrollView>(null)
   const handleSwap = (from: number, to: number) => {
     const newOrder = [...order] as ButtonPlacementOrder
     const temp = newOrder[from]
@@ -157,10 +167,10 @@ export default function ButtonPlacementScreen() {
   }
   return (
     <ScrollView
+      ref={scrollRef}
       style={styles.container}
       contentContainerStyle={styles.content}
       contentInsetAdjustmentBehavior="automatic"
-      scrollEnabled={false}
     >
       {/* Top info */}
       <InfoBanner
@@ -199,6 +209,7 @@ export default function ButtonPlacementScreen() {
             config={buttonConfigs[buttonType]}
             slotIndex={slotIndex}
             slotPositions={slotPositions}
+            scrollRef={scrollRef}
             onSwap={handleSwap}
           />
         ))}
