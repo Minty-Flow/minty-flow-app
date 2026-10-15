@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-15T11:06:56.890Z
+Generated on: 2026-10-15T11:45:20.799Z
 ```
 ./
 ├── __tests__/
@@ -565,6 +565,7 @@ Generated on: 2026-10-15T11:06:56.890Z
 │   │   ├── use-retention-cleanup.ts
 │   │   ├── use-scroll-into-view.ts
 │   │   ├── use-shake-listener.ts
+│   │   ├── use-sheet-open-key.ts
 │   │   ├── use-tab-visibility.tsx
 │   │   ├── use-time-reactivity.ts
 │   │   ├── use-transaction-lifecycle-sync.ts

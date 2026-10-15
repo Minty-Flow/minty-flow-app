@@ -18,6 +18,7 @@ import {
 } from "~/components/ui/single-select-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { useSheetOpenKey } from "~/hooks/use-sheet-open-key"
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Category, CategoryType } from "~/types/categories"
 import { NewEnum } from "~/types/new"
@@ -43,12 +44,14 @@ type Props = {
 }
 
 export function CategoryPickerSheet(props: Props) {
-  // Mounted only while open so the draft and search reset on every open.
-  if (!props.visible) return null
-  return <CategoryPickerSheetInner {...props} />
+  // A new key per open resets the draft and search, while the sheet stays
+  // mounted to animate out.
+  const openKey = useSheetOpenKey(props.visible)
+  return <CategoryPickerSheetInner key={openKey} {...props} />
 }
 
 function CategoryPickerSheetInner({
+  visible,
   categories,
   mode,
   selectedIds,
@@ -56,7 +59,7 @@ function CategoryPickerSheetInner({
   onClose,
   newCategoryType,
   onNewCategory,
-}: Omit<Props, "visible">) {
+}: Props) {
   const { t } = useTranslation()
   const router = useRouter()
   const [draft, setDraft] = useState<string[]>(selectedIds)
@@ -109,7 +112,7 @@ function CategoryPickerSheetInner({
 
   return (
     <BottomSheet
-      isPresented
+      isPresented={visible}
       onDismiss={onClose}
       contentPadding={0}
       heightFraction={0.75}

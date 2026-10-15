@@ -6,15 +6,15 @@
 import { useRouter } from "expo-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
-import { SearchInput } from "~/components/search-input"
-import { sheetHeaderStyles } from "~/components/selectors/styles"
-import { BottomSheet } from "~/components/ui/bottom-sheet"
+import {
+  PICKER_SEARCH_MIN_ROWS,
+  PickerSheet,
+} from "~/components/selectors/picker-sheet"
 import { EmptyState } from "~/components/ui/empty-state"
 import { ListItem } from "~/components/ui/list-item"
 import {
@@ -25,9 +25,6 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { Account } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
-
-/** Above this many accounts the sheet shows a search field. */
-const SEARCH_MIN_ACCOUNTS = 8
 
 interface AccountPickerSheetProps {
   visible: boolean
@@ -49,7 +46,7 @@ export function AccountPickerSheet({
   const { t } = useTranslation()
   const router = useRouter()
   const [query, setQuery] = useState("")
-  const showSearch = accounts.length > SEARCH_MIN_ACCOUNTS
+  const showSearch = accounts.length > PICKER_SEARCH_MIN_ROWS
 
   const q = query.trim().toLowerCase()
   const filtered = q
@@ -98,88 +95,42 @@ export function AccountPickerSheet({
     </SingleSelectItem>
   )
 
-  const header = (
-    <View style={sheetHeaderStyles.header}>
-      <Text variant="default" style={sheetHeaderStyles.title}>
-        {title}
-      </Text>
-    </View>
-  )
-
-  if (accounts.length === 0) {
-    return (
-      <BottomSheet
-        isPresented={visible}
-        onDismiss={handleClose}
-        contentPadding={0}
-      >
-        {header}
+  return (
+    <PickerSheet
+      visible={visible}
+      onClose={handleClose}
+      title={title}
+      search={
+        showSearch
+          ? {
+              value: query,
+              onChange: setQuery,
+              placeholder: t("screens.accounts.a11y.searchPlaceholder"),
+            }
+          : undefined
+      }
+    >
+      {accounts.length === 0 ? (
         <ListItem style={styles.row} onPress={handleAddAccount}>
           <View style={styles.addIcon}>
             <IconSvg name="plus-outline" size={20} />
           </View>
           <Text style={styles.addLabel}>{t("screens.accounts.a11y.add")}</Text>
         </ListItem>
-      </BottomSheet>
-    )
-  }
-
-  if (!showSearch) {
-    return (
-      <BottomSheet
-        isPresented={visible}
-        onDismiss={handleClose}
-        contentPadding={{ horizontal: 0, bottom: 16 }}
-      >
-        {header}
-        {accounts.map(renderRow)}
-      </BottomSheet>
-    )
-  }
-
-  return (
-    <BottomSheet
-      isPresented={visible}
-      onDismiss={handleClose}
-      contentPadding={0}
-      heightFraction={0.75}
-    >
-      <View style={styles.container}>
-        {header}
-        <View style={styles.search}>
-          <SearchInput
-            value={query}
-            onChangeText={setQuery}
-            onClear={() => setQuery("")}
-            placeholder={t("screens.accounts.a11y.searchPlaceholder")}
-          />
-        </View>
-        <FlatList
-          style={styles.list}
-          data={filtered}
-          keyExtractor={(account) => account.id}
-          renderItem={({ item }) => renderRow(item)}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <EmptyState
-              variant="compact"
-              icon="search-outline"
-              title={t("components.accountPicker.noResults")}
-            />
-          }
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          variant="compact"
+          icon="search-outline"
+          title={t("components.accountPicker.noResults")}
         />
-      </View>
-    </BottomSheet>
+      ) : (
+        filtered.map(renderRow)
+      )}
+    </PickerSheet>
   )
 }
 
 const styles = StyleSheet.create((theme) => ({
-  container: { flex: 1 },
-  search: { paddingHorizontal: 20, paddingBottom: 8 },
-  list: { flex: 1 },
-  listContent: { paddingBottom: 16 },
   row: {
     gap: 12,
     paddingVertical: 10,
