@@ -37,109 +37,38 @@ const income = (key: string, icon: IconSvgName): CategoryPreset => ({
   colorSchemeName: "",
 })
 
-/** The broad categories almost everyone needs. Pre-selected in onboarding. */
+/** The presets offered when adding categories; pre-selected in onboarding. */
 const CORE_PRESETS: CategoryPreset[] = [
-  expense("groceries", "basket"),
-  expense("dining", "pizza"),
-  expense("transportation", "car"),
-  expense("housing", "building-outline"),
-  expense("utilities", "plug-outline"),
+  expense("eatingOut", "tools-kitchen-2"),
+  expense("groceries", "bottle"),
+  expense("drinks", "mug"),
+  expense("education", "school"),
+  expense("health", "shield"),
+  expense("transport", "bus"),
+  expense("gas", "gas-station"),
   expense("shopping", "shopping-cart"),
-  expense("healthcare", "heart"),
-  expense("entertainment", "headphones"),
-  expense("personalCare", "sparkles"),
+  expense("entertainment", "ball-bowling"),
+  expense("subscriptions", "cloud"),
   expense("gifts", "gift"),
-  expense("savings", "pig"),
+  expense("rent", "file-dollar"),
+  expense("utils", "plug-outline"),
+  expense("taxes", "building-bank-outline"),
+  expense("insurance", "shield-check"),
+  expense("petCare", "paw"),
+  expense("childCare", "mood-happy"),
+  expense("fitness", "barbell"),
+  expense("gadgets", "device-mobile"),
+  expense("services", "headset"),
+  expense("snacks", "cookie"),
+  expense("stationery", "pencil"),
+  expense("hygiene", "droplet"),
+  expense("travel", "plane"),
 
-  income("salary", "wallet-outline"),
-  income("freelance", "briefcase"),
-  income("investment", "trending-up-outline"),
-  income("gift", "gift"),
-  income("cashback", "coins-outline"),
+  income("paycheck", "wallet-outline"),
 ]
 
-/** Optional extras grouped by life situation. Each preset is in one pack. */
-const PRESET_PACKS: CategoryPresetPack[] = [
-  {
-    id: "student",
-    name: "components.categories.presets.packs.student",
-    icon: "school",
-    presets: [
-      expense("education", "school"),
-      income("allowance", "cash-banknote"),
-    ],
-  },
-  {
-    id: "renter",
-    name: "components.categories.presets.packs.renter",
-    icon: "key",
-    presets: [expense("rent", "key")],
-  },
-  {
-    id: "investor",
-    name: "components.categories.presets.packs.investor",
-    icon: "chart-pie-outline",
-    presets: [expense("investments", "chart-pie-outline")],
-  },
-  {
-    id: "family",
-    name: "components.categories.presets.packs.family",
-    icon: "users-outline",
-    presets: [expense("kids", "baby-carriage"), expense("insurance", "shield")],
-  },
-  {
-    id: "car",
-    name: "components.categories.presets.packs.car",
-    icon: "car",
-    presets: [
-      expense("fuel", "gas-station"),
-      expense("carMaintenance", "car-suv"),
-    ],
-  },
-  {
-    id: "pets",
-    name: "components.categories.presets.packs.pets",
-    icon: "paw-print-outline",
-    presets: [expense("pets", "paw-print-outline")],
-  },
-  {
-    id: "selfEmployed",
-    name: "components.categories.presets.packs.selfEmployed",
-    icon: "briefcase",
-    presets: [
-      expense("businessExpenses", "briefcase"),
-      expense("taxes", "receipt-outline"),
-      income("business", "building-bank-outline"),
-    ],
-  },
-  {
-    id: "traveler",
-    name: "components.categories.presets.packs.traveler",
-    icon: "plane",
-    presets: [expense("travel", "plane")],
-  },
-  {
-    id: "landlord",
-    name: "components.categories.presets.packs.landlord",
-    icon: "home-share-outline",
-    presets: [
-      expense("homeMaintenance", "home"),
-      income("rental", "home-share-outline"),
-    ],
-  },
-  {
-    id: "retired",
-    name: "components.categories.presets.packs.retired",
-    icon: "clock",
-    presets: [income("pension", "clock")],
-  },
-  {
-    id: "giving",
-    name: "components.categories.presets.packs.giving",
-    icon: "heart-handshake-outline",
-    presets: [expense("charity", "heart-handshake-outline")],
-  },
-]
+/** Optional extras grouped by life situation. Empty for now. */
+const PRESET_PACKS: CategoryPresetPack[] = []
 
 /** Core presets and the packs (with at least one preset) for one type. */
 export function getPresetGroups(type: CategoryType): {

@@ -180,12 +180,16 @@ function PickerInner({
         </Text>
         {renderGrid(core)}
 
-        <Text style={[styles.sectionTitle, styles.packsTitle]}>
-          {t("components.categories.presets.packsTitle")}
-        </Text>
-        <Text style={styles.packsHint}>
-          {t("components.categories.presets.packsHint")}
-        </Text>
+        {packs.length > 0 ? (
+          <>
+            <Text style={[styles.sectionTitle, styles.packsTitle]}>
+              {t("components.categories.presets.packsTitle")}
+            </Text>
+            <Text style={styles.packsHint}>
+              {t("components.categories.presets.packsHint")}
+            </Text>
+          </>
+        ) : null}
 
         {packs.map((pack) => {
           const keys = availableKeys(pack.presets)
