@@ -5,6 +5,12 @@ Rule: sheets that replaced a full-screen modal use `heightFraction={0.75}` (cont
 Native sheet wrapper: `src/components/ui/bottom-sheet.tsx` (`@expo/ui` BottomSheet).
 Status: `done` converted · `next` good sheet candidate · `review` needs a decision / has risk · `keep` stays a centered dialog.
 
+## Closing lifecycle
+
+- `BottomSheet` keeps the last presented children until the native `onDismiss` fires, so clearing state behind a sheet does not empty it mid-animation.
+- A sheet must stay mounted while it closes: never render it as `{entity && <ConfirmSheet />}` when the confirm deletes `entity`. Screens that show the entity keep it after deletion (`useModifyRouteLoader` keeps the last loaded entity).
+- Leave the screen from `ConfirmSheet`'s `onConfirmed` (runs after the sheet has closed), not from `onConfirm`. `onConfirm` returns `false` on failure to keep the sheet open.
+
 ## Modals (RN `Modal`)
 
 | File | Today | Plan | Notes |

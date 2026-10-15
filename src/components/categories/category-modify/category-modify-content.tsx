@@ -146,12 +146,9 @@ export function CategoryModifyContent({
           title: t("common.toast.error"),
           description: t("components.categories.form.toast.notFound"),
         })
-        return
+        return false
       }
       await deleteCategoryById(categoryModifyId)
-      allowNavigation()
-      // This is cleaner than replace because it actually removes the screens from history rather than stacking a new one on top. The number 2 matches exactly how deep you pushed from /settings/categories.
-      router.dismiss(2)
     } catch (error) {
       logger.error("Error deleting category", { error })
       Toast.error({
@@ -163,7 +160,14 @@ export function CategoryModifyContent({
               })
             : t("components.categories.form.toast.deleteFailed"),
       })
+      return false
     }
+  }
+  // Runs once the delete sheet has closed: leaving earlier tears it down mid-animation.
+  const handleDeleted = () => {
+    allowNavigation()
+    // This is cleaner than replace because it actually removes the screens from history rather than stacking a new one on top. The number 2 matches exactly how deep you pushed from /settings/categories.
+    router.dismiss(2)
   }
   const handleIconSelected = (icon: string | null) => {
     setValue("icon", icon, { shouldDirty: true })
@@ -245,8 +249,8 @@ export function CategoryModifyContent({
         onCloseDeleteSheet={() => setDeleteSheetVisible(false)}
         onCloseUnsavedSheet={() => setUnsavedSheetVisible(false)}
         onConfirmDelete={handleDelete}
+        onDeleted={handleDeleted}
         onDiscardAndNavigate={() => {
-          setUnsavedSheetVisible(false)
           allowNavigation()
           handleGoBack()
         }}

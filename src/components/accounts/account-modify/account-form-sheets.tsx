@@ -13,8 +13,10 @@ interface AccountFormSheetsProps {
   onCloseDeleteSheet: () => void
   onCloseArchiveSheet: () => void
   onCloseUnsavedSheet: () => void
-  onConfirmDelete: () => void
-  onConfirmArchive: () => void
+  onConfirmDelete: () => Promise<boolean | undefined>
+  onConfirmArchive: () => Promise<boolean | undefined>
+  onDeleted: () => void
+  onArchived: () => void
   onDiscardAndNavigate: () => void
 }
 
@@ -30,6 +32,8 @@ export function AccountFormSheets({
   onCloseUnsavedSheet,
   onConfirmDelete,
   onConfirmArchive,
+  onDeleted,
+  onArchived,
   onDiscardAndNavigate,
 }: AccountFormSheetsProps) {
   const { t } = useTranslation()
@@ -38,13 +42,14 @@ export function AccountFormSheets({
 
   return (
     <>
-      {!isAddMode && account && (
+      {!isAddMode && (
         <ConfirmSheet
           visible={deleteSheetVisible}
           onRequestClose={onCloseDeleteSheet}
           onConfirm={onConfirmDelete}
+          onConfirmed={onDeleted}
           title={t("screens.accounts.form.deleteSheet.title", {
-            name: account.name,
+            name: account?.name,
           })}
           description={
             transactionCount > 0
@@ -60,11 +65,12 @@ export function AccountFormSheets({
         />
       )}
 
-      {!isAddMode && account && (
+      {!isAddMode && (
         <ConfirmSheet
           visible={archiveSheetVisible}
           onRequestClose={onCloseArchiveSheet}
           onConfirm={onConfirmArchive}
+          onConfirmed={onArchived}
           title={
             isArchived
               ? t("screens.accounts.form.archiveSheet.unarchiveTitle")
@@ -84,7 +90,8 @@ export function AccountFormSheets({
       <ConfirmSheet
         visible={unsavedSheetVisible}
         onRequestClose={onCloseUnsavedSheet}
-        onConfirm={onDiscardAndNavigate}
+        onConfirm={() => undefined}
+        onConfirmed={onDiscardAndNavigate}
         title={t("common.sheets.closeWithoutSaving")}
         description={t("common.sheets.unsavedDescription")}
         confirmLabel={t("common.actions.discard")}

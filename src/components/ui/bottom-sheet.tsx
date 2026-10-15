@@ -9,6 +9,11 @@ type Padding = number | { horizontal?: number; top?: number; bottom?: number }
 interface BottomSheetProps {
   isPresented: boolean
   onDismiss: () => void
+  /**
+   * Fires once the sheet has finished closing (after the exit animation on iOS).
+   * Run navigation or other work that would tear the sheet down here.
+   */
+  onDismissed?: () => void
   children: ReactNode
   /** Gorhom-style, e.g. ["50%", "90%"]. Omit to size to content. */
   snapPoints?: (string | number)[]
@@ -62,6 +67,7 @@ const SHEET_CHROME = 48
 export function BottomSheet({
   isPresented,
   onDismiss,
+  onDismissed,
   children,
   snapPoints,
   showDragIndicator = true,
@@ -82,6 +88,7 @@ export function BottomSheet({
   const handleDismiss = () => {
     retainedChildren.current = null
     onDismiss()
+    onDismissed?.()
   }
 
   return (

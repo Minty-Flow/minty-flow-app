@@ -23,9 +23,9 @@ export interface LoanFormSheetsProps {
   deleteSheetVisible: boolean
   unsavedSheetVisible: boolean
   isAddMode: boolean
-  loan?: Loan
   onCloseDeleteSheet: () => void
   onCloseUnsavedSheet: () => void
-  onConfirmDelete: () => void
+  onConfirmDelete: () => Promise<boolean | undefined>
+  onDeleted: () => void
   onDiscardAndNavigate: () => void
 }

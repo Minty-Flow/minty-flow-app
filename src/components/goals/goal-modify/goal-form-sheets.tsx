@@ -12,8 +12,10 @@ interface GoalFormSheetsProps {
   onCloseDeleteSheet: () => void
   onCloseArchiveSheet: () => void
   onCloseUnsavedSheet: () => void
-  onConfirmDelete: () => void
-  onConfirmArchive: () => void
+  onConfirmDelete: () => Promise<boolean | undefined>
+  onConfirmArchive: () => Promise<boolean | undefined>
+  onDeleted: () => void
+  onArchived: () => void
   onDiscardAndNavigate: () => void
 }
 
@@ -28,6 +30,8 @@ export function GoalFormSheets({
   onCloseUnsavedSheet,
   onConfirmDelete,
   onConfirmArchive,
+  onDeleted,
+  onArchived,
   onDiscardAndNavigate,
 }: GoalFormSheetsProps) {
   const { t } = useTranslation()
@@ -36,11 +40,12 @@ export function GoalFormSheets({
 
   return (
     <>
-      {!isAddMode && goal && (
+      {!isAddMode && (
         <ConfirmSheet
           visible={deleteSheetVisible}
           onRequestClose={onCloseDeleteSheet}
           onConfirm={onConfirmDelete}
+          onConfirmed={onDeleted}
           title={t("common.sheets.deletePermanently")}
           note={t("common.sheets.deleteNoteGoal")}
           confirmLabel={t("common.actions.delete")}
@@ -50,11 +55,12 @@ export function GoalFormSheets({
         />
       )}
 
-      {!isAddMode && goal && (
+      {!isAddMode && (
         <ConfirmSheet
           visible={archiveSheetVisible}
           onRequestClose={onCloseArchiveSheet}
           onConfirm={onConfirmArchive}
+          onConfirmed={onArchived}
           title={
             isArchived
               ? t("screens.settings.goals.form.archiveSheet.unarchiveTitle")
@@ -74,7 +80,8 @@ export function GoalFormSheets({
       <ConfirmSheet
         visible={unsavedSheetVisible}
         onRequestClose={onCloseUnsavedSheet}
-        onConfirm={onDiscardAndNavigate}
+        onConfirm={() => undefined}
+        onConfirmed={onDiscardAndNavigate}
         title={t("common.sheets.closeWithoutSaving")}
         description={t("common.sheets.unsavedDescription")}
         confirmLabel={t("common.actions.discard")}

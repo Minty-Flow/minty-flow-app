@@ -100,15 +100,19 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
   const handleDelete = async () => {
     try {
       await deleteTagById(tagId)
-      allowNavigation()
-      router.back()
     } catch (error) {
       logger.error("Error deleting tag", { error })
       Toast.error({
         title: t("common.toast.error"),
         description: t("screens.settings.tags.form.toast.deleteFailed"),
       })
+      return false
     }
+  }
+  // Runs once the delete sheet has closed: leaving earlier tears it down mid-animation.
+  const handleDeleted = () => {
+    allowNavigation()
+    router.back()
   }
   const currentColorScheme = getThemeStrict(formColorSchemeName)
   if (!isAddMode && !tag) {
@@ -159,6 +163,7 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
         setDeleteSheetVisible={setDeleteSheetVisible}
         tag={tag}
         handleDelete={handleDelete}
+        onDeleted={handleDeleted}
         unsavedSheetVisible={unsavedSheetVisible}
         setUnsavedSheetVisible={setUnsavedSheetVisible}
         allowNavigation={allowNavigation}

@@ -13,7 +13,8 @@ interface CategoryFormSheetsProps {
   budgetsLosingCategory: BudgetLosingLastCategory[]
   onCloseDeleteSheet: () => void
   onCloseUnsavedSheet: () => void
-  onConfirmDelete: () => void
+  onConfirmDelete: () => Promise<boolean | undefined>
+  onDeleted: () => void
   onDiscardAndNavigate: () => void
 }
 
@@ -26,6 +27,7 @@ export function CategoryFormSheets({
   onCloseDeleteSheet,
   onCloseUnsavedSheet,
   onConfirmDelete,
+  onDeleted,
   onDiscardAndNavigate,
 }: CategoryFormSheetsProps) {
   const { t } = useTranslation()
@@ -46,13 +48,14 @@ export function CategoryFormSheets({
 
   return (
     <>
-      {!isAddMode && category && (
+      {!isAddMode && (
         <ConfirmSheet
           visible={deleteSheetVisible}
           onRequestClose={onCloseDeleteSheet}
           onConfirm={onConfirmDelete}
+          onConfirmed={onDeleted}
           title={t("components.categories.form.deleteSheet.title", {
-            name: category.name,
+            name: category?.name,
           })}
           description={budgetsText ? `${usageText} ${budgetsText}` : usageText}
           confirmLabel={
@@ -69,7 +72,8 @@ export function CategoryFormSheets({
       <ConfirmSheet
         visible={unsavedSheetVisible}
         onRequestClose={onCloseUnsavedSheet}
-        onConfirm={onDiscardAndNavigate}
+        onConfirm={() => undefined}
+        onConfirmed={onDiscardAndNavigate}
         title={t("common.sheets.closeWithoutSaving")}
         description={t("common.sheets.unsavedDescription")}
         confirmLabel={t("common.actions.discard")}
