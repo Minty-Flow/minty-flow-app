@@ -1,4 +1,5 @@
-import { type RefObject, useRef } from "react"
+import * as Haptics from "expo-haptics"
+import { type RefObject, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { useWindowDimensions } from "react-native"
 import {
@@ -7,7 +8,13 @@ import {
   ScrollView,
 } from "react-native-gesture-handler"
 import Animated, {
+  Easing,
+  interpolateColor,
+  ReduceMotion,
+  type SharedValue,
+  useAnimatedReaction,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated"
@@ -47,72 +54,219 @@ interface ButtonConfig {
   color: string
   iconColor: string
 }
+/** Settling into a slot: short and ease-out, no bounce. Honors Reduce Motion. */
+const SETTLE = {
+  duration: 180,
+  easing: Easing.out(Easing.cubic),
+  reduceMotion: ReduceMotion.System,
+}
+const PRESS = { duration: 120, reduceMotion: ReduceMotion.System }
+const HIGHLIGHT = { duration: 120, reduceMotion: ReduceMotion.System }
+
+type Tick = "pickup" | "select" | "drop"
+
+function tick(kind: Tick) {
+  if (kind === "select") {
+    void Haptics.selectionAsync()
+  } else {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+  }
+}
+
+/** How much closer another slot must be before the hover moves to it (dp). */
+const HOVER_HYSTERESIS = 14
+
+/**
+ * Slot whose centre is closest to a button at (x, y). `current` is the slot
+ * already hovered (or -1): it is kept until another slot is clearly closer, so
+ * a finger resting between two slots does not make the buttons flicker.
+ */
+function nearestSlotIndex(
+  x: number,
+  y: number,
+  slots: SlotPos[],
+  current: number,
+): number {
+  "worklet"
+  let nearest = 0
+  let minDist = Number.POSITIVE_INFINITY
+  let currentDist = Number.POSITIVE_INFINITY
+  for (let i = 0; i < slots.length; i++) {
+    const dx = x - slots[i].x
+    const dy = y - slots[i].y
+    const dist = Math.sqrt(dx * dx + dy * dy)
+    if (dist < minDist) {
+      minDist = dist
+      nearest = i
+    }
+    if (i === current) currentDist = dist
+  }
+  if (
+    current >= 0 &&
+    nearest !== current &&
+    minDist > currentDist - HOVER_HYSTERESIS
+  ) {
+    return current
+  }
+  return nearest
+}
+
+function SlotPlaceholder({
+  pos,
+  index,
+  nearestSlot,
+}: {
+  pos: SlotPos
+  index: number
+  /** Slot under the dragged button, or -1 when nothing is being dragged. */
+  nearestSlot: SharedValue<number>
+}) {
+  const { theme } = useUnistyles()
+  const idle = theme.colors.semantic.semi
+  const active = theme.colors.primary
+  const progress = useDerivedValue(() =>
+    withTiming(nearestSlot.value === index ? 1 : 0, HIGHLIGHT),
+  )
+  const animatedStyle = useAnimatedStyle(() => ({
+    borderColor: interpolateColor(progress.value, [0, 1], [idle, active]),
+    backgroundColor: interpolateColor(
+      progress.value,
+      [0, 1],
+      [`${active}00`, `${active}1F`],
+    ),
+    opacity: 0.5 + progress.value * 0.5,
+  }))
+  return (
+    <Animated.View
+      style={[
+        styles.slotPlaceholder,
+        { position: "absolute", left: pos.x - 6, top: pos.y - 6 },
+        animatedStyle,
+      ]}
+    />
+  )
+}
+
 function DraggableButton({
   config,
+  buttonType,
   slotIndex,
   slotPositions,
   scrollRef,
+  dragged,
+  dragFrom,
+  nearestSlot,
   onSwap,
 }: {
   config: ButtonConfig
+  buttonType: FabButtonType
   slotIndex: number
   slotPositions: SlotPos[]
   /** The page's scroll view: a drag on a button must win over scrolling it. */
   scrollRef: RefObject<ScrollView | null>
+  /** The button being dragged ("" when none), the slot it left, and the slot it hovers. */
+  dragged: SharedValue<string>
+  dragFrom: SharedValue<number>
+  nearestSlot: SharedValue<number>
   onSwap: (from: number, to: number) => void
 }) {
-  const tx = useSharedValue(0)
-  const ty = useSharedValue(0)
+  const slotPos = slotPositions[slotIndex]
+  const x = useSharedValue(slotPos.x)
+  const y = useSharedValue(slotPos.y)
+  const startX = useSharedValue(0)
+  const startY = useSharedValue(0)
   const scale = useSharedValue(1)
-  const isDragging = useSharedValue(false)
-  const triggerSwap = (from: number, to: number) => onSwap(from, to)
+
+  // Glide to the slot whenever it changes: after a drop, or a layout change.
+  useEffect(() => {
+    x.value = withTiming(slotPos.x, SETTLE)
+    y.value = withTiming(slotPos.y, SETTLE)
+  }, [slotPos.x, slotPos.y, x, y])
+
+  // While another button is dragged over this one's slot, make room: move into
+  // the slot that button left. The dragged button itself follows the finger.
+  useAnimatedReaction(
+    () => {
+      if (dragged.value === buttonType) return -1
+      if (dragged.value === "") return slotIndex
+      return nearestSlot.value === slotIndex && dragFrom.value !== slotIndex
+        ? dragFrom.value
+        : slotIndex
+    },
+    (target, previous) => {
+      if (target === -1 || target === previous) return
+      x.value = withTiming(slotPositions[target].x, SETTLE)
+      y.value = withTiming(slotPositions[target].y, SETTLE)
+    },
+    [slotIndex, slotPositions],
+  )
+
   const pan = Gesture.Pan()
     .blocksExternalGesture(scrollRef)
     .onStart(() => {
       "worklet"
-      isDragging.value = true
-      scale.value = withTiming(1.08, { duration: 120 })
+      startX.value = x.value
+      startY.value = y.value
+      dragged.value = buttonType
+      dragFrom.value = slotIndex
+      nearestSlot.value = slotIndex
+      scale.value = withTiming(1.08, PRESS)
+      scheduleOnRN(tick, "pickup")
     })
     .onUpdate((e) => {
       "worklet"
-      tx.value = e.translationX
-      ty.value = e.translationY
+      x.value = startX.value + e.translationX
+      y.value = startY.value + e.translationY
+      const near = nearestSlotIndex(
+        x.value,
+        y.value,
+        slotPositions,
+        nearestSlot.value,
+      )
+      if (near !== nearestSlot.value) {
+        nearestSlot.value = near
+        scheduleOnRN(tick, "select")
+      }
     })
     .onEnd(() => {
       "worklet"
-      const myPos = slotPositions[slotIndex]
-      const fingerX = myPos.x + BUTTON_SIZE / 2 + tx.value
-      const fingerY = myPos.y + BUTTON_SIZE / 2 + ty.value
-      let nearestSlot = slotIndex
-      let minDistSq = Number.POSITIVE_INFINITY
-      for (let i = 0; i < slotPositions.length; i++) {
-        const p = slotPositions[i]
-        const dx = fingerX - (p.x + BUTTON_SIZE / 2)
-        const dy = fingerY - (p.y + BUTTON_SIZE / 2)
-        const distSq = dx * dx + dy * dy
-        if (distSq < minDistSq) {
-          minDistSq = distSq
-          nearestSlot = i
-        }
+      const target = nearestSlot.value
+      scale.value = withTiming(1, PRESS)
+      scheduleOnRN(tick, "drop")
+      if (target !== slotIndex) {
+        // The other button is already in place; this one glides to its new slot
+        // once the swap re-renders, and the screen then clears the drag state.
+        scheduleOnRN(onSwap, slotIndex, target)
+      } else {
+        x.value = withTiming(slotPos.x, SETTLE)
+        y.value = withTiming(slotPos.y, SETTLE)
+        dragged.value = ""
+        dragFrom.value = -1
+        nearestSlot.value = -1
       }
-      if (nearestSlot !== slotIndex) {
-        scheduleOnRN(triggerSwap, slotIndex, nearestSlot)
-      }
-      isDragging.value = false
-      scale.value = withTiming(1, { duration: 120 })
-      tx.value = 0
-      ty.value = 0
     })
+    .onFinalize((_e, success) => {
+      "worklet"
+      // Only a cancelled drag (no onEnd) needs undoing here.
+      if (success || dragged.value !== buttonType) return
+      dragged.value = ""
+      dragFrom.value = -1
+      nearestSlot.value = -1
+      scale.value = withTiming(1, PRESS)
+      x.value = withTiming(slotPos.x, SETTLE)
+      y.value = withTiming(slotPos.y, SETTLE)
+    })
+
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateX: tx.value },
-      { translateY: ty.value },
+      { translateX: x.value },
+      { translateY: y.value },
       { scale: scale.value },
     ],
-    zIndex: isDragging.value ? 100 : 2,
-    elevation: isDragging.value ? 12 : 3,
+    zIndex: dragged.value === buttonType ? 100 : 2,
+    elevation: dragged.value === buttonType ? 12 : 3,
   }))
-  const slotPos = slotPositions[slotIndex]
+
   return (
     <GestureDetector gesture={pan}>
       <Animated.View
@@ -120,8 +274,8 @@ function DraggableButton({
           styles.button,
           {
             position: "absolute",
-            left: slotPos.x,
-            top: slotPos.y,
+            left: 0,
+            top: 0,
             backgroundColor: config.color,
           },
           animatedStyle,
@@ -132,6 +286,7 @@ function DraggableButton({
     </GestureDetector>
   )
 }
+
 export default function ButtonPlacementScreen() {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
@@ -158,6 +313,16 @@ export default function ButtonPlacementScreen() {
     },
   }
   const scrollRef = useRef<ScrollView>(null)
+  const dragged = useSharedValue("")
+  const dragFrom = useSharedValue(-1)
+  const nearestSlot = useSharedValue(-1)
+  // A swap re-rendered the buttons into their new slots: the drag is over.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset when the order changes
+  useEffect(() => {
+    dragged.value = ""
+    dragFrom.value = -1
+    nearestSlot.value = -1
+  }, [order, dragged, dragFrom, nearestSlot])
   const handleSwap = (from: number, to: number) => {
     const newOrder = [...order] as ButtonPlacementOrder
     const temp = newOrder[from]
@@ -187,18 +352,12 @@ export default function ButtonPlacementScreen() {
         ]}
       >
         {/* Dashed slot placeholders behind buttons */}
-        {slotPositions.map((pos) => (
-          <View
+        {slotPositions.map((pos, index) => (
+          <SlotPlaceholder
             key={pos.id}
-            style={[
-              styles.slotPlaceholder,
-              {
-                position: "absolute",
-                left: pos.x - 6,
-                top: pos.y - 6,
-                borderColor: theme.colors.semantic.semi,
-              },
-            ]}
+            pos={pos}
+            index={index}
+            nearestSlot={nearestSlot}
           />
         ))}
 
@@ -207,9 +366,13 @@ export default function ButtonPlacementScreen() {
           <DraggableButton
             key={buttonType}
             config={buttonConfigs[buttonType]}
+            buttonType={buttonType}
             slotIndex={slotIndex}
             slotPositions={slotPositions}
             scrollRef={scrollRef}
+            dragged={dragged}
+            dragFrom={dragFrom}
+            nearestSlot={nearestSlot}
             onSwap={handleSwap}
           />
         ))}
