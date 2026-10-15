@@ -63,6 +63,8 @@ const CORE_PRESETS: CategoryPreset[] = [
   expense("stationery", "pencil"),
   expense("hygiene", "hand-sanitizer-outline"),
   expense("travel", "plane"),
+  expense("hobbies", "palette"),
+  expense("beauty", "sparkles"),
 
   income("paycheck", "wallet-outline"),
   income("bonus", "trophy"),

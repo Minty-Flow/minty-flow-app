@@ -1296,7 +1296,9 @@
           "snacks": "الوجبات الخفيفة",
           "stationery": "القرطاسية",
           "hygiene": "النظافة الشخصية",
-          "travel": "السفر"
+          "travel": "السفر",
+          "hobbies": "الهوايات",
+          "beauty": "الجمال"
         },
         "income": {
           "paycheck": "الراتب",

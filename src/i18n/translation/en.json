@@ -1296,7 +1296,9 @@
           "snacks": "Snacks",
           "stationery": "Stationery",
           "hygiene": "Hygiene",
-          "travel": "Travel"
+          "travel": "Travel",
+          "hobbies": "Hobbies",
+          "beauty": "Beauty"
         },
         "income": {
           "paycheck": "Paycheck",
