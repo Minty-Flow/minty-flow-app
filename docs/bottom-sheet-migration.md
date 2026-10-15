@@ -21,7 +21,7 @@ Status: `done` converted · `next` good sheet candidate · `review` needs a deci
 | `info-sheet.tsx` | fade dialog | **done** | Content-sized. |
 | `transaction/transaction-form-v4/kind-info-sheet.tsx` | fade card | **done** | `heightFraction={0.75}`, inner ScrollView, OK button pinned below. |
 | `transaction/edit-recurring-sheet.tsx` | fade card | **done** | `dismissable={!loadingScope}` blocks dismiss while saving. |
-| `transaction/delete-recurring-sheet.tsx` | fade card | **done** (sheet) | Still opens a native `Alert.alert` confirm for all / this+future: convert that to a sheet or `ConfirmSheet`. |
+| `transaction/delete-recurring-sheet.tsx` | fade card | **done** | "All" / "this and future" swap to an inline confirm step in the same sheet. |
 | `loans/loan-action-sheet.tsx` | fade card | **done** | Content-sized, not dismissable while loading. |
 | `bill-splitter/add-name-sheet.tsx` | fade card | **done** | Has a text input: check keyboard vs field/buttons. |
 | `transaction/attachment-preview-modal.tsx` | fade, image viewer | keep | full-bleed viewer |
@@ -31,14 +31,13 @@ Status: `done` converted · `next` good sheet candidate · `review` needs a deci
 
 | `month-picker-sheet.tsx` / `year-picker-sheet.tsx` | inline `MonthGrid` + inline year input | **done** | Replaces `month-grid.tsx`. Month sheet opens the year sheet stacked on top. Used by `MonthYearPicker` (5 screens) and the date-range sheet. Check stacking on iOS. |
 
-## Native `Alert.alert` (5 calls, decisions)
+## Native `Alert.alert` (decisions)
 
 | Where | What it is | Decision |
 |---|---|---|
 | `app/_layout.tsx:82` and `:95` | "Your data is ready" notice after the one-time SQLite→Drizzle migration (with "Don't show again" on the first) | **Keep native.** Runs in the root gate before app providers/theme are mounted; also temporary (TODO remove-after-drizzle-rollout). |
 | `app/(tabs)/_layout.tsx:246` | Development notice on launch ("A quick note", Don't show again / OK) | Convert later, low priority. Fires on mount in the tabs layout; two actions. |
 | `settings/preferences/privacy.tsx:44` | Error: device lock required to enable app lock (OK only) | **Done**: now an `InfoSheet` (state `deviceLockInfoVisible`). |
-| `transaction/delete-recurring-sheet.tsx:147` | Destructive confirm for "all" / "this and future", opened over a sheet | Keep native for now: a sheet opened over a sheet is risky on iOS. Better: an inline confirm step inside the same sheet. |
 
 ## Screens presented as modals (expo-router)
 

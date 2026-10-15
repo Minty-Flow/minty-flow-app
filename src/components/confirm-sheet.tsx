@@ -2,7 +2,7 @@
  * Reusable confirm bottom sheet.
  * Use for delete confirmations or other destructive/important actions.
  */
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { View } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
@@ -59,17 +59,30 @@ export function ConfirmSheet({
 }: ConfirmSheetProps) {
   const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
+  const inFlight = useRef(false)
+  // After a confirm that closes the sheet, `loading` stays on through the exit
+  // animation so the buttons do not flip back; a new presentation starts clean.
+  useEffect(() => {
+    if (visible) setLoading(false)
+  }, [visible])
   const handleConfirm = () => {
+    if (inFlight.current) return
+    inFlight.current = true
     setLoading(true)
     Promise.resolve(onConfirm())
       .then(() => {
-        if (closeOnConfirm) onRequestClose()
+        if (closeOnConfirm) {
+          onRequestClose()
+        } else {
+          setLoading(false)
+        }
       })
       .catch((e) => {
         logger.error("Error confirming sheet", { error: e })
+        setLoading(false)
       })
       .finally(() => {
-        setLoading(false)
+        inFlight.current = false
       })
   }
   return (

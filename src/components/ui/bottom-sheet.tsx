@@ -1,5 +1,5 @@
 import { BottomSheet as NativeBottomSheet } from "@expo/ui/community/bottom-sheet"
-import type { ReactNode } from "react"
+import { type ReactNode, useRef } from "react"
 import { ScrollView, useWindowDimensions, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useUnistyles } from "react-native-unistyles"
@@ -54,6 +54,10 @@ const SHEET_CHROME = 48
  * children correctly — the universal `BottomSheet` does not). Controlled: set
  * `isPresented` false in `onDismiss`. Height follows content up to the screen,
  * then scrolls — callers must not add their own outer ScrollView.
+ *
+ * Once `isPresented` goes false the last presented children stay on screen
+ * until the native `onDismiss` fires (after the exit animation), so callers can
+ * clear the state behind the content without the sheet emptying mid-animation.
  */
 export function BottomSheet({
   isPresented,
@@ -72,6 +76,13 @@ export function BottomSheet({
   // The sheet sizes to its content; once that exceeds the screen the content
   // scrolls inside this cap instead of the sheet growing off-screen.
   const maxHeight = height - insets.top - insets.bottom - SHEET_CHROME
+  const retainedChildren = useRef<ReactNode>(children)
+  if (isPresented) retainedChildren.current = children
+  const content = isPresented ? children : retainedChildren.current
+  const handleDismiss = () => {
+    retainedChildren.current = null
+    onDismiss()
+  }
 
   return (
     <NativeBottomSheet
@@ -80,7 +91,7 @@ export function BottomSheet({
       enablePanDownToClose={dismissable}
       handleComponent={showDragIndicator ? undefined : null}
       backgroundStyle={{ backgroundColor: theme.colors.surface }}
-      onDismiss={onDismiss}
+      onDismiss={handleDismiss}
     >
       {heightFraction ? (
         <View
@@ -89,7 +100,7 @@ export function BottomSheet({
             resolvePadding(contentPadding),
           ]}
         >
-          {children}
+          {content}
         </View>
       ) : scrollable ? (
         <ScrollView
@@ -100,7 +111,7 @@ export function BottomSheet({
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {children}
+          {content}
         </ScrollView>
       ) : (
         <View
@@ -109,7 +120,7 @@ export function BottomSheet({
             resolvePadding(contentPadding),
           ]}
         >
-          {children}
+          {content}
         </View>
       )}
     </NativeBottomSheet>
