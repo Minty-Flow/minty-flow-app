@@ -12,6 +12,10 @@ import { BottomSheet } from "~/components/ui/bottom-sheet"
 import { Button } from "~/components/ui/button"
 import { Checkbox } from "~/components/ui/checkbox"
 import { ListItem } from "~/components/ui/list-item"
+import {
+  SingleSelectItem,
+  SingleSelectLabel,
+} from "~/components/ui/single-select-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { getThemeStrict } from "~/styles/theme/registry"
@@ -214,27 +218,42 @@ function CategoryRow({
   multi: boolean
   onPress: () => void
 }) {
-  return (
-    <ListItem
-      style={[styles.row, !multi && checked && styles.rowSelected]}
-      onPress={onPress}
-      accessibilityRole={multi ? "checkbox" : "radio"}
-      accessibilityState={{ checked }}
-    >
+  const content = (
+    <>
       <DynamicIcon
         icon={category.icon || "category-outline"}
         size={20}
         colorScheme={getThemeStrict(category.colorSchemeName)}
         variant="badge"
       />
-      <Text
-        style={[styles.rowLabel, !multi && checked && styles.rowLabelSelected]}
-        numberOfLines={2}
-      >
-        {category.name}
-      </Text>
+      {multi ? (
+        <Text style={styles.rowLabel} numberOfLines={2}>
+          {category.name}
+        </Text>
+      ) : (
+        <SingleSelectLabel style={styles.rowLabel} numberOfLines={2}>
+          {category.name}
+        </SingleSelectLabel>
+      )}
       {multi ? <Checkbox checked={checked} /> : null}
-    </ListItem>
+    </>
+  )
+  if (multi) {
+    return (
+      <ListItem
+        style={styles.row}
+        onPress={onPress}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked }}
+      >
+        {content}
+      </ListItem>
+    )
+  }
+  return (
+    <SingleSelectItem selected={checked} style={styles.row} onPress={onPress}>
+      {content}
+    </SingleSelectItem>
   )
 }
 
@@ -257,16 +276,12 @@ const styles = StyleSheet.create((theme) => ({
     gap: 12,
     paddingVertical: 10,
   },
-  rowSelected: {
-    backgroundColor: `${theme.colors.primary}15`,
-  },
   rowLabel: {
     flex: 1,
     ...theme.typography.bodyLarge,
     fontWeight: "500",
     color: theme.colors.onSurface,
   },
-  rowLabelSelected: { color: theme.colors.primary },
   newIcon: {
     width: 36,
     height: 36,

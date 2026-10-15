@@ -5,7 +5,10 @@ import { StyleSheet } from "react-native-unistyles"
 import { sheetHeaderStyles } from "~/components/selectors/styles"
 import { BottomSheet } from "~/components/ui/bottom-sheet"
 import { Chip } from "~/components/ui/chips"
-import { ListItem } from "~/components/ui/list-item"
+import {
+  SingleSelectItem,
+  SingleSelectLabel,
+} from "~/components/ui/single-select-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TranslationKey } from "~/i18n/config"
@@ -51,27 +54,21 @@ export function DateFormatSheet({ visible, onClose }: Props) {
           {t(key("styleLabel"))}
         </Text>
         {STYLES.map((style) => (
-          <ListItem
+          <SingleSelectItem
             key={style}
-            style={[styles.row, style === dateStyle && styles.rowSelected]}
+            selected={style === dateStyle}
+            style={styles.row}
             onPress={() => setDateStyle(style)}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: style === dateStyle }}
           >
             <View style={styles.rowContent}>
-              <Text
-                style={[
-                  styles.rowLabel,
-                  style === dateStyle && styles.rowLabelSelected,
-                ]}
-              >
+              <SingleSelectLabel style={styles.rowLabel}>
                 {t(key(`style.${style}`))}
-              </Text>
+              </SingleSelectLabel>
               <Text variant="muted" style={styles.rowExample}>
                 {formatDatePreview(now, style, dateOrder)}
               </Text>
             </View>
-          </ListItem>
+          </SingleSelectItem>
         ))}
 
         <Text variant="small" style={styles.sectionLabel}>
@@ -110,8 +107,6 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 4,
   },
   row: { justifyContent: "space-between", minHeight: 56 },
-  rowSelected: { backgroundColor: `${theme.colors.primary}15` },
-  rowLabelSelected: { color: theme.colors.primary },
   rowContent: { flex: 1, gap: 2 },
   rowLabel: { ...theme.typography.titleSmall, color: theme.colors.onSurface },
   rowExample: { fontSize: theme.typography.labelLarge.fontSize },

@@ -21,6 +21,10 @@ import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { EmptyState } from "~/components/ui/empty-state"
 import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
+import {
+  SingleSelectItem,
+  SingleSelectLabel,
+} from "~/components/ui/single-select-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { currencyRegistryService } from "~/services/currency-registry"
@@ -53,27 +57,18 @@ const CurrencyPanelRow = function CurrencyPanelRow({
   onSelect,
 }: CurrencyPanelRowProps) {
   return (
-    <ListItem
-      style={[
-        currencyAccountStyles.panelRow,
-        isSelected && currencyAccountStyles.panelRowSelected,
-      ]}
+    <SingleSelectItem
+      selected={isSelected}
+      style={currencyAccountStyles.panelRow}
       onPress={() => onSelect(item.code)}
-      accessibilityRole="radio"
-      accessibilityState={{ checked: isSelected }}
     >
       <View style={currencyAccountStyles.panelRowLeft}>
-        <Text
-          variant="large"
-          style={isSelected && currencyAccountStyles.selectedText}
-        >
-          {item.code}
-        </Text>
+        <SingleSelectLabel variant="large">{item.code}</SingleSelectLabel>
         <Text variant="muted">
           {item.accountCount} account{item.accountCount !== 1 ? "s" : ""}
         </Text>
       </View>
-    </ListItem>
+    </SingleSelectItem>
   )
 }
 // ---------------------------------------------------------------------------
