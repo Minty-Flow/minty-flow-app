@@ -47,6 +47,9 @@ const CORE_PRESETS: CategoryPreset[] = [
   expense("shopping", "shopping-cart"),
   expense("healthcare", "heart"),
   expense("entertainment", "headphones"),
+  expense("personalCare", "sparkles"),
+  expense("gifts", "gift"),
+  expense("savings", "pig"),
 
   income("salary", "wallet-outline"),
   income("freelance", "briefcase"),
@@ -65,6 +68,18 @@ const PRESET_PACKS: CategoryPresetPack[] = [
       expense("education", "school"),
       income("allowance", "cash-banknote"),
     ],
+  },
+  {
+    id: "renter",
+    name: "components.categories.presets.packs.renter",
+    icon: "key",
+    presets: [expense("rent", "key")],
+  },
+  {
+    id: "investor",
+    name: "components.categories.presets.packs.investor",
+    icon: "chart-pie-outline",
+    presets: [expense("investments", "chart-pie-outline")],
   },
   {
     id: "family",

@@ -1291,7 +1291,12 @@
           "taxes": "Taxes",
           "travel": "Travel",
           "homeMaintenance": "Home Maintenance",
-          "charity": "Charity"
+          "charity": "Charity",
+          "personalCare": "Personal Care",
+          "gifts": "Gifts",
+          "savings": "Savings",
+          "rent": "Rent",
+          "investments": "Investments"
         },
         "income": {
           "salary": "Salary",
@@ -1310,6 +1315,8 @@
         "addPack": "Add all",
         "removePack": "Remove",
         "packs": {
+          "renter": "Renter",
+          "investor": "Investor",
           "student": "Student",
           "family": "Family",
           "car": "Car owner",

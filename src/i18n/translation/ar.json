@@ -1291,7 +1291,12 @@
           "taxes": "ضرائب",
           "travel": "سفر",
           "homeMaintenance": "صيانة المنزل",
-          "charity": "خيرية"
+          "charity": "خيرية",
+          "personalCare": "العناية الشخصية",
+          "gifts": "الهدايا",
+          "savings": "المدخرات",
+          "rent": "الإيجار",
+          "investments": "الاستثمارات"
         },
         "income": {
           "salary": "مرتب",
@@ -1310,6 +1315,8 @@
         "addPack": "إضافة الكل",
         "removePack": "إزالة",
         "packs": {
+          "renter": "مستأجر",
+          "investor": "مستثمر",
           "student": "طالب",
           "family": "عائلة",
           "car": "مالك سيارة",
