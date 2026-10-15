@@ -155,7 +155,7 @@ export function ColorVariantInline({
           )}
 
           <ChevronIcon
-            direction={expanded ? "up" : "trailing"}
+            direction={expanded ? "up" : "down"}
             size={20}
             style={styles.chevronIcon}
           />

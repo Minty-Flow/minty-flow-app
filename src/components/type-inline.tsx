@@ -75,7 +75,7 @@ export function TypeInline<T extends string>({
           </Text>
           {editable && (
             <ChevronIcon
-              direction={expanded ? "up" : "trailing"}
+              direction={expanded ? "up" : "down"}
               size={20}
               style={styles.chevronIconOpacity}
               color={styles.chevronIconColor.color}
