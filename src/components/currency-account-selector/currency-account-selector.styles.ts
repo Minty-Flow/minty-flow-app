@@ -116,12 +116,6 @@ export const currencyAccountStyles = StyleSheet.create((t) => ({
     borderBottomWidth: 1,
     borderBottomColor: `${t.colors.onSurface}10`,
   },
-  panelRowSelected: {
-    backgroundColor: `${t.colors.primary}15`,
-  },
-  selectedText: {
-    color: t.colors.primary,
-  },
   panelRowLeft: {
     flex: 1,
     gap: 2,

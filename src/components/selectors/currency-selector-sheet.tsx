@@ -9,7 +9,7 @@ import { FlatList, View } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { EmptyState } from "~/components/ui/empty-state"
-import { ListItem } from "~/components/ui/list-item"
+import { SingleSelectItem } from "~/components/ui/single-select-item"
 import { Text } from "~/components/ui/text"
 import { currencyRegistryService } from "~/services/currency-registry"
 import type { Currency } from "~/types/currency"
@@ -34,11 +34,11 @@ const CurrencyRow = function CurrencyRow({
 }: CurrencyRowProps) {
   const { t } = useTranslation()
   return (
-    <ListItem
+    <SingleSelectItem
+      selected={isSelected}
       style={({ pressed }: { pressed: boolean }) => [
         sheetStyles.item,
         pressed && sheetStyles.itemPressed,
-        isSelected && sheetStyles.itemSelected,
       ]}
       onPress={() => onSelect(item.code)}
     >
@@ -58,7 +58,7 @@ const CurrencyRow = function CurrencyRow({
           {item.code}
         </Text>
       </View>
-    </ListItem>
+    </SingleSelectItem>
   )
 }
 const currencyItemStyles = StyleSheet.create((theme) => ({
