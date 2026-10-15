@@ -100,6 +100,9 @@ export function PickerSheet<T>({
           renderItem={({ item }) => renderRow(item)}
           ListHeaderComponent={listHeader}
           ListEmptyComponent={empty}
+          // Android detaches off-screen rows by default. Keep them attached so
+          // the list behaves like the ScrollView it replaced inside the sheet.
+          removeClippedSubviews={false}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         />

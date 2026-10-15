@@ -182,6 +182,9 @@ function CategoryPickerSheetInner({
           keyExtractor={(entry) => entry.key}
           renderItem={renderEntry}
           extraData={mode === "single" ? selectedIds : draft}
+          // Android detaches off-screen rows by default. Keep them attached so
+          // the list behaves like the ScrollView it replaced inside the sheet.
+          removeClippedSubviews={false}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
