@@ -1,5 +1,8 @@
-import { BottomSheet as NativeBottomSheet } from "@expo/ui/community/bottom-sheet"
-import { type ReactNode, useRef } from "react"
+import {
+  type BottomSheetMethods,
+  BottomSheet as NativeBottomSheet,
+} from "@expo/ui/community/bottom-sheet"
+import { type ReactNode, useEffect, useRef, useState } from "react"
 import { ScrollView, useWindowDimensions, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useUnistyles } from "react-native-unistyles"
@@ -60,9 +63,12 @@ const SHEET_CHROME = 48
  * `isPresented` false in `onDismiss`. Height follows content up to the screen,
  * then scrolls — callers must not add their own outer ScrollView.
  *
- * Once `isPresented` goes false the last presented children stay on screen
- * until the native `onDismiss` fires (after the exit animation), so callers can
- * clear the state behind the content without the sheet emptying mid-animation.
+ * Closing goes through the sheet's own `close()` (animated hide) rather than
+ * `index={-1}`: on Android `index={-1}` unmounts the content at once while the
+ * native sheet is still sliding out, leaving an empty sheet. The sheet stays at
+ * index 0 until the native `onDismiss` fires, and the last presented children
+ * stay on screen until then, so callers can clear the state behind the content
+ * without the sheet emptying mid-animation.
  */
 export function BottomSheet({
   isPresented,
@@ -82,10 +88,18 @@ export function BottomSheet({
   // The sheet sizes to its content; once that exceeds the screen the content
   // scrolls inside this cap instead of the sheet growing off-screen.
   const maxHeight = height - insets.top - insets.bottom - SHEET_CHROME
+  const sheetRef = useRef<BottomSheetMethods>(null)
   const retainedChildren = useRef<ReactNode>(children)
   if (isPresented) retainedChildren.current = children
   const content = isPresented ? children : retainedChildren.current
+  // Open from the first presentation until the native dismiss completes.
+  const [open, setOpen] = useState(isPresented)
+  if (isPresented && !open) setOpen(true)
+  useEffect(() => {
+    if (!isPresented) sheetRef.current?.close()
+  }, [isPresented])
   const handleDismiss = () => {
+    setOpen(false)
     retainedChildren.current = null
     onDismiss()
     onDismissed?.()
@@ -93,7 +107,8 @@ export function BottomSheet({
 
   return (
     <NativeBottomSheet
-      index={isPresented ? 0 : -1}
+      ref={sheetRef}
+      index={open ? 0 : -1}
       snapPoints={snapPoints}
       enablePanDownToClose={dismissable}
       handleComponent={showDragIndicator ? undefined : null}
