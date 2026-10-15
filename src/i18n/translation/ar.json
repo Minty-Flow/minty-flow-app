@@ -1299,7 +1299,17 @@
           "travel": "السفر"
         },
         "income": {
-          "paycheck": "الراتب"
+          "paycheck": "الراتب",
+          "bonus": "المكافآت",
+          "freelance": "العمل الحر",
+          "business": "دخل الأعمال",
+          "investments": "الاستثمارات",
+          "interest": "الفوائد",
+          "rental": "دخل الإيجار",
+          "allowance": "المصروف",
+          "gifts": "الهدايا المستلمة",
+          "cashback": "الاسترداد النقدي",
+          "pension": "المعاش"
         },
         "essentials": "الأساسيات",
         "packsTitle": "حسب أسلوب حياتك",

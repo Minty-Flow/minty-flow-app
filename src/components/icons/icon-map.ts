@@ -369,6 +369,7 @@ import FilterOff from "./outline/FilterOff"
 import Fingerprint from "./outline/Fingerprint"
 import GraphOutline from "./outline/Graph"
 import GripHorizontal from "./outline/GripHorizontal"
+import HandSanitizer from "./outline/HandSanitizer"
 import Hash from "./outline/Hash"
 import HeartHandshake from "./outline/HeartHandshake"
 import HistoryToggle from "./outline/HistoryToggle"
@@ -807,6 +808,9 @@ const ICON_MAP = {
   },
 
   // People & Social
+  get "hand-sanitizer-outline"() {
+    return HandSanitizer
+  },
   get "heart-handshake-outline"() {
     return HeartHandshake
   },

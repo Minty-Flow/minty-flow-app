@@ -40,7 +40,7 @@ const income = (key: string, icon: IconSvgName): CategoryPreset => ({
 /** The presets offered when adding categories; pre-selected in onboarding. */
 const CORE_PRESETS: CategoryPreset[] = [
   expense("eatingOut", "tools-kitchen-2"),
-  expense("groceries", "bottle"),
+  expense("groceries", "basket"),
   expense("drinks", "mug"),
   expense("education", "school"),
   expense("health", "shield"),
@@ -61,10 +61,20 @@ const CORE_PRESETS: CategoryPreset[] = [
   expense("services", "headset"),
   expense("snacks", "cookie"),
   expense("stationery", "pencil"),
-  expense("hygiene", "droplet"),
+  expense("hygiene", "hand-sanitizer-outline"),
   expense("travel", "plane"),
 
   income("paycheck", "wallet-outline"),
+  income("bonus", "trophy"),
+  income("freelance", "briefcase"),
+  income("business", "building-bank-outline"),
+  income("investments", "trending-up-outline"),
+  income("interest", "percentage-outline"),
+  income("rental", "home-share-outline"),
+  income("allowance", "cash-banknote"),
+  income("gifts", "gift"),
+  income("cashback", "coins-outline"),
+  income("pension", "clock"),
 ]
 
 /** Optional extras grouped by life situation. Empty for now. */

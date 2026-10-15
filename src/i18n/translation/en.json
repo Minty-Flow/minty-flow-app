@@ -1299,7 +1299,17 @@
           "travel": "Travel"
         },
         "income": {
-          "paycheck": "Paycheck"
+          "paycheck": "Paycheck",
+          "bonus": "Bonus",
+          "freelance": "Freelance",
+          "business": "Business income",
+          "investments": "Investments",
+          "interest": "Interest",
+          "rental": "Rental income",
+          "allowance": "Allowance",
+          "gifts": "Gifts received",
+          "cashback": "Cashback & Refunds",
+          "pension": "Pension"
         },
         "essentials": "Essentials",
         "packsTitle": "Fits your life",
