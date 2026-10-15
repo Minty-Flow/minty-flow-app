@@ -50,7 +50,7 @@ const CORE_PRESETS: CategoryPreset[] = [
   expense("entertainment", "ball-bowling"),
   expense("subscriptions", "cloud"),
   expense("gifts", "gift"),
-  expense("rent", "file-dollar"),
+  expense("rent", "home-dollar-outline"),
   expense("utils", "plug-outline"),
   expense("taxes", "building-bank-outline"),
   expense("insurance", "shield-check"),
