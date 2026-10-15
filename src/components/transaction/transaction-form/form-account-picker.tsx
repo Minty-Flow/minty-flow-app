@@ -1,26 +1,22 @@
 /**
- * Account pickers for the transaction form: trigger + inline list with search.
+ * Account pickers for the transaction form: a trigger that opens the account picker sheet.
  * `FormAccountPicker` picks the (from) account, `FormToAccountPicker` the
  * transfer destination; both render the shared `AccountPickerField`.
  */
-import { useRouter } from "expo-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ScrollView } from "react-native"
 import { useUnistyles } from "react-native-unistyles"
 
+import { AccountPickerSheet } from "~/components/accounts/account-picker-sheet"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
-import { Input } from "~/components/ui/input"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useScrollIntoView } from "~/hooks/use-scroll-into-view"
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Account } from "~/types/accounts"
-import { NewEnum } from "~/types/new"
 import { TransactionTypeEnum } from "~/types/transactions"
 
 import { transactionFormStyles } from "./form.styles"
@@ -54,34 +50,18 @@ function AccountPickerField({
   error,
   onSelect,
 }: AccountPickerFieldProps) {
-  const router = useRouter()
-  const { t } = useTranslation()
   const { theme } = useUnistyles()
-  const { wrapperRef, scrollIntoView } = useScrollIntoView()
   const [open, setOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
-  const filteredAccounts = (() => {
-    if (!searchQuery.trim()) return accounts
-    const lower = searchQuery.toLowerCase()
-    return accounts.filter((a) => a.name.toLowerCase().includes(lower))
-  })()
-  const handleToggle = () => {
-    if (!open) {
-      scrollIntoView()
-      setSearchQuery("")
-    }
-    setOpen((o) => !o)
-  }
   return (
-    <View native ref={wrapperRef} style={transactionFormStyles.fieldBlock}>
+    <View native style={transactionFormStyles.fieldBlock}>
       <Pressable
         style={[
           transactionFormStyles.accountTrigger,
           selectedAccount && transactionFormStyles.accountTriggerSelected,
           error && selectedAccount && transactionFormStyles.accountTriggerError,
         ]}
-        onPress={handleToggle}
-        accessibilityLabel={open ? t("common.actions.cancel") : selectLabel}
+        onPress={() => setOpen(true)}
+        accessibilityLabel={selectLabel}
       >
         {selectedAccount ? (
           <>
@@ -106,7 +86,7 @@ function AccountPickerField({
               />
             </View>
             <ChevronIcon
-              direction={open ? "up" : "trailing"}
+              direction="trailing"
               size={20}
               style={transactionFormStyles.chevronIcon}
             />
@@ -127,100 +107,21 @@ function AccountPickerField({
               {selectLabel}
             </Text>
             <IconSvg
-              name={open ? "x-outline" : "chevron-down-outline"}
+              name="chevron-down-outline"
               size={20}
               style={transactionFormStyles.chevronIcon}
             />
           </>
         )}
       </Pressable>
-      {open && (
-        <View native style={transactionFormStyles.inlineAccountPicker}>
-          <View native style={transactionFormStyles.searchFieldWrap}>
-            <Input
-              placeholder={t("screens.accounts.a11y.searchPlaceholder")}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholderTextColor={theme.colors.semantic.semi}
-            />
-          </View>
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            nestedScrollEnabled
-          >
-            {filteredAccounts.map((account) => (
-              <Pressable
-                key={account.id}
-                style={[
-                  transactionFormStyles.accountPickerRow,
-                  account.id === selectedId &&
-                    transactionFormStyles.inlinePickerRowSelected,
-                ]}
-                onPress={() => {
-                  onSelect(account.id)
-                  setOpen(false)
-                }}
-              >
-                <DynamicIcon
-                  icon={account.icon || "wallet-outline"}
-                  size={24}
-                  colorScheme={getThemeStrict(account.colorSchemeName)}
-                  variant="badge"
-                />
-                <View
-                  style={transactionFormStyles.accountPickerRowContent}
-                  native
-                >
-                  <Text
-                    variant="default"
-                    style={[
-                      transactionFormStyles.accountPickerRowName,
-                      account.id === selectedId &&
-                        transactionFormStyles.inlinePickerRowNameSelected,
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {account.name}
-                  </Text>
-                  <Money
-                    value={account.balance}
-                    currency={account.currencyCode}
-                    style={transactionFormStyles.accountPickerRowBalance}
-                  />
-                </View>
-              </Pressable>
-            ))}
-            {filteredAccounts.length === 0 ? (
-              <Pressable
-                style={transactionFormStyles.accountPickerRowAdd}
-                onPress={() => {
-                  router.push({
-                    pathname: "/accounts/[accountId]/modify",
-                    params: { accountId: NewEnum.NEW },
-                  })
-                  setOpen(false)
-                }}
-                accessibilityLabel={t("screens.accounts.a11y.add")}
-              >
-                <DynamicIcon
-                  icon="plus-outline"
-                  size={24}
-                  colorScheme={theme.colors}
-                  variant="badge"
-                />
-                <Text
-                  variant="default"
-                  style={transactionFormStyles.accountPickerRowAddLabel}
-                  numberOfLines={1}
-                >
-                  {t("screens.accounts.a11y.add")}
-                </Text>
-              </Pressable>
-            ) : null}
-          </ScrollView>
-        </View>
-      )}
+      <AccountPickerSheet
+        visible={open}
+        onClose={() => setOpen(false)}
+        title={selectLabel}
+        accounts={accounts}
+        selectedId={selectedId}
+        onSelect={onSelect}
+      />
       {error ? (
         <Text style={transactionFormStyles.fieldError}>{error}</Text>
       ) : null}

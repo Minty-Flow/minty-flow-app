@@ -1525,6 +1525,9 @@
       "accountsClearedTitle": "Accounts cleared",
       "accountsClearedDescription": "Selected accounts were removed because they don't match {{currency}}."
     },
+    "accountPicker": {
+      "noResults": "No accounts found"
+    },
     "categoryPicker": {
       "title": "Select a category",
       "titleMulti": "Select categories",

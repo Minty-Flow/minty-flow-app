@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { FlatList, View as RNView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { AccountPickerSheet } from "~/components/accounts/account-picker-sheet"
 import { BillItemCard } from "~/components/bill-splitter/bill-item-card"
 import { ConfirmSheet } from "~/components/confirm-sheet"
 import { DynamicIcon } from "~/components/dynamic-icon"
@@ -14,7 +15,6 @@ import { RouteLoadingState } from "~/components/route-load-state"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Fab } from "~/components/ui/fab"
-import { Input } from "~/components/ui/input"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -43,7 +43,6 @@ export default function BillSplitterScreen() {
   const [infoVisible, setInfoVisible] = useState(false)
   const [clearVisible, setClearVisible] = useState(false)
   const [accountPickerOpen, setAccountPickerOpen] = useState(false)
-  const [accountSearchQuery, setAccountSearchQuery] = useState("")
   const selectedAccount = accounts.find((a) => a.id === accountId) ?? null
   const currency = selectedAccount?.currencyCode ?? preferredCurrency
   useEffect(() => setCurrencyCode(currency), [currency, setCurrencyCode])
@@ -51,19 +50,7 @@ export default function BillSplitterScreen() {
   const allocated = getAllocatedTotal(items)
   // Progress bar fill percentage, clamped to 0–100
   const progressPercent = total > 0 ? Math.min(allocated / total, 1) * 100 : 0
-  const filteredAccounts = (() => {
-    if (!accountSearchQuery.trim()) return accounts
-    const lower = accountSearchQuery.toLowerCase()
-    return accounts.filter((a) => a.name.toLowerCase().includes(lower))
-  })()
-  const handleToggleAccountPicker = () => {
-    if (!accountPickerOpen) setAccountSearchQuery("")
-    setAccountPickerOpen((open) => !open)
-  }
-  const handleSelectAccount = (id: string) => {
-    setAccountId(id)
-    setAccountPickerOpen(false)
-  }
+  const handleSelectAccount = (id: string) => setAccountId(id)
   // Header right: info button + trash (only when items exist)
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -135,12 +122,10 @@ export default function BillSplitterScreen() {
                   styles.accountTrigger,
                   selectedAccount && styles.accountTriggerSelected,
                 ]}
-                onPress={handleToggleAccountPicker}
-                accessibilityLabel={
-                  accountPickerOpen
-                    ? t("common.actions.cancel")
-                    : t("screens.settings.billSplitter.summary.selectAccount")
-                }
+                onPress={() => setAccountPickerOpen(true)}
+                accessibilityLabel={t(
+                  "screens.settings.billSplitter.summary.selectAccount",
+                )}
               >
                 {selectedAccount ? (
                   <>
@@ -161,11 +146,7 @@ export default function BillSplitterScreen() {
                       />
                     </View>
                     <IconSvg
-                      name={
-                        accountPickerOpen
-                          ? "chevron-up-outline"
-                          : "chevron-down-outline"
-                      }
+                      name="chevron-down-outline"
                       size={22}
                       color={theme.colors.onSecondary}
                       style={styles.chevron}
@@ -186,11 +167,7 @@ export default function BillSplitterScreen() {
                       {t("screens.settings.billSplitter.summary.selectAccount")}
                     </Text>
                     <IconSvg
-                      name={
-                        accountPickerOpen
-                          ? "chevron-up-outline"
-                          : "chevron-down-outline"
-                      }
+                      name="chevron-down-outline"
                       size={22}
                       color={theme.colors.onSecondary}
                       style={styles.chevron}
@@ -198,61 +175,6 @@ export default function BillSplitterScreen() {
                   </>
                 )}
               </Pressable>
-
-              {/* Inline expandable account list */}
-              {accountPickerOpen && (
-                <View native style={styles.inlineAccountPicker}>
-                  <Input
-                    placeholder={t("screens.accounts.a11y.searchPlaceholder")}
-                    value={accountSearchQuery}
-                    onChangeText={setAccountSearchQuery}
-                    placeholderTextColor={theme.colors.semantic.semi}
-                    style={styles.pickerSearchInput}
-                  />
-                  <FlatList
-                    style={styles.pickerList}
-                    data={filteredAccounts}
-                    keyExtractor={(account) => account.id}
-                    keyboardShouldPersistTaps="handled"
-                    nestedScrollEnabled
-                    showsVerticalScrollIndicator
-                    renderItem={({ item: account }) => (
-                      <Pressable
-                        style={[
-                          styles.accountPickerRow,
-                          account.id === accountId &&
-                            styles.accountPickerRowSelected,
-                        ]}
-                        onPress={() => handleSelectAccount(account.id)}
-                      >
-                        <DynamicIcon
-                          icon={account.icon || "wallet-outline"}
-                          size={28}
-                          colorScheme={account.colorScheme}
-                          variant="badge"
-                        />
-                        <View style={styles.accountPickerRowContent} native>
-                          <Text
-                            style={[
-                              styles.accountPickerRowName,
-                              account.id === accountId &&
-                                styles.accountPickerRowNameSelected,
-                            ]}
-                            numberOfLines={1}
-                          >
-                            {account.name}
-                          </Text>
-                          <Money
-                            value={account.balance}
-                            currency={account.currencyCode}
-                            style={styles.accountPickerRowBalance}
-                          />
-                        </View>
-                      </Pressable>
-                    )}
-                  />
-                </View>
-              )}
             </RNView>
 
             {/* Hero Total Display */}
@@ -338,6 +260,14 @@ export default function BillSplitterScreen() {
       />
 
       {/* Sheets */}
+      <AccountPickerSheet
+        visible={accountPickerOpen}
+        onClose={() => setAccountPickerOpen(false)}
+        title={t("screens.settings.billSplitter.summary.selectAccount")}
+        accounts={accounts}
+        selectedId={accountId ?? undefined}
+        onSelect={handleSelectAccount}
+      />
       <InfoSheet
         visible={infoVisible}
         onRequestClose={() => setInfoVisible(false)}
@@ -423,49 +353,6 @@ const styles = StyleSheet.create((theme) => ({
     alignSelf: "center",
   },
   // Inline account picker dropdown
-  inlineAccountPicker: {
-    marginTop: 8,
-    maxHeight: 280,
-    borderRadius: theme.radius,
-    overflow: "hidden",
-  },
-  pickerSearchInput: {
-    marginBottom: 8,
-  },
-  pickerList: {},
-  accountPickerRow: {
-    marginTop: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    borderRadius: theme.radius,
-  },
-  accountPickerRowSelected: {
-    backgroundColor: `${theme.colors.primary}15`,
-    borderRadius: theme.radius,
-  },
-  accountPickerRowContent: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 8,
-  },
-  accountPickerRowNameSelected: {
-    color: theme.colors.primary,
-  },
-  accountPickerRowName: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-    fontWeight: "500",
-    flex: 1,
-    minWidth: 0,
-  },
-  accountPickerRowBalance: {
-    fontSize: theme.typography.bodyMedium.fontSize,
-  },
   // Hero total display
   heroContainer: {
     alignItems: "center",
