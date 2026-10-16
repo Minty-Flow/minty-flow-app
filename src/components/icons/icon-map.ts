@@ -369,9 +369,11 @@ import FilterOff from "./outline/FilterOff"
 import Fingerprint from "./outline/Fingerprint"
 import GraphOutline from "./outline/Graph"
 import GripHorizontal from "./outline/GripHorizontal"
+import HandSanitizer from "./outline/HandSanitizer"
 import Hash from "./outline/Hash"
 import HeartHandshake from "./outline/HeartHandshake"
 import HistoryToggle from "./outline/HistoryToggle"
+import HomeDollar from "./outline/HomeDollar"
 import HomeShare from "./outline/HomeShare"
 import InfoCircleOutline from "./outline/InfoCircle"
 import Language from "./outline/Language"
@@ -390,8 +392,10 @@ import PasswordMobilePhone from "./outline/PasswordMobilePhone"
 import PawOutline from "./outline/Paw"
 import PencilOutline from "./outline/Pencil"
 import Percentage from "./outline/Percentage"
+import Perfume from "./outline/Perfume"
 import PhotoOutline from "./outline/Photo"
 import PigMoney from "./outline/PigMoney"
+import PingPong from "./outline/PingPong"
 import Plant from "./outline/Plant"
 import PlaylistX from "./outline/PlaylistX"
 import Plug from "./outline/Plug"
@@ -807,6 +811,18 @@ const ICON_MAP = {
   },
 
   // People & Social
+  get "home-dollar-outline"() {
+    return HomeDollar
+  },
+  get "perfume-outline"() {
+    return Perfume
+  },
+  get "ping-pong-outline"() {
+    return PingPong
+  },
+  get "hand-sanitizer-outline"() {
+    return HandSanitizer
+  },
   get "heart-handshake-outline"() {
     return HeartHandshake
   },

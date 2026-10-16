@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-15T12:23:36.290Z
+Generated on: 2026-10-15T23:54:30.434Z
 ```
 ./
 ├── __tests__/
@@ -335,7 +335,6 @@ Generated on: 2026-10-15T12:23:36.290Z
 │   │   │   │   ├── stat-card.tsx
 │   │   │   │   ├── top-categories-card.tsx
 │   │   │   │   └── wrapped-card.tsx
-│   │   │   ├── chart-crosshair.tsx
 │   │   │   ├── delta-badge.tsx
 │   │   │   ├── get-category-color.ts
 │   │   │   ├── insight-card.tsx
@@ -553,7 +552,6 @@ Generated on: 2026-10-15T12:23:36.290Z
 │   ├── hooks/
 │   │   ├── exchange-rates-editor.reducer.ts
 │   │   ├── use-balance-before.ts
-│   │   ├── use-chart-font.ts
 │   │   ├── use-debounced-callback.ts
 │   │   ├── use-import-recovery.ts
 │   │   ├── use-loan-term-reconcile.ts
