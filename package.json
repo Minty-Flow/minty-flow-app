@@ -1,7 +1,7 @@
 {
   "name": "minty-flow-app",
   "main": "index.ts",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "scripts": {
     "android": "expo run:android",
     "android:emu": "expo run:android --device Pixel_10",
