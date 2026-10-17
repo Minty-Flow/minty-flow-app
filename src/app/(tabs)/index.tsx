@@ -105,8 +105,8 @@ const styles = StyleSheet.create((theme) => ({
   },
   header: {
     marginHorizontal: 20,
-    marginTop: 50,
-    marginBottom: 10,
+    marginTop: 40,
+    marginBottom: 20,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

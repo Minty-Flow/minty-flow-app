@@ -55,7 +55,12 @@ export function getDefaultValues(
         ? transaction.relatedAccountId
         : ""
   return {
-    amount: Math.abs(transaction.amount),
+    // The form edits a transfer through its debit leg, in the source account's
+    // currency. Opening the credit leg must not put its own amount (in the
+    // destination currency) in that field.
+    amount: isTransfer
+      ? (transaction.transferSourceAmount ?? Math.abs(transaction.amount))
+      : Math.abs(transaction.amount),
     type: transaction.type ?? transactionType,
     transactionDate: transaction.transactionDate,
     accountId: fromId,
@@ -79,4 +84,14 @@ export function getDefaultValues(
 
 export function mergeReducer<S>(state: S, update: Partial<S>): S {
   return { ...state, ...update }
+}
+
+/**
+ * A trashed transaction can only be restored or deleted for good. Editing or
+ * confirming it would move a balance for a row that is not part of any balance.
+ */
+export function isFormReadOnly(
+  transaction: { isDeleted: boolean } | null,
+): boolean {
+  return transaction?.isDeleted === true
 }

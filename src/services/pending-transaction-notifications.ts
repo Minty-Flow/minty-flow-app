@@ -4,6 +4,7 @@ import {
   getPendingTransactions,
   type TransactionWithRelations,
 } from "~/database/drizzle/read-models/transaction-read-model"
+import i18n from "~/i18n/config"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { startOfNextMinute } from "~/utils/pending-transactions"
 
@@ -45,7 +46,9 @@ async function scheduleForPlannedTransaction(
   const now = Date.now()
   const transactionDate = transaction.transactionDate
   const dueMs = transactionDate.getTime()
-  const title = transaction.title || "Pending Transaction"
+  const title =
+    transaction.title ||
+    i18n.t("screens.settings.pending.notification.fallbackTitle")
   const data: TransactionReminderPayload = {
     itemType: "txn",
     id: transaction.id,
@@ -56,7 +59,7 @@ async function scheduleForPlannedTransaction(
       identifier: `txn-${transaction.id}`,
       content: {
         title,
-        body: "Your planned transaction is due now.",
+        body: i18n.t("screens.settings.pending.notification.dueBody"),
         data,
       },
       trigger: {
@@ -71,8 +74,10 @@ async function scheduleForPlannedTransaction(
     await Notifications.scheduleNotificationAsync({
       identifier: `txn-early-${transaction.id}`,
       content: {
-        title: `Upcoming: ${title}`,
-        body: "You have a planned transaction coming up.",
+        title: i18n.t("screens.settings.pending.notification.earlyTitle", {
+          title,
+        }),
+        body: i18n.t("screens.settings.pending.notification.earlyBody"),
         data,
       },
       trigger: {
@@ -81,6 +86,15 @@ async function scheduleForPlannedTransaction(
       },
     })
   }
+}
+
+/**
+ * A transfer is two rows, a debit with a negative amount and a credit with a
+ * positive one. Remind about the debit only, so a pending transfer notifies
+ * once.
+ */
+function isCreditLegOfTransfer(transaction: TransactionWithRelations): boolean {
+  return transaction.type === "transfer" && transaction.amount > 0
 }
 
 /**
@@ -102,7 +116,7 @@ export async function synchronizePlannedTransactionNotifications(): Promise<void
 
   await Promise.all(
     pending.flatMap((t) =>
-      t.transactionDate.getTime() <= now.getTime()
+      t.transactionDate.getTime() <= now.getTime() || isCreditLegOfTransfer(t)
         ? []
         : [scheduleForPlannedTransaction(t, earlyReminderInSeconds)],
     ),

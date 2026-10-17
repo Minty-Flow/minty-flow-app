@@ -289,7 +289,9 @@ export function BudgetCard({ budget, categories, onPress }: BudgetCardProps) {
           ) : (
             <View style={styles.disabledBadge}>
               <Text variant="small" style={styles.disabledText}>
-                {t("screens.settings.budgets.card.disabled")}
+                {budget.categoryIds.length === 0
+                  ? t("screens.settings.budgets.card.needsCategory")
+                  : t("screens.settings.budgets.card.inactive")}
               </Text>
             </View>
           )}

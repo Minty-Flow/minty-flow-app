@@ -5,6 +5,7 @@ import { useUnistyles } from "react-native-unistyles"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { FormLocationPicker } from "~/components/location/form-location-picker"
 import { SmartAmountInput } from "~/components/smart-amount-input"
+import { InfoBanner } from "~/components/ui/info-banner"
 import { Input } from "~/components/ui/input"
 import { ListItem } from "~/components/ui/list-item"
 import { Switch } from "~/components/ui/switch"
@@ -31,6 +32,7 @@ import { FormLoanPicker } from "./form-loan-picker"
 import { FormNotesSection } from "./form-notes-section"
 import { FormOverlays } from "./form-overlays"
 import { FormTagsPicker } from "./form-tags-picker"
+import { isFormReadOnly } from "./form-utils"
 import { TransactionTopTabs } from "./transaction-top-tabs"
 import type { TransactionFormProps } from "./types"
 import { UpcomingBanner } from "./upcoming-banner"
@@ -41,6 +43,7 @@ export function TransactionForm(props: TransactionFormProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const f = useTransactionForm(props)
+  const readOnly = isFormReadOnly(transaction)
 
   const showUntitledForBlankTitle = useTransactionItemAppearanceStore(
     (s) => s.showUntitledForBlankTitle,
@@ -59,7 +62,10 @@ export function TransactionForm(props: TransactionFormProps) {
 
   return (
     <View style={transactionFormStyles.container}>
-      <View style={transactionFormStyles.header}>
+      <View
+        style={transactionFormStyles.header}
+        pointerEvents={readOnly ? "none" : "auto"}
+      >
         <TransactionTopTabs
           labels={f.tabLabels}
           icons={f.tabIcons}
@@ -70,6 +76,14 @@ export function TransactionForm(props: TransactionFormProps) {
       </View>
 
       <UpcomingBanner transaction={transaction} />
+      {readOnly ? (
+        <View style={transactionFormStyles.trashedNotice}>
+          <InfoBanner
+            icon="trash-outline"
+            text={t("components.transactionForm.trashed.banner")}
+          />
+        </View>
+      ) : null}
 
       <ScrollIntoViewProvider
         contentContainerStyle={transactionFormStyles.content}
@@ -79,76 +93,84 @@ export function TransactionForm(props: TransactionFormProps) {
         }}
       >
         <View style={transactionFormStyles.form}>
-          {/* Amount */}
-          <View style={transactionFormStyles.balanceSection}>
-            <SmartAmountInput
-              valueMinor={f.amount ?? 0}
-              onChangeMinor={(value) =>
-                f.setValue("amount", value, { shouldDirty: true })
-              }
-              currencyCode={f.selectedAccount?.currencyCode ?? "USD"}
-              error={f.amountError}
-              label={t("components.transactionForm.fields.amountLabel")}
-              placeholder="0"
-              type={transactionType}
+          {/* A trashed transaction is read-only: the fields ignore touches. */}
+          <View
+            style={[
+              transactionFormStyles.form,
+              readOnly && transactionFormStyles.readOnlyFields,
+            ]}
+            pointerEvents={readOnly ? "none" : "auto"}
+          >
+            {/* Amount */}
+            <View style={transactionFormStyles.balanceSection}>
+              <SmartAmountInput
+                valueMinor={f.amount ?? 0}
+                onChangeMinor={(value) =>
+                  f.setValue("amount", value, { shouldDirty: true })
+                }
+                currencyCode={f.selectedAccount?.currencyCode ?? "USD"}
+                error={f.amountError}
+                label={t("components.transactionForm.fields.amountLabel")}
+                placeholder="0"
+                type={transactionType}
+              />
+            </View>
+
+            <FormAccountPicker
+              accounts={accounts}
+              accountId={f.accountId}
+              toAccountId={f.toAccountId}
+              setValue={f.setValue}
+              selectedAccount={f.selectedAccount}
+              balanceAtTransaction={f.balanceAtTransaction}
+              transaction={transaction}
+              accountError={f.accountError}
+              onAccountChange={f.handleAccountChange}
             />
-          </View>
 
-          <FormAccountPicker
-            accounts={accounts}
-            accountId={f.accountId}
-            toAccountId={f.toAccountId}
-            setValue={f.setValue}
-            selectedAccount={f.selectedAccount}
-            balanceAtTransaction={f.balanceAtTransaction}
-            transaction={transaction}
-            accountError={f.accountError}
-            onAccountChange={f.handleAccountChange}
-          />
-
-          {/* Transfer: to-account sits right under from-account, then the
+            {/* Transfer: to-account sits right under from-account, then the
               conversion rate. FormToAccountPicker renders null otherwise. */}
-          <FormToAccountPicker
-            accounts={accounts}
-            toAccountId={f.toAccountId}
-            accountId={f.accountId}
-            setValue={f.setValue}
-            selectedToAccount={f.selectedToAccount}
-            transactionType={transactionType}
-          />
+            <FormToAccountPicker
+              accounts={accounts}
+              toAccountId={f.toAccountId}
+              accountId={f.accountId}
+              setValue={f.setValue}
+              selectedToAccount={f.selectedToAccount}
+              transactionType={transactionType}
+            />
 
-          {transactionType === TransactionTypeEnum.TRANSFER &&
-            f.selectedAccount &&
-            f.selectedToAccount &&
-            f.selectedAccount.currencyCode !==
-              f.selectedToAccount.currencyCode && (
-              <FormConversionSection
-                amount={f.amount ?? 0}
-                conversionRate={f.conversionRate}
-                onConversionRateChange={f.setConversionRate}
-                selectedAccount={f.selectedAccount}
-                selectedToAccount={f.selectedToAccount}
+            {transactionType === TransactionTypeEnum.TRANSFER &&
+              f.selectedAccount &&
+              f.selectedToAccount &&
+              f.selectedAccount.currencyCode !==
+                f.selectedToAccount.currencyCode && (
+                <FormConversionSection
+                  amount={f.amount ?? 0}
+                  conversionRate={f.conversionRate}
+                  onConversionRateChange={f.setConversionRate}
+                  selectedAccount={f.selectedAccount}
+                  selectedToAccount={f.selectedToAccount}
+                />
+              )}
+
+            {/* Category: hidden for transfers */}
+            {transactionType !== TransactionTypeEnum.TRANSFER && (
+              <FormCategoryPicker
+                categories={categories}
+                categoryType={
+                  transactionType === TransactionTypeEnum.INCOME
+                    ? "income"
+                    : "expense"
+                }
+                categoryId={f.categoryId}
+                onSelect={f.handleCategorySelect}
+                onClear={f.handleCategoryClear}
               />
             )}
 
-          {/* Category: hidden for transfers */}
-          {transactionType !== TransactionTypeEnum.TRANSFER && (
-            <FormCategoryPicker
-              categories={categories}
-              categoryType={
-                transactionType === TransactionTypeEnum.INCOME
-                  ? "income"
-                  : "expense"
-              }
-              categoryId={f.categoryId}
-              onSelect={f.handleCategorySelect}
-              onClear={f.handleCategoryClear}
-            />
-          )}
-
-          {/* Date + Pending: hidden for subscription/repetitive kinds.
+            {/* Date + Pending: shown for every kind. For subscription/repetitive
+                it is the rule's start date (new) or the instance's date (edit).
                 For loan kinds this row is the loan's due date. */}
-          {!f.isRecurringKind && (
             <FormDateSection
               date={f.date}
               control={f.control}
@@ -156,184 +178,186 @@ export function TransactionForm(props: TransactionFormProps) {
               onTimePress={() => f.openDatePicker("transaction", "time")}
               dueDateMode={f.isLoanKind}
             />
-          )}
 
-          <FormKindSelector
-            kind={f.kind}
-            onSelect={f.setKind}
-            isNew={f.isNew}
-            locked={!f.canEditKind}
-            linkedLoan={f.linkedLoan}
-          />
-          <FormKindCard
-            kind={f.kind}
-            recurrence={f.recurring.recurrence}
-            until={f.recurring.until}
-            occurrenceCount={f.occurrenceCount}
-            onIntervalChange={(n) =>
-              f.setRecurring({
-                recurrence: { ...f.recurring.recurrence, interval: n },
-              })
-            }
-            onUnitChange={(u) =>
-              f.setRecurring({
-                recurrence: { ...f.recurring.recurrence, unit: u },
-              })
-            }
-            onUntilPress={() => f.openDatePicker("recurringEnd")}
-            onUntilReset={() => f.setRecurring({ until: null })}
-          />
+            <FormKindSelector
+              kind={f.kind}
+              onSelect={f.setKind}
+              isNew={f.isNew}
+              locked={!f.canEditKind}
+              linkedLoan={f.linkedLoan}
+            />
+            <FormKindCard
+              kind={f.kind}
+              recurrence={f.recurring.recurrence}
+              until={f.recurring.until}
+              occurrenceCount={f.occurrenceCount}
+              onIntervalChange={(n) =>
+                f.setRecurring({
+                  recurrence: { ...f.recurring.recurrence, interval: n },
+                })
+              }
+              onUnitChange={(u) =>
+                f.setRecurring({
+                  recurrence: { ...f.recurring.recurrence, unit: u },
+                })
+              }
+              onUntilPress={() => f.openDatePicker("recurringEnd")}
+              onUntilReset={() => f.setRecurring({ until: null })}
+            />
 
-          <View style={transactionFormStyles.nameSection}>
-            <Controller
-              control={f.control}
-              name="title"
-              render={({ field: { value, onChange } }) => (
-                <Input
-                  value={value ?? ""}
-                  onChangeText={onChange}
-                  placeholder={titlePlaceholder}
-                  variant="title"
-                  placeholderTextColor={theme.colors.semantic.semi}
+            <View style={transactionFormStyles.nameSection}>
+              <Controller
+                control={f.control}
+                name="title"
+                render={({ field: { value, onChange } }) => (
+                  <Input
+                    value={value ?? ""}
+                    onChangeText={onChange}
+                    placeholder={titlePlaceholder}
+                    variant="title"
+                    placeholderTextColor={theme.colors.semantic.semi}
+                  />
+                )}
+              />
+              {f.titleErrorKey ? (
+                <Text style={transactionFormStyles.fieldError}>
+                  {t(f.titleErrorKey as TranslationKey)}
+                </Text>
+              ) : null}
+            </View>
+
+            <FormNotesSection
+              description={f.description}
+              descriptionErrorKey={f.descriptionErrorKey}
+              notesModalVisible={f.overlays.notesModalVisible}
+              onOpenModal={() => f.setOverlays({ notesModalVisible: true })}
+              onCloseModal={() => f.setOverlays({ notesModalVisible: false })}
+              onSave={(html) =>
+                f.setValue("description", html, { shouldDirty: true })
+              }
+            />
+
+            {/* Goal: hidden for transfers and loan kinds (a loan isn't saving
+                toward a goal), filtered by selected account */}
+            {transactionType !== TransactionTypeEnum.TRANSFER &&
+              !f.isLoanKind && (
+                <FormGoalPicker
+                  goals={f.accountGoals}
+                  goalId={f.goalId}
+                  onSelect={(id) =>
+                    f.setValue("goalId", id, { shouldDirty: true })
+                  }
+                  onClear={() =>
+                    f.setValue("goalId", null, { shouldDirty: true })
+                  }
                 />
               )}
-            />
-            {f.titleErrorKey ? (
-              <Text style={transactionFormStyles.fieldError}>
-                {t(f.titleErrorKey as TranslationKey)}
-              </Text>
-            ) : null}
-          </View>
 
-          <FormNotesSection
-            description={f.description}
-            descriptionErrorKey={f.descriptionErrorKey}
-            notesModalVisible={f.overlays.notesModalVisible}
-            onOpenModal={() => f.setOverlays({ notesModalVisible: true })}
-            onCloseModal={() => f.setOverlays({ notesModalVisible: false })}
-            onSave={(html) =>
-              f.setValue("description", html, { shouldDirty: true })
-            }
-          />
-
-          {/* Goal: hidden for transfers and loan kinds (a loan isn't saving
-                toward a goal), filtered by selected account */}
-          {transactionType !== TransactionTypeEnum.TRANSFER &&
-            !f.isLoanKind && (
-              <FormGoalPicker
-                goals={f.accountGoals}
-                goalId={f.goalId}
-                onSelect={(id) =>
-                  f.setValue("goalId", id, { shouldDirty: true })
-                }
-                onClear={() =>
-                  f.setValue("goalId", null, { shouldDirty: true })
-                }
-              />
-            )}
-
-          {/* Budget: hidden for transfers and loan kinds (a loan isn't
+            {/* Budget: hidden for transfers and loan kinds (a loan isn't
                 spending), filtered by account + category */}
-          {transactionType !== TransactionTypeEnum.TRANSFER &&
-            !f.isLoanKind && (
-              <FormBudgetPicker
-                budgets={f.accountBudgets}
-                budgetId={f.budgetId}
-                onSelect={(id) =>
-                  f.setValue("budgetId", id, { shouldDirty: true })
-                }
-                onClear={() =>
-                  f.setValue("budgetId", null, { shouldDirty: true })
-                }
-              />
-            )}
+            {transactionType !== TransactionTypeEnum.TRANSFER &&
+              !f.isLoanKind && (
+                <FormBudgetPicker
+                  budgets={f.accountBudgets}
+                  budgetId={f.budgetId}
+                  onSelect={(id) =>
+                    f.setValue("budgetId", id, { shouldDirty: true })
+                  }
+                  onClear={() =>
+                    f.setValue("budgetId", null, { shouldDirty: true })
+                  }
+                />
+              )}
 
-          {/* Loan link: hidden for transfers and for the loan kinds (the
+            {/* Loan link: hidden for transfers and for the loan kinds (the
                 loan card owns linking there). */}
-          {transactionType !== TransactionTypeEnum.TRANSFER &&
-            !f.isLoanKind && (
-              <FormLoanPicker
-                loans={f.accountLoans}
-                loanId={f.loanId}
-                onSelect={(id) =>
-                  f.setValue("loanId", id, { shouldDirty: true })
-                }
-                onClear={() =>
-                  f.setValue("loanId", null, { shouldDirty: true })
-                }
-              />
-            )}
+            {transactionType !== TransactionTypeEnum.TRANSFER &&
+              !f.isLoanKind && (
+                <FormLoanPicker
+                  loans={f.accountLoans}
+                  loanId={f.loanId}
+                  onSelect={(id) =>
+                    f.setValue("loanId", id, { shouldDirty: true })
+                  }
+                  onClear={() =>
+                    f.setValue("loanId", null, { shouldDirty: true })
+                  }
+                />
+              )}
 
-          <FormTagsPicker
-            tags={tags}
-            tagIds={f.tagIds}
-            setTags={f.setTags}
-            removeTag={f.removeTag}
-          />
+            <FormTagsPicker
+              tags={tags}
+              tagIds={f.tagIds}
+              setTags={f.setTags}
+              removeTag={f.removeTag}
+            />
 
-          {/* Refund: not for recurring kinds, and not for loans (money coming
+            {/* Refund: not for recurring kinds, and not for loans (money coming
                 back on a loan is a repayment, not a refund). */}
-          {transactionType === TransactionTypeEnum.EXPENSE &&
-            !f.isRecurringKind &&
-            !f.isLoanKind && (
-              <ListItem
-                style={transactionFormStyles.switchRow}
-                onPress={f.handleRefundToggle}
-                accessibilityRole="switch"
-                accessibilityState={{ checked: f.isRefund }}
-              >
-                <View style={transactionFormStyles.switchLeft}>
-                  <DynamicIcon
-                    icon="receipt-refund-outline"
-                    size={20}
-                    color={theme.colors.primary}
-                    variant="badge"
-                  />
-                  <Text
-                    variant="default"
-                    style={transactionFormStyles.switchLabel}
-                  >
-                    {t("components.transactionForm.fields.refundLabel")}
-                  </Text>
-                </View>
-                <Switch value={f.isRefund} />
-              </ListItem>
+            {transactionType === TransactionTypeEnum.EXPENSE &&
+              !f.isRecurringKind &&
+              !f.isLoanKind && (
+                <ListItem
+                  style={transactionFormStyles.switchRow}
+                  onPress={f.handleRefundToggle}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: f.isRefund }}
+                >
+                  <View style={transactionFormStyles.switchLeft}>
+                    <DynamicIcon
+                      icon="receipt-refund-outline"
+                      size={20}
+                      color={theme.colors.primary}
+                      variant="badge"
+                    />
+                    <Text
+                      variant="default"
+                      style={transactionFormStyles.switchLabel}
+                    >
+                      {t("components.transactionForm.fields.refundLabel")}
+                    </Text>
+                  </View>
+                  <Switch value={f.isRefund} />
+                </ListItem>
+              )}
+
+            <FormAttachmentsSection
+              list={f.attachmentState.list}
+              preview={f.attachmentState.preview}
+              fileToOpen={f.attachmentState.fileToOpen}
+              toRemove={f.attachmentState.toRemove}
+              addFilesExpanded={f.attachmentState.addFilesExpanded}
+              onToggleAddFiles={() =>
+                f.setAttachmentState({
+                  addFilesExpanded: !f.attachmentState.addFilesExpanded,
+                })
+              }
+              onClosePreview={() => f.setAttachmentState({ preview: null })}
+              onCancelFileOpen={() =>
+                f.setAttachmentState({ fileToOpen: null })
+              }
+              onPreview={(a) => f.setAttachmentState({ preview: a })}
+              onOpenExternal={(a) => f.setAttachmentState({ fileToOpen: a })}
+              onRemoveRequest={(a) => f.setAttachmentState({ toRemove: a })}
+              onRemoveConfirm={f.removeAttachment}
+              onRemoveCancel={() => f.setAttachmentState({ toRemove: null })}
+              onSelectFromFiles={f.handleSelectFromFiles}
+              onTakePhoto={f.handleTakePhoto}
+              onSelectMultipleMedia={f.handleSelectMultipleMedia}
+              onSelectSinglePhoto={f.handleSelectSinglePhoto}
+            />
+
+            {f.locationEnabled && (
+              <View style={transactionFormStyles.fieldBlock}>
+                <FormLocationPicker
+                  location={f.location}
+                  isCapturingLocation={f.isCapturingLocation}
+                  onPress={() => f.setOverlays({ locationPickerVisible: true })}
+                  onClear={f.handleClearLocation}
+                />
+              </View>
             )}
-
-          <FormAttachmentsSection
-            list={f.attachmentState.list}
-            preview={f.attachmentState.preview}
-            fileToOpen={f.attachmentState.fileToOpen}
-            toRemove={f.attachmentState.toRemove}
-            addFilesExpanded={f.attachmentState.addFilesExpanded}
-            onToggleAddFiles={() =>
-              f.setAttachmentState({
-                addFilesExpanded: !f.attachmentState.addFilesExpanded,
-              })
-            }
-            onClosePreview={() => f.setAttachmentState({ preview: null })}
-            onCancelFileOpen={() => f.setAttachmentState({ fileToOpen: null })}
-            onPreview={(a) => f.setAttachmentState({ preview: a })}
-            onOpenExternal={(a) => f.setAttachmentState({ fileToOpen: a })}
-            onRemoveRequest={(a) => f.setAttachmentState({ toRemove: a })}
-            onRemoveConfirm={f.removeAttachment}
-            onRemoveCancel={() => f.setAttachmentState({ toRemove: null })}
-            onSelectFromFiles={f.handleSelectFromFiles}
-            onTakePhoto={f.handleTakePhoto}
-            onSelectMultipleMedia={f.handleSelectMultipleMedia}
-            onSelectSinglePhoto={f.handleSelectSinglePhoto}
-          />
-
-          {f.locationEnabled && (
-            <View style={transactionFormStyles.fieldBlock}>
-              <FormLocationPicker
-                location={f.location}
-                isCapturingLocation={f.isCapturingLocation}
-                onPress={() => f.setOverlays({ locationPickerVisible: true })}
-                onClear={f.handleClearLocation}
-              />
-            </View>
-          )}
+          </View>
 
           {!f.isNew && transaction && (
             <FormDeleteActions
@@ -352,6 +376,7 @@ export function TransactionForm(props: TransactionFormProps) {
         isNew={f.isNew}
         isSaving={f.isSaving}
         isDirty={f.isDirty}
+        readOnly={readOnly}
         onCancel={f.handleCancelPress}
         onSave={f.submit}
       />

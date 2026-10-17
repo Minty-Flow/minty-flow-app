@@ -41,8 +41,11 @@ export default function PendingTransactionsScreen() {
     showFilters,
     toggleFilters,
   } = useTransactionListFilters()
+  // The row stays set after the sheet closes so the sheet keeps its content
+  // while it animates out; the next delete replaces it.
   const [recurringToDelete, setRecurringToDelete] =
     useState<TransactionWithRelations | null>(null)
+  const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
   const recurringRule = useRecurringRule(
     recurringToDelete?.extra?.recurringId ?? null,
   )
@@ -72,6 +75,7 @@ export default function PendingTransactionsScreen() {
   const handleBeforeDelete = (row: TransactionWithRelations) => {
     if (row.extra?.recurringId) {
       setRecurringToDelete(row)
+      setDeleteSheetVisible(true)
       return true
     }
     return false
@@ -124,18 +128,20 @@ export default function PendingTransactionsScreen() {
         renderItem={renderItem}
       />
 
-      {recurringToDelete && recurringRule && (
-        <DeleteRecurringSheet
-          visible
-          transaction={recurringToDelete}
-          recurringRule={recurringRule}
-          onRequestClose={() => setRecurringToDelete(null)}
-          onDeleted={() => {
-            setRecurringToDelete(null)
-            closeOpenSwipeable()
-          }}
-        />
-      )}
+      {recurringToDelete &&
+        recurringRule &&
+        recurringRule.id === recurringToDelete.extra?.recurringId && (
+          <DeleteRecurringSheet
+            visible={deleteSheetVisible}
+            transaction={recurringToDelete}
+            recurringRule={recurringRule}
+            onRequestClose={() => setDeleteSheetVisible(false)}
+            onDeleted={() => {
+              setDeleteSheetVisible(false)
+              closeOpenSwipeable()
+            }}
+          />
+        )}
     </View>
   )
 }

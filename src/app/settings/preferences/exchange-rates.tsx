@@ -28,6 +28,10 @@ import {
   INITIAL_EDITOR_STATE,
 } from "../../../hooks/exchange-rates-editor.reducer"
 
+// Attribution required by the open.er-api.com terms of use.
+const EXCHANGE_RATE_API_URL = "https://www.exchangerate-api.com"
+const EXCHANGE_RATE_API_ATTRIBUTION = "Rates By Exchange Rate API"
+// Fills the codes the primary source lacks (crypto and a few ISO codes).
 const EXCHANGE_API_URL = "https://github.com/fawazahmed0/exchange-api"
 async function createRatesPromise(): Promise<{
   rates: ExchangeRates | null
@@ -154,6 +158,7 @@ function ExchangeRatesContent({
     const displayRate = rate ?? 0
     const draftValue = draftRates[item.displayCode] ?? displayRate
     const isInvalidRate = draftValue <= 0
+    const originalRate = rates?.rates?.[item.code] ?? null
     return (
       <View style={styles.entryWrapper}>
         <ListItem
@@ -163,13 +168,31 @@ function ExchangeRatesContent({
           onPress={() => handleSelectEntry(item.displayCode, displayRate)}
         >
           <Text style={styles.entryEquals}>=</Text>
-          <Text style={styles.entryAmount} numberOfLines={1}>
-            {formatNumber(displayRate, {
-              minimumFractionDigits: 14,
-              maximumFractionDigits: 14,
-              useGrouping: false,
-            })}
-          </Text>
+          <View style={styles.entryAmountColumn}>
+            <Text style={styles.entryAmount} numberOfLines={1}>
+              {formatNumber(displayRate, {
+                minimumFractionDigits: 14,
+                maximumFractionDigits: 14,
+                useGrouping: false,
+              })}
+            </Text>
+            {/* A custom rate shows the original one it replaces. */}
+            {item.isCustom && originalRate != null && (
+              <Text style={styles.entryOriginal} numberOfLines={1}>
+                {t("screens.settings.exchangeRates.originalRate", {
+                  rate: formatNumber(originalRate, {
+                    maximumFractionDigits: 6,
+                    useGrouping: false,
+                  }),
+                })}
+              </Text>
+            )}
+          </View>
+          {item.isCustom && (
+            <Text style={styles.entryBadge}>
+              {t("screens.settings.exchangeRates.customBadge")}
+            </Text>
+          )}
           <Text style={styles.entryCode}>{item.displayCode}</Text>
         </ListItem>
         {isEditing && (
@@ -210,20 +233,6 @@ function ExchangeRatesContent({
   }
   const listHeader = (
     <View style={styles.listHeader}>
-      <ExternalLink href={EXCHANGE_API_URL} pressableStyle={styles.apiCard}>
-        <View style={styles.apiCardContent}>
-          <Text style={styles.apiTitle}>
-            {t("screens.settings.exchangeRates.apiTitle")}
-          </Text>
-          <Text style={styles.apiUrl}>{EXCHANGE_API_URL}</Text>
-        </View>
-      </ExternalLink>
-      <SearchInput
-        value={searchQuery}
-        onChangeText={(query) => dispatch({ type: "SET_SEARCH", query })}
-        onClear={() => dispatch({ type: "SET_SEARCH", query: "" })}
-        placeholder={t("screens.settings.exchangeRates.searchPlaceholder")}
-      />
       <Text style={styles.instruction}>
         {t("screens.settings.exchangeRates.instructionCaption")}
       </Text>
@@ -243,16 +252,27 @@ function ExchangeRatesContent({
     )
   }
   return (
-    <FlatList
-      data={filteredEntries}
-      keyExtractor={(item) => item.displayCode}
-      renderItem={renderItem}
-      ListHeaderComponent={listHeader}
-      contentContainerStyle={styles.listContent}
-      keyboardShouldPersistTaps="handled"
-      style={styles.list}
-      contentInsetAdjustmentBehavior="automatic"
-    />
+    <View style={styles.container}>
+      {/* Outside the list so it stays put while the rates scroll. */}
+      <View style={styles.searchContainer}>
+        <SearchInput
+          value={searchQuery}
+          onChangeText={(query) => dispatch({ type: "SET_SEARCH", query })}
+          onClear={() => dispatch({ type: "SET_SEARCH", query: "" })}
+          placeholder={t("screens.settings.exchangeRates.searchPlaceholder")}
+        />
+      </View>
+      <FlatList
+        data={filteredEntries}
+        keyExtractor={(item) => item.displayCode}
+        renderItem={renderItem}
+        ListHeaderComponent={listHeader}
+        contentContainerStyle={styles.listContent}
+        keyboardShouldPersistTaps="handled"
+        style={styles.list}
+        contentInsetAdjustmentBehavior="automatic"
+      />
+    </View>
   )
 }
 export default function ExchangeRatesScreen() {
@@ -310,11 +330,43 @@ export default function ExchangeRatesScreen() {
         title={t("screens.settings.exchangeRates.infoSheet.title")}
         description={t("screens.settings.exchangeRates.infoSheet.description")}
         okLabel={t("screens.settings.exchangeRates.infoSheet.ok")}
-      />
+      >
+        <View style={styles.sources}>
+          <Text variant="small" style={styles.sourcesLabel}>
+            {t("screens.settings.exchangeRates.infoSheet.sources")}
+          </Text>
+          <ExternalLink
+            href={EXCHANGE_RATE_API_URL}
+            pressableStyle={styles.sourceLink}
+            textStyle={styles.sourceUrl}
+          >
+            <Text style={styles.sourceTitle}>
+              {EXCHANGE_RATE_API_ATTRIBUTION}
+            </Text>
+            {"\n"}
+            {EXCHANGE_RATE_API_URL}
+          </ExternalLink>
+          <ExternalLink
+            href={EXCHANGE_API_URL}
+            pressableStyle={styles.sourceLink}
+            textStyle={styles.sourceUrl}
+          >
+            <Text style={styles.sourceTitle}>
+              {t("screens.settings.exchangeRates.apiTitleSecondary")}
+            </Text>
+            {"\n"}
+            {EXCHANGE_API_URL}
+          </ExternalLink>
+        </View>
+      </InfoSheet>
     </>
   )
 }
 const styles = StyleSheet.create((theme) => ({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.surface,
+  },
   list: {
     flex: 1,
     backgroundColor: theme.colors.surface,
@@ -325,27 +377,31 @@ const styles = StyleSheet.create((theme) => ({
   listHeader: {
     paddingBottom: 4,
   },
-  apiCard: {
+  sources: {
+    gap: 8,
+  },
+  sourcesLabel: {
+    color: theme.colors.semantic.semi,
+    textAlign: "center",
+  },
+  sourceLink: {
     backgroundColor: theme.colors.secondary,
     borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 20,
+    padding: 12,
   },
-  apiCardContent: {
-    flexDirection: "column",
-    backgroundColor: theme.colors.secondary,
-  },
-  apiTitle: {
+  sourceTitle: {
     fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "700",
     color: theme.colors.onSurface,
-    marginBottom: 4,
   },
-  apiUrl: {
+  sourceUrl: {
     fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.semantic.semi,
+  },
+  searchContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    marginBottom: 12,
   },
   instruction: {
     fontSize: theme.typography.bodyMedium.fontSize,
@@ -371,10 +427,27 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSurface,
     marginRight: 8,
   },
-  entryAmount: {
+  entryAmountColumn: {
     flex: 1,
+  },
+  entryAmount: {
     fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSurface,
+  },
+  entryOriginal: {
+    fontSize: theme.typography.bodyMedium.fontSize,
+    color: theme.colors.semantic.semi,
+    marginTop: 2,
+  },
+  entryBadge: {
+    ...theme.typography.labelSmall,
+    color: theme.colors.onPrimary,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginRight: 8,
+    overflow: "hidden",
   },
   entryCode: {
     fontSize: theme.typography.bodyLarge.fontSize,
@@ -382,13 +455,12 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSurface,
   },
   inlineInput: {
-    paddingHorizontal: 0,
+    paddingHorizontal: 20,
     paddingBottom: 8,
   },
   saveButtonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginHorizontal: 20,
     marginVertical: 12,
   },
   centered: {

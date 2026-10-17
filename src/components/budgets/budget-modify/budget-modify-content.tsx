@@ -157,18 +157,22 @@ export function BudgetModifyContent({
           title: t("common.toast.error"),
           description: t("screens.settings.budgets.form.toast.notFound"),
         })
-        return
+        return false
       }
       await deleteBudgetById(budgetModifyId)
-      allowNavigation()
-      router.dismiss(2)
     } catch (error) {
       logger.error("Error deleting budget", { error })
       Toast.error({
         title: t("common.toast.error"),
         description: t("screens.settings.budgets.form.toast.deleteFailed"),
       })
+      return false
     }
+  }
+  // Runs once the delete sheet has closed: leaving earlier tears it down mid-animation.
+  const handleDeleted = () => {
+    allowNavigation()
+    router.dismiss(2)
   }
   const handleDuplicate = async () => {
     try {
@@ -253,6 +257,22 @@ export function BudgetModifyContent({
                 setValue("accountIds", ids, { shouldDirty: true })
               }
             />
+            {/* The accounts row only exists once a currency is chosen, so the
+                currency error comes first. */}
+            {(errors.currencyCode ?? errors.accountIds) && (
+              <Text
+                variant="small"
+                style={[
+                  modifyFormStyles.errorText,
+                  budgetModifyStyles.rowError,
+                ]}
+              >
+                {t(
+                  (errors.currencyCode ?? errors.accountIds)
+                    ?.message as TranslationKey,
+                )}
+              </Text>
+            )}
 
             {/* Amount input */}
             <View style={budgetModifyStyles.amountSection}>
@@ -284,6 +304,17 @@ export function BudgetModifyContent({
               }
               label={t("screens.settings.budgets.form.categoryLabel")}
             />
+            {errors.categoryIds && (
+              <Text
+                variant="small"
+                style={[
+                  modifyFormStyles.errorText,
+                  budgetModifyStyles.rowError,
+                ]}
+              >
+                {t(errors.categoryIds.message as TranslationKey)}
+              </Text>
+            )}
 
             {/* Color selector */}
             <ColorVariantInline
@@ -364,7 +395,13 @@ export function BudgetModifyContent({
                   </Text>
                 </ListItem>
                 {errors.endDate && (
-                  <Text variant="small" style={modifyFormStyles.errorText}>
+                  <Text
+                    variant="small"
+                    style={[
+                      modifyFormStyles.errorText,
+                      budgetModifyStyles.rowError,
+                    ]}
+                  >
                     {t(errors.endDate.message as TranslationKey)}
                   </Text>
                 )}
@@ -473,12 +510,11 @@ export function BudgetModifyContent({
         deleteSheetVisible={deleteSheetVisible}
         unsavedSheetVisible={unsavedSheetVisible}
         isAddMode={isAddMode}
-        budget={budget}
         onCloseDeleteSheet={() => setDeleteSheetVisible(false)}
         onCloseUnsavedSheet={() => setUnsavedSheetVisible(false)}
         onConfirmDelete={handleDelete}
+        onDeleted={handleDeleted}
         onDiscardAndNavigate={() => {
-          setUnsavedSheetVisible(false)
           allowNavigation()
           handleGoBack()
         }}

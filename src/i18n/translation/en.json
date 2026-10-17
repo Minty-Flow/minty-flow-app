@@ -38,7 +38,6 @@
     "developmentNotice": {
       "title": "A quick note",
       "dontShowAgain": "Don't show again",
-
       "message": "Minty Flow is still in development, so data loss may happen. I'm sorry for that. Starting with this release, I'm focused on stability and safer backups for future updates."
     },
     "sheets": {
@@ -165,6 +164,7 @@
       }
     },
     "accounts": {
+      "balanceAdjustmentTitle": "Balance adjustment",
       "title": "All Accounts",
       "addNew": "Add new account",
       "addNewAccount": "New Account",
@@ -214,6 +214,7 @@
         },
         "toast": {
           "deleteFailed": "Failed to delete account.",
+          "deleteBlockedByLoans": "This account has loans: {{names}}. Move or delete them first.",
           "createFailed": "Failed to create account.",
           "updateFailed": "Failed to update account."
         }
@@ -597,6 +598,12 @@
             "1day": "1 day",
             "2days": "2 days"
           }
+        },
+        "notification": {
+          "fallbackTitle": "Pending Transaction",
+          "dueBody": "Your planned transaction is due now.",
+          "earlyTitle": "Upcoming: {{title}}",
+          "earlyBody": "You have a planned transaction coming up."
         }
       },
       "goals": {
@@ -691,7 +698,8 @@
           "left": "left",
           "allAccounts": "All Accounts",
           "alertThresholdReached": "Alert threshold reached",
-          "disabled": "Disabled",
+          "inactive": "Inactive",
+          "needsCategory": "Needs a category",
           "dayOf": "day {{current}}/{{total}}",
           "dayXofY": "Day {{current}} of {{total}}",
           "uncategorized": "Uncategorized",
@@ -900,14 +908,15 @@
       },
       "exchangeRates": {
         "title": "Exchange Rates",
-        "apiTitle": "Exchange Rates API",
+        "apiTitleSecondary": "Crypto and other rates",
         "loading": "Loading exchange rates…",
         "searchPlaceholder": "Search currencies...",
         "instructionCaption": "Select an entry to set a custom exchange rate. Note: All exchange rate calculations use USD as a reference.",
         "infoSheet": {
           "title": "Exchange Rates",
           "description": "Rates are shown as amount per 1 USD. Select an entry to set a custom rate. All calculations use USD as reference.",
-          "ok": "OK"
+          "ok": "OK",
+          "sources": "Sources"
         },
         "errors": {
           "invalidRate": "Rate must be greater than 0",
@@ -919,7 +928,9 @@
         },
         "a11y": {
           "info": "Information about exchange rates"
-        }
+        },
+        "customBadge": "Custom",
+        "originalRate": "Original: {{rate}}"
       },
       "dataManagement": {
         "title": "Data Management",
@@ -1060,6 +1071,9 @@
           "recurring": "Part of a recurring series"
         }
       },
+      "trashed": {
+        "banner": "This transaction is in the trash. Restore it to make changes."
+      },
       "upcoming": {
         "banner": "Upcoming — not counted in your balance or stats yet.",
         "markPaid": "Mark paid",
@@ -1170,6 +1184,8 @@
         "transferUpdated": "Transfer updated",
         "recurringCreated": "Recurring transaction created",
         "recurringCreateFailed": "Failed to create recurring transaction",
+        "recurringStopped": "Recurring transaction stopped",
+        "recurringStoppedDescription": "\"{{title}}\" could not be generated and was turned off. Check its account and category.",
         "transactionCreated": "Transaction created",
         "transactionUpdated": "Transaction updated",
         "saveFailed": "Failed to save transaction",
@@ -1257,35 +1273,44 @@
         "selectedCount": "{{count}} selected",
         "noneSelected": "None selected",
         "expense": {
+          "eatingOut": "Eating out",
           "groceries": "Groceries",
-          "dining": "Food & Dining",
-          "transportation": "Transportation",
-          "housing": "Housing",
-          "utilities": "Bills & Utilities",
-          "shopping": "Shopping",
-          "healthcare": "Health",
-          "entertainment": "Entertainment",
+          "drinks": "Drinks & Beverages",
           "education": "Education",
-          "kids": "Kids & Childcare",
-          "insurance": "Insurance",
-          "fuel": "Fuel",
-          "carMaintenance": "Car Maintenance",
-          "pets": "Pets",
-          "businessExpenses": "Business Expenses",
+          "health": "Health",
+          "transport": "Transport",
+          "gas": "Fuel",
+          "shopping": "Shopping",
+          "entertainment": "Entertainment",
+          "subscriptions": "Online subscriptions",
+          "gifts": "Gifts",
+          "rent": "Rent",
+          "utils": "Utils",
           "taxes": "Taxes",
+          "insurance": "Insurance",
+          "petCare": "Pet care",
+          "childCare": "Child care",
+          "fitness": "Fitness",
+          "gadgets": "Gadgets",
+          "services": "Services",
+          "snacks": "Snacks",
+          "stationery": "Stationery",
+          "hygiene": "Hygiene",
           "travel": "Travel",
-          "homeMaintenance": "Home Maintenance",
-          "charity": "Charity"
+          "hobbies": "Hobbies",
+          "beauty": "Beauty"
         },
         "income": {
-          "salary": "Salary",
-          "freelance": "Freelance & Side Work",
-          "investment": "Investments",
-          "gift": "Gifts",
-          "cashback": "Cashback & Refunds",
+          "paycheck": "Paycheck",
+          "bonus": "Bonus",
+          "freelance": "Freelance",
+          "business": "Business income",
+          "investments": "Investments",
+          "interest": "Interest",
+          "rental": "Rental income",
           "allowance": "Allowance",
-          "business": "Business Income",
-          "rental": "Rental Income",
+          "gifts": "Gifts received",
+          "cashback": "Cashback & Refunds",
           "pension": "Pension"
         },
         "essentials": "Essentials",
@@ -1293,17 +1318,7 @@
         "packsHint": "Add a few extras that match your situation.",
         "addPack": "Add all",
         "removePack": "Remove",
-        "packs": {
-          "student": "Student",
-          "family": "Family",
-          "car": "Car owner",
-          "pets": "Pet owner",
-          "selfEmployed": "Self-employed",
-          "traveler": "Traveler",
-          "landlord": "Landlord",
-          "retired": "Retired",
-          "giving": "Giving"
-        }
+        "packs": {}
       },
       "search": {
         "placeholder": "Search {{tab}} categories..."
@@ -1327,15 +1342,17 @@
         "deleteLabel": "Permanently delete",
         "deleteSheet": {
           "title": "Delete {{name}}?",
-          "descriptionWithCount_one": "This category is used by {{count}} transaction. Deleting will unlink it. This cannot be undone.",
-          "descriptionWithCount_other": "This category is used by {{count}} transactions. Deleting will unlink them. This cannot be undone.",
+          "descriptionWithCount_one": "This category is used by {{count}} transaction. Deleting it removes the category from that transaction, which becomes uncategorized. This cannot be undone.",
+          "descriptionWithCount_other": "This category is used by {{count}} transactions. Deleting it removes the category from them, and they become uncategorized. This cannot be undone.",
+          "descriptionBudgets_one": "The budget {{names}} uses this category as its only one and will be switched off until you give it a category.",
+          "descriptionBudgets_other": "The budgets {{names}} use this category as their only one and will be switched off until you give each a category.",
+          "deleteAnyway": "Delete anyway",
           "descriptionEmpty": "Deleting this category cannot be undone."
         },
         "toast": {
           "notFound": "Category not found",
           "cannotDelete": "Cannot delete category",
-          "cannotDeleteDescription_one": "This category has {{count}} transaction. Please remove or reassign all transactions before deleting.",
-          "cannotDeleteDescription_other": "This category has {{count}} transactions. Please remove or reassign all transactions before deleting.",
+          "cannotDeleteLoans": "Loans use this category: {{names}}. Change the category of those loans first.",
           "deleteFailed": "Failed to delete category. Please try again.",
           "createFailed": "Failed to create category. Please try again.",
           "updateFailed": "Failed to update category. Please try again."
@@ -1506,6 +1523,9 @@
       "noAccountsForCurrency": "No accounts for this currency",
       "accountsClearedTitle": "Accounts cleared",
       "accountsClearedDescription": "Selected accounts were removed because they don't match {{currency}}."
+    },
+    "accountPicker": {
+      "noResults": "No accounts found"
     },
     "categoryPicker": {
       "title": "Select a category",

@@ -20,10 +20,10 @@ export function getLiveBudgetSpent(
       ) {
         return sum
       }
+      // A budget with no categories counts nothing, it is not "all categories".
       if (
-        budget.categoryIds.length > 0 &&
-        (!transaction.categoryId ||
-          !budget.categoryIds.includes(transaction.categoryId))
+        !transaction.categoryId ||
+        !budget.categoryIds.includes(transaction.categoryId)
       ) {
         return sum
       }

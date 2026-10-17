@@ -11,13 +11,16 @@ import {
   transactionTags,
   transfers,
 } from "~/database/drizzle/schema"
+import { createTransactionInTx } from "~/database/services/ledger-service"
 import { runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
+import { disableRecurringRulesForAccount } from "~/database/utils/recurring-template-refs"
+import i18n from "~/i18n/config"
 import type {
   AddAccountsFormSchema,
   UpdateAccountsFormSchema,
 } from "~/schemas/accounts.schema"
-import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
+import { TransactionTypeEnum } from "~/types/transactions"
 import { assertMinorUnits, rescaleMinorUnits } from "~/utils/money"
 
 // ── Create ───────────────────────────────────────────────────────────────────
@@ -74,12 +77,8 @@ export async function updateAccount(
 ): Promise<void> {
   if (updates.balance !== undefined) assertMinorUnits(updates.balance)
   const now = new Date().toISOString()
-  let currencyChanged = false
 
-  const balanceAdjustment = await runInTransaction<{
-    amount: number
-    type: TransactionType
-  } | null>("account.update", (db) => {
+  await runInTransaction("account.update", (db) => {
     const existing = db
       .select({
         balance: accounts.balance,
@@ -96,7 +95,6 @@ export async function updateAccount(
       updates.currencyCode !== existing.currencyCode
     ) {
       const nextCurrencyCode = updates.currencyCode
-      currencyChanged = true
       comparableBalance = rescaleMinorUnits(
         existing.balance,
         existing.currencyCode,
@@ -216,39 +214,30 @@ export async function updateAccount(
       .where(eq(accounts.id, id))
       .run()
 
-    // Return balance adjustment info for after commit (avoid nested tx event timing)
+    // `updates.balance` is the balance the caller wants. When it differs from
+    // what the account holds, a compensating transaction closes the gap, in
+    // this same transaction so both the update and the adjustment land or
+    // neither does.
     if (
       updates.balance !== undefined &&
       typeof updates.balance === "number" &&
       updates.balance !== comparableBalance
     ) {
       const delta = updates.balance - comparableBalance
-      return {
+      createTransactionInTx(db, {
         amount: Math.abs(delta),
         type:
           delta > 0 ? TransactionTypeEnum.INCOME : TransactionTypeEnum.EXPENSE,
-      }
+        transactionDate: new Date(),
+        accountId: id,
+        categoryId: null,
+        title: i18n.t("screens.accounts.balanceAdjustmentTitle"),
+        description: null,
+        isPending: false,
+        tags: [],
+      })
     }
-    return null
   })
-
-  // Balance adjustment via compensating transaction (runs after outer tx commits)
-  if (balanceAdjustment) {
-    const { createTransaction } = await import("./ledger-service")
-    await createTransaction({
-      amount: balanceAdjustment.amount,
-      type: balanceAdjustment.type,
-      transactionDate: new Date(),
-      accountId: id,
-      categoryId: null,
-      title: "Balance adjustment",
-      description: null,
-      isPending: false,
-      tags: [],
-    })
-  }
-  if (currencyChanged) {
-  }
 }
 
 // ── Archive / Unarchive ───────────────────────────────────────────────────────
@@ -275,10 +264,34 @@ export async function unarchiveAccount(id: string): Promise<void> {
 
 // ── Destroy (cascading) ───────────────────────────────────────────────────────
 
+/**
+ * Thrown by {@link destroyAccount} when the account still holds loans. A loan
+ * cannot be deleted along with its account without taking its transactions
+ * too, so the caller must move or delete the loans first.
+ */
+export class AccountHasLoansError extends Error {
+  readonly loanNames: string[]
+
+  constructor(loanNames: string[]) {
+    super(`Account has ${loanNames.length} loan(s): ${loanNames.join(", ")}`)
+    this.name = "AccountHasLoansError"
+    this.loanNames = loanNames
+  }
+}
+
 export async function destroyAccount(id: string): Promise<void> {
   const now = new Date().toISOString()
 
   await runInTransaction("account.destroy", (db) => {
+    const accountLoans = db
+      .select({ name: loans.name })
+      .from(loans)
+      .where(eq(loans.accountId, id))
+      .all()
+    if (accountLoans.length > 0) {
+      throw new AccountHasLoansError(accountLoans.map((loan) => loan.name))
+    }
+
     const txs = db
       .select()
       .from(transactions)
@@ -396,6 +409,7 @@ export async function destroyAccount(id: string): Promise<void> {
       db.delete(transactions).where(eq(transactions.accountId, id)).run()
     }
 
+    disableRecurringRulesForAccount(db, id)
     db.delete(budgetAccounts).where(eq(budgetAccounts.accountId, id)).run()
     db.delete(goalAccounts).where(eq(goalAccounts.accountId, id)).run()
     db.delete(accounts).where(eq(accounts.id, id)).run()

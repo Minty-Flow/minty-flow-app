@@ -2,7 +2,10 @@ import { useTranslation } from "react-i18next"
 
 import { sheetStyles } from "~/components/selectors/styles"
 import { BottomSheet } from "~/components/ui/bottom-sheet"
-import { ListItem } from "~/components/ui/list-item"
+import {
+  SingleSelectItem,
+  SingleSelectLabel,
+} from "~/components/ui/single-select-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { RecurrenceUnit } from "~/types/transactions"
@@ -30,21 +33,22 @@ export function RecurrenceUnitSheet({
           {t("components.transactionForm.recurrence.unitTitle")}
         </Text>
         {UNITS.map((u) => (
-          <ListItem
+          <SingleSelectItem
             key={u}
-            style={[sheetStyles.item, u === value && sheetStyles.itemSelected]}
+            selected={u === value}
+            style={sheetStyles.item}
             onPress={() => {
               onSelect(u)
               onClose()
             }}
           >
             {/* count:2 so the label reads as a plural noun ("weeks"), not "every 2 week" */}
-            <Text variant="large">
+            <SingleSelectLabel variant="large">
               {t(`components.transactionForm.recurrence.unit.${u}`, {
                 count: 2,
               })}
-            </Text>
-          </ListItem>
+            </SingleSelectLabel>
+          </SingleSelectItem>
         ))}
       </View>
     </BottomSheet>

@@ -55,6 +55,7 @@ import { EMPTY_TAG_IDS } from "./constants"
 import { getDefaultValues, mergeReducer } from "./form-utils"
 import { KIND_ICONS } from "./kind-info"
 import { onKindChange } from "./on-kind-change"
+import { checkTransferRate } from "./transfer-rate"
 import type {
   OverlayState,
   RecurringState,
@@ -186,8 +187,8 @@ export function useTransactionForm({
     ? budgets.filter(
         (b) =>
           b.accountIds.includes(accountId) &&
-          (b.categoryIds.length === 0 ||
-            (categoryId && b.categoryIds.includes(categoryId))),
+          categoryId &&
+          b.categoryIds.includes(categoryId),
       )
     : []
   // Clear goalId/budgetId/loanId when account changes and current selection is no longer valid
@@ -249,13 +250,14 @@ export function useTransactionForm({
     until: null,
     startDate: watch("transactionDate"),
   })
-  const { conversionRate, setConversionRate } = useFormConversionRate(
-    transactionType,
-    selectedAccount,
-    selectedToAccount,
-    transaction,
-    setValue,
-  )
+  const { conversionRate, isConversionRateLoading, setConversionRate } =
+    useFormConversionRate(
+      transactionType,
+      selectedAccount,
+      selectedToAccount,
+      transaction,
+      setValue,
+    )
   const {
     attachmentState,
     setAttachmentState,
@@ -301,7 +303,7 @@ export function useTransactionForm({
     : null
 
   // RS-1: a new subscription/repetitive starts at the form's transactionDate
-  // (which is `new Date()` at open for these kinds — Date field is hidden).
+  // (`new Date()` at open, editable through the Date field).
   useEffect(() => {
     if (isNew && isRecurringKind && recurring.startDate !== date) {
       setRecurring({ startDate: date })
@@ -393,33 +395,27 @@ export function useTransactionForm({
           fromAccount &&
           toAccount &&
           fromAccount.currencyCode !== toAccount.currencyCode
-        if (differentCurrencies) {
-          if (
-            conversionRate == null ||
-            conversionRate <= 0 ||
-            conversionRate === 1
-          ) {
-            Toast.error({
-              title:
-                conversionRate === 1
-                  ? t("components.transactionForm.toast.rateLoading")
-                  : t(
-                      "components.transactionForm.toast.setDifferentCurrencies",
-                    ),
-            })
-            return
-          }
+        const rateCheck = checkTransferRate({
+          differentCurrencies: !!differentCurrencies,
+          conversionRate,
+          isLoading: isConversionRateLoading,
+        })
+        if (!rateCheck.ok) {
+          Toast.error({
+            title:
+              rateCheck.reason === "loading"
+                ? t("components.transactionForm.toast.rateLoading")
+                : t("components.transactionForm.toast.setDifferentCurrencies"),
+          })
+          return
         }
         const effectiveDate = data.transactionDate
         const transferPayload = {
           fromAccountId: fromId,
           toAccountId: toId,
           amount: data.amount,
-          ...(differentCurrencies &&
-          conversionRate != null &&
-          conversionRate > 0 &&
-          conversionRate !== 1
-            ? { conversionRate }
+          ...(rateCheck.conversionRate != null
+            ? { conversionRate: rateCheck.conversionRate }
             : {}),
           transactionDate: isNew ? effectiveDate.getTime() : effectiveDate,
           title:
@@ -449,9 +445,11 @@ export function useTransactionForm({
         router.back()
         return
       }
-      const effectiveDate = isRecurringKind
-        ? recurring.startDate
-        : data.transactionDate
+      // Only a new rule starts at the recurrence card's start date. An edited
+      // instance keeps its own date; `recurring.startDate` is the rule's first
+      // date there.
+      const effectiveDate =
+        isNew && isRecurringKind ? recurring.startDate : data.transactionDate
       const attachmentsJson =
         attachmentState.list.length > 0
           ? JSON.stringify(attachmentState.list.map(toStoredAttachment))
@@ -774,9 +772,7 @@ export function useTransactionForm({
     // Clear budget if it no longer matches the new category
     if (budgetId) {
       const valid = budgets.some(
-        (b) =>
-          b.id === budgetId &&
-          (b.categoryIds.length === 0 || b.categoryIds.includes(id)),
+        (b) => b.id === budgetId && b.categoryIds.includes(id),
       )
       if (!valid) {
         setValue("budgetId", null, { shouldDirty: false })

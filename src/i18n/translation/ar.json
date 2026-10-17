@@ -37,7 +37,6 @@
     "developmentNotice": {
       "title": "ملاحظة سريعة",
       "dontShowAgain": "عدم الإظهار مرة أخرى",
-
       "message": "Minty Flow ما زال قيد التطوير، لذلك قد يحدث فقدان للبيانات. أعتذر عن ذلك. ابتداءً من هذا الإصدار، أركز على الاستقرار ونسخ احتياطية أكثر أماناً في التحديثات القادمة."
     },
     "sheets": {
@@ -165,6 +164,7 @@
       }
     },
     "accounts": {
+      "balanceAdjustmentTitle": "تعديل الرصيد",
       "title": "جميع الحسابات",
       "addNew": "إضافة حساب جديد",
       "addNewAccount": "حساب جديد",
@@ -214,6 +214,7 @@
         },
         "toast": {
           "deleteFailed": "فشل حذف الحساب.",
+          "deleteBlockedByLoans": "هذا الحساب يحتوي على قروض: {{names}}. انقلها أو احذفها أولاً.",
           "createFailed": "فشل إنشاء الحساب.",
           "updateFailed": "فشل تحديث الحساب."
         }
@@ -597,6 +598,12 @@
             "1day": "يوم",
             "2days": "يومان"
           }
+        },
+        "notification": {
+          "fallbackTitle": "معاملة معلّقة",
+          "dueBody": "حان موعد معاملتك المخططة.",
+          "earlyTitle": "قادم: {{title}}",
+          "earlyBody": "لديك معاملة مخططة قادمة."
         }
       },
       "goals": {
@@ -691,7 +698,8 @@
           "left": "متبقي",
           "allAccounts": "جميع الحسابات",
           "alertThresholdReached": "تم بلوغ حد التنبيه",
-          "disabled": "معطّل",
+          "inactive": "غير نشط",
+          "needsCategory": "تحتاج إلى فئة",
           "dayOf": "يوم {{current}}/{{total}}",
           "dayXofY": "اليوم {{current}} من {{total}}",
           "uncategorized": "غير مصنف",
@@ -900,14 +908,15 @@
       },
       "exchangeRates": {
         "title": "أسعار الصرف",
-        "apiTitle": "واجهة أسعار الصرف",
+        "apiTitleSecondary": "العملات الرقمية وأسعار أخرى",
         "loading": "جاري تحميل أسعار الصرف...",
         "searchPlaceholder": "البحث عن العملات...",
         "instructionCaption": "اختر أحد المدخلات لتعيين سعر صرف مخصص. ملاحظة: جميع حسابات أسعار الصرف تعتمد على الدولار الأمريكي كمرجع.",
         "infoSheet": {
           "title": "أسعار الصرف",
           "description": "تُعرض الأسعار كقيمة مقابل 1 دولار أمريكي. اختر عملة لتعيين سعر مخصص. تعتمد جميع الحسابات على الدولار الأمريكي كمرجع أساسي.",
-          "ok": "حسناً"
+          "ok": "حسناً",
+          "sources": "المصادر"
         },
         "errors": {
           "invalidRate": "يجب أن يكون السعر أكبر من 0",
@@ -919,7 +928,9 @@
         },
         "a11y": {
           "info": "معلومات عن أسعار الصرف"
-        }
+        },
+        "customBadge": "مخصص",
+        "originalRate": "الأصلي: {{rate}}"
       },
       "dataManagement": {
         "title": "إدارة البيانات",
@@ -1143,6 +1154,8 @@
         "transferUpdated": "تم تحديث التحويل",
         "recurringCreated": "تم إنشاء المعاملة المتكررة",
         "recurringCreateFailed": "فشل إنشاء المعاملة المتكررة",
+        "recurringStopped": "تم إيقاف المعاملة المتكررة",
+        "recurringStoppedDescription": "تعذر إنشاء \"{{title}}\" وتم إيقافها. تحقق من حسابها وفئتها.",
         "transactionCreated": "تم إنشاء المعاملة",
         "transactionUpdated": "تم تحديث المعاملة",
         "saveFailed": "فشل حفظ المعاملة",
@@ -1209,6 +1222,9 @@
           "recurring": "جزء من سلسلة متكررة"
         }
       },
+      "trashed": {
+        "banner": "هذه المعاملة في سلة المهملات. استعدها لإجراء أي تغييرات."
+      },
       "upcoming": {
         "banner": "قادمة — لا تُحتسب في رصيدك أو إحصاءاتك بعد.",
         "markPaid": "تحديد كمدفوعة",
@@ -1257,53 +1273,52 @@
         "selectedCount": "{{count}} محدد",
         "noneSelected": "لم يتم التحديد",
         "expense": {
-          "groceries": "بقالة",
-          "dining": "طعام ومطاعم",
-          "transportation": "مواصلات",
-          "housing": "سكن",
-          "utilities": "فواتير وخدمات",
+          "eatingOut": "الأكل خارج المنزل",
+          "groceries": "البقالة",
+          "drinks": "المشروبات",
+          "education": "التعليم",
+          "health": "الصحة",
+          "transport": "المواصلات",
+          "gas": "الوقود",
           "shopping": "التسوق",
-          "healthcare": "الصحة",
-          "entertainment": "ترفيه",
-          "education": "تعليم",
-          "kids": "الأطفال ورعايتهم",
-          "insurance": "تأمين",
-          "fuel": "وقود",
-          "carMaintenance": "صيانة السيارة",
-          "pets": "حيوانات أليفة",
-          "businessExpenses": "مصاريف العمل",
-          "taxes": "ضرائب",
-          "travel": "سفر",
-          "homeMaintenance": "صيانة المنزل",
-          "charity": "خيرية"
+          "entertainment": "الترفيه",
+          "subscriptions": "الاشتراكات الإلكترونية",
+          "gifts": "الهدايا",
+          "rent": "الإيجار",
+          "utils": "المرافق",
+          "taxes": "الضرائب",
+          "insurance": "التأمين",
+          "petCare": "رعاية الحيوانات الأليفة",
+          "childCare": "رعاية الأطفال",
+          "fitness": "اللياقة البدنية",
+          "gadgets": "الأجهزة",
+          "services": "الخدمات",
+          "snacks": "الوجبات الخفيفة",
+          "stationery": "القرطاسية",
+          "hygiene": "النظافة الشخصية",
+          "travel": "السفر",
+          "hobbies": "الهوايات",
+          "beauty": "الجمال"
         },
         "income": {
-          "salary": "مرتب",
-          "freelance": "عمل حر وإضافي",
-          "investment": "استثمارات",
-          "gift": "هدايا",
-          "cashback": "استرداد نقدي ومرتجعات",
-          "allowance": "مصروف",
-          "business": "دخل العمل",
+          "paycheck": "الراتب",
+          "bonus": "المكافآت",
+          "freelance": "العمل الحر",
+          "business": "دخل الأعمال",
+          "investments": "الاستثمارات",
+          "interest": "الفوائد",
           "rental": "دخل الإيجار",
-          "pension": "معاش"
+          "allowance": "المصروف",
+          "gifts": "الهدايا المستلمة",
+          "cashback": "الاسترداد النقدي",
+          "pension": "المعاش"
         },
         "essentials": "الأساسيات",
         "packsTitle": "حسب أسلوب حياتك",
         "packsHint": "أضف بعض الفئات التي تناسب وضعك.",
         "addPack": "إضافة الكل",
         "removePack": "إزالة",
-        "packs": {
-          "student": "طالب",
-          "family": "عائلة",
-          "car": "مالك سيارة",
-          "pets": "مربي حيوانات أليفة",
-          "selfEmployed": "عمل حر",
-          "traveler": "مسافر",
-          "landlord": "مؤجر عقار",
-          "retired": "متقاعد",
-          "giving": "العطاء"
-        }
+        "packs": {}
       },
       "search": {
         "placeholder": "بحث في فئات {{tab}}..."
@@ -1327,15 +1342,17 @@
         "deleteLabel": "حذف نهائي",
         "deleteSheet": {
           "title": "حذف {{name}}؟",
-          "descriptionWithCount_one": "تستخدم هذه الفئة في {{count}} معاملة. سيؤدي الحذف إلى إلغاء الارتباط. لا يمكن التراجع عن ذلك.",
-          "descriptionWithCount_other": "تستخدم هذه الفئة في {{count}} معاملة. سيؤدي الحذف إلى إلغاء ارتباطها. لا يمكن التراجع عن ذلك.",
+          "descriptionWithCount_one": "تُستخدم هذه الفئة في {{count}} معاملة. سيؤدي الحذف إلى إزالة الفئة من هذه المعاملة وستصبح غير مصنفة. لا يمكن التراجع عن ذلك.",
+          "descriptionWithCount_other": "تُستخدم هذه الفئة في {{count}} معاملة. سيؤدي الحذف إلى إزالة الفئة منها وستصبح غير مصنفة. لا يمكن التراجع عن ذلك.",
+          "descriptionBudgets_one": "تستخدم الميزانية {{names}} هذه الفئة كفئتها الوحيدة وسيتم إيقافها حتى تضيف إليها فئة.",
+          "descriptionBudgets_other": "تستخدم الميزانيات {{names}} هذه الفئة كفئتها الوحيدة وسيتم إيقافها حتى تضيف فئة لكل منها.",
+          "deleteAnyway": "احذف على أي حال",
           "descriptionEmpty": "لا يمكن التراجع عن حذف هذه الفئة."
         },
         "toast": {
           "notFound": "الفئة غير موجودة",
           "cannotDelete": "لا يمكن حذف الفئة",
-          "cannotDeleteDescription_one": "تحتوي هذه الفئة على {{count}} معاملة. يرجى إزالة أو إعادة تعيين جميع المعاملات قبل الحذف.",
-          "cannotDeleteDescription_other": "تحتوي هذه الفئة على {{count}} معاملة. يرجى إزالة أو إعادة تعيين جميع المعاملات قبل الحذف.",
+          "cannotDeleteLoans": "تستخدم القروض التالية هذه الفئة: {{names}}. غيّر فئة هذه القروض أولاً.",
           "deleteFailed": "فشل حذف الفئة. يرجى المحاولة مرة أخرى.",
           "createFailed": "فشل إنشاء الفئة. يرجى المحاولة مرة أخرى.",
           "updateFailed": "فشل تحديث الفئة. يرجى المحاولة مرة أخرى."
@@ -1506,6 +1523,9 @@
       "noAccountsForCurrency": "لا توجد حسابات لهذه العملة",
       "accountsClearedTitle": "تم مسح الحسابات",
       "accountsClearedDescription": "تم إزالة الحسابات المحددة لأنها لا تتطابق مع {{currency}}."
+    },
+    "accountPicker": {
+      "noResults": "لا توجد حسابات"
     },
     "categoryPicker": {
       "title": "اختر فئة",

@@ -3,7 +3,7 @@ import { and, count, desc, eq } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
 import { recurringTransactions, transactions } from "~/database/drizzle/schema"
-import { runInTransaction } from "~/database/transaction"
+import { type DbTransaction, runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
 import type {
   RecurringEditPayload,
@@ -112,6 +112,14 @@ function parseRules(row: RowRecurring): string[] {
   } catch {
     return []
   }
+}
+
+/** Move a rule's cursor to `iso`, inside an open database transaction. */
+function advanceCursor(db: DbTransaction, ruleId: string, iso: string): void {
+  db.update(recurringTransactions)
+    .set({ lastGeneratedTransactionDate: iso })
+    .where(eq(recurringTransactions.id, ruleId))
+    .run()
 }
 
 async function getInitialDateMs(txId: string): Promise<number> {
@@ -364,7 +372,23 @@ export async function applyRecurringEditScope({
     await deleteFutureRecurringInstances(ruleId, fromDate)
   } else if (!recurrenceChanged) {
     // Pure field-only edit: update field values on future instances.
-    await updateFutureRecurringInstances(ruleId, transactionDate, payload)
+    const edited = drizzleDb
+      .select({
+        requiresManualConfirmation: transactions.requiresManualConfirmation,
+      })
+      .from(transactions)
+      .where(eq(transactions.id, transactionId))
+      .get()
+    await updateFutureRecurringInstances(ruleId, transactionDate, payload, {
+      dateShiftMs:
+        payload.transactionDate.getTime() - transactionDate.getTime(),
+      // Copy the flag only when the user changed it on the edited instance.
+      applyManualConfirmation:
+        !!edited &&
+        payload.requiresManualConfirmation !== undefined &&
+        (payload.requiresManualConfirmation ? 1 : 0) !==
+          edited.requiresManualConfirmation,
+    })
   }
 
   // Update template fields.
@@ -423,13 +447,33 @@ export async function applyRecurringDeleteScope({
 
 // ── Sync ──────────────────────────────────────────────────────────────────────
 
-/* Concurrency lock — prevents parallel sync from creating duplicates. */
-let syncRunning = false
+/*
+ * Concurrency control — prevents parallel sync from creating duplicates.
+ * `currentPass` is the pass running now; `queuedPass` is the single rerun that
+ * callers arriving meanwhile share (see synchronizeAllRecurringTransactions).
+ */
+let currentPass: Promise<RecurringSyncFailure[]> | null = null
+let queuedPass: Promise<RecurringSyncFailure[]> | null = null
+
+/** A rule the sync turned off because it can never generate. */
+export interface RecurringSyncFailure {
+  ruleId: string
+  title: string | null
+}
+
+/**
+ * Whether a sync error will repeat on every sync: a broken reference or
+ * constraint, or a transfer rule without a destination. Anything else (a busy
+ * database, say) is left to retry.
+ */
+export function isPermanentRuleError(message: string): boolean {
+  return /constraint failed|missing transferToAccountId/i.test(message)
+}
 
 async function synchronizeRecurringTransaction(
   ruleId: string,
   anchor: Date = new Date(),
-): Promise<void> {
+): Promise<RecurringSyncFailure | null> {
   /**
    * Safety valve:
    * We want to fully catch up normal offline periods (days/months),
@@ -444,7 +488,7 @@ async function synchronizeRecurringTransaction(
     .where(eq(recurringTransactions.id, ruleId))
     .get()
 
-  if (!rule || rule.disabled) return
+  if (!rule || rule.disabled) return null
 
   try {
     const range = parseTimeRange(rule)
@@ -465,24 +509,22 @@ async function synchronizeRecurringTransaction(
       // If we've already generated up to (or beyond) the anchor,
       // there is nothing left to do.
       if (lastGenerated && lastGenerated.getTime() >= anchor.getTime()) {
-        return
+        return null
       }
 
       const fromDate = new Date(range.from)
 
       /**
-       * If we've never generated anything, start from:
-       * - the rule start date
-       * - or "now" (anchor)
-       * whichever is earlier.
+       * If we've never generated anything, look from just before the rule
+       * start date. `nextAbsoluteOccurrence` treats an anchor before the range
+       * as inclusive, so the start date itself becomes the first occurrence.
+       * Anchoring at the start date would skip it.
        */
-      const nextAnchor = lastGenerated
-        ? lastGenerated
-        : new Date(Math.min(anchor.getTime(), fromDate.getTime()))
+      const nextAnchor = lastGenerated ?? new Date(fromDate.getTime() - 1)
 
       const nextOccurrence = nextAbsoluteOccurrence(rules, range, nextAnchor)
 
-      if (!nextOccurrence) return
+      if (!nextOccurrence) return null
 
       /**
        * Defensive guard:
@@ -492,7 +534,7 @@ async function synchronizeRecurringTransaction(
         lastGenerated &&
         nextOccurrence.getTime() <= lastGenerated.getTime()
       ) {
-        return
+        return null
       }
 
       // ------------------------------------------------------------------
@@ -523,7 +565,16 @@ async function synchronizeRecurringTransaction(
         const effectiveLastMs = Math.max(...initialDates)
 
         if (nextOccurrence.getTime() <= effectiveLastMs) {
-          return
+          // An instance for this slot, or a later one, already exists, so the
+          // cursor is behind (an interrupted write, or a rewritten rule). Catch
+          // it up and go on. Returning here would leave the cursor where it is
+          // and the rule would never generate again.
+          await runInTransaction("recurring.updateLastGenerated", (db) =>
+            advanceCursor(db, ruleId, nextOccurrence.toISOString()),
+          )
+          lastGenerated = nextOccurrence
+          processed++
+          continue
         }
       }
 
@@ -547,12 +598,9 @@ async function synchronizeRecurringTransaction(
         .get()
 
       if ((alreadyExists?.cnt ?? 0) > 0) {
-        await runInTransaction("recurring.updateLastGenerated", (db) => {
-          db.update(recurringTransactions)
-            .set({ lastGeneratedTransactionDate: nextIso })
-            .where(eq(recurringTransactions.id, ruleId))
-            .run()
-        })
+        await runInTransaction("recurring.updateLastGenerated", (db) =>
+          advanceCursor(db, ruleId, nextIso),
+        )
 
         lastGenerated = nextOccurrence
         processed++
@@ -575,8 +623,14 @@ async function synchronizeRecurringTransaction(
       }
 
       // ------------------------------------------------------------------
-      // Create transaction/transfer and advance cursor atomically.
+      // Create the instance and advance the cursor in ONE database
+      // transaction. Two separate writes left a window where the instance
+      // existed but the cursor did not move, and the rule then stalled.
       // ------------------------------------------------------------------
+
+      const { createTransactionInTx, createTransferInTx } = await import(
+        "./ledger-service"
+      )
 
       if (!isTransfer) {
         const txData: TransactionFormValues = {
@@ -595,9 +649,10 @@ async function synchronizeRecurringTransaction(
           kind: template.kind,
         }
 
-        const { createTransaction } = await import("./ledger-service")
-
-        await createTransaction(txData)
+        await runInTransaction("recurring.generate", (db) => {
+          createTransactionInTx(db, txData)
+          advanceCursor(db, ruleId, nextIso)
+        })
       } else {
         const toAccountId = rule.transfer_to_account_id
 
@@ -605,33 +660,28 @@ async function synchronizeRecurringTransaction(
           throw new Error("Recurring transfer missing transferToAccountId")
         }
 
-        const { createTransfer } = await import("./ledger-service")
-
-        await createTransfer(
-          {
-            fromAccountId: template.accountId,
-            toAccountId,
-            amount: template.amount,
-            transactionDate: nextOccurrence,
-            title: template.title ?? undefined,
-            notes: template.description ?? undefined,
-          },
-          {
-            recurringId: ruleId,
-            isPending,
-            subtype: template.subtype ?? null,
-            extra,
-            kind: template.kind,
-          },
-        )
+        await runInTransaction("recurring.generate", (db) => {
+          createTransferInTx(
+            db,
+            {
+              fromAccountId: template.accountId,
+              toAccountId,
+              amount: template.amount,
+              transactionDate: nextOccurrence,
+              title: template.title ?? undefined,
+              notes: template.description ?? undefined,
+            },
+            {
+              recurringId: ruleId,
+              isPending,
+              subtype: template.subtype ?? null,
+              extra,
+              kind: template.kind,
+            },
+          )
+          advanceCursor(db, ruleId, nextIso)
+        })
       }
-
-      await runInTransaction("recurring.updateLastGenerated", (db) => {
-        db.update(recurringTransactions)
-          .set({ lastGeneratedTransactionDate: nextIso })
-          .where(eq(recurringTransactions.id, ruleId))
-          .run()
-      })
 
       // Advance cursor and continue catch-up.
       lastGenerated = nextOccurrence
@@ -643,39 +693,77 @@ async function synchronizeRecurringTransaction(
       processed,
       limit: MAX_CATCH_UP_OCCURRENCES,
     })
+    return null
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
     logger.error(
       "[RecurringSync] failed to synchronize recurring transaction",
-      {
-        ruleId,
-        error: err instanceof Error ? err.message : String(err),
-      },
+      { ruleId, error: message },
     )
+    // A transient error (busy database) retries on the next sync. A rule that
+    // can never generate would fail on every sync, so turn it off.
+    if (!isPermanentRuleError(message)) return null
+    try {
+      await disableRecurringRule(ruleId)
+    } catch (disableErr) {
+      logger.error("[RecurringSync] failed to disable a failing rule", {
+        ruleId,
+        error:
+          disableErr instanceof Error ? disableErr.message : String(disableErr),
+      })
+      return null
+    }
+    return { ruleId, title: parseTemplate(rule).title }
   }
+}
+
+async function runSyncPass(anchor: Date): Promise<RecurringSyncFailure[]> {
+  const failures: RecurringSyncFailure[] = []
+  const rules = drizzleDb
+    .select(recurringSelection)
+    .from(recurringTransactions)
+    .where(eq(recurringTransactions.disabled, 0))
+    .all()
+  for (const rule of rules) {
+    const failure = await synchronizeRecurringTransaction(rule.id, anchor)
+    if (failure) failures.push(failure)
+  }
+  return failures
 }
 
 /**
  * Runs synchronizeRecurringTransaction for every active (non-disabled) rule.
- * Module-level lock prevents concurrent sync passes from creating duplicates.
+ * Only one pass runs at a time, so parallel passes cannot create duplicates.
+ *
+ * A call that arrives while a pass is running waits for it and then runs one
+ * more pass. The running pass loaded its rule list before the caller's change
+ * (a rule just created, say), so it would otherwise miss it. Every call that
+ * arrives meanwhile shares that one rerun.
+ *
+ * Returns the rules it turned off, so the caller can tell the user.
  */
-export async function synchronizeAllRecurringTransactions(
+export function synchronizeAllRecurringTransactions(
   anchor: Date = new Date(),
-): Promise<void> {
-  if (syncRunning) return
-  syncRunning = true
-
-  try {
-    const rules = drizzleDb
-      .select(recurringSelection)
-      .from(recurringTransactions)
-      .where(eq(recurringTransactions.disabled, 0))
-      .all()
-    for (const rule of rules) {
-      await synchronizeRecurringTransaction(rule.id, anchor)
-    }
-  } finally {
-    syncRunning = false
+): Promise<RecurringSyncFailure[]> {
+  if (currentPass) {
+    // Rerun even if the running pass threw, and never leave a settled
+    // promise behind in `queuedPass`.
+    queuedPass ??= currentPass
+      .catch(() => undefined)
+      .then(() => {
+        queuedPass = null
+        return synchronizeAllRecurringTransactions(anchor)
+      })
+    return queuedPass
   }
+
+  const pass: Promise<RecurringSyncFailure[]> = runSyncPass(anchor).finally(
+    () => {
+      if (currentPass === pass) currentPass = null
+    },
+  )
+  currentPass = pass
+  return pass
 }
 
 export async function findRecurringById(

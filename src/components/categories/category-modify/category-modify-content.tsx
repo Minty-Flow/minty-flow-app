@@ -18,8 +18,12 @@ import { Separator } from "~/components/ui/separator"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
 import {
+  type BudgetLosingLastCategory,
+  CategoryHasLoansError,
   createCategory,
   deleteCategoryById,
+  getBudgetsLosingLastCategory,
+  getLoansUsingCategory,
   updateCategoryById,
 } from "~/database/services/category-service"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
@@ -76,6 +80,9 @@ export function CategoryModifyContent({
     onBlock: () => setUnsavedSheetVisible(true),
   })
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
+  const [budgetsLosingCategory, setBudgetsLosingCategory] = useState<
+    BudgetLosingLastCategory[]
+  >([])
   const onSubmit = async (data: AddCategoriesFormSchema) => {
     const trimmedName = data.name.trim()
     try {
@@ -108,6 +115,30 @@ export function CategoryModifyContent({
     }
   }
   const handleSubmit = handleFormSubmit(onSubmit)
+  const handleDeletePress = async () => {
+    try {
+      const loanNames = await getLoansUsingCategory(categoryModifyId)
+      if (loanNames.length > 0) {
+        Toast.error({
+          title: t("components.categories.form.toast.cannotDelete"),
+          description: t("components.categories.form.toast.cannotDeleteLoans", {
+            names: loanNames.join(", "),
+          }),
+        })
+        return
+      }
+      setBudgetsLosingCategory(
+        await getBudgetsLosingLastCategory(categoryModifyId),
+      )
+      setDeleteSheetVisible(true)
+    } catch (error) {
+      logger.error("Error checking category before delete", { error })
+      Toast.error({
+        title: t("common.toast.error"),
+        description: t("components.categories.form.toast.deleteFailed"),
+      })
+    }
+  }
   const handleDelete = async () => {
     try {
       if (!category) {
@@ -115,29 +146,28 @@ export function CategoryModifyContent({
           title: t("common.toast.error"),
           description: t("components.categories.form.toast.notFound"),
         })
-        return
-      }
-      if (category.transactionCount > 0) {
-        Toast.error({
-          title: t("components.categories.form.toast.cannotDelete"),
-          description: t(
-            "components.categories.form.toast.cannotDeleteDescription",
-            { count: category.transactionCount },
-          ),
-        })
-        return
+        return false
       }
       await deleteCategoryById(categoryModifyId)
-      allowNavigation()
-      // This is cleaner than replace because it actually removes the screens from history rather than stacking a new one on top. The number 2 matches exactly how deep you pushed from /settings/categories.
-      router.dismiss(2)
     } catch (error) {
       logger.error("Error deleting category", { error })
       Toast.error({
         title: t("common.toast.error"),
-        description: t("components.categories.form.toast.deleteFailed"),
+        description:
+          error instanceof CategoryHasLoansError
+            ? t("components.categories.form.toast.cannotDeleteLoans", {
+                names: error.loanNames.join(", "),
+              })
+            : t("components.categories.form.toast.deleteFailed"),
       })
+      return false
     }
+  }
+  // Runs once the delete sheet has closed: leaving earlier tears it down mid-animation.
+  const handleDeleted = () => {
+    allowNavigation()
+    // This is cleaner than replace because it actually removes the screens from history rather than stacking a new one on top. The number 2 matches exactly how deep you pushed from /settings/categories.
+    router.dismiss(2)
   }
   const handleIconSelected = (icon: string | null) => {
     setValue("icon", icon, { shouldDirty: true })
@@ -195,7 +225,7 @@ export function CategoryModifyContent({
           <View style={modifyFormStyles.deleteSection}>
             <FormDeleteButton
               label={t("components.categories.form.deleteLabel")}
-              onPress={() => setDeleteSheetVisible(true)}
+              onPress={handleDeletePress}
             />
           </View>
         )}
@@ -215,11 +245,12 @@ export function CategoryModifyContent({
         unsavedSheetVisible={unsavedSheetVisible}
         isAddMode={isAddMode}
         category={category}
+        budgetsLosingCategory={budgetsLosingCategory}
         onCloseDeleteSheet={() => setDeleteSheetVisible(false)}
         onCloseUnsavedSheet={() => setUnsavedSheetVisible(false)}
         onConfirmDelete={handleDelete}
+        onDeleted={handleDeleted}
         onDiscardAndNavigate={() => {
-          setUnsavedSheetVisible(false)
           allowNavigation()
           handleGoBack()
         }}

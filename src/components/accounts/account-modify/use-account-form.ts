@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
+import { getAccountDeleteErrorDescription } from "~/components/accounts/account-delete-error"
 import {
   archiveAccount,
   createAccount,
@@ -15,6 +16,7 @@ import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import {
   type AddAccountsFormSchema,
   addAccountsSchema,
+  editAccountsSchema,
 } from "~/schemas/accounts.schema"
 import { currencyRegistryService } from "~/services/currency-registry"
 import { getThemeStrict } from "~/styles/theme/registry"
@@ -24,6 +26,7 @@ import { logger } from "~/utils/logger"
 import { rescaleMinorUnits } from "~/utils/money"
 import { Toast } from "~/utils/toast"
 
+import { buildAccountUpdate } from "./account-update-payload"
 import type { AccountModifyContentProps } from "./types"
 
 type UseAccountFormProps = Pick<
@@ -42,11 +45,11 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
   const {
     control,
     handleSubmit: handleFormSubmit,
-    formState: { errors, isDirty, isSubmitting },
+    formState: { errors, isDirty, isSubmitting, dirtyFields },
     watch,
     setValue,
   } = useForm({
-    resolver: zodResolver(addAccountsSchema),
+    resolver: zodResolver(isAddMode ? addAccountsSchema : editAccountsSchema),
     defaultValues: {
       name: account?.name || "",
       type: account?.type || AccountTypeEnum.CHECKING,
@@ -90,16 +93,10 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
         allowNavigation()
         handleGoBack()
       } else {
-        await updateAccount(accountId, {
-          name: data.name,
-          type: data.type,
-          balance: data.balance,
-          currencyCode: data.currencyCode,
-          icon: data.icon,
-          colorSchemeName: data.colorSchemeName,
-          isPrimary: data.isPrimary,
-          excludeFromBalance: data.excludeFromBalance,
-        })
+        await updateAccount(
+          accountId,
+          buildAccountUpdate(data, { balanceEdited: !!dirtyFields.balance }),
+        )
         allowNavigation()
         handleGoBack()
       }
@@ -116,7 +113,7 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
   const handleSubmit = handleFormSubmit(onSubmit)
   const handleArchive = async () => {
     try {
-      if (!account) return
+      if (!account) return false
       if (account.isArchived) {
         await unarchiveAccount(accountId)
         Toast.success({ title: t("screens.accounts.unarchiveSuccess") })
@@ -124,25 +121,33 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
         await archiveAccount(accountId)
         Toast.success({ title: t("screens.accounts.archiveSuccess") })
       }
-      allowNavigation()
-      router.back()
     } catch (error) {
       logger.error("Error archiving account", { error })
       Toast.error({ title: t("common.toast.error") })
+      return false
     }
+  }
+  // Runs once the archive sheet has closed: leaving earlier tears it down mid-animation.
+  const handleArchived = () => {
+    allowNavigation()
+    router.back()
   }
   const handleDelete = async () => {
     try {
       await destroyAccount(accountId)
-      allowNavigation()
-      router.dismiss(2)
     } catch (error) {
       logger.error("Error deleting account", { error })
       Toast.error({
         title: t("common.toast.error"),
-        description: t("screens.accounts.form.toast.deleteFailed"),
+        description: getAccountDeleteErrorDescription(error, t),
       })
+      return false
     }
+  }
+  // Runs once the delete sheet has closed: leaving earlier tears it down mid-animation.
+  const handleDeleted = () => {
+    allowNavigation()
+    router.dismiss(2)
   }
   const handleIconSelected = (icon: string | null) => {
     setValue("icon", icon, { shouldDirty: true })
@@ -184,6 +189,8 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
     setValue,
     handleSubmit,
     handleDelete,
+    handleDeleted,
+    handleArchived,
     handleIconSelected,
     handleColorSelected,
     handleColorCleared,

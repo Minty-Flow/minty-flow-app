@@ -11,7 +11,7 @@ import {
   normalizeMajorUnitInput,
   parseMajorUnits,
 } from "~/utils/money"
-import { formatEditableNumber, formatMoney } from "~/utils/number-format"
+import { formatEditableNumber } from "~/utils/number-format"
 import {
   exceedsFractionDigits,
   type MathErrorCode,
@@ -24,6 +24,7 @@ import { View } from "../ui/view"
 import { AmountInputRow } from "./amount-input-row"
 import { AmountLabelRow } from "./amount-label-row"
 import { AmountLivePreview } from "./amount-preview-chip"
+import { formatAmountPreview, formatAmountText } from "./format-amount"
 import { MathToolbar } from "./math-toolbar"
 import {
   hasMathOperation,
@@ -65,25 +66,29 @@ export const SmartAmountInput = ({
   // throw is load-bearing elsewhere (backup/import validation), so it
   // can't be softened at the source; guard it here instead and fall back
   // to the common 2-decimal default until a real currency is selected.
-  const maximumFractionDigits = (() => {
+  const minorUnitDigits = (() => {
     try {
       return getMinorUnitDigits(currencyCode)
     } catch {
-      return 2
+      return null
     }
   })()
+  const hasCurrency = minorUnitDigits !== null
+  const maximumFractionDigits = minorUnitDigits ?? 2
+  // An amount cannot become minor units without a currency, so typing is
+  // refused until one is chosen and this message says why.
+  const [currencyHintShown, setCurrencyHintShown] = useState(false)
+  const requireCurrency = () => {
+    if (!hasCurrency) setCurrencyHintShown(true)
+    return hasCurrency
+  }
   const resolvedLabel =
     label ?? t("components.transactionForm.fields.amountLabel")
   const currencySymbol =
     currencyRegistryService.getCurrencySymbol(currencyCode) ?? currencyCode
   const displayValue = isEditing
     ? inputValue
-    : valueMinor === 0
-      ? ""
-      : formatMoney(valueMinor, currencyCode, {
-          hideSign: true,
-          hideSymbol: true,
-        })
+    : formatAmountText(valueMinor, currencyCode)
   const previewResult = (() => {
     if (!hasMathOperation(displayValue)) return null
     const normalized = normalizeMajorUnitInput(displayValue)
@@ -110,6 +115,7 @@ export const SmartAmountInput = ({
     ? t(previewErrorKeys[previewErrorCode])
     : null
   const handleFocus = () => {
+    if (!requireCurrency()) return
     if (!isEditing) {
       setIsEditing(true)
       setInputValue(
@@ -120,6 +126,7 @@ export const SmartAmountInput = ({
     }
   }
   const handleTextChange = (text: string) => {
+    if (!requireCurrency()) return
     const normalized = normalizeMajorUnitInput(text)
     if (normalized === null) return
     const sanitized = sanitizeAmountInput(normalized)
@@ -139,6 +146,7 @@ export const SmartAmountInput = ({
     }
   }
   const handleOperatorPress = (op: string) => {
+    if (!requireCurrency()) return
     setIsEditing(true)
     const currentValue = isEditing
       ? inputValue
@@ -155,6 +163,7 @@ export const SmartAmountInput = ({
     )
   }
   const commitValue = (): boolean => {
+    if (!requireCurrency()) return false
     if (previewError) return false
     let finalValue = previewMinor ?? 0
     try {
@@ -177,6 +186,7 @@ export const SmartAmountInput = ({
     Keyboard.dismiss()
   }
   const handleBackspace = () => {
+    if (!requireCurrency()) return
     setIsEditing(true)
     const currentValue = isEditing
       ? inputValue
@@ -222,11 +232,13 @@ export const SmartAmountInput = ({
     setShowMathToolbar(true)
     scrollIntoView()
   }
+  const shownError =
+    !hasCurrency && currencyHintShown
+      ? t("validation.required.currency")
+      : error
   const displayPreview =
     previewMinor !== null
-      ? formatMoney(previewMinor, currencyCode, {
-          hideSign: true,
-        })
+      ? formatAmountPreview(previewMinor, currencyCode)
       : null
   const formattedExpression = (() => {
     if (!isEditing || displayValue.trim() === "") return null
@@ -273,7 +285,9 @@ export const SmartAmountInput = ({
         error={previewError}
         onPress={handleSubmit}
       />
-      {error ? <Text style={smartInputStyles.fieldError}>{error}</Text> : null}
+      {shownError ? (
+        <Text style={smartInputStyles.fieldError}>{shownError}</Text>
+      ) : null}
     </View>
   )
 }

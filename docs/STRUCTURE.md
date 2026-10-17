@@ -1,7 +1,58 @@
 # Project Structure
-Generated on: 2026-10-11T22:47:50.143Z
+Generated on: 2026-10-17T07:53:25.356Z
 ```
 ./
+├── __tests__/
+│   ├── components/
+│   │   ├── accounts/
+│   │   │   └── account-update-payload.test.ts
+│   │   ├── smart-amount-input/
+│   │   │   └── format-amount.test.ts
+│   │   └── transaction/
+│   │       └── transaction-form/
+│   │           ├── transfer-edit-from-credit-leg.test.ts
+│   │           └── transfer-rate.test.ts
+│   ├── constants/
+│   │   └── trash-retention.test.ts
+│   ├── database/
+│   │   ├── backup/
+│   │   │   └── backup-format.test.ts
+│   │   ├── drizzle/
+│   │   │   └── read-models/
+│   │   │       └── stats-data.test.ts
+│   │   ├── services/
+│   │   │   ├── account-balance-adjustment.test.ts
+│   │   │   ├── backup-after-account-delete.test.ts
+│   │   │   ├── balance-service.test.ts
+│   │   │   ├── budget-category-delete.test.ts
+│   │   │   ├── category-delete.test.ts
+│   │   │   ├── destroy-account-with-loans.test.ts
+│   │   │   ├── empty-trash.test.ts
+│   │   │   ├── loan-type-switch.test.ts
+│   │   │   ├── recurring-failure-isolation.test.ts
+│   │   │   ├── recurring-sync-concurrency.test.ts
+│   │   │   ├── recurring-sync-cursor.test.ts
+│   │   │   ├── recurring-sync.test.ts
+│   │   │   ├── recurring-template-refs.test.ts
+│   │   │   ├── recurring-transaction-service.test.ts
+│   │   │   ├── trash-auto-purge.test.ts
+│   │   │   └── trashed-transactions-read-only.test.ts
+│   │   └── utils/
+│   │       └── get-balance-delta.test.ts
+│   ├── helpers/
+│   │   ├── create-test-db.test.ts
+│   │   └── create-test-db.ts
+│   ├── schemas/
+│   │   ├── accounts.schema.test.ts
+│   │   └── budgets.schema.test.ts
+│   ├── services/
+│   │   ├── exchange-rate-sources.test.ts
+│   │   ├── exchange-rates.test.ts
+│   │   └── pending-transaction-notifications.test.ts
+│   └── utils/
+│       ├── live-progress.test.ts
+│       ├── money.test.ts
+│       └── recurrence.test.ts
 ├── .github/
 │   └── workflows/
 │       ├── board-sync.yml
@@ -29,7 +80,8 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   └── pre-commit
 ├── docs/
 │   ├── adr/
-│   │   └── 0001-transaction-kind-axis.md
+│   │   ├── 0001-transaction-kind-axis.md
+│   │   └── 0002-vitest-with-in-memory-sqlite.md
 │   ├── agents/
 │   │   ├── domain.md
 │   │   ├── issue-tracker.md
@@ -50,11 +102,15 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   │   ├── 0000_snapshot.json
 │   │   ├── 0001_snapshot.json
 │   │   ├── 0002_snapshot.json
-│   │   └── 0003_snapshot.json
+│   │   ├── 0003_snapshot.json
+│   │   ├── 0004_snapshot.json
+│   │   └── 0005_snapshot.json
 │   ├── 0000_safe_maximus.sql
 │   ├── 0001_deep_daredevil.sql
 │   ├── 0002_famous_bastion.sql
 │   ├── 0003_transaction_composite_indexes.sql
+│   ├── 0004_repair_recurring_template_refs.sql
+│   ├── 0005_align_loan_row_kind.sql
 │   ├── migrations.d.ts
 │   └── migrations.js
 ├── plugins/
@@ -170,9 +226,12 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   │   │   │   ├── account-modify-content.tsx
 │   │   │   │   ├── account-modify.styles.ts
 │   │   │   │   ├── account-switches-section.tsx
+│   │   │   │   ├── account-update-payload.ts
 │   │   │   │   ├── types.ts
 │   │   │   │   └── use-account-form.ts
 │   │   │   ├── account-card.tsx
+│   │   │   ├── account-delete-error.ts
+│   │   │   ├── account-picker-sheet.tsx
 │   │   │   └── account-type-inline.tsx
 │   │   ├── bill-splitter/
 │   │   │   ├── add-name-sheet.tsx
@@ -209,7 +268,9 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   │   │   ├── mode-selector-list.tsx
 │   │   │   └── types.ts
 │   │   ├── currency-account-selector/
+│   │   │   ├── accounts-sheet.tsx
 │   │   │   ├── currency-account-selector.styles.ts
+│   │   │   ├── currency-sheet.tsx
 │   │   │   ├── index.tsx
 │   │   │   └── types.ts
 │   │   ├── date-range-preset-sheet/
@@ -250,6 +311,7 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   │   ├── selectors/
 │   │   │   ├── contact-selector-sheet.tsx
 │   │   │   ├── currency-selector-sheet.tsx
+│   │   │   ├── picker-sheet.tsx
 │   │   │   ├── selector-parts.tsx
 │   │   │   └── styles.ts
 │   │   ├── settings/
@@ -258,6 +320,7 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   │   │   ├── amount-input-row.tsx
 │   │   │   ├── amount-label-row.tsx
 │   │   │   ├── amount-preview-chip.tsx
+│   │   │   ├── format-amount.ts
 │   │   │   ├── index.tsx
 │   │   │   ├── math-toolbar.tsx
 │   │   │   ├── math-utils.ts
@@ -272,7 +335,6 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   │   │   │   ├── stat-card.tsx
 │   │   │   │   ├── top-categories-card.tsx
 │   │   │   │   └── wrapped-card.tsx
-│   │   │   ├── chart-crosshair.tsx
 │   │   │   ├── delta-badge.tsx
 │   │   │   ├── get-category-color.ts
 │   │   │   ├── insight-card.tsx
@@ -348,6 +410,7 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   │   │   │   ├── recurrence-unit-sheet.tsx
 │   │   │   │   ├── tag-picker-sheet.tsx
 │   │   │   │   ├── transaction-top-tabs.tsx
+│   │   │   │   ├── transfer-rate.ts
 │   │   │   │   ├── types.ts
 │   │   │   │   ├── upcoming-banner.tsx
 │   │   │   │   ├── use-form-attachments.ts
@@ -384,6 +447,7 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   │   │   ├── activity-indicator-minty.tsx
 │   │   │   ├── bottom-sheet.tsx
 │   │   │   ├── button.tsx
+│   │   │   ├── checkbox.tsx
 │   │   │   ├── chevron-icon.tsx
 │   │   │   ├── chips.tsx
 │   │   │   ├── empty-state.tsx
@@ -395,6 +459,7 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   │   │   ├── pressable.tsx
 │   │   │   ├── separator.tsx
 │   │   │   ├── sheet-icon-header.tsx
+│   │   │   ├── single-select-item.tsx
 │   │   │   ├── switch.tsx
 │   │   │   ├── text.tsx
 │   │   │   ├── toast.tsx
@@ -430,7 +495,8 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   │   ├── fab-button.ts
 │   │   ├── minty-icons-selection.ts
 │   │   ├── pre-sets-accounts.ts
-│   │   └── pre-sets-categories.ts
+│   │   ├── pre-sets-categories.ts
+│   │   └── trash-retention.ts
 │   ├── contexts/
 │   │   └── scroll-into-view-context.tsx
 │   ├── database/
@@ -473,7 +539,8 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   │   │   ├── generate-id.ts
 │   │   │   ├── get-balance-delta.ts
 │   │   │   ├── has-attachments-from-extra.ts
-│   │   │   └── import-snapshot.ts
+│   │   │   ├── import-snapshot.ts
+│   │   │   └── recurring-template-refs.ts
 │   │   ├── db.ts
 │   │   ├── pending-migrations.ts
 │   │   ├── transaction.ts
@@ -485,7 +552,6 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   ├── hooks/
 │   │   ├── exchange-rates-editor.reducer.ts
 │   │   ├── use-balance-before.ts
-│   │   ├── use-chart-font.ts
 │   │   ├── use-debounced-callback.ts
 │   │   ├── use-import-recovery.ts
 │   │   ├── use-loan-term-reconcile.ts
@@ -497,6 +563,7 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   │   ├── use-retention-cleanup.ts
 │   │   ├── use-scroll-into-view.ts
 │   │   ├── use-shake-listener.ts
+│   │   ├── use-sheet-open-key.ts
 │   │   ├── use-tab-visibility.tsx
 │   │   ├── use-time-reactivity.ts
 │   │   ├── use-transaction-lifecycle-sync.ts
@@ -518,6 +585,7 @@ Generated on: 2026-10-11T22:47:50.143Z
 │   ├── services/
 │   │   ├── auto-confirmation-service.ts
 │   │   ├── currency-registry.ts
+│   │   ├── exchange-rate-sources.ts
 │   │   ├── exchange-rates.ts
 │   │   └── pending-transaction-notifications.ts
 │   ├── stores/
@@ -621,6 +689,7 @@ Generated on: 2026-10-11T22:47:50.143Z
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml
 ├── README.md
-└── tsconfig.json
+├── tsconfig.json
+└── vitest.config.mts
 
 ```

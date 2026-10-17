@@ -7,3 +7,8 @@ export interface CurrencyAccountSelectorProps {
   onCurrencyChange: (currency: string) => void
   onAccountIdsChange: (ids: string[]) => void
 }
+
+export interface CurrencyItem {
+  code: string
+  accountCount: number
+}

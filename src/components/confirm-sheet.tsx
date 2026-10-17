@@ -2,7 +2,7 @@
  * Reusable confirm bottom sheet.
  * Use for delete confirmations or other destructive/important actions.
  */
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { View } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
@@ -19,8 +19,18 @@ interface ConfirmSheetProps {
   visible: boolean
   /** Called when the user requests close (backdrop tap or cancel). */
   onRequestClose: () => void
-  /** Called when the user confirms the action. May return a Promise for async flows. */
-  onConfirm: () => Promise<void> | void
+  /**
+   * Called when the user confirms the action. May return a Promise for async
+   * flows. Return (or resolve) `false` when the action failed: the sheet then
+   * stays open.
+   */
+  onConfirm: () => unknown
+  /**
+   * Called once the sheet has finished closing after a successful confirm.
+   * Navigate here: leaving the screen in `onConfirm` tears the sheet down
+   * mid-animation.
+   */
+  onConfirmed?: () => void
   /** Title shown in the sheet (e.g. "Delete category?"). */
   title: string
   /** Description or warning message. Omit for simple confirmations. */
@@ -47,6 +57,7 @@ export function ConfirmSheet({
   visible,
   onRequestClose,
   onConfirm,
+  onConfirmed,
   title,
   description,
   confirmLabel,
@@ -59,49 +70,88 @@ export function ConfirmSheet({
 }: ConfirmSheetProps) {
   const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
+  const inFlight = useRef(false)
+  const confirmed = useRef(false)
+  // After a confirm that closes the sheet, `loading` stays on through the exit
+  // animation so the buttons do not flip back; a new presentation starts clean.
+  useEffect(() => {
+    if (visible) setLoading(false)
+  }, [visible])
   const handleConfirm = () => {
+    if (inFlight.current) return
+    inFlight.current = true
     setLoading(true)
     Promise.resolve(onConfirm())
-      .then(() => {
-        if (closeOnConfirm) onRequestClose()
+      .then((result) => {
+        if (result === false) {
+          setLoading(false)
+          return
+        }
+        confirmed.current = true
+        if (closeOnConfirm) {
+          onRequestClose()
+        } else {
+          setLoading(false)
+        }
       })
       .catch((e) => {
         logger.error("Error confirming sheet", { error: e })
-      })
-      .finally(() => {
         setLoading(false)
       })
+      .finally(() => {
+        inFlight.current = false
+      })
+  }
+  // While a confirm runs, the action can remove what the sheet describes (a
+  // deleted account, goal...). Keep showing what the user confirmed.
+  const live = {
+    title,
+    description,
+    note,
+    confirmLabel,
+    cancelLabel,
+    icon,
+    variant,
+  }
+  const shownRef = useRef(live)
+  if (!loading) shownRef.current = live
+  const shown = shownRef.current
+  const handleDismissed = () => {
+    if (!confirmed.current) return
+    confirmed.current = false
+    onConfirmed?.()
   }
   return (
     <BottomSheet
       isPresented={visible}
       onDismiss={onRequestClose}
+      onDismissed={handleDismissed}
       dismissable={dismissable && !loading}
     >
       <View style={styles.card}>
-        {icon ? (
+        {shown.icon ? (
           <View style={styles.iconRow}>
             <IconSvg
-              name={icon}
+              name={shown.icon}
               size={40}
-              color={styles.iconColor(variant).color}
+              color={styles.iconColor(shown.variant).color}
             />
           </View>
         ) : null}
 
         <Text variant="h3" style={styles.title}>
-          {title}
+          {shown.title}
         </Text>
 
-        {description ? (
+        {shown.description ? (
           <Text variant="p" style={styles.description}>
-            {description}
+            {shown.description}
           </Text>
         ) : null}
 
-        {note ? (
+        {shown.note ? (
           <Text variant="small" style={styles.note}>
-            {note}
+            {shown.note}
           </Text>
         ) : null}
 
@@ -113,12 +163,14 @@ export function ConfirmSheet({
             disabled={loading}
           >
             <Text variant="default">
-              {cancelLabel || t("common.actions.cancel")}
+              {shown.cancelLabel || t("common.actions.cancel")}
             </Text>
           </Button>
 
           <Button
-            variant={variant === "destructive" ? "destructive" : "default"}
+            variant={
+              shown.variant === "destructive" ? "destructive" : "default"
+            }
             onPress={handleConfirm}
             style={styles.actionButton}
             disabled={loading}
@@ -128,7 +180,7 @@ export function ConfirmSheet({
               <ActivityIndicatorMinty />
             ) : (
               <Text variant="default">
-                {confirmLabel || t("common.actions.confirm")}
+                {shown.confirmLabel || t("common.actions.confirm")}
               </Text>
             )}
           </Button>

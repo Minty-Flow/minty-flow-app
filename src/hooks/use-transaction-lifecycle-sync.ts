@@ -3,9 +3,11 @@ import { AppState } from "react-native"
 
 import { synchronizeAllRecurringTransactions } from "~/database/services/recurring-transaction-service"
 import { useDebouncedCallback } from "~/hooks/use-debounced-callback"
+import i18n from "~/i18n/config"
 import { autoConfirmationService } from "~/services/auto-confirmation-service"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { logger } from "~/utils/logger"
+import { Toast } from "~/utils/toast"
 
 /**
  * Debounce delay applied to every sync trigger — the initial mount sync and
@@ -72,7 +74,19 @@ export function useTransactionLifecycleSync(): void {
   const sync = useCallback(async () => {
     lastSyncAtRef.current = Date.now()
     try {
-      await synchronizeAllRecurringTransactions()
+      const stopped = await synchronizeAllRecurringTransactions()
+      for (const rule of stopped) {
+        Toast.error({
+          title: i18n.t("components.transactionForm.toast.recurringStopped"),
+          description: i18n.t(
+            "components.transactionForm.toast.recurringStoppedDescription",
+            {
+              title:
+                rule.title ?? i18n.t("common.transaction.untitledTransaction"),
+            },
+          ),
+        })
+      }
 
       // Skip auto-confirm until preferences have hydrated — configuring with
       // default switch values would auto-confirm rows the user opted out of.

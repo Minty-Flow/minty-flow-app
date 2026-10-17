@@ -28,6 +28,13 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   form: {
     gap: FORM_GAP,
   },
+  readOnlyFields: {
+    opacity: 0.6,
+  },
+  trashedNotice: {
+    marginHorizontal: H_PAD,
+    marginTop: FORM_GAP,
+  },
   nameSection: {
     paddingHorizontal: H_PAD,
   },
@@ -111,6 +118,12 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     paddingVertical: TRIGGER_PAD,
     paddingHorizontal: H_PAD,
   },
+  conversionAttribution: {
+    ...theme.typography.bodyMedium,
+    color: theme.colors.onSecondary,
+    opacity: 0.7,
+    textDecorationLine: "underline",
+  },
   conversionRateSummaryLabel: {
     ...theme.typography.bodyMedium,
     fontWeight: "600",
@@ -185,64 +198,9 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.semantic.semi,
   },
-  inlineAccountPicker: {
-    marginTop: FORM_GAP,
-    marginHorizontal: H_PAD,
-    maxHeight: 320,
-    borderRadius: theme.radius,
-    overflow: "hidden",
-    backgroundColor: theme.colors.secondary,
-    padding: CARD_PAD,
-  },
   inlinePickerRowSelected: {
     backgroundColor: `${theme.colors.primary}15`,
     borderRadius: theme.radius,
-  },
-  accountPickerRow: {
-    marginTop: FORM_GAP,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: ELEMENT_GAP,
-    paddingVertical: TRIGGER_PAD,
-    paddingHorizontal: TRIGGER_PAD,
-    borderRadius: theme.radius,
-  },
-  accountPickerRowAdd: {
-    marginTop: FORM_GAP,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: ELEMENT_GAP,
-    paddingVertical: TRIGGER_PAD,
-    paddingHorizontal: TRIGGER_PAD,
-    borderRadius: theme.radius,
-    borderWidth: 2,
-    borderStyle: "dashed",
-    borderColor: theme.colors.secondary,
-  },
-  accountPickerRowAddLabel: {
-    ...theme.typography.bodyLarge,
-    flex: 1,
-    minWidth: 0,
-    color: theme.colors.primary,
-  },
-  accountPickerRowContent: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: SECTION_GAP,
-  },
-  accountPickerRowName: {
-    ...theme.typography.bodyLarge,
-    flex: 1,
-    minWidth: 0,
-  },
-  accountPickerRowBalance: {
-    fontSize: theme.typography.bodyMedium.fontSize,
-  },
-  searchFieldWrap: {
-    marginBottom: CARD_PAD,
   },
   kindScrollContent: {
     flexDirection: "row",

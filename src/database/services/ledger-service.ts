@@ -1,6 +1,7 @@
 import { startOfDay, subDays } from "date-fns"
 import { and, sql as drizzleSql, eq, gte, inArray, lt, or } from "drizzle-orm"
 
+import { getTrashRetentionDays } from "~/constants/trash-retention"
 import { drizzleDb } from "~/database/drizzle/db"
 import {
   accounts,
@@ -273,9 +274,14 @@ function destroyTransferById(txId: string, db: Db): void {
 
 // ── Create ───────────────────────────────────────────────────────────────────
 
-export async function createTransaction(
+/**
+ * Insert a transaction and apply its balance delta inside an open database
+ * transaction, so a caller can make it part of a larger all-or-nothing write.
+ */
+export function createTransactionInTx(
+  db: DbTransaction,
   data: TransactionFormValues,
-): Promise<string> {
+): string {
   assertMinorUnits(data.amount)
   const id = generateId()
   const now = new Date().toISOString()
@@ -286,80 +292,92 @@ export async function createTransaction(
   const kind = data.kind ?? "default"
   assertPendingKindAllowed(!!data.isPending, kind)
 
-  const txId = await runInTransaction("transaction.create", (db) => {
-    const balanceBefore = data.isPending
-      ? 0
-      : (db
-          .select({ balance: accounts.balance })
-          .from(accounts)
-          .where(eq(accounts.id, data.accountId))
-          .get()?.balance ?? 0)
+  const balanceBefore = data.isPending
+    ? 0
+    : (db
+        .select({ balance: accounts.balance })
+        .from(accounts)
+        .where(eq(accounts.id, data.accountId))
+        .get()?.balance ?? 0)
 
-    db.insert(transactions)
-      .values({
-        id,
-        accountId: data.accountId,
-        categoryId: data.categoryId ?? null,
-        amount: data.amount,
-        type: data.type,
-        transactionDate: data.transactionDate.toISOString(),
-        title: data.title ?? null,
-        description: data.description ?? null,
-        isDeleted: 0,
-        deletedAt: null,
-        isPending: data.isPending ? 1 : 0,
-        requiresManualConfirmation: data.requiresManualConfirmation ? 1 : 0,
-        accountBalanceBefore: balanceBefore,
-        subtype: data.subtype ?? null,
-        kind,
-        extra: extraJson,
-        hasAttachments,
-        recurringId: data.recurringId ?? null,
-        location: data.location ?? null,
-        goalId: data.goalId ?? null,
-        budgetId: data.budgetId ?? null,
-        loanId: data.loanId ?? null,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .run()
+  db.insert(transactions)
+    .values({
+      id,
+      accountId: data.accountId,
+      categoryId: data.categoryId ?? null,
+      amount: data.amount,
+      type: data.type,
+      transactionDate: data.transactionDate.toISOString(),
+      title: data.title ?? null,
+      description: data.description ?? null,
+      isDeleted: 0,
+      deletedAt: null,
+      isPending: data.isPending ? 1 : 0,
+      requiresManualConfirmation: data.requiresManualConfirmation ? 1 : 0,
+      accountBalanceBefore: balanceBefore,
+      subtype: data.subtype ?? null,
+      kind,
+      extra: extraJson,
+      hasAttachments,
+      recurringId: data.recurringId ?? null,
+      location: data.location ?? null,
+      goalId: data.goalId ?? null,
+      budgetId: data.budgetId ?? null,
+      loanId: data.loanId ?? null,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .run()
 
-    if (!data.isPending) {
-      const delta = getBalanceDelta(data.amount, data.type, data.subtype)
-      if (delta !== 0) {
-        db.update(accounts)
-          .set({
-            balance: drizzleSql`${accounts.balance} + ${delta}`,
-            updatedAt: now,
-          })
-          .where(eq(accounts.id, data.accountId))
-          .run()
-      }
-    }
-
-    if (data.tags?.length) {
-      db.insert(transactionTags)
-        .values(data.tags.map((tagId) => ({ transactionId: id, tagId })))
-        .onConflictDoNothing()
+  if (!data.isPending) {
+    const delta = getBalanceDelta(data.amount, data.type, data.subtype)
+    if (delta !== 0) {
+      db.update(accounts)
+        .set({
+          balance: drizzleSql`${accounts.balance} + ${delta}`,
+          updatedAt: now,
+        })
+        .where(eq(accounts.id, data.accountId))
         .run()
     }
+  }
 
-    return id
-  })
+  if (data.tags?.length) {
+    db.insert(transactionTags)
+      .values(data.tags.map((tagId) => ({ transactionId: id, tagId })))
+      .onConflictDoNothing()
+      .run()
+  }
 
-  return txId
+  return id
 }
 
-export async function createTransfer(
+export async function createTransaction(
+  data: TransactionFormValues,
+): Promise<string> {
+  return runInTransaction("transaction.create", (db) =>
+    createTransactionInTx(db, data),
+  )
+}
+
+type TransferRecurringOptions = {
+  recurringId: string
+  isPending: boolean
+  subtype?: string | null
+  extra?: Record<string, string> | null
+  kind?: TransactionKind
+}
+
+/**
+ * Insert a transfer (both legs and the link) and move both balances inside an
+ * open database transaction, so a caller can make it part of a larger
+ * all-or-nothing write.
+ */
+export function createTransferInTx(
+  db: DbTransaction,
   params: CreateTransferParams,
-  recurringOptions?: {
-    recurringId: string
-    isPending: boolean
-    subtype?: string | null
-    extra?: Record<string, string> | null
-    kind?: TransactionKind
-  },
-): Promise<void> {
+  recurringOptions?: TransferRecurringOptions,
+): void {
   assertMinorUnits(params.amount)
   if (params.fromAccountId === params.toAccountId) {
     throw new Error("Cannot transfer to the same account.")
@@ -382,127 +400,134 @@ export async function createTransfer(
     ? JSON.stringify(recurringOptions.extra)
     : null
 
-  await runInTransaction("transfer.create", (db) => {
-    const fromAcc = db
-      .select({
-        balance: accounts.balance,
-        currencyCode: accounts.currencyCode,
+  const fromAcc = db
+    .select({
+      balance: accounts.balance,
+      currencyCode: accounts.currencyCode,
+    })
+    .from(accounts)
+    .where(eq(accounts.id, params.fromAccountId))
+    .get()
+  const toAcc = db
+    .select({
+      balance: accounts.balance,
+      currencyCode: accounts.currencyCode,
+    })
+    .from(accounts)
+    .where(eq(accounts.id, params.toAccountId))
+    .get()
+
+  if (!fromAcc || !toAcc) throw new Error("One or both accounts not found.")
+
+  const creditAmount =
+    fromAcc.currencyCode !== toAcc.currencyCode &&
+    params.conversionRate != null &&
+    params.conversionRate > 0
+      ? convertMinorUnits(
+          params.amount,
+          fromAcc.currencyCode,
+          toAcc.currencyCode,
+          params.conversionRate,
+        )
+      : params.amount
+
+  db.insert(transactions)
+    .values({
+      id: debitId,
+      accountId: params.fromAccountId,
+      categoryId: null,
+      amount: -params.amount,
+      type: "transfer",
+      transactionDate: dateIso,
+      title,
+      description: params.notes ?? null,
+      isDeleted: 0,
+      deletedAt: null,
+      isPending: isPending ? 1 : 0,
+      requiresManualConfirmation: 0,
+      accountBalanceBefore: isPending ? 0 : fromAcc.balance,
+      subtype: recurringOptions?.subtype ?? null,
+      // transfers are pending+default by design (migration 0001 & deriveKind exclude type='transfer' from 'upcoming') — CSI-2 assert intentionally not applied here
+      kind: recurringOptions?.kind ?? "default",
+      extra: extraJson,
+      hasAttachments: 0,
+      recurringId: recurringOptions?.recurringId ?? null,
+      location: null,
+      goalId: null,
+      budgetId: null,
+      loanId: null,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .run()
+
+  db.insert(transactions)
+    .values({
+      id: creditId,
+      accountId: params.toAccountId,
+      categoryId: null,
+      amount: creditAmount,
+      type: "transfer",
+      transactionDate: dateIso,
+      title,
+      description: params.notes ?? null,
+      isDeleted: 0,
+      deletedAt: null,
+      isPending: isPending ? 1 : 0,
+      requiresManualConfirmation: 0,
+      accountBalanceBefore: isPending ? 0 : toAcc.balance,
+      subtype: recurringOptions?.subtype ?? null,
+      kind: recurringOptions?.kind ?? "default",
+      extra: extraJson,
+      hasAttachments: 0,
+      recurringId: recurringOptions?.recurringId ?? null,
+      location: null,
+      goalId: null,
+      budgetId: null,
+      loanId: null,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .run()
+
+  if (!isPending) {
+    db.update(accounts)
+      .set({
+        balance: drizzleSql`${accounts.balance} - ${params.amount}`,
+        updatedAt: now,
       })
-      .from(accounts)
       .where(eq(accounts.id, params.fromAccountId))
-      .get()
-    const toAcc = db
-      .select({
-        balance: accounts.balance,
-        currencyCode: accounts.currencyCode,
+      .run()
+    db.update(accounts)
+      .set({
+        balance: drizzleSql`${accounts.balance} + ${creditAmount}`,
+        updatedAt: now,
       })
-      .from(accounts)
       .where(eq(accounts.id, params.toAccountId))
-      .get()
-
-    if (!fromAcc || !toAcc) throw new Error("One or both accounts not found.")
-
-    const creditAmount =
-      fromAcc.currencyCode !== toAcc.currencyCode &&
-      params.conversionRate != null &&
-      params.conversionRate > 0
-        ? convertMinorUnits(
-            params.amount,
-            fromAcc.currencyCode,
-            toAcc.currencyCode,
-            params.conversionRate,
-          )
-        : params.amount
-
-    db.insert(transactions)
-      .values({
-        id: debitId,
-        accountId: params.fromAccountId,
-        categoryId: null,
-        amount: -params.amount,
-        type: "transfer",
-        transactionDate: dateIso,
-        title,
-        description: params.notes ?? null,
-        isDeleted: 0,
-        deletedAt: null,
-        isPending: isPending ? 1 : 0,
-        requiresManualConfirmation: 0,
-        accountBalanceBefore: isPending ? 0 : fromAcc.balance,
-        subtype: recurringOptions?.subtype ?? null,
-        // transfers are pending+default by design (migration 0001 & deriveKind exclude type='transfer' from 'upcoming') — CSI-2 assert intentionally not applied here
-        kind: recurringOptions?.kind ?? "default",
-        extra: extraJson,
-        hasAttachments: 0,
-        recurringId: recurringOptions?.recurringId ?? null,
-        location: null,
-        goalId: null,
-        budgetId: null,
-        loanId: null,
-        createdAt: now,
-        updatedAt: now,
-      })
       .run()
+  }
 
-    db.insert(transactions)
-      .values({
-        id: creditId,
-        accountId: params.toAccountId,
-        categoryId: null,
-        amount: creditAmount,
-        type: "transfer",
-        transactionDate: dateIso,
-        title,
-        description: params.notes ?? null,
-        isDeleted: 0,
-        deletedAt: null,
-        isPending: isPending ? 1 : 0,
-        requiresManualConfirmation: 0,
-        accountBalanceBefore: isPending ? 0 : toAcc.balance,
-        subtype: recurringOptions?.subtype ?? null,
-        kind: recurringOptions?.kind ?? "default",
-        extra: extraJson,
-        hasAttachments: 0,
-        recurringId: recurringOptions?.recurringId ?? null,
-        location: null,
-        goalId: null,
-        budgetId: null,
-        loanId: null,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .run()
+  db.insert(transfers)
+    .values({
+      id: generateId(),
+      fromTransactionId: debitId,
+      toTransactionId: creditId,
+      fromAccountId: params.fromAccountId,
+      toAccountId: params.toAccountId,
+      conversionRate: params.conversionRate ?? 1,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .run()
+}
 
-    if (!isPending) {
-      db.update(accounts)
-        .set({
-          balance: drizzleSql`${accounts.balance} - ${params.amount}`,
-          updatedAt: now,
-        })
-        .where(eq(accounts.id, params.fromAccountId))
-        .run()
-      db.update(accounts)
-        .set({
-          balance: drizzleSql`${accounts.balance} + ${creditAmount}`,
-          updatedAt: now,
-        })
-        .where(eq(accounts.id, params.toAccountId))
-        .run()
-    }
-
-    db.insert(transfers)
-      .values({
-        id: generateId(),
-        fromTransactionId: debitId,
-        toTransactionId: creditId,
-        fromAccountId: params.fromAccountId,
-        toAccountId: params.toAccountId,
-        conversionRate: params.conversionRate ?? 1,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .run()
-  })
+export async function createTransfer(
+  params: CreateTransferParams,
+  recurringOptions?: TransferRecurringOptions,
+): Promise<void> {
+  await runInTransaction("transfer.create", (db) =>
+    createTransferInTx(db, params, recurringOptions),
+  )
 }
 
 // ── Update ───────────────────────────────────────────────────────────────────
@@ -525,6 +550,8 @@ function updateTransactionInTx(
   const now = new Date().toISOString()
 
   const tx = requireTx(db, id)
+  // A trashed row is not part of any balance; editing it would move one.
+  if (tx.is_deleted) throw new Error(`Transaction ${id} is in the trash`)
 
   const oldPending = !!tx.is_pending
   const oldAmount = tx.amount
@@ -724,6 +751,9 @@ export async function editTransfer(
       .where(eq(transactions.id, partnerInfo.partnerId))
       .get()
     if (!paired) throw new Error("Paired transfer leg not found.")
+    if (tx.is_deleted || paired.is_deleted) {
+      throw new Error(`Transfer ${txId} is in the trash`)
+    }
 
     const debitRow = tx.amount < 0 ? tx : paired
     const creditRow = tx.amount > 0 ? tx : paired
@@ -1132,6 +1162,8 @@ function confirmTransactionInTx(
 
   const tx = requireTx(db, id)
 
+  // A trashed row never touches a balance, however it is asked to move.
+  if (tx.is_deleted) return
   if (shouldConfirm && !tx.is_pending) return
   if (!shouldConfirm && tx.is_pending) return
 
@@ -1293,25 +1325,53 @@ export async function detachFromRule(id: string): Promise<void> {
   })
 }
 
+/**
+ * Apply the edited fields to every pending instance of a rule from `fromDate`
+ * on. Each instance keeps its own date; `dateShiftMs` moves all of them by the
+ * same amount when the user changed the edited instance's date.
+ *
+ * Instances stay pending: `isPending` belongs to the edited instance, and
+ * copying it would confirm future instances early. The manual-confirmation
+ * flag is copied only when `applyManualConfirmation` is set.
+ */
 export async function updateFutureRecurringInstances(
   ruleId: string,
   fromDate: Date,
-  payload: RecurringEditPayload,
+  payload: Omit<RecurringEditPayload, "transactionDate" | "isPending">,
+  { dateShiftMs = 0, applyManualConfirmation = false } = {},
 ): Promise<void> {
-  const ids = getRuleInstanceIds(ruleId, { fromDate, pendingOnly: true })
+  const rows = drizzleDb
+    .select({
+      id: transactions.id,
+      transactionDate: transactions.transactionDate,
+    })
+    .from(transactions)
+    .where(
+      and(
+        eq(transactions.recurringId, ruleId),
+        gte(transactions.transactionDate, fromDate.toISOString()),
+        eq(transactions.isPending, 1),
+        eq(transactions.isDeleted, 0),
+      ),
+    )
+    .all()
   if (payload.amount !== undefined) assertMinorUnits(payload.amount)
   await runInTransaction("recurring.updateFuture", (db) => {
-    for (const id of ids) {
+    for (const { id, transactionDate } of rows) {
       updateTransactionInTx(db, id, {
         amount: payload.amount,
         type: payload.type,
-        transactionDate: payload.transactionDate,
+        transactionDate:
+          dateShiftMs === 0
+            ? undefined
+            : new Date(new Date(transactionDate).getTime() + dateShiftMs),
         categoryId: payload.categoryId,
         accountId: payload.accountId,
         title: payload.title,
         description: payload.description,
-        isPending: payload.isPending,
-        requiresManualConfirmation: payload.requiresManualConfirmation,
+        requiresManualConfirmation: applyManualConfirmation
+          ? payload.requiresManualConfirmation
+          : undefined,
         tags: payload.tags,
         extra: payload.extra,
         subtype: payload.subtype,
@@ -1322,6 +1382,19 @@ export async function updateFutureRecurringInstances(
 
 // ── Trash helpers ─────────────────────────────────────────────────────────────
 
+/**
+ * Destroying one leg of a transfer hard-deletes both, so in a batch the second
+ * leg's id may already be gone. Skip it instead of failing the whole batch.
+ */
+function destroyTransactionIfPresent(db: DbTransaction, id: string): void {
+  const exists = db
+    .select({ id: transactions.id })
+    .from(transactions)
+    .where(eq(transactions.id, id))
+    .get()
+  if (exists) destroyTransactionInTx(db, id)
+}
+
 export async function destroyAllDeletedTransactions(): Promise<void> {
   const deleted = drizzleDb
     .select(txSelection)
@@ -1329,17 +1402,13 @@ export async function destroyAllDeletedTransactions(): Promise<void> {
     .where(eq(transactions.isDeleted, 1))
     .all()
   await runInTransaction("trash.destroyAll", (db) => {
-    for (const tx of deleted) destroyTransactionInTx(db, tx.id)
+    for (const tx of deleted) destroyTransactionIfPresent(db, tx.id)
   })
 }
 
 export async function autoPurgeTrash(retentionValue: string): Promise<void> {
-  if (retentionValue === "forever") return
-
-  const match = /^(\d+)days$/.exec(retentionValue)
-  if (!match) return
-  const days = parseInt(match[1], 10)
-  if (!Number.isFinite(days) || days <= 0) return
+  const days = getTrashRetentionDays(retentionValue)
+  if (days === null) return
 
   const cutoff = startOfDay(subDays(new Date(), days)).toISOString()
 
@@ -1353,7 +1422,7 @@ export async function autoPurgeTrash(retentionValue: string): Promise<void> {
 
   try {
     await runInTransaction("trash.autoPurge", (db) => {
-      for (const tx of toPurge) destroyTransactionInTx(db, tx.id)
+      for (const tx of toPurge) destroyTransactionIfPresent(db, tx.id)
     })
     return
   } catch (err) {
@@ -1365,7 +1434,9 @@ export async function autoPurgeTrash(retentionValue: string): Promise<void> {
   // One bad row rolled the batch back; isolate it so the rest still purge.
   for (const tx of toPurge) {
     try {
-      await destroyTransaction(tx.id)
+      await runInTransaction("trash.autoPurgeRow", (db) =>
+        destroyTransactionIfPresent(db, tx.id),
+      )
     } catch (err) {
       logger.error("[autoPurgeTrash] failed to destroy transaction", {
         id: tx.id,

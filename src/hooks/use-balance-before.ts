@@ -9,10 +9,7 @@ import { logger } from "~/utils/logger"
  * This is what Flow displays next to the account name (balance after = snapshot).
  */
 export function useBalanceAtTransaction(
-  transaction: Pick<
-    Transaction,
-    "id" | "accountId" | "transactionDate" | "amount" | "type"
-  > | null,
+  transaction: Pick<Transaction, "id" | "accountId" | "transactionDate"> | null,
 ): number | null {
   const [balance, setBalance] = useState<number | null>(null)
 

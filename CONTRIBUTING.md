@@ -44,9 +44,9 @@ issue (Backlog → Ready)
 1. **Start.** `git switch dev && git pull && git switch -c feat/xyz`. Open a
    draft PR into `dev` with `Closes #n` in the body (moves the card to
    *In progress*).
-2. **Work.** Conventional Commits, one logical change per PR. There is no CI,
-   so run `pnpm verify` (lint, number-formatting check, `tsc --noEmit`) before
-   merging.
+2. **Work.** Conventional Commits, one logical change per PR. CI runs only on
+   PRs into `main`, not on PRs into `dev`, so run `pnpm verify` (lint,
+   number-formatting check, `tsc --noEmit`, tests) before merging.
 3. **Merge to dev.** Mark the PR ready and merge (squash is fine). The card
    moves to *In review*. Delete the temp branch and test from `dev`.
 4. **Release.** When `dev` is validated, open a PR `dev → main` repeating the
@@ -58,6 +58,14 @@ issue (Backlog → Ready)
 Only `Closes #n` in a PR into `main` closes an issue; the `board-sync`
 workflow reads those lines on PRs into `dev` to move the board cards.
 
+### Coding agents
+
+- Commit freely on a `feat/*`, `fix/*`, `chore/*` or `perf/*` branch off `dev`.
+  Never commit to `main` or `dev`.
+- Do not push, and do not open or update a PR, until the repository owner has
+  approved. A push is the point where other people can see the work.
+- Open PRs as drafts.
+
 ## Checks
 
 The pre-commit hook (husky) runs these automatically and they must all pass:
@@ -67,9 +75,20 @@ pnpm structure                # regenerate docs/STRUCTURE.md
 pnpm lint:fix                 # Biome check + autofix
 pnpm check-number-formatting  # centralized money-formatting rules
 pnpm types                    # tsc --noEmit
+pnpm test                     # Vitest
 ```
 
-There is no test framework set up; verify changes by running the app.
+Tests run with Vitest. They live in a root `__tests__/` folder that mirrors
+`src/` (`src/utils/money.ts` is tested by `__tests__/utils/money.test.ts`), the
+layout Expo recommends. Nothing test-related sits in `src/`, and `src/app` stays
+route-only. Shared helpers go in `__tests__/helpers/`, imported as
+`@tests/helpers/...`.
+
+Tests cover pure data-layer logic and services against an in-memory SQLite; UI
+is verified by running the app. To test a service, mock `~/database/drizzle/db`
+with `createTestDb()` from `@tests/helpers/create-test-db` (see
+`__tests__/database/services/balance-service.test.ts`). Add a regression test
+with every data-layer fix.
 
 ## Translation guide
 

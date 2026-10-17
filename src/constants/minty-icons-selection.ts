@@ -508,6 +508,60 @@ export const MINTY_SVGS: MintyIconData[] = [
     keywords: ["help", "unknown", "faq", "other"],
   },
 
+  // Shopping & Lifestyle (outline variants)
+  { name: "basket-outline", keywords: ["groceries", "shopping", "market"] },
+  { name: "cart-outline", keywords: ["shopping", "buy", "store"] },
+  { name: "tag-outline", keywords: ["price", "label", "sale"] },
+  { name: "tags-outline", keywords: ["prices", "labels", "categories"] },
+  { name: "star-outline", keywords: ["favorite", "rating", "special"] },
+  { name: "brush-outline", keywords: ["art", "paint", "personal care"] },
+  { name: "camera-outline", keywords: ["photo", "photography", "hobby"] },
+  { name: "photo-outline", keywords: ["picture", "image", "gallery"] },
+  { name: "library-photo-outline", keywords: ["gallery", "album", "photos"] },
+  { name: "video-outline", keywords: ["movie", "streaming", "film"] },
+  { name: "puzzle-outline", keywords: ["game", "hobby", "toys"] },
+  { name: "moon-stars-outline", keywords: ["night", "sleep", "evening"] },
+  { name: "sparkles-2", keywords: ["cleaning", "beauty", "shine"] },
+  { name: "map-pin-outline", keywords: ["location", "place", "trip"] },
+  { name: "calendar-outline", keywords: ["date", "schedule", "monthly"] },
+  { name: "bell-outline", keywords: ["reminder", "alert", "notification"] },
+
+  // Money & Finance (outline variants)
+  { name: "cash-banknote-outline", keywords: ["cash", "money", "bills"] },
+  { name: "credit-card-outline", keywords: ["card", "payment", "debt"] },
+  {
+    name: "receipt-refund-outline",
+    keywords: ["refund", "return", "cashback"],
+  },
+  {
+    name: "chart-pie-outline",
+    keywords: ["investment", "portfolio", "budget"],
+  },
+  {
+    name: "chart-histogram-outline",
+    keywords: ["statistics", "trend", "growth"],
+  },
+  { name: "graph-outline", keywords: ["growth", "trend", "stocks"] },
+  {
+    name: "shield-checkered-outline",
+    keywords: ["insurance", "safe", "protection"],
+  },
+  { name: "archive-outline", keywords: ["storage", "archive", "box"] },
+  { name: "clipboard-outline", keywords: ["list", "tasks", "notes"] },
+  { name: "lock-outline", keywords: ["secure", "private", "safe"] },
+
+  // People & Giving
+  { name: "users-outline", keywords: ["family", "group", "people"] },
+  { name: "user-plus-outline", keywords: ["friend", "member", "add person"] },
+  {
+    name: "address-book-outline",
+    keywords: ["contacts", "people", "directory"],
+  },
+  {
+    name: "heart-handshake-outline",
+    keywords: ["charity", "donation", "giving"],
+  },
+
   // Arrows & Direction
   { name: "arrow-narrow-up-outline", keywords: ["up", "increase", "rise"] },
   { name: "arrow-narrow-down-outline", keywords: ["down", "decrease", "fall"] },

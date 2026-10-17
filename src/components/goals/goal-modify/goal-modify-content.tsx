@@ -140,23 +140,27 @@ export function GoalModifyContent({
           title: t("common.toast.error"),
           description: t("screens.settings.goals.form.toast.notFound"),
         })
-        return
+        return false
       }
       await deleteGoalById(goalModifyId)
-      allowNavigation()
-      // Dismiss 2 levels: the edit screen and the goal detail screen
-      router.dismiss(2)
     } catch (error) {
       logger.error("Error deleting goal", { error })
       Toast.error({
         title: t("common.toast.error"),
         description: t("screens.settings.goals.form.toast.deleteFailed"),
       })
+      return false
     }
+  }
+  // Runs once the delete sheet has closed: leaving earlier tears it down mid-animation.
+  const handleDeleted = () => {
+    allowNavigation()
+    // Dismiss 2 levels: the edit screen and the goal detail screen
+    router.dismiss(2)
   }
   const handleArchive = async () => {
     try {
-      if (!goal) return
+      if (!goal) return false
       if (goal.isArchived) {
         await unarchiveGoalById(goalModifyId)
         Toast.success({
@@ -168,12 +172,15 @@ export function GoalModifyContent({
           title: t("screens.settings.goals.archiveSuccess"),
         })
       }
-      allowNavigation()
-      router.back()
     } catch (error) {
       logger.error("Error archiving goal", { error })
       Toast.error({ title: t("common.toast.error") })
+      return false
     }
+  }
+  const handleArchived = () => {
+    allowNavigation()
+    router.back()
   }
   const handleIconSelected = (icon: string | null) => {
     setValue("icon", icon, { shouldDirty: true })
@@ -409,8 +416,9 @@ export function GoalModifyContent({
         onCloseUnsavedSheet={() => setUnsavedSheetVisible(false)}
         onConfirmDelete={handleDelete}
         onConfirmArchive={handleArchive}
+        onDeleted={handleDeleted}
+        onArchived={handleArchived}
         onDiscardAndNavigate={() => {
-          setUnsavedSheetVisible(false)
           allowNavigation()
           handleGoBack()
         }}

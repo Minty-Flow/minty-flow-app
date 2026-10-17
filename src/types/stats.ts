@@ -210,8 +210,6 @@ export interface StatsRawRow {
   categoryColorSchemeName: string | null
   /** Account that owns this transaction */
   accountId: string
-  /** Balance snapshot before this transaction was applied */
-  accountBalanceBefore: number
   /** Transaction subtype: 'recurring' | 'one-time' | 'refund' | null */
   subtype: string | null
   /** Non-null when the row is a loan opening entry or repayment (excluded from generic totals). */
@@ -224,7 +222,9 @@ export interface StatsRawRow {
 export interface BalanceRawRow {
   date: Date
   accountId: string
-  accountBalanceBefore: number
+  /** Raw stored amount: unsigned for income/expense, pre-signed for transfers. */
   amount: number
+  type: TransactionType
+  subtype: string | null
   currencyCode: string
 }

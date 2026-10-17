@@ -13,6 +13,7 @@ import { Button } from "~/components/ui/button"
 import { Chip } from "~/components/ui/chips"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { useSheetOpenKey } from "~/hooks/use-sheet-open-key"
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Tag } from "~/types/tags"
 
@@ -28,18 +29,20 @@ type Props = {
 }
 
 export function TagPickerSheet(props: Props) {
-  // Mounted only while open so the draft and search reset on every open.
-  if (!props.visible) return null
-  return <TagPickerSheetInner {...props} />
+  // A new key per open resets the draft and search, while the sheet stays
+  // mounted to animate out.
+  const openKey = useSheetOpenKey(props.visible)
+  return <TagPickerSheetInner key={openKey} {...props} />
 }
 
 function TagPickerSheetInner({
+  visible,
   tags,
   selectedIds,
   onApply,
   onNewTag,
   onClose,
-}: Omit<Props, "visible">) {
+}: Props) {
   const { t } = useTranslation()
   const [draft, setDraft] = useState<string[]>(selectedIds)
   const [query, setQuery] = useState("")
@@ -54,7 +57,7 @@ function TagPickerSheetInner({
 
   return (
     <BottomSheet
-      isPresented
+      isPresented={visible}
       onDismiss={onClose}
       contentPadding={0}
       heightFraction={0.5}

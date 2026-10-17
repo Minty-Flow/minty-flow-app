@@ -1,12 +1,14 @@
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
-import { StyleSheet, useUnistyles } from "react-native-unistyles"
+import { StyleSheet } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/icons"
 import { sheetHeaderStyles } from "~/components/selectors/styles"
 import { BottomSheet } from "~/components/ui/bottom-sheet"
 import { Chip } from "~/components/ui/chips"
-import { ListItem } from "~/components/ui/list-item"
+import {
+  SingleSelectItem,
+  SingleSelectLabel,
+} from "~/components/ui/single-select-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TranslationKey } from "~/i18n/config"
@@ -33,7 +35,6 @@ type Props = {
 /** Date style (how the day reads) + order (month / day / year) picker. */
 export function DateFormatSheet({ visible, onClose }: Props) {
   const { t } = useTranslation()
-  const { theme } = useUnistyles()
   const dateStyle = useCalendarFormatStore((s) => s.dateStyle)
   const dateOrder = useCalendarFormatStore((s) => s.dateOrder)
   const setDateStyle = useCalendarFormatStore((s) => s.setDateStyle)
@@ -53,27 +54,21 @@ export function DateFormatSheet({ visible, onClose }: Props) {
           {t(key("styleLabel"))}
         </Text>
         {STYLES.map((style) => (
-          <ListItem
+          <SingleSelectItem
             key={style}
+            selected={style === dateStyle}
             style={styles.row}
             onPress={() => setDateStyle(style)}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: style === dateStyle }}
           >
             <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>{t(key(`style.${style}`))}</Text>
+              <SingleSelectLabel style={styles.rowLabel}>
+                {t(key(`style.${style}`))}
+              </SingleSelectLabel>
               <Text variant="muted" style={styles.rowExample}>
                 {formatDatePreview(now, style, dateOrder)}
               </Text>
             </View>
-            {style === dateStyle ? (
-              <IconSvg
-                name="check-outline"
-                size={20}
-                color={theme.colors.primary}
-              />
-            ) : null}
-          </ListItem>
+          </SingleSelectItem>
         ))}
 
         <Text variant="small" style={styles.sectionLabel}>

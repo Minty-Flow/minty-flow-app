@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { ExternalLink } from "~/components/external-link"
 import { Money } from "~/components/money"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { Pressable } from "~/components/ui/pressable"
@@ -90,6 +91,14 @@ export function FormConversionSection({
               </Text>
             </View>
           </View>
+
+          {/* Attribution required by the open.er-api.com terms of use */}
+          <ExternalLink
+            href="https://www.exchangerate-api.com"
+            textStyle={transactionFormStyles.conversionAttribution}
+          >
+            Rates By Exchange Rate API
+          </ExternalLink>
 
           {/* Formula row: amount × rate = converted */}
           <View style={transactionFormStyles.conversionOutcomeRow}>

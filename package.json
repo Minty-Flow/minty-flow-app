@@ -1,7 +1,7 @@
 {
   "name": "minty-flow-app",
   "main": "index.ts",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "scripts": {
     "android": "expo run:android",
     "android:emu": "expo run:android --device Pixel_10",
@@ -9,8 +9,9 @@
     "prebuild": "expo prebuild",
     "build": "cd android && ./gradlew bundleRelease assembleRelease",
     "types": "tsc --noEmit",
+    "test": "vitest run",
     "prepare": "husky",
-    "verify": "pnpm lint && pnpm check-number-formatting && pnpm types",
+    "verify": "pnpm lint && pnpm check-number-formatting && pnpm types && pnpm test",
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "lint:fix-unsafe": "biome check --write --unsafe",
@@ -86,11 +87,14 @@
     "@svgr/cli": "^8.1.0",
     "@types/node": "^25.9.1",
     "@types/react": "~19.2.15",
+    "@types/sql.js": "^1.4.11",
     "babel-preset-expo": "~57.0.3",
     "drizzle-kit": "^0.31.10",
     "expo-drizzle-studio-plugin": "^0.2.1",
     "husky": "^9.1.7",
-    "typescript": "^7.0.2"
+    "sql.js": "^1.14.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
   },
   "private": true
 }

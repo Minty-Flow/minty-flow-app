@@ -43,6 +43,7 @@ const BASE_TX = {
   updatedAt: new Date(2024, 0, 15),
   relatedAccount: undefined,
   conversionRate: null,
+  transferSourceAmount: null,
   recurringId: null,
   tagIds: [],
 }

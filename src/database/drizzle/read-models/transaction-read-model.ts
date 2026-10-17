@@ -1,4 +1,14 @@
-import { and, desc, eq, gte, inArray, lte, or, type SQL } from "drizzle-orm"
+import {
+  and,
+  desc,
+  eq,
+  gte,
+  inArray,
+  lte,
+  or,
+  type SQL,
+  sql,
+} from "drizzle-orm"
 import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 import { useMemo } from "react"
 
@@ -33,6 +43,11 @@ export interface TransactionWithRelations extends Transaction {
   relatedAccountId: string | null
   relatedAccount: Account | undefined
   conversionRate: number | null
+  /**
+   * Amount of the transfer's debit leg, in the source account's currency,
+   * whichever leg this row is. `null` for a row that is not a transfer.
+   */
+  transferSourceAmount: number | null
   tagIds: string[]
 }
 
@@ -60,6 +75,8 @@ interface RowTransfer {
   from_account_id: string
   to_account_id: string
   conversion_rate: number
+  /** Signed amount of the debit leg (negative), or null if the leg is gone. */
+  from_amount: number | null
 }
 
 const txSelection = {
@@ -127,6 +144,9 @@ const transferSelection = {
   from_account_id: transfers.fromAccountId,
   to_account_id: transfers.toAccountId,
   conversion_rate: transfers.conversionRate,
+  from_amount: sql<
+    number | null
+  >`(SELECT amount FROM transactions WHERE id = ${transfers.fromTransactionId})`,
 }
 
 function stableFilterHash(filters: TransactionFilters): string {
@@ -198,15 +218,19 @@ function hydrateTransactionRows({
       transferGroupId: string
       relatedAccountId: string
       conversionRate: number
+      sourceAmount: number | null
     }
   >()
   for (const row of transferRows) {
+    const sourceAmount =
+      row.from_amount == null ? null : Math.abs(row.from_amount)
     if (txIds.has(row.from_transaction_id)) {
       transferMap.set(row.from_transaction_id, {
         transferId: row.to_transaction_id,
         transferGroupId: row.id,
         relatedAccountId: row.to_account_id,
         conversionRate: row.conversion_rate,
+        sourceAmount,
       })
     }
     if (txIds.has(row.to_transaction_id)) {
@@ -215,6 +239,7 @@ function hydrateTransactionRows({
         transferGroupId: row.id,
         relatedAccountId: row.from_account_id,
         conversionRate: row.conversion_rate,
+        sourceAmount,
       })
     }
   }
@@ -231,6 +256,7 @@ function hydrateTransactionRows({
       relatedAccountId: tf?.relatedAccountId ?? null,
       relatedAccount: tf ? accountMap.get(tf.relatedAccountId) : undefined,
       conversionRate: tf?.conversionRate ?? null,
+      transferSourceAmount: tf?.sourceAmount ?? null,
       tagIds: tagMap.get(row.id) ?? [],
     }
   })
