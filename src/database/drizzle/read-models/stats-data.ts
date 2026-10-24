@@ -239,8 +239,8 @@ async function fetchPendingSummary(
     if (tx.type === TransactionTypeEnum.EXPENSE) {
       if (!isLoanFlow) {
         if (tx.subtype === TransactionSubTypeEnum.REFUND) {
-          // Pending refund reduces pending expense
-          existing.totalExpense = Math.max(0, existing.totalExpense - abs)
+          // Pending refund reduces pending expense; floored once, after the loop
+          existing.totalExpense -= abs
         } else {
           existing.totalExpense += abs
         }
@@ -252,6 +252,10 @@ async function fetchPendingSummary(
     }
     existing.count++
     result.set(currency, existing)
+  }
+
+  for (const summary of result.values()) {
+    summary.totalExpense = Math.max(0, summary.totalExpense)
   }
 
   return result
@@ -682,7 +686,7 @@ function computeByAccount(
 
 function computeTopTransactions(rows: StatsRawRow[]): TopTransactionItem[] {
   return rows
-    .filter((r) => r.type === TransactionTypeEnum.EXPENSE)
+    .filter((r) => expenseContribution(r) > 0)
     .sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))
     .slice(0, 5)
     .map((r) => ({

@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-17T07:53:25.356Z
+Generated on: 2026-10-24T20:43:12.581Z
 ```
 ./
 ├── __tests__/
@@ -52,7 +52,8 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   └── utils/
 │       ├── live-progress.test.ts
 │       ├── money.test.ts
-│       └── recurrence.test.ts
+│       ├── recurrence.test.ts
+│       └── stats-date-range.test.ts
 ├── .github/
 │   └── workflows/
 │       ├── board-sync.yml
