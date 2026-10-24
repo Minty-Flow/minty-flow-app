@@ -160,9 +160,12 @@ export async function updateAccount(
         .all()
       const recurringUpdates: [string, string][] = []
       for (const recurring of recurringRows) {
-        const template = JSON.parse(recurring.jsonTransactionTemplate) as {
-          accountId?: string
-          amount?: number
+        // One unreadable template must not block the currency change.
+        let template: { accountId?: string; amount?: number }
+        try {
+          template = JSON.parse(recurring.jsonTransactionTemplate)
+        } catch {
+          continue
         }
         if (template.accountId !== id || template.amount === undefined) continue
         template.amount = rescaleMinorUnits(

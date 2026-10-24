@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-24T20:50:18.269Z
+Generated on: 2026-10-24T20:52:03.240Z
 ```
 ./
 ├── __tests__/
@@ -22,10 +22,12 @@ Generated on: 2026-10-24T20:50:18.269Z
 │   │   │       └── stats-data.test.ts
 │   │   ├── services/
 │   │   │   ├── account-balance-adjustment.test.ts
+│   │   │   ├── account-currency-change.test.ts
 │   │   │   ├── backup-after-account-delete.test.ts
 │   │   │   ├── balance-service.test.ts
 │   │   │   ├── budget-category-delete.test.ts
 │   │   │   ├── category-delete.test.ts
+│   │   │   ├── destroy-account-transfer-partner.test.ts
 │   │   │   ├── destroy-account-with-loans.test.ts
 │   │   │   ├── detach-transfer-from-rule.test.ts
 │   │   │   ├── edit-transfer-validation.test.ts

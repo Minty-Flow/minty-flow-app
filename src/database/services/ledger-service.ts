@@ -1034,6 +1034,14 @@ export async function restoreTransaction(id: string): Promise<void> {
       return
     }
 
+    if (tx.type === "transfer" && tx.is_deleted) {
+      // Destroying an account removes the transfer link and trashes the other
+      // account's leg. Restoring that leg alone would put back half a transfer.
+      throw new Error(
+        "This transfer's other leg was removed with its account and cannot be restored.",
+      )
+    }
+
     if (!tx.is_deleted) return
 
     db.update(transactions)
