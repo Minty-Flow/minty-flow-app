@@ -5,7 +5,7 @@ import { useIsFocused } from "expo-router"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { drizzleDb } from "~/database/drizzle/db"
-import { useAccounts } from "~/database/drizzle/read-models/account-read-model"
+import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
 import {
   fetchAllStatsData,
   fetchWrappedInsights,
@@ -146,7 +146,7 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
   const [isLoading, setIsLoading] = useState(true)
   const fetchIdRef = useRef(0)
   const activeFetchCountRef = useRef(0)
-  const accounts = useAccounts()
+  const accounts = useActiveAccounts()
   const dbChangeSignal = useStatsDatabaseChangeSignal()
   // `accounts` is rebuilt every render, so key the supplements on its content.
   const accountsSignature = accounts
