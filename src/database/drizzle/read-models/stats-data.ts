@@ -277,7 +277,8 @@ function computePeriodStats(
   for (const row of rows) {
     totalExpense += expenseContribution(row)
     if (isRealIncome(row)) totalIncome += Math.abs(row.amount)
-    count++
+    // Loan rows are left out of the totals, so they are left out of the count.
+    if (row.loanId == null) count++
   }
 
   const net = totalIncome - totalExpense
@@ -741,8 +742,18 @@ async function computeCurrencyStats(
   const previousByCurrency = groupByCurrency(previousRows)
   const balanceByCurrency = groupBalanceByCurrency(balanceRows)
 
+  // A currency whose only activity in the range is a transfer has no income or
+  // expense rows, but its balance still moved.
+  const movedBalanceCurrencies = balanceRows
+    .filter((r) => r.date >= range.from && r.date <= range.to)
+    .map((r) => r.currencyCode)
+
   const currencies = [
-    ...new Set([...currentByCurrency.keys(), ...previousByCurrency.keys()]),
+    ...new Set([
+      ...currentByCurrency.keys(),
+      ...previousByCurrency.keys(),
+      ...movedBalanceCurrencies,
+    ]),
   ]
 
   const results = await Promise.all(

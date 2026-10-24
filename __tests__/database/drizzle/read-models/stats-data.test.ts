@@ -27,6 +27,7 @@ import {
 import { accounts, categories } from "~/database/drizzle/schema"
 import {
   createTransaction,
+  createTransfer,
   deleteTransaction,
   restoreTransaction,
   updateTransaction,
@@ -447,5 +448,52 @@ describe("stats pending summary", () => {
     )
     await createTransaction(pending("pend-c", 5_000, 1, { subtype: "refund" }))
     expect((await statsFor("PLN")).pendingSummary?.totalExpense).toBe(0)
+  })
+})
+
+describe("stats currencies and counts", () => {
+  it("lists a currency whose only activity is a transfer", async () => {
+    seedAccount("hu-a", "HUF", 50_000)
+    seedAccount("hu-b", "HUF", 50_000)
+    await createTransfer({
+      fromAccountId: "hu-a",
+      toAccountId: "hu-b",
+      amount: 10_000,
+      transactionDate: new Date(2026, 2, 5, 12),
+    })
+    const stats = await statsFor("HUF")
+    expect(stats.current.totalExpense).toBe(0)
+    expect(stats.current.totalIncome).toBe(0)
+    expect(stats.closingBalance).toBe(100_000)
+  })
+
+  it("does not count loan rows that the totals leave out", async () => {
+    seedAccount("cnt", "CZK", 1_000_000)
+    drizzleDb
+      .insert(categories)
+      .values({
+        id: "cat-cnt",
+        name: "Loans",
+        type: "expense",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      })
+      .run()
+    await createLoanWithOpeningEntry(
+      {
+        name: "Sam",
+        principalAmount: 500_000,
+        loanType: "lent",
+        accountId: "cnt",
+        categoryId: "cat-cnt",
+      },
+      { title: "Lent", transactionDate: new Date(2026, 0, 5, 12) },
+    )
+    await createTransaction(
+      entry("cnt", "expense", 1_000, new Date(2026, 0, 7, 12)),
+    )
+    const stats = await statsFor("CZK")
+    expect(stats.current.transactionCount).toBe(1)
+    expect(stats.current.totalExpense).toBe(1_000)
   })
 })
