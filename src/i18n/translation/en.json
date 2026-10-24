@@ -262,7 +262,9 @@
         "other": "Other",
         "fromBalance": "From balance",
         "savedNode": "Saved",
-        "averagesByDay": "Averages, by day"
+        "averagesByDay": "Averages, by day",
+        "toReserves": "To reserves",
+        "fromReserves": "From reserves"
       },
       "categories": {
         "title": "Categories",
@@ -1195,6 +1197,9 @@
         "restoredDescription": "Transaction restored.",
         "restoreFailed": "Failed to restore transaction",
         "couldNotSelectFile": "Could not select file",
+        "permissionRequired": "Permission required",
+        "cameraPermission": "Camera access is needed to take a photo.",
+        "libraryPermission": "Photo library access is needed.",
         "deleteRecurringSuccess": "Transaction deleted",
         "deleteRecurringAllSuccess": "All recurring transactions deleted",
         "deleteRecurringFutureSuccess": "This and future transactions deleted",

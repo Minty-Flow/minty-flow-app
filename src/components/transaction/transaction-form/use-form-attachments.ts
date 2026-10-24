@@ -111,12 +111,12 @@ export function useFormAttachments(transaction: Transaction | null) {
       })
     }
   }
-  const handleTakePhoto = async () => {
+  const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync()
     if (status !== "granted") {
       Toast.error({
-        title: "Permission required",
-        description: "Camera access is needed to take a photo.",
+        title: t("components.transactionForm.toast.permissionRequired"),
+        description: t("components.transactionForm.toast.cameraPermission"),
       })
       return
     }
@@ -138,12 +138,12 @@ export function useFormAttachments(transaction: Transaction | null) {
       },
     ])
   }
-  const handleSelectMultipleMedia = async () => {
+  const selectMultipleMedia = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (status !== "granted") {
       Toast.error({
-        title: "Permission required",
-        description: "Photo library access is needed.",
+        title: t("components.transactionForm.toast.permissionRequired"),
+        description: t("components.transactionForm.toast.libraryPermission"),
       })
       return
     }
@@ -168,12 +168,12 @@ export function useFormAttachments(transaction: Transaction | null) {
       }),
     )
   }
-  const handleSelectSinglePhoto = async () => {
+  const selectSinglePhoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (status !== "granted") {
       Toast.error({
-        title: "Permission required",
-        description: "Photo library access is needed.",
+        title: t("components.transactionForm.toast.permissionRequired"),
+        description: t("components.transactionForm.toast.libraryPermission"),
       })
       return
     }
@@ -196,14 +196,26 @@ export function useFormAttachments(transaction: Transaction | null) {
       },
     ])
   }
+  // A picker can throw (no camera, revoked permission, copy failure); say so
+  // instead of leaving an unhandled rejection behind.
+  const guarded = (pick: () => Promise<void>) => async () => {
+    try {
+      await pick()
+    } catch (e) {
+      logger.error("Attachment picker error", { e })
+      Toast.error({
+        title: t("components.transactionForm.toast.couldNotSelectFile"),
+      })
+    }
+  }
   return {
     attachmentState,
     setAttachmentState,
     removeAttachment,
     flushRemovedAttachments,
     handleSelectFromFiles,
-    handleTakePhoto,
-    handleSelectMultipleMedia,
-    handleSelectSinglePhoto,
+    handleTakePhoto: guarded(takePhoto),
+    handleSelectMultipleMedia: guarded(selectMultipleMedia),
+    handleSelectSinglePhoto: guarded(selectSinglePhoto),
   }
 }

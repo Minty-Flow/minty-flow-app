@@ -303,7 +303,9 @@
         "other": "أخرى",
         "fromBalance": "من الرصيد",
         "savedNode": "مدّخر",
-        "averagesByDay": "المعدلات اليومية"
+        "averagesByDay": "المعدلات اليومية",
+        "toReserves": "إلى المدخرات",
+        "fromReserves": "من المدخرات"
       },
       "categories": {
         "title": "الفئات",
@@ -1165,6 +1167,9 @@
         "restoredDescription": "تم استعادة المعاملة.",
         "restoreFailed": "فشل الاستعادة",
         "couldNotSelectFile": "تعذر اختيار الملف",
+        "permissionRequired": "الإذن مطلوب",
+        "cameraPermission": "يلزم الوصول إلى الكاميرا لالتقاط صورة.",
+        "libraryPermission": "يلزم الوصول إلى مكتبة الصور.",
         "deleteRecurringSuccess": "تم حذف المعاملة",
         "deleteRecurringAllSuccess": "تم حذف جميع المعاملات المتكررة",
         "deleteRecurringFutureSuccess": "تم حذف هذه والمعاملات المستقبلية",
