@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-24T21:37:33.635Z
+Generated on: 2026-10-24T21:48:10.083Z
 ```
 ./
 ├── __tests__/
@@ -20,7 +20,8 @@ Generated on: 2026-10-24T21:37:33.635Z
 │   │   │   └── backup-format.test.ts
 │   │   ├── drizzle/
 │   │   │   └── read-models/
-│   │   │       └── stats-data.test.ts
+│   │   │       ├── stats-data.test.ts
+│   │   │       └── trash-by-deletion-date.test.ts
 │   │   ├── services/
 │   │   │   ├── account-balance-adjustment.test.ts
 │   │   │   ├── backup-after-account-delete.test.ts

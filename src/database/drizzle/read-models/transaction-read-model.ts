@@ -164,9 +164,13 @@ function getConditions(filters: TransactionFilters): SQL[] {
     : [eq(transactions.isDeleted, filters.deletedOnly ? 1 : 0)]
   if (filters.id) conditions.push(eq(transactions.id, filters.id))
   if (filters.isPending) conditions.push(eq(transactions.isPending, 1))
-  if (filters.from)
-    conditions.push(gte(transactions.transactionDate, filters.from))
-  if (filters.to) conditions.push(lte(transactions.transactionDate, filters.to))
+  // The Trash lists what was deleted in the period; an old transaction deleted
+  // today would otherwise sit in a month nobody opens.
+  const dateColumn = filters.deletedOnly
+    ? transactions.deletedAt
+    : transactions.transactionDate
+  if (filters.from) conditions.push(gte(dateColumn, filters.from))
+  if (filters.to) conditions.push(lte(dateColumn, filters.to))
   if (filters.accountIds?.length)
     conditions.push(inArray(transactions.accountId, filters.accountIds))
   if (filters.categoryIds?.length)
@@ -353,7 +357,7 @@ export function useTransactions(filters: TransactionFilters): {
   }
 }
 
-async function getTransactions(
+export async function getTransactions(
   filters: TransactionFilters,
 ): Promise<TransactionWithRelations[]> {
   const queries = buildTransactionQueries(filters)
