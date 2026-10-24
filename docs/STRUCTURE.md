@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-24T20:46:10.024Z
+Generated on: 2026-10-24T20:47:08.465Z
 ```
 ./
 ├── __tests__/
@@ -39,8 +39,9 @@ Generated on: 2026-10-24T20:46:10.024Z
 │   │   │   ├── recurring-transaction-service.test.ts
 │   │   │   ├── trash-auto-purge.test.ts
 │   │   │   └── trashed-transactions-read-only.test.ts
-│   │   └── utils/
-│   │       └── get-balance-delta.test.ts
+│   │   ├── utils/
+│   │   │   └── get-balance-delta.test.ts
+│   │   └── commit-events.test.ts
 │   ├── helpers/
 │   │   ├── create-test-db.test.ts
 │   │   └── create-test-db.ts
@@ -544,6 +545,7 @@ Generated on: 2026-10-24T20:46:10.024Z
 │   │   │   ├── has-attachments-from-extra.ts
 │   │   │   ├── import-snapshot.ts
 │   │   │   └── recurring-template-refs.ts
+│   │   ├── commit-events.ts
 │   │   ├── db.ts
 │   │   ├── pending-migrations.ts
 │   │   ├── transaction.ts

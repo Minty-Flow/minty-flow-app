@@ -32,7 +32,6 @@ import {
   transactionSchema,
 } from "~/schemas/transactions.schema"
 import { currencyRegistryService } from "~/services/currency-registry"
-import { synchronizePlannedTransactionNotifications } from "~/services/pending-transaction-notifications"
 import { useTransactionLocationStore } from "~/stores/transaction-location.store"
 import { NewEnum } from "~/types/new"
 import {
@@ -564,7 +563,6 @@ export function useTransactionForm({
             Toast.success({
               title: t("components.transactionForm.toast.transactionCreated"),
             })
-            synchronizePlannedTransactionNotifications().catch(() => {})
           } catch (loanErr) {
             logger.error("Failed to save loan", {
               message:
@@ -593,7 +591,6 @@ export function useTransactionForm({
             }
           }
           await createTransaction(payload)
-          synchronizePlannedTransactionNotifications().catch(() => {})
           Toast.success({
             title: t("components.transactionForm.toast.transactionCreated"),
           })
@@ -620,7 +617,6 @@ export function useTransactionForm({
           return
         }
         await updateTransaction(transaction.id, payload)
-        synchronizePlannedTransactionNotifications().catch(() => {})
         Toast.success({
           title: t("components.transactionForm.toast.transactionUpdated"),
         })
@@ -661,7 +657,6 @@ export function useTransactionForm({
         : deleteTransaction(transaction.id)
     promise
       .then(() => {
-        synchronizePlannedTransactionNotifications().catch(() => {})
         Toast.success({
           title: t("components.transactionForm.toast.movedToTrash"),
         })
@@ -680,7 +675,6 @@ export function useTransactionForm({
     setOverlays({ deleteLoanSheetVisible: false })
     try {
       await deleteLoanById(transaction.loanId)
-      synchronizePlannedTransactionNotifications().catch(() => {})
       Toast.success({
         title: t("components.transactionForm.toast.loanDeleted"),
       })
@@ -697,7 +691,6 @@ export function useTransactionForm({
     if (!transaction?.isDeleted) return
     try {
       await restoreTransaction(transaction.id)
-      synchronizePlannedTransactionNotifications().catch(() => {})
       Toast.success({
         title: t("components.transactionForm.toast.restored"),
         description: t("components.transactionForm.toast.restoredDescription"),
