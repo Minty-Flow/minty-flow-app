@@ -221,6 +221,9 @@ type RecurringRuleTemplateUpdate = Partial<{
   categoryId: string | null
   accountId: string
   type: string
+  subtype: TransactionSubType | null
+  tags: string[] | null
+  extra: Record<string, string> | null
 }>
 
 async function updateRecurringRuleTemplate(
@@ -246,6 +249,9 @@ async function updateRecurringRuleTemplate(
     ...(fields.categoryId !== undefined && { categoryId: fields.categoryId }),
     ...(fields.accountId !== undefined && { accountId: fields.accountId }),
     ...(fields.type !== undefined && { type: fields.type }),
+    ...(fields.subtype !== undefined && { subtype: fields.subtype }),
+    ...(fields.tags !== undefined && { tags: fields.tags }),
+    ...(fields.extra !== undefined && { extra: fields.extra }),
   }
 
   await runInTransaction("recurring.updateTemplate", (db) => {
@@ -254,6 +260,18 @@ async function updateRecurringRuleTemplate(
       .where(eq(recurringTransactions.id, ruleId))
       .run()
   })
+}
+
+/**
+ * An instance's `extra` carries the keys the sync stamps on it. They belong to
+ * that occurrence, not to the template every later occurrence is built from.
+ */
+function templateExtra(
+  extra: Record<string, string> | null | undefined,
+): Record<string, string> | null | undefined {
+  if (!extra) return extra
+  const { recurringId: _id, recurringInitialDate: _date, ...rest } = extra
+  return Object.keys(rest).length > 0 ? rest : null
 }
 
 const FOREVER_MS = new Date(2099, 11, 31).getTime()
@@ -395,9 +413,13 @@ export async function applyRecurringEditScope({
   await updateRecurringRuleTemplate(ruleId, {
     amount: payload.amount,
     title: payload.title,
+    description: payload.description,
     categoryId: payload.categoryId,
     accountId: payload.accountId,
     type: payload.type,
+    subtype: payload.subtype,
+    tags: payload.tags,
+    extra: templateExtra(payload.extra),
   })
 
   // Update recurrence/until if cadence changed.

@@ -1323,9 +1323,14 @@ export async function deleteFutureRecurringInstances(
 export async function detachFromRule(id: string): Promise<void> {
   const now = new Date().toISOString()
   await runInTransaction("transaction.detach", (db) => {
+    // A transfer is two rows under one rule; detaching one leg would leave the
+    // other for a later "delete this and future" to remove on its own.
+    const ids = [id]
+    const partner = getPartnerTxId(id, db)
+    if (partner) ids.push(partner.partnerId)
     db.update(transactions)
       .set({ recurringId: null, updatedAt: now })
-      .where(eq(transactions.id, id))
+      .where(inArray(transactions.id, ids))
       .run()
   })
 }
