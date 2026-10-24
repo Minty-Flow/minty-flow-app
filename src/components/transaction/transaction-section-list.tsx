@@ -109,7 +109,7 @@ export function TransactionSectionList({
   // Pending visibility follows the pending filter; structural filters apply on top.
   const sections = useMemo(() => {
     const withoutRecurring = transactionsFull.filter(
-      (r) => !r.extra?.recurringId,
+      (r) => r.recurringId == null,
     )
     const byPending = applyPendingFilter(
       withoutRecurring,

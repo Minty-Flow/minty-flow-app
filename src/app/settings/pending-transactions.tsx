@@ -46,9 +46,7 @@ export default function PendingTransactionsScreen() {
   const [recurringToDelete, setRecurringToDelete] =
     useState<TransactionWithRelations | null>(null)
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
-  const recurringRule = useRecurringRule(
-    recurringToDelete?.extra?.recurringId ?? null,
-  )
+  const recurringRule = useRecurringRule(recurringToDelete?.recurringId ?? null)
   const { items: allPending, status: transactionsStatus } = useTransactions({
     from: month.from,
     to: month.to,
@@ -73,7 +71,7 @@ export default function PendingTransactionsScreen() {
   // Recurring spawns must route through the 3-option scope modal, not a plain
   // soft-delete — same guard the transaction form and Upcoming section use.
   const handleBeforeDelete = (row: TransactionWithRelations) => {
-    if (row.extra?.recurringId) {
+    if (row.recurringId) {
       setRecurringToDelete(row)
       setDeleteSheetVisible(true)
       return true
@@ -130,7 +128,7 @@ export default function PendingTransactionsScreen() {
 
       {recurringToDelete &&
         recurringRule &&
-        recurringRule.id === recurringToDelete.extra?.recurringId && (
+        recurringRule.id === recurringToDelete.recurringId && (
           <DeleteRecurringSheet
             visible={deleteSheetVisible}
             transaction={recurringToDelete}
