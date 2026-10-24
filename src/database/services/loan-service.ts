@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm"
+import { and, eq, inArray, sql } from "drizzle-orm"
 
 import {
   accounts,
@@ -120,7 +120,7 @@ export async function updateLoanById(
 
   await runInTransaction("loan.update", (db) => {
     const current = db
-      .select({ loanType: loans.loanType })
+      .select({ loanType: loans.loanType, accountId: loans.accountId })
       .from(loans)
       .where(eq(loans.id, id))
       .get()
@@ -128,11 +128,14 @@ export async function updateLoanById(
 
     const typeChanged =
       data.loanType !== undefined && data.loanType !== current.loanType
-    if (typeChanged) {
+    const accountChanged =
+      data.accountId !== undefined && data.accountId !== current.accountId
+    if (typeChanged || accountChanged) {
       // The opening entry and the repayments are told apart by `type`, so
       // flipping the loan type with repayments in place would make them look
-      // like opening entries. Only a loan with nothing but its opening entry
-      // can change type.
+      // like opening entries. Moving the loan to another account would move
+      // only the opening entry and leave the repayments behind. Only a loan
+      // with nothing but its opening entry can change either.
       const openingId = db
         .select({ id: transactions.id })
         .from(transactions)
@@ -154,7 +157,29 @@ export async function updateLoanById(
         .all()
         .filter((row) => row.id !== openingId)
       if (others.length > 0) {
-        throw new Error("Cannot change the type of a loan that has repayments")
+        throw new Error(
+          typeChanged
+            ? "Cannot change the type of a loan that has repayments"
+            : "Cannot change the account of a loan that has repayments",
+        )
+      }
+    }
+
+    if (accountChanged && data.principalAmount === undefined) {
+      // The stored amount is in minor units of the old account's currency.
+      const currencies = db
+        .select({ id: accounts.id, currencyCode: accounts.currencyCode })
+        .from(accounts)
+        .where(
+          inArray(accounts.id, [current.accountId, data.accountId as string]),
+        )
+        .all()
+      const oldCode = currencies.find((a) => a.id === current.accountId)
+      const newCode = currencies.find((a) => a.id === data.accountId)
+      if (oldCode?.currencyCode !== newCode?.currencyCode) {
+        throw new Error(
+          "A new principal amount is required when the account's currency differs",
+        )
       }
     }
 

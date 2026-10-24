@@ -38,6 +38,8 @@ interface AccountPickerFieldProps {
   /** Placeholder + accessibility label while closed. */
   selectLabel: string
   error?: string
+  /** Shows the account but does not open the picker. */
+  disabled?: boolean
   onSelect: (accountId: string) => void
 }
 
@@ -48,6 +50,7 @@ function AccountPickerField({
   triggerBalance,
   selectLabel,
   error,
+  disabled,
   onSelect,
 }: AccountPickerFieldProps) {
   const { theme } = useUnistyles()
@@ -59,7 +62,10 @@ function AccountPickerField({
           transactionFormStyles.accountTrigger,
           selectedAccount && transactionFormStyles.accountTriggerSelected,
           error && selectedAccount && transactionFormStyles.accountTriggerError,
+          disabled && transactionFormStyles.accountTriggerDisabled,
         ]}
+        disabled={disabled}
+        accessibilityState={{ disabled: !!disabled }}
         onPress={() => setOpen(true)}
         accessibilityLabel={selectLabel}
       >
@@ -142,6 +148,7 @@ interface FormAccountPickerProps {
   accountError: string | undefined
   /** Called after the selected account changes (new id or cleared). */
   onAccountChange?: (newAccountId: string) => void
+  disabled?: boolean
 }
 
 export function FormAccountPicker({
@@ -154,6 +161,7 @@ export function FormAccountPicker({
   transaction,
   accountError,
   onAccountChange,
+  disabled,
 }: FormAccountPickerProps) {
   const { t } = useTranslation()
   return (
@@ -168,6 +176,7 @@ export function FormAccountPicker({
       }
       selectLabel={t("screens.accounts.a11y.select")}
       error={accountError}
+      disabled={disabled}
       onSelect={(id) => {
         setValue("accountId", id, { shouldDirty: true })
         if (toAccountId === id) {

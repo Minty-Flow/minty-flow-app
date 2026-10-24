@@ -1,3 +1,4 @@
+import { emitWriteCommitted } from "./commit-events"
 import { drizzleDb } from "./drizzle/db"
 import { enqueueWrite } from "./write-queue"
 
@@ -51,7 +52,8 @@ function assertSynchronous<T>(
  * transaction context. This lets services call other services without
  * deadlocking the queue.
  *
- * @param name - Reserved human-readable label for call-site clarity.
+ * @param name - Human-readable label. Listeners registered with
+ *   `onWriteCommitted` receive it after the outermost transaction commits.
  * @param fn - Async callback that receives the open database instance and
  *   performs all reads/writes. Its return value is forwarded to the caller.
  * @returns A promise that resolves with `fn`'s return value once the
@@ -59,7 +61,7 @@ function assertSynchronous<T>(
  *
  */
 export async function runInTransaction<T>(
-  _name: string,
+  name: string,
   fn: (db: DbTransaction) => T,
 ): Promise<T> {
   // Re-entrant: if already inside a queued tx context, bypass queue to avoid deadlock.
@@ -76,7 +78,9 @@ export async function runInTransaction<T>(
     txDepth++
 
     try {
-      return drizzleDb.transaction(assertSynchronous(fn))
+      const result = drizzleDb.transaction(assertSynchronous(fn))
+      emitWriteCommitted(name)
+      return result
     } finally {
       txDepth--
     }

@@ -239,8 +239,8 @@ async function fetchPendingSummary(
     if (tx.type === TransactionTypeEnum.EXPENSE) {
       if (!isLoanFlow) {
         if (tx.subtype === TransactionSubTypeEnum.REFUND) {
-          // Pending refund reduces pending expense
-          existing.totalExpense = Math.max(0, existing.totalExpense - abs)
+          // Pending refund reduces pending expense; floored once, after the loop
+          existing.totalExpense -= abs
         } else {
           existing.totalExpense += abs
         }
@@ -252,6 +252,10 @@ async function fetchPendingSummary(
     }
     existing.count++
     result.set(currency, existing)
+  }
+
+  for (const summary of result.values()) {
+    summary.totalExpense = Math.max(0, summary.totalExpense)
   }
 
   return result
@@ -273,7 +277,8 @@ function computePeriodStats(
   for (const row of rows) {
     totalExpense += expenseContribution(row)
     if (isRealIncome(row)) totalIncome += Math.abs(row.amount)
-    count++
+    // Loan rows are left out of the totals, so they are left out of the count.
+    if (row.loanId == null) count++
   }
 
   const net = totalIncome - totalExpense
@@ -682,7 +687,7 @@ function computeByAccount(
 
 function computeTopTransactions(rows: StatsRawRow[]): TopTransactionItem[] {
   return rows
-    .filter((r) => r.type === TransactionTypeEnum.EXPENSE)
+    .filter((r) => expenseContribution(r) > 0)
     .sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))
     .slice(0, 5)
     .map((r) => ({
@@ -737,8 +742,18 @@ async function computeCurrencyStats(
   const previousByCurrency = groupByCurrency(previousRows)
   const balanceByCurrency = groupBalanceByCurrency(balanceRows)
 
+  // A currency whose only activity in the range is a transfer has no income or
+  // expense rows, but its balance still moved.
+  const movedBalanceCurrencies = balanceRows
+    .filter((r) => r.date >= range.from && r.date <= range.to)
+    .map((r) => r.currencyCode)
+
   const currencies = [
-    ...new Set([...currentByCurrency.keys(), ...previousByCurrency.keys()]),
+    ...new Set([
+      ...currentByCurrency.keys(),
+      ...previousByCurrency.keys(),
+      ...movedBalanceCurrencies,
+    ]),
   ]
 
   const results = await Promise.all(

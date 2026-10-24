@@ -24,13 +24,15 @@ import {
   computeBalanceTimeline,
   fetchAllStatsData,
 } from "~/database/drizzle/read-models/stats-data"
-import { accounts } from "~/database/drizzle/schema"
+import { accounts, categories } from "~/database/drizzle/schema"
 import {
   createTransaction,
+  createTransfer,
   deleteTransaction,
   restoreTransaction,
   updateTransaction,
 } from "~/database/services/ledger-service"
+import { createLoanWithOpeningEntry } from "~/database/services/loan-service"
 import type { RowAccount } from "~/database/types/rows"
 import type { BalanceRawRow, StatsDateRange } from "~/types/stats"
 import type { TransactionType } from "~/types/transactions"
@@ -376,5 +378,122 @@ describe("stats balance against the real ledger", () => {
     )
     const stats = await statsFor("DKK")
     expect(stats.closingBalance).toBe(liveBalance("nw-a") + liveBalance("nw-b"))
+  })
+})
+
+describe("stats top transactions", () => {
+  it("leaves out loan entries and refunds", async () => {
+    seedAccount("top", "ISK", 1_000_000)
+    drizzleDb
+      .insert(categories)
+      .values({
+        id: "cat-top",
+        name: "Loans",
+        type: "expense",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      })
+      .run()
+    await createLoanWithOpeningEntry(
+      {
+        name: "Sam",
+        principalAmount: 500_000,
+        loanType: "lent",
+        accountId: "top",
+        categoryId: "cat-top",
+      },
+      { title: "Lent", transactionDate: new Date(2026, 0, 5, 12) },
+    )
+    await createTransaction(
+      entry("top", "expense", 300_000, new Date(2026, 0, 6, 12), {
+        subtype: "refund",
+      }),
+    )
+    await createTransaction(
+      entry("top", "expense", 1_000, new Date(2026, 0, 7, 12)),
+    )
+    const stats = await statsFor("ISK")
+    expect(stats.topTransactions.map((t) => t.amount)).toEqual([1_000])
+  })
+})
+
+describe("stats pending summary", () => {
+  const pending = (
+    accountId: string,
+    amount: number,
+    day: number,
+    extra: Record<string, unknown> = {},
+  ) =>
+    entry(accountId, "expense", amount, new Date(2026, 8, day, 12), {
+      isPending: true,
+      kind: "upcoming",
+      ...extra,
+    })
+
+  it("gives the same total whichever order a refund and an expense come in", async () => {
+    seedAccount("pend-a", "NOK", 100_000)
+    seedAccount("pend-b", "DKK", 100_000)
+    await createTransaction(pending("pend-a", 5_000, 1, { subtype: "refund" }))
+    await createTransaction(pending("pend-a", 10_000, 2))
+    await createTransaction(pending("pend-b", 10_000, 1))
+    await createTransaction(pending("pend-b", 5_000, 2, { subtype: "refund" }))
+    expect((await statsFor("NOK")).pendingSummary?.totalExpense).toBe(5_000)
+    expect((await statsFor("DKK")).pendingSummary?.totalExpense).toBe(5_000)
+  })
+
+  it("never reports a negative pending expense", async () => {
+    seedAccount("pend-c", "PLN", 100_000)
+    await createTransaction(
+      entry("pend-c", "expense", 100, new Date(2026, 8, 1, 12)),
+    )
+    await createTransaction(pending("pend-c", 5_000, 1, { subtype: "refund" }))
+    expect((await statsFor("PLN")).pendingSummary?.totalExpense).toBe(0)
+  })
+})
+
+describe("stats currencies and counts", () => {
+  it("lists a currency whose only activity is a transfer", async () => {
+    seedAccount("hu-a", "HUF", 50_000)
+    seedAccount("hu-b", "HUF", 50_000)
+    await createTransfer({
+      fromAccountId: "hu-a",
+      toAccountId: "hu-b",
+      amount: 10_000,
+      transactionDate: new Date(2026, 2, 5, 12),
+    })
+    const stats = await statsFor("HUF")
+    expect(stats.current.totalExpense).toBe(0)
+    expect(stats.current.totalIncome).toBe(0)
+    expect(stats.closingBalance).toBe(100_000)
+  })
+
+  it("does not count loan rows that the totals leave out", async () => {
+    seedAccount("cnt", "CZK", 1_000_000)
+    drizzleDb
+      .insert(categories)
+      .values({
+        id: "cat-cnt",
+        name: "Loans",
+        type: "expense",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      })
+      .run()
+    await createLoanWithOpeningEntry(
+      {
+        name: "Sam",
+        principalAmount: 500_000,
+        loanType: "lent",
+        accountId: "cnt",
+        categoryId: "cat-cnt",
+      },
+      { title: "Lent", transactionDate: new Date(2026, 0, 5, 12) },
+    )
+    await createTransaction(
+      entry("cnt", "expense", 1_000, new Date(2026, 0, 7, 12)),
+    )
+    const stats = await statsFor("CZK")
+    expect(stats.current.transactionCount).toBe(1)
+    expect(stats.current.totalExpense).toBe(1_000)
   })
 })

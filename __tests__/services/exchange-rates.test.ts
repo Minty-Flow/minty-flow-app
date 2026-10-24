@@ -6,6 +6,7 @@ vi.mock("~/utils/toast", () => ({
 }))
 
 import { exchangeRatesService } from "~/services/exchange-rates"
+import { Toast } from "~/utils/toast"
 
 const erUsd = {
   result: "success",
@@ -36,7 +37,11 @@ function stubFetch(routes: Record<string, unknown>) {
   return fetchMock
 }
 
-beforeEach(() => exchangeRatesService.clearCache())
+beforeEach(() => {
+  exchangeRatesService.clearCache()
+  vi.mocked(Toast.error).mockClear()
+  vi.mocked(Toast.warn).mockClear()
+})
 afterEach(() => vi.unstubAllGlobals())
 
 describe("exchange rates source", () => {
@@ -93,5 +98,73 @@ describe("exchange rates source", () => {
     })
 
     expect(await exchangeRatesService.getRate("USD", "SYP")).toBeNull()
+  })
+})
+
+const toastCount = () =>
+  vi.mocked(Toast.error).mock.calls.length +
+  vi.mocked(Toast.warn).mock.calls.length
+
+describe("exchange rates fetching", () => {
+  it("makes one request per source for callers asking at the same time", async () => {
+    const fetchMock = stubFetch({
+      "open.er-api.com/v6/latest/USD": erUsd,
+      "currencies/usd.min.json": fawazUsd,
+    })
+
+    const [a, b, c] = await Promise.all([
+      exchangeRatesService.fetchRates("USD"),
+      exchangeRatesService.fetchRates("USD"),
+      exchangeRatesService.getRate("USD", "EUR"),
+    ])
+
+    expect(a).toBe(b)
+    expect(c).toBe(0.89)
+    // open.er-api.com plus the gap-fill source, once each.
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it("shows one toast when the network is down", async () => {
+    stubFetch({})
+    expect(await exchangeRatesService.getRate("USD", "EUR")).toBeNull()
+    expect(toastCount()).toBe(1)
+  })
+
+  it("falls back to expired rates with one warning", async () => {
+    vi.useFakeTimers()
+    try {
+      stubFetch({
+        "open.er-api.com/v6/latest/USD": erUsd,
+        "currencies/usd.min.json": fawazUsd,
+      })
+      await exchangeRatesService.fetchRates("USD")
+      vi.setSystemTime(Date.now() + 2 * 60 * 60 * 1000)
+      stubFetch({})
+
+      const rates = await exchangeRatesService.tryFetchRates("USD")
+
+      expect(rates?.rates.eur).toBe(0.89)
+      expect(vi.mocked(Toast.warn)).toHaveBeenCalledTimes(1)
+      expect(vi.mocked(Toast.error)).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("shows nothing when the lookup was cancelled", async () => {
+    stubFetch({
+      "open.er-api.com/v6/latest/USD": erUsd,
+      "currencies/usd.min.json": fawazUsd,
+    })
+    const controller = new AbortController()
+    const pending = exchangeRatesService.getRate(
+      "USD",
+      "EUR",
+      controller.signal,
+    )
+    controller.abort()
+
+    expect(await pending).toBeNull()
+    expect(toastCount()).toBe(0)
   })
 })

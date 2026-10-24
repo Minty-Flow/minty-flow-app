@@ -16,6 +16,7 @@ export function getLiveBudgetSpent(
         transaction.isPending ||
         transaction.type !== TransactionTypeEnum.EXPENSE ||
         transaction.isTransfer ||
+        transaction.loanId ||
         transaction.account?.currencyCode !== budget.currencyCode
       ) {
         return sum
@@ -69,6 +70,11 @@ export function getLiveGoalProgress(
     ) {
       return sum
     }
-    return sum + transaction.amount
+    return (
+      sum +
+      (transaction.subtype === TransactionSubTypeEnum.REFUND
+        ? -transaction.amount
+        : transaction.amount)
+    )
   }, 0)
 }

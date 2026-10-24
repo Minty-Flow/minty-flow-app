@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-17T07:53:25.356Z
+Generated on: 2026-10-24T21:18:54.996Z
 ```
 ./
 ├── __tests__/
@@ -26,7 +26,10 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   │   │   ├── balance-service.test.ts
 │   │   │   ├── budget-category-delete.test.ts
 │   │   │   ├── category-delete.test.ts
+│   │   │   ├── destroy-account-transfer-partner.test.ts
 │   │   │   ├── destroy-account-with-loans.test.ts
+│   │   │   ├── detach-transfer-from-rule.test.ts
+│   │   │   ├── edit-transfer-validation.test.ts
 │   │   │   ├── empty-trash.test.ts
 │   │   │   ├── loan-type-switch.test.ts
 │   │   │   ├── recurring-failure-isolation.test.ts
@@ -37,8 +40,9 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   │   │   ├── recurring-transaction-service.test.ts
 │   │   │   ├── trash-auto-purge.test.ts
 │   │   │   └── trashed-transactions-read-only.test.ts
-│   │   └── utils/
-│   │       └── get-balance-delta.test.ts
+│   │   ├── utils/
+│   │   │   └── get-balance-delta.test.ts
+│   │   └── commit-events.test.ts
 │   ├── helpers/
 │   │   ├── create-test-db.test.ts
 │   │   └── create-test-db.ts
@@ -46,13 +50,16 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   │   ├── accounts.schema.test.ts
 │   │   └── budgets.schema.test.ts
 │   ├── services/
+│   │   ├── currency-registry.test.ts
 │   │   ├── exchange-rate-sources.test.ts
 │   │   ├── exchange-rates.test.ts
 │   │   └── pending-transaction-notifications.test.ts
 │   └── utils/
+│       ├── csv.test.ts
 │       ├── live-progress.test.ts
 │       ├── money.test.ts
-│       └── recurrence.test.ts
+│       ├── recurrence.test.ts
+│       └── stats-date-range.test.ts
 ├── .github/
 │   └── workflows/
 │       ├── board-sync.yml
@@ -541,6 +548,7 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   │   │   ├── has-attachments-from-extra.ts
 │   │   │   ├── import-snapshot.ts
 │   │   │   └── recurring-template-refs.ts
+│   │   ├── commit-events.ts
 │   │   ├── db.ts
 │   │   ├── pending-migrations.ts
 │   │   ├── transaction.ts
@@ -646,6 +654,7 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   └── utils/
 │       ├── account-types-list.ts
 │       ├── attachments.ts
+│       ├── csv.ts
 │       ├── file-icon.ts
 │       ├── format-file-size.ts
 │       ├── get-week-start-on.ts

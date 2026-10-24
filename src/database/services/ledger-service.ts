@@ -755,14 +755,19 @@ export async function editTransfer(
       throw new Error(`Transfer ${txId} is in the trash`)
     }
 
-    const debitRow = tx.amount < 0 ? tx : paired
-    const creditRow = tx.amount > 0 ? tx : paired
-    if (debitRow === creditRow) {
-      throw new Error("Could not identify debit/credit legs.")
-    }
+    // The transfers row says which leg is the debit; the sign of a leg's
+    // amount cannot, because an amount of 0 has none.
+    const debitRow = partnerInfo.isDebit ? tx : paired
+    const creditRow = partnerInfo.isDebit ? paired : tx
 
     const newFromAccountId = fields.fromAccountId ?? debitRow.account_id
     const newToAccountId = fields.toAccountId ?? creditRow.account_id
+    if (newFromAccountId === newToAccountId) {
+      throw new Error("Cannot transfer to the same account.")
+    }
+    if (fields.amount !== undefined && fields.amount <= 0) {
+      throw new Error("Transfer amount must be positive.")
+    }
     const newDateMs = toDateMs(
       fields.transactionDate as number | Date | undefined,
       new Date(debitRow.transaction_date).getTime(),
@@ -1027,6 +1032,14 @@ export async function restoreTransaction(id: string): Promise<void> {
     if (transferPartner) {
       restoreTransferById(tx.id, db)
       return
+    }
+
+    if (tx.type === "transfer" && tx.is_deleted) {
+      // Destroying an account removes the transfer link and trashes the other
+      // account's leg. Restoring that leg alone would put back half a transfer.
+      throw new Error(
+        "This transfer's other leg was removed with its account and cannot be restored.",
+      )
     }
 
     if (!tx.is_deleted) return
@@ -1318,9 +1331,14 @@ export async function deleteFutureRecurringInstances(
 export async function detachFromRule(id: string): Promise<void> {
   const now = new Date().toISOString()
   await runInTransaction("transaction.detach", (db) => {
+    // A transfer is two rows under one rule; detaching one leg would leave the
+    // other for a later "delete this and future" to remove on its own.
+    const ids = [id]
+    const partner = getPartnerTxId(id, db)
+    if (partner) ids.push(partner.partnerId)
     db.update(transactions)
       .set({ recurringId: null, updatedAt: now })
-      .where(eq(transactions.id, id))
+      .where(inArray(transactions.id, ids))
       .run()
   })
 }

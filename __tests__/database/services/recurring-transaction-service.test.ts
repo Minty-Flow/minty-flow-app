@@ -14,6 +14,7 @@ import { drizzleDb } from "~/database/drizzle/db"
 import {
   accounts,
   recurringTransactions,
+  tags,
   transactions,
 } from "~/database/drizzle/schema"
 import { applyRecurringEditScope } from "~/database/services/recurring-transaction-service"
@@ -217,5 +218,49 @@ describe("applyRecurringEditScope this_and_future", () => {
     expect(rowsOf("rule-manual-changed").map((r) => r.manual)).toEqual([
       1, 1, 1,
     ])
+  })
+
+  it("writes tags, subtype, extra and description into the rule template", async () => {
+    seedRule("rule-template")
+    drizzleDb
+      .insert(tags)
+      .values(
+        ["tag-a", "tag-b"].map((id) => ({
+          id,
+          name: id,
+          type: "generic",
+          createdAt: now,
+          updatedAt: now,
+        })),
+      )
+      .run()
+
+    await applyRecurringEditScope({
+      scope: "this_and_future",
+      transactionId: "rule-template-t0",
+      transactionDate: EDITED,
+      ruleId: "rule-template",
+      payload: editPayload(EDITED, {
+        tags: ["tag-a", "tag-b"],
+        subtype: "refund",
+        description: "shared plan",
+        extra: {
+          note: "keep",
+          recurringId: "rule-template",
+          recurringInitialDate: "123",
+        },
+      }),
+    })
+
+    const row = drizzleDb
+      .select({ template: recurringTransactions.jsonTransactionTemplate })
+      .from(recurringTransactions)
+      .where(eq(recurringTransactions.id, "rule-template"))
+      .get()
+    const template = JSON.parse(row?.template ?? "{}")
+    expect(template.tags).toEqual(["tag-a", "tag-b"])
+    expect(template.subtype).toBe("refund")
+    expect(template.description).toBe("shared plan")
+    expect(template.extra).toEqual({ note: "keep" })
   })
 })

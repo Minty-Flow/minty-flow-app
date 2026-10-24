@@ -43,6 +43,49 @@ export function clampInterval(n: number): number {
 }
 
 /**
+ * rrule does its arithmetic on the UTC fields of a Date. Feeding it real
+ * instants makes a "23:30 on the 14th" rule come out an hour off after a DST
+ * change, and puts a rule whose local day differs from its UTC day on the wrong
+ * day of the month. These two helpers move a Date's local wall-clock fields
+ * into UTC fields and back, so rrule steps in local time.
+ */
+function toFloating(d: Date): Date {
+  return new Date(
+    Date.UTC(
+      d.getFullYear(),
+      d.getMonth(),
+      d.getDate(),
+      d.getHours(),
+      d.getMinutes(),
+      d.getSeconds(),
+      d.getMilliseconds(),
+    ),
+  )
+}
+
+function fromFloating(d: Date): Date {
+  return new Date(
+    d.getUTCFullYear(),
+    d.getUTCMonth(),
+    d.getUTCDate(),
+    d.getUTCHours(),
+    d.getUTCMinutes(),
+    d.getUTCSeconds(),
+    d.getUTCMilliseconds(),
+  )
+}
+
+/** The same rule, stepping through local wall-clock time. */
+function toLocalRule(rule: RRule): RRule {
+  const { dtstart, until, ...rest } = rule.origOptions
+  return new RRule({
+    ...rest,
+    ...(dtstart ? { dtstart: toFloating(dtstart) } : {}),
+    ...(until ? { until: toFloating(until) } : {}),
+  })
+}
+
+/**
  * Build an RRULE string from "every {interval} {unit}", a start date, and an
  * optional end date. `until` is normalised to end-of-day (device-local) so an
  * "until Oct 16" rule includes every occurrence that falls on Oct 16.
@@ -95,10 +138,10 @@ export function countOccurrencesBetween(
   const rule = new RRule({
     freq: FREQ_BY_UNIT[recurrence.unit],
     interval: clampInterval(recurrence.interval),
-    dtstart: startDate,
-    until: endDate,
+    dtstart: toFloating(startDate),
+    until: toFloating(endDate),
   })
-  return rule.between(startDate, endDate, true).length
+  return rule.between(toFloating(startDate), toFloating(endDate), true).length
 }
 
 /**
@@ -135,15 +178,24 @@ export function nextAbsoluteOccurrence(
 ): Date | null {
   if (ruleStrings.length === 0) return null
 
-  const rrule = parseRRule(ruleStrings[0])
+  const parsed = parseRRule(ruleStrings[0])
+  const rrule = toLocalRule(parsed)
   const fromDate = new Date(range.from)
   const toDate = new Date(range.to)
   if (anchor.getTime() > toDate.getTime()) return null
 
   const anchorBeforeRange = anchor.getTime() < fromDate.getTime()
   const start = anchorBeforeRange ? fromDate : anchor
-  const next = rrule.after(start, anchorBeforeRange)
-  if (!next) return null
+  const found = rrule.after(toFloating(start), anchorBeforeRange)
+  if (!found) return null
+  // The rule's own start is an exact instant. Rebuilding it from wall-clock
+  // fields would pick the earlier of two instants when a DST change repeats
+  // that hour.
+  const startInstant = parsed.origOptions.dtstart
+  const next =
+    startInstant && found.getTime() === toFloating(startInstant).getTime()
+      ? startInstant
+      : fromFloating(found)
   if (next.getTime() > range.to) return null
   return next
 }
