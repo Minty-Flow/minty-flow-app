@@ -755,14 +755,19 @@ export async function editTransfer(
       throw new Error(`Transfer ${txId} is in the trash`)
     }
 
-    const debitRow = tx.amount < 0 ? tx : paired
-    const creditRow = tx.amount > 0 ? tx : paired
-    if (debitRow === creditRow) {
-      throw new Error("Could not identify debit/credit legs.")
-    }
+    // The transfers row says which leg is the debit; the sign of a leg's
+    // amount cannot, because an amount of 0 has none.
+    const debitRow = partnerInfo.isDebit ? tx : paired
+    const creditRow = partnerInfo.isDebit ? paired : tx
 
     const newFromAccountId = fields.fromAccountId ?? debitRow.account_id
     const newToAccountId = fields.toAccountId ?? creditRow.account_id
+    if (newFromAccountId === newToAccountId) {
+      throw new Error("Cannot transfer to the same account.")
+    }
+    if (fields.amount !== undefined && fields.amount <= 0) {
+      throw new Error("Transfer amount must be positive.")
+    }
     const newDateMs = toDateMs(
       fields.transactionDate as number | Date | undefined,
       new Date(debitRow.transaction_date).getTime(),

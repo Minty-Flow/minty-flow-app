@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-24T20:43:12.581Z
+Generated on: 2026-10-24T20:43:54.705Z
 ```
 ./
 ├── __tests__/
@@ -27,6 +27,7 @@ Generated on: 2026-10-24T20:43:12.581Z
 │   │   │   ├── budget-category-delete.test.ts
 │   │   │   ├── category-delete.test.ts
 │   │   │   ├── destroy-account-with-loans.test.ts
+│   │   │   ├── edit-transfer-validation.test.ts
 │   │   │   ├── empty-trash.test.ts
 │   │   │   ├── loan-type-switch.test.ts
 │   │   │   ├── recurring-failure-isolation.test.ts
