@@ -105,7 +105,6 @@ export const TransactionItem = ({
     amount,
     title,
     transactionDate,
-    extra,
     isDeleted,
     transferId,
     subtype,

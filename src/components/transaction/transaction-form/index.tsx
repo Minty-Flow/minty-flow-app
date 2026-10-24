@@ -240,7 +240,8 @@ export function TransactionForm(props: TransactionFormProps) {
             {/* Goal: hidden for transfers and loan kinds (a loan isn't saving
                 toward a goal), filtered by selected account */}
             {transactionType !== TransactionTypeEnum.TRANSFER &&
-              !f.isLoanKind && (
+              !f.isLoanKind &&
+              !f.isNewRecurringRule && (
                 <FormGoalPicker
                   goals={f.accountGoals}
                   goalId={f.goalId}
@@ -256,7 +257,8 @@ export function TransactionForm(props: TransactionFormProps) {
             {/* Budget: hidden for transfers and loan kinds (a loan isn't
                 spending), filtered by account + category */}
             {transactionType !== TransactionTypeEnum.TRANSFER &&
-              !f.isLoanKind && (
+              !f.isLoanKind &&
+              !f.isNewRecurringRule && (
                 <FormBudgetPicker
                   budgets={f.accountBudgets}
                   budgetId={f.budgetId}
@@ -272,7 +274,8 @@ export function TransactionForm(props: TransactionFormProps) {
             {/* Loan link: hidden for transfers and for the loan kinds (the
                 loan card owns linking there). */}
             {transactionType !== TransactionTypeEnum.TRANSFER &&
-              !f.isLoanKind && (
+              !f.isLoanKind &&
+              !f.isNewRecurringRule && (
                 <FormLoanPicker
                   loans={f.accountLoans}
                   loanId={f.loanId}
@@ -321,33 +324,35 @@ export function TransactionForm(props: TransactionFormProps) {
                 </ListItem>
               )}
 
-            <FormAttachmentsSection
-              list={f.attachmentState.list}
-              preview={f.attachmentState.preview}
-              fileToOpen={f.attachmentState.fileToOpen}
-              toRemove={f.attachmentState.toRemove}
-              addFilesExpanded={f.attachmentState.addFilesExpanded}
-              onToggleAddFiles={() =>
-                f.setAttachmentState({
-                  addFilesExpanded: !f.attachmentState.addFilesExpanded,
-                })
-              }
-              onClosePreview={() => f.setAttachmentState({ preview: null })}
-              onCancelFileOpen={() =>
-                f.setAttachmentState({ fileToOpen: null })
-              }
-              onPreview={(a) => f.setAttachmentState({ preview: a })}
-              onOpenExternal={(a) => f.setAttachmentState({ fileToOpen: a })}
-              onRemoveRequest={(a) => f.setAttachmentState({ toRemove: a })}
-              onRemoveConfirm={f.removeAttachment}
-              onRemoveCancel={() => f.setAttachmentState({ toRemove: null })}
-              onSelectFromFiles={f.handleSelectFromFiles}
-              onTakePhoto={f.handleTakePhoto}
-              onSelectMultipleMedia={f.handleSelectMultipleMedia}
-              onSelectSinglePhoto={f.handleSelectSinglePhoto}
-            />
+            {!f.isNewRecurringRule && (
+              <FormAttachmentsSection
+                list={f.attachmentState.list}
+                preview={f.attachmentState.preview}
+                fileToOpen={f.attachmentState.fileToOpen}
+                toRemove={f.attachmentState.toRemove}
+                addFilesExpanded={f.attachmentState.addFilesExpanded}
+                onToggleAddFiles={() =>
+                  f.setAttachmentState({
+                    addFilesExpanded: !f.attachmentState.addFilesExpanded,
+                  })
+                }
+                onClosePreview={() => f.setAttachmentState({ preview: null })}
+                onCancelFileOpen={() =>
+                  f.setAttachmentState({ fileToOpen: null })
+                }
+                onPreview={(a) => f.setAttachmentState({ preview: a })}
+                onOpenExternal={(a) => f.setAttachmentState({ fileToOpen: a })}
+                onRemoveRequest={(a) => f.setAttachmentState({ toRemove: a })}
+                onRemoveConfirm={f.removeAttachment}
+                onRemoveCancel={() => f.setAttachmentState({ toRemove: null })}
+                onSelectFromFiles={f.handleSelectFromFiles}
+                onTakePhoto={f.handleTakePhoto}
+                onSelectMultipleMedia={f.handleSelectMultipleMedia}
+                onSelectSinglePhoto={f.handleSelectSinglePhoto}
+              />
+            )}
 
-            {f.locationEnabled && (
+            {f.locationEnabled && !f.isNewRecurringRule && (
               <View style={transactionFormStyles.fieldBlock}>
                 <FormLocationPicker
                   location={f.location}
