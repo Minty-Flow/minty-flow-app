@@ -60,6 +60,10 @@ class ExchangeRatesService {
   // Cache TTL: 1 hour in milliseconds
   private readonly CACHE_TTL_MS = 60 * 60 * 1000
 
+  // Network fetches in progress, by base currency, so a burst of callers for
+  // the same base makes one request (open.er-api.com answers bursts with 429).
+  private inflight: Map<string, Promise<ExchangeRates | null>> = new Map()
+
   private constructor() {
     // Private constructor for singleton pattern
   }
@@ -146,10 +150,102 @@ class ExchangeRatesService {
   }
 
   /**
+   * Fresh rates for a base currency: the cache while it is still valid,
+   * otherwise one network fetch shared by every caller asking at the same time.
+   * Never shows a toast. A caller's `signal` only stops that caller waiting;
+   * the shared fetch finishes and fills the cache for the others.
+   */
+  private async loadFreshRates(
+    normalizedCurrency: string,
+    signal?: AbortSignal,
+  ): Promise<ExchangeRates | null> {
+    const cached = this.getCachedRates(normalizedCurrency)
+    if (cached) return cached
+    if (signal?.aborted) return null
+
+    let shared = this.inflight.get(normalizedCurrency)
+    if (!shared) {
+      shared = this.fetchRatesFromNetwork(normalizedCurrency).finally(() => {
+        this.inflight.delete(normalizedCurrency)
+      })
+      this.inflight.set(normalizedCurrency, shared)
+    }
+    if (!signal) return shared
+
+    return new Promise((resolve, reject) => {
+      const onAbort = () => resolve(null)
+      signal.addEventListener("abort", onAbort, { once: true })
+      shared.then(resolve, reject).finally(() => {
+        signal.removeEventListener("abort", onAbort)
+      })
+    })
+  }
+
+  private async fetchRatesFromNetwork(
+    normalizedCurrency: string,
+  ): Promise<ExchangeRates | null> {
+    const primary = await this.fetchFromSources(
+      RATE_SOURCES,
+      normalizedCurrency,
+    )
+    if (!primary) {
+      logger.error(
+        `Failed to fetch exchange rates for ${normalizedCurrency} from all sources.`,
+      )
+      return null
+    }
+
+    // open.er-api.com has no crypto and a few ISO codes; fill those from
+    // fawazahmed0 on a best-effort basis. Never needed when a fawazahmed0
+    // source was already the one that answered.
+    const sourceRates =
+      primary.source === OPEN_ER_API
+        ? fillMissingRates(
+            primary.rates,
+            (await this.fetchFromSources(GAP_FILL_SOURCES, normalizedCurrency))
+              ?.rates ?? null,
+          )
+        : primary.rates
+
+    const normalizedRates: ExchangeRates = {
+      date: sourceRates.date,
+      baseCurrency: normalizedCurrency,
+      rates: sourceRates.rates,
+    }
+
+    logger.debug("Normalized rates", {
+      baseCurrency: normalizedCurrency,
+      date: normalizedRates.date,
+      rateCount: Object.keys(normalizedRates.rates).length,
+      sampleRates: Object.keys(normalizedRates.rates).slice(0, 5),
+    })
+    this.updateCache(normalizedCurrency, normalizedRates)
+    return normalizedRates
+  }
+
+  /**
+   * Rates for a base currency, falling back to an expired cache entry when the
+   * network gives nothing. `stale` says which one the caller got. No toasts.
+   */
+  private async loadRates(
+    normalizedCurrency: string,
+    signal?: AbortSignal,
+  ): Promise<{ rates: ExchangeRates; stale: boolean } | null> {
+    const fresh = await this.loadFreshRates(normalizedCurrency, signal)
+    if (fresh) return { rates: fresh, stale: false }
+    const stale = this.getCachedRates(normalizedCurrency, true)
+    return stale ? { rates: stale, stale: true } : null
+  }
+
+  private warnInvalidCurrency(): void {
+    this.showToast("screens.settings.exchangeRates.errors.invalidCurrencyCode")
+  }
+
+  /**
    * Fetches exchange rates from the API.
    *
    * @remarks
-   * Always fetches latest rates for consistency.
+   * Serves a still-valid cache entry, otherwise fetches the latest rates.
    * Tries main source first, then fallback source.
    *
    * @param baseCurrency - Base currency code (e.g., "USD")
@@ -163,72 +259,24 @@ class ExchangeRatesService {
 
     // Use registry service for validation
     if (!currencyRegistryService.isCurrencyCodeValid(baseCurrency)) {
-      const errorMessage = `Invalid currency code: ${baseCurrency}. Please use a valid ISO 4217 currency code.`
-      this.showToast(
-        "screens.settings.exchangeRates.errors.invalidCurrencyCode",
-      )
+      this.warnInvalidCurrency()
       logger.error("Invalid currency code", {
         baseCurrency,
-        error: errorMessage,
+        error: `Invalid currency code: ${baseCurrency}. Please use a valid ISO 4217 currency code.`,
       })
       return null
     }
 
-    // Check cache first
-    const cached = this.getCachedRates(normalizedCurrency)
-    if (cached) {
-      return cached
-    }
-
-    const primary = await this.fetchFromSources(
-      RATE_SOURCES,
-      normalizedCurrency,
-      signal,
-    )
-    if (signal?.aborted) return null
-
-    if (!primary) {
-      const errorMessage = `Failed to fetch exchange rates for ${baseCurrency} from all sources. Please check your internet connection and try again.`
+    const rates = await this.loadFreshRates(normalizedCurrency, signal)
+    if (!rates && !signal?.aborted) {
       this.showToast("screens.settings.exchangeRates.errors.fetchFailed")
-      logger.error(errorMessage)
-      return null
     }
-
-    // open.er-api.com has no crypto and a few ISO codes; fill those from
-    // fawazahmed0 on a best-effort basis. Never needed when a fawazahmed0
-    // source was already the one that answered.
-    const sourceRates =
-      primary.source === OPEN_ER_API
-        ? fillMissingRates(
-            primary.rates,
-            (
-              await this.fetchFromSources(
-                GAP_FILL_SOURCES,
-                normalizedCurrency,
-                signal,
-              )
-            )?.rates ?? null,
-          )
-        : primary.rates
-
-    const normalizedRates: ExchangeRates = {
-      date: sourceRates.date,
-      baseCurrency: normalizedCurrency,
-      rates: sourceRates.rates,
-    }
-
-    logger.debug("Normalized rates", {
-      baseCurrency,
-      date: normalizedRates.date,
-      rateCount: Object.keys(normalizedRates.rates).length,
-      sampleRates: Object.keys(normalizedRates.rates).slice(0, 5),
-    })
-    // Update cache
-    this.updateCache(normalizedCurrency, normalizedRates)
-    return normalizedRates
+    return rates
   }
+
   /**
-   * Tries to fetch rates, returning cached value if fetch fails.
+   * Tries to fetch rates, returning an expired cached value if the fetch fails.
+   * One toast per call: the failure, or that cached rates are in use.
    *
    * @param baseCurrency - Base currency code
    * @returns Exchange rates or null if unavailable
@@ -237,23 +285,25 @@ class ExchangeRatesService {
     baseCurrency: string,
     signal?: AbortSignal,
   ): Promise<ExchangeRates | null> {
-    logger.debug("Fetching exchange rates", { baseCurrency })
-    const rates = await this.fetchRates(baseCurrency, signal)
-
-    // If fetch failed, try to return cached value
-    if (!rates) {
-      const normalizedCurrency = normalizeCurrencyCode(baseCurrency)
-      const cached = this.getCachedRates(normalizedCurrency)
-      if (cached) {
-        this.showToast(
-          "screens.settings.exchangeRates.errors.usingCachedRates",
-          "warn",
-        )
-      }
-      return cached
+    const normalizedCurrency = normalizeCurrencyCode(baseCurrency)
+    if (!currencyRegistryService.isCurrencyCodeValid(baseCurrency)) {
+      this.warnInvalidCurrency()
+      return null
     }
 
-    return rates
+    const loaded = await this.loadRates(normalizedCurrency, signal)
+    if (signal?.aborted) return null
+    if (!loaded) {
+      this.showToast("screens.settings.exchangeRates.errors.fetchFailed")
+      return null
+    }
+    if (loaded.stale) {
+      this.showToast(
+        "screens.settings.exchangeRates.errors.usingCachedRates",
+        "warn",
+      )
+    }
+    return loaded.rates
   }
 
   /**
@@ -302,19 +352,26 @@ class ExchangeRatesService {
       return 1
     }
 
-    let rates = await this.tryFetchRates(fromCurrency, signal)
     const fromCurrencyLower = normalizeCurrencyCode(fromCurrency)
     const toCurrencyLower = normalizeCurrencyCode(toCurrency)
+    let usedStale = false
 
-    if (rates?.rates && typeof rates.rates[toCurrencyLower] === "number") {
-      return rates.rates[toCurrencyLower]
+    const direct = await this.loadRates(fromCurrencyLower, signal)
+    if (signal?.aborted) return null
+    const directRate = direct?.rates.rates[toCurrencyLower]
+    if (direct && typeof directRate === "number") {
+      if (direct.stale) this.warnUsingCachedRates()
+      return directRate
     }
+    usedStale ||= direct?.stale ?? false
 
     // Fallback: many APIs only support USD (or a few bases). Try fetching with toCurrency as base and invert.
-    rates = await this.tryFetchRates(toCurrency, signal)
-    if (rates?.rates && typeof rates.rates[fromCurrencyLower] === "number") {
-      const inverse = rates.rates[fromCurrencyLower]
-      if (inverse !== 0) return 1 / inverse
+    const reverse = await this.loadRates(toCurrencyLower, signal)
+    if (signal?.aborted) return null
+    const inverse = reverse?.rates.rates[fromCurrencyLower]
+    if (reverse && typeof inverse === "number" && inverse !== 0) {
+      if (usedStale || reverse.stale) this.warnUsingCachedRates()
+      return 1 / inverse
     }
 
     const errorMessage = `Exchange rate not found for ${fromCurrency} to ${toCurrency}. Please try again or set a custom rate in Settings.`
@@ -327,14 +384,26 @@ class ExchangeRatesService {
     return null
   }
 
+  private warnUsingCachedRates(): void {
+    this.showToast(
+      "screens.settings.exchangeRates.errors.usingCachedRates",
+      "warn",
+    )
+  }
+
   /**
    * Gets cached rates if available and not expired.
    *
    * @param currencyCode - Currency code
+   * @param allowStale - Also return an expired entry. Expired entries stay in
+   * the cache until a fetch replaces them, so they can back a failed fetch.
    * @returns Cached rates or null if expired/not found
    * @internal
    */
-  private getCachedRates(currencyCode: string): ExchangeRates | null {
+  private getCachedRates(
+    currencyCode: string,
+    allowStale = false,
+  ): ExchangeRates | null {
     const entry = this.cache.get(currencyCode)
     if (!entry) {
       return null
@@ -343,9 +412,7 @@ class ExchangeRatesService {
     // Check if cache is expired
     const now = new Date()
     const age = now.getTime() - entry.fetchedAt.getTime()
-    if (age > this.CACHE_TTL_MS) {
-      // Remove expired entry
-      this.cache.delete(currencyCode)
+    if (age > this.CACHE_TTL_MS && !allowStale) {
       return null
     }
 
