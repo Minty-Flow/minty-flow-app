@@ -956,6 +956,7 @@
         "importJsonDesc": "Replace all data from a JSON or ZIP backup file",
         "importSuccess": "Data restored successfully",
         "importError": "Restore failed",
+        "importAttachmentsFailed": "Some attachments could not be copied.",
         "importRecovered": "Import interrupted — your data has been restored.",
         "importParseError": "The selected file is not valid JSON",
         "importValidationError": "Invalid JSON backup file",

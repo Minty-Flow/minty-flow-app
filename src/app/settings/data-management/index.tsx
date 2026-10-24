@@ -215,10 +215,29 @@ export default function DataManagementScreen() {
         }
         // Only once the DB is committed — a failed import rolls back and must not
         // leave the archive's attachments behind.
-        if (stagingDir) await restoreAttachmentsFromStaging(stagingDir)
-        Toast.success({
-          title: t("screens.settings.dataManagement.importSuccess"),
-        })
+        // The data is already replaced, so a failed attachment copy must not
+        // read as a failed restore.
+        let attachmentsFailed = false
+        if (stagingDir) {
+          try {
+            await restoreAttachmentsFromStaging(stagingDir)
+          } catch {
+            attachmentsFailed = true
+            deleteStagingDir(stagingDir)
+          }
+        }
+        if (attachmentsFailed) {
+          Toast.warn({
+            title: t("screens.settings.dataManagement.importSuccess"),
+            description: t(
+              "screens.settings.dataManagement.importAttachmentsFailed",
+            ),
+          })
+        } else {
+          Toast.success({
+            title: t("screens.settings.dataManagement.importSuccess"),
+          })
+        }
         // Arrived from onboarding: the restore was the whole errand, so land in the app
         // instead of dropping the user into a settings stack rooted at onboarding.
         if (importOnly) router.replace("/")

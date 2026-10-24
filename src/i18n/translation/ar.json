@@ -956,6 +956,7 @@
         "importJsonDesc": "استبدال جميع البيانات من ملف نسخة احتياطية JSON أو ZIP",
         "importSuccess": "تمت استعادة البيانات بنجاح",
         "importError": "فشلت الاستعادة",
+        "importAttachmentsFailed": "تعذر نسخ بعض المرفقات.",
         "importRecovered": "تمت مقاطعة الاستيراد — تمت استعادة بياناتك.",
         "importParseError": "الملف المحدد ليس JSON صالحاً",
         "importValidationError": "ملف النسخ الاحتياطي JSON غير صالح",
