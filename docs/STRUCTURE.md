@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-24T21:51:30.802Z
+Generated on: 2026-10-24T21:52:42.389Z
 ```
 ./
 ├── __tests__/
@@ -504,6 +504,7 @@ Generated on: 2026-10-24T21:51:30.802Z
 │   │   ├── app-data.ts
 │   │   ├── fab-button.ts
 │   │   ├── minty-icons-selection.ts
+│   │   ├── notification-channels.ts
 │   │   ├── pre-sets-accounts.ts
 │   │   ├── pre-sets-categories.ts
 │   │   └── trash-retention.ts

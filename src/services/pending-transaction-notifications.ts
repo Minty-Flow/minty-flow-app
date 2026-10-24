@@ -1,5 +1,6 @@
 import * as Notifications from "expo-notifications"
 
+import { TRANSACTION_REMINDERS_CHANNEL_ID } from "~/constants/notification-channels"
 import {
   getPendingTransactions,
   type TransactionWithRelations,
@@ -64,6 +65,7 @@ async function scheduleForPlannedTransaction(
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,
+        channelId: TRANSACTION_REMINDERS_CHANNEL_ID,
         date: transactionDate,
       },
     })
@@ -82,6 +84,7 @@ async function scheduleForPlannedTransaction(
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,
+        channelId: TRANSACTION_REMINDERS_CHANNEL_ID,
         date: new Date(earlyMs),
       },
     })

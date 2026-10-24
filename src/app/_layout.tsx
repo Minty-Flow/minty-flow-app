@@ -20,6 +20,7 @@ import {
 import { RouteErrorBoundary } from "~/components/route-error-boundary"
 import { ToastManager } from "~/components/ui/toast"
 import { TooltipProvider } from "~/components/ui/tooltip"
+import { TRANSACTION_REMINDERS_CHANNEL_ID } from "~/constants/notification-channels"
 import { drizzleDb, expoDb } from "~/database/drizzle/db"
 import { useImportRecovery } from "~/hooks/use-import-recovery"
 import { useNotificationSync } from "~/hooks/use-notification-sync"
@@ -86,10 +87,13 @@ function AppRootLayout() {
 
   useEffect(() => {
     if (Platform.OS === "android") {
-      Notifications.setNotificationChannelAsync("transaction-reminders", {
-        name: "Transaction Reminders",
-        importance: Notifications.AndroidImportance.HIGH,
-      }).catch(() => {})
+      Notifications.setNotificationChannelAsync(
+        TRANSACTION_REMINDERS_CHANNEL_ID,
+        {
+          name: "Transaction Reminders",
+          importance: Notifications.AndroidImportance.HIGH,
+        },
+      ).catch(() => {})
     }
   }, [])
 
