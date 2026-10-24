@@ -28,6 +28,7 @@ import {
   writeSqliteSnapshot,
 } from "~/database/utils/import-snapshot"
 import { attachmentsDirectory } from "~/utils/attachments"
+import { escapeCsvField, escapeCsvText } from "~/utils/csv"
 import { getFileExtension, getMimeTypeForExtension } from "~/utils/file-icon"
 import { logger } from "~/utils/logger"
 import { minorUnitsToDecimalString } from "~/utils/money"
@@ -352,28 +353,14 @@ async function generateCsvExport(
     "created_at",
   ]
 
-  function escapeCsvField(value: unknown): string {
-    if (value === null || value === undefined) return ""
-    const str = String(value)
-    if (
-      str.includes(",") ||
-      str.includes('"') ||
-      str.includes("\n") ||
-      str.includes("\r")
-    ) {
-      return `"${str.replace(/"/g, '""')}"`
-    }
-    return str
-  }
-
   const rows = transactions.map((r) =>
     [
       escapeCsvField(r.id),
       escapeCsvField(r.transaction_date), // already ISO string in SQLite
       escapeCsvField(r.type),
       escapeCsvField(minorUnitsToDecimalString(r.amount, r.currency_code)),
-      escapeCsvField(r.title),
-      escapeCsvField(r.description),
+      escapeCsvText(r.title),
+      escapeCsvText(r.description),
       escapeCsvField(r.category_id),
       escapeCsvField(r.account_id),
       escapeCsvField(r.is_pending),
