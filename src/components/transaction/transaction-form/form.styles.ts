@@ -174,6 +174,9 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   accountTriggerError: {
     borderColor: theme.colors.error,
   },
+  accountTriggerDisabled: {
+    opacity: 0.5,
+  },
   accountTriggerContent: {
     flex: 1,
     minWidth: 0,

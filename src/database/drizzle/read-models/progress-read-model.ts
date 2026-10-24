@@ -24,8 +24,8 @@ const notTransferLeg = sql`NOT EXISTS (
 /**
  * Amount spent against a budget in `[from, to]`, computed in SQL so the card
  * never hydrates transaction rows. Mirrors `getLiveBudgetSpent`: confirmed,
- * non-deleted expenses outside transfers, in the budget currency, refunds
- * subtracting, floored at zero.
+ * non-deleted expenses outside transfers and loans, in the budget currency,
+ * refunds subtracting, floored at zero.
  */
 export function useBudgetSpent(budget: Budget, from: Date, to: Date): number {
   const accountIds =
@@ -59,6 +59,8 @@ export function useBudgetSpent(budget: Budget, from: Date, to: Date): number {
           gte(transactions.transactionDate, fromIso),
           lte(transactions.transactionDate, toIso),
           inArray(transactions.categoryId, categoryIds),
+          // Lending and repaying move money; they are not spending.
+          isNull(transactions.loanId),
           notTransferLeg,
         ),
       ),
@@ -67,7 +69,10 @@ export function useBudgetSpent(budget: Budget, from: Date, to: Date): number {
   return Math.max(0, data[0]?.total ?? 0)
 }
 
-/** Progress of a goal: sum of its confirmed, non-deleted matching entries. */
+/**
+ * Progress of a goal: sum of its confirmed, non-deleted matching entries,
+ * refunds subtracting.
+ */
 export function useGoalProgress(goal: Goal): number {
   const type =
     goal.goalType === "expense"
@@ -75,7 +80,9 @@ export function useGoalProgress(goal: Goal): number {
       : TransactionTypeEnum.INCOME
   const { data } = useLiveQuery(
     drizzleDb
-      .select({ total: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` })
+      .select({
+        total: sql<number>`COALESCE(SUM(CASE WHEN ${transactions.subtype} = ${TransactionSubTypeEnum.REFUND} THEN -${transactions.amount} ELSE ${transactions.amount} END), 0)`,
+      })
       .from(transactions)
       .innerJoin(accounts, eq(transactions.accountId, accounts.id))
       .where(
