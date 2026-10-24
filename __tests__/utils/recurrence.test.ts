@@ -121,4 +121,19 @@ describe("local wall-clock time", () => {
       expect(count).toBe(4)
     }),
   )
+
+  it(
+    "returns the start itself when a DST change repeats its hour",
+    inZone("Asia/Beirut", () => {
+      // Clocks go back at midnight on 25 Oct 2026, so 23:30 on the 24th happens
+      // twice. This is the second one (UTC+2).
+      const start = new Date(Date.UTC(2026, 9, 24, 21, 30))
+      const first = nextAbsoluteOccurrence(
+        rule(start),
+        range(start, new Date(2027, 0, 1)),
+        new Date(start.getTime() - 1),
+      )
+      expect(first?.getTime()).toBe(start.getTime())
+    }),
+  )
 })

@@ -178,7 +178,8 @@ export function nextAbsoluteOccurrence(
 ): Date | null {
   if (ruleStrings.length === 0) return null
 
-  const rrule = toLocalRule(parseRRule(ruleStrings[0]))
+  const parsed = parseRRule(ruleStrings[0])
+  const rrule = toLocalRule(parsed)
   const fromDate = new Date(range.from)
   const toDate = new Date(range.to)
   if (anchor.getTime() > toDate.getTime()) return null
@@ -187,7 +188,14 @@ export function nextAbsoluteOccurrence(
   const start = anchorBeforeRange ? fromDate : anchor
   const found = rrule.after(toFloating(start), anchorBeforeRange)
   if (!found) return null
-  const next = fromFloating(found)
+  // The rule's own start is an exact instant. Rebuilding it from wall-clock
+  // fields would pick the earlier of two instants when a DST change repeats
+  // that hour.
+  const startInstant = parsed.origOptions.dtstart
+  const next =
+    startInstant && found.getTime() === toFloating(startInstant).getTime()
+      ? startInstant
+      : fromFloating(found)
   if (next.getTime() > range.to) return null
   return next
 }
