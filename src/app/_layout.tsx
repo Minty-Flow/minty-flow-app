@@ -27,6 +27,7 @@ import { useNotificationSync } from "~/hooks/use-notification-sync"
 import { useRetentionCleanup } from "~/hooks/use-retention-cleanup"
 import { useShakeListener } from "~/hooks/use-shake-listener"
 import { useTransactionLifecycleSync } from "~/hooks/use-transaction-lifecycle-sync"
+import i18n from "~/i18n/config"
 import { DirectionEnum } from "~/i18n/language.constants"
 import { useLanguageStore } from "~/stores/language.store"
 import { useOnboardingStore } from "~/stores/onboarding.store"
@@ -70,12 +71,23 @@ function DrizzleMigratedApp() {
 
   if (migration.error) {
     return (
-      <MigrationState message="Database migration failed. Restart the app or recover from backup." />
+      <MigrationState
+        message={i18n.t("common.migration.failed", {
+          defaultValue:
+            "Database migration failed. Restart the app or recover from backup.",
+        })}
+      />
     )
   }
 
   if (!migration.success) {
-    return <MigrationState message="Preparing database..." />
+    return (
+      <MigrationState
+        message={i18n.t("common.migration.preparing", {
+          defaultValue: "Preparing database...",
+        })}
+      />
+    )
   }
 
   return <AppRootLayout />

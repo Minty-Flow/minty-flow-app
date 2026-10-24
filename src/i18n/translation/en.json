@@ -1,5 +1,9 @@
 {
   "common": {
+    "migration": {
+      "failed": "Database migration failed. Restart the app or recover from backup.",
+      "preparing": "Preparing database..."
+    },
     "failedToOpenLink": "Failed to open browser",
     "actions": {
       "save": "Save",
