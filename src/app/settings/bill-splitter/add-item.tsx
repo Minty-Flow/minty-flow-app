@@ -120,7 +120,9 @@ export default function AddItemScreen() {
   }
   const handlePercentageBlur = (participantId: string, rawValue: string) => {
     const numValue = Number.parseFloat(rawValue)
-    const clamped = Number.isNaN(numValue) ? 0 : Math.min(numValue, 100)
+    const clamped = Number.isNaN(numValue)
+      ? 0
+      : Math.max(0, Math.min(numValue, 100))
     setSplits((prev) =>
       prev.map((s) =>
         s.participantId === participantId ? { ...s, percentage: clamped } : s,

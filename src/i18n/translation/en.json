@@ -208,9 +208,9 @@
         },
         "deleteSheet": {
           "title": "Permanently delete {{name}}?",
-          "descriptionWithCount_one": "This account has {{count}} transaction. Permanently deleting the account will also delete it. This action cannot be undone.",
-          "descriptionWithCount_other": "This account has {{count}} transactions. Permanently deleting the account will also delete them. This action cannot be undone.",
-          "descriptionEmpty": "Permanently deleting this account cannot be undone. This action is irreversible!"
+          "descriptionWithCount_one": "This account has {{count}} transaction. Permanently deleting the account will also delete it, turn off its recurring rules and remove it from budgets and goals. This action cannot be undone.",
+          "descriptionWithCount_other": "This account has {{count}} transactions. Permanently deleting the account will also delete them, turn off its recurring rules and remove it from budgets and goals. This action cannot be undone.",
+          "descriptionEmpty": "Permanently deleting this account will turn off its recurring rules and remove it from budgets and goals. This action cannot be undone."
         },
         "toast": {
           "deleteFailed": "Failed to delete account.",
