@@ -24,15 +24,6 @@ import { formatReadableTime } from "~/utils/time-utils"
 
 const DAILY_REMINDER_ID = "daily-check-in-reminder"
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-})
-
 export default function ReminderScreen() {
   const { permissionStatus, refreshPermissionStatus } =
     useNotificationPermissionStatus()

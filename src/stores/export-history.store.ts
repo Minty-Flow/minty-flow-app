@@ -17,7 +17,8 @@ export interface ExportRecord {
 
 interface ExportHistoryStore {
   exports: ExportRecord[]
-  addExport: (record: Omit<ExportRecord, "id">) => void
+  /** Returns the records pushed out of the history, whose files are now unreferenced. */
+  addExport: (record: Omit<ExportRecord, "id">) => ExportRecord[]
   removeExport: (id: string) => void
   clearAll: () => void
 }
@@ -26,19 +27,21 @@ const exportHistoryStorage = createMMKV({ id: "export-history-storage" })
 
 export const useExportHistoryStore = create<ExportHistoryStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       exports: [],
 
-      addExport: (record) =>
-        set((state) => ({
-          exports: [
-            {
-              ...record,
-              id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-            },
-            ...state.exports,
-          ].slice(0, MAX_EXPORT_HISTORY), // Keep only the most recent N items
-        })),
+      addExport: (record) => {
+        const all = [
+          {
+            ...record,
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          },
+          ...get().exports,
+        ]
+        // Keep only the most recent N items
+        set({ exports: all.slice(0, MAX_EXPORT_HISTORY) })
+        return all.slice(MAX_EXPORT_HISTORY)
+      },
 
       removeExport: (id) =>
         set((state) => ({

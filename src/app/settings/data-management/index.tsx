@@ -16,6 +16,7 @@ import { View } from "~/components/ui/view"
 import {
   countBackupRecords,
   defaultExportBaseName,
+  deleteExportFile,
   deleteStagingDir,
   importBackup,
   type MintyFlowBackup,
@@ -136,7 +137,15 @@ export default function DataManagementScreen() {
         // Cancelling the folder picker / share sheet is not an export: no toast,
         // no history entry (the service already removed the temporary copy).
         if (!savedToDevice) return
-        addExport({ uri, fileName, type, exportedAt: new Date().toISOString() })
+        const evicted = addExport({
+          uri,
+          fileName,
+          type,
+          exportedAt: new Date().toISOString(),
+        })
+        // A record that fell off the history can no longer be opened or
+        // removed from the screen, so its file would stay on the device.
+        for (const old of evicted) void deleteExportFile(old.uri)
         Toast.success({
           title: t("screens.settings.dataManagement.exportSaved"),
         })

@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-24T21:54:50.605Z
+Generated on: 2026-10-24T21:55:43.106Z
 ```
 ./
 ├── __tests__/
@@ -56,6 +56,8 @@ Generated on: 2026-10-24T21:54:50.605Z
 │   │   ├── exchange-rate-sources.test.ts
 │   │   ├── exchange-rates.test.ts
 │   │   └── pending-transaction-notifications.test.ts
+│   ├── stores/
+│   │   └── export-history.store.test.ts
 │   └── utils/
 │       ├── csv.test.ts
 │       ├── live-progress.test.ts

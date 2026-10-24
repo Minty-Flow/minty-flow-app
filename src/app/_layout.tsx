@@ -37,6 +37,17 @@ import migrations from "../../drizzle/migrations"
 
 // TODO: code of conduct to be added alongside contributions rules
 
+// Registered at app start, not by whichever settings screen happens to load
+// first, so a reminder shows while the app is open.
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+})
+
 export default function RootLayout() {
   return (
     <PreUpdateBackupGate>
