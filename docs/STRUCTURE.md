@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-24T21:50:33.771Z
+Generated on: 2026-10-24T21:51:30.802Z
 ```
 ./
 ├── __tests__/
@@ -60,6 +60,7 @@ Generated on: 2026-10-24T21:50:33.771Z
 │       ├── csv.test.ts
 │       ├── live-progress.test.ts
 │       ├── money.test.ts
+│       ├── planning-progress.test.ts
 │       ├── recurrence.test.ts
 │       └── stats-date-range.test.ts
 ├── .github/

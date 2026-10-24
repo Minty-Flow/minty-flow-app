@@ -22,9 +22,11 @@ import {
   useSingleOpenSwipeable,
   useTransactionListFilters,
 } from "~/hooks/use-transaction-list-state"
+import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import {
   applySearch,
   applyTransactionFilters,
+  applyTransferLayout,
 } from "~/utils/transaction-list-utils"
 export default function PendingTransactionsScreen() {
   const { t } = useTranslation()
@@ -52,9 +54,10 @@ export default function PendingTransactionsScreen() {
     to: month.to,
     isPending: true,
   })
-  const transactionsFull = applySearch(
-    applyTransactionFilters(allPending, filterState),
-    searchState,
+  const transferLayout = useTransfersPreferencesStore((s) => s.layout)
+  const transactionsFull = applyTransferLayout(
+    applySearch(applyTransactionFilters(allPending, filterState), searchState),
+    transferLayout,
   )
   useLayoutEffect(() => {
     navigation.setOptions({

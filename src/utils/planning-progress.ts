@@ -8,7 +8,6 @@ import {
   endOfAppWeek,
   formatDateKey,
   formatMonthKey,
-  formatWeekKey,
   formatYear,
   startOfAppWeek,
 } from "./time-utils"
@@ -75,7 +74,7 @@ export function getBudgetPeriodKey(
     case "daily":
       return formatDateKey(now)
     case "weekly":
-      return formatWeekKey(now)
+      return formatDateKey(startOfAppWeek(now))
     case "monthly":
       return formatMonthKey(now)
     case "yearly":

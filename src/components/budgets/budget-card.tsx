@@ -101,10 +101,11 @@ export function BudgetCard({ budget, categories, onPress }: BudgetCardProps) {
   const budgetId = budget.id
   const budgetName = budget.name
   const alertThreshold = budget.alertThreshold
+  const isActive = budget.isActive
   const budgetPeriod = budget.period
   const budgetStartDateMs = budget.startDate.getTime()
   useEffect(() => {
-    if (!alertThreshold || limit <= 0) return
+    if (!isActive || !alertThreshold || limit <= 0) return
     const ctx: BudgetAlertCtx = {
       id: budgetId,
       period: budgetPeriod,
@@ -123,6 +124,7 @@ export function BudgetCard({ budget, categories, onPress }: BudgetCardProps) {
     spent,
     limit,
     budgetId,
+    isActive,
     alertThreshold,
     budgetPeriod,
     budgetStartDateMs,
