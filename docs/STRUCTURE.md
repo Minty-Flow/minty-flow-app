@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-24T20:49:13.737Z
+Generated on: 2026-10-24T20:49:42.187Z
 ```
 ./
 ├── __tests__/
@@ -49,6 +49,7 @@ Generated on: 2026-10-24T20:49:13.737Z
 │   │   ├── accounts.schema.test.ts
 │   │   └── budgets.schema.test.ts
 │   ├── services/
+│   │   ├── currency-registry.test.ts
 │   │   ├── exchange-rate-sources.test.ts
 │   │   ├── exchange-rates.test.ts
 │   │   └── pending-transaction-notifications.test.ts

@@ -657,6 +657,8 @@ const getCurrencySymbol = (code: string): string => {
 class CurrencyRegistryService {
   private static instance: CurrencyRegistryService | null = null
   private customCurrencies: CustomCurrencyData[] = []
+  /** Built on first use; dropped whenever a custom currency is added. */
+  private groupedCache: Readonly<Record<string, Currency>> | null = null
 
   private constructor() {
     // Private constructor for singleton pattern
@@ -723,6 +725,7 @@ class CurrencyRegistryService {
    * @returns Record mapping currency codes to Currency objects
    */
   get groupedCurrencies(): Readonly<Record<string, Currency>> {
+    if (this.groupedCache) return this.groupedCache
     // Group ISO 4217 currencies by code
     const iso4217Grouped = new Map<string, Currency>()
     for (const currency of ISO4217_CURRENCIES) {
@@ -768,11 +771,12 @@ class CurrencyRegistryService {
     }
 
     // Combine all maps
-    return {
+    this.groupedCache = {
       ...Object.fromEntries(iso4217Grouped),
       ...Object.fromEntries(cryptoMap),
       ...Object.fromEntries(customMap),
     }
+    return this.groupedCache
   }
 
   /**
@@ -845,6 +849,7 @@ class CurrencyRegistryService {
     }
 
     this.customCurrencies.push(customCurrency)
+    this.groupedCache = null
   }
 
   /**
