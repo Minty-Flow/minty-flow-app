@@ -150,11 +150,14 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
       // reduced motion and hid every toast on frame 1 (§10.2), so the pause
       // runs as a plain JS timer on the RN thread.
       if (toastAutoHide) {
-        scheduleOnRN(() => {
-          autoHideTimer.current = setTimeout(triggerHide, toastVisibilityTime)
-        })
+        scheduleOnRN(scheduleAutoHide)
       }
     })
+  }
+  // Component-scope function so the UI worklet can hand it to scheduleOnRN
+  // by reference (locally-defined closures are not allowed).
+  const scheduleAutoHide = () => {
+    autoHideTimer.current = setTimeout(triggerHide, toastVisibilityTime)
   }
   useEffect(
     () => () => {
