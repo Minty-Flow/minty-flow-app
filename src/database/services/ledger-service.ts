@@ -806,7 +806,11 @@ export async function editTransfer(
         ? toMajorUnits(oldCreditAmount, oldToAccount.currencyCode) /
           toMajorUnits(oldDebitAmount, oldFromAccount.currencyCode)
         : 1
-    const newConversionRate = fields.conversionRate ?? oldImpliedRate
+    const newConversionRate =
+      fields.conversionRate ??
+      (newFromAccount.currencyCode === newToAccount.currencyCode
+        ? 1
+        : oldImpliedRate)
     const newCreditAmount =
       newConversionRate > 0
         ? convertMinorUnits(
