@@ -44,6 +44,9 @@ export function AppLockGate() {
       accessibilityElementsHidden={!isLocked}
     >
       <BlurView intensity={80} tint="regular" style={styles.fill}>
+        {isLocked && authFailed && !isAuthenticating ? (
+          <Text style={styles.hint}>{t("common.appLock.tapToUnlock")}</Text>
+        ) : null}
         <Pressable
           onPress={attemptUnlock}
           disabled={isAuthenticating}
@@ -56,9 +59,6 @@ export function AppLockGate() {
             size={40}
           />
         </Pressable>
-        {isLocked && authFailed && !isAuthenticating ? (
-          <Text style={styles.hint}>{t("common.appLock.tapToUnlock")}</Text>
-        ) : null}
       </BlurView>
     </Animated.View>
   )
@@ -85,7 +85,12 @@ const styles = StyleSheet.create((theme) => ({
   },
   hint: {
     ...theme.typography.bodyMedium,
-    marginTop: 12,
-    color: theme.colors.onSurface,
+    marginBottom: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    overflow: "hidden",
+    color: theme.colors.onSecondary,
+    backgroundColor: theme.colors.secondary,
   },
 }))
