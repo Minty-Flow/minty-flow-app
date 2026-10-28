@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-28T10:05:45.371Z
+Generated on: 2026-10-28T10:11:46.221Z
 ```
 ./
 ├── __tests__/
@@ -7,7 +7,8 @@ Generated on: 2026-10-28T10:05:45.371Z
 │   │   ├── accounts/
 │   │   │   └── account-update-payload.test.ts
 │   │   ├── smart-amount-input/
-│   │   │   └── format-amount.test.ts
+│   │   │   ├── format-amount.test.ts
+│   │   │   └── max-amount-input-length.test.ts
 │   │   ├── transaction/
 │   │   │   └── transaction-form/
 │   │   │       ├── transfer-edit-from-credit-leg.test.ts
