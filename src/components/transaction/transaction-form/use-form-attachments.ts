@@ -1,13 +1,16 @@
 import * as DocumentPicker from "expo-document-picker"
 import * as ImagePicker from "expo-image-picker"
 import { useReducer, useRef } from "react"
+import type { UseFormSetValue } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
+import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import type { Transaction, TransactionAttachment } from "~/types/transactions"
 import {
   deleteAttachmentFile,
   persistAttachment,
   resolveAttachmentUri,
+  toStoredAttachment,
 } from "~/utils/attachments"
 import { getFileExtension } from "~/utils/file-icon"
 import { logger } from "~/utils/logger"
@@ -15,7 +18,10 @@ import { Toast } from "~/utils/toast"
 
 import { mergeReducer } from "./form-utils"
 import type { AttachmentState } from "./types"
-export function useFormAttachments(transaction: Transaction | null) {
+export function useFormAttachments(
+  transaction: Transaction | null,
+  setValue: UseFormSetValue<TransactionFormValues>,
+) {
   const { t } = useTranslation()
   const [attachmentState, setAttachmentState] = useReducer(
     mergeReducer<AttachmentState>,
@@ -51,6 +57,16 @@ export function useFormAttachments(transaction: Transaction | null) {
   )
   const removedUris = useRef<string[]>([])
   /**
+   * §3.4a: mirrors the attachment list into the registered `attachments` field
+   * so react-hook-form sees the change — Save re-enables and the back-guard
+   * prompts instead of silently dropping new files.
+   */
+  const mirrorListToForm = (list: TransactionAttachment[]) => {
+    const json =
+      list.length > 0 ? JSON.stringify(list.map(toStoredAttachment)) : null
+    setValue("attachments", json, { shouldDirty: true })
+  }
+  /**
    * Copies each picked file into permanent storage, then appends them in a single
    * dispatch — `mergeReducer` has no functional form, so one dispatch per file would
    * read a stale list and keep only the last.
@@ -63,7 +79,9 @@ export function useFormAttachments(transaction: Transaction | null) {
           uri: resolveAttachmentUri(await persistAttachment(a.uri, a.name)),
         })),
       )
-      setAttachmentState({ list: [...attachmentState.list, ...persisted] })
+      const next = [...attachmentState.list, ...persisted]
+      setAttachmentState({ list: next })
+      mirrorListToForm(next)
     } catch (e) {
       logger.error("Failed to save attachment", { e })
       Toast.error({
@@ -73,9 +91,9 @@ export function useFormAttachments(transaction: Transaction | null) {
   }
   const removeAttachment = (uri: string) => {
     removedUris.current.push(uri)
-    setAttachmentState({
-      list: attachmentState.list.filter((x) => x.uri !== uri),
-    })
+    const next = attachmentState.list.filter((x) => x.uri !== uri)
+    setAttachmentState({ list: next })
+    mirrorListToForm(next)
   }
   /**
    * Deletes the files of attachments removed during this edit. Call only after a

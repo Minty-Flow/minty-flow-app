@@ -239,15 +239,30 @@ export function useTransactionForm({
       : null
   const [isSaving, setIsSaving] = useState(false)
   const isLoanKind = kind === "lent" || kind === "borrowed"
-  const { allowNavigation } = useNavigationGuard({
-    navigation,
-    when: isDirty && !isSaving,
-    onBlock: () => setOverlays({ unsavedSheetVisible: true }),
-  })
   const [recurring, setRecurring] = useReducer(mergeReducer<RecurringState>, {
     recurrence: { interval: 1, unit: "month" },
     until: null,
     startDate: watch("transactionDate"),
+  })
+  // §3.4b: a cadence-only edit never touched react-hook-form, so Save stayed
+  // disabled. The seeding effect stores the rule baseline in `seededCadenceRef`;
+  // diff the card against it and treat a change as dirty.
+  const seededFromRuleRef = useRef(false)
+  const seededCadenceRef = useRef<RecurringState | null>(null)
+  const isCadenceDirty = (() => {
+    const seeded = seededCadenceRef.current
+    if (!seeded) return false
+    return (
+      recurring.recurrence.interval !== seeded.recurrence.interval ||
+      recurring.recurrence.unit !== seeded.recurrence.unit ||
+      (recurring.until?.getTime() ?? null) !== (seeded.until?.getTime() ?? null)
+    )
+  })()
+  const hasUnsavedChanges = isDirty || isCadenceDirty
+  const { allowNavigation } = useNavigationGuard({
+    navigation,
+    when: hasUnsavedChanges && !isSaving,
+    onBlock: () => setOverlays({ unsavedSheetVisible: true }),
   })
   const { conversionRate, isConversionRateLoading, setConversionRate } =
     useFormConversionRate(
@@ -266,7 +281,7 @@ export function useTransactionForm({
     handleTakePhoto,
     handleSelectMultipleMedia,
     handleSelectSinglePhoto,
-  } = useFormAttachments(transaction)
+  } = useFormAttachments(transaction, setValue)
   const {
     datePicker,
     setDatePicker,
@@ -313,17 +328,17 @@ export function useTransactionForm({
   }, [isNew, isRecurringKind, date, recurring.startDate])
   // ES-8: seed the recurrence card from the stored rule exactly once when
   // editing a rule-linked instance. After this the user's card edits win.
-  const seededFromRuleRef = useRef(false)
   useEffect(() => {
     if (seededFromRuleRef.current) return
     if (!transaction?.recurringId || !recurringRule) return
     seededFromRuleRef.current = true
     const to = recurringRule.range.to
-    setRecurring({
+    seededCadenceRef.current = {
       recurrence: parseRecurrence(recurringRule.rules[0] ?? ""),
       until: to >= new Date(2099, 0, 1).getTime() ? null : new Date(to),
       startDate: new Date(recurringRule.range.from), // RS-2 anchor
-    })
+    }
+    setRecurring(seededCadenceRef.current)
   }, [transaction?.recurringId, recurringRule])
   // ES-4/5/8: kind is locked once a transaction is tied to a loan or a
   // recurring rule (recurrence editing lands in Slice 2, loan wiring in Slice 4).
@@ -637,7 +652,7 @@ export function useTransactionForm({
     }
   }
   const handleCancelPress = () => {
-    if (isDirty) {
+    if (hasUnsavedChanges) {
       setOverlays({ unsavedSheetVisible: true })
     } else {
       allowNavigation()
@@ -801,6 +816,7 @@ export function useTransactionForm({
     setValue,
     errors,
     isDirty,
+    hasUnsavedChanges,
     isSaving,
     isNew,
     submit: handleSubmit(onSubmit),
