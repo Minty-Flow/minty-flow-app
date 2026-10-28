@@ -1,5 +1,6 @@
 import { BlurView } from "expo-blur"
 import { useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -9,12 +10,15 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
 import { Pressable } from "~/components/ui/pressable"
+import { Text } from "~/components/ui/text"
 import { useAppLockStore } from "~/stores/app-lock.store"
 
 export function AppLockGate() {
+  const { t } = useTranslation()
   const lockAppEnabled = useAppLockStore((s) => s.lockAppEnabled)
   const isLocked = useAppLockStore((s) => s.isLocked)
   const isAuthenticating = useAppLockStore((s) => s.isAuthenticating)
+  const authFailed = useAppLockStore((s) => s.authFailed)
   const attemptUnlock = useAppLockStore((s) => s.attemptUnlock)
 
   const opacity = useSharedValue(isLocked ? 1 : 0)
@@ -43,7 +47,7 @@ export function AppLockGate() {
         <Pressable
           onPress={attemptUnlock}
           disabled={isAuthenticating}
-          style={styles.lockButton}
+          style={[styles.lockButton, isAuthenticating && styles.lockButtonDim]}
         >
           <IconSvg
             // Closed while locked (including while the prompt is up); flips open
@@ -52,6 +56,9 @@ export function AppLockGate() {
             size={40}
           />
         </Pressable>
+        {isLocked && authFailed && !isAuthenticating ? (
+          <Text style={styles.hint}>{t("common.appLock.tapToUnlock")}</Text>
+        ) : null}
       </BlurView>
     </Animated.View>
   )
@@ -72,5 +79,13 @@ const styles = StyleSheet.create((theme) => ({
     padding: 24,
     borderRadius: 999,
     backgroundColor: `${theme.colors.surface}55`,
+  },
+  lockButtonDim: {
+    opacity: 0.6,
+  },
+  hint: {
+    ...theme.typography.bodyMedium,
+    marginTop: 12,
+    color: theme.colors.onSurface,
   },
 }))

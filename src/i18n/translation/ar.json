@@ -38,6 +38,9 @@
       "continueWithout": "المتابعة بدون نسخة احتياطية",
       "failed": "تعذّر حفظ النسخة الاحتياطية. حاول مرة أخرى."
     },
+    "appLock": {
+      "tapToUnlock": "اضغط لفتح القفل"
+    },
     "developmentNotice": {
       "title": "ملاحظة سريعة",
       "dontShowAgain": "عدم الإظهار مرة أخرى",
