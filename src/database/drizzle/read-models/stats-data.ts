@@ -31,6 +31,7 @@ import type {
 } from "~/types/stats"
 import type { TransactionType } from "~/types/transactions"
 import {
+  TransactionKindEnum,
   TransactionSubTypeEnum,
   TransactionTypeEnum,
 } from "~/types/transactions"
@@ -57,18 +58,28 @@ import {
  * Loan cash flows (opening entry + repayments) are excluded entirely.
  * Refunds are real expenses — they contribute a negative amount.
  */
-function isRealExpense(row: { type: string; loanId: string | null }): boolean {
+function isRealExpense(row: {
+  type: string
+  loanId: string | null
+  kind: string | null
+}): boolean {
   if (row.type !== TransactionTypeEnum.EXPENSE) return false
-  return row.loanId == null
+  // Loan cash flows are excluded by kind too, because deleting a loan nulls
+  // loanId but keeps the lent/borrowed kind (map §1.4).
+  return row.loanId == null && row.kind !== TransactionKindEnum.LENT && row.kind !== TransactionKindEnum.BORROWED
 }
 
 /**
  * True when the row counts as real income for statistics purposes.
  * Loan cash flows (opening entry + repayments) are excluded entirely.
  */
-function isRealIncome(row: { type: string; loanId: string | null }): boolean {
+function isRealIncome(row: {
+  type: string
+  loanId: string | null
+  kind: string | null
+}): boolean {
   if (row.type !== TransactionTypeEnum.INCOME) return false
-  return row.loanId == null
+  return row.loanId == null && row.kind !== TransactionKindEnum.LENT && row.kind !== TransactionKindEnum.BORROWED
 }
 
 /**
@@ -82,6 +93,7 @@ function expenseContribution(row: {
   subtype: string | null
   amount: number
   loanId: string | null
+  kind: string | null
 }): number {
   if (!isRealExpense(row)) return 0
   const abs = Math.abs(row.amount)
@@ -112,9 +124,10 @@ async function fetchStatsTransactions(
     subtype: string | null
     title: string | null
     loan_id: string | null
+    kind: string | null
   }>(sql`
     SELECT t.id, t.account_id, t.category_id, t.amount, t.type, t.transaction_date,
-            t.subtype, t.title, t.loan_id
+            t.subtype, t.title, t.loan_id, t.kind
      FROM transactions t
      WHERE t.is_deleted = 0
        AND t.is_pending = 0
@@ -149,6 +162,7 @@ async function fetchStatsTransactions(
       accountId: tx.account_id,
       subtype: tx.subtype,
       loanId: tx.loan_id ?? null,
+      kind: tx.kind ?? null,
       title: tx.title,
     } satisfies StatsRawRow
   })

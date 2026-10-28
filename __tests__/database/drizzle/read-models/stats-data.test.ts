@@ -32,7 +32,10 @@ import {
   restoreTransaction,
   updateTransaction,
 } from "~/database/services/ledger-service"
-import { createLoanWithOpeningEntry } from "~/database/services/loan-service"
+import {
+  createLoanWithOpeningEntry,
+  deleteLoanById,
+} from "~/database/services/loan-service"
 import type { RowAccount } from "~/database/types/rows"
 import type { BalanceRawRow, StatsDateRange } from "~/types/stats"
 import type { TransactionType } from "~/types/transactions"
@@ -427,6 +430,56 @@ describe("stats top transactions", () => {
     )
     const stats = await statsFor("ISK")
     expect(stats.topTransactions.map((t) => t.amount)).toEqual([1_000])
+  })
+})
+
+describe("stats after a loan is deleted", () => {
+  it("does not count the lent opening entry as spending", async () => {
+    drizzleDb
+      .insert(accounts)
+      .values({
+        id: "loan-del-acc",
+        name: "loan-del-acc",
+        type: "checking",
+        balance: 0,
+        currencyCode: "USD",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      })
+      .run()
+    drizzleDb
+      .insert(categories)
+      .values({
+        id: "loan-del-cat",
+        name: "Loans",
+        type: "expense",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      })
+      .run()
+    const { loanId } = await createLoanWithOpeningEntry(
+      {
+        name: "Sam",
+        principalAmount: 5_000,
+        loanType: "lent",
+        accountId: "loan-del-acc",
+        categoryId: "loan-del-cat",
+      },
+      { title: "Lent", transactionDate: new Date(2026, 0, 11, 12) },
+    )
+    const range: StatsDateRange = {
+      preset: "custom",
+      from: new Date(2026, 0, 1),
+      to: new Date(2026, 0, 31, 23, 59, 59),
+      previousFrom: new Date(2025, 11, 1),
+      previousTo: new Date(2025, 11, 31, 23, 59, 59),
+      interval: "day",
+    }
+    // While the loan exists, and after it is deleted (loanId nulled but kind
+    // kept), the lent entry is never spending (map §1.4).
+    await deleteLoanById(loanId)
+    const stats = await fetchAllStatsData(range)
+    expect(stats[0]?.current.totalExpense ?? 0).toBe(0)
   })
 })
 

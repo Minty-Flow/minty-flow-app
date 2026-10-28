@@ -1,10 +1,11 @@
-import { and, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm"
+import { and, eq, gte, inArray, isNull, lte, ne, sql } from "drizzle-orm"
 import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 import { useMemo } from "react"
 
 import type { Budget } from "~/types/budgets"
 import type { Goal } from "~/types/goals"
 import {
+  TransactionKindEnum,
   TransactionSubTypeEnum,
   TransactionTypeEnum,
 } from "~/types/transactions"
@@ -61,6 +62,9 @@ export function useBudgetSpent(budget: Budget, from: Date, to: Date): number {
           inArray(transactions.categoryId, categoryIds),
           // Lending and repaying move money; they are not spending.
           isNull(transactions.loanId),
+          // Deleting a loan nulls loanId but keeps the kind; exclude those too.
+          ne(transactions.kind, TransactionKindEnum.LENT),
+          ne(transactions.kind, TransactionKindEnum.BORROWED),
           notTransferLeg,
         ),
       ),
@@ -136,6 +140,9 @@ export function useAccountPeriodTotals(
           eq(transactions.isDeleted, 0),
           eq(transactions.isPending, 0),
           isNull(transactions.loanId),
+          // Deleting a loan nulls loanId but keeps the kind; exclude those too.
+          ne(transactions.kind, TransactionKindEnum.LENT),
+          ne(transactions.kind, TransactionKindEnum.BORROWED),
           gte(transactions.transactionDate, fromIso),
           lte(transactions.transactionDate, toIso),
         ),
