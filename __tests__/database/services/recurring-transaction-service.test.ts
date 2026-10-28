@@ -172,6 +172,27 @@ describe("applyRecurringEditScope this_and_future", () => {
     ])
   })
 
+  it("re-anchors the rule on a date shift so the next sync keeps the cadence", async () => {
+    seedRule("rule-reanchor")
+
+    await applyRecurringEditScope({
+      scope: "this_and_future",
+      transactionId: "rule-reanchor-t0",
+      transactionDate: EDITED,
+      ruleId: "rule-reanchor",
+      payload: editPayload(new Date(EDITED.getTime() + 2 * DAY_MS)),
+    })
+
+    const rule = drizzleDb
+      .select({ rules: recurringTransactions.rules })
+      .from(recurringTransactions)
+      .where(eq(recurringTransactions.id, "rule-reanchor"))
+      .get()
+    // The rule's DTSTART must move with the shift, or the next sync would
+    // generate on the old monthly grid (map §2.3).
+    expect(rule?.rules).toContain("DTSTART:20260217")
+  })
+
   it("leaves future instances pending when a confirmed instance is edited", async () => {
     seedRule("rule-pending", { confirmedFirst: true })
     const before = accountBalance()
