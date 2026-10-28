@@ -66,7 +66,11 @@ function isRealExpense(row: {
   if (row.type !== TransactionTypeEnum.EXPENSE) return false
   // Loan cash flows are excluded by kind too, because deleting a loan nulls
   // loanId but keeps the lent/borrowed kind (map §1.4).
-  return row.loanId == null && row.kind !== TransactionKindEnum.LENT && row.kind !== TransactionKindEnum.BORROWED
+  return (
+    row.loanId == null &&
+    row.kind !== TransactionKindEnum.LENT &&
+    row.kind !== TransactionKindEnum.BORROWED
+  )
 }
 
 /**
@@ -79,7 +83,11 @@ function isRealIncome(row: {
   kind: string | null
 }): boolean {
   if (row.type !== TransactionTypeEnum.INCOME) return false
-  return row.loanId == null && row.kind !== TransactionKindEnum.LENT && row.kind !== TransactionKindEnum.BORROWED
+  return (
+    row.loanId == null &&
+    row.kind !== TransactionKindEnum.LENT &&
+    row.kind !== TransactionKindEnum.BORROWED
+  )
 }
 
 /**
