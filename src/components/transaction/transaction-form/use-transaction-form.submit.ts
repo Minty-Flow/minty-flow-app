@@ -66,8 +66,8 @@ export function buildTransactionPayload(
     goalId: data.goalId ?? null,
     budgetId: data.budgetId ?? null,
     loanId: data.loanId ?? null,
-    location: data.location,
-    extra: Object.keys(builtExtra).length > 0 ? builtExtra : undefined,
+    location: data.location ?? null,
+    extra: Object.keys(builtExtra).length > 0 ? builtExtra : null,
     subtype: data.subtype ?? undefined,
   }
 

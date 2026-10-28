@@ -176,7 +176,7 @@ export function CategoryModifyContent({
     setValue("colorSchemeName", schemeName, { shouldDirty: true })
   }
   const handleColorCleared = () => {
-    setValue("colorSchemeName", undefined, { shouldDirty: true })
+    setValue("colorSchemeName", null, { shouldDirty: true })
   }
   const currentColorScheme = getThemeStrict(formColorSchemeName)
   if (!isAddMode && !category) {

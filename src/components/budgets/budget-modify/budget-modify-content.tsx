@@ -201,7 +201,7 @@ export function BudgetModifyContent({
     setValue("colorSchemeName", schemeName, { shouldDirty: true })
   }
   const handleColorCleared = () => {
-    setValue("colorSchemeName", undefined, { shouldDirty: true })
+    setValue("colorSchemeName", null, { shouldDirty: true })
   }
   const currentColorScheme = getThemeStrict(formColorSchemeName)
   // Formatted display strings for the date rows
