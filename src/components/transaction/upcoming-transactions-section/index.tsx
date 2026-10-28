@@ -65,7 +65,7 @@ export function UpcomingTransactionsSection({
     const recurringList: TransactionWithRelations[] = []
     const pendingList: TransactionWithRelations[] = []
     for (const row of upcomingForDisplay) {
-      if (row.extra?.recurringId) {
+      if (row.recurringId) {
         recurringList.push(row)
       } else {
         pendingList.push(row)
@@ -82,9 +82,7 @@ export function UpcomingTransactionsSection({
   const [recurringToDelete, setRecurringToDelete] =
     useState<TransactionWithRelations | null>(null)
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
-  const recurringRule = useRecurringRule(
-    recurringToDelete?.extra?.recurringId ?? null,
-  )
+  const recurringRule = useRecurringRule(recurringToDelete?.recurringId ?? null)
   const handleConfirm = async (transactionId: string) => {
     const opts = { updateTransactionDate: updateDateUponConfirmation }
     try {
@@ -114,7 +112,7 @@ export function UpcomingTransactionsSection({
   const openConfirmAllSheet = () => setConfirmAllSheetVisible(true)
   const closeConfirmAllSheet = () => setConfirmAllSheetVisible(false)
   const handleBeforeDelete = (row: TransactionWithRelations) => {
-    if (row.extra?.recurringId) {
+    if (row.recurringId) {
       setRecurringToDelete(row)
       setDeleteSheetVisible(true)
       return true
@@ -145,7 +143,7 @@ export function UpcomingTransactionsSection({
 
       {recurringToDelete &&
         recurringRule &&
-        recurringRule.id === recurringToDelete.extra?.recurringId && (
+        recurringRule.id === recurringToDelete.recurringId && (
           <DeleteRecurringSheet
             visible={deleteSheetVisible}
             transaction={recurringToDelete}

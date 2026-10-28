@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-24T21:18:54.996Z
+Generated on: 2026-10-24T21:59:14.296Z
 ```
 ./
 ├── __tests__/
@@ -8,10 +8,11 @@ Generated on: 2026-10-24T21:18:54.996Z
 │   │   │   └── account-update-payload.test.ts
 │   │   ├── smart-amount-input/
 │   │   │   └── format-amount.test.ts
-│   │   └── transaction/
-│   │       └── transaction-form/
-│   │           ├── transfer-edit-from-credit-leg.test.ts
-│   │           └── transfer-rate.test.ts
+│   │   ├── transaction/
+│   │   │   └── transaction-form/
+│   │   │       ├── transfer-edit-from-credit-leg.test.ts
+│   │   │       └── transfer-rate.test.ts
+│   │   └── date-range-presets.test.ts
 │   ├── constants/
 │   │   └── trash-retention.test.ts
 │   ├── database/
@@ -19,7 +20,8 @@ Generated on: 2026-10-24T21:18:54.996Z
 │   │   │   └── backup-format.test.ts
 │   │   ├── drizzle/
 │   │   │   └── read-models/
-│   │   │       └── stats-data.test.ts
+│   │   │       ├── stats-data.test.ts
+│   │   │       └── trash-by-deletion-date.test.ts
 │   │   ├── services/
 │   │   │   ├── account-balance-adjustment.test.ts
 │   │   │   ├── backup-after-account-delete.test.ts
@@ -54,10 +56,13 @@ Generated on: 2026-10-24T21:18:54.996Z
 │   │   ├── exchange-rate-sources.test.ts
 │   │   ├── exchange-rates.test.ts
 │   │   └── pending-transaction-notifications.test.ts
+│   ├── stores/
+│   │   └── export-history.store.test.ts
 │   └── utils/
 │       ├── csv.test.ts
 │       ├── live-progress.test.ts
 │       ├── money.test.ts
+│       ├── planning-progress.test.ts
 │       ├── recurrence.test.ts
 │       └── stats-date-range.test.ts
 ├── .github/
@@ -501,6 +506,7 @@ Generated on: 2026-10-24T21:18:54.996Z
 │   │   ├── app-data.ts
 │   │   ├── fab-button.ts
 │   │   ├── minty-icons-selection.ts
+│   │   ├── notification-channels.ts
 │   │   ├── pre-sets-accounts.ts
 │   │   ├── pre-sets-categories.ts
 │   │   └── trash-retention.ts

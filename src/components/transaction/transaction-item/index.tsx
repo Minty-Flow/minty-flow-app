@@ -105,7 +105,6 @@ export const TransactionItem = ({
     amount,
     title,
     transactionDate,
-    extra,
     isDeleted,
     transferId,
     subtype,
@@ -188,7 +187,7 @@ export const TransactionItem = ({
     autoPayUpcoming,
   })
   const isUpcoming = variant === "upcoming"
-  const isAutoRecurring = Boolean(extra?.recurringId)
+  const isAutoRecurring = Boolean(transactionWithRelations.recurringId)
   const accountLabel =
     isCombinedTransfer && relatedAccount
       ? `${account?.name} → ${relatedAccount.name}`

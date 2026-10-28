@@ -20,12 +20,14 @@ import {
 import { RouteErrorBoundary } from "~/components/route-error-boundary"
 import { ToastManager } from "~/components/ui/toast"
 import { TooltipProvider } from "~/components/ui/tooltip"
+import { TRANSACTION_REMINDERS_CHANNEL_ID } from "~/constants/notification-channels"
 import { drizzleDb, expoDb } from "~/database/drizzle/db"
 import { useImportRecovery } from "~/hooks/use-import-recovery"
 import { useNotificationSync } from "~/hooks/use-notification-sync"
 import { useRetentionCleanup } from "~/hooks/use-retention-cleanup"
 import { useShakeListener } from "~/hooks/use-shake-listener"
 import { useTransactionLifecycleSync } from "~/hooks/use-transaction-lifecycle-sync"
+import i18n from "~/i18n/config"
 import { DirectionEnum } from "~/i18n/language.constants"
 import { useLanguageStore } from "~/stores/language.store"
 import { useOnboardingStore } from "~/stores/onboarding.store"
@@ -35,6 +37,17 @@ import { logger } from "~/utils/logger"
 import migrations from "../../drizzle/migrations"
 
 // TODO: code of conduct to be added alongside contributions rules
+
+// Registered at app start, not by whichever settings screen happens to load
+// first, so a reminder shows while the app is open.
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+})
 
 export default function RootLayout() {
   return (
@@ -58,12 +71,23 @@ function DrizzleMigratedApp() {
 
   if (migration.error) {
     return (
-      <MigrationState message="Database migration failed. Restart the app or recover from backup." />
+      <MigrationState
+        message={i18n.t("common.migration.failed", {
+          defaultValue:
+            "Database migration failed. Restart the app or recover from backup.",
+        })}
+      />
     )
   }
 
   if (!migration.success) {
-    return <MigrationState message="Preparing database..." />
+    return (
+      <MigrationState
+        message={i18n.t("common.migration.preparing", {
+          defaultValue: "Preparing database...",
+        })}
+      />
+    )
   }
 
   return <AppRootLayout />
@@ -86,10 +110,13 @@ function AppRootLayout() {
 
   useEffect(() => {
     if (Platform.OS === "android") {
-      Notifications.setNotificationChannelAsync("transaction-reminders", {
-        name: "Transaction Reminders",
-        importance: Notifications.AndroidImportance.HIGH,
-      }).catch(() => {})
+      Notifications.setNotificationChannelAsync(
+        TRANSACTION_REMINDERS_CHANNEL_ID,
+        {
+          name: "Transaction Reminders",
+          importance: Notifications.AndroidImportance.HIGH,
+        },
+      ).catch(() => {})
     }
   }, [])
 

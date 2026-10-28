@@ -88,12 +88,12 @@ describe("detachFromRule on a recurring transfer", () => {
   })
 
   it("still detaches a plain transaction", async () => {
-    seedAccount("d-c")
+    seedAccount("d-plain")
     drizzleDb
       .insert(transactions)
       .values({
         id: "plain-1",
-        accountId: "d-c",
+        accountId: "d-plain",
         amount: 100,
         type: "expense",
         kind: "default",
@@ -105,5 +105,45 @@ describe("detachFromRule on a recurring transfer", () => {
       .run()
     await detachFromRule("plain-1")
     expect(rowOf("plain-1")?.recurringId).toBeNull()
+  })
+})
+
+describe("detachFromRule on a plain instance", () => {
+  it("clears the rule link from the column and from extra", async () => {
+    seedAccount("d-extra")
+    drizzleDb
+      .insert(recurringTransactions)
+      .values({
+        id: "rule-p",
+        jsonTransactionTemplate: "{}",
+        range: JSON.stringify({ from: 0, to: 1 }),
+        rules: JSON.stringify([]),
+        createdAt: now,
+      })
+      .run()
+    drizzleDb
+      .insert(transactions)
+      .values({
+        id: "inst-1",
+        accountId: "d-extra",
+        amount: -500,
+        type: "expense",
+        transactionDate: now,
+        recurringId: "rule-p",
+        extra: JSON.stringify({
+          recurringId: "rule-p",
+          recurringInitialDate: "123",
+          note: "keep",
+        }),
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run()
+
+    await detachFromRule("inst-1")
+
+    const row = rowOf("inst-1")
+    expect(row?.recurringId).toBeNull()
+    expect(JSON.parse(row?.extra ?? "{}")).toEqual({ note: "keep" })
   })
 })

@@ -201,6 +201,7 @@ function seedAccount(
   currencyCode: string,
   balance: number,
   excludeFromBalance = 0,
+  isArchived = 0,
 ) {
   drizzleDb
     .insert(accounts)
@@ -211,6 +212,7 @@ function seedAccount(
       balance,
       currencyCode,
       excludeFromBalance: excludeFromBalance as 0 | 1,
+      isArchived: isArchived as 0 | 1,
       createdAt: now,
       updatedAt: now,
     })
@@ -351,6 +353,17 @@ describe("stats balance against the real ledger", () => {
     const stats = await statsFor("SEK")
     expect(stats.closingBalance).toBe(9_000 + 20_500)
     expect(stats.openingBalance).toBe(10_000 + 20_000)
+  })
+
+  it("leaves out an archived account, as the Accounts tab does", async () => {
+    seedAccount("arc-a", "PLN", 10_000)
+    seedAccount("arc-z", "PLN", 50_000, 0, 1)
+    await createTransaction(
+      entry("arc-a", "expense", 1_000, new Date(2026, 2, 3, 12)),
+    )
+    const stats = await statsFor("PLN")
+    expect(stats.closingBalance).toBe(9_000)
+    expect(stats.openingBalance).toBe(10_000)
   })
 
   it("holds a quiet account flat at its live balance", async () => {

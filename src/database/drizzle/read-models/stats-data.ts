@@ -775,7 +775,10 @@ async function computeCurrencyStats(
         categoryBreakdown.length > 0 ? (categoryBreakdown[0] ?? null) : null
 
       const currencyAccounts = accounts.filter(
-        (a) => a.currency_code === currency && !a.exclude_from_balance,
+        (a) =>
+          a.currency_code === currency &&
+          !a.exclude_from_balance &&
+          !a.is_archived,
       )
 
       const { timeline, opening, closing } = computeBalanceTimeline(

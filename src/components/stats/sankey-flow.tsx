@@ -6,6 +6,7 @@ import {
   Skia,
 } from "@shopify/react-native-skia"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
 import { View } from "~/components/ui/view"
@@ -73,6 +74,7 @@ export function SankeyFlow({
   height = 260,
   hubColor = "#4A5568",
 }: SankeyFlowProps) {
+  const { t } = useTranslation()
   const [width, setWidth] = useState(0)
   const geometry = (() => {
     if (width === 0 || left.length === 0 || right.length === 0) return null
@@ -86,14 +88,14 @@ export function SankeyFlow({
       if (diff > 0) {
         // Income > Spending: Auto-inject "To reserves" node on the right
         balancedRight.push({
-          label: "To reserves",
+          label: t("screens.stats.cashFlow.toReserves"),
           color: "#2D3748",
           value: diff,
         })
       } else {
         // Spending > Income: Auto-inject "From reserves" node on the left
         balancedLeft.push({
-          label: "From reserves",
+          label: t("screens.stats.cashFlow.fromReserves"),
           color: "#4A2020",
           value: Math.abs(diff),
         })

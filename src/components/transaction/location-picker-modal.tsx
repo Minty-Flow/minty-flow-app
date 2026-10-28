@@ -24,6 +24,14 @@ const DEFAULT_MAP_CENTER = { latitude: 37.7749, longitude: -122.4194 }
 const LOCATE_TIMEOUT_MS = 10_000
 // A cached position this recent is good enough to move the map immediately.
 const LAST_KNOWN_MAX_AGE_MS = 5 * 60_000
+// The map script runs inside a WebView that receives the chosen coordinates, so
+// it is pinned to an exact version and checked against its hash. Bumping the
+// version means recomputing both hashes (sha384 of the unpkg files).
+const MAPLIBRE_VERSION = "5.24.0"
+const MAPLIBRE_JS_SRI =
+  "sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp"
+const MAPLIBRE_CSS_SRI =
+  "sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK"
 // Module-level so the WebView prop is referentially stable across re-renders.
 const WEBVIEW_ORIGINS = [
   "https://unpkg.com",
@@ -74,8 +82,8 @@ function buildMaplibreHtml(lat: number, lng: number): string {
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css"/>
-  <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@${MAPLIBRE_VERSION}/dist/maplibre-gl.css" integrity="${MAPLIBRE_CSS_SRI}" crossorigin="anonymous"/>
+  <script src="https://unpkg.com/maplibre-gl@${MAPLIBRE_VERSION}/dist/maplibre-gl.js" integrity="${MAPLIBRE_JS_SRI}" crossorigin="anonymous"></script>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: rgba(0,0,0,0); }
     html, body, #map { width:100%; height:100%; }

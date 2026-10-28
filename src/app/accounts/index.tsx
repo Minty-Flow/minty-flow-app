@@ -24,6 +24,7 @@ import type { Account } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
 import { logger } from "~/utils/logger"
 import { getMonthRange } from "~/utils/time-utils"
+import { Toast } from "~/utils/toast"
 
 function AccountsScreen() {
   const { t } = useTranslation()
@@ -101,6 +102,7 @@ function AccountsScreen() {
       setReorderedAccounts([])
     } catch (error) {
       logger.error("Failed to save account order", { error })
+      Toast.error({ title: t("common.toast.error") })
     }
   }
   const handleCancelReorder = () => {

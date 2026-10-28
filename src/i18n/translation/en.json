@@ -1,5 +1,9 @@
 {
   "common": {
+    "migration": {
+      "failed": "Database migration failed. Restart the app or recover from backup.",
+      "preparing": "Preparing database..."
+    },
     "failedToOpenLink": "Failed to open browser",
     "actions": {
       "save": "Save",
@@ -208,9 +212,9 @@
         },
         "deleteSheet": {
           "title": "Permanently delete {{name}}?",
-          "descriptionWithCount_one": "This account has {{count}} transaction. Permanently deleting the account will also delete it. This action cannot be undone.",
-          "descriptionWithCount_other": "This account has {{count}} transactions. Permanently deleting the account will also delete them. This action cannot be undone.",
-          "descriptionEmpty": "Permanently deleting this account cannot be undone. This action is irreversible!"
+          "descriptionWithCount_one": "This account has {{count}} transaction. Permanently deleting the account will also delete it, turn off its recurring rules and remove it from budgets and goals. This action cannot be undone.",
+          "descriptionWithCount_other": "This account has {{count}} transactions. Permanently deleting the account will also delete them, turn off its recurring rules and remove it from budgets and goals. This action cannot be undone.",
+          "descriptionEmpty": "Permanently deleting this account will turn off its recurring rules and remove it from budgets and goals. This action cannot be undone."
         },
         "toast": {
           "deleteFailed": "Failed to delete account.",
@@ -262,7 +266,9 @@
         "other": "Other",
         "fromBalance": "From balance",
         "savedNode": "Saved",
-        "averagesByDay": "Averages, by day"
+        "averagesByDay": "Averages, by day",
+        "toReserves": "To reserves",
+        "fromReserves": "From reserves"
       },
       "categories": {
         "title": "Categories",
@@ -954,6 +960,7 @@
         "importJsonDesc": "Replace all data from a JSON or ZIP backup file",
         "importSuccess": "Data restored successfully",
         "importError": "Restore failed",
+        "importAttachmentsFailed": "Some attachments could not be copied.",
         "importRecovered": "Import interrupted — your data has been restored.",
         "importParseError": "The selected file is not valid JSON",
         "importValidationError": "Invalid JSON backup file",
@@ -1195,6 +1202,9 @@
         "restoredDescription": "Transaction restored.",
         "restoreFailed": "Failed to restore transaction",
         "couldNotSelectFile": "Could not select file",
+        "permissionRequired": "Permission required",
+        "cameraPermission": "Camera access is needed to take a photo.",
+        "libraryPermission": "Photo library access is needed.",
         "deleteRecurringSuccess": "Transaction deleted",
         "deleteRecurringAllSuccess": "All recurring transactions deleted",
         "deleteRecurringFutureSuccess": "This and future transactions deleted",

@@ -144,6 +144,7 @@ interface FormAccountPickerProps {
   balanceAtTransaction: number | null
   transaction: {
     id: string
+    accountId: string
   } | null
   accountError: string | undefined
   /** Called after the selected account changes (new id or cleared). */
@@ -169,8 +170,12 @@ export function FormAccountPicker({
       accounts={accounts}
       selectedId={accountId}
       selectedAccount={selectedAccount}
+      // The balance-at-time belongs to the transaction's own account; after
+      // switching accounts the picked one shows its live balance.
       triggerBalance={
-        transaction && balanceAtTransaction !== null
+        transaction &&
+        balanceAtTransaction !== null &&
+        accountId === transaction.accountId
           ? balanceAtTransaction
           : undefined
       }

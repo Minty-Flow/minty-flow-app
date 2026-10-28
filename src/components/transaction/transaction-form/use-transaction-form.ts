@@ -293,6 +293,9 @@ export function useTransactionForm({
     })
   })()
   const isRecurringKind = kind === "subscription" || kind === "repetitive"
+  // A new rule keeps only the fields its template holds; goal, budget, loan
+  // link, attachments and location belong to single transactions.
+  const isNewRecurringRule = isNew && isRecurringKind
   const occurrenceCount = recurring.until
     ? countOccurrencesBetween(
         recurring.startDate,
@@ -460,7 +463,7 @@ export function useTransactionForm({
         usdCode,
         attachmentsJson,
         effectiveDate,
-        recurringEnabled: isNew && isRecurringKind,
+        recurringEnabled: isNewRecurringRule,
       })
       if (isNew) {
         if (data.kind === "subscription" || data.kind === "repetitive") {
@@ -856,6 +859,7 @@ export function useTransactionForm({
     setRecurring,
     occurrenceCount,
     isRecurringKind,
+    isNewRecurringRule,
     recurringRule,
 
     // conversion rate

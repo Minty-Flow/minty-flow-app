@@ -54,7 +54,7 @@ export default function OnboardingAccountsScreen() {
       if (toCreate.length > 0) {
         try {
           await Promise.all(
-            toCreate.map((preset) =>
+            toCreate.map((preset, index) =>
               createAccount({
                 name: t(preset.name as TranslationKey),
                 type: preset.type,
@@ -62,7 +62,9 @@ export default function OnboardingAccountsScreen() {
                 balance: 0,
                 currencyCode: preferredCurrency,
                 colorSchemeName: "",
-                isPrimary: false,
+                // With no primary yet, the first one becomes it, so the
+                // transaction form starts with a default account.
+                isPrimary: index === 0 && !accounts.some((a) => a.isPrimary),
                 excludeFromBalance: false,
               }),
             ),

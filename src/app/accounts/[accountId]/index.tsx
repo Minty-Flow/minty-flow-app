@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
@@ -20,6 +20,7 @@ import { useAccount } from "~/database/drizzle/read-models/account-read-model"
 import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import {
   destroyAccount,
+  getAccountTransactionCount,
   unarchiveAccount,
 } from "~/database/services/account-service"
 import {
@@ -52,12 +53,17 @@ export default function AccountDetailsScreen() {
   } = useTransactionListFilters()
   const [unarchiveSheetVisible, setUnarchiveSheetVisible] = useState(false)
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
+  const [transactionCount, setTransactionCount] = useState(0)
   const liveAccount = useAccount(accountId ?? "")
   // Keep the account on screen after it is deleted, so the delete sheet is not
   // unmounted before it has closed and the screen leaves.
   const lastAccount = useRef(liveAccount)
   if (liveAccount) lastAccount.current = liveAccount
   const account = liveAccount ?? lastAccount.current
+  useEffect(() => {
+    if (!deleteSheetVisible || !accountId) return
+    getAccountTransactionCount(accountId).then(setTransactionCount)
+  }, [deleteSheetVisible, accountId])
   const excludeFromTotals = useTransfersPreferencesStore(
     (s) => s.excludeFromTotals,
   )
@@ -313,7 +319,13 @@ export default function AccountDetailsScreen() {
         title={t("screens.accounts.form.deleteSheet.title", {
           name: account.name,
         })}
-        description={t("screens.accounts.form.deleteSheet.descriptionEmpty")}
+        description={
+          transactionCount > 0
+            ? t("screens.accounts.form.deleteSheet.descriptionWithCount", {
+                count: transactionCount,
+              })
+            : t("screens.accounts.form.deleteSheet.descriptionEmpty")
+        }
         confirmLabel={t("common.actions.delete")}
         cancelLabel={t("common.actions.cancel")}
         variant="destructive"

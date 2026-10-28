@@ -1336,11 +1336,38 @@ export async function detachFromRule(id: string): Promise<void> {
     const ids = [id]
     const partner = getPartnerTxId(id, db)
     if (partner) ids.push(partner.partnerId)
-    db.update(transactions)
-      .set({ recurringId: null, updatedAt: now })
+    // Older screens read `extra.recurringId`, so drop the copy kept there too.
+    for (const row of db
+      .select({ id: transactions.id, extra: transactions.extra })
+      .from(transactions)
       .where(inArray(transactions.id, ids))
-      .run()
+      .all()) {
+      db.update(transactions)
+        .set({
+          recurringId: null,
+          extra: withoutRuleKeys(row.extra),
+          updatedAt: now,
+        })
+        .where(eq(transactions.id, row.id))
+        .run()
+    }
   })
+}
+
+function withoutRuleKeys(extra: string | null): string | null {
+  if (!extra) return extra
+  try {
+    const parsed: unknown = JSON.parse(extra)
+    if (typeof parsed !== "object" || parsed === null) return extra
+    const {
+      recurringId: _id,
+      recurringInitialDate: _date,
+      ...rest
+    } = parsed as Record<string, unknown>
+    return Object.keys(rest).length > 0 ? JSON.stringify(rest) : null
+  } catch {
+    return extra
+  }
 }
 
 /**
