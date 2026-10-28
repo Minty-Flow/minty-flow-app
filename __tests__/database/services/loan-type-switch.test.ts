@@ -21,6 +21,10 @@ import {
   transactions,
 } from "~/database/drizzle/schema"
 import {
+  deleteTransaction,
+  updateTransaction,
+} from "~/database/services/ledger-service"
+import {
   createLoanWithOpeningEntry,
   updateLoanById,
 } from "~/database/services/loan-service"
@@ -264,5 +268,28 @@ describe("updateLoanById account change", () => {
       accountId: "acc-jpy",
       amount: 300,
     })
+  })
+
+  it("keeps the opening amount in sync when the entry is edited directly", async () => {
+    const { loanId, transactionId } = await createLent()
+    await updateTransaction(transactionId, { amount: 1_000 })
+
+    // The opening entry mirrors principal_amount; an edit must not desync it.
+    expect(rowOf(transactionId)?.amount).toBe(2_000)
+    expect(
+      drizzleDb
+        .select({ principalAmount: loans.principalAmount })
+        .from(loans)
+        .where(eq(loans.id, loanId))
+        .get()?.principalAmount,
+    ).toBe(2_000)
+  })
+
+  it("refuses to delete an opening entry on its own", async () => {
+    const { transactionId } = await createLent()
+    await expect(deleteTransaction(transactionId)).rejects.toThrow(
+      "opening entry",
+    )
+    expect(rowOf(transactionId)?.isDeleted).toBe(0)
   })
 })

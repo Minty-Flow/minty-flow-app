@@ -5,6 +5,7 @@ import { getTrashRetentionDays } from "~/constants/trash-retention"
 import { drizzleDb } from "~/database/drizzle/db"
 import {
   accounts,
+  loans,
   transactions,
   transactionTags,
   transfers,
@@ -14,12 +15,14 @@ import type { RowTransaction } from "~/database/types/rows"
 import { generateId } from "~/database/utils/generate-id"
 import { getBalanceDelta } from "~/database/utils/get-balance-delta"
 import { hasAttachmentsFromExtra } from "~/database/utils/has-attachments-from-extra"
+import { getOpeningTypeForLoan } from "~/domain/transaction-kind"
 import type {
   CreateTransferParams,
   EditTransferFields,
   RecurringEditPayload,
   TransactionFormValues,
 } from "~/schemas/transactions.schema"
+import type { LoanType } from "~/types/loans"
 import type { TransactionKind, TransactionType } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import {
@@ -80,6 +83,24 @@ function requireTx(db: Db, id: string): RowTransaction {
     .get()
   if (!row) throw new Error(`Transaction ${id} not found`)
   return row
+}
+
+/**
+ * True when the row is its loan's opening cash-flow entry, whose amount must
+ * mirror the loan's `principal_amount` (map §1.5).
+ */
+function isLoanOpeningEntry(
+  db: Db,
+  tx: Pick<RowTransaction, "loan_id" | "type">,
+): boolean {
+  if (tx.loan_id == null) return false
+  const loan = db
+    .select({ loanType: loans.loanType })
+    .from(loans)
+    .where(eq(loans.id, tx.loan_id))
+    .get()
+  if (!loan) return false
+  return tx.type === getOpeningTypeForLoan(loan.loanType as LoanType)
 }
 
 function getTagIdsForTx(db: Db, txId: string): string[] {
@@ -582,7 +603,12 @@ function updateTransactionInTx(
       : (tx.kind ?? "default")
 
   const newPending = data.isPending !== undefined ? data.isPending : oldPending
-  const newAmount = data.amount !== undefined ? data.amount : oldAmount
+  // A loan opening entry's amount mirrors principal_amount (map §1.5); the
+  // loan form owns it. Silently keep the stored value, like the other locks.
+  const newAmount =
+    data.amount !== undefined && !isLoanOpeningEntry(db, tx)
+      ? data.amount
+      : oldAmount
   const newType = data.type !== undefined && !isLoanLinked ? data.type : oldType
   const newSubtype =
     data.subtype !== undefined ? (data.subtype ?? null) : oldSubtype
@@ -694,7 +720,9 @@ function updateTransactionInTx(
 
   db.update(transactions)
     .set({
-      ...(data.amount !== undefined ? { amount: data.amount } : {}),
+      ...(data.amount !== undefined || isLoanOpeningEntry(db, tx)
+        ? { amount: newAmount }
+        : {}),
       ...(data.type !== undefined && !isLoanLinked ? { type: data.type } : {}),
       kind: nextKind,
       ...(data.transactionDate !== undefined
@@ -983,6 +1011,14 @@ function deleteTransactionInTx(db: DbTransaction, id: string): void {
 
   const tx = requireTx(db, id)
   if (tx.is_deleted) return
+
+  // A loan's opening entry is deleted with the loan, not on its own; leaving
+  // it would keep the loan open without its principal row (map §3.9).
+  if (isLoanOpeningEntry(db, tx)) {
+    throw new Error(
+      "A loan's opening entry cannot be deleted on its own; delete the loan.",
+    )
+  }
 
   const transferPartner = db
     .select({ id: transfers.id })
