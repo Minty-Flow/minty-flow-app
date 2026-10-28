@@ -479,8 +479,9 @@ function AppRootLayout() {
               </Stack>
             </RouteErrorBoundary>
 
-            <AppLockGate />
+            {/* Toasts go under the lock so nothing shows above the blur before unlock. */}
             <ToastManager />
+            <AppLockGate />
 
             <NavigationBar style="auto" />
           </TooltipProvider>

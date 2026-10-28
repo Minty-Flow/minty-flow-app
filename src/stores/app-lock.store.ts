@@ -30,7 +30,7 @@ interface AppLockStore {
   setLockAfterClosing: (value: boolean) => void
   lock: () => void
   unlock: () => void
-  attemptUnlock: () => Promise<void>
+  attemptUnlock: () => Promise<boolean>
 }
 
 export const useAppLockStore = create<AppLockStore>()(
@@ -49,18 +49,22 @@ export const useAppLockStore = create<AppLockStore>()(
       unlock: () => set({ isLocked: false }),
 
       attemptUnlock: async () => {
-        if (get().isAuthenticating) return
+        if (!get().isLocked) return true
+        // A prompt is already on screen; the caller cannot claim this unlocked.
+        if (get().isAuthenticating) return false
         set({ isAuthenticating: true })
         try {
           const result = await LocalAuthentication.authenticateAsync({
             promptMessage: PROMPT_MESSAGE,
           })
           if (result.success) get().unlock()
+          return result.success
         } catch (e) {
           // H-S5: surface auth errors so the user isn't silently stuck locked
           logger.error("[AppLock] authenticateAsync threw", {
             error: String(e),
           })
+          return false
         } finally {
           set({ isAuthenticating: false })
         }
