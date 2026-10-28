@@ -50,7 +50,7 @@ export function AppLockGate() {
           disabled={isAuthenticating}
           accessibilityRole="button"
           accessibilityLabel={t("common.appLock.tapToUnlock")}
-          style={styles.fill}
+          style={styles.tapTarget}
         >
           {isLocked && !isAuthenticating ? (
             <Text style={styles.hint}>{t("common.appLock.tapToUnlock")}</Text>
@@ -83,6 +83,9 @@ const styles = StyleSheet.create((theme) => ({
   },
   fill: {
     flex: 1,
+  },
+  tapTarget: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
   },
