@@ -46,13 +46,9 @@ export function AppLockGate() {
           style={styles.lockButton}
         >
           <IconSvg
-            // Closed while locked and idle; open once the finger is on the
-            // prompt and stay open through the fade-out after a successful unlock.
-            name={
-              isAuthenticating || !isLocked
-                ? "lock-open-outline"
-                : "lock-outline"
-            }
+            // Closed while locked (including while the prompt is up); flips open
+            // only once the fingerprint/PIN succeeds, then fades out.
+            name={isLocked ? "lock-outline" : "lock-open-outline"}
             size={40}
           />
         </Pressable>
