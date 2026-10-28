@@ -45,7 +45,13 @@ export default function BillSplitterScreen() {
   const [accountPickerOpen, setAccountPickerOpen] = useState(false)
   const selectedAccount = accounts.find((a) => a.id === accountId) ?? null
   const currency = selectedAccount?.currencyCode ?? preferredCurrency
-  useEffect(() => setCurrencyCode(currency), [currency, setCurrencyCode])
+  // §6.1: the first render has no accounts, so `currency` is the preferred one;
+  // rescaling through it and back again drops a digit in 3-decimal currencies.
+  // Only sync once the real account (or its absence) is known.
+  useEffect(() => {
+    if (status === "loading" || status === "error") return
+    setCurrencyCode(currency)
+  }, [currency, setCurrencyCode, status])
   const total = getBillTotal(items)
   const allocated = getAllocatedTotal(items)
   // Progress bar fill percentage, clamped to 0–100
@@ -90,6 +96,7 @@ export default function BillSplitterScreen() {
     <BillItemCard
       item={item}
       participants={participants}
+      currency={currency}
       onDelete={() => removeItem(item.id)}
       onEdit={() =>
         router.push({

@@ -82,7 +82,6 @@ export default function AddItemScreen() {
     editItem ? editItem.quantity !== 1 : false,
   )
   const quantityNum = Math.max(quantity > 0 ? quantity : 1, 0.01)
-  const selectedCount = splits.filter((s) => s.selected).length
   // Recalculate even split when toggling participants or splitEvenly.
   // Also syncs newly added participants into the splits list so they
   // immediately get the correct even share instead of 0%.
@@ -107,9 +106,10 @@ export default function AddItemScreen() {
       percentage: s.selected ? evenPercentage : 0,
     }))
   })()
+  const selectedCount = effectiveSplits.filter((s) => s.selected).length
   const toggleParticipant = (participantId: string) => {
-    setSplits((prev) =>
-      prev.map((s) =>
+    setSplits(
+      effectiveSplits.map((s) =>
         s.participantId === participantId ? { ...s, selected: !s.selected } : s,
       ),
     )
@@ -123,8 +123,8 @@ export default function AddItemScreen() {
     const clamped = Number.isNaN(numValue)
       ? 0
       : Math.max(0, Math.min(numValue, 100))
-    setSplits((prev) =>
-      prev.map((s) =>
+    setSplits(
+      effectiveSplits.map((s) =>
         s.participantId === participantId ? { ...s, percentage: clamped } : s,
       ),
     )
