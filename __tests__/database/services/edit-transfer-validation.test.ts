@@ -14,6 +14,7 @@ import { accounts, transactions, transfers } from "~/database/drizzle/schema"
 import {
   createTransfer,
   editTransfer,
+  updateTransaction,
 } from "~/database/services/ledger-service"
 
 const now = "2026-01-01T00:00:00.000Z"
@@ -158,5 +159,20 @@ describe("editTransfer validation", () => {
     })
     expect(rowOf(link?.toTransactionId as string)?.amount).toBe(10_000)
     expect(balanceOf("v-usd-c")).toBe(10_000)
+  })
+
+  it("refuses to turn a transfer leg into a plain expense", async () => {
+    const { debitId, creditId } = await transfer("v-x", "v-y")
+    await expect(
+      updateTransaction(creditId, {
+        type: "expense",
+        amount: 1_000,
+        categoryId: null,
+        accountId: "v-y",
+        title: "t",
+      }),
+    ).rejects.toThrow(/transfer/)
+    expect(rowOf(debitId)?.type).toBe("transfer")
+    expect(rowOf(creditId)?.type).toBe("transfer")
   })
 })

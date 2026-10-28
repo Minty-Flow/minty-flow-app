@@ -553,6 +553,18 @@ function updateTransactionInTx(
   // A trashed row is not part of any balance; editing it would move one.
   if (tx.is_deleted) throw new Error(`Transaction ${id} is in the trash`)
 
+  // ES-6: a transfer's legs must stay a transfer. The type switch would orphan
+  // one leg and move both balances; the form locks the tab, this is defence.
+  if (
+    data.type !== undefined &&
+    data.type !== "transfer" &&
+    getTransferRow(id, db)
+  ) {
+    throw new Error(
+      "A transfer's legs cannot be changed to a plain expense or income.",
+    )
+  }
+
   const oldPending = !!tx.is_pending
   const oldAmount = tx.amount
   const oldType = tx.type
