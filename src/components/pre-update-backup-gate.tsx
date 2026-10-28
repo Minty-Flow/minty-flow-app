@@ -12,6 +12,7 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { hasPendingMigrationsWithData } from "~/database/pending-migrations"
 import { saveZipToDevice } from "~/database/services/data-management-service"
+import { useAppLockStore } from "~/stores/app-lock.store"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
@@ -22,6 +23,9 @@ type Phase = "checking" | "prompt" | "ready"
 export function PreUpdateBackupGate({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
   const [phase, setPhase] = useState<Phase>("checking")
+  // Reading the store forces its synchronous MMKV rehydration before the
+  // export below, so a lazy load can't let an unauthenticated export through.
+  const lockAppEnabled = useAppLockStore((s) => s.lockAppEnabled)
 
   useEffect(() => {
     try {
@@ -36,6 +40,17 @@ export function PreUpdateBackupGate({ children }: { children: ReactNode }) {
   }, [])
 
   const handleSaveBackup = async () => {
+    // §7.1: opening the export while the app lock is up would hand anyone the
+    // full DB + attachments. Ask the user to unlock first.
+    if (lockAppEnabled) {
+      try {
+        await useAppLockStore.getState().attemptUnlock()
+      } catch {
+        // auth failed — keep the prompt open, do not export
+        return
+      }
+      if (useAppLockStore.getState().isLocked) return
+    }
     try {
       const saved = await saveZipToDevice("minty-flow-before-update")
       // Cancelling the save dialog keeps the prompt open.
