@@ -40,11 +40,11 @@ export function PreUpdateBackupGate({ children }: { children: ReactNode }) {
   }, [])
 
   const handleSaveBackup = async () => {
-    // §7.1: opening the export while the app lock is up would hand anyone the
-    // full DB + attachments. Only a successful unlock from this call may export.
+    // §7.1: an export hands over the full DB + attachments, so re-verify the
+    // user every time the lock is on — even when the app is already unlocked.
     if (lockAppEnabled) {
-      const unlocked = await useAppLockStore.getState().attemptUnlock()
-      if (!unlocked || useAppLockStore.getState().isLocked) return
+      const verified = await useAppLockStore.getState().verifyIdentity()
+      if (!verified || useAppLockStore.getState().isLocked) return
     }
     try {
       const saved = await saveZipToDevice("minty-flow-before-update")

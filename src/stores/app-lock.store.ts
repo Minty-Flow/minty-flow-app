@@ -31,6 +31,8 @@ interface AppLockStore {
   lock: () => void
   unlock: () => void
   attemptUnlock: () => Promise<boolean>
+  /** Always prompts (when the lock is on), even if the app is already unlocked. */
+  verifyIdentity: () => Promise<boolean>
 }
 
 export const useAppLockStore = create<AppLockStore>()(
@@ -50,18 +52,21 @@ export const useAppLockStore = create<AppLockStore>()(
 
       attemptUnlock: async () => {
         if (!get().isLocked) return true
-        // A prompt is already on screen; the caller cannot claim this unlocked.
+        const ok = await get().verifyIdentity()
+        if (ok) get().unlock()
+        return ok
+      },
+
+      verifyIdentity: async () => {
+        if (!get().lockAppEnabled) return true
+        // A prompt is already on screen; the caller cannot claim this verified.
         if (get().isAuthenticating) return false
         set({ isAuthenticating: true })
         try {
           const result = await LocalAuthentication.authenticateAsync({
             promptMessage: PROMPT_MESSAGE,
           })
-          if (result.success) {
-            get().unlock()
-            return true
-          }
-          return false
+          return result.success
         } catch (e) {
           // H-S5: surface auth errors so the user isn't silently stuck locked
           logger.error("[AppLock] authenticateAsync threw", {
