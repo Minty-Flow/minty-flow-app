@@ -1009,7 +1009,7 @@
           "maskNumber": "إخفاء المبالغ (⁕) عند التشغيل",
           "maskNumberOnShake": "إخفاء المبالغ (⁕) عند الهز",
           "lockApp": "قفل التطبيق",
-          "lockAfterClosing": "القفل بعد الإغلاق"
+          "lockAfterClosing": "القفل عند مغادرة التطبيق"
         },
         "alert": {
           "deviceLockRequired": {

@@ -993,7 +993,7 @@
           "maskNumber": "Mask money (⁕) at startup",
           "maskNumberOnShake": "Mask money (⁕) when shaking",
           "lockApp": "Lock app",
-          "lockAfterClosing": "Lock after closing"
+          "lockAfterClosing": "Lock when leaving the app"
         },
         "alert": {
           "deviceLockRequired": {
