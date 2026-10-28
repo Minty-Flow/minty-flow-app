@@ -11,6 +11,7 @@ import { StyleSheet } from "react-native-unistyles"
 import { IconSvg } from "~/components/icons"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
+import { View } from "~/components/ui/view"
 import { useAppLockStore } from "~/stores/app-lock.store"
 
 export function AppLockGate() {
@@ -18,7 +19,6 @@ export function AppLockGate() {
   const lockAppEnabled = useAppLockStore((s) => s.lockAppEnabled)
   const isLocked = useAppLockStore((s) => s.isLocked)
   const isAuthenticating = useAppLockStore((s) => s.isAuthenticating)
-  const authFailed = useAppLockStore((s) => s.authFailed)
   const attemptUnlock = useAppLockStore((s) => s.attemptUnlock)
 
   const opacity = useSharedValue(isLocked ? 1 : 0)
@@ -44,20 +44,31 @@ export function AppLockGate() {
       accessibilityElementsHidden={!isLocked}
     >
       <BlurView intensity={80} tint="regular" style={styles.fill}>
-        {isLocked && authFailed && !isAuthenticating ? (
-          <Text style={styles.hint}>{t("common.appLock.tapToUnlock")}</Text>
-        ) : null}
+        {/* The whole screen is the tap target, so tapping anywhere unlocks. */}
         <Pressable
           onPress={attemptUnlock}
           disabled={isAuthenticating}
-          style={[styles.lockButton, isAuthenticating && styles.lockButtonDim]}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.appLock.tapToUnlock")}
+          style={styles.fill}
         >
-          <IconSvg
-            // Closed while locked (including while the prompt is up); flips open
-            // only once the fingerprint/PIN succeeds, then fades out.
-            name={isLocked ? "lock-outline" : "lock-open-outline"}
-            size={40}
-          />
+          {isLocked && !isAuthenticating ? (
+            <Text style={styles.hint}>{t("common.appLock.tapToUnlock")}</Text>
+          ) : null}
+          <View
+            style={[
+              styles.lockButton,
+              isAuthenticating && styles.lockButtonDim,
+            ]}
+          >
+            <IconSvg
+              // Closed while locked (including while the prompt is up); flips open
+              // only once the fingerprint/PIN succeeds, then fades out.
+              name={isLocked ? "lock-outline" : "lock-open-outline"}
+              size={40}
+              color={styles.iconColor.color}
+            />
+          </View>
         </Pressable>
       </BlurView>
     </Animated.View>
@@ -78,10 +89,13 @@ const styles = StyleSheet.create((theme) => ({
   lockButton: {
     padding: 24,
     borderRadius: 999,
-    backgroundColor: `${theme.colors.surface}55`,
+    backgroundColor: theme.colors.secondary,
   },
   lockButtonDim: {
     opacity: 0.6,
+  },
+  iconColor: {
+    color: theme.colors.onSecondary,
   },
   hint: {
     ...theme.typography.bodyMedium,

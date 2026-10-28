@@ -25,8 +25,6 @@ interface AppLockStore {
   lockAfterClosing: boolean
   isLocked: boolean
   isAuthenticating: boolean
-  /** Set when the last prompt was cancelled or failed; cleared on the next try. */
-  authFailed: boolean
 
   setLockAppEnabled: (value: boolean) => void
   setLockAfterClosing: (value: boolean) => void
@@ -44,18 +42,17 @@ export const useAppLockStore = create<AppLockStore>()(
       // onRehydrateStorage explicitly unlocks when lockAppEnabled is false.
       isLocked: true,
       isAuthenticating: false,
-      authFailed: false,
 
       setLockAppEnabled: (value) => set({ lockAppEnabled: value }),
       setLockAfterClosing: (value) => set({ lockAfterClosing: value }),
-      lock: () => set({ isLocked: true, authFailed: false }),
-      unlock: () => set({ isLocked: false, authFailed: false }),
+      lock: () => set({ isLocked: true }),
+      unlock: () => set({ isLocked: false }),
 
       attemptUnlock: async () => {
         if (!get().isLocked) return true
         // A prompt is already on screen; the caller cannot claim this unlocked.
         if (get().isAuthenticating) return false
-        set({ isAuthenticating: true, authFailed: false })
+        set({ isAuthenticating: true })
         try {
           const result = await LocalAuthentication.authenticateAsync({
             promptMessage: PROMPT_MESSAGE,
@@ -64,14 +61,12 @@ export const useAppLockStore = create<AppLockStore>()(
             get().unlock()
             return true
           }
-          set({ authFailed: true })
           return false
         } catch (e) {
           // H-S5: surface auth errors so the user isn't silently stuck locked
           logger.error("[AppLock] authenticateAsync threw", {
             error: String(e),
           })
-          set({ authFailed: true })
           return false
         } finally {
           set({ isAuthenticating: false })
