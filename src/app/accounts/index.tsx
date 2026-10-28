@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
@@ -19,6 +19,7 @@ import { View } from "~/components/ui/view"
 import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
 import { useAccountPeriodTotals } from "~/database/drizzle/read-models/progress-read-model"
 import { updateAccountsOrder } from "~/database/services/account-service"
+import { useDayKey } from "~/hooks/use-time-reactivity"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import type { Account } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
@@ -36,10 +37,12 @@ function AccountsScreen() {
     (s) => s.excludeFromTotals,
   )
   const accounts = useActiveAccounts()
-  const { fromDate, toDate } = (() => {
+  const dayKey = useDayKey()
+  // biome-ignore lint/correctness/useExhaustiveDependencies: dayKey intentionally busts the cache on date change
+  const { fromDate, toDate } = useMemo(() => {
     const now = new Date()
     return getMonthRange(now.getFullYear(), now.getMonth())
-  })()
+  }, [dayKey])
   const { totals: totalsByAccount, isReady: totalsReady } =
     useAccountPeriodTotals(
       new Date(fromDate),
