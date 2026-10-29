@@ -1507,12 +1507,14 @@ function destroyTransactionIfPresent(db: DbTransaction, id: string): void {
 }
 
 export async function destroyAllDeletedTransactions(): Promise<void> {
-  const deleted = drizzleDb
-    .select(txSelection)
-    .from(transactions)
-    .where(eq(transactions.isDeleted, 1))
-    .all()
+  // Select inside the write transaction: a restore queued after the read would
+  // otherwise be hard-deleted.
   await runInTransaction("trash.destroyAll", (db) => {
+    const deleted = db
+      .select(txSelection)
+      .from(transactions)
+      .where(eq(transactions.isDeleted, 1))
+      .all()
     for (const tx of deleted) destroyTransactionIfPresent(db, tx.id)
   })
 }
@@ -1523,16 +1525,21 @@ export async function autoPurgeTrash(retentionValue: string): Promise<void> {
 
   const cutoff = startOfDay(subDays(new Date(), days)).toISOString()
 
-  const toPurge = drizzleDb
-    .select(txSelection)
-    .from(transactions)
-    .where(
-      and(eq(transactions.isDeleted, 1), lt(transactions.deletedAt, cutoff)),
-    )
-    .all()
+  let toPurge: RowTransaction[] = []
 
   try {
     await runInTransaction("trash.autoPurge", (db) => {
+      // Read inside the transaction so a concurrent restore is not purged.
+      toPurge = db
+        .select(txSelection)
+        .from(transactions)
+        .where(
+          and(
+            eq(transactions.isDeleted, 1),
+            lt(transactions.deletedAt, cutoff),
+          ),
+        )
+        .all()
       for (const tx of toPurge) destroyTransactionIfPresent(db, tx.id)
     })
     return
