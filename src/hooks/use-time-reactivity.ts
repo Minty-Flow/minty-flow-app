@@ -2,6 +2,7 @@ import { useCallback, useSyncExternalStore } from "react"
 import { AppState } from "react-native"
 
 import { localDayKey } from "~/utils/time-utils"
+import { timestampScheduler } from "~/utils/timestamp-scheduler"
 
 /* ------------------------------------------------------------------ */
 /* Precise Minute Ticker (fires exactly at minute boundaries)         */
@@ -45,53 +46,7 @@ export function useMinuteTick(): number {
 /* ------------------------------------------------------------------ */
 /* Specific Timestamp Watcher (fires exactly when a date passes)      */
 /* ------------------------------------------------------------------ */
-class TimestampScheduler {
-  private listeners = new Map<number, Set<() => void>>()
-  private timeouts = new Map<number, ReturnType<typeof setTimeout>>()
-  subscribe(timestamp: number, callback: () => void): () => void {
-    // Round to minute for grouping (multiple transactions at same minute)
-    const minuteTimestamp = Math.floor(timestamp / 60000) * 60000
-    if (!this.listeners.has(minuteTimestamp)) {
-      this.listeners.set(minuteTimestamp, new Set())
-      this.scheduleTimestamp(minuteTimestamp)
-    }
-    const set = this.listeners.get(minuteTimestamp)
-    if (set) set.add(callback)
-    return () => {
-      const set = this.listeners.get(minuteTimestamp)
-      if (set) {
-        set.delete(callback)
-        if (set.size === 0) {
-          this.listeners.delete(minuteTimestamp)
-          const timeout = this.timeouts.get(minuteTimestamp)
-          if (timeout) {
-            clearTimeout(timeout)
-            this.timeouts.delete(minuteTimestamp)
-          }
-        }
-      }
-    }
-  }
-  private scheduleTimestamp(timestamp: number) {
-    const msUntil = timestamp - Date.now()
-    if (msUntil <= 0) {
-      this.notifyListeners(timestamp)
-      return
-    }
-    const timeout = setTimeout(() => {
-      this.notifyListeners(timestamp)
-      this.timeouts.delete(timestamp)
-    }, msUntil)
-    this.timeouts.set(timestamp, timeout)
-  }
-  private notifyListeners(timestamp: number) {
-    const set = this.listeners.get(timestamp)
-    if (set) {
-      for (const cb of set) cb()
-    }
-  }
-}
-const timestampScheduler = new TimestampScheduler()
+
 /**
  * Returns true once the specified date has passed.
  * Updates **exactly** when the date passes (no polling, no delay).
