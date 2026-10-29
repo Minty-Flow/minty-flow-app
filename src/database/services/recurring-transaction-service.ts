@@ -2,7 +2,11 @@ import { endOfDay } from "date-fns"
 import { and, count, desc, eq } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
-import { recurringTransactions, transactions } from "~/database/drizzle/schema"
+import {
+  accounts,
+  recurringTransactions,
+  transactions,
+} from "~/database/drizzle/schema"
 import { type DbTransaction, runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
 import type {
@@ -64,6 +68,8 @@ export interface RecurringTransactionTemplate {
   tags: string[] | null
   extra: Record<string, string> | null
   kind: TransactionKind
+  /** Stored rate for cross-currency transfer rules. */
+  conversionRate?: number | null
 }
 
 /** Template plus the raw scheduling columns, for the edit screen. */
@@ -162,6 +168,7 @@ interface CreateRecurringRuleInput {
   rules: string[]
   transferToAccountId?: string | null
   kind: TransactionKind
+  conversionRate?: number | null
 }
 
 export async function createRecurringRule(
@@ -170,6 +177,29 @@ export async function createRecurringRule(
   assertMinorUnits(data.amount)
   const id = generateId()
   const now = new Date().toISOString()
+
+  if (data.type === "transfer") {
+    const currencyOf = (accountId: string) =>
+      drizzleDb
+        .select({ currencyCode: accounts.currencyCode })
+        .from(accounts)
+        .where(eq(accounts.id, accountId))
+        .get()?.currencyCode
+    const fromCurrency = currencyOf(data.accountId)
+    const toCurrency = data.transferToAccountId
+      ? currencyOf(data.transferToAccountId)
+      : undefined
+    if (
+      fromCurrency &&
+      toCurrency &&
+      fromCurrency !== toCurrency &&
+      !(data.conversionRate != null && data.conversionRate > 0)
+    ) {
+      throw new Error(
+        "A conversion rate is required for cross-currency transfers.",
+      )
+    }
+  }
 
   const template: Omit<RecurringTransactionTemplate, "id"> = {
     amount: data.amount,
@@ -182,6 +212,7 @@ export async function createRecurringRule(
     tags: data.tags,
     extra: null,
     kind: data.kind,
+    conversionRate: data.conversionRate ?? null,
   }
 
   await runInTransaction("recurring.create", (db) => {
@@ -731,6 +762,7 @@ async function synchronizeRecurringTransaction(
               transactionDate: nextOccurrence,
               title: template.title ?? undefined,
               notes: template.description ?? undefined,
+              conversionRate: template.conversionRate ?? undefined,
             },
             {
               recurringId: ruleId,

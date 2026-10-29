@@ -440,6 +440,15 @@ export function createTransferInTx(
 
   if (!fromAcc || !toAcc) throw new Error("One or both accounts not found.")
 
+  if (
+    fromAcc.currencyCode !== toAcc.currencyCode &&
+    !(params.conversionRate != null && params.conversionRate > 0)
+  ) {
+    throw new Error(
+      "A conversion rate is required for cross-currency transfers.",
+    )
+  }
+
   const creditAmount =
     fromAcc.currencyCode !== toAcc.currencyCode &&
     params.conversionRate != null &&
