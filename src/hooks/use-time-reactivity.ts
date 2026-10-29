@@ -1,4 +1,3 @@
-import { useCalendars } from "expo-localization"
 import { useCallback, useSyncExternalStore } from "react"
 import { AppState } from "react-native"
 
@@ -179,20 +178,18 @@ function subscribeDayKey(callback: () => void) {
   }
 }
 /**
- * A `dayKey` that changes once per local day, immediately on app-foreground and
- * when the device time zone changes. Screens whose date-range query is otherwise
- * memoized on frozen inputs use this to re-derive "this month" after a month
- * rollover or a time zone change without a cold start.
+ * A `dayKey` that changes once per local day and immediately on app-foreground.
+ * Screens whose date-range query is otherwise memoized on frozen inputs use this
+ * to re-derive "this month" after a month rollover without a cold start.
+ *
+ * A live time zone change is not observed on Android (expo-localization only
+ * reacts to configuration changes); it is picked up on the next foreground or
+ * cold start, when the local date is recomputed.
  */
 export function useDayKey(): string {
-  const dayKey = useSyncExternalStore(
+  return useSyncExternalStore(
     subscribeDayKey,
     () => currentDayKey,
     () => currentDayKey,
   )
-  const timeZone =
-    useCalendars()[0].timeZone ??
-    Intl.DateTimeFormat().resolvedOptions().timeZone ??
-    "unknown"
-  return `${dayKey}:${timeZone}`
 }
