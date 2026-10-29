@@ -317,8 +317,16 @@ export function useTransactions(filters: TransactionFilters): {
   const transactionsResult = useLiveQuery(queries.rows, [filterHash])
   const accountsResult = useLiveQuery(queries.accounts)
   const categoriesResult = useLiveQuery(queries.categories)
-  const tagLinksResult = useLiveQuery(queries.tags, [filterHash])
-  const transfersResult = useLiveQuery(queries.transfers, [filterHash])
+  // Restores and re-dates rewrite only `transactions`; re-load the relation
+  // rows whenever the main result changes so tags/transfers are not stale.
+  const tagLinksResult = useLiveQuery(queries.tags, [
+    filterHash,
+    transactionsResult.updatedAt,
+  ])
+  const transfersResult = useLiveQuery(queries.transfers, [
+    filterHash,
+    transactionsResult.updatedAt,
+  ])
 
   const items = useMemo(
     () =>
