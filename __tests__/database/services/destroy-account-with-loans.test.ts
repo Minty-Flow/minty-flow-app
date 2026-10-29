@@ -13,6 +13,8 @@ vi.mock("~/database/drizzle/db", async () => {
 import { drizzleDb } from "~/database/drizzle/db"
 import {
   accounts,
+  budgetAccounts,
+  budgets,
   categories,
   loans,
   transactions,
@@ -21,6 +23,7 @@ import {
   AccountHasLoansError,
   destroyAccount,
 } from "~/database/services/account-service"
+import { createTransaction } from "~/database/services/ledger-service"
 import { createLoanWithOpeningEntry } from "~/database/services/loan-service"
 
 const now = "2026-01-01T00:00:00.000Z"
@@ -42,6 +45,11 @@ function addAccount(id: string) {
 
 addAccount("acc-with-loans")
 addAccount("acc-plain")
+addAccount("acc-loan-owner")
+addAccount("acc-repay")
+addAccount("acc-budget-only")
+addAccount("acc-budget-kept")
+addAccount("acc-budget-shared")
 drizzleDb
   .insert(categories)
   .values({
@@ -81,6 +89,110 @@ describe("destroyAccount", () => {
     expect(accountExists("acc-with-loans")).toBe(true)
     expect(drizzleDb.select().from(loans).all()).toHaveLength(2)
     expect(drizzleDb.select().from(transactions).all()).toHaveLength(2)
+  })
+
+  it("refuses an account holding a repayment for another account's loan", async () => {
+    const { loanId } = await createLoanWithOpeningEntry(
+      {
+        name: "Repaid elsewhere",
+        principalAmount: 1_000,
+        loanType: "lent",
+        accountId: "acc-loan-owner",
+        categoryId: "cat-1",
+      },
+      { title: "Lent", transactionDate: new Date(2026, 0, 5) },
+    )
+    await createTransaction({
+      amount: 100,
+      type: "expense",
+      transactionDate: new Date(2026, 0, 6),
+      accountId: "acc-repay",
+      title: "Repayment",
+      tags: [],
+      isPending: false,
+      kind: "default",
+      loanId,
+    } as Parameters<typeof createTransaction>[0])
+
+    const error = await destroyAccount("acc-repay").catch((e) => e)
+
+    expect(error).toBeInstanceOf(AccountHasLoansError)
+    expect(accountExists("acc-repay")).toBe(true)
+  })
+
+  it("switches off a budget left with no account", async () => {
+    drizzleDb
+      .insert(budgets)
+      .values({
+        id: "bud-alone",
+        name: "Alone",
+        amount: 10_000,
+        currencyCode: "USD",
+        period: "monthly",
+        startDate: now,
+        isActive: 1,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run()
+    drizzleDb
+      .insert(budgetAccounts)
+      .values({
+        budgetId: "bud-alone",
+        accountId: "acc-budget-only",
+        createdAt: now,
+      })
+      .run()
+
+    await destroyAccount("acc-budget-only")
+
+    const budget = drizzleDb
+      .select()
+      .from(budgets)
+      .where(eq(budgets.id, "bud-alone"))
+      .get()
+    expect(budget?.isActive).toBe(0)
+  })
+
+  it("keeps a budget that still has another account", async () => {
+    drizzleDb
+      .insert(budgets)
+      .values({
+        id: "bud-shared",
+        name: "Shared",
+        amount: 10_000,
+        currencyCode: "USD",
+        period: "monthly",
+        startDate: now,
+        isActive: 1,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run()
+    drizzleDb
+      .insert(budgetAccounts)
+      .values([
+        {
+          budgetId: "bud-shared",
+          accountId: "acc-budget-kept",
+          createdAt: now,
+        },
+        {
+          budgetId: "bud-shared",
+          accountId: "acc-budget-shared",
+          createdAt: now,
+        },
+      ])
+      .run()
+
+    await destroyAccount("acc-budget-shared")
+
+    const budget = drizzleDb
+      .select()
+      .from(budgets)
+      .where(eq(budgets.id, "bud-shared"))
+      .get()
+    expect(budget?.isActive).toBe(1)
   })
 
   it("still destroys an account without loans", async () => {
