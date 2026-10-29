@@ -64,11 +64,12 @@ export async function runInTransaction<T>(
   name: string,
   fn: (db: DbTransaction) => T,
 ): Promise<T> {
-  // Re-entrant: if already inside a queued tx context, bypass queue to avoid deadlock.
+  // Re-entrant: run inside the transaction that is already open. Opening a
+  // second one here issued a nested BEGIN whose writes were discarded.
   if (txDepth > 0) {
     txDepth++
     try {
-      return drizzleDb.transaction(assertSynchronous(fn))
+      return assertSynchronous(fn)(drizzleDb as unknown as DbTransaction)
     } finally {
       txDepth--
     }
