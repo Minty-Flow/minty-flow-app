@@ -1,3 +1,4 @@
+import { useCalendars } from "expo-localization"
 import { useCallback, useSyncExternalStore } from "react"
 import { AppState } from "react-native"
 
@@ -141,6 +142,7 @@ function publishDayKey() {
 }
 function scheduleNextDay() {
   if (dayTimeoutId) clearTimeout(dayTimeoutId)
+  // UTC-anchored, so it needs no reschedule when the device time zone changes.
   const msFromNowToMidnight = Date.now() % 86_400_000
   dayTimeoutId = setTimeout(publishDayKey, 86_400_000 - msFromNowToMidnight)
 }
@@ -166,14 +168,20 @@ function subscribeDayKey(callback: () => void) {
   }
 }
 /**
- * A value that changes once per UTC day and immediately on app-foreground.
- * Screens whose date-range query is otherwise memoized on frozen inputs use
- * this to re-derive "this month" after a month rollover without a cold start.
+ * A `dayKey` that changes once per UTC day, immediately on app-foreground and
+ * when the device time zone changes. Screens whose date-range query is otherwise
+ * memoized on frozen inputs use this to re-derive "this month" after a month
+ * rollover or a time zone change without a cold start.
  */
-export function useDayKey(): number {
-  return useSyncExternalStore(
+export function useDayKey(): string {
+  const dayKey = useSyncExternalStore(
     subscribeDayKey,
     () => currentDayKey,
     () => currentDayKey,
   )
+  const timeZone =
+    useCalendars()[0].timeZone ??
+    Intl.DateTimeFormat().resolvedOptions().timeZone ??
+    "unknown"
+  return `${dayKey}:${timeZone}`
 }

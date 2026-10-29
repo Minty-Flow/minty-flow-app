@@ -32,7 +32,7 @@ import { Toast } from "~/utils/toast"
  * Compiler drops memo dependencies the computation does not read, so the day
  * has to be an argument for the range to re-derive after a rollover.
  */
-function currentMonthRange(_dayKey: number) {
+function currentMonthRange(_dayKey: string) {
   const now = new Date()
   return getMonthRange(now.getFullYear(), now.getMonth())
 }

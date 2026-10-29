@@ -157,7 +157,7 @@ function getDefaultDateRange(timeframeDays: number) {
 export function buildQueryFilters(
   selectedRange: { start: Date; end: Date } | null,
   homeTimeframe: number,
-  _dayKey: number,
+  _dayKey: string,
 ) {
   return selectedRange
     ? {
