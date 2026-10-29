@@ -15,6 +15,7 @@ import {
   budgets,
   categories,
 } from "~/database/drizzle/schema"
+import { duplicateBudgetById } from "~/database/services/budget-service"
 import {
   deleteCategoryById,
   getBudgetsLosingLastCategory,
@@ -160,5 +161,19 @@ describe("getBudgetsLosingLastCategory", () => {
     expect(warned.map((b) => b.id)).toEqual(["same-only"])
     expect(budgetRow("same-only")?.isActive).toBe(0)
     expect(budgetRow("same-shared")?.isActive).toBe(1)
+  })
+})
+
+describe("duplicating a budget switched off by a category delete", () => {
+  it("copies the inactive state instead of reactivating it", async () => {
+    seedCategory("dup-food")
+    seedBudget("dup-source", ["dup-food"])
+    await deleteCategoryById("dup-food")
+    expect(budgetRow("dup-source")?.isActive).toBe(0)
+
+    const copyId = await duplicateBudgetById("dup-source")
+
+    expect(budgetRow(copyId)?.isActive).toBe(0)
+    expect(linkedCategories(copyId)).toEqual([])
   })
 })

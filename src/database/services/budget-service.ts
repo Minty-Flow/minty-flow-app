@@ -189,7 +189,7 @@ export async function duplicateBudgetById(id: string): Promise<string> {
         startDate: budget.startDate,
         endDate: budget.endDate,
         alertThreshold: budget.alertThreshold,
-        isActive: 1,
+        isActive: budget.isActive,
         icon: budget.icon,
         colorSchemeName: budget.colorSchemeName,
         createdAt: now,
