@@ -213,6 +213,10 @@
         "deleteSheet": {
           "title": "حذف {{name}} نهائياً؟",
           "descriptionWithCount_one": "يحتوي هذا الحساب على {{count}} معاملة. سيؤدي الحذف النهائي إلى حذفها أيضاً وإيقاف القواعد المتكررة المرتبطة بالحساب وإزالته من الميزانيات والأهداف. لا يمكن التراجع عن هذا الإجراء.",
+          "descriptionWithCount_zero": "يحتوي هذا الحساب على {{count}} معاملة. سيؤدي الحذف النهائي إلى حذفها جميعاً وإيقاف القواعد المتكررة المرتبطة بالحساب وإزالته من الميزانيات والأهداف. لا يمكن التراجع عن هذا الإجراء.",
+          "descriptionWithCount_two": "يحتوي هذا الحساب على {{count}} معاملة. سيؤدي الحذف النهائي إلى حذفها جميعاً وإيقاف القواعد المتكررة المرتبطة بالحساب وإزالته من الميزانيات والأهداف. لا يمكن التراجع عن هذا الإجراء.",
+          "descriptionWithCount_few": "يحتوي هذا الحساب على {{count}} معاملة. سيؤدي الحذف النهائي إلى حذفها جميعاً وإيقاف القواعد المتكررة المرتبطة بالحساب وإزالته من الميزانيات والأهداف. لا يمكن التراجع عن هذا الإجراء.",
+          "descriptionWithCount_many": "يحتوي هذا الحساب على {{count}} معاملة. سيؤدي الحذف النهائي إلى حذفها جميعاً وإيقاف القواعد المتكررة المرتبطة بالحساب وإزالته من الميزانيات والأهداف. لا يمكن التراجع عن هذا الإجراء.",
           "descriptionWithCount_other": "يحتوي هذا الحساب على {{count}} معاملة. سيؤدي الحذف النهائي إلى حذفها جميعاً وإيقاف القواعد المتكررة المرتبطة بالحساب وإزالته من الميزانيات والأهداف. لا يمكن التراجع عن هذا الإجراء.",
           "descriptionEmpty": "سيؤدي الحذف النهائي لهذا الحساب إلى إيقاف قواعده المتكررة وإزالته من الميزانيات والأهداف. لا يمكن التراجع عن هذا الإجراء."
         },
@@ -723,7 +727,11 @@
               "custom": "تجاوز بمقدار {{amount}} خلال {{range}}"
             },
             "dailyPace_one": "{{amount}}/يوم لمدة يوم واحد",
-            "dailyPace_other": "{{amount}}/يوم لمدة {{count}} يوم"
+            "dailyPace_other": "{{amount}}/يوم لمدة {{count}} يوم",
+            "dailyPace_zero": "{{amount}}/يوم لمدة {{count}} يوم",
+            "dailyPace_two": "{{amount}}/يوم لمدة {{count}} يوم",
+            "dailyPace_few": "{{amount}}/يوم لمدة {{count}} يوم",
+            "dailyPace_many": "{{amount}}/يوم لمدة {{count}} يوم"
           }
         },
         "detail": {
@@ -782,7 +790,11 @@
           "dueInDays_other": "يستحق خلال {{count}} يوم",
           "noDueDate": "بلا تاريخ استحقاق",
           "settled": "مُسوّى",
-          "statusPaid": "مدفوع"
+          "statusPaid": "مدفوع",
+          "dueInDays_zero": "يستحق خلال {{count}} يوم",
+          "dueInDays_two": "يستحق خلال {{count}} يوم",
+          "dueInDays_few": "يستحق خلال {{count}} يوم",
+          "dueInDays_many": "يستحق خلال {{count}} يوم"
         },
         "form": {
           "nameLabel": "اسم القرض",
@@ -845,7 +857,11 @@
             "title": "حذف {{name}} نهائياً؟",
             "descriptionWithCount_one": "يُستخدم هذا الوسم في {{count}} معاملة. سيؤدي الحذف النهائي إلى إلغاء ارتباطه وإزالته. لا يمكن التراجع عن ذلك.",
             "descriptionWithCount_other": "يُستخدم هذا الوسم في {{count}} معاملة. سيؤدي الحذف النهائي إلى إلغاء ارتباطه من جميعها وإزالته. لا يمكن التراجع عن ذلك.",
-            "descriptionEmpty": "لا يمكن التراجع عن الحذف النهائي لهذا الوسم."
+            "descriptionEmpty": "لا يمكن التراجع عن الحذف النهائي لهذا الوسم.",
+            "descriptionWithCount_zero": "يُستخدم هذا الوسم في {{count}} معاملة. سيؤدي الحذف النهائي إلى إلغاء ارتباطه من جميعها وإزالته. لا يمكن التراجع عن ذلك.",
+            "descriptionWithCount_two": "يُستخدم هذا الوسم في {{count}} معاملة. سيؤدي الحذف النهائي إلى إلغاء ارتباطه من جميعها وإزالته. لا يمكن التراجع عن ذلك.",
+            "descriptionWithCount_few": "يُستخدم هذا الوسم في {{count}} معاملة. سيؤدي الحذف النهائي إلى إلغاء ارتباطه من جميعها وإزالته. لا يمكن التراجع عن ذلك.",
+            "descriptionWithCount_many": "يُستخدم هذا الوسم في {{count}} معاملة. سيؤدي الحذف النهائي إلى إلغاء ارتباطه من جميعها وإزالته. لا يمكن التراجع عن ذلك."
           },
           "toast": {
             "deleteFailed": "فشل حذف الوسم.",
@@ -1099,7 +1115,23 @@
           "month_one": "شهر",
           "month_other": "أشهر",
           "year_one": "سنة",
-          "year_other": "سنوات"
+          "year_other": "سنوات",
+          "day_zero": "أيام",
+          "day_two": "أيام",
+          "day_few": "أيام",
+          "day_many": "أيام",
+          "week_zero": "أسابيع",
+          "week_two": "أسابيع",
+          "week_few": "أسابيع",
+          "week_many": "أسابيع",
+          "month_zero": "أشهر",
+          "month_two": "أشهر",
+          "month_few": "أشهر",
+          "month_many": "أشهر",
+          "year_zero": "سنوات",
+          "year_two": "سنوات",
+          "year_few": "سنوات",
+          "year_many": "سنوات"
         },
         "until": "حتى",
         "forever": "للأبد",
@@ -1357,7 +1389,15 @@
           "descriptionBudgets_one": "تستخدم الميزانية {{names}} هذه الفئة كفئتها الوحيدة وسيتم إيقافها حتى تضيف إليها فئة.",
           "descriptionBudgets_other": "تستخدم الميزانيات {{names}} هذه الفئة كفئتها الوحيدة وسيتم إيقافها حتى تضيف فئة لكل منها.",
           "deleteAnyway": "احذف على أي حال",
-          "descriptionEmpty": "لا يمكن التراجع عن حذف هذه الفئة."
+          "descriptionEmpty": "لا يمكن التراجع عن حذف هذه الفئة.",
+          "descriptionWithCount_zero": "تُستخدم هذه الفئة في {{count}} معاملة. سيؤدي الحذف إلى إزالة الفئة منها وستصبح غير مصنفة. لا يمكن التراجع عن ذلك.",
+          "descriptionWithCount_two": "تُستخدم هذه الفئة في {{count}} معاملة. سيؤدي الحذف إلى إزالة الفئة منها وستصبح غير مصنفة. لا يمكن التراجع عن ذلك.",
+          "descriptionWithCount_few": "تُستخدم هذه الفئة في {{count}} معاملة. سيؤدي الحذف إلى إزالة الفئة منها وستصبح غير مصنفة. لا يمكن التراجع عن ذلك.",
+          "descriptionWithCount_many": "تُستخدم هذه الفئة في {{count}} معاملة. سيؤدي الحذف إلى إزالة الفئة منها وستصبح غير مصنفة. لا يمكن التراجع عن ذلك.",
+          "descriptionBudgets_zero": "تستخدم الميزانيات {{names}} هذه الفئة كفئتها الوحيدة وسيتم إيقافها حتى تضيف فئة لكل منها.",
+          "descriptionBudgets_two": "تستخدم الميزانيات {{names}} هذه الفئة كفئتها الوحيدة وسيتم إيقافها حتى تضيف فئة لكل منها.",
+          "descriptionBudgets_few": "تستخدم الميزانيات {{names}} هذه الفئة كفئتها الوحيدة وسيتم إيقافها حتى تضيف فئة لكل منها.",
+          "descriptionBudgets_many": "تستخدم الميزانيات {{names}} هذه الفئة كفئتها الوحيدة وسيتم إيقافها حتى تضيف فئة لكل منها."
         },
         "toast": {
           "notFound": "الفئة غير موجودة",
@@ -1406,7 +1446,23 @@
         "pendingStatus": "حالة الجدولة",
         "thisMonth": "هذا الشهر",
         "untitled": "بدون عنوان",
-        "typeCount": "عدد النوع"
+        "typeCount": "عدد النوع",
+        "categoryCount_zero": "{{count}} فئات",
+        "categoryCount_two": "{{count}} فئات",
+        "categoryCount_few": "{{count}} فئات",
+        "categoryCount_many": "{{count}} فئات",
+        "tagCount_zero": "{{count}} وسوم",
+        "tagCount_two": "{{count}} وسوم",
+        "tagCount_few": "{{count}} وسوم",
+        "tagCount_many": "{{count}} وسوم",
+        "typeCount_zero": "{{count}} أنواع",
+        "typeCount_two": "{{count}} أنواع",
+        "typeCount_few": "{{count}} أنواع",
+        "typeCount_many": "{{count}} أنواع",
+        "currencyCount_zero": "{{count}} عملات",
+        "currencyCount_two": "{{count}} عملات",
+        "currencyCount_few": "{{count}} عملات",
+        "currencyCount_many": "{{count}} عملات"
       },
       "attachmentOptions": {
         "has": "بها مرفقات",
@@ -1519,7 +1575,11 @@
     },
     "categoryRow": {
       "transactionCount_one": "معاملة واحدة",
-      "transactionCount_other": "{{count}} معاملات"
+      "transactionCount_other": "{{count}} معاملات",
+      "transactionCount_zero": "{{count}} معاملات",
+      "transactionCount_two": "{{count}} معاملات",
+      "transactionCount_few": "{{count}} معاملات",
+      "transactionCount_many": "{{count}} معاملات"
     },
     "searchInput": {
       "placeholder": "بحث..."

@@ -14,6 +14,7 @@ import { accounts, transactions, transfers } from "~/database/drizzle/schema"
 import {
   createTransfer,
   editTransfer,
+  updateTransaction,
 } from "~/database/services/ledger-service"
 
 const now = "2026-01-01T00:00:00.000Z"
@@ -32,7 +33,6 @@ function seedAccount(id: string, balance = 10_000) {
     })
     .run()
 }
-
 const balanceOf = (id: string) =>
   drizzleDb.select().from(accounts).where(eq(accounts.id, id)).get()?.balance
 
@@ -122,5 +122,57 @@ describe("editTransfer validation", () => {
     expect(rowOf(creditId)?.amount).toBe(300)
     expect(balanceOf("v-i")).toBe(9_700)
     expect(balanceOf("v-j")).toBe(10_300)
+  })
+
+  it("credits the full amount when a cross-currency transfer is edited to same currency", async () => {
+    seedAccount("v-usd-a", 100_000)
+    drizzleDb
+      .insert(accounts)
+      .values({
+        id: "v-eur-b",
+        name: "v-eur-b",
+        type: "checking",
+        balance: 0,
+        currencyCode: "EUR",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run()
+    seedAccount("v-usd-c", 0)
+    await createTransfer({
+      fromAccountId: "v-usd-a",
+      toAccountId: "v-eur-b",
+      amount: 10_000,
+      conversionRate: 0.9,
+    })
+    const link = drizzleDb
+      .select()
+      .from(transfers)
+      .where(eq(transfers.fromAccountId, "v-usd-a"))
+      .get()
+    expect(link?.conversionRate).toBe(0.9)
+    expect(rowOf(link?.toTransactionId as string)?.amount).toBe(9_000)
+    await editTransfer(link?.fromTransactionId as string, {
+      fromAccountId: "v-usd-a",
+      toAccountId: "v-usd-c",
+      amount: 10_000,
+    })
+    expect(rowOf(link?.toTransactionId as string)?.amount).toBe(10_000)
+    expect(balanceOf("v-usd-c")).toBe(10_000)
+  })
+
+  it("refuses to turn a transfer leg into a plain expense", async () => {
+    const { debitId, creditId } = await transfer("v-x", "v-y")
+    await expect(
+      updateTransaction(creditId, {
+        type: "expense",
+        amount: 1_000,
+        categoryId: null,
+        accountId: "v-y",
+        title: "t",
+      }),
+    ).rejects.toThrow(/transfer/)
+    expect(rowOf(debitId)?.type).toBe("transfer")
+    expect(rowOf(creditId)?.type).toBe("transfer")
   })
 })

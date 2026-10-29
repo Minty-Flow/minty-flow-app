@@ -79,18 +79,9 @@ export default function EditProfileScreen() {
       // 5. Copy to app storage (permanent)
       await sourceFile.copy(destinationFile)
 
-      // 6. Delete the previous local copy before swapping the URI so stale files don't accumulate.
-      // Awaited to prevent a race condition where rapid successive picks could interleave
-      // the deletion of the previous file with the copy of the new one.
-      if (localImageUri) {
-        try {
-          await new File(localImageUri).delete()
-        } catch {
-          // file may already be gone — ignore
-        }
-      }
-
-      // 7. Save URI (this is your "permanentUri")
+      // 6. Point the local state at the new file. The previous persisted file
+      // is only deleted in handleSave — deleting it here would leave the saved
+      // avatar broken when the user backs out without saving (map §6.4).
       setLocalImageUri(destinationFile.uri)
     } catch (e) {
       logger.error("Failed to pick/save image:", { e })
@@ -102,15 +93,9 @@ export default function EditProfileScreen() {
     }
   }
 
-  const handleRemoveImage = async () => {
-    if (localImageUri) {
-      try {
-        const file = new File(localImageUri)
-        await file.delete()
-      } catch (e) {
-        logger.error("File already gone or deletion failed", { e })
-      }
-    }
+  const handleRemoveImage = () => {
+    // Backing out without saving must keep the persisted avatar intact, so the
+    // file is deleted only in handleSave (map §6.4).
     setLocalImageUri(null)
   }
 

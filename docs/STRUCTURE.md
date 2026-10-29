@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-24T21:59:14.296Z
+Generated on: 2026-10-28T13:02:28.892Z
 ```
 ./
 ├── __tests__/
@@ -7,7 +7,8 @@ Generated on: 2026-10-24T21:59:14.296Z
 │   │   ├── accounts/
 │   │   │   └── account-update-payload.test.ts
 │   │   ├── smart-amount-input/
-│   │   │   └── format-amount.test.ts
+│   │   │   ├── format-amount.test.ts
+│   │   │   └── max-amount-input-length.test.ts
 │   │   ├── transaction/
 │   │   │   └── transaction-form/
 │   │   │       ├── transfer-edit-from-credit-leg.test.ts
@@ -28,6 +29,7 @@ Generated on: 2026-10-24T21:59:14.296Z
 │   │   │   ├── balance-service.test.ts
 │   │   │   ├── budget-category-delete.test.ts
 │   │   │   ├── category-delete.test.ts
+│   │   │   ├── color-clear.test.ts
 │   │   │   ├── destroy-account-transfer-partner.test.ts
 │   │   │   ├── destroy-account-with-loans.test.ts
 │   │   │   ├── detach-transfer-from-rule.test.ts

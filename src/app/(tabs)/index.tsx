@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
@@ -15,6 +15,7 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
 import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
+import { useDayKey } from "~/hooks/use-time-reactivity"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { useProfileStore } from "~/stores/profile.store"
 import type {
@@ -43,7 +44,14 @@ function HomeScreen() {
   const profileName = useProfileStore((s) => s.name)
   const image = useProfileStore((s) => s.imageUri)
   const accounts = useActiveAccounts()
-  const { fromDate, toDate } = buildQueryFilters(selectedRange, homeTimeframe)
+  // dayKey re-bumps on app-foreground and at each date change, so "this month"
+  // re-derives after a month rollover instead of serving a memoized stale range.
+  const dayKey = useDayKey()
+  // biome-ignore lint/correctness/useExhaustiveDependencies: dayKey intentionally busts the cache on date change
+  const { fromDate, toDate } = useMemo(
+    () => buildQueryFilters(selectedRange, homeTimeframe),
+    [selectedRange, homeTimeframe, dayKey],
+  )
   const { items: transactionsFull, status: transactionsStatus } =
     useTransactions({
       from: new Date(fromDate).toISOString(),

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react"
 import { Platform } from "react-native"
 import Animated, {
   Easing,
@@ -36,7 +37,7 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
   const opacity = useSharedValue(0)
   const scale = useSharedValue(0.8)
   const progressWidth = useSharedValue(100)
-  const autoHideTimer = useSharedValue(0)
+  const autoHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasAnimated = useSharedValue(false)
   const handleHide = () => {
     onHide(toastId)
@@ -145,18 +146,22 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
           easing: Easing.linear,
         })
       }
-      // Auto-hide with exit animation
+      // Auto-hide with exit animation. Reanimated's withDelay is skipped under
+      // reduced motion and hid every toast on frame 1 (§10.2), so the pause
+      // runs as a plain JS timer on the RN thread.
       if (toastAutoHide) {
-        // Use a dedicated timer for auto-hide
-        autoHideTimer.value = withDelay(
-          toastVisibilityTime,
-          withTiming(1, { duration: 0 }, () => {
-            scheduleOnRN(triggerHide)
-          }),
-        )
+        scheduleOnRN(() => {
+          autoHideTimer.current = setTimeout(triggerHide, toastVisibilityTime)
+        })
       }
     })
   }
+  useEffect(
+    () => () => {
+      if (autoHideTimer.current) clearTimeout(autoHideTimer.current)
+    },
+    [],
+  )
   return (
     <AnimatedPressable
       style={[toastStyles.container, animatedStyle]}

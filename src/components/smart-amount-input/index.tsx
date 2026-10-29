@@ -29,7 +29,7 @@ import { MathToolbar } from "./math-toolbar"
 import {
   hasMathOperation,
   isOperator,
-  MAX_AMOUNT_INPUT_LENGTH,
+  maxAmountInputLength,
 } from "./math-utils"
 import { smartInputStyles } from "./styles"
 
@@ -131,7 +131,7 @@ export const SmartAmountInput = ({
     if (normalized === null) return
     const sanitized = sanitizeAmountInput(normalized)
     if (exceedsFractionDigits(sanitized, maximumFractionDigits)) return
-    if (sanitized.length <= MAX_AMOUNT_INPUT_LENGTH) {
+    if (sanitized.length <= maxAmountInputLength(maximumFractionDigits)) {
       setIsEditing(true)
       setInputValue(sanitized)
       if (!showMathToolbar) {
@@ -211,16 +211,22 @@ export const SmartAmountInput = ({
     }
   }
   const handleBlur = () => {
-    if (
-      !showMathToolbar &&
-      previewMinor !== null &&
-      !previewError &&
-      isEditing
-    ) {
-      onChangeMinor(previewMinor)
-      setIsEditing(false)
-      setInputValue("")
+    if (!isEditing) return
+    if (previewError) {
+      // Keep the incomplete value; the field will re-enter editing on focus.
+      return
     }
+    let finalValue = previewMinor ?? 0
+    if (previewMinor === null && displayValue) {
+      try {
+        finalValue = parseMajorUnits(displayValue, currencyCode)
+      } catch {
+        return
+      }
+    }
+    onChangeMinor(finalValue)
+    setIsEditing(false)
+    setInputValue("")
   }
   const handleToggleMathToolbar = () => {
     if (showMathToolbar) {
@@ -264,6 +270,7 @@ export const SmartAmountInput = ({
         displayValue={displayValue}
         placeholder={placeholder}
         inputRef={inputRef}
+        maxLength={maxAmountInputLength(maximumFractionDigits)}
         onChangeText={handleTextChange}
         onSubmitEditing={handleSubmit}
         onFocus={handleFocus}

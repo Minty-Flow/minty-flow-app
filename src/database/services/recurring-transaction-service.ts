@@ -277,6 +277,39 @@ function templateExtra(
 const FOREVER_MS = new Date(2099, 11, 31).getTime()
 
 /**
+ * Re-anchor a rule's rrule to a new start date (a "this and future" date
+ * shift). Rewrites only `rules`; the range, cursor and template are untouched
+ * so the shift never regenerates or loses instances.
+ */
+async function reanchorRecurringRule(
+  ruleId: string,
+  recurrence: Recurrence,
+  startDate: Date,
+): Promise<void> {
+  const rule = drizzleDb
+    .select(recurringSelection)
+    .from(recurringTransactions)
+    .where(eq(recurringTransactions.id, ruleId))
+    .get()
+  if (!rule) return
+
+  const range = parseTimeRange(rule)
+  const rrule = buildRRuleString({
+    interval: recurrence.interval,
+    unit: recurrence.unit,
+    startDate,
+    until: range.to >= FOREVER_MS ? null : new Date(range.to),
+  })
+
+  await runInTransaction("recurring.reanchor", (db) => {
+    db.update(recurringTransactions)
+      .set({ rules: JSON.stringify([rrule]) })
+      .where(eq(recurringTransactions.id, ruleId))
+      .run()
+  })
+}
+
+/**
  * ES-8 — rewrite a rule's recurrence (interval/unit) and/or its "until".
  * Keeps `range.from` (RS-2). Resets `last_generated_transaction_date` to the
  * latest live occurrence (past or future) so the next sync continues without
@@ -397,9 +430,10 @@ export async function applyRecurringEditScope({
       .from(transactions)
       .where(eq(transactions.id, transactionId))
       .get()
+    const dateShiftMs =
+      payload.transactionDate.getTime() - transactionDate.getTime()
     await updateFutureRecurringInstances(ruleId, transactionDate, payload, {
-      dateShiftMs:
-        payload.transactionDate.getTime() - transactionDate.getTime(),
+      dateShiftMs,
       // Copy the flag only when the user changed it on the edited instance.
       applyManualConfirmation:
         !!edited &&
@@ -407,6 +441,11 @@ export async function applyRecurringEditScope({
         (payload.requiresManualConfirmation ? 1 : 0) !==
           edited.requiresManualConfirmation,
     })
+    // A date shift moves the grid: re-anchor the rrule so the next sync keeps
+    // generating on the new cadence instead of the old one (map §2.3).
+    if (dateShiftMs !== 0 && storedRec && storedRule) {
+      await reanchorRecurringRule(ruleId, storedRec, payload.transactionDate)
+    }
   }
 
   // Update template fields.

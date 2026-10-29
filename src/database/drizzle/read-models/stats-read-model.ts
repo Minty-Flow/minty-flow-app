@@ -17,6 +17,7 @@ import {
   transactions,
 } from "~/database/drizzle/schema"
 import { useIsActiveTab } from "~/hooks/use-tab-visibility"
+import { useDayKey } from "~/hooks/use-time-reactivity"
 import { useWeekStartStore } from "~/stores/week-start.store"
 import type { Account } from "~/types/accounts"
 import type {
@@ -175,6 +176,22 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
         : range,
     [activePreset, range, weekAnchor, weekStartsOn],
   )
+  // §2.5: on a month rollover without a cold start, re-anchor the rolling
+  // presets so "this month" doesn't show last month's window forever.
+  const dayKey = useDayKey()
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-anchor only on date change, not on every preset/range change
+  useEffect(() => {
+    if (
+      activePreset === "thisWeek" ||
+      activePreset === "thisMonth" ||
+      activePreset === "thisYear" ||
+      activePreset === "last30"
+    ) {
+      setIsLoading(true)
+      if (activePreset === "thisWeek") setWeekAnchor(new Date())
+      else setRange(buildStatsDateRange(activePreset))
+    }
+  }, [dayKey])
   const fetchData = useCallback(async (range: StatsDateRange) => {
     const fetchId = ++fetchIdRef.current
     activeFetchCountRef.current++

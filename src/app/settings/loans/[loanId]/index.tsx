@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { type DimensionValue, FlatList, View as RNView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { LoanActionSheet } from "~/components/loans/loan-action-sheet"
@@ -26,6 +27,10 @@ import {
   useTransactions,
 } from "~/database/drizzle/read-models/transaction-read-model"
 import { createTransaction } from "~/database/services/ledger-service"
+import {
+  deleteLoanById,
+  isLoanOpeningTransaction,
+} from "~/database/services/loan-service"
 import { useLoanTermReconcile } from "~/hooks/use-loan-term-reconcile"
 import { useSingleOpenSwipeable } from "~/hooks/use-transaction-list-state"
 import { useLanguageStore } from "~/stores/language.store"
@@ -44,6 +49,7 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
   const isRTL = useLanguageStore((s) => s.isRTL)
   const [actionSheetVisible, setActionSheetVisible] = useState(false)
   const [isCreatingTransaction, setIsCreatingTransaction] = useState(false)
+  const [deleteLoanVisible, setDeleteLoanVisible] = useState(false)
   const { onWillOpen: handleWillOpen, closeOpen: closeOpenSwipeable } =
     useSingleOpenSwipeable()
   const loansQuery = useLoansQuery()
@@ -61,6 +67,29 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
   const handleDeleteDone = () => {
     closeOpenSwipeable()
   }
+  // Map §3.9: swipe-trashing the opening entry must delete the loan, not leave
+  // it open. Route it to the loan-delete confirm; everything else deletes as
+  // a normal transaction.
+  const handleBeforeDelete = (item: TransactionWithRelations) => {
+    if (loan && isLoanOpeningTransaction(item, loan)) {
+      setDeleteLoanVisible(true)
+      return true
+    }
+    return false
+  }
+  const handleDeleteLoanConfirm = async () => {
+    setDeleteLoanVisible(false)
+    try {
+      await deleteLoanById(loanId)
+      Toast.success({
+        title: t("components.transactionForm.toast.loanDeleted"),
+      })
+      router.back()
+    } catch (error) {
+      logger.error("Failed to delete loan", { error })
+      Toast.error({ title: t("common.toast.error") })
+    }
+  }
   const renderTransactionItem = ({
     item,
   }: {
@@ -69,6 +98,7 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
     <TransactionItem
       transactionWithRelations={item}
       onPress={() => handleTransactionPress(item.id)}
+      onBeforeDelete={handleBeforeDelete}
       onDelete={handleDeleteDone}
       onWillOpen={handleWillOpen}
     />
@@ -357,6 +387,19 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
         onFullAction={handleFullAction}
         onPartialAction={handlePartialAction}
         onClose={() => setActionSheetVisible(false)}
+      />
+      <ConfirmSheet
+        visible={deleteLoanVisible}
+        onRequestClose={() => setDeleteLoanVisible(false)}
+        onConfirm={handleDeleteLoanConfirm}
+        title={t("components.transactionForm.deleteLoanSheet.title")}
+        description={t(
+          "components.transactionForm.deleteLoanSheet.description",
+        )}
+        confirmLabel={t("common.actions.delete")}
+        cancelLabel={t("common.actions.cancel")}
+        variant="destructive"
+        icon="trash-outline"
       />
     </View>
   )

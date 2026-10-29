@@ -1,4 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react"
+import { AppState } from "react-native"
 
 /* ------------------------------------------------------------------ */
 /* Precise Minute Ticker (fires exactly at minute boundaries)         */
@@ -120,4 +121,57 @@ export function useIsConfirmable(transaction: ConfirmableTransaction): boolean {
     if (transaction.isDeleted) return false
     return transaction.isPending && hasPassed
   })()
+}
+
+/* ------------------------------------------------------------------ */
+/* Day Key (month-rollover staleness)                                  */
+/* ------------------------------------------------------------------ */
+const dayListeners = new Set<() => void>()
+let currentDayKey = Math.floor(Date.now() / 86_400_000)
+let dayTimeoutId: ReturnType<typeof setTimeout> | null = null
+let dayAppStateSub: ReturnType<typeof AppState.addEventListener> | null = null
+/** Recompute the key and push it to every listener on a new UTC day. */
+function publishDayKey() {
+  const next = Math.floor(Date.now() / 86_400_000)
+  if (next !== currentDayKey) {
+    currentDayKey = next
+    for (const cb of dayListeners) cb()
+  }
+  scheduleNextDay()
+}
+function scheduleNextDay() {
+  if (dayTimeoutId) clearTimeout(dayTimeoutId)
+  const msFromNowToMidnight = Date.now() % 86_400_000
+  dayTimeoutId = setTimeout(publishDayKey, 86_400_000 - msFromNowToMidnight)
+}
+function subscribeDayKey(callback: () => void) {
+  const becameFirst = dayListeners.size === 0
+  dayListeners.add(callback)
+  if (becameFirst) {
+    scheduleNextDay()
+    dayAppStateSub ??= AppState.addEventListener("change", (state) => {
+      if (state === "active") publishDayKey()
+    })
+  }
+  return () => {
+    dayListeners.delete(callback)
+    if (dayListeners.size === 0) {
+      if (dayTimeoutId) clearTimeout(dayTimeoutId)
+      dayTimeoutId = null
+      dayAppStateSub?.remove()
+      dayAppStateSub = null
+    }
+  }
+}
+/**
+ * A value that changes once per UTC day and immediately on app-foreground.
+ * Screens whose date-range query is otherwise memoized on frozen inputs use
+ * this to re-derive "this month" after a month rollover without a cold start.
+ */
+export function useDayKey(): number {
+  return useSyncExternalStore(
+    subscribeDayKey,
+    () => currentDayKey,
+    () => currentDayKey,
+  )
 }

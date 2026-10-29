@@ -156,7 +156,7 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
     setValue("colorSchemeName", schemeName, { shouldDirty: true })
   }
   const handleColorCleared = () => {
-    setValue("colorSchemeName", undefined, { shouldDirty: true })
+    setValue("colorSchemeName", null, { shouldDirty: true })
   }
   const handleCurrencySelected = (code: string) => {
     if (code !== formCurrencyCode) {

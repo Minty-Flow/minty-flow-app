@@ -72,6 +72,9 @@ export function TransactionForm(props: TransactionFormProps) {
           value={f.topTabType}
           onChange={f.onTopTabChange}
           hiddenSlots={f.tabHiddenSlots}
+          lockedTo={
+            transaction?.isTransfer && transaction.transferId ? 2 : null
+          }
         />
       </View>
 
@@ -380,7 +383,7 @@ export function TransactionForm(props: TransactionFormProps) {
       <FormFooter
         isNew={f.isNew}
         isSaving={f.isSaving}
-        isDirty={f.isDirty}
+        isDirty={f.hasUnsavedChanges}
         readOnly={readOnly}
         onCancel={f.handleCancelPress}
         onSave={f.submit}

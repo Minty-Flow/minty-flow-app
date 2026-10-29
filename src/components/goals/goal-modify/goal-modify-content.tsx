@@ -189,7 +189,7 @@ export function GoalModifyContent({
     setValue("colorSchemeName", schemeName, { shouldDirty: true })
   }
   const handleColorCleared = () => {
-    setValue("colorSchemeName", undefined, { shouldDirty: true })
+    setValue("colorSchemeName", null, { shouldDirty: true })
   }
   const handleClearDate = () => {
     setValue("targetDate", null, { shouldDirty: true })

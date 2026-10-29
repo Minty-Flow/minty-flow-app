@@ -38,6 +38,8 @@ export const transactionSchema = z
     subtype: z.enum(TransactionSubTypeEnum).nullable().optional(),
     // Not registered with RHF — exists solely to enable dirty tracking for conversion rate edits
     conversionRate: z.number().positive().nullable().optional(),
+    // Not displayed; mirrors the attachment list so add/remove dirties the form
+    attachments: z.string().nullable().optional(),
   })
   .superRefine((data, ctx) => {
     const kind = data.kind ?? "default"

@@ -7,13 +7,13 @@ import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { getItemAllocations } from "~/stores/bill-splitter.store"
-import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { BillItem, Participant } from "~/types/bill-splitter"
 import { roundToSafeInteger } from "~/utils/money"
 
 interface BillItemCardProps {
   item: BillItem
   participants: Participant[]
+  currency: string
   onDelete: () => void
   onEdit: () => void
 }
@@ -21,12 +21,12 @@ interface BillItemCardProps {
 export function BillItemCard({
   item,
   participants,
+  currency,
   onDelete,
   onEdit,
 }: BillItemCardProps) {
   const { theme } = useUnistyles()
   const { t } = useTranslation()
-  const currency = useMoneyFormattingStore((s) => s.preferredCurrency)
 
   const itemTotal = roundToSafeInteger(item.price * item.quantity)
   const allocations = getItemAllocations(item)
