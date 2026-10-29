@@ -2,6 +2,8 @@ import { useCalendars } from "expo-localization"
 import { useCallback, useSyncExternalStore } from "react"
 import { AppState } from "react-native"
 
+import { localDayKey } from "~/utils/time-utils"
+
 /* ------------------------------------------------------------------ */
 /* Precise Minute Ticker (fires exactly at minute boundaries)         */
 /* ------------------------------------------------------------------ */
@@ -128,12 +130,12 @@ export function useIsConfirmable(transaction: ConfirmableTransaction): boolean {
 /* Day Key (month-rollover staleness)                                  */
 /* ------------------------------------------------------------------ */
 const dayListeners = new Set<() => void>()
-let currentDayKey = Math.floor(Date.now() / 86_400_000)
+let currentDayKey = localDayKey(new Date())
 let dayTimeoutId: ReturnType<typeof setTimeout> | null = null
 let dayAppStateSub: ReturnType<typeof AppState.addEventListener> | null = null
-/** Recompute the key and push it to every listener on a new UTC day. */
+/** Recompute the key and push it to every listener on a new local day. */
 function publishDayKey() {
-  const next = Math.floor(Date.now() / 86_400_000)
+  const next = localDayKey(new Date())
   if (next !== currentDayKey) {
     currentDayKey = next
     for (const cb of dayListeners) cb()
@@ -142,9 +144,18 @@ function publishDayKey() {
 }
 function scheduleNextDay() {
   if (dayTimeoutId) clearTimeout(dayTimeoutId)
-  // UTC-anchored, so it needs no reschedule when the device time zone changes.
-  const msFromNowToMidnight = Date.now() % 86_400_000
-  dayTimeoutId = setTimeout(publishDayKey, 86_400_000 - msFromNowToMidnight)
+  const now = new Date()
+  // `Date` normalizes the calendar date, so the next local midnight is right
+  // even when a DST day is 23 or 25 hours long.
+  const nextMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+  )
+  dayTimeoutId = setTimeout(
+    publishDayKey,
+    nextMidnight.getTime() - now.getTime(),
+  )
 }
 function subscribeDayKey(callback: () => void) {
   const becameFirst = dayListeners.size === 0
@@ -168,7 +179,7 @@ function subscribeDayKey(callback: () => void) {
   }
 }
 /**
- * A `dayKey` that changes once per UTC day, immediately on app-foreground and
+ * A `dayKey` that changes once per local day, immediately on app-foreground and
  * when the device time zone changes. Screens whose date-range query is otherwise
  * memoized on frozen inputs use this to re-derive "this month" after a month
  * rollover or a time zone change without a cold start.
