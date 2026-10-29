@@ -148,7 +148,9 @@ function subscribeDayKey(callback: () => void) {
   const becameFirst = dayListeners.size === 0
   dayListeners.add(callback)
   if (becameFirst) {
-    scheduleNextDay()
+    // Recompute now: subscribers may have been detached across a rollover, and
+    // the stored key would otherwise stay stale until the next midnight.
+    publishDayKey()
     dayAppStateSub ??= AppState.addEventListener("change", (state) => {
       if (state === "active") publishDayKey()
     })

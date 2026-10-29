@@ -47,9 +47,8 @@ function HomeScreen() {
   // dayKey re-bumps on app-foreground and at each date change, so "this month"
   // re-derives after a month rollover instead of serving a memoized stale range.
   const dayKey = useDayKey()
-  // biome-ignore lint/correctness/useExhaustiveDependencies: dayKey intentionally busts the cache on date change
   const { fromDate, toDate } = useMemo(
-    () => buildQueryFilters(selectedRange, homeTimeframe),
+    () => buildQueryFilters(selectedRange, homeTimeframe, dayKey),
     [selectedRange, homeTimeframe, dayKey],
   )
   const { items: transactionsFull, status: transactionsStatus } =
