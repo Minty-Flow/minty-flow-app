@@ -1312,6 +1312,11 @@ function confirmTransactionInTx(
         .run()
     }
   } else {
+    if (legs.some((leg) => leg.loan_id != null)) {
+      // Re-pending a lent/borrowed row would produce the pending+loan-kind
+      // state that `assertPendingKindAllowed` forbids.
+      throw new Error("A loan-linked transaction cannot be put on hold.")
+    }
     for (const leg of legs) {
       const delta = getBalanceDelta(
         leg.amount,
