@@ -104,6 +104,9 @@ export function useFormConversionRate(
       ? conversionRateState.rate
       : customConversionRate
 
+  // Keyed on the id, not the object: a live-query refresh hands back a new
+  // object and would otherwise overwrite a rate the user just typed.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `transactionKey` is the id of `transaction`; depending on the object itself would re-run on every refresh.
   useEffect(() => {
     const initial = initialPairRef.current
     if (
@@ -127,8 +130,6 @@ export function useFormConversionRate(
     return () => {
       cancelled = true
     }
-    // Keyed on the id, not the object: a live-query refresh hands back a new
-    // object and would otherwise overwrite a rate the user just typed.
   }, [conversionRatePairKey, transactionKey, transactionType])
 
   const lookupKey = conversionRatePairKey
