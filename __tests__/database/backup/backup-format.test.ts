@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   type MintyFlowBackup,
+  normalizeColumnValue,
   SCHEMA_VERSION,
   validateBackup,
 } from "~/database/backup/backup-format"
@@ -96,7 +97,7 @@ describe("validateBackup, recurring rules", () => {
     const result = validateBackup(backupWith([rule("gone", { disabled: 0 })]))
     expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.message).toBe("Invalid recurring money template (row 0)")
+      expect(result.message).toBe("Invalid recurring rule (row 0)")
     }
   })
 
@@ -112,6 +113,51 @@ describe("validateBackup, recurring rules", () => {
     expect(result.success).toBe(false)
   })
 
+  it("rejects an enabled rule whose category is not in the backup", () => {
+    const withCategory = JSON.parse(template("acc-1")) as Record<
+      string,
+      unknown
+    >
+    withCategory.categoryId = "gone"
+    const result = validateBackup(
+      backupWith([
+        rule("acc-1", {
+          disabled: 0,
+          json_transaction_template: JSON.stringify(withCategory),
+        }),
+      ]),
+    )
+    expect(result.success).toBe(false)
+  })
+
+  it("rejects an enabled rule whose transfer account is not in the backup", () => {
+    const result = validateBackup(
+      backupWith([
+        rule("acc-1", { disabled: 0, transfer_to_account_id: "gone" }),
+      ]),
+    )
+    expect(result.success).toBe(false)
+  })
+
+  it("accepts a disabled rule whose transfer account is gone", () => {
+    const result = validateBackup(
+      backupWith([
+        rule("acc-1", { disabled: 1, transfer_to_account_id: "gone" }),
+      ]),
+    )
+    expect(result.success).toBe(true)
+  })
+
+  it("rejects a transaction date that does not parse", () => {
+    const result = validateBackup(
+      backupWith([rule("acc-1", { disabled: 1 })]).replace(
+        '"transactions":[]',
+        '"transactions":[{"id":"tx-1","amount":100,"transaction_date":"nope"}]',
+      ),
+    )
+    expect(result.success).toBe(false)
+  })
+
   it("still rejects a rule whose template is not JSON", () => {
     const result = validateBackup(
       backupWith([
@@ -119,5 +165,23 @@ describe("validateBackup, recurring rules", () => {
       ]),
     )
     expect(result.success).toBe(false)
+  })
+})
+
+describe("normalizeColumnValue, dates", () => {
+  it("turns a date-only string into an ISO timestamp", () => {
+    expect(normalizeColumnValue("transaction_date", "2026-03-04")).toBe(
+      "2026-03-04T00:00:00.000Z",
+    )
+  })
+
+  it("normalizes an offset-carrying timestamp to UTC", () => {
+    expect(
+      normalizeColumnValue("transaction_date", "2026-03-04T12:00:00+03:00"),
+    ).toBe("2026-03-04T09:00:00.000Z")
+  })
+
+  it("leaves an unparseable date for validation to reject", () => {
+    expect(normalizeColumnValue("transaction_date", "nope")).toBe("nope")
   })
 })
