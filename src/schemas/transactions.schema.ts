@@ -63,7 +63,7 @@ export type TransactionFormValues = z.infer<typeof transactionSchema>
 export type RecurringEditPayload = z.infer<typeof transactionSchema>
 
 /* ------------------------------------------------------------------ */
-/* Transfer (create / edit) — single source of truth for form & service */
+/* Transfer (create / edit) — form and service param types              */
 /* ------------------------------------------------------------------ */
 
 const dateOrNumber = z.union([z.number(), z.date()])
