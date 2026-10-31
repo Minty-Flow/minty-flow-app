@@ -70,6 +70,29 @@ describe("getLiveBudgetSpentByCategory", () => {
   it("returns nothing for a budget with no categories", () => {
     expect(getLiveBudgetSpentByCategory(budget([]), spending)).toEqual({})
   })
+
+  it("subtracts a refund from its own category", () => {
+    const refund = {
+      ...expense("r1", "food", 400),
+      subtype: "refund",
+    } as unknown as TransactionWithRelations
+    expect(
+      getLiveBudgetSpentByCategory(budget(["food", "rent"]), [
+        ...spending,
+        refund,
+      ]),
+    ).toEqual({ food: 600, rent: 5_000 })
+  })
+
+  it("keeps a category refunded past its spend at zero", () => {
+    const refund = {
+      ...expense("r1", "food", 1_500),
+      subtype: "refund",
+    } as unknown as TransactionWithRelations
+    expect(getLiveBudgetSpentByCategory(budget(["food"]), [refund])).toEqual({
+      food: 0,
+    })
+  })
 })
 
 describe("loans in budgets", () => {
