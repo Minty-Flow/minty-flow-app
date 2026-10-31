@@ -1,5 +1,5 @@
 import { endOfDay } from "date-fns"
-import { and, count, desc, eq } from "drizzle-orm"
+import { and, count, desc, eq, sql } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
 import {
@@ -130,31 +130,6 @@ function advanceCursor(db: DbTransaction, ruleId: string, iso: string): void {
     .set({ lastGeneratedTransactionDate: iso })
     .where(eq(recurringTransactions.id, ruleId))
     .run()
-}
-
-async function getInitialDateMs(txId: string): Promise<number> {
-  const row = drizzleDb
-    .select({
-      extra: transactions.extra,
-      transaction_date: transactions.transactionDate,
-    })
-    .from(transactions)
-    .where(eq(transactions.id, txId))
-    .get()
-  if (!row) return 0
-  if (row.extra) {
-    try {
-      const extra = JSON.parse(row.extra) as Record<string, string>
-      const raw = extra.recurringInitialDate
-      if (raw) {
-        const n = parseInt(raw, 10)
-        if (!Number.isNaN(n)) return n
-      }
-    } catch {
-      // ignore
-    }
-  }
-  return new Date(row.transaction_date).getTime()
 }
 
 // ── CRUD ─────────────────────────────────────────────────────────────────────
@@ -653,8 +628,16 @@ async function synchronizeRecurringTransaction(
       // duplicate-prevention mechanism.
       // ------------------------------------------------------------------
 
-      const relatedTxIds = drizzleDb
-        .select({ id: transactions.id })
+      // One aggregate instead of a query per instance, on every catch-up pass.
+      const effectiveLastMs = drizzleDb
+        .select({
+          max: sql<number | null>`MAX(COALESCE(
+            CASE WHEN json_valid(${transactions.extra})
+              THEN CAST(json_extract(${transactions.extra}, '$.recurringInitialDate') AS INTEGER)
+            END,
+            CAST(strftime('%s', ${transactions.transactionDate}) AS INTEGER) * 1000
+          ))`,
+        })
         .from(transactions)
         .where(
           and(
@@ -662,15 +645,9 @@ async function synchronizeRecurringTransaction(
             eq(transactions.isDeleted, 0),
           ),
         )
-        .all()
+        .get()?.max
 
-      if (relatedTxIds.length > 0) {
-        const initialDates = await Promise.all(
-          relatedTxIds.map((r) => getInitialDateMs(r.id)),
-        )
-
-        const effectiveLastMs = Math.max(...initialDates)
-
+      if (effectiveLastMs != null) {
         if (nextOccurrence.getTime() <= effectiveLastMs) {
           // An instance for this slot, or a later one, already exists, so the
           // cursor is behind (an interrupted write, or a rewritten rule). Catch
