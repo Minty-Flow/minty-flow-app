@@ -19,6 +19,18 @@ describe("previous period", () => {
     expect(range.previousFrom.getHours()).toBe(0)
   })
 
+  it("covers 30 calendar days with a matching previous window", () => {
+    const range = buildStatsDateRange("last30")
+    const dayCount = (a: Date, b: Date) =>
+      Math.round(
+        (Date.UTC(b.getFullYear(), b.getMonth(), b.getDate()) -
+          Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())) /
+          86_400_000,
+      ) + 1
+    expect(dayCount(range.from, range.to)).toBe(30)
+    expect(dayCount(range.previousFrom, range.previousTo)).toBe(30)
+  })
+
   it("ends at the end of its last day for a custom range", () => {
     const range = buildStatsDateRange(
       "custom",

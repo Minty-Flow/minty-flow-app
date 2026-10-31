@@ -78,7 +78,8 @@ export function buildStatsDateRange(
 
     case "last30": {
       const to = now
-      const from = startOfDay(subDays(now, 30))
+      // 30 calendar days including today, matching the previous 30-day window.
+      const from = startOfDay(subDays(now, 29))
       const prevTo = endOfDay(subDays(from, 1))
       const prevFrom = startOfDay(subDays(prevTo, 29))
       return {
