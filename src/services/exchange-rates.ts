@@ -19,6 +19,9 @@ import {
   type SourceRates,
 } from "./exchange-rate-sources"
 
+/** A source that never answers blocks the next one, so bound each request. */
+const SOURCE_TIMEOUT_MS = 8_000
+
 // Normalized structure we use internally
 export interface ExchangeRates {
   date: string
@@ -120,13 +123,17 @@ class ExchangeRatesService {
     signal?: AbortSignal,
   ): Promise<{ source: RateSource; rates: SourceRates } | null> {
     for (const source of sources) {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), SOURCE_TIMEOUT_MS)
+      const forwardAbort = () => controller.abort()
+      signal?.addEventListener("abort", forwardAbort, { once: true })
       try {
         const url = source.url(baseCurrency)
         logger.debug("Fetching exchange rates", { source: source.name, url })
         const response = await fetch(url, {
           method: "GET",
           headers: { Accept: "application/json" },
-          signal,
+          signal: controller.signal,
         })
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`)
@@ -144,6 +151,9 @@ class ExchangeRatesService {
           baseCurrency,
           error: error instanceof Error ? error.message : "Unknown error",
         })
+      } finally {
+        clearTimeout(timer)
+        signal?.removeEventListener("abort", forwardAbort)
       }
     }
     return null
