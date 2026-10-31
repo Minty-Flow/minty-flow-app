@@ -186,11 +186,13 @@ export function TransactionForm(props: TransactionFormProps) {
               kind={f.kind}
               onSelect={f.setKind}
               isNew={f.isNew}
+              type={f.topTabType}
               locked={!f.canEditKind}
               linkedLoan={f.linkedLoan}
             />
             <FormKindCard
               kind={f.kind}
+              backedByRule={f.isNew || !!f.recurringRule}
               recurrence={f.recurring.recurrence}
               until={f.recurring.until}
               occurrenceCount={f.occurrenceCount}

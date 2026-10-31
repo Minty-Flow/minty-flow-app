@@ -165,7 +165,13 @@ export function useTransactionForm({
       ? [2]
       : kind === "upcoming"
         ? [2]
-        : []
+        : // An existing row that is not a transfer cannot become one: the
+          // service refuses it and the other leg would be orphaned.
+          !isNew &&
+            transaction &&
+            transaction.type !== TransactionTypeEnum.TRANSFER
+          ? [2]
+          : []
   const selectedAccount = accounts.find((a) => a.id === accountId)
   // Filter goals to only those linked to the selected account
   const accountGoals = accountId
@@ -442,10 +448,14 @@ export function useTransactionForm({
           notes: data.description?.trim() || null,
         }
         if (isNew) {
-          await createTransfer({
-            ...transferPayload,
-            transactionDate: effectiveDate.getTime(),
-          })
+          await createTransfer(
+            {
+              ...transferPayload,
+              transactionDate: effectiveDate.getTime(),
+            },
+            // A future-dated transfer is pending like any other row.
+            { isPending: data.isPending },
+          )
           Toast.success({
             title: t("components.transactionForm.toast.transferCreated"),
           })

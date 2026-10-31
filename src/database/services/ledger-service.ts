@@ -382,7 +382,7 @@ export async function createTransaction(
 }
 
 type TransferRecurringOptions = {
-  recurringId: string
+  recurringId?: string
   isPending: boolean
   subtype?: string | null
   extra?: Record<string, string> | null
@@ -416,6 +416,9 @@ export function createTransferInTx(
   )
   const dateIso = new Date(dateMs).toISOString()
   const isPending = recurringOptions?.isPending ?? false
+  // A pending row cannot keep kind "default" (CSI-2), and the form cannot pick
+  // "upcoming" on a transfer because that kind switches the type.
+  const kind = recurringOptions?.kind ?? (isPending ? "upcoming" : "default")
   const title = params.title ?? "Transfer"
   const extraJson = recurringOptions?.extra
     ? JSON.stringify(recurringOptions.extra)
@@ -478,7 +481,7 @@ export function createTransferInTx(
       accountBalanceBefore: isPending ? 0 : fromAcc.balance,
       subtype: recurringOptions?.subtype ?? null,
       // transfers are pending+default by design (migration 0001 & deriveKind exclude type='transfer' from 'upcoming') — CSI-2 assert intentionally not applied here
-      kind: recurringOptions?.kind ?? "default",
+      kind,
       extra: extraJson,
       hasAttachments: 0,
       recurringId: recurringOptions?.recurringId ?? null,
@@ -507,7 +510,7 @@ export function createTransferInTx(
       requiresManualConfirmation: 0,
       accountBalanceBefore: isPending ? 0 : toAcc.balance,
       subtype: recurringOptions?.subtype ?? null,
-      kind: recurringOptions?.kind ?? "default",
+      kind,
       extra: extraJson,
       hasAttachments: 0,
       recurringId: recurringOptions?.recurringId ?? null,
