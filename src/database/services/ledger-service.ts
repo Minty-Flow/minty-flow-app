@@ -900,7 +900,8 @@ export async function editTransfer(
         amount: -newDebitAmount,
         transactionDate: newDateIso,
         accountId: newFromAccountId,
-        accountBalanceBefore: fromBalanceBefore,
+        // A pending leg is not part of the balance, so it has no "before".
+        accountBalanceBefore: debitRow.is_pending ? 0 : fromBalanceBefore,
         ...(fields.title !== undefined ? { title: fields.title ?? null } : {}),
         ...(fields.notes !== undefined
           ? { description: fields.notes ?? null }
@@ -915,7 +916,7 @@ export async function editTransfer(
         amount: newCreditAmount,
         transactionDate: newDateIso,
         accountId: newToAccountId,
-        accountBalanceBefore: toBalanceBefore,
+        accountBalanceBefore: creditRow.is_pending ? 0 : toBalanceBefore,
         ...(fields.title !== undefined ? { title: fields.title ?? null } : {}),
         ...(fields.notes !== undefined
           ? { description: fields.notes ?? null }
