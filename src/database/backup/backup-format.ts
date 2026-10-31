@@ -1,3 +1,4 @@
+import { hasAttachmentsFromExtra } from "~/database/utils/has-attachments-from-extra"
 import { assertMinorUnits, getMinorUnitDigits } from "~/utils/money"
 
 export interface BackupMeta {
@@ -251,16 +252,12 @@ export function normalizeColumnValue(col: string, val: unknown): unknown {
 export function deriveHasAttachments(extraJson: unknown): number {
   if (typeof extraJson !== "string" || !extraJson) return 0
   try {
-    const extra = JSON.parse(extraJson) as Record<string, unknown>
-    if (!extra.attachments) return 0
-    const attachments =
-      typeof extra.attachments === "string"
-        ? (JSON.parse(extra.attachments) as unknown)
-        : extra.attachments
-    if (Array.isArray(attachments)) return attachments.length > 0 ? 1 : 0
-    if (typeof attachments === "object" && attachments !== null)
-      return Object.keys(attachments).length > 0 ? 1 : 0
-    return 0
+    // Same helper the live write path uses, so import and editing agree.
+    return hasAttachmentsFromExtra(
+      JSON.parse(extraJson) as Record<string, string>,
+    )
+      ? 1
+      : 0
   } catch {
     return 0
   }
