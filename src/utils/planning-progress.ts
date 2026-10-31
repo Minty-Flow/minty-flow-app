@@ -1,4 +1,4 @@
-import { differenceInCalendarDays, differenceInDays } from "date-fns"
+import { differenceInCalendarDays } from "date-fns"
 
 import type { Budget, BudgetPeriod } from "~/types/budgets"
 import type { Goal } from "~/types/goals"
@@ -138,8 +138,10 @@ export function getGoalProgressModel(
 ) {
   const progress = goal.targetAmount > 0 ? currentAmount / goal.targetAmount : 0
   const isCompleted = progress >= 1
+  // Calendar days, not elapsed 24 h spans: a due date carries the time it was
+  // picked, so the last day must not flip to "overdue" at that time.
   const daysLeft = goal.targetDate
-    ? differenceInDays(goal.targetDate, now)
+    ? differenceInCalendarDays(goal.targetDate, now)
     : null
   const status: GoalStatus =
     progress >= 1
@@ -149,12 +151,12 @@ export function getGoalProgressModel(
         : daysLeft !== null && daysLeft < 0
           ? "behind"
           : (() => {
-              const totalDays = differenceInDays(
+              const totalDays = differenceInCalendarDays(
                 goal.targetDate,
                 goal.createdAt,
               )
               if (totalDays <= 0) return "onTrack"
-              const elapsed = differenceInDays(now, goal.createdAt)
+              const elapsed = differenceInCalendarDays(now, goal.createdAt)
               return progress >= Math.min(elapsed / totalDays, 1)
                 ? "onTrack"
                 : "behind"
@@ -186,6 +188,6 @@ export function getLoanProgressModel(
     clampedProgress: Math.min(progress, 1),
     isPaid: progress >= 1,
     remaining: Math.max(loan.principalAmount - paidAmount, 0),
-    dueDays: loan.dueDate ? differenceInDays(loan.dueDate, now) : null,
+    dueDays: loan.dueDate ? differenceInCalendarDays(loan.dueDate, now) : null,
   }
 }
