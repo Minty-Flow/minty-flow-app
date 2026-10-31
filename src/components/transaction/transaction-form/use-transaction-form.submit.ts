@@ -76,7 +76,10 @@ export function buildTransactionPayload(
   const resolvedIsPending = effectiveIsPending
   const resolvedKind: TransactionKind =
     data.kind === "upcoming"
-      ? "upcoming"
+      ? // Turning the switch off on an upcoming row makes it a plain row.
+        resolvedIsPending
+        ? "upcoming"
+        : "default"
       : resolvedIsPending && (data.kind ?? "default") === "default"
         ? "upcoming"
         : (data.kind ?? "default")
