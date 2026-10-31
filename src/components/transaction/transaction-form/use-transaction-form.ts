@@ -113,6 +113,7 @@ export function useTransactionForm({
     control,
     handleSubmit,
     watch,
+    getValues,
     setValue,
     formState: { errors, isDirty },
   } = useForm<TransactionFormValues>({
@@ -765,6 +766,12 @@ export function useTransactionForm({
     )
   }
   const handleTransactionTypeChange = (type: TransactionFormValues["type"]) => {
+    // Expense and income categories are disjoint, so a kept selection would
+    // save the row under a category the user can no longer see.
+    if (type !== getValues("type")) {
+      setValue("categoryId", null, { shouldDirty: true })
+      setValue("budgetId", null, { shouldDirty: true })
+    }
     onTransactionTypeChange(type)
     setValue("type", type, { shouldDirty: true })
     // Clear goal when switching types (different goal types apply)
