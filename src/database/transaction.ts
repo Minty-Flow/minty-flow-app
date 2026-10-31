@@ -1,3 +1,5 @@
+import { sql } from "drizzle-orm"
+
 import { emitWriteCommitted } from "./commit-events"
 import { drizzleDb } from "./drizzle/db"
 import { enqueueWrite } from "./write-queue"
@@ -82,6 +84,45 @@ export async function runInTransaction<T>(
       const result = drizzleDb.transaction(assertSynchronous(fn))
       emitWriteCommitted(name)
       return result
+    } finally {
+      txDepth--
+    }
+  })
+}
+
+/**
+ * Same contract as {@link runInTransaction}, but the callback may await.
+ *
+ * Drizzle's expo-sqlite transactions are synchronous, so a scope that must be
+ * all-or-nothing across several awaited service calls (each of which joins the
+ * open transaction when `txDepth > 0`) manages BEGIN/COMMIT itself. The write
+ * queue still serialises the whole span, so no other writer interleaves.
+ */
+export async function runInAsyncTransaction<T>(
+  name: string,
+  fn: (db: DbTransaction) => Promise<T>,
+): Promise<T> {
+  const db = drizzleDb as unknown as DbTransaction
+  if (txDepth > 0) {
+    txDepth++
+    try {
+      return await fn(db)
+    } finally {
+      txDepth--
+    }
+  }
+
+  return enqueueWrite(async () => {
+    txDepth++
+    drizzleDb.run(sql.raw("BEGIN"))
+    try {
+      const result = await fn(db)
+      drizzleDb.run(sql.raw("COMMIT"))
+      emitWriteCommitted(name)
+      return result
+    } catch (error) {
+      drizzleDb.run(sql.raw("ROLLBACK"))
+      throw error
     } finally {
       txDepth--
     }

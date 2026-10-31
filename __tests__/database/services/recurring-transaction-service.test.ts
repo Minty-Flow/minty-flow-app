@@ -140,6 +140,27 @@ describe("applyRecurringEditScope this_and_future", () => {
     })
     .run()
 
+  it("rolls the detach back when the edit throws", async () => {
+    seedRule("rule-atomic")
+
+    await expect(
+      applyRecurringEditScope({
+        scope: "this",
+        transactionId: "rule-atomic-t0",
+        transactionDate: EDITED,
+        ruleId: "rule-atomic",
+        payload: editPayload(EDITED, { amount: 10.5 }),
+      }),
+    ).rejects.toThrow()
+
+    const row = drizzleDb
+      .select({ recurringId: transactions.recurringId })
+      .from(transactions)
+      .where(eq(transactions.id, "rule-atomic-t0"))
+      .get()
+    expect(row?.recurringId).toBe("rule-atomic")
+  })
+
   it("keeps every future instance on its own date", async () => {
     seedRule("rule-keep")
 
