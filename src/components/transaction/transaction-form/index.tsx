@@ -73,7 +73,13 @@ export function TransactionForm(props: TransactionFormProps) {
           onChange={f.onTopTabChange}
           hiddenSlots={f.tabHiddenSlots}
           lockedTo={
-            transaction?.isTransfer && transaction.transferId ? 2 : null
+            transaction?.isTransfer && transaction.transferId
+              ? 2
+              : f.lockedFields.has("type")
+                ? f.topTabType === TransactionTypeEnum.INCOME
+                  ? 1
+                  : 0
+                : null
           }
         />
       </View>
@@ -129,6 +135,7 @@ export function TransactionForm(props: TransactionFormProps) {
               transaction={transaction}
               accountError={f.accountError}
               onAccountChange={f.handleAccountChange}
+              disabled={f.lockedFields.has("accountId")}
             />
 
             {/* Transfer: to-account sits right under from-account, then the

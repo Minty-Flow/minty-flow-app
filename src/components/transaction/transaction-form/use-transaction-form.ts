@@ -351,7 +351,9 @@ export function useTransactionForm({
   const canEditKind =
     isNew || (transaction?.loanId == null && transaction?.recurringId == null)
   const lockedFields: ReadonlySet<string> = new Set<string>(
-    transaction?.loanId ? ["kind", "type", "loanId", "toAccountId"] : [],
+    transaction?.loanId
+      ? ["kind", "type", "accountId", "loanId", "toAccountId"]
+      : [],
   )
   // LX-2: the loan's opening entry can't be deleted on its own — deleting it
   // deletes the loan. A repayment deletes normally (progress recomputes on read).
