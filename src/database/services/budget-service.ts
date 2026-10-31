@@ -1,3 +1,4 @@
+import { endOfDay, startOfDay } from "date-fns"
 import { eq } from "drizzle-orm"
 
 import {
@@ -30,9 +31,13 @@ export async function createBudget(data: AddBudgetFormSchema): Promise<string> {
         amount: data.amount,
         currencyCode: data.currencyCode,
         period: data.period,
-        startDate: new Date(data.startDate).toISOString(),
+        // A custom period is inclusive on both ends, so a time-of-day carried
+        // by the picker must not cut the first or last day short.
+        startDate: startOfDay(new Date(data.startDate)).toISOString(),
         endDate:
-          data.endDate != null ? new Date(data.endDate).toISOString() : null,
+          data.endDate != null
+            ? endOfDay(new Date(data.endDate)).toISOString()
+            : null,
         alertThreshold: data.alertThreshold ?? null,
         isActive: data.isActive ? 1 : 0,
         icon: data.icon ?? null,
@@ -86,13 +91,13 @@ export async function updateBudgetById(
           : {}),
         ...(data.period !== undefined ? { period: data.period } : {}),
         ...(data.startDate !== undefined
-          ? { startDate: new Date(data.startDate).toISOString() }
+          ? { startDate: startOfDay(new Date(data.startDate)).toISOString() }
           : {}),
         ...(data.endDate !== undefined
           ? {
               endDate:
                 data.endDate != null
-                  ? new Date(data.endDate).toISOString()
+                  ? endOfDay(new Date(data.endDate)).toISOString()
                   : null,
             }
           : {}),
