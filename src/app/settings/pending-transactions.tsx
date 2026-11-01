@@ -16,13 +16,16 @@ import {
   type TransactionWithRelations,
   useTransactions,
 } from "~/database/drizzle/read-models/transaction-read-model"
+import { confirmTransaction } from "~/database/services/ledger-service"
 import { useRecurringRule } from "~/hooks/use-recurring-rule"
 import {
   useSelectedMonth,
   useSingleOpenSwipeable,
   useTransactionListFilters,
 } from "~/hooks/use-transaction-list-state"
+import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
+import { Toast } from "~/utils/toast"
 import {
   applySearch,
   applyTransactionFilters,
@@ -59,6 +62,9 @@ export default function PendingTransactionsScreen() {
     applySearch(applyTransactionFilters(allPending, filterState), searchState),
     transferLayout,
   )
+  const updateDateUponConfirmation = usePendingTransactionsStore(
+    (s) => s.updateDateUponConfirmation,
+  )
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -81,11 +87,23 @@ export default function PendingTransactionsScreen() {
     }
     return false
   }
+  const handleConfirm = async (transactionId: string) => {
+    try {
+      await confirmTransaction(transactionId, {
+        updateTransactionDate: updateDateUponConfirmation,
+      })
+    } catch {
+      Toast.error({
+        title: t("components.transactionForm.toast.upcomingConfirmFailed"),
+      })
+    }
+  }
   const renderItem = ({ item }: { item: TransactionWithRelations }) => (
     <TransactionItem
       transactionWithRelations={item}
       onPress={() => router.push(`/transaction/${item.id}`)}
       onBeforeDelete={handleBeforeDelete}
+      onConfirm={() => handleConfirm(item.id)}
       onDelete={handleDeleteDone}
       onWillOpen={handleWillOpen}
     />

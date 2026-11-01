@@ -247,7 +247,7 @@ function AccountsScreen() {
   )
 }
 export default AccountsScreen
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create((theme, rt) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.surface,
@@ -262,7 +262,7 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 50,
+    marginTop: rt.insets.top + 12,
     marginBottom: 10,
   },
   actionButtons: {

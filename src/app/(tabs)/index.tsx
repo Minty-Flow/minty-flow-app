@@ -107,14 +107,15 @@ function HomeScreen() {
   )
 }
 export default HomeScreen
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create((theme, rt) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.surface,
   },
   header: {
     marginHorizontal: 20,
-    marginTop: 40,
+    // Below the status bar / notch whatever the device.
+    marginTop: rt.insets.top + 12,
     marginBottom: 20,
     flexDirection: "row",
     alignItems: "center",
