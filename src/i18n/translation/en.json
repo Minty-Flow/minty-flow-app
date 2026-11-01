@@ -1645,7 +1645,9 @@
         "main": "Main",
         "cash": "Cash",
         "savings": "Savings"
-      }
+      },
+      "createFailed": "Couldn't create your accounts. Try again.",
+      "pickOne": "Pick at least one account to continue"
     },
     "expenseCategories": {
       "title": "Expense categories",

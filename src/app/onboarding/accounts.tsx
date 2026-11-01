@@ -44,6 +44,8 @@ export default function OnboardingAccountsScreen() {
     })
   }
 
+  // The app needs somewhere to put a transaction, so keep at least one.
+  const canContinue = accounts.length > 0 || selectedKeys.size > 0
   const handleNext = () => {
     startTransition(async () => {
       const toCreate = AccountPresets.filter(
@@ -73,7 +75,7 @@ export default function OnboardingAccountsScreen() {
           logger.error("Error creating preset accounts", { error })
           Toast.error({
             title: t("common.toast.error"),
-            description: t("common.toast.error"),
+            description: t("onboarding.accounts.createFailed"),
           })
           return
         }
@@ -150,9 +152,14 @@ export default function OnboardingAccountsScreen() {
       </ScrollView>
 
       <View style={styles.buttonRow}>
+        {canContinue ? null : (
+          <Text variant="muted" style={styles.pickOneHint}>
+            {t("onboarding.accounts.pickOne")}
+          </Text>
+        )}
         <Button
           onPress={handleNext}
-          disabled={saving}
+          disabled={saving || !canContinue}
           style={styles.nextButton}
         >
           <Text style={styles.nextButtonText}>
@@ -261,6 +268,10 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
     paddingVertical: 16,
     backgroundColor: theme.colors.surface,
+  },
+  pickOneHint: {
+    textAlign: "center",
+    marginBottom: 8,
   },
   nextButton: {
     width: "100%",

@@ -80,7 +80,9 @@ function AccountsScreen() {
       a.name.toLowerCase().includes(searchQuery.toLowerCase()),
   )
   const displayAccounts = isReorderMode ? reorderedAccounts : filteredAccounts
-  const balancesByCurrency = displayAccounts
+  // The headline is the user's whole balance: a search or a reorder in
+  // progress must not change it.
+  const balancesByCurrency = accountsWithMonthTotals
     .filter((account) => !account.excludeFromBalance)
     .reduce(
       (acc, account) => {
