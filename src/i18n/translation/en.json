@@ -1576,7 +1576,11 @@
       "negative": "Initial balance cannot be negative"
     },
     "endDate": {
-      "requiredForCustom": "End date is required for custom period"
+      "requiredForCustom": "End date is required for custom period",
+      "beforeStart": "End date cannot be before the start date"
+    },
+    "alertThreshold": {
+      "range": "Alert threshold must be between 1 and 100"
     },
     "transaction": {
       "kindTypeMismatch": "This type is not allowed for the selected kind"
