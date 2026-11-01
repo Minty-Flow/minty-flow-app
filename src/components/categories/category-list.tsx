@@ -33,15 +33,15 @@ function CategoryListHeader({
   const { t } = useTranslation()
   return (
     <View style={styles.headerContainer}>
-      <Pressable style={styles.headerTile} onPress={onAddCategory}>
-        <IconSvg name="plus-outline" size={28} />
-        <Text variant="default" style={styles.headerTileText} numberOfLines={2}>
+      <Pressable style={styles.headerPill} onPress={onAddCategory}>
+        <IconSvg name="plus-outline" size={20} />
+        <Text variant="default" style={styles.headerPillText} numberOfLines={2}>
           {t("components.categories.actions.addNew")}
         </Text>
       </Pressable>
-      <Pressable style={styles.headerTile} onPress={onAddFromPresets}>
-        <IconSvg name="category-plus-outline" size={28} />
-        <Text variant="default" style={styles.headerTileText} numberOfLines={2}>
+      <Pressable style={styles.headerPill} onPress={onAddFromPresets}>
+        <IconSvg name="category-plus-outline" size={20} />
+        <Text variant="default" style={styles.headerPillText} numberOfLines={2}>
           {t("components.categories.actions.addFromPresets")}
         </Text>
       </Pressable>
@@ -151,25 +151,28 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
     gap: 10,
   },
-  // Two equal square tiles side by side, icon over label.
+  // Two equal-width pills in one row, icon beside the label. minHeight (not a
+  // fixed height) so a long translation can wrap to a second line.
   headerContainer: {
     flexDirection: "row",
     paddingVertical: 10,
     gap: 10,
   },
-  headerTile: {
+  headerPill: {
     flex: 1,
-    aspectRatio: 1,
-    maxHeight: 120,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    padding: 12,
+    minHeight: 44,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     backgroundColor: theme.colors.secondary,
     borderRadius: theme.radius,
   },
-  headerTileText: {
+  headerPillText: {
     ...theme.typography.titleSmall,
+    flexShrink: 1,
     fontWeight: "600",
     textAlign: "center",
     color: theme.colors.onSecondary,
