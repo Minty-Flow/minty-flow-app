@@ -46,19 +46,16 @@ function readDotEnvLocalValue(
   return undefined
 }
 
-function loadKeystoreConfig(projectRoot: string): KeystoreConfig {
+function loadKeystoreConfig(projectRoot: string): KeystoreConfig | null {
   const storePassword =
     process.env.MYAPP_UPLOAD_STORE_PASSWORD ??
     readDotEnvLocalValue(projectRoot, "MYAPP_UPLOAD_STORE_PASSWORD")
   const keyPassword =
     process.env.MYAPP_UPLOAD_KEY_PASSWORD ??
     readDotEnvLocalValue(projectRoot, "MYAPP_UPLOAD_KEY_PASSWORD")
-  if (!storePassword || !keyPassword) {
-    throw new Error(
-      "with-android-release-signing: missing MYAPP_UPLOAD_STORE_PASSWORD or MYAPP_UPLOAD_KEY_PASSWORD. " +
-        "Set both in .env.local (gitignored) or your shell.",
-    )
-  }
+  // Without the release passwords there is nothing to sign with. Returning
+  // null lets a fresh clone (or a debug build) prebuild instead of failing.
+  if (!storePassword || !keyPassword) return null
   return {
     storeFile: KEYSTORE_FILE,
     keyAlias: KEY_ALIAS,
@@ -94,6 +91,7 @@ const withReleaseSigningConfig: ConfigPlugin = (config) =>
 const withReleaseGradleProperties: ConfigPlugin = (config) =>
   withGradleProperties(config, (cfg) => {
     const keystore = loadKeystoreConfig(cfg.modRequest.projectRoot)
+    if (!keystore) return cfg
     const entries: [string, string][] = [
       ["MYAPP_UPLOAD_STORE_FILE", keystore.storeFile],
       ["MYAPP_UPLOAD_KEY_ALIAS", keystore.keyAlias],
@@ -134,6 +132,13 @@ const withKeystoreCopy: ConfigPlugin = (config) =>
   ])
 
 const withAndroidReleaseSigning: ConfigPlugin = (config) => {
+  if (!loadKeystoreConfig(process.cwd())) {
+    process.stderr.write(
+      "with-android-release-signing: MYAPP_UPLOAD_STORE_PASSWORD / MYAPP_UPLOAD_KEY_PASSWORD not set; " +
+        "skipping release signing. Set both in .env.local (gitignored) or your shell to sign a release build.\n",
+    )
+    return config
+  }
   config = withKeystoreCopy(config)
   config = withReleaseGradleProperties(config)
   config = withReleaseSigningConfig(config)

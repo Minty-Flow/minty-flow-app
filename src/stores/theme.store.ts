@@ -3,6 +3,7 @@ import { UnistylesRuntime } from "react-native-unistyles"
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
+import { ALL_THEMES } from "~/styles/theme/registry"
 import type { ThemeKey } from "~/styles/unistyles"
 import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
@@ -103,6 +104,11 @@ export const useThemeStore = create<ThemeStore>()(
       onRehydrateStorage: () => (state) => {
         // Sync UnistylesRuntime and native chrome when store hydrates on app start
         if (state?.themeMode) {
+          // A theme renamed or removed since it was saved is not registered;
+          // setting it would crash at startup. Fall back to the default.
+          if (!(state.themeMode in ALL_THEMES)) {
+            state.themeMode = DEFAULT_THEME
+          }
           UnistylesRuntime.setTheme(state.themeMode)
         }
       },
