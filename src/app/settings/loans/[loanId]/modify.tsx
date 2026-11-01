@@ -7,7 +7,7 @@ import {
   RouteNotFoundState,
 } from "~/components/route-load-state"
 import { useActiveAccountsWith } from "~/database/drizzle/read-models/account-read-model"
-import { useCategories } from "~/database/drizzle/read-models/category-read-model"
+import { useCategoriesQuery } from "~/database/drizzle/read-models/category-read-model"
 import { useLoansQuery } from "~/database/drizzle/read-models/loan-read-model"
 import { useModifyRouteLoader } from "~/hooks/use-modify-route-loader"
 import { type LoanTerm, type LoanType, LoanTypeEnum } from "~/types/loans"
@@ -34,7 +34,8 @@ export default function LoanModifyScreen() {
   const accounts = useActiveAccountsWith(
     loadState.mode === "edit" ? loadState.entity.accountId : null,
   )
-  const categories = useCategories()
+  // Counts feed the picker's "Most used" row.
+  const categories = useCategoriesQuery(true).data
   const prefill = (() => {
     const term =
       params.prefillTerm === "one_time" || params.prefillTerm === "long_term"
