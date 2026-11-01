@@ -1,3 +1,4 @@
+import { hasAttachmentsFromExtra } from "~/database/utils/has-attachments-from-extra"
 import { assertMinorUnits, getMinorUnitDigits } from "~/utils/money"
 
 export interface BackupMeta {
@@ -234,12 +235,16 @@ export function normalizeColumnValue(col: string, val: unknown): unknown {
     if (val === "BORROWED") return "borrowed"
   }
   if (col === "range") return normalizeRecurringRange(val)
-  if (
-    DATE_COLUMNS.has(col) &&
-    typeof val === "number" &&
-    Number.isFinite(val)
-  ) {
-    return new Date(val).toISOString()
+  if (DATE_COLUMNS.has(col)) {
+    // Reads compare these as ISO strings, so a date-only or offset-carrying
+    // value from an older backup would not match a day query.
+    if (typeof val === "number" && Number.isFinite(val)) {
+      return new Date(val).toISOString()
+    }
+    if (typeof val === "string" && val) {
+      const ms = Date.parse(val)
+      return Number.isFinite(ms) ? new Date(ms).toISOString() : val
+    }
   }
   return val ?? null
 }
@@ -247,16 +252,12 @@ export function normalizeColumnValue(col: string, val: unknown): unknown {
 export function deriveHasAttachments(extraJson: unknown): number {
   if (typeof extraJson !== "string" || !extraJson) return 0
   try {
-    const extra = JSON.parse(extraJson) as Record<string, unknown>
-    if (!extra.attachments) return 0
-    const attachments =
-      typeof extra.attachments === "string"
-        ? (JSON.parse(extra.attachments) as unknown)
-        : extra.attachments
-    if (Array.isArray(attachments)) return attachments.length > 0 ? 1 : 0
-    if (typeof attachments === "object" && attachments !== null)
-      return Object.keys(attachments).length > 0 ? 1 : 0
-    return 0
+    // Same helper the live write path uses, so import and editing agree.
+    return hasAttachmentsFromExtra(
+      JSON.parse(extraJson) as Record<string, string>,
+    )
+      ? 1
+      : 0
   } catch {
     return 0
   }
@@ -405,6 +406,9 @@ export function validateBackup(json: string): ValidateBackupResult {
       }
     }
 
+    const categoryIds = new Set(
+      (data.categories as RawRow[]).map((row) => String(row.id)),
+    )
     for (const table of ["accounts", "budgets", "goals"]) {
       for (const [index, row] of (data[table] as RawRow[]).entries()) {
         try {
@@ -435,14 +439,30 @@ export function validateBackup(json: string): ValidateBackupResult {
         // such rules. A disabled rule never reads its account again; only an
         // enabled one needs the account to exist.
         const disabled = row.disabled === 1 || row.disabled === true
-        if (!disabled && !accountIds.has(String(template.accountId))) {
-          throw new Error("Unknown recurring account")
+        if (!disabled) {
+          if (!accountIds.has(String(template.accountId))) {
+            throw new Error("Unknown recurring account")
+          }
+          // A rule that points at a row the backup does not carry would only
+          // fail later on insert, or dangle.
+          if (
+            template.categoryId != null &&
+            !categoryIds.has(String(template.categoryId))
+          ) {
+            throw new Error("Unknown recurring category")
+          }
+          if (
+            row.transfer_to_account_id != null &&
+            !accountIds.has(String(row.transfer_to_account_id))
+          ) {
+            throw new Error("Unknown recurring transfer account")
+          }
         }
       } catch {
         return {
           success: false,
           reason: "validation_error",
-          message: `Invalid recurring money template (row ${index})`,
+          message: `Invalid recurring rule (row ${index})`,
         }
       }
     }
@@ -469,7 +489,8 @@ export function validateBackup(json: string): ValidateBackupResult {
         }
         const txDate = row.transaction_date
         if (
-          typeof txDate !== "string" &&
+          (typeof txDate !== "string" ||
+            !Number.isFinite(Date.parse(txDate))) &&
           (typeof txDate !== "number" || !Number.isFinite(txDate as number))
         ) {
           return {

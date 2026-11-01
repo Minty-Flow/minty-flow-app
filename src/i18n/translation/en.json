@@ -39,6 +39,9 @@
       "continueWithout": "Continue without backup",
       "failed": "Couldn't save the backup. Try again."
     },
+    "appLock": {
+      "tapToUnlock": "Tap to unlock"
+    },
     "developmentNotice": {
       "title": "A quick note",
       "dontShowAgain": "Don't show again",
@@ -993,7 +996,7 @@
           "maskNumber": "Mask money (⁕) at startup",
           "maskNumberOnShake": "Mask money (⁕) when shaking",
           "lockApp": "Lock app",
-          "lockAfterClosing": "Lock after closing"
+          "lockAfterClosing": "Lock when leaving the app"
         },
         "alert": {
           "deviceLockRequired": {

@@ -1,9 +1,10 @@
-import { and, count, eq, inArray, or, sql } from "drizzle-orm"
+import { and, count, eq, inArray, isNotNull, or, sql } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
 import {
   accounts,
   budgetAccounts,
+  budgets,
   goalAccounts,
   loans,
   transactions,
@@ -191,13 +192,36 @@ export async function destroyAccount(id: string): Promise<void> {
   const now = new Date().toISOString()
 
   await runInTransaction("account.destroy", (db) => {
-    const accountLoans = db
-      .select({ name: loans.name })
-      .from(loans)
-      .where(eq(loans.accountId, id))
-      .all()
-    if (accountLoans.length > 0) {
-      throw new AccountHasLoansError(accountLoans.map((loan) => loan.name))
+    // Loans owned by the account, plus any loan that has a row on it (a
+    // repayment can live on a different account). Deleting either would leave
+    // the loan pointing at a row that no longer exists.
+    const loanIds = new Set(
+      db
+        .select({ id: loans.id })
+        .from(loans)
+        .where(eq(loans.accountId, id))
+        .all()
+        .map((row) => row.id),
+    )
+    for (const row of db
+      .selectDistinct({ loanId: transactions.loanId })
+      .from(transactions)
+      .where(
+        and(eq(transactions.accountId, id), isNotNull(transactions.loanId)),
+      )
+      .all()) {
+      if (row.loanId) loanIds.add(row.loanId)
+    }
+    if (loanIds.size > 0) {
+      const accountLoans = db
+        .select({ name: loans.name })
+        .from(loans)
+        .where(inArray(loans.id, [...loanIds]))
+        .orderBy(loans.name)
+        .all()
+      if (accountLoans.length > 0) {
+        throw new AccountHasLoansError(accountLoans.map((loan) => loan.name))
+      }
     }
 
     const txs = db
@@ -318,6 +342,28 @@ export async function destroyAccount(id: string): Promise<void> {
     }
 
     disableRecurringRulesForAccount(db, id)
+    // Switch off budgets left with no account, before the links are removed
+    // (mirrors what deleting a category does).
+    db.update(budgets)
+      .set({ isActive: 0, updatedAt: now })
+      .where(
+        and(
+          eq(budgets.isActive, 1),
+          inArray(
+            budgets.id,
+            db
+              .select({ id: budgetAccounts.budgetId })
+              .from(budgetAccounts)
+              .where(eq(budgetAccounts.accountId, id)),
+          ),
+          sql`NOT EXISTS (
+            SELECT 1 FROM ${budgetAccounts}
+            WHERE ${budgetAccounts.budgetId} = ${budgets.id}
+              AND ${budgetAccounts.accountId} <> ${id}
+          )`,
+        ),
+      )
+      .run()
     db.delete(budgetAccounts).where(eq(budgetAccounts.accountId, id)).run()
     db.delete(goalAccounts).where(eq(goalAccounts.accountId, id)).run()
     db.delete(accounts).where(eq(accounts.id, id)).run()

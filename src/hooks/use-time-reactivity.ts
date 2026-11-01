@@ -1,6 +1,9 @@
 import { useCallback, useSyncExternalStore } from "react"
 import { AppState } from "react-native"
 
+import { localDayKey } from "~/utils/time-utils"
+import { timestampScheduler } from "~/utils/timestamp-scheduler"
+
 /* ------------------------------------------------------------------ */
 /* Precise Minute Ticker (fires exactly at minute boundaries)         */
 /* ------------------------------------------------------------------ */
@@ -43,53 +46,7 @@ export function useMinuteTick(): number {
 /* ------------------------------------------------------------------ */
 /* Specific Timestamp Watcher (fires exactly when a date passes)      */
 /* ------------------------------------------------------------------ */
-class TimestampScheduler {
-  private listeners = new Map<number, Set<() => void>>()
-  private timeouts = new Map<number, ReturnType<typeof setTimeout>>()
-  subscribe(timestamp: number, callback: () => void): () => void {
-    // Round to minute for grouping (multiple transactions at same minute)
-    const minuteTimestamp = Math.floor(timestamp / 60000) * 60000
-    if (!this.listeners.has(minuteTimestamp)) {
-      this.listeners.set(minuteTimestamp, new Set())
-      this.scheduleTimestamp(minuteTimestamp)
-    }
-    const set = this.listeners.get(minuteTimestamp)
-    if (set) set.add(callback)
-    return () => {
-      const set = this.listeners.get(minuteTimestamp)
-      if (set) {
-        set.delete(callback)
-        if (set.size === 0) {
-          this.listeners.delete(minuteTimestamp)
-          const timeout = this.timeouts.get(minuteTimestamp)
-          if (timeout) {
-            clearTimeout(timeout)
-            this.timeouts.delete(minuteTimestamp)
-          }
-        }
-      }
-    }
-  }
-  private scheduleTimestamp(timestamp: number) {
-    const msUntil = timestamp - Date.now()
-    if (msUntil <= 0) {
-      this.notifyListeners(timestamp)
-      return
-    }
-    const timeout = setTimeout(() => {
-      this.notifyListeners(timestamp)
-      this.timeouts.delete(timestamp)
-    }, msUntil)
-    this.timeouts.set(timestamp, timeout)
-  }
-  private notifyListeners(timestamp: number) {
-    const set = this.listeners.get(timestamp)
-    if (set) {
-      for (const cb of set) cb()
-    }
-  }
-}
-const timestampScheduler = new TimestampScheduler()
+
 /**
  * Returns true once the specified date has passed.
  * Updates **exactly** when the date passes (no polling, no delay).
@@ -127,12 +84,12 @@ export function useIsConfirmable(transaction: ConfirmableTransaction): boolean {
 /* Day Key (month-rollover staleness)                                  */
 /* ------------------------------------------------------------------ */
 const dayListeners = new Set<() => void>()
-let currentDayKey = Math.floor(Date.now() / 86_400_000)
+let currentDayKey = localDayKey(new Date())
 let dayTimeoutId: ReturnType<typeof setTimeout> | null = null
 let dayAppStateSub: ReturnType<typeof AppState.addEventListener> | null = null
-/** Recompute the key and push it to every listener on a new UTC day. */
+/** Recompute the key and push it to every listener on a new local day. */
 function publishDayKey() {
-  const next = Math.floor(Date.now() / 86_400_000)
+  const next = localDayKey(new Date())
   if (next !== currentDayKey) {
     currentDayKey = next
     for (const cb of dayListeners) cb()
@@ -141,14 +98,26 @@ function publishDayKey() {
 }
 function scheduleNextDay() {
   if (dayTimeoutId) clearTimeout(dayTimeoutId)
-  const msFromNowToMidnight = Date.now() % 86_400_000
-  dayTimeoutId = setTimeout(publishDayKey, 86_400_000 - msFromNowToMidnight)
+  const now = new Date()
+  // `Date` normalizes the calendar date, so the next local midnight is right
+  // even when a DST day is 23 or 25 hours long.
+  const nextMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+  )
+  dayTimeoutId = setTimeout(
+    publishDayKey,
+    nextMidnight.getTime() - now.getTime(),
+  )
 }
 function subscribeDayKey(callback: () => void) {
   const becameFirst = dayListeners.size === 0
   dayListeners.add(callback)
   if (becameFirst) {
-    scheduleNextDay()
+    // Recompute now: subscribers may have been detached across a rollover, and
+    // the stored key would otherwise stay stale until the next midnight.
+    publishDayKey()
     dayAppStateSub ??= AppState.addEventListener("change", (state) => {
       if (state === "active") publishDayKey()
     })
@@ -164,11 +133,15 @@ function subscribeDayKey(callback: () => void) {
   }
 }
 /**
- * A value that changes once per UTC day and immediately on app-foreground.
- * Screens whose date-range query is otherwise memoized on frozen inputs use
- * this to re-derive "this month" after a month rollover without a cold start.
+ * A `dayKey` that changes once per local day and immediately on app-foreground.
+ * Screens whose date-range query is otherwise memoized on frozen inputs use this
+ * to re-derive "this month" after a month rollover without a cold start.
+ *
+ * A live time zone change is not observed on Android (expo-localization only
+ * reacts to configuration changes); it is picked up on the next foreground or
+ * cold start, when the local date is recomputed.
  */
-export function useDayKey(): number {
+export function useDayKey(): string {
   return useSyncExternalStore(
     subscribeDayKey,
     () => currentDayKey,

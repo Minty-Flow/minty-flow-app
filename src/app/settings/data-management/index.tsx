@@ -28,6 +28,7 @@ import {
   saveZipToDevice,
   validateBackup,
 } from "~/database/services/data-management-service"
+import { useAppLockStore } from "~/stores/app-lock.store"
 import {
   type ExportRecord,
   useExportHistoryStore,
@@ -130,10 +131,20 @@ export default function DataManagementScreen() {
     }>,
     type: ExportRecord["type"],
   ) {
-    setSavingType(type)
-
-    Promise.resolve(save(baseName.trim() || undefined))
-      .then(({ uri, fileName, savedToDevice }) => {
+    void (async () => {
+      // An export hands over the full DB + attachments, so re-verify the user
+      // every time the lock is on — even when the app is already unlocked.
+      if (
+        useAppLockStore.getState().lockAppEnabled &&
+        !(await useAppLockStore.getState().verifyIdentity())
+      ) {
+        return
+      }
+      setSavingType(type)
+      try {
+        const { uri, fileName, savedToDevice } = await save(
+          baseName.trim() || undefined,
+        )
         // Cancelling the folder picker / share sheet is not an export: no toast,
         // no history entry (the service already removed the temporary copy).
         if (!savedToDevice) return
@@ -149,13 +160,12 @@ export default function DataManagementScreen() {
         Toast.success({
           title: t("screens.settings.dataManagement.exportSaved"),
         })
-      })
-      .catch(() => {
+      } catch {
         Toast.error({ title: t("screens.settings.dataManagement.exportError") })
-      })
-      .finally(() => {
+      } finally {
         setSavingType(null)
-      })
+      }
+    })()
   }
 
   function handleImportJson() {

@@ -367,6 +367,7 @@ import Filter2Search from "./outline/Filter2Search"
 import Filter2X from "./outline/Filter2X"
 import FilterOff from "./outline/FilterOff"
 import Fingerprint from "./outline/Fingerprint"
+import FingerprintScan from "./outline/FingerprintScan"
 import GraphOutline from "./outline/Graph"
 import GripHorizontal from "./outline/GripHorizontal"
 import HandSanitizer from "./outline/HandSanitizer"
@@ -388,6 +389,7 @@ import Minus from "./outline/Minus"
 import MoonStars from "./outline/MoonStars"
 import PageBreak from "./outline/PageBreak"
 import Paperclip from "./outline/Paperclip"
+import PasswordFingerprint from "./outline/PasswordFingerprint"
 import PasswordMobilePhone from "./outline/PasswordMobilePhone"
 import PawOutline from "./outline/Paw"
 import PencilOutline from "./outline/Pencil"
@@ -805,6 +807,12 @@ const ICON_MAP = {
   },
   get "fingerprint-outline"() {
     return Fingerprint
+  },
+  get "fingerprint-scan"() {
+    return FingerprintScan
+  },
+  get "password-fingerprint"() {
+    return PasswordFingerprint
   },
   get "password-mobile-phone-outline"() {
     return PasswordMobilePhone

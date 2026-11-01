@@ -85,7 +85,7 @@ export default function PrivacyScreen() {
     {
       id: "lockApp",
       label: t("screens.settings.privacy.settings.lockApp"),
-      icon: "password-mobile-phone-outline",
+      icon: "password-fingerprint",
       value: lockAppEnabled,
       onValueChange: handleLockAppChange,
     },

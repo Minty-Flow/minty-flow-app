@@ -147,10 +147,17 @@ function getDefaultDateRange(timeframeDays: number) {
   }
 }
 
-/** Build query filters for the DB: only date range. */
+/**
+ * Build query filters for the DB: only date range.
+ *
+ * `_dayKey` is a cache key, not data: React Compiler drops memo dependencies the
+ * computation does not read, so the day has to be an argument for the range to
+ * re-derive after a rollover.
+ */
 export function buildQueryFilters(
   selectedRange: { start: Date; end: Date } | null,
   homeTimeframe: number,
+  _dayKey: string,
 ) {
   return selectedRange
     ? {

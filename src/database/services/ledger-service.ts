@@ -440,6 +440,15 @@ export function createTransferInTx(
 
   if (!fromAcc || !toAcc) throw new Error("One or both accounts not found.")
 
+  if (
+    fromAcc.currencyCode !== toAcc.currencyCode &&
+    !(params.conversionRate != null && params.conversionRate > 0)
+  ) {
+    throw new Error(
+      "A conversion rate is required for cross-currency transfers.",
+    )
+  }
+
   const creditAmount =
     fromAcc.currencyCode !== toAcc.currencyCode &&
     params.conversionRate != null &&
@@ -891,7 +900,8 @@ export async function editTransfer(
         amount: -newDebitAmount,
         transactionDate: newDateIso,
         accountId: newFromAccountId,
-        accountBalanceBefore: fromBalanceBefore,
+        // A pending leg is not part of the balance, so it has no "before".
+        accountBalanceBefore: debitRow.is_pending ? 0 : fromBalanceBefore,
         ...(fields.title !== undefined ? { title: fields.title ?? null } : {}),
         ...(fields.notes !== undefined
           ? { description: fields.notes ?? null }
@@ -906,7 +916,7 @@ export async function editTransfer(
         amount: newCreditAmount,
         transactionDate: newDateIso,
         accountId: newToAccountId,
-        accountBalanceBefore: toBalanceBefore,
+        accountBalanceBefore: creditRow.is_pending ? 0 : toBalanceBefore,
         ...(fields.title !== undefined ? { title: fields.title ?? null } : {}),
         ...(fields.notes !== undefined
           ? { description: fields.notes ?? null }
@@ -1303,6 +1313,11 @@ function confirmTransactionInTx(
         .run()
     }
   } else {
+    if (legs.some((leg) => leg.loan_id != null)) {
+      // Re-pending a lent/borrowed row would produce the pending+loan-kind
+      // state that `assertPendingKindAllowed` forbids.
+      throw new Error("A loan-linked transaction cannot be put on hold.")
+    }
     for (const leg of legs) {
       const delta = getBalanceDelta(
         leg.amount,
@@ -1493,12 +1508,14 @@ function destroyTransactionIfPresent(db: DbTransaction, id: string): void {
 }
 
 export async function destroyAllDeletedTransactions(): Promise<void> {
-  const deleted = drizzleDb
-    .select(txSelection)
-    .from(transactions)
-    .where(eq(transactions.isDeleted, 1))
-    .all()
+  // Select inside the write transaction: a restore queued after the read would
+  // otherwise be hard-deleted.
   await runInTransaction("trash.destroyAll", (db) => {
+    const deleted = db
+      .select(txSelection)
+      .from(transactions)
+      .where(eq(transactions.isDeleted, 1))
+      .all()
     for (const tx of deleted) destroyTransactionIfPresent(db, tx.id)
   })
 }
@@ -1509,16 +1526,21 @@ export async function autoPurgeTrash(retentionValue: string): Promise<void> {
 
   const cutoff = startOfDay(subDays(new Date(), days)).toISOString()
 
-  const toPurge = drizzleDb
-    .select(txSelection)
-    .from(transactions)
-    .where(
-      and(eq(transactions.isDeleted, 1), lt(transactions.deletedAt, cutoff)),
-    )
-    .all()
+  let toPurge: RowTransaction[] = []
 
   try {
     await runInTransaction("trash.autoPurge", (db) => {
+      // Read inside the transaction so a concurrent restore is not purged.
+      toPurge = db
+        .select(txSelection)
+        .from(transactions)
+        .where(
+          and(
+            eq(transactions.isDeleted, 1),
+            lt(transactions.deletedAt, cutoff),
+          ),
+        )
+        .all()
       for (const tx of toPurge) destroyTransactionIfPresent(db, tx.id)
     })
     return

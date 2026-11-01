@@ -39,21 +39,24 @@ export const TransactionTopTabs = ({
   lockedTo = null,
 }: TransactionTopTabsProps) => {
   const locked = lockedTo != null
-  const slots = locked
-    ? [lockedTo]
-    : [0, 1, 2].filter((slot) => !hiddenSlots.includes(slot))
+  const slots = [0, 1, 2].filter((slot) => !hiddenSlots.includes(slot))
 
   return (
     <View style={styles.segmented}>
       {slots.map((slot) => {
         const type = SLOT_TYPES[slot]
-        const isSelected = locked || value === type
+        const isLockedSlot = lockedTo === slot
+        const isSelected = locked ? isLockedSlot : value === type
         return (
           <Pressable
             key={slot}
             onPress={locked ? undefined : () => onChange(type)}
             disabled={locked}
-            style={[styles.segment, isSelected && styles.active]}
+            style={[
+              styles.segment,
+              isSelected && styles.active,
+              locked && !isLockedSlot && styles.disabled,
+            ]}
           >
             <IconSvg
               name={icons[slot]}
@@ -103,5 +106,8 @@ const styles = StyleSheet.create((theme) => ({
   },
   activeText: {
     color: theme.colors.onPrimary,
+  },
+  disabled: {
+    opacity: 0.4,
   },
 }))

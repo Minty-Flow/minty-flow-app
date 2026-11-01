@@ -27,6 +27,16 @@ import { logger } from "~/utils/logger"
 import { getMonthRange } from "~/utils/time-utils"
 import { Toast } from "~/utils/toast"
 
+/**
+ * Local month bounds for "now". `_dayKey` is a cache key, not data: React
+ * Compiler drops memo dependencies the computation does not read, so the day
+ * has to be an argument for the range to re-derive after a rollover.
+ */
+function currentMonthRange(_dayKey: string) {
+  const now = new Date()
+  return getMonthRange(now.getFullYear(), now.getMonth())
+}
+
 function AccountsScreen() {
   const { t } = useTranslation()
   const router = useRouter()
@@ -38,11 +48,10 @@ function AccountsScreen() {
   )
   const accounts = useActiveAccounts()
   const dayKey = useDayKey()
-  // biome-ignore lint/correctness/useExhaustiveDependencies: dayKey intentionally busts the cache on date change
-  const { fromDate, toDate } = useMemo(() => {
-    const now = new Date()
-    return getMonthRange(now.getFullYear(), now.getMonth())
-  }, [dayKey])
+  const { fromDate, toDate } = useMemo(
+    () => currentMonthRange(dayKey),
+    [dayKey],
+  )
   const { totals: totalsByAccount, isReady: totalsReady } =
     useAccountPeriodTotals(
       new Date(fromDate),

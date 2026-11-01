@@ -38,6 +38,9 @@
       "continueWithout": "المتابعة بدون نسخة احتياطية",
       "failed": "تعذّر حفظ النسخة الاحتياطية. حاول مرة أخرى."
     },
+    "appLock": {
+      "tapToUnlock": "اضغط لفتح القفل"
+    },
     "developmentNotice": {
       "title": "ملاحظة سريعة",
       "dontShowAgain": "عدم الإظهار مرة أخرى",
@@ -1009,7 +1012,7 @@
           "maskNumber": "إخفاء المبالغ (⁕) عند التشغيل",
           "maskNumberOnShake": "إخفاء المبالغ (⁕) عند الهز",
           "lockApp": "قفل التطبيق",
-          "lockAfterClosing": "القفل بعد الإغلاق"
+          "lockAfterClosing": "القفل عند مغادرة التطبيق"
         },
         "alert": {
           "deviceLockRequired": {
