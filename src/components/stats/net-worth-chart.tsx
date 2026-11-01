@@ -125,9 +125,11 @@ export function NetWorthChart({
         >
           {width > 0 ? (
             <Canvas style={styles.canvas}>
-              {gridValues.map((v) => (
+              {gridValues.map((v, i) => (
                 <Line
-                  key={v}
+                  // A flat timeline repeats the same value, so key by position.
+                  // biome-ignore lint/suspicious/noArrayIndexKey: grid lines have no identity beyond position
+                  key={`${i}-${v}`}
                   p1={vec(0, yAt(v))}
                   p2={vec(width, yAt(v))}
                   color={`${theme.colors.semantic.semi}30`}
