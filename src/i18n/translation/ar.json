@@ -27,7 +27,8 @@
       "soon": "قريباً"
     },
     "errorBoundary": {
-      "title": "حدث خطأ ما"
+      "title": "حدث خطأ ما",
+      "goHome": "العودة إلى الرئيسية"
     },
     "preUpdateBackup": {
       "checking": "جارٍ فحص بياناتك...",

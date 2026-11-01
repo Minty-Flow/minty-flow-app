@@ -28,7 +28,8 @@
       "soon": "Soon"
     },
     "errorBoundary": {
-      "title": "Something went wrong"
+      "title": "Something went wrong",
+      "goHome": "Go to Home"
     },
     "preUpdateBackup": {
       "checking": "Checking your data...",
