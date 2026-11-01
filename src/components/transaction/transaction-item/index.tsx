@@ -109,6 +109,7 @@ export const TransactionItem = ({
     transferId,
     subtype,
     kind,
+    transferSourceAmount,
   } = transactionWithRelations
   const isTransfer = txIsTransfer || type === TransactionTypeEnum.TRANSFER
   const transferLayout = useTransfersPreferencesStore((s) => s.layout)
@@ -132,12 +133,13 @@ export const TransactionItem = ({
             relatedAccount.currencyCode,
             conversionRate,
           )
-        : convertMinorUnits(
+        : (transferSourceAmount ??
+          convertMinorUnits(
             amount,
             account.currencyCode,
             relatedAccount.currencyCode,
             1 / conversionRate,
-          )
+          ))
       : null
   const icon = isTransfer ? "arrows-right-left-outline" : category?.icon
   const amountTone = isTransfer
@@ -190,7 +192,10 @@ export const TransactionItem = ({
   const isAutoRecurring = Boolean(transactionWithRelations.recurringId)
   const accountLabel =
     isCombinedTransfer && relatedAccount
-      ? `${account?.name} → ${relatedAccount.name}`
+      ? // Money flows from the debit leg's account to the credit leg's.
+        amount < 0
+        ? `${account?.name} → ${relatedAccount.name}`
+        : `${relatedAccount.name} → ${account?.name}`
       : account?.name
   const categorySegment =
     showCategoryInSubtitle && !isTransfer
