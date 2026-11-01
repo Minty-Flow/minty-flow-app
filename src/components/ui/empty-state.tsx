@@ -2,6 +2,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import type { IconSvgName } from "~/components/icons"
 import { IconSvg } from "~/components/icons"
+import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 
@@ -12,6 +13,8 @@ interface EmptyStateProps {
   title: string
   description?: string
   variant?: EmptyStateVariant
+  /** What the user can do about it, e.g. add the first item. */
+  action?: { label: string; onPress: () => void }
 }
 
 export function EmptyState({
@@ -19,6 +22,7 @@ export function EmptyState({
   title,
   description,
   variant = "default",
+  action,
 }: EmptyStateProps) {
   const { theme } = useUnistyles()
   const isCompact = variant === "compact"
@@ -45,11 +49,23 @@ export function EmptyState({
           {description}
         </Text>
       ) : null}
+      {action ? (
+        <Button
+          variant="secondary"
+          style={styles.action}
+          onPress={action.onPress}
+        >
+          <Text>{action.label}</Text>
+        </Button>
+      ) : null}
     </View>
   )
 }
 
 const styles = StyleSheet.create((t) => ({
+  action: {
+    marginTop: 16,
+  },
   container: {
     paddingVertical: 48,
     paddingHorizontal: 24,

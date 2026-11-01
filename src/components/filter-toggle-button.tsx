@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next"
+
 import { IconSvg } from "~/components/icons"
 import { Button } from "~/components/ui/button"
 
@@ -17,12 +19,14 @@ export function FilterToggleButton({
   variant = "filter",
   accessibilityLabel,
 }: FilterToggleButtonProps) {
+  const { t } = useTranslation()
   return (
     <Button
       variant="ghost"
       size="icon"
       onPress={onPress}
-      accessibilityLabel={accessibilityLabel}
+      accessibilityLabel={accessibilityLabel ?? t("components.filters.toggle")}
+      accessibilityState={{ expanded: active }}
     >
       <IconSvg
         name={

@@ -180,7 +180,8 @@
         }
       },
       "emptyState": {
-        "title": "لا توجد معاملات بعد"
+        "title": "لا توجد معاملات بعد",
+        "addFirst": "أضف معاملة"
       }
     },
     "accounts": {
@@ -1630,7 +1631,9 @@
       "transactionCount_two": "• معاملتان",
       "transactionCount_few": "• {{count}} معاملات",
       "transactionCount_many": "• {{count}} معاملة",
-      "transactionCount_other": "• {{count}} معاملة"
+      "transactionCount_other": "• {{count}} معاملة",
+      "noMatches": "لا توجد معاملات مطابقة",
+      "noMatchesDescription": "غيّر عوامل التصفية أو امسحها لعرض المزيد."
     },
     "categoryRow": {
       "transactionCount_one": "معاملة واحدة",

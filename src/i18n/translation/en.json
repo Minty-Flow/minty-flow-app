@@ -176,7 +176,8 @@
         }
       },
       "emptyState": {
-        "title": "No transactions yet"
+        "title": "No transactions yet",
+        "addFirst": "Add a transaction"
       }
     },
     "accounts": {
@@ -1546,7 +1547,9 @@
     "transactionList": {
       "emptyDescription": "Transactions for this period will appear here",
       "transactionCount_one": "• {{count}} transaction",
-      "transactionCount_other": "• {{count}} transactions"
+      "transactionCount_other": "• {{count}} transactions",
+      "noMatches": "No matching transactions",
+      "noMatchesDescription": "Change or clear your filters to see more."
     },
     "categoryRow": {
       "transactionCount_one": "{{count}} transaction",
