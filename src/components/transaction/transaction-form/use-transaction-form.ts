@@ -945,6 +945,7 @@ export function useTransactionForm({
     handleRefundToggle,
     handleCategorySelect,
     handleCategoryClear,
+    allowNavigation,
     handleConfirmExit,
     handleRecurringSaved,
     handleCancelPress,

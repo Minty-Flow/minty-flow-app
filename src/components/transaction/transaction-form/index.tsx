@@ -84,7 +84,10 @@ export function TransactionForm(props: TransactionFormProps) {
         />
       </View>
 
-      <UpcomingBanner transaction={transaction} />
+      <UpcomingBanner
+        transaction={transaction}
+        allowNavigation={f.allowNavigation}
+      />
       {readOnly ? (
         <View style={transactionFormStyles.trashedNotice}>
           <InfoBanner
