@@ -39,9 +39,14 @@ export default function OnboardingScreen() {
   const isRTL = useLanguageStore((s) => s.isRTL)
   const [currentPage, setCurrentPage] = useState(0)
   useFocusEffect(() => {
-    // Android hardware back button → close app
+    // Android hardware back button: step back a page, and close the app only
+    // from the first one.
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      BackHandler.exitApp()
+      if (currentPage > 0) {
+        pagerRef.current?.setPage(currentPage - 1)
+      } else {
+        BackHandler.exitApp()
+      }
       return true // consume the event
     })
     return () => sub.remove()
