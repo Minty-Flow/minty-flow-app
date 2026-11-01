@@ -24,7 +24,8 @@
       "discard": "تجاهل",
       "previous": "السابق",
       "moveUp": "نقل للأعلى",
-      "moveDown": "نقل للأسفل"
+      "moveDown": "نقل للأسفل",
+      "undo": "تراجع"
     },
     "states": {
       "soon": "قريباً"
@@ -1618,7 +1619,9 @@
       "recurring": "متكررة",
       "upcoming": "القادمة",
       "canceled": "تم إلغاء المعاملة",
-      "failedToDelete": "فشل الحذف"
+      "failedToDelete": "فشل الحذف",
+      "movedToTrash": "تم النقل إلى سلة المحذوفات",
+      "failedToRestore": "فشلت الاستعادة"
     },
     "transactionList": {
       "emptyDescription": "ستظهر معاملات هذه الفترة هنا",

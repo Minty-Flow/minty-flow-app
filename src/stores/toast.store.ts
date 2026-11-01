@@ -16,6 +16,8 @@ export interface ToastOptions {
   onShow?: () => void
   onHide?: () => void
   onPress?: () => void
+  /** A button on the toast, e.g. Undo. Pressing it also dismisses the toast. */
+  action?: { label: string; onPress: () => void }
 }
 
 export interface Toast extends ToastOptions {

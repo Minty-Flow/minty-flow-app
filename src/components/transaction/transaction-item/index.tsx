@@ -14,6 +14,7 @@ import type { TransactionWithRelations } from "~/database/drizzle/read-models/tr
 import {
   deleteTransaction,
   deleteTransfer,
+  restoreTransaction,
 } from "~/database/services/ledger-service"
 import { useIsConfirmable } from "~/hooks/use-time-reactivity"
 import { isPreapproved } from "~/services/auto-confirmation-service"
@@ -254,8 +255,19 @@ export const TransactionItem = ({
       .then(() =>
         Toast.success({
           title: isUpcoming
-            ? t("components.transactionItem.canceled")
+            ? t("components.transactionItem.movedToTrash")
             : t("components.transactionForm.toast.movedToTrash"),
+          // A swipe is easy to trigger by accident: offer to take it back.
+          action: {
+            label: t("common.actions.undo"),
+            onPress: () => {
+              restoreTransaction(id).catch(() =>
+                Toast.error({
+                  title: t("components.transactionItem.failedToRestore"),
+                }),
+              )
+            },
+          },
         }),
       )
       .catch(() =>

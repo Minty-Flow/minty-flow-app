@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react"
+import { useTranslation } from "react-i18next"
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -25,6 +26,7 @@ type ToastItemProps = {
   onHide: (id: string) => void
 }
 const ToastItem = ({ toast, onHide }: ToastItemProps) => {
+  const { t } = useTranslation()
   // Capture toast properties for use in worklets
   const toastPosition = toast.position
   const toastAutoHide = toast.autoHide
@@ -178,9 +180,23 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
             <Text style={toastStyles.text2}>{toast.description}</Text>
           )}
         </View>
+        {toast.action ? (
+          <Pressable
+            onPress={() => {
+              toast.action?.onPress()
+              triggerHide()
+            }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={toastStyles.actionButton}
+            accessibilityLabel={toast.action.label}
+          >
+            <Text style={toastStyles.actionText}>{toast.action.label}</Text>
+          </Pressable>
+        ) : null}
         {toast.showCloseIcon && (
           <Pressable
             onPress={triggerHide}
+            accessibilityLabel={t("common.actions.close")}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={toastStyles.closeButton}
           >
@@ -362,6 +378,16 @@ const toastStyles = StyleSheet.create((theme, rt) => ({
   text2: {
     fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.onSecondary,
+  },
+  actionButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginLeft: 8,
+  },
+  actionText: {
+    ...theme.typography.titleSmall,
+    fontWeight: "700",
+    color: theme.colors.primary,
   },
   closeButton: {
     padding: 4,

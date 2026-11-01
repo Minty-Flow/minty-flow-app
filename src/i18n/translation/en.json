@@ -25,7 +25,8 @@
       "discard": "Discard",
       "previous": "Previous",
       "moveUp": "Move up",
-      "moveDown": "Move down"
+      "moveDown": "Move down",
+      "undo": "Undo"
     },
     "states": {
       "soon": "Soon"
@@ -1538,7 +1539,9 @@
       "recurring": "Recurring",
       "upcoming": "Upcoming",
       "canceled": "Transaction canceled",
-      "failedToDelete": "Failed to delete"
+      "failedToDelete": "Failed to delete",
+      "movedToTrash": "Moved to trash",
+      "failedToRestore": "Failed to restore"
     },
     "transactionList": {
       "emptyDescription": "Transactions for this period will appear here",
