@@ -17,7 +17,7 @@ import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
+import { useAccounts } from "~/database/drizzle/read-models/account-read-model"
 import { useBudgetsQuery } from "~/database/drizzle/read-models/budget-read-model"
 import { useCategories } from "~/database/drizzle/read-models/category-read-model"
 import {
@@ -32,6 +32,7 @@ import { useWeekStartStore } from "~/stores/week-start.store"
 import {
   getLiveBudgetSpent,
   getLiveBudgetSpentByCategory,
+  isBudgetTransaction,
 } from "~/utils/live-progress"
 import { roundToSafeInteger } from "~/utils/money"
 import { formatMoney } from "~/utils/number-format"
@@ -54,7 +55,8 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
   const budgetsQuery = useBudgetsQuery()
   const budget = budgetsQuery.data.find((item) => item.id === budgetId)
   const weekStart = useWeekStartStore((s) => s.weekStart)
-  const allAccounts = useActiveAccounts()
+  // Archived accounts still hold the budget's rows, so name them too.
+  const allAccounts = useAccounts()
   const allCategories = useCategories()
   const accountNames = (() => {
     const accountNameById = new Map(allAccounts.map((a) => [a.id, a.name]))
@@ -90,6 +92,10 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
       : { accountIds: ["__none__"] },
   )
   const spentAmount = budget ? getLiveBudgetSpent(budget, transactionsFull) : 0
+  // Only the rows behind the spent figure, so the list explains the number.
+  const budgetTransactions = budget
+    ? transactionsFull.filter((tx) => isBudgetTransaction(budget, tx))
+    : []
   const spentByCategory = budget
     ? getLiveBudgetSpentByCategory(budget, transactionsFull)
     : {}
@@ -356,7 +362,7 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
   return (
     <View style={planningDetailStyles.container}>
       <FlatList
-        data={transactionsFull}
+        data={budgetTransactions}
         keyExtractor={(item) => item.id}
         renderItem={renderTransactionItem}
         ListHeaderComponent={headerContent}

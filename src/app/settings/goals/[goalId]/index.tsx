@@ -19,7 +19,7 @@ import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
+import { useAccounts } from "~/database/drizzle/read-models/account-read-model"
 import { useGoalsQuery } from "~/database/drizzle/read-models/goal-read-model"
 import {
   type TransactionWithRelations,
@@ -50,7 +50,7 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
   const [unarchiveSheetVisible, setUnarchiveSheetVisible] = useState(false)
   const goalsQuery = useGoalsQuery()
   const goal = goalsQuery.data.find((item) => item.id === goalId)
-  const allAccounts = useActiveAccounts()
+  const allAccounts = useAccounts()
   const { items: transactionsFull } = useTransactions({ goalId })
   const currentAmount = goal ? getLiveGoalProgress(goal, transactionsFull) : 0
   const accountNames = (() => {

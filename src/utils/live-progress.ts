@@ -32,6 +32,14 @@ function budgetDelta(
     : transaction.amount
 }
 
+/** True when the row moves the budget's spent figure (zero-amount rows excepted). */
+export function isBudgetTransaction(
+  budget: Budget,
+  transaction: TransactionWithRelations,
+): boolean {
+  return budgetDelta(budget, transaction) !== 0
+}
+
 export function getLiveBudgetSpent(
   budget: Budget,
   transactions: TransactionWithRelations[],
