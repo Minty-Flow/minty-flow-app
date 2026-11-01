@@ -182,7 +182,7 @@ export default function AccountDetailsScreen() {
       <RouteNotFoundState message={t("common.notFound.account")} />
     )
   }
-  const typeLabel = account.type.charAt(0).toUpperCase() + account.type.slice(1)
+  const typeLabel = t(`common.account.types.${account.type}`)
   const headerContent = (
     <>
       {/* Account Header Card */}

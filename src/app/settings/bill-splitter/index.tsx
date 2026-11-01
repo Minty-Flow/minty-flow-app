@@ -226,8 +226,9 @@ export default function BillSplitterScreen() {
                   color={theme.colors.onSecondary}
                 />
                 <Text style={styles.participantsChipText}>
-                  {participants.length}{" "}
-                  {t("screens.settings.billSplitter.names.title").toLowerCase()}
+                  {t("screens.settings.billSplitter.names.count", {
+                    count: participants.length,
+                  })}
                 </Text>
               </Pressable>
             </View>

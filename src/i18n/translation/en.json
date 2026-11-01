@@ -904,7 +904,9 @@
           "empty": {
             "title": "No Participants",
             "description": "Add people to split the bill with."
-          }
+          },
+          "count_one": "{{count}} participant",
+          "count_other": "{{count}} participants"
         },
         "summary": {
           "title": "Summary",
@@ -1547,7 +1549,9 @@
       "createAccount": "Create an account",
       "noAccountsForCurrency": "No accounts for this currency",
       "accountsClearedTitle": "Accounts cleared",
-      "accountsClearedDescription": "Selected accounts were removed because they don't match {{currency}}."
+      "accountsClearedDescription": "Selected accounts were removed because they don't match {{currency}}.",
+      "accountCount_one": "{{count}} account",
+      "accountCount_other": "{{count}} accounts"
     },
     "accountPicker": {
       "noResults": "No accounts found"

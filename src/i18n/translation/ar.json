@@ -940,7 +940,13 @@
           "empty": {
             "title": "لا يوجد مشاركون",
             "description": "أضف أشخاصًا لتقسيم الفاتورة معهم."
-          }
+          },
+          "count_zero": "{{count}} مشاركين",
+          "count_one": "مشارك واحد",
+          "count_two": "مشاركان",
+          "count_few": "{{count}} مشاركين",
+          "count_many": "{{count}} مشاركاً",
+          "count_other": "{{count}} مشارك"
         },
         "summary": {
           "title": "الملخص",
@@ -1631,7 +1637,13 @@
       "createAccount": "إنشاء حساب",
       "noAccountsForCurrency": "لا توجد حسابات لهذه العملة",
       "accountsClearedTitle": "تم مسح الحسابات",
-      "accountsClearedDescription": "تم إزالة الحسابات المحددة لأنها لا تتطابق مع {{currency}}."
+      "accountsClearedDescription": "تم إزالة الحسابات المحددة لأنها لا تتطابق مع {{currency}}.",
+      "accountCount_zero": "{{count}} حساب",
+      "accountCount_one": "حساب واحد",
+      "accountCount_two": "حسابان",
+      "accountCount_few": "{{count}} حسابات",
+      "accountCount_many": "{{count}} حساباً",
+      "accountCount_other": "{{count}} حساب"
     },
     "accountPicker": {
       "noResults": "لا توجد حسابات"

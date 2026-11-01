@@ -12,6 +12,7 @@ import { useGoalProgress } from "~/database/drizzle/read-models/progress-read-mo
 import { useLanguageStore } from "~/stores/language.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { Goal } from "~/types/goals"
+import { formatPercent } from "~/utils/number-format"
 
 interface GoalCardProps {
   goal: Goal
@@ -125,7 +126,7 @@ export function GoalCard({ goal, onPress }: GoalCardProps) {
             variant="small"
             style={[styles.rightText, { color: theme.colors.semantic.income }]}
           >
-            100%
+            {formatPercent(100)}
           </Text>
         ) : (
           <Text

@@ -15,6 +15,7 @@ import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import i18n from "~/i18n/config"
 import { currencyRegistryService } from "~/services/currency-registry"
 import type { ExchangeRates } from "~/services/exchange-rates"
 import { exchangeRatesService } from "~/services/exchange-rates"
@@ -43,11 +44,13 @@ async function createRatesPromise(): Promise<{
     .tryFetchRates(useCode.toLowerCase())
     .then((result) => ({
       rates: result ?? null,
-      error: result ? null : "Could not load rates. Check your connection.",
+      error: result
+        ? null
+        : i18n.t("screens.settings.exchangeRates.errors.fetchFailed"),
     }))
-    .catch((e) => ({
+    .catch(() => ({
       rates: null,
-      error: e instanceof Error ? e.message : "Failed to load rates",
+      error: i18n.t("screens.settings.exchangeRates.errors.fetchFailed"),
     }))
 }
 function getEffectiveRate(

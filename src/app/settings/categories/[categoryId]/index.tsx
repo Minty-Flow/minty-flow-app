@@ -112,8 +112,7 @@ export default function CategoryDetailsScreen() {
       <RouteNotFoundState message={t("common.notFound.category")} />
     )
   }
-  const typeLabel =
-    category.type.charAt(0).toUpperCase() + category.type.slice(1)
+  const typeLabel = t(`common.transaction.types.${category.type}`)
   const headerContent = (
     <>
       {/* Category Header Card */}
