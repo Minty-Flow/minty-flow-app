@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import { FlatList, type FlatListProps, type ListRenderItem } from "react-native"
 import Animated, {
   LinearTransition,
@@ -58,6 +59,7 @@ function ReorderableRow<T>({
   // Animation values for buttons
   const upButtonScale = useSharedValue(1)
   const downButtonScale = useSharedValue(1)
+  const { t } = useTranslation()
   const itemScale = useSharedValue(1)
 
   // Animated styles for buttons (Use .get() instead of .value)
@@ -121,6 +123,7 @@ function ReorderableRow<T>({
           <AnimatedPressable
             disabled={isFirst}
             onPress={handleMoveUp}
+            accessibilityLabel={t("common.actions.moveUp")}
             style={[
               styles.iconButton,
               upButtonStyle,
@@ -133,6 +136,7 @@ function ReorderableRow<T>({
           <AnimatedPressable
             disabled={isLast}
             onPress={handleMoveDown}
+            accessibilityLabel={t("common.actions.moveDown")}
             style={[
               styles.iconButton,
               downButtonStyle,

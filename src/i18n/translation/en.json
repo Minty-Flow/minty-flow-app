@@ -22,7 +22,10 @@
       "saving": "Saving...",
       "create": "Create",
       "saveChanges": "Save Changes",
-      "discard": "Discard"
+      "discard": "Discard",
+      "previous": "Previous",
+      "moveUp": "Move up",
+      "moveDown": "Move down"
     },
     "states": {
       "soon": "Soon"
@@ -108,7 +111,8 @@
       "goal": "Goal not found.",
       "loan": "Loan not found.",
       "tag": "Tag not found."
-    }
+    },
+    "privacyToggle": "Hide amounts"
   },
   "navigation": {
     "tabs": {

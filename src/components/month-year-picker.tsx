@@ -98,7 +98,12 @@ export function MonthYearPicker({
       {/* Top row: chevrons + pill */}
       <View style={styles.topRow}>
         {navigable && (
-          <Button variant="secondary" size="icon" onPress={goPrev}>
+          <Button
+            variant="secondary"
+            size="icon"
+            onPress={goPrev}
+            accessibilityLabel={t("common.actions.previous")}
+          >
             <ChevronIcon direction="leading" size={24} />
           </Button>
         )}
@@ -113,7 +118,12 @@ export function MonthYearPicker({
         </Pressable>
 
         {navigable && (
-          <Button variant="secondary" size="icon" onPress={goNext}>
+          <Button
+            variant="secondary"
+            size="icon"
+            onPress={goNext}
+            accessibilityLabel={t("common.actions.next")}
+          >
             <ChevronIcon direction="trailing" size={24} />
           </Button>
         )}

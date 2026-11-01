@@ -40,6 +40,7 @@ export function SearchInput({
             variant="ghost"
             size="icon"
             onPress={onClear}
+            accessibilityLabel={t("common.actions.clear")}
             hitSlop={{
               top: 8,
               bottom: 8,

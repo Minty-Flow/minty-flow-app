@@ -86,6 +86,7 @@ const SearchHeader = ({
       {searchQuery.length > 0 && (
         <Pressable
           onPress={onClear}
+          accessibilityLabel={t("common.actions.clear")}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           style={styles.clearButton}
         >

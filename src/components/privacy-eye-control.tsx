@@ -1,13 +1,22 @@
+import { useTranslation } from "react-i18next"
+
 import { IconSvg } from "~/components/icons"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 
 import { Button } from "./ui/button"
 
 export const PrivacyEyeControl = () => {
+  const { t } = useTranslation()
   const privacyModeEnabled = useMoneyFormattingStore((s) => s.privacyMode)
   const togglePrivacy = useMoneyFormattingStore((s) => s.togglePrivacyMode)
   return (
-    <Button variant="ghost" onPress={togglePrivacy}>
+    <Button
+      variant="ghost"
+      onPress={togglePrivacy}
+      accessibilityRole="switch"
+      accessibilityLabel={t("common.privacyToggle")}
+      accessibilityState={{ checked: privacyModeEnabled }}
+    >
       <IconSvg
         name={privacyModeEnabled ? "eye" : "eye-off-outline"}
         size={24}
