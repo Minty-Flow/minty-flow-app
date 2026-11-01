@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-01T13:17:18.750Z
+Generated on: 2026-11-01T13:40:39.313Z
 ```
 ./
 ├── __tests__/
@@ -68,6 +68,7 @@ Generated on: 2026-11-01T13:17:18.750Z
 │   ├── stores/
 │   │   └── export-history.store.test.ts
 │   └── utils/
+│       ├── chart-path.test.ts
 │       ├── csv.test.ts
 │       ├── live-progress.test.ts
 │       ├── local-day-key.test.ts
@@ -672,6 +673,7 @@ Generated on: 2026-11-01T13:17:18.750Z
 │   └── utils/
 │       ├── account-types-list.ts
 │       ├── attachments.ts
+│       ├── chart-path.ts
 │       ├── csv.ts
 │       ├── file-icon.ts
 │       ├── format-file-size.ts

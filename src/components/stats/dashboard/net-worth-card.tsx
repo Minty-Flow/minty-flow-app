@@ -8,6 +8,7 @@ import { Money } from "~/components/money"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { BalanceTimelinePoint } from "~/types/stats"
+import { buildLineChartPaths } from "~/utils/chart-path"
 
 import { StatCard } from "./stat-card"
 
@@ -22,27 +23,13 @@ function Sparkline({ timeline }: SparklineProps) {
     if (width === 0 || timeline.length < 2) {
       return { linePath: null, areaPath: null }
     }
-    const values = timeline.map((p) => p.balance)
-    const min = Math.min(...values)
-    const max = Math.max(...values)
-    const span = max - min || 1
-    const pad = 4
-    const usable = CHART_HEIGHT - pad * 2
-    const line: string[] = []
-    const area: string[] = []
-    timeline.forEach((point, i) => {
-      const x = (i / (timeline.length - 1)) * width
-      const y = pad + (1 - (point.balance - min) / span) * usable
-      if (i === 0) {
-        line.push(`M ${x} ${y}`)
-        area.push(`M ${x} ${CHART_HEIGHT}`, `L ${x} ${y}`)
-      } else {
-        line.push(`L ${x} ${y}`)
-        area.push(`L ${x} ${y}`)
-      }
-    })
-    area.push(`L ${width} ${CHART_HEIGHT}`, "Z")
-    return { linePath: line.join(" "), areaPath: area.join(" ") }
+    const { linePath, areaPath } = buildLineChartPaths(
+      timeline.map((p) => p.balance),
+      width,
+      CHART_HEIGHT,
+      4,
+    )
+    return { linePath, areaPath }
   })()
   return (
     <View
