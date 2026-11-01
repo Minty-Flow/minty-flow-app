@@ -516,11 +516,17 @@ export async function applyRecurringDeleteScope({
         await deleteTransaction(transactionId)
         return
       case "all":
-        await deleteAllRecurringInstances(ruleId)
+        await deleteAllRecurringInstances(ruleId, {
+          keepPaid: true,
+          alsoId: transactionId,
+        })
         await disableRecurringRule(ruleId)
         return
       case "this_and_future":
-        await deleteFutureRecurringInstances(ruleId, transactionDate)
+        await deleteFutureRecurringInstances(ruleId, transactionDate, {
+          keepPaid: true,
+          alsoId: transactionId,
+        })
         await disableRecurringRule(ruleId)
         return
     }

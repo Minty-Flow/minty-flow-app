@@ -1379,10 +1379,31 @@ function getRuleInstanceIds(
     .map((row) => row.id)
 }
 
+/**
+ * `keepPaid` spares confirmed instances: they are history the user already
+ * lived, and deleting the schedule must not rewrite balances. `alsoId` is the
+ * row the user explicitly deleted, which goes even when it is paid.
+ */
+export interface DeleteInstancesOptions {
+  keepPaid?: boolean
+  alsoId?: string
+}
+
+function pickInstanceIds(
+  ruleId: string,
+  { keepPaid = false, alsoId }: DeleteInstancesOptions,
+  fromDate?: Date,
+): string[] {
+  const ids = getRuleInstanceIds(ruleId, { fromDate, pendingOnly: keepPaid })
+  if (keepPaid && alsoId && !ids.includes(alsoId)) ids.push(alsoId)
+  return ids
+}
+
 export async function deleteAllRecurringInstances(
   ruleId: string,
+  opts: DeleteInstancesOptions = {},
 ): Promise<void> {
-  const ids = getRuleInstanceIds(ruleId)
+  const ids = pickInstanceIds(ruleId, opts)
   await runInTransaction("recurring.deleteAll", (db) => {
     for (const id of ids) deleteTransactionInTx(db, id)
   })
@@ -1391,8 +1412,9 @@ export async function deleteAllRecurringInstances(
 export async function deleteFutureRecurringInstances(
   ruleId: string,
   fromDate: Date,
+  opts: DeleteInstancesOptions = {},
 ): Promise<void> {
-  const ids = getRuleInstanceIds(ruleId, { fromDate })
+  const ids = pickInstanceIds(ruleId, opts, fromDate)
   await runInTransaction("recurring.deleteFuture", (db) => {
     for (const id of ids) deleteTransactionInTx(db, id)
   })

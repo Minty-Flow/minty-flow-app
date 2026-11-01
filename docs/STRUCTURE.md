@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-01T11:21:24.024Z
+Generated on: 2026-11-01T11:46:41.407Z
 ```
 ./
 ├── __tests__/
@@ -32,6 +32,7 @@ Generated on: 2026-11-01T11:21:24.024Z
 │   │   │   ├── budget-period-bounds.test.ts
 │   │   │   ├── category-delete.test.ts
 │   │   │   ├── color-clear.test.ts
+│   │   │   ├── delete-recurring-keep-paid.test.ts
 │   │   │   ├── destroy-account-transfer-partner.test.ts
 │   │   │   ├── destroy-account-with-loans.test.ts
 │   │   │   ├── detach-transfer-from-rule.test.ts
