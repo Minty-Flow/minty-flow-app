@@ -376,7 +376,7 @@ function AppRootLayout() {
                 />
                 <Stack.Screen
                   name="settings/preferences/trash-bin"
-                  options={{ title: t("screens.settings.trash.title") }}
+                  options={{ title: t("screens.settings.trash.settingsTitle") }}
                 />
                 <Stack.Screen
                   name="settings/preferences/reminder"

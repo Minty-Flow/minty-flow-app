@@ -569,16 +569,18 @@
           "label": "Empty trash bin",
           "sheet": {
             "title": "Empty Trash",
-            "description": "All items in the trash will be permanently deleted. This action cannot be undone.",
             "confirm": "Empty Trash",
-            "cancel": "Cancel"
+            "cancel": "Cancel",
+            "description_one": "This permanently deletes {{count}} item from every month. This action cannot be undone.",
+            "description_other": "This permanently deletes {{count}} items from every month. This action cannot be undone."
           },
           "toast": {
             "successTitle": "Trash Emptied",
             "successDescription": "Your trash has been cleared.",
             "errorTitle": "Cleanup Failed",
             "errorDescription": "An unexpected error occurred. Please try again."
-          }
+          },
+          "a11y": "Empty trash"
         },
         "swipeInfo": {
           "title": "Swipe Gestures",
@@ -589,7 +591,8 @@
           "destroyPermanently": "Destroy permanently",
           "moveToTrash": "Move to trash",
           "infoButton": "Swipe gesture help"
-        }
+        },
+        "settingsTitle": "Trash settings"
       },
       "pending": {
         "title": "Scheduled Transactions",

@@ -1,5 +1,6 @@
 import {
   and,
+  count,
   desc,
   eq,
   gte,
@@ -380,4 +381,15 @@ export async function getTransactions(
 
 export function getPendingTransactions(): Promise<TransactionWithRelations[]> {
   return getTransactions({ isPending: true, deletedOnly: false })
+}
+
+/** Number of transactions in the trash, across every month. */
+export function useDeletedTransactionCount(): number {
+  const result = useLiveQuery(
+    drizzleDb
+      .select({ total: count() })
+      .from(transactions)
+      .where(eq(transactions.isDeleted, 1)),
+  )
+  return result.data[0]?.total ?? 0
 }

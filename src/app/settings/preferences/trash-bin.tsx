@@ -1,28 +1,19 @@
 import { useRouter } from "expo-router"
-import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native-gesture-handler"
 import { StyleSheet } from "react-native-unistyles"
 
-import { ConfirmSheet } from "~/components/confirm-sheet"
-import { IconSvg } from "~/components/icons"
 import {
   SettingsRow,
   settingsStyles,
 } from "~/components/settings/settings-list"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { ChoiceChips } from "~/components/ui/chips"
-import { ListItem } from "~/components/ui/list-item"
-import { Text } from "~/components/ui/text"
-import { View } from "~/components/ui/view"
 import { TRASH_RETENTION_CHOICES } from "~/constants/trash-retention"
-import { destroyAllDeletedTransactions } from "~/database/services/ledger-service"
 import { useTrashBinStore } from "~/stores/trash-bin.store"
-import { Toast } from "~/utils/toast"
 
 export default function TrashBinScreen() {
   const router = useRouter()
-  const [confirmSheetVisible, setConfirmSheetVisible] = useState<boolean>(false)
   const retentionPeriod = useTrashBinStore((s) => s.retentionPeriod)
   const setRetentionPeriod = useTrashBinStore((s) => s.setRetentionPeriod)
   const { t } = useTranslation()
@@ -44,23 +35,6 @@ export default function TrashBinScreen() {
     retentionPeriod
   const handleView = () => {
     router.push("/settings/trash")
-  }
-  const handleEmptyConfirmed = () => {
-    destroyAllDeletedTransactions()
-      .then(() => {
-        Toast.success({
-          title: t("screens.settings.trash.empty.toast.successTitle"),
-          description: t(
-            "screens.settings.trash.empty.toast.successDescription",
-          ),
-        })
-      })
-      .catch(() => {
-        Toast.error({
-          title: t("screens.settings.trash.empty.toast.errorTitle"),
-          description: t("screens.settings.trash.empty.toast.errorDescription"),
-        })
-      })
   }
   return (
     <ScrollView
@@ -94,72 +68,11 @@ export default function TrashBinScreen() {
           />
         }
       />
-
-      {/* Empty Trash Bin */}
-      <ListItem
-        style={styles.actionItem}
-        onPress={() => {
-          setConfirmSheetVisible(true)
-        }}
-      >
-        <View style={styles.actionItemLeft}>
-          <View style={styles.actionItemContent}>
-            <View style={styles.titleRow}>
-              <Text variant="default" style={styles.actionTrashItemTitle}>
-                {t("screens.settings.trash.empty.label")}
-              </Text>
-            </View>
-          </View>
-        </View>
-        <IconSvg
-          name="trash-outline"
-          size={18}
-          color={styles.actionTrashItemIcon.color}
-        />
-      </ListItem>
-
-      {/* Empty Trash Modal */}
-      <ConfirmSheet
-        visible={confirmSheetVisible}
-        onRequestClose={() => setConfirmSheetVisible(false)}
-        onConfirm={handleEmptyConfirmed}
-        title={t("screens.settings.trash.empty.sheet.title")}
-        description={t("screens.settings.trash.empty.sheet.description")}
-        confirmLabel={t("screens.settings.trash.empty.sheet.confirm")}
-        cancelLabel={t("screens.settings.trash.empty.sheet.cancel")}
-        variant="destructive"
-        icon="trash-outline"
-      />
     </ScrollView>
   )
 }
 const styles = StyleSheet.create((theme) => ({
-  actionItem: {
-    justifyContent: "space-between",
-  },
-  actionItemLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    gap: 15,
-  },
-  actionItemContent: {
-    flex: 1,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  actionTrashItemTitle: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-    fontWeight: "600",
-    color: theme.colors.error,
-  },
   actionItemIcon: {
     color: theme.colors.onSecondary,
-  },
-  actionTrashItemIcon: {
-    color: theme.colors.error,
   },
 }))
