@@ -1,6 +1,6 @@
 import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { KeyboardAvoidingView, Modal, Platform, Pressable } from "react-native"
+import { KeyboardAvoidingView, Modal, Platform } from "react-native"
 import {
   EnrichedTextInput,
   type EnrichedTextInputInstance,
@@ -12,6 +12,7 @@ import {
   useUnistyles,
 } from "react-native-unistyles"
 
+import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 

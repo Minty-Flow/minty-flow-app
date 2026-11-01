@@ -50,6 +50,10 @@ export function AppLockGate() {
           disabled={isAuthenticating}
           accessibilityRole="button"
           accessibilityLabel={t("common.appLock.tapToUnlock")}
+          accessibilityState={{
+            busy: isAuthenticating,
+            disabled: isAuthenticating,
+          }}
           style={styles.tapTarget}
         >
           {isLocked && !isAuthenticating ? (

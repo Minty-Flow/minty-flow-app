@@ -1,9 +1,4 @@
-import {
-  FlatList,
-  type FlatListProps,
-  type ListRenderItem,
-  Pressable,
-} from "react-native"
+import { FlatList, type FlatListProps, type ListRenderItem } from "react-native"
 import Animated, {
   LinearTransition,
   SlideInRight,
@@ -15,6 +10,7 @@ import Animated, {
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
+import { Pressable } from "~/components/ui/pressable"
 import { View } from "~/components/ui/view"
 import { logger } from "~/utils/logger"
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FlatList, Pressable, TextInput, View } from "react-native"
+import { FlatList, TextInput, View } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { IconSvg, type IconSvgName } from "~/components/icons"
@@ -8,6 +8,7 @@ import { sheetHeaderStyles } from "~/components/selectors/styles"
 import { BottomSheet } from "~/components/ui/bottom-sheet"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
+import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import {
   MINTY_SVGS,
