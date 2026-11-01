@@ -849,7 +849,8 @@
         },
         "initialTransaction": {
           "title": "قرض: {{name}}"
-        }
+        },
+        "editTitle": "تعديل القرض"
       },
       "tags": {
         "title": "الوسوم",

@@ -67,12 +67,31 @@ export interface VariantOption {
  * - colors: only color tokens (MintyThemeColors)
  * - non-color metadata (name, iconName, radius) lives at the top level alongside isDark
  */
+/** Spacing steps (px). Use these for padding, margin and gap instead of literals. */
+export interface MintySpacingTokens {
+  xs: number
+  sm: number
+  md: number
+  lg: number
+  xl: number
+}
+
+/** Icon sizes (px) shared by buttons, list rows and headers. */
+export interface MintyIconSizeTokens {
+  sm: number
+  md: number
+  lg: number
+  xl: number
+}
+
 export interface UnistylesTheme {
   colors: MintyThemeColors
   isDark: boolean
   name: string
   iconName?: string
   radius: number
+  space: MintySpacingTokens
+  iconSize: MintyIconSizeTokens
   rippleColor: string // Derived from onSurface, not stored in scheme data
   typography: MintyTypographyTokens
 }

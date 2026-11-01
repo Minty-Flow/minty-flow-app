@@ -813,7 +813,8 @@
         },
         "initialTransaction": {
           "title": "Loan: {{name}}"
-        }
+        },
+        "editTitle": "Edit Loan"
       },
       "tags": {
         "title": "Tags",

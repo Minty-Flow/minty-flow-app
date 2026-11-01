@@ -223,7 +223,7 @@ function AppRootLayout() {
                   options={modifyTitle(
                     "loanId",
                     t("screens.settings.loans.addNew"),
-                    t("screens.settings.loans.title"),
+                    t("screens.settings.loans.editTitle"),
                   )}
                 />
                 <Stack.Screen
