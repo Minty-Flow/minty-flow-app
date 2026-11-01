@@ -854,6 +854,10 @@ export function useTransactionForm({
   const accountError = accountErrorKey
     ? t(accountErrorKey as TranslationKey)
     : undefined
+  const toAccountErrorKey = errors.toAccountId?.message
+  const toAccountError = toAccountErrorKey
+    ? t(toAccountErrorKey as TranslationKey)
+    : undefined
 
   return {
     // form primitives
@@ -911,6 +915,7 @@ export function useTransactionForm({
     descriptionErrorKey,
     amountError,
     accountError,
+    toAccountError,
 
     // overlays
     overlays,
