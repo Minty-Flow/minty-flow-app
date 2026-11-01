@@ -5,6 +5,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
 import { AppData } from "~/constants/app-data"
+import i18n from "~/i18n/config"
 import { logger } from "~/utils/logger"
 import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 
@@ -15,8 +16,6 @@ let appStateSubscription: ReturnType<typeof AppState.addEventListener> | null =
 
 const APP_LOCK_STORE_KEY = "app-lock-store"
 const APP_LOCK_MMKV_KEY = "app-lock-storage"
-
-const PROMPT_MESSAGE = `Unlock ${AppData.name}.`
 
 const appLockStorage = createMMKV({ id: APP_LOCK_MMKV_KEY })
 
@@ -64,8 +63,27 @@ export const useAppLockStore = create<AppLockStore>()(
         set({ isAuthenticating: true })
         try {
           const result = await LocalAuthentication.authenticateAsync({
-            promptMessage: PROMPT_MESSAGE,
+            promptMessage: i18n.t("common.appLock.unlockPrompt", {
+              name: AppData.name,
+            }),
           })
+          if (
+            !result.success &&
+            (result.error === "not_enrolled" ||
+              result.error === "passcode_not_set")
+          ) {
+            // The device has no biometrics or passcode left to check against
+            // (removed since the lock was turned on). The lock can no longer
+            // protect anything, and keeping it would lock the user out for good.
+            logger.warn(
+              "[AppLock] no credential on device; turning the lock off",
+              {
+                error: result.error,
+              },
+            )
+            set({ lockAppEnabled: false })
+            return true
+          }
           return result.success
         } catch (e) {
           // H-S5: surface auth errors so the user isn't silently stuck locked

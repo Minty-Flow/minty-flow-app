@@ -40,7 +40,8 @@
       "failed": "Couldn't save the backup. Try again."
     },
     "appLock": {
-      "tapToUnlock": "Tap to unlock"
+      "tapToUnlock": "Tap to unlock",
+      "unlockPrompt": "Unlock {{name}}."
     },
     "developmentNotice": {
       "title": "A quick note",

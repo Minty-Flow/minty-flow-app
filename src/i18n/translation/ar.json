@@ -39,7 +39,8 @@
       "failed": "تعذّر حفظ النسخة الاحتياطية. حاول مرة أخرى."
     },
     "appLock": {
-      "tapToUnlock": "اضغط لفتح القفل"
+      "tapToUnlock": "اضغط لفتح القفل",
+      "unlockPrompt": "فتح قفل {{name}}."
     },
     "developmentNotice": {
       "title": "ملاحظة سريعة",
