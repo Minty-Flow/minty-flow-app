@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { StyleSheet } from "react-native-unistyles"
+import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import {
   AccountCard,
@@ -14,6 +14,7 @@ import { ReorderableList } from "~/components/reorderable-list"
 import { RouteLoadingState } from "~/components/route-load-state"
 import { SearchInput } from "~/components/search-input"
 import { Button } from "~/components/ui/button"
+import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
@@ -39,6 +40,7 @@ function currentMonthRange(_dayKey: string) {
 
 function AccountsScreen() {
   const { t } = useTranslation()
+  const { theme } = useUnistyles()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [isReorderMode, setIsReorderMode] = useState(false)
@@ -233,12 +235,19 @@ function AccountsScreen() {
         ListFooterComponent={
           !isReorderMode ? (
             <View style={styles.footer}>
-              <Button onPress={handleAddAccount} variant="secondary">
-                <IconSvg name="plus-outline" size={24} />
-                <Text variant="default">
+              <Pressable
+                style={styles.newAccountButton}
+                onPress={handleAddAccount}
+              >
+                <IconSvg
+                  name="plus-outline"
+                  size={32}
+                  color={theme.colors.onSecondary}
+                />
+                <Text variant="default" style={styles.newAccountText}>
                   {t("screens.accounts.addNewAccount")}
                 </Text>
-              </Button>
+              </Pressable>
             </View>
           ) : null
         }
@@ -303,5 +312,20 @@ const styles = StyleSheet.create((theme, rt) => ({
   },
   footer: {
     marginBottom: 40,
+  },
+  // Same look as the "new account" row on the All accounts screen.
+  newAccountButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    paddingVertical: 20,
+    backgroundColor: theme.colors.secondary,
+    borderRadius: theme.radius,
+  },
+  newAccountText: {
+    ...theme.typography.titleSmall,
+    fontWeight: "600",
+    color: theme.colors.onSecondary,
   },
 }))

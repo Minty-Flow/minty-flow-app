@@ -5,8 +5,8 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
 import { RouteLoadingState } from "~/components/route-load-state"
-import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
+import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useCategoriesByTypeQuery } from "~/database/drizzle/read-models/category-read-model"
@@ -33,28 +33,18 @@ function CategoryListHeader({
   const { t } = useTranslation()
   return (
     <View style={styles.headerContainer}>
-      <Button
-        variant="secondary"
-        size="default"
-        onPress={onAddCategory}
-        style={styles.headerButton}
-      >
-        <IconSvg name="plus-outline" size={20} />
-        <Text variant="default" style={styles.headerButtonText}>
+      <Pressable style={styles.headerTile} onPress={onAddCategory}>
+        <IconSvg name="plus-outline" size={28} />
+        <Text variant="default" style={styles.headerTileText} numberOfLines={2}>
           {t("components.categories.actions.addNew")}
         </Text>
-      </Button>
-      <Button
-        variant="secondary"
-        size="default"
-        onPress={onAddFromPresets}
-        style={styles.headerButton}
-      >
-        <IconSvg name="category-plus-outline" size={20} />
-        <Text variant="default" style={styles.headerButtonText}>
+      </Pressable>
+      <Pressable style={styles.headerTile} onPress={onAddFromPresets}>
+        <IconSvg name="category-plus-outline" size={28} />
+        <Text variant="default" style={styles.headerTileText} numberOfLines={2}>
           {t("components.categories.actions.addFromPresets")}
         </Text>
-      </Button>
+      </Pressable>
     </View>
   )
 }
@@ -161,20 +151,28 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
     gap: 10,
   },
+  // Two equal square tiles side by side, icon over label.
   headerContainer: {
+    flexDirection: "row",
     paddingVertical: 10,
     gap: 10,
   },
-  headerButton: {
-    flexDirection: "row",
+  headerTile: {
+    flex: 1,
+    aspectRatio: 1,
+    maxHeight: 120,
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
-    width: "100%",
+    gap: 8,
+    padding: 12,
+    backgroundColor: theme.colors.secondary,
+    borderRadius: theme.radius,
   },
-  headerButtonText: {
+  headerTileText: {
     ...theme.typography.titleSmall,
     fontWeight: "600",
+    textAlign: "center",
+    color: theme.colors.onSecondary,
   },
   emptyWrapper: {
     flex: 1,
