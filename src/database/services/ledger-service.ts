@@ -1488,11 +1488,21 @@ export async function updateFutureRecurringInstances(
           ? payload.requiresManualConfirmation
           : undefined,
         tags: payload.tags,
-        extra: payload.extra,
+        // Attachment URIs point at one file; sharing them would let deleting
+        // one instance's attachment delete the file for every instance.
+        extra: withoutAttachments(payload.extra),
         subtype: payload.subtype,
       })
     }
   })
+}
+
+function withoutAttachments(
+  extra: RecurringEditPayload["extra"],
+): RecurringEditPayload["extra"] {
+  if (!extra || !("attachments" in extra)) return extra
+  const { attachments: _attachments, ...rest } = extra
+  return rest
 }
 
 // ── Trash helpers ─────────────────────────────────────────────────────────────

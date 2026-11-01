@@ -396,6 +396,11 @@ export function useTransactionForm({
     allowNavigation()
     router.back()
   }
+  // The edit-scope sheet saved the row: drop the files the user removed.
+  const handleRecurringSaved = () => {
+    flushRemovedAttachments()
+    handleConfirmExit()
+  }
   const onSubmit = async (data: TransactionFormValues) => {
     // Until the rule loads, a recurring row would save as a plain update.
     if (isSaving || recurringRuleLoading) return
@@ -644,6 +649,10 @@ export function useTransactionForm({
               tags: payload.tags ?? [],
               extra: payload.extra,
               subtype: payload.subtype,
+              goalId: payload.goalId,
+              budgetId: payload.budgetId,
+              loanId: payload.loanId,
+              location: payload.location,
             },
             editRecurringSheetVisible: true,
           })
@@ -933,6 +942,7 @@ export function useTransactionForm({
     handleCategorySelect,
     handleCategoryClear,
     handleConfirmExit,
+    handleRecurringSaved,
     handleCancelPress,
     handleDeleteConfirm,
     handleDeleteLoanConfirm,

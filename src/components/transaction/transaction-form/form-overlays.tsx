@@ -24,6 +24,7 @@ interface FormOverlaysProps {
   recurrenceForEdit?: Recurrence
   untilForEdit?: Date | null
   onConfirmExit: () => void
+  onRecurringSaved: () => void
   onDestroyConfirm: () => void
   onDeleteLoanConfirm: () => void
   onLocationConfirm: (loc: TransactionLocation) => void
@@ -42,6 +43,7 @@ export function FormOverlays({
   recurrenceForEdit,
   untilForEdit,
   onConfirmExit,
+  onRecurringSaved,
   onDestroyConfirm,
   onDeleteLoanConfirm,
   onLocationConfirm,
@@ -136,7 +138,7 @@ export function FormOverlays({
                 pendingEditPayload: null,
               })
             }}
-            onSaved={onConfirmExit}
+            onSaved={onRecurringSaved}
           />
         </>
       )}

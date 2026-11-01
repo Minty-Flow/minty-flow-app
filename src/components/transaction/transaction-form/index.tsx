@@ -410,6 +410,7 @@ export function TransactionForm(props: TransactionFormProps) {
         recurrenceForEdit={f.recurring.recurrence}
         untilForEdit={f.recurring.until}
         onConfirmExit={f.handleConfirmExit}
+        onRecurringSaved={f.handleRecurringSaved}
         onDestroyConfirm={f.handleDestroyConfirm}
         onDeleteLoanConfirm={f.handleDeleteLoanConfirm}
         onLocationConfirm={f.handleLocationConfirm}
