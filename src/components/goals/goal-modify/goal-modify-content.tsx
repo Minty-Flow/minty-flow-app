@@ -30,6 +30,7 @@ import { Separator } from "~/components/ui/separator"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
+import { useGoalHasLinkedTransactions } from "~/database/drizzle/read-models/goal-read-model"
 import {
   archiveGoalById,
   createGoal,
@@ -87,6 +88,7 @@ export function GoalModifyContent({
   const formName = watch("name")
   const formIcon = watch("icon")
   const formColorSchemeName = watch("colorSchemeName")
+  const hasLinkedTransactions = useGoalHasLinkedTransactions(goal?.id)
   const formCurrencyCode = watch("currencyCode")
   const formAccountIds = watch("accountIds")
   const formTargetAmount = watch("targetAmount")
@@ -273,6 +275,7 @@ export function GoalModifyContent({
               accounts={accounts}
               selectedCurrency={formCurrencyCode || null}
               selectedAccountIds={formAccountIds}
+              currencyLocked={hasLinkedTransactions}
               onCurrencyChange={(code) => {
                 if (formCurrencyCode && code !== formCurrencyCode) {
                   setValue(
