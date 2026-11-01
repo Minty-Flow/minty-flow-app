@@ -50,34 +50,26 @@ export default function CategoryDetailsScreen() {
       : {},
   )
   const colorScheme = getThemeStrict(category?.colorSchemeName ?? null)
-  const dominantCurrency = (() => {
+  // Sum per currency: amounts in different currencies must not be added up.
+  const monthTotals = (() => {
+    const byCurrency = new Map<string, { income: number; expense: number }>()
     for (const r of transactionsFull) {
       const code = r.account?.currencyCode
-      if (code) return code
+      if (!code || r.isPending || r.isDeleted || r.loanId != null) continue
+      const totals = byCurrency.get(code) ?? { income: 0, expense: 0 }
+      if (r.type === TransactionTypeEnum.INCOME) {
+        totals.income += r.amount
+      } else if (r.type === TransactionTypeEnum.EXPENSE) {
+        totals.expense +=
+          r.subtype === TransactionSubTypeEnum.REFUND ? -r.amount : r.amount
+      } else continue
+      byCurrency.set(code, totals)
     }
-    return ""
+    return [...byCurrency.entries()].map(([currency, totals]) => ({
+      currency,
+      ...totals,
+    }))
   })()
-  const monthIn = transactionsFull
-    .filter(
-      (r) =>
-        r.type === TransactionTypeEnum.INCOME && !r.isPending && !r.isDeleted,
-    )
-    .reduce((sum, r) => {
-      if (r.loanId != null) return sum
-      return sum + r.amount
-    }, 0)
-  const monthOut = transactionsFull
-    .filter(
-      (r) =>
-        r.type === TransactionTypeEnum.EXPENSE && !r.isPending && !r.isDeleted,
-    )
-    .reduce((sum, r) => {
-      if (r.loanId != null) return sum
-      if (r.subtype === TransactionSubTypeEnum.REFUND) {
-        return sum - r.amount
-      }
-      return sum + r.amount
-    }, 0)
   useLayoutEffect(() => {
     navigation.setOptions({
       title: category?.name ?? "",
@@ -137,26 +129,26 @@ export default function CategoryDetailsScreen() {
       </View>
 
       {/* Summary: Income & Expense pill cards */}
-      {dominantCurrency !== "" && (
-        <View style={styles.summaryRow}>
+      {monthTotals.map(({ currency, income, expense }) => (
+        <View key={currency} style={styles.summaryRow}>
           <View style={styles.summaryPillCard}>
             <Money
-              value={monthIn}
-              currency={dominantCurrency}
+              value={income}
+              currency={currency}
               visualTone={TransactionTypeEnum.INCOME}
               style={styles.summaryPillAmount}
             />
           </View>
           <View style={styles.summaryPillCard}>
             <Money
-              value={monthOut}
-              currency={dominantCurrency}
+              value={expense}
+              currency={currency}
               tone={TransactionTypeEnum.EXPENSE}
               style={styles.summaryPillAmount}
             />
           </View>
         </View>
-      )}
+      ))}
     </>
   )
   return (
