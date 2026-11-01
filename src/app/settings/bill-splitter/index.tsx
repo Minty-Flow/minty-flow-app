@@ -26,6 +26,7 @@ import {
 } from "~/stores/bill-splitter.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { BillItem } from "~/types/bill-splitter"
+import { Toast } from "~/utils/toast"
 export default function BillSplitterScreen() {
   const { data: accounts, status } = useActiveAccountsQuery()
   const { t } = useTranslation()
@@ -38,6 +39,7 @@ export default function BillSplitterScreen() {
   const accountId = useBillSplitterStore((s) => s.accountId)
   const setAccountId = useBillSplitterStore((s) => s.setAccountId)
   const removeItem = useBillSplitterStore((s) => s.removeItem)
+  const addItem = useBillSplitterStore((s) => s.addItem)
   const clearBill = useBillSplitterStore((s) => s.clearBill)
   const setCurrencyCode = useBillSplitterStore((s) => s.setCurrencyCode)
   const [infoVisible, setInfoVisible] = useState(false)
@@ -97,7 +99,18 @@ export default function BillSplitterScreen() {
       item={item}
       participants={participants}
       currency={currency}
-      onDelete={() => removeItem(item.id)}
+      onDelete={() => {
+        const { id: _id, ...removed } = item
+        removeItem(item.id)
+        Toast.show({
+          type: "info",
+          title: t("screens.settings.billSplitter.items.removed"),
+          action: {
+            label: t("common.actions.undo"),
+            onPress: () => addItem(removed),
+          },
+        })
+      }}
       onEdit={() =>
         router.push({
           pathname: "/settings/bill-splitter/add-item",
