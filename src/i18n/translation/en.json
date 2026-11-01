@@ -996,7 +996,7 @@
         "importValidationError": "Invalid JSON backup file",
         "importConfirm": {
           "title": "Overwrite all data?",
-          "warning": "Everything currently in the app will be erased and replaced with the contents of the file you selected. This cannot be undone.",
+          "warning": "Everything currently in the app will be erased and replaced with the contents of the file you selected. This cannot be undone. To keep a copy of your current data, cancel and export a backup first.",
           "recordSummary": "{{count}} records across {{tables}} tables",
           "confirm": "Overwrite",
           "cancel": "Cancel"
