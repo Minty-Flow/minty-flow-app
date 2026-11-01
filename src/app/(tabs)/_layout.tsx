@@ -105,6 +105,9 @@ const AnimatedFABOption = ({
   const progress = useSharedValue(0)
   const pos = FAB_OPTION_POSITIONS[index]
   const tooltipProps = useTooltipTrigger({ text: option.label })
+  const isRTL = useLanguageStore((s) => s.isRTL)
+  // `left` mirrors in RTL but translateX does not, so flip the fly-in too.
+  const dir = isRTL ? -1 : 1
   useEffect(() => {
     if (isExpanded) {
       progress.value = withDelay(index * STAGGER_MS, withSpring(1, OPEN_SPRING))
@@ -121,7 +124,7 @@ const AnimatedFABOption = ({
       // an invisible option stacked under the "+" and opens a transaction.
       pointerEvents: p > 0.6 ? "auto" : "none",
       transform: [
-        { translateX: pos.left * (p - 1) },
+        { translateX: dir * pos.left * (p - 1) },
         { translateY: pos.top * (p - 1) },
         { scale: p },
       ],

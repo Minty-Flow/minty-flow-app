@@ -296,6 +296,32 @@ export const TransactionItem = ({
             transactionItemStyles.mainTouchableElevated,
         ]}
         onPress={onPress}
+        // The swipe actions have no touch-free equivalent otherwise.
+        accessibilityActions={[
+          {
+            name: "trash",
+            label:
+              rightActionAccessibilityLabel ??
+              t("screens.settings.trash.a11y.moveToTrash"),
+          },
+          ...(onRestore
+            ? [
+                {
+                  name: "restore",
+                  label:
+                    leftActionAccessibilityLabel ??
+                    t("screens.settings.trash.a11y.restore"),
+                },
+              ]
+            : []),
+        ]}
+        onAccessibilityAction={(event) => {
+          if (event.nativeEvent.actionName === "trash") {
+            void handleTrashPress(() => {})
+          } else if (event.nativeEvent.actionName === "restore") {
+            void handleRestorePress(() => {})
+          }
+        }}
       >
         <TransactionItemLeft
           displayIcon={displayIcon}

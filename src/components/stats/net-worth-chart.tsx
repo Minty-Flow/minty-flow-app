@@ -234,6 +234,9 @@ const styles = StyleSheet.create((theme) => ({
   },
   chartArea: {
     height: CHART_HEIGHT,
+    // Skia and the pan gesture work in physical x, so keep the whole chart
+    // (labels and tooltip too) left-to-right even in an RTL layout.
+    direction: "ltr",
   },
   canvas: {
     height: CHART_HEIGHT - LABEL_HEIGHT,
