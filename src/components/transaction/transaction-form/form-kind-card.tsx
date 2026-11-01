@@ -8,6 +8,8 @@ import { RecurrenceCard } from "./recurrence-card"
 
 type Props = {
   kind: TransactionKind
+  /** An edit only shows the recurrence card when a rule backs the row. */
+  backedByRule: boolean
   recurrence: Recurrence
   until: Date | null
   occurrenceCount: number | null
@@ -18,7 +20,10 @@ type Props = {
 }
 
 export function FormKindCard(props: Props) {
-  if (props.kind === "subscription" || props.kind === "repetitive") {
+  if (
+    props.backedByRule &&
+    (props.kind === "subscription" || props.kind === "repetitive")
+  ) {
     return (
       <RecurrenceCard
         recurrence={props.recurrence}

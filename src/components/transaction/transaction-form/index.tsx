@@ -73,12 +73,21 @@ export function TransactionForm(props: TransactionFormProps) {
           onChange={f.onTopTabChange}
           hiddenSlots={f.tabHiddenSlots}
           lockedTo={
-            transaction?.isTransfer && transaction.transferId ? 2 : null
+            transaction?.isTransfer && transaction.transferId
+              ? 2
+              : f.lockedFields.has("type")
+                ? f.topTabType === TransactionTypeEnum.INCOME
+                  ? 1
+                  : 0
+                : null
           }
         />
       </View>
 
-      <UpcomingBanner transaction={transaction} />
+      <UpcomingBanner
+        transaction={transaction}
+        allowNavigation={f.allowNavigation}
+      />
       {readOnly ? (
         <View style={transactionFormStyles.trashedNotice}>
           <InfoBanner
@@ -129,6 +138,7 @@ export function TransactionForm(props: TransactionFormProps) {
               transaction={transaction}
               accountError={f.accountError}
               onAccountChange={f.handleAccountChange}
+              disabled={f.lockedFields.has("accountId")}
             />
 
             {/* Transfer: to-account sits right under from-account, then the
@@ -186,11 +196,13 @@ export function TransactionForm(props: TransactionFormProps) {
               kind={f.kind}
               onSelect={f.setKind}
               isNew={f.isNew}
+              type={f.topTabType}
               locked={!f.canEditKind}
               linkedLoan={f.linkedLoan}
             />
             <FormKindCard
               kind={f.kind}
+              backedByRule={f.isNew || !!f.recurringRule}
               recurrence={f.recurring.recurrence}
               until={f.recurring.until}
               occurrenceCount={f.occurrenceCount}
@@ -401,6 +413,7 @@ export function TransactionForm(props: TransactionFormProps) {
         recurrenceForEdit={f.recurring.recurrence}
         untilForEdit={f.recurring.until}
         onConfirmExit={f.handleConfirmExit}
+        onRecurringSaved={f.handleRecurringSaved}
         onDestroyConfirm={f.handleDestroyConfirm}
         onDeleteLoanConfirm={f.handleDeleteLoanConfirm}
         onLocationConfirm={f.handleLocationConfirm}

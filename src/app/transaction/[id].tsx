@@ -7,7 +7,7 @@ import { RouteLoadingState } from "~/components/route-load-state"
 import { TransactionForm } from "~/components/transaction/transaction-form"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
+import { useActiveAccountsWith } from "~/database/drizzle/read-models/account-read-model"
 import { useAllBudgets } from "~/database/drizzle/read-models/budget-read-model"
 import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
 import { useGoalsByType } from "~/database/drizzle/read-models/goal-read-model"
@@ -75,7 +75,10 @@ function TransactionEditor({
     transaction?.type ?? initialType ?? TransactionTypeEnum.EXPENSE,
   )
 
-  const accounts = useActiveAccounts()
+  const accounts = useActiveAccountsWith(
+    transaction?.accountId,
+    transaction?.relatedAccountId,
+  )
   const categories = useCategoriesByType(transactionType)
   const tags = useTags()
   const goals = useGoalsByType(transactionTypeToGoalType(transactionType))

@@ -25,7 +25,7 @@ import { createRecurringRule } from "~/database/services/recurring-transaction-s
 import { getRepaymentTypeForLoan } from "~/domain/transaction-kind"
 import { useBalanceAtTransaction } from "~/hooks/use-balance-before"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
-import { useRecurringRule } from "~/hooks/use-recurring-rule"
+import { useRecurringRuleState } from "~/hooks/use-recurring-rule"
 import type { TranslationKey } from "~/i18n/config"
 import {
   type TransactionFormValues,
@@ -100,7 +100,8 @@ export function useTransactionForm({
     locationPickerVisible: false,
     pendingEditPayload: null,
   })
-  const recurringRule = useRecurringRule(transaction?.recurringId ?? null)
+  const { rule: recurringRule, loading: recurringRuleLoading } =
+    useRecurringRuleState(transaction?.recurringId ?? null)
   const defaultValues = getDefaultValues(
     transaction,
     accounts,
@@ -113,6 +114,7 @@ export function useTransactionForm({
     control,
     handleSubmit,
     watch,
+    getValues,
     setValue,
     formState: { errors, isDirty },
   } = useForm<TransactionFormValues>({
@@ -165,7 +167,13 @@ export function useTransactionForm({
       ? [2]
       : kind === "upcoming"
         ? [2]
-        : []
+        : // An existing row that is not a transfer cannot become one: the
+          // service refuses it and the other leg would be orphaned.
+          !isNew &&
+            transaction &&
+            transaction.type !== TransactionTypeEnum.TRANSFER
+          ? [2]
+          : []
   const selectedAccount = accounts.find((a) => a.id === accountId)
   // Filter goals to only those linked to the selected account
   const accountGoals = accountId
@@ -238,6 +246,8 @@ export function useTransactionForm({
       ? accounts.find((a) => a.id === toAccountId)
       : null
   const [isSaving, setIsSaving] = useState(false)
+  // State lags a render, so two quick taps both pass an `isSaving` check.
+  const submitLatch = useRef(false)
   const isLoanKind = kind === "lent" || kind === "borrowed"
   const [recurring, setRecurring] = useReducer(mergeReducer<RecurringState>, {
     recurrence: { interval: 1, unit: "month" },
@@ -345,7 +355,9 @@ export function useTransactionForm({
   const canEditKind =
     isNew || (transaction?.loanId == null && transaction?.recurringId == null)
   const lockedFields: ReadonlySet<string> = new Set<string>(
-    transaction?.loanId ? ["kind", "type", "loanId", "toAccountId"] : [],
+    transaction?.loanId
+      ? ["kind", "type", "accountId", "loanId", "toAccountId"]
+      : [],
   )
   // LX-2: the loan's opening entry can't be deleted on its own — deleting it
   // deletes the loan. A repayment deletes normally (progress recomputes on read).
@@ -386,8 +398,15 @@ export function useTransactionForm({
     allowNavigation()
     router.back()
   }
+  // The edit-scope sheet saved the row: drop the files the user removed.
+  const handleRecurringSaved = () => {
+    flushRemovedAttachments()
+    handleConfirmExit()
+  }
   const onSubmit = async (data: TransactionFormValues) => {
-    if (isSaving) return
+    // Until the rule loads, a recurring row would save as a plain update.
+    if (submitLatch.current || recurringRuleLoading) return
+    submitLatch.current = true
     setIsSaving(true)
     try {
       // ─── Transfer ─────────────────────────────────────────────────────────
@@ -442,10 +461,14 @@ export function useTransactionForm({
           notes: data.description?.trim() || null,
         }
         if (isNew) {
-          await createTransfer({
-            ...transferPayload,
-            transactionDate: effectiveDate.getTime(),
-          })
+          await createTransfer(
+            {
+              ...transferPayload,
+              transactionDate: effectiveDate.getTime(),
+            },
+            // A future-dated transfer is pending like any other row.
+            { isPending: data.isPending },
+          )
           Toast.success({
             title: t("components.transactionForm.toast.transferCreated"),
           })
@@ -629,6 +652,10 @@ export function useTransactionForm({
               tags: payload.tags ?? [],
               extra: payload.extra,
               subtype: payload.subtype,
+              goalId: payload.goalId,
+              budgetId: payload.budgetId,
+              loanId: payload.loanId,
+              location: payload.location,
             },
             editRecurringSheetVisible: true,
           })
@@ -648,6 +675,7 @@ export function useTransactionForm({
       })
       Toast.error({ title: t("components.transactionForm.toast.saveFailed") })
     } finally {
+      submitLatch.current = false
       setIsSaving(false)
     }
   }
@@ -660,7 +688,7 @@ export function useTransactionForm({
     }
   }
   const handleDeleteConfirm = () => {
-    if (!transaction) return
+    if (!transaction || recurringRuleLoading) return
     if (isLoanOpeningEntry) {
       setOverlays({ deleteLoanSheetVisible: true })
       return
@@ -753,6 +781,12 @@ export function useTransactionForm({
     )
   }
   const handleTransactionTypeChange = (type: TransactionFormValues["type"]) => {
+    // Expense and income categories are disjoint, so a kept selection would
+    // save the row under a category the user can no longer see.
+    if (type !== getValues("type")) {
+      setValue("categoryId", null, { shouldDirty: true })
+      setValue("budgetId", null, { shouldDirty: true })
+    }
     onTransactionTypeChange(type)
     setValue("type", type, { shouldDirty: true })
     // Clear goal when switching types (different goal types apply)
@@ -817,7 +851,7 @@ export function useTransactionForm({
     errors,
     isDirty,
     hasUnsavedChanges,
-    isSaving,
+    isSaving: isSaving || recurringRuleLoading,
     isNew,
     submit: handleSubmit(onSubmit),
 
@@ -911,7 +945,9 @@ export function useTransactionForm({
     handleRefundToggle,
     handleCategorySelect,
     handleCategoryClear,
+    allowNavigation,
     handleConfirmExit,
+    handleRecurringSaved,
     handleCancelPress,
     handleDeleteConfirm,
     handleDeleteLoanConfirm,

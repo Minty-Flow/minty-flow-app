@@ -382,7 +382,7 @@ export async function createTransaction(
 }
 
 type TransferRecurringOptions = {
-  recurringId: string
+  recurringId?: string
   isPending: boolean
   subtype?: string | null
   extra?: Record<string, string> | null
@@ -416,6 +416,9 @@ export function createTransferInTx(
   )
   const dateIso = new Date(dateMs).toISOString()
   const isPending = recurringOptions?.isPending ?? false
+  // A pending row cannot keep kind "default" (CSI-2), and the form cannot pick
+  // "upcoming" on a transfer because that kind switches the type.
+  const kind = recurringOptions?.kind ?? (isPending ? "upcoming" : "default")
   const title = params.title ?? "Transfer"
   const extraJson = recurringOptions?.extra
     ? JSON.stringify(recurringOptions.extra)
@@ -478,7 +481,7 @@ export function createTransferInTx(
       accountBalanceBefore: isPending ? 0 : fromAcc.balance,
       subtype: recurringOptions?.subtype ?? null,
       // transfers are pending+default by design (migration 0001 & deriveKind exclude type='transfer' from 'upcoming') — CSI-2 assert intentionally not applied here
-      kind: recurringOptions?.kind ?? "default",
+      kind,
       extra: extraJson,
       hasAttachments: 0,
       recurringId: recurringOptions?.recurringId ?? null,
@@ -507,7 +510,7 @@ export function createTransferInTx(
       requiresManualConfirmation: 0,
       accountBalanceBefore: isPending ? 0 : toAcc.balance,
       subtype: recurringOptions?.subtype ?? null,
-      kind: recurringOptions?.kind ?? "default",
+      kind,
       extra: extraJson,
       hasAttachments: 0,
       recurringId: recurringOptions?.recurringId ?? null,
@@ -1376,10 +1379,31 @@ function getRuleInstanceIds(
     .map((row) => row.id)
 }
 
+/**
+ * `keepPaid` spares confirmed instances: they are history the user already
+ * lived, and deleting the schedule must not rewrite balances. `alsoId` is the
+ * row the user explicitly deleted, which goes even when it is paid.
+ */
+export interface DeleteInstancesOptions {
+  keepPaid?: boolean
+  alsoId?: string
+}
+
+function pickInstanceIds(
+  ruleId: string,
+  { keepPaid = false, alsoId }: DeleteInstancesOptions,
+  fromDate?: Date,
+): string[] {
+  const ids = getRuleInstanceIds(ruleId, { fromDate, pendingOnly: keepPaid })
+  if (keepPaid && alsoId && !ids.includes(alsoId)) ids.push(alsoId)
+  return ids
+}
+
 export async function deleteAllRecurringInstances(
   ruleId: string,
+  opts: DeleteInstancesOptions = {},
 ): Promise<void> {
-  const ids = getRuleInstanceIds(ruleId)
+  const ids = pickInstanceIds(ruleId, opts)
   await runInTransaction("recurring.deleteAll", (db) => {
     for (const id of ids) deleteTransactionInTx(db, id)
   })
@@ -1388,8 +1412,9 @@ export async function deleteAllRecurringInstances(
 export async function deleteFutureRecurringInstances(
   ruleId: string,
   fromDate: Date,
+  opts: DeleteInstancesOptions = {},
 ): Promise<void> {
-  const ids = getRuleInstanceIds(ruleId, { fromDate })
+  const ids = pickInstanceIds(ruleId, opts, fromDate)
   await runInTransaction("recurring.deleteFuture", (db) => {
     for (const id of ids) deleteTransactionInTx(db, id)
   })
@@ -1485,11 +1510,21 @@ export async function updateFutureRecurringInstances(
           ? payload.requiresManualConfirmation
           : undefined,
         tags: payload.tags,
-        extra: payload.extra,
+        // Attachment URIs point at one file; sharing them would let deleting
+        // one instance's attachment delete the file for every instance.
+        extra: withoutAttachments(payload.extra),
         subtype: payload.subtype,
       })
     }
   })
+}
+
+function withoutAttachments(
+  extra: RecurringEditPayload["extra"],
+): RecurringEditPayload["extra"] {
+  if (!extra || !("attachments" in extra)) return extra
+  const { attachments: _attachments, ...rest } = extra
+  return rest
 }
 
 // ── Trash helpers ─────────────────────────────────────────────────────────────
