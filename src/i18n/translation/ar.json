@@ -1145,7 +1145,14 @@
         "loan": "القرض",
         "location": "موقع",
         "refundLabel": "استرداد",
-        "deleteLoan": "حذف القرض"
+        "deleteLoan": "حذف القرض",
+        "notesToolbar": {
+          "bold": "غامق",
+          "italic": "مائل",
+          "bulletList": "قائمة نقطية",
+          "numberedList": "قائمة مرقمة",
+          "checklist": "قائمة مهام"
+        }
       },
       "recurrence": {
         "every": "التكرار كل",

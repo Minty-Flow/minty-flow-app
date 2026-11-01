@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react"
-import { Platform } from "react-native"
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -284,7 +283,7 @@ const toastItemStyles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.primary,
   },
 }))
-const toastStyles = StyleSheet.create((theme) => ({
+const toastStyles = StyleSheet.create((theme, rt) => ({
   overlay: {
     position: "absolute",
     top: 0,
@@ -299,7 +298,8 @@ const toastStyles = StyleSheet.create((theme) => ({
     top: 0,
     left: 0,
     right: 0,
-    paddingTop: Platform.select({ ios: 60, android: 50, web: 20, default: 50 }),
+    // Clear the status bar / notch / camera cutout on every device.
+    paddingTop: rt.insets.top + 12,
     paddingHorizontal: 16,
     gap: 8,
     alignItems: "center",
@@ -314,12 +314,7 @@ const toastStyles = StyleSheet.create((theme) => ({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingBottom: Platform.select({
-      ios: 40,
-      android: 50,
-      web: 20,
-      default: 50,
-    }),
+    paddingBottom: rt.insets.bottom + 16,
     paddingHorizontal: 16,
     gap: 8,
     alignItems: "center",
@@ -378,7 +373,8 @@ const toastStyles = StyleSheet.create((theme) => ({
     left: 0,
     right: 0,
     height: 4,
-    backgroundColor: "rgba(0,0,0,0.1)",
+    // Themed track: a fixed black tint vanishes on dark surfaces.
+    backgroundColor: `${theme.colors.onSecondary}26`,
     borderBottomLeftRadius: theme.radius,
     borderBottomRightRadius: theme.radius,
     overflow: "hidden",

@@ -1135,7 +1135,14 @@
         "restore": "Restore",
         "location": "Location",
         "refundLabel": "Refund",
-        "deleteLoan": "Delete loan"
+        "deleteLoan": "Delete loan",
+        "notesToolbar": {
+          "bold": "Bold",
+          "italic": "Italic",
+          "bulletList": "Bulleted list",
+          "numberedList": "Numbered list",
+          "checklist": "Checklist"
+        }
       },
       "recurrence": {
         "every": "Repeat every",

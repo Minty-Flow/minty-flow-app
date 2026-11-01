@@ -50,6 +50,38 @@ function NotesModalContent({
   const isUL = activeStyles?.unorderedList.isActive ?? false
   const isOL = activeStyles?.orderedList.isActive ?? false
   const isChecklist = activeStyles?.checkboxList.isActive ?? false
+  const toolbarButtons = [
+    {
+      key: "bold",
+      glyph: "B",
+      active: isBold,
+      onPress: () => editorRef.current?.toggleBold(),
+    },
+    {
+      key: "italic",
+      glyph: "I",
+      active: isItalic,
+      onPress: () => editorRef.current?.toggleItalic(),
+    },
+    {
+      key: "bulletList",
+      glyph: "•",
+      active: isUL,
+      onPress: () => editorRef.current?.toggleUnorderedList(),
+    },
+    {
+      key: "numberedList",
+      glyph: "1.",
+      active: isOL,
+      onPress: () => editorRef.current?.toggleOrderedList(),
+    },
+    {
+      key: "checklist",
+      glyph: "☑",
+      active: isChecklist,
+      onPress: () => editorRef.current?.toggleCheckboxList(false),
+    },
+  ] as const
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.colors.surface }]}
@@ -92,90 +124,37 @@ function NotesModalContent({
           },
         ]}
       >
-        <Pressable
-          style={styles.toolbarBtn}
-          onPress={() => editorRef.current?.toggleBold()}
-          hitSlop={4}
-        >
-          <Text
+        {toolbarButtons.map((btn) => (
+          <Pressable
+            key={btn.key}
             style={[
-              styles.toolbarLabel,
-              {
-                color: isBold ? theme.colors.primary : theme.colors.onSurface,
-                fontWeight: "700",
-              },
+              styles.toolbarBtn,
+              // Not colour alone: the active format also gets a tinted chip.
+              btn.active && { backgroundColor: `${theme.colors.primary}26` },
             ]}
+            onPress={btn.onPress}
+            hitSlop={4}
+            accessibilityLabel={t(
+              `components.transactionForm.fields.notesToolbar.${btn.key}`,
+            )}
+            accessibilityState={{ selected: btn.active }}
           >
-            B
-          </Text>
-        </Pressable>
-        <Pressable
-          style={styles.toolbarBtn}
-          onPress={() => editorRef.current?.toggleItalic()}
-          hitSlop={4}
-        >
-          <Text
-            style={[
-              styles.toolbarLabel,
-              {
-                color: isItalic ? theme.colors.primary : theme.colors.onSurface,
-                fontStyle: "italic",
-              },
-            ]}
-          >
-            I
-          </Text>
-        </Pressable>
-        <Pressable
-          style={styles.toolbarBtn}
-          onPress={() => editorRef.current?.toggleUnorderedList()}
-          hitSlop={4}
-        >
-          <Text
-            style={[
-              styles.toolbarLabel,
-              {
-                color: isUL ? theme.colors.primary : theme.colors.onSurface,
-              },
-            ]}
-          >
-            •
-          </Text>
-        </Pressable>
-        <Pressable
-          style={styles.toolbarBtn}
-          onPress={() => editorRef.current?.toggleOrderedList()}
-          hitSlop={4}
-        >
-          <Text
-            style={[
-              styles.toolbarLabel,
-              {
-                color: isOL ? theme.colors.primary : theme.colors.onSurface,
-              },
-            ]}
-          >
-            1.
-          </Text>
-        </Pressable>
-        <Pressable
-          style={styles.toolbarBtn}
-          onPress={() => editorRef.current?.toggleCheckboxList(false)}
-          hitSlop={4}
-        >
-          <Text
-            style={[
-              styles.toolbarLabel,
-              {
-                color: isChecklist
-                  ? theme.colors.primary
-                  : theme.colors.onSurface,
-              },
-            ]}
-          >
-            ☑
-          </Text>
-        </Pressable>
+            <Text
+              style={[
+                styles.toolbarLabel,
+                {
+                  color: btn.active
+                    ? theme.colors.primary
+                    : theme.colors.onSurface,
+                },
+                btn.key === "bold" && { fontWeight: "700" },
+                btn.key === "italic" && { fontStyle: "italic" },
+              ]}
+            >
+              {btn.glyph}
+            </Text>
+          </Pressable>
+        ))}
       </View>
 
       <View style={styles.content}>
