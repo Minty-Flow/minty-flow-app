@@ -6,7 +6,7 @@ import {
   RouteLoadingState,
   RouteNotFoundState,
 } from "~/components/route-load-state"
-import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
+import { useActiveAccountsWith } from "~/database/drizzle/read-models/account-read-model"
 import { useCategories } from "~/database/drizzle/read-models/category-read-model"
 import { useLoansQuery } from "~/database/drizzle/read-models/loan-read-model"
 import { useModifyRouteLoader } from "~/hooks/use-modify-route-loader"
@@ -31,7 +31,9 @@ export default function LoanModifyScreen() {
     updatedAt: loansQuery.updatedAt,
     notFoundMessage: t("common.notFound.loan"),
   })
-  const accounts = useActiveAccounts()
+  const accounts = useActiveAccountsWith(
+    loadState.mode === "edit" ? loadState.entity.accountId : null,
+  )
   const categories = useCategories()
   const prefill = (() => {
     const term =

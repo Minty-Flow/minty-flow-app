@@ -46,6 +46,19 @@ export function useActiveAccounts(): Account[] {
   return useAccounts().filter((account) => !account.isArchived)
 }
 
+/**
+ * Active accounts plus any archived account the edited row still points at.
+ * A form needs the row's own account even when archived: without it the
+ * currency falls back to the default and the amount is off by 10^n.
+ */
+export function useActiveAccountsWith(
+  ...ids: (string | null | undefined)[]
+): Account[] {
+  return useAccounts().filter(
+    (account) => !account.isArchived || ids.includes(account.id),
+  )
+}
+
 export function useActiveAccountsQuery(): LiveReadModelResult<Account[]> {
   const result = useAccountsQuery()
   return {
