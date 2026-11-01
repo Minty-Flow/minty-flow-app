@@ -4,7 +4,6 @@
       "failed": "Database migration failed. Restart the app or recover from backup.",
       "preparing": "Preparing database..."
     },
-    "failedToOpenLink": "Failed to open browser",
     "actions": {
       "save": "Save",
       "cancel": "Cancel",
@@ -83,9 +82,7 @@
       },
       "tabs": {
         "lent": "Lent",
-        "borrowed": "Borrowed",
-        "paid": "Paid",
-        "collected": "Collected"
+        "borrowed": "Borrowed"
       },
       "kinds": {
         "default": "Standard",
@@ -241,10 +238,8 @@
         "title": "Account Details"
       },
       "a11y": {
-        "clear": "Clear account",
         "select": "Select account",
         "selectTo": "Select to account",
-        "clearTo": "Clear to account",
         "add": "Add account",
         "searchPlaceholder": "Search accounts..."
       }
@@ -280,9 +275,7 @@
         "other": "Other",
         "fromBalance": "From balance",
         "savedNode": "Saved",
-        "averagesByDay": "Averages, by day",
-        "toReserves": "To reserves",
-        "fromReserves": "From reserves"
+        "averagesByDay": "Averages, by day"
       },
       "categories": {
         "title": "Categories",
@@ -303,8 +296,7 @@
         "vsAvg": "3-month average:",
         "frequentSentence": "You logged \"{{title}}\" {{count}} times",
         "rhythmSentence": "Your priciest day is {{day}}",
-        "shapeSentence": "Half your purchases are under",
-        "shapeSupport": "Median of {{count}} expenses"
+        "shapeSentence": "Half your purchases are under"
       },
       "netWorth": {
         "title": "Net worth",
@@ -317,30 +309,18 @@
         "more": "More"
       },
       "currency": {
-        "sectionHeader": "{{currency}}",
         "showing": "Showing {{currency}}",
         "tapToSwitch": "Tap to switch"
       },
-      "hero": {
-        "totalExpense": "Total Expense",
-        "totalIncome": "Total Income",
-        "netFlow": "Net Flow",
-        "transactionCount": "{{count}} txn",
-        "onPaceFor": "On pace for ~{{amount}}"
-      },
       "averages": {
-        "title": "Daily Averages",
         "expense": "Avg. Expense",
         "income": "Avg. Income",
         "net": "Avg. Net"
       },
       "chart": {
-        "dailyTrend": "Daily Trend",
         "spendingByCategory": "Spending by Category",
         "uncategorizedLabel": "Uncategorized",
-        "otherLabel": "Other",
-        "prevPeriod": "Previous",
-        "currentPeriod": "This month"
+        "otherLabel": "Other"
       },
       "pieToggle": {
         "expenses": "Expenses",
@@ -357,11 +337,6 @@
       },
       "pendingNotice_one": "{{count}} scheduled transaction excluded from stats",
       "pendingNotice_other": "{{count}} scheduled transactions excluded from stats",
-      "balance": {
-        "title": "Net Balance",
-        "opening": "Opening",
-        "closing": "Closing"
-      },
       "delta": {
         "notAvailable": "N/A"
       }
@@ -571,7 +546,6 @@
         },
         "empty": {
           "noTransactions": "No deleted transactions",
-          "label": "Empty trash bin",
           "sheet": {
             "title": "Empty Trash",
             "confirm": "Empty Trash",
@@ -735,7 +709,6 @@
           "needsCategory": "Needs a category",
           "dayOf": "day {{current}}/{{total}}",
           "dayXofY": "Day {{current}} of {{total}}",
-          "uncategorized": "Uncategorized",
           "status": {
             "onTrack": "On track",
             "watch": "Watch",
@@ -798,7 +771,6 @@
           "longTerm": "Long term"
         },
         "card": {
-          "paid": "Paid",
           "paidBack": "Paid back",
           "received": "Received",
           "of": "of",
@@ -945,7 +917,6 @@
       "exchangeRates": {
         "title": "Exchange Rates",
         "apiTitleSecondary": "Crypto and other rates",
-        "loading": "Loading exchange rates…",
         "searchPlaceholder": "Search currencies...",
         "instructionCaption": "Select an entry to set a custom exchange rate. Note: All exchange rate calculations use USD as a reference.",
         "infoSheet": {
@@ -955,10 +926,8 @@
           "sources": "Sources"
         },
         "errors": {
-          "invalidRate": "Rate must be greater than 0",
           "invalidCurrencyCode": "Invalid currency code. Please use a valid ISO 4217 currency code.",
           "fetchFailed": "Failed to fetch exchange rates. Please check your connection and try again.",
-          "invalidData": "Invalid exchange rate data. Please try again later.",
           "usingCachedRates": "Using cached exchange rates. Rates may be outdated.",
           "rateNotFound": "Exchange rate not found. Please try again or set a custom rate in Settings."
         },
@@ -1088,11 +1057,8 @@
       },
       "notFoundTransaction": "Transaction not found.",
       "searchTags": "Search tags...",
-      "createNewTag": "New tag",
       "selectTags": "Select tags",
-      "clearSelection": "Clear selection",
       "kind": {
-        "label": "Kind",
         "info": {
           "a11yOpen": "About transaction types",
           "title": "Transaction types",
@@ -1123,20 +1089,8 @@
         "convertedAmountLabel": "Converted amount",
         "notes": "Notes",
         "notesPlaceholder": "Add notes about this transaction...",
-        "transactionDate": "Transaction date",
-        "fileAttachments": "File attachments",
-        "conversion": "Conversion",
         "conversionRate": "Rate",
-        "category": "Category",
-        "account": "Account",
-        "toAccount": "To Account",
-        "tags": "Tags",
-        "goal": "Goal",
-        "budget": "Budget",
-        "loan": "Loan",
-        "clear": "Clear",
         "addCategories": "categories",
-        "now": "Now",
         "pending": "Pending",
         "pendingHintOn": "The amount won't be deducted from your account until the transaction date arrives.",
         "pendingHintOff": "The amount will be deducted from your account right away, even though it's dated in the future.",
@@ -1144,7 +1098,6 @@
         "addNotes": "Add notes...",
         "moveToTrash": "Move to trash",
         "restore": "Restore",
-        "location": "Location",
         "refundLabel": "Refund",
         "deleteLoan": "Delete loan",
         "notesToolbar": {
@@ -1262,24 +1215,15 @@
       },
       "a11y": {
         "closePreview": "Close preview",
-        "selectedSuffix": ", selected",
         "openNotesEditor": "Open notes editor",
-        "setDateTimeNow": "Set date and time to now",
-        "clearCategory": "Clear category",
         "addCategories": "Add categories",
         "selectCategory": "Select {{name}} category",
-        "clearGoal": "Clear goal",
-        "clearBudget": "Clear budget",
-        "clearLoan": "Clear loan",
-        "clearAllTags": "Clear all tags",
         "addTag": "Add tag",
         "noTagsFound": "No tags found",
-        "allTagsSelected": "All tags selected",
         "amountInput": "Amount input"
       },
       "loan": {
-        "nameLabel": "Loan name",
-        "dueDateLabel": "Due date"
+        "nameLabel": "Loan name"
       },
       "deleteLoanSheet": {
         "title": "Delete this loan?",
@@ -1364,8 +1308,7 @@
         "packsTitle": "Fits your life",
         "packsHint": "Add a few extras that match your situation.",
         "addPack": "Add all",
-        "removePack": "Remove",
-        "packs": {}
+        "removePack": "Remove"
       },
       "search": {
         "placeholder": "Search {{tab}} categories..."
@@ -1539,7 +1482,6 @@
       "currency": {
         "title": "Select a currency",
         "triggerLabel": "Currency",
-        "searchPlaceholder": "Search currencies...",
         "noCurrenciesFound": "No currencies found",
         "cryptocurrency": "Cryptocurrency",
         "searchPlaceholderEx": "Search... (country, currency, code)"
@@ -1548,7 +1490,6 @@
     "transactionItem": {
       "recurring": "Recurring",
       "upcoming": "Upcoming",
-      "canceled": "Transaction canceled",
       "failedToDelete": "Failed to delete",
       "movedToTrash": "Moved to trash",
       "failedToRestore": "Failed to restore"

@@ -82,9 +82,7 @@
       },
       "tabs": {
         "lent": "أقرضت",
-        "borrowed": "اقترضت",
-        "paid": "مدفوع",
-        "collected": "محصّل"
+        "borrowed": "اقترضت"
       },
       "kinds": {
         "default": "قياسي",
@@ -104,7 +102,6 @@
       "info": "معلومات",
       "deleted": "تم الحذف"
     },
-    "failedToOpenLink": "فشل في فتح المتصفح",
     "notFound": {
       "account": "الحساب غير موجود.",
       "budget": "الميزانية غير موجودة.",
@@ -249,10 +246,8 @@
         "title": "تفاصيل الحساب"
       },
       "a11y": {
-        "clear": "مسح الحساب",
         "select": "اختر الحساب",
         "selectTo": "اختر الحساب المستفيد",
-        "clearTo": "مسح الحساب المستفيد",
         "add": "إضافة حساب",
         "searchPlaceholder": "البحث في الحسابات..."
       }
@@ -269,36 +264,19 @@
       "averages": {
         "expense": "متوسط \nحساب",
         "income": "متوسط \nدخل",
-        "net": "متوسط \nشبكة",
-        "title": "المتوسطات اليومية"
+        "net": "متوسط \nشبكة"
       },
       "chart": {
-        "dailyTrend": "الاتجاه اليومي",
         "spendingByCategory": "الإنفاق حسب الفئة",
         "uncategorizedLabel": "غير مصنف",
-        "otherLabel": "أخرى",
-        "prevPeriod": "السابق",
-        "currentPeriod": "هذا الشهر"
+        "otherLabel": "أخرى"
       },
       "currency": {
-        "sectionHeader": "{{currency}}",
         "showing": "عرض {{currency}}",
         "tapToSwitch": "اضغط للتبديل"
       },
-      "balance": {
-        "title": "صافي الرصيد",
-        "opening": "الافتتاح",
-        "closing": "الإغلاق"
-      },
       "delta": {
         "notAvailable": "لا يوجد"
-      },
-      "hero": {
-        "netFlow": "صافي التدفق",
-        "totalExpense": "إجمالي النفقات",
-        "totalIncome": "إجمالي الدخل",
-        "transactionCount": "{{count}} معاملة",
-        "onPaceFor": "في مسار ~{{amount}}"
       },
       "moreOptions": "المزيد من الخيارات",
       "dashboard": {
@@ -330,9 +308,7 @@
         "other": "أخرى",
         "fromBalance": "من الرصيد",
         "savedNode": "مدّخر",
-        "averagesByDay": "المعدلات اليومية",
-        "toReserves": "إلى المدخرات",
-        "fromReserves": "من المدخرات"
+        "averagesByDay": "المعدلات اليومية"
       },
       "categories": {
         "title": "الفئات",
@@ -353,8 +329,7 @@
         "vsAvg": "متوسط 3 أشهر:",
         "frequentSentence": "سجّلت \"{{title}}\" {{count}} مرة",
         "rhythmSentence": "أكثر أيامك إنفاقاً هو {{day}}",
-        "shapeSentence": "نصف مشترياتك أقل من",
-        "shapeSupport": "الوسيط من {{count}} مصروفاً"
+        "shapeSentence": "نصف مشترياتك أقل من"
       },
       "netWorth": {
         "title": "صافي الثروة",
@@ -587,7 +562,6 @@
         },
         "empty": {
           "noTransactions": "لا توجد معاملات محذوفة",
-          "label": "إفراغ سلة المحذوفات",
           "sheet": {
             "title": "إفراغ سلة المحذوفات",
             "confirm": "إفراغ السلة",
@@ -763,7 +737,6 @@
           "needsCategory": "تحتاج إلى فئة",
           "dayOf": "يوم {{current}}/{{total}}",
           "dayXofY": "اليوم {{current}} من {{total}}",
-          "uncategorized": "غير مصنف",
           "status": {
             "onTrack": "على المسار",
             "watch": "انتبه",
@@ -830,7 +803,6 @@
           "longTerm": "طويل الأجل"
         },
         "card": {
-          "paid": "مدفوع",
           "paidBack": "تم سداد",
           "received": "مُستلَم",
           "of": "من",
@@ -989,7 +961,6 @@
       "exchangeRates": {
         "title": "أسعار الصرف",
         "apiTitleSecondary": "العملات الرقمية وأسعار أخرى",
-        "loading": "جاري تحميل أسعار الصرف...",
         "searchPlaceholder": "البحث عن العملات...",
         "instructionCaption": "اختر أحد المدخلات لتعيين سعر صرف مخصص. ملاحظة: جميع حسابات أسعار الصرف تعتمد على الدولار الأمريكي كمرجع.",
         "infoSheet": {
@@ -999,10 +970,8 @@
           "sources": "المصادر"
         },
         "errors": {
-          "invalidRate": "يجب أن يكون السعر أكبر من 0",
           "invalidCurrencyCode": "رمز عملة غير صالح. يرجى استخدام رمز عملة ISO 4217 صالح.",
           "fetchFailed": "فشل جلب أسعار الصرف. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
-          "invalidData": "بيانات سعر صرف غير صالحة. يرجى المحاولة مرة أخرى لاحقاً.",
           "usingCachedRates": "جاري استخدام أسعار صرف مخزنة مؤقتاً. قد تكون الأسعار قديمة.",
           "rateNotFound": "سعر الصرف غير موجود. يرجى المحاولة مرة أخرى أو تعيين سعر مخصص في الإعدادات."
         },
@@ -1137,14 +1106,8 @@
         "convertedAmountLabel": "المبلغ المحوّل",
         "notes": "ملاحظات",
         "notesPlaceholder": "أضف ملاحظات حول هذه المعاملة...",
-        "transactionDate": "تاريخ المعاملة",
-        "fileAttachments": "مرفقات الملفات",
-        "conversion": "التحويل",
         "conversionRate": "السعر",
-        "category": "الفئة",
-        "clear": "مسح",
         "addCategories": "فئات",
-        "now": "الآن",
         "pending": "معلقة",
         "pendingHintOn": "لن يُخصم المبلغ من حسابك حتى يحين تاريخ المعاملة.",
         "pendingHintOff": "سيُخصم المبلغ من حسابك فورًا، رغم أن تاريخه في المستقبل.",
@@ -1152,13 +1115,6 @@
         "addNotes": "أضف ملاحظات...",
         "moveToTrash": "نقل إلى سلة المحذوفات",
         "restore": "استعادة",
-        "account": "حساب",
-        "toAccount": "إلى الحساب",
-        "tags": "العلامات",
-        "goal": "الهدف",
-        "budget": "الميزانية",
-        "loan": "القرض",
-        "location": "موقع",
         "refundLabel": "استرداد",
         "deleteLoan": "حذف القرض",
         "notesToolbar": {
@@ -1292,28 +1248,17 @@
       },
       "a11y": {
         "closePreview": "إغلاق المعاينة",
-        "selectedSuffix": "، محدد",
         "openNotesEditor": "فتح محرر الملاحظات",
-        "setDateTimeNow": "تعيين التاريخ والوقت إلى الآن",
-        "clearCategory": "مسح الفئة",
         "addCategories": "إضافة فئات",
         "selectCategory": "اختر فئة {{name}}",
-        "clearGoal": "مسح الهدف",
-        "clearBudget": "مسح الميزانية",
-        "clearLoan": "مسح القرض",
-        "clearAllTags": "مسح جميع الوسوم",
         "addTag": "إضافة وسم",
         "noTagsFound": "لم يتم العثور على وسوم",
-        "allTagsSelected": "تم تحديد جميع الوسوم",
         "amountInput": "إدخال المبلغ"
       },
       "notFoundTransaction": "لم يتم العثور على المعاملة.",
       "searchTags": "ابحث عن الوسوم...",
-      "createNewTag": "وسم جديد",
       "selectTags": "اختيار الوسوم",
-      "clearSelection": "مسح التحديد",
       "kind": {
-        "label": "النوع",
         "info": {
           "a11yOpen": "عن أنواع المعاملات",
           "title": "أنواع المعاملات",
@@ -1338,8 +1283,7 @@
         "markDeposited": "تحديد كمُودعة"
       },
       "loan": {
-        "nameLabel": "اسم القرض",
-        "dueDateLabel": "تاريخ الاستحقاق"
+        "nameLabel": "اسم القرض"
       },
       "deleteLoanSheet": {
         "title": "حذف هذا القرض؟",
@@ -1424,8 +1368,7 @@
         "packsTitle": "حسب أسلوب حياتك",
         "packsHint": "أضف بعض الفئات التي تناسب وضعك.",
         "addPack": "إضافة الكل",
-        "removePack": "إزالة",
-        "packs": {}
+        "removePack": "إزالة"
       },
       "search": {
         "placeholder": "بحث في فئات {{tab}}..."
@@ -1623,7 +1566,6 @@
       "currency": {
         "title": "اختر عملة",
         "triggerLabel": "العملة",
-        "searchPlaceholder": "البحث عن العملات...",
         "noCurrenciesFound": "لا توجد عملات",
         "cryptocurrency": "عملة رقمية",
         "searchPlaceholderEx": "بحث... (بلد، عملة، رمز)"
@@ -1632,7 +1574,6 @@
     "transactionItem": {
       "recurring": "متكررة",
       "upcoming": "القادمة",
-      "canceled": "تم إلغاء المعاملة",
       "failedToDelete": "فشل الحذف",
       "movedToTrash": "تم النقل إلى سلة المحذوفات",
       "failedToRestore": "فشلت الاستعادة"
