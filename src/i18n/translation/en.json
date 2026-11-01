@@ -198,6 +198,7 @@
         "namePlaceholder": "Account name",
         "placeholder": "Checking, Savings, etc.",
         "initialBalance": "Initial balance",
+        "currentBalance": "Current balance",
         "excludeFromBalanceLabel": "Exclude from balance",
         "primaryAccountLabel": "Primary account",
         "primaryAccountHint": "This account will be used as the default account for new transactions and other actions.",

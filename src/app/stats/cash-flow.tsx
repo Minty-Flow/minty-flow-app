@@ -10,7 +10,7 @@ import { SankeyFlow, type SankeyNode } from "~/components/stats/sankey-flow"
 import { StatsDetailShell } from "~/components/stats/stats-detail-shell"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { getThemeVariantPalette, shuffleArray } from "~/styles/theme/utils"
+import { getFallbackPalette } from "~/styles/theme/utils"
 import type { CurrencyPeriodStats, CurrencyStats } from "~/types/stats"
 import { formatPercent } from "~/utils/number-format"
 
@@ -209,7 +209,7 @@ function AveragesByDay({
 export default function StatsCashFlowScreen() {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
-  const fallbackPalette = shuffleArray(getThemeVariantPalette(theme.name))
+  const fallbackPalette = getFallbackPalette(theme.name)
   return (
     <StatsDetailShell>
       {({ stats }) => {

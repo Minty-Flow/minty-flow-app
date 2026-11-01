@@ -1,5 +1,5 @@
 import { Group, Paint } from "@shopify/react-native-skia"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
   Easing,
@@ -19,7 +19,7 @@ import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { getThemeStrict } from "~/styles/theme/registry"
-import { getThemeVariantPalette, shuffleArray } from "~/styles/theme/utils"
+import { getFallbackPalette } from "~/styles/theme/utils"
 import type { CategoryBreakdownItem } from "~/types/stats"
 import { formatPercent } from "~/utils/number-format"
 
@@ -99,11 +99,7 @@ export function StatsCategoryPie({
       endAngle: number
     }>
   >([])
-  // Randomized once per theme category (re-shuffles only when the user switches theme category)
-  const fallbackPalette = useMemo(
-    () => shuffleArray(getThemeVariantPalette(theme.name)),
-    [theme.name],
-  )
+  const fallbackPalette = getFallbackPalette(theme.name)
   const { pieData, legendItems, total } = (() => {
     if (breakdown.length === 0) {
       return { pieData: [], legendItems: [], total: 0 }

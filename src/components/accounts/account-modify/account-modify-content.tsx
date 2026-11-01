@@ -103,7 +103,11 @@ export function AccountModifyContent({
                   valueMinor={value}
                   onChangeMinor={(v) => onChange(v)}
                   currencyCode={formCurrencyCode}
-                  label={t("screens.accounts.form.initialBalance")}
+                  label={t(
+                    isAddMode
+                      ? "screens.accounts.form.initialBalance"
+                      : "screens.accounts.form.currentBalance",
+                  )}
                   placeholder="0"
                   error={
                     errors.balance?.message

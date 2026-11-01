@@ -198,6 +198,7 @@
         "namePlaceholder": "اسم الحساب",
         "placeholder": "جاري، توفير، إلخ.",
         "initialBalance": "الرصيد الافتتاحي",
+        "currentBalance": "الرصيد الحالي",
         "excludeFromBalanceLabel": "استبعاد من الرصيد",
         "primaryAccountLabel": "الحساب الأساسي",
         "primaryAccountHint": "سيُستخدم هذا الحساب كحساب افتراضي للمعاملات الجديدة والإجراءات الأخرى.",
