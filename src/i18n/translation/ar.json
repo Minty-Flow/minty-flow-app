@@ -158,7 +158,12 @@
           "sheetDescription": "سيتم تأكيد جميع المعاملات المعلقة. لا يمكن التراجع عن ذلك."
         },
         "chips": {
-          "daysCount": "خلال الـ {{count}} أيام القادمة"
+          "daysCount_zero": "خلال الـ {{count}} يوماً القادمة",
+          "daysCount_one": "خلال اليوم القادم",
+          "daysCount_two": "خلال اليومين القادمين",
+          "daysCount_few": "خلال الـ {{count}} أيام القادمة",
+          "daysCount_many": "خلال الـ {{count}} يوماً القادمة",
+          "daysCount_other": "خلال الـ {{count}} يوماً القادمة"
         },
         "a11y": {
           "header": "القادمة",
@@ -354,7 +359,12 @@
         "less": "أقل",
         "more": "أكثر"
       },
-      "pendingNotice": "{{count}} المعاملات المجدولة مستبعدة من الإحصائيات",
+      "pendingNotice_zero": "{{count}} معاملة مجدولة مستبعدة من الإحصائيات",
+      "pendingNotice_one": "معاملة مجدولة واحدة مستبعدة من الإحصائيات",
+      "pendingNotice_two": "معاملتان مجدولتان مستبعدتان من الإحصائيات",
+      "pendingNotice_few": "{{count}} معاملات مجدولة مستبعدة من الإحصائيات",
+      "pendingNotice_many": "{{count}} معاملة مجدولة مستبعدة من الإحصائيات",
+      "pendingNotice_other": "{{count}} معاملة مجدولة مستبعدة من الإحصائيات",
       "pieToggle": {
         "expenses": "نفقات",
         "income": "دخل",
@@ -555,8 +565,12 @@
         "retention": {
           "title": "فترة الاحتفاظ",
           "description": "مسح العناصر المحذوفة تلقائياً بعد فترة زمنية محددة",
-          "daysCount": "{{count}} يوم",
-          "daysCountPlural": "{{count}} أيام",
+          "daysCount_zero": "{{count}} يوماً",
+          "daysCount_one": "يوم واحد",
+          "daysCount_two": "يومان",
+          "daysCount_few": "{{count}} أيام",
+          "daysCount_many": "{{count}} يوماً",
+          "daysCount_other": "{{count}} يوماً",
           "forever": "للأبد"
         },
         "empty": {
@@ -639,8 +653,18 @@
           "saved": "تم الادخار",
           "spent": "تم الإنفاق",
           "of": "من",
-          "daysLeft": "{{count}} أيام متبقية",
-          "overdue": "متأخر بـ {{count}} أيام",
+          "daysLeft_zero": "{{count}} يوماً متبقياً",
+          "daysLeft_one": "يوم واحد متبقٍ",
+          "daysLeft_two": "يومان متبقيان",
+          "daysLeft_few": "{{count}} أيام متبقية",
+          "daysLeft_many": "{{count}} يوماً متبقياً",
+          "daysLeft_other": "{{count}} يوماً متبقياً",
+          "overdue_zero": "متأخر بـ {{count}} يوماً",
+          "overdue_one": "متأخر بيوم واحد",
+          "overdue_two": "متأخر بيومين",
+          "overdue_few": "متأخر بـ {{count}} أيام",
+          "overdue_many": "متأخر بـ {{count}} يوماً",
+          "overdue_other": "متأخر بـ {{count}} يوماً",
           "noDeadline": "بلا موعد",
           "allAccounts": "جميع الحسابات",
           "archived": "مؤرشف",
@@ -1580,7 +1604,12 @@
     },
     "transactionList": {
       "emptyDescription": "ستظهر معاملات هذه الفترة هنا",
-      "transactionCount": "• {{count}} معاملات"
+      "transactionCount_zero": "• {{count}} معاملة",
+      "transactionCount_one": "• معاملة واحدة",
+      "transactionCount_two": "• معاملتان",
+      "transactionCount_few": "• {{count}} معاملات",
+      "transactionCount_many": "• {{count}} معاملة",
+      "transactionCount_other": "• {{count}} معاملة"
     },
     "categoryRow": {
       "transactionCount_one": "معاملة واحدة",

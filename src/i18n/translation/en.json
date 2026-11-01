@@ -158,7 +158,8 @@
           "sheetDescription": "All transactions awaiting confirmation will be confirmed. This cannot be undone."
         },
         "chips": {
-          "daysCount": "Next {{count}} day(s)"
+          "daysCount_one": "Next {{count}} day",
+          "daysCount_other": "Next {{count}} days"
         },
         "a11y": {
           "header": "Upcoming",
@@ -347,7 +348,8 @@
         "noTransactionsEver": "No transactions yet",
         "addFirst": "Add your first transaction"
       },
-      "pendingNotice": "{{count}} scheduled transactions excluded from stats",
+      "pendingNotice_one": "{{count}} scheduled transaction excluded from stats",
+      "pendingNotice_other": "{{count}} scheduled transactions excluded from stats",
       "balance": {
         "title": "Net Balance",
         "opening": "Opening",
@@ -551,8 +553,8 @@
         "retention": {
           "title": "Retention Period",
           "description": "Automatically clear deleted items after a set period",
-          "daysCount": "{{count}} day",
-          "daysCountPlural": "{{count}} days",
+          "daysCount_one": "{{count}} day",
+          "daysCount_other": "{{count}} days",
           "forever": "Forever"
         },
         "empty": {
@@ -635,8 +637,10 @@
           "saved": "Saved",
           "spent": "Spent",
           "of": "of",
-          "daysLeft": "{{count}} days left",
-          "overdue": "Overdue by {{count}} days",
+          "daysLeft_one": "{{count}} day left",
+          "daysLeft_other": "{{count}} days left",
+          "overdue_one": "Overdue by {{count}} day",
+          "overdue_other": "Overdue by {{count}} days",
           "noDeadline": "No deadline",
           "allAccounts": "All Accounts",
           "archived": "Archived",
@@ -1524,7 +1528,8 @@
     },
     "transactionList": {
       "emptyDescription": "Transactions for this period will appear here",
-      "transactionCount": "• {{count}} transactions"
+      "transactionCount_one": "• {{count}} transaction",
+      "transactionCount_other": "• {{count}} transactions"
     },
     "categoryRow": {
       "transactionCount_one": "{{count}} transaction",

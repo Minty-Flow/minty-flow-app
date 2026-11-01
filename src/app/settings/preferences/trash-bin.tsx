@@ -35,12 +35,7 @@ export default function TrashBinScreen() {
     }
     return {
       value,
-      label:
-        days === 1
-          ? t("screens.settings.trash.retention.daysCount", { count: days })
-          : t("screens.settings.trash.retention.daysCountPlural", {
-              count: days,
-            }),
+      label: t("screens.settings.trash.retention.daysCount", { count: days }),
     }
   })
   const choiceLabels = retentionMapping.map((m) => m.label)
