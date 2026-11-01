@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-29T08:08:27.027Z
+Generated on: 2026-11-01T11:18:13.349Z
 ```
 ./
 ├── __tests__/
@@ -13,7 +13,8 @@ Generated on: 2026-10-29T08:08:27.027Z
 │   │   │   └── transaction-form/
 │   │   │       ├── transfer-edit-from-credit-leg.test.ts
 │   │   │       └── transfer-rate.test.ts
-│   │   └── date-range-presets.test.ts
+│   │   ├── date-range-presets.test.ts
+│   │   └── transaction-form-payload.test.ts
 │   ├── constants/
 │   │   └── trash-retention.test.ts
 │   ├── database/
@@ -28,6 +29,7 @@ Generated on: 2026-10-29T08:08:27.027Z
 │   │   │   ├── backup-after-account-delete.test.ts
 │   │   │   ├── balance-service.test.ts
 │   │   │   ├── budget-category-delete.test.ts
+│   │   │   ├── budget-period-bounds.test.ts
 │   │   │   ├── category-delete.test.ts
 │   │   │   ├── color-clear.test.ts
 │   │   │   ├── destroy-account-transfer-partner.test.ts
@@ -35,7 +37,9 @@ Generated on: 2026-10-29T08:08:27.027Z
 │   │   │   ├── detach-transfer-from-rule.test.ts
 │   │   │   ├── edit-transfer-validation.test.ts
 │   │   │   ├── empty-trash.test.ts
+│   │   │   ├── loan-hold-guard.test.ts
 │   │   │   ├── loan-type-switch.test.ts
+│   │   │   ├── pending-transfer.test.ts
 │   │   │   ├── recurring-failure-isolation.test.ts
 │   │   │   ├── recurring-sync-concurrency.test.ts
 │   │   │   ├── recurring-sync-cursor.test.ts
@@ -46,7 +50,8 @@ Generated on: 2026-10-29T08:08:27.027Z
 │   │   │   └── trashed-transactions-read-only.test.ts
 │   │   ├── utils/
 │   │   │   └── get-balance-delta.test.ts
-│   │   └── commit-events.test.ts
+│   │   ├── commit-events.test.ts
+│   │   └── transaction-nesting.test.ts
 │   ├── helpers/
 │   │   ├── create-test-db.test.ts
 │   │   └── create-test-db.ts
@@ -67,7 +72,8 @@ Generated on: 2026-10-29T08:08:27.027Z
 │       ├── money.test.ts
 │       ├── planning-progress.test.ts
 │       ├── recurrence.test.ts
-│       └── stats-date-range.test.ts
+│       ├── stats-date-range.test.ts
+│       └── timestamp-scheduler.test.ts
 ├── .github/
 │   └── workflows/
 │       ├── board-sync.yml
@@ -684,6 +690,7 @@ Generated on: 2026-10-29T08:08:27.027Z
 │       ├── stats-date-range.ts
 │       ├── string-utils.ts
 │       ├── time-utils.ts
+│       ├── timestamp-scheduler.ts
 │       ├── toast.ts
 │       └── transaction-list-utils.ts
 ├── .env.local

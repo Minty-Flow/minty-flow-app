@@ -25,7 +25,7 @@ import { createRecurringRule } from "~/database/services/recurring-transaction-s
 import { getRepaymentTypeForLoan } from "~/domain/transaction-kind"
 import { useBalanceAtTransaction } from "~/hooks/use-balance-before"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
-import { useRecurringRule } from "~/hooks/use-recurring-rule"
+import { useRecurringRuleState } from "~/hooks/use-recurring-rule"
 import type { TranslationKey } from "~/i18n/config"
 import {
   type TransactionFormValues,
@@ -100,7 +100,8 @@ export function useTransactionForm({
     locationPickerVisible: false,
     pendingEditPayload: null,
   })
-  const recurringRule = useRecurringRule(transaction?.recurringId ?? null)
+  const { rule: recurringRule, loading: recurringRuleLoading } =
+    useRecurringRuleState(transaction?.recurringId ?? null)
   const defaultValues = getDefaultValues(
     transaction,
     accounts,
@@ -396,7 +397,8 @@ export function useTransactionForm({
     router.back()
   }
   const onSubmit = async (data: TransactionFormValues) => {
-    if (isSaving) return
+    // Until the rule loads, a recurring row would save as a plain update.
+    if (isSaving || recurringRuleLoading) return
     setIsSaving(true)
     try {
       // ─── Transfer ─────────────────────────────────────────────────────────
@@ -673,7 +675,7 @@ export function useTransactionForm({
     }
   }
   const handleDeleteConfirm = () => {
-    if (!transaction) return
+    if (!transaction || recurringRuleLoading) return
     if (isLoanOpeningEntry) {
       setOverlays({ deleteLoanSheetVisible: true })
       return
@@ -836,7 +838,7 @@ export function useTransactionForm({
     errors,
     isDirty,
     hasUnsavedChanges,
-    isSaving,
+    isSaving: isSaving || recurringRuleLoading,
     isNew,
     submit: handleSubmit(onSubmit),
 
