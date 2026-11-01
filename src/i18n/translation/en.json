@@ -660,7 +660,7 @@
           "insight": {
             "savePerDay": "Save {{amount}}/day to hit it",
             "spendPerDay": "Spend {{amount}}/day to hit it",
-            "goalReached": "🎉 Goal reached"
+            "goalReached": "Goal reached"
           }
         },
         "detail": {
@@ -1035,7 +1035,7 @@
         "remindAt": "Remind me at",
         "footerCaption": "Reminders will stop if you don't open the app for 7 consecutive days",
         "notification": {
-          "title": "Time for a check-in! 🍃",
+          "title": "Time for a check-in!",
           "body": "Don't forget to log your transactions for today."
         },
         "a11y": {

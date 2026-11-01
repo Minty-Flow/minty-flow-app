@@ -40,7 +40,7 @@ export const filterHeaderStyles = StyleSheet.create((theme) => ({
     color: theme.colors.primary,
   },
   clearHit: {
-    padding: 4,
+    padding: 12,
   },
   doneText: {
     ...theme.typography.bodyMedium,
