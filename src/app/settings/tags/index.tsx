@@ -44,10 +44,11 @@ export default function TagsScreen() {
           variant="search"
           active={showSearch}
           onPress={() => setShowSearch((v) => !v)}
+          filtersApplied={searchQuery.trim().length > 0}
         />
       ),
     })
-  }, [navigation, showSearch])
+  }, [navigation, showSearch, searchQuery])
 
   if (status === "loading") return <RouteLoadingState />
 
