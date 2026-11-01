@@ -37,6 +37,7 @@ import {
 } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
+import { hasActiveFilters } from "~/utils/transaction-list-utils"
 export default function AccountDetailsScreen() {
   const { accountId } = useLocalSearchParams<{
     accountId: string
@@ -126,12 +127,17 @@ export default function AccountDetailsScreen() {
       Toast.error({ title: t("common.toast.error") })
     }
   }
+  const filtersApplied = hasActiveFilters(filterState, searchState)
   useLayoutEffect(() => {
     navigation.setOptions({
       title: account?.name ?? "",
       headerRight: () => (
         <View style={{ flexDirection: "row", gap: 4, alignItems: "center" }}>
-          <FilterToggleButton active={showFilters} onPress={toggleFilters} />
+          <FilterToggleButton
+            active={showFilters}
+            onPress={toggleFilters}
+            filtersApplied={filtersApplied}
+          />
           {isArchived ? (
             <>
               <Button
@@ -174,6 +180,7 @@ export default function AccountDetailsScreen() {
     showFilters,
     isArchived,
     toggleFilters,
+    filtersApplied,
   ])
   if (!account) {
     return accountsQuery.status === "loading" ? (

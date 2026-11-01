@@ -30,6 +30,7 @@ import {
   applySearch,
   applyTransactionFilters,
   applyTransferLayout,
+  hasActiveFilters,
 } from "~/utils/transaction-list-utils"
 export default function PendingTransactionsScreen() {
   const { t } = useTranslation()
@@ -65,13 +66,18 @@ export default function PendingTransactionsScreen() {
   const updateDateUponConfirmation = usePendingTransactionsStore(
     (s) => s.updateDateUponConfirmation,
   )
+  const filtersApplied = hasActiveFilters(filterState, searchState)
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <FilterToggleButton active={showFilters} onPress={toggleFilters} />
+        <FilterToggleButton
+          active={showFilters}
+          onPress={toggleFilters}
+          filtersApplied={filtersApplied}
+        />
       ),
     })
-  }, [navigation, showFilters, toggleFilters])
+  }, [navigation, showFilters, toggleFilters, filtersApplied])
   if (transactionsStatus === "loading" && allPending.length === 0)
     return <RouteLoadingState />
   const handleDeleteDone = () => {

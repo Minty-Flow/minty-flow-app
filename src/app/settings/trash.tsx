@@ -37,6 +37,7 @@ import {
   applySearch,
   applyTransactionFilters,
   applyTransferLayout,
+  hasActiveFilters,
 } from "~/utils/transaction-list-utils"
 
 export default function TrashScreen() {
@@ -68,6 +69,7 @@ export default function TrashScreen() {
     applySearch(applyTransactionFilters(allDeleted, filterState), searchState),
     transferLayout,
   )
+  const filtersApplied = hasActiveFilters(filterState, searchState)
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -90,11 +92,15 @@ export default function TrashScreen() {
               <IconSvg name="trash-outline" size={20} />
             </Button>
           ) : null}
-          <FilterToggleButton active={showFilters} onPress={toggleFilters} />
+          <FilterToggleButton
+            active={showFilters}
+            onPress={toggleFilters}
+            filtersApplied={filtersApplied}
+          />
         </View>
       ),
     })
-  }, [navigation, showFilters, t, toggleFilters, deletedCount])
+  }, [navigation, showFilters, t, toggleFilters, deletedCount, filtersApplied])
   if (transactionsStatus === "loading" && allDeleted.length === 0)
     return <RouteLoadingState />
   const handleRestore = (item: TransactionWithRelations) => async () => {

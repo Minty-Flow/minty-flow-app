@@ -28,6 +28,7 @@ import {
   TransactionSubTypeEnum,
   TransactionTypeEnum,
 } from "~/types/transactions"
+import { hasActiveFilters } from "~/utils/transaction-list-utils"
 export default function CategoryDetailsScreen() {
   const { categoryId } = useLocalSearchParams<{
     categoryId: string
@@ -76,12 +77,17 @@ export default function CategoryDetailsScreen() {
       ...totals,
     }))
   })()
+  const filtersApplied = hasActiveFilters(filterState, searchState)
   useLayoutEffect(() => {
     navigation.setOptions({
       title: category?.name ?? "",
       headerRight: () => (
         <View style={{ flexDirection: "row", gap: 4, alignItems: "center" }}>
-          <FilterToggleButton active={showFilters} onPress={toggleFilters} />
+          <FilterToggleButton
+            active={showFilters}
+            onPress={toggleFilters}
+            filtersApplied={filtersApplied}
+          />
           <Button
             variant="ghost"
             size="icon"
@@ -104,6 +110,7 @@ export default function CategoryDetailsScreen() {
     category?.name,
     showFilters,
     toggleFilters,
+    filtersApplied,
   ])
   if (!category) {
     return categoriesQuery.status === "loading" ? (
