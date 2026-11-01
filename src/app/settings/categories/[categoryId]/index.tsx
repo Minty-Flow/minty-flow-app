@@ -1,5 +1,6 @@
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
 import { useLayoutEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
@@ -7,13 +8,16 @@ import { FilterToggleButton } from "~/components/filter-toggle-button"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { MonthYearPicker } from "~/components/month-year-picker"
-import { RouteLoadingState } from "~/components/route-load-state"
+import {
+  RouteLoadingState,
+  RouteNotFoundState,
+} from "~/components/route-load-state"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionSectionList } from "~/components/transaction/transaction-section-list"
 import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useCategory } from "~/database/drizzle/read-models/category-read-model"
+import { useCategoriesQuery } from "~/database/drizzle/read-models/category-read-model"
 import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import {
   useSelectedMonth,
@@ -39,7 +43,9 @@ export default function CategoryDetailsScreen() {
     showFilters,
     toggleFilters,
   } = useTransactionListFilters()
-  const category = useCategory(categoryId ?? "", true)
+  const { t } = useTranslation()
+  const categoriesQuery = useCategoriesQuery(true)
+  const category = categoriesQuery.data.find((c) => c.id === categoryId)
   const { items: transactionsFull } = useTransactions(
     categoryId
       ? {
@@ -100,7 +106,11 @@ export default function CategoryDetailsScreen() {
     toggleFilters,
   ])
   if (!category) {
-    return <RouteLoadingState />
+    return categoriesQuery.status === "loading" ? (
+      <RouteLoadingState />
+    ) : (
+      <RouteNotFoundState message={t("common.notFound.category")} />
+    )
   }
   const typeLabel =
     category.type.charAt(0).toUpperCase() + category.type.slice(1)

@@ -10,13 +10,16 @@ import { FilterToggleButton } from "~/components/filter-toggle-button"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { MonthYearPicker } from "~/components/month-year-picker"
-import { RouteLoadingState } from "~/components/route-load-state"
+import {
+  RouteLoadingState,
+  RouteNotFoundState,
+} from "~/components/route-load-state"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionSectionList } from "~/components/transaction/transaction-section-list"
 import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useAccount } from "~/database/drizzle/read-models/account-read-model"
+import { useAccountsQuery } from "~/database/drizzle/read-models/account-read-model"
 import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import {
   destroyAccount,
@@ -54,7 +57,8 @@ export default function AccountDetailsScreen() {
   const [unarchiveSheetVisible, setUnarchiveSheetVisible] = useState(false)
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
   const [transactionCount, setTransactionCount] = useState(0)
-  const liveAccount = useAccount(accountId ?? "")
+  const accountsQuery = useAccountsQuery()
+  const liveAccount = accountsQuery.data.find((a) => a.id === accountId)
   // Keep the account on screen after it is deleted, so the delete sheet is not
   // unmounted before it has closed and the screen leaves.
   const lastAccount = useRef(liveAccount)
@@ -172,7 +176,11 @@ export default function AccountDetailsScreen() {
     toggleFilters,
   ])
   if (!account) {
-    return <RouteLoadingState />
+    return accountsQuery.status === "loading" ? (
+      <RouteLoadingState />
+    ) : (
+      <RouteNotFoundState message={t("common.notFound.account")} />
+    )
   }
   const typeLabel = account.type.charAt(0).toUpperCase() + account.type.slice(1)
   const headerContent = (
