@@ -25,7 +25,10 @@ import {
   type TransactionWithRelations,
   useTransactions,
 } from "~/database/drizzle/read-models/transaction-read-model"
-import { unarchiveGoalById } from "~/database/services/goal-service"
+import {
+  deleteGoalById,
+  unarchiveGoalById,
+} from "~/database/services/goal-service"
 import { useSingleOpenSwipeable } from "~/hooks/use-transaction-list-state"
 import type { TranslationKey } from "~/i18n/config"
 import { useLanguageStore } from "~/stores/language.store"
@@ -48,6 +51,7 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
   const { onWillOpen: handleWillOpen, closeOpen: closeOpenSwipeable } =
     useSingleOpenSwipeable()
   const [unarchiveSheetVisible, setUnarchiveSheetVisible] = useState(false)
+  const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
   const goalsQuery = useGoalsQuery()
   const goal = goalsQuery.data.find((item) => item.id === goalId)
   const allAccounts = useAccounts()
@@ -60,6 +64,19 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
       return name ? [name] : []
     })
   })()
+  // An archived goal can be deleted from here too, as an archived account can.
+  const handleDelete = async () => {
+    try {
+      await deleteGoalById(goalId)
+    } catch (error) {
+      logger.error("Error deleting goal", { error })
+      Toast.error({
+        title: t("common.toast.error"),
+        description: t("screens.settings.goals.form.toast.deleteFailed"),
+      })
+      return false
+    }
+  }
   const handleTransactionPress = (id: string) => {
     router.push({ pathname: "/transaction/[id]", params: { id } })
   }
@@ -93,13 +110,26 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
       title: t("screens.settings.goals.detail.title"),
       headerRight: () =>
         isArchived ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            onPress={() => setUnarchiveSheetVisible(true)}
-          >
-            <IconSvg name="archive-off-outline" size={20} />
-          </Button>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onPress={() => setDeleteSheetVisible(true)}
+              accessibilityLabel={t("common.actions.delete")}
+            >
+              <IconSvg name="trash-outline" size={20} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onPress={() => setUnarchiveSheetVisible(true)}
+              accessibilityLabel={t(
+                "screens.settings.goals.form.archiveSheet.unarchiveTitle",
+              )}
+            >
+              <IconSvg name="archive-off-outline" size={20} />
+            </Button>
+          </View>
         ) : (
           <Button
             variant="ghost"
@@ -292,6 +322,18 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
         contentContainerStyle={planningDetailStyles.listContent}
       />
 
+      <ConfirmSheet
+        visible={deleteSheetVisible}
+        onRequestClose={() => setDeleteSheetVisible(false)}
+        onConfirm={handleDelete}
+        onConfirmed={() => router.back()}
+        title={t("common.sheets.deletePermanently")}
+        note={t("common.sheets.deleteNoteGoal")}
+        confirmLabel={t("common.actions.delete")}
+        cancelLabel={t("common.actions.cancel")}
+        variant="destructive"
+        icon="trash-outline"
+      />
       <ConfirmSheet
         visible={unarchiveSheetVisible}
         onRequestClose={() => setUnarchiveSheetVisible(false)}
