@@ -246,6 +246,8 @@ export function useTransactionForm({
       ? accounts.find((a) => a.id === toAccountId)
       : null
   const [isSaving, setIsSaving] = useState(false)
+  // State lags a render, so two quick taps both pass an `isSaving` check.
+  const submitLatch = useRef(false)
   const isLoanKind = kind === "lent" || kind === "borrowed"
   const [recurring, setRecurring] = useReducer(mergeReducer<RecurringState>, {
     recurrence: { interval: 1, unit: "month" },
@@ -403,7 +405,8 @@ export function useTransactionForm({
   }
   const onSubmit = async (data: TransactionFormValues) => {
     // Until the rule loads, a recurring row would save as a plain update.
-    if (isSaving || recurringRuleLoading) return
+    if (submitLatch.current || recurringRuleLoading) return
+    submitLatch.current = true
     setIsSaving(true)
     try {
       // ─── Transfer ─────────────────────────────────────────────────────────
@@ -672,6 +675,7 @@ export function useTransactionForm({
       })
       Toast.error({ title: t("components.transactionForm.toast.saveFailed") })
     } finally {
+      submitLatch.current = false
       setIsSaving(false)
     }
   }
