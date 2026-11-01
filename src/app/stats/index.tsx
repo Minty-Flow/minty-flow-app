@@ -50,6 +50,7 @@ export default function StatsScreen() {
                 current={stats.current}
                 previous={stats.previous}
                 currency={stats.currency}
+                inProgress={dateRange.to.getTime() > Date.now()}
                 onPress={() => pushDetail("/stats/cash-flow")}
               />
             </View>
