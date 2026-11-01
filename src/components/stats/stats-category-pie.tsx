@@ -26,6 +26,9 @@ import { formatPercent } from "~/utils/number-format"
 import { DeltaBadge } from "./delta-badge"
 import { getCategoryColor } from "./get-category-color"
 
+const UNCATEGORIZED_ID = "__uncategorized__"
+const OTHER_ID = "__other__"
+
 interface StatsCategoryPieProps {
   breakdown: CategoryBreakdownItem[]
   currency: string
@@ -84,13 +87,10 @@ export function StatsCategoryPie({
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const [mode, setMode] = useState<"expense" | "income">("expense")
-  const [selectedSlice, setSelectedSlice] = useState<{
-    index: number
-    label: string
-    value: number
-    color: string
-    prevValue: number | undefined
-  } | null>(null)
+  // Keyed by slice id, not index or value: after a mode, currency or period
+  // switch the id is looked up again in the new data, so the centre never shows
+  // a stale value.
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   // Captures startAngle/endAngle for each slice so the tap handler can do
   // angle-based hit-testing without needing Skia canvas coordinates.
   const pieSlicesRef = useRef<
@@ -99,12 +99,6 @@ export function StatsCategoryPie({
       endAngle: number
     }>
   >([])
-  // SharedValue mirror of selectedSlice?.index — drives per-slice spring animations
-  // on the UI thread without going through React renders.
-  const selectedIndexSv = useSharedValue(-1)
-  useEffect(() => {
-    selectedIndexSv.value = selectedSlice?.index ?? -1
-  }, [selectedSlice, selectedIndexSv])
   // Randomized once per theme category (re-shuffles only when the user switches theme category)
   const fallbackPalette = useMemo(
     () => shuffleArray(getThemeVariantPalette(theme.name)),
@@ -125,6 +119,7 @@ export function StatsCategoryPie({
     const getPrevValue = (b: CategoryBreakdownItem) =>
       mode === "expense" ? b.prevTotalExpense : undefined
     const items: {
+      id: string
       label: string
       value: number
       prevValue: number | undefined
@@ -132,6 +127,7 @@ export function StatsCategoryPie({
       icon: string | null
       colorSchemeName: string | null
     }[] = topSlices.map((item, i) => ({
+      id: item.categoryId ?? UNCATEGORIZED_ID,
       label:
         item.categoryId === null
           ? t("screens.stats.chart.uncategorizedLabel")
@@ -145,7 +141,8 @@ export function StatsCategoryPie({
     if (otherSlices.length > 0) {
       const otherTotal = otherSlices.reduce((s, b) => s + getValue(b), 0)
       items.push({
-        label: "Other",
+        id: OTHER_ID,
+        label: t("screens.stats.chart.otherLabel"),
         value: otherTotal,
         prevValue:
           mode === "expense"
@@ -163,10 +160,19 @@ export function StatsCategoryPie({
       total: totalVal,
     }
   })()
+  const selectedIndex =
+    selectedId === null ? -1 : pieData.findIndex((d) => d.id === selectedId)
+  const selectedSlice = selectedIndex === -1 ? null : pieData[selectedIndex]
+  // SharedValue mirror of the selected index — drives per-slice spring
+  // animations on the UI thread without going through React renders.
+  const selectedIndexSv = useSharedValue(-1)
+  useEffect(() => {
+    selectedIndexSv.value = selectedIndex
+  }, [selectedIndex, selectedIndexSv])
   // Reset selection whenever the user switches expense/income mode
   const handleModeChange = (newMode: "expense" | "income") => {
     setMode(newMode)
-    setSelectedSlice(null)
+    setSelectedId(null)
   }
   const handleChartPress = (event: {
     nativeEvent: { locationX: number; locationY: number }
@@ -177,7 +183,7 @@ export function StatsCategoryPie({
     const outerRadius = CENTER
     const innerRadius = outerRadius * INNER_RADIUS_RATIO
     if (dist < innerRadius || dist > outerRadius) {
-      setSelectedSlice(null)
+      setSelectedId(null)
       return
     }
     const angle = (Math.atan2(dy, dx) * 180) / Math.PI
@@ -185,24 +191,8 @@ export function StatsCategoryPie({
     const hitIndex = pieSlicesRef.current.findIndex(
       (s) => normAngle >= s.startAngle && normAngle < s.endAngle,
     )
-    if (hitIndex === -1) {
-      setSelectedSlice(null)
-      return
-    }
-    if (selectedSlice?.index === hitIndex) {
-      setSelectedSlice(null)
-      return
-    }
-    const hit = pieData[hitIndex]
-    if (hit) {
-      setSelectedSlice({
-        index: hitIndex,
-        label: hit.label,
-        value: hit.value,
-        color: hit.color,
-        prevValue: hit.prevValue,
-      })
-    }
+    const hit = hitIndex === -1 ? undefined : pieData[hitIndex]
+    setSelectedId(!hit || hit.id === selectedId ? null : hit.id)
   }
   // If there are no categories at all, hide the section entirely
   if (breakdown.length === 0) return null
@@ -282,14 +272,14 @@ export function StatsCategoryPie({
               <Pressable onPress={handleChartPress} style={styles.pieContainer}>
                 <PolarChart
                   data={pieData}
-                  labelKey="label"
+                  labelKey="id"
                   valueKey="value"
                   colorKey="color"
                 >
                   <Pie.Chart innerRadius="50%">
                     {({ slice }) => {
                       const index = pieData.findIndex(
-                        (d) => d.label === slice.label,
+                        (d) => d.id === slice.label,
                       )
                       if (index !== -1) {
                         pieSlicesRef.current[index] = {
@@ -297,8 +287,7 @@ export function StatsCategoryPie({
                           endAngle: slice.endAngle,
                         }
                       }
-                      const isSelected =
-                        selectedSlice !== null && selectedSlice.index === index
+                      const isSelected = selectedIndex === index
                       return (
                         <PieSliceAnimated
                           sliceIndex={index}
@@ -360,27 +349,15 @@ export function StatsCategoryPie({
               {legendItems.map((item) => {
                 const colorScheme = getThemeStrict(item.colorSchemeName)
                 const percent = total > 0 ? (item.value / total) * 100 : 0
-                const itemIndex = pieData.findIndex(
-                  (d) => d.label === item.label,
-                )
+                const itemIndex = pieData.findIndex((d) => d.id === item.id)
                 const isSelected =
-                  selectedSlice !== null && selectedSlice.index === itemIndex
+                  selectedIndex === itemIndex && itemIndex !== -1
                 return (
                   <Pressable
-                    key={item.label}
+                    key={item.id}
                     onPress={() => {
                       if (itemIndex === -1) return
-                      if (selectedSlice?.index === itemIndex) {
-                        setSelectedSlice(null)
-                      } else {
-                        setSelectedSlice({
-                          index: itemIndex,
-                          label: item.label,
-                          value: item.value,
-                          color: item.color,
-                          prevValue: item.prevValue,
-                        })
-                      }
+                      setSelectedId(isSelected ? null : item.id)
                     }}
                     style={[
                       styles.legendRow,

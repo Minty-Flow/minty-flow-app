@@ -327,6 +327,7 @@
         "dailyTrend": "Daily Trend",
         "spendingByCategory": "Spending by Category",
         "uncategorizedLabel": "Uncategorized",
+        "otherLabel": "Other",
         "prevPeriod": "Previous",
         "currentPeriod": "This month"
       },
