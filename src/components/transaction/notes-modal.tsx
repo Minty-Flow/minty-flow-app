@@ -39,7 +39,9 @@ function NotesModalContent({
   )
   const handleSave = async () => {
     const html = (await editorRef.current?.getHTML()) ?? initialValue
-    onSave(html)
+    // An emptied editor still yields markup like `<html><p></p></html>`;
+    // store '' so a cleared note counts as no note.
+    onSave(hasVisibleText(html) ? html : "")
     onRequestClose()
   }
   const isBold = activeStyles?.bold.isActive ?? false
@@ -198,6 +200,12 @@ function NotesModalContent({
     </KeyboardAvoidingView>
   )
 }
+const hasVisibleText = (html: string) =>
+  html
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .trim().length > 0
+
 export function NotesModal({
   visible,
   initialValue,
