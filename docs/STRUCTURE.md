@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-01T12:59:45.098Z
+Generated on: 2026-11-01T13:00:04.562Z
 ```
 ./
 ├── __tests__/
@@ -584,6 +584,7 @@ Generated on: 2026-11-01T12:59:45.098Z
 │   │   ├── use-navigation-guard.ts
 │   │   ├── use-notification-sync.ts
 │   │   ├── use-permission-status.ts
+│   │   ├── use-preferred-currency-sync.ts
 │   │   ├── use-recurring-rule.ts
 │   │   ├── use-retention-cleanup.ts
 │   │   ├── use-scroll-into-view.ts

@@ -24,6 +24,7 @@ import { TRANSACTION_REMINDERS_CHANNEL_ID } from "~/constants/notification-chann
 import { drizzleDb, expoDb } from "~/database/drizzle/db"
 import { useImportRecovery } from "~/hooks/use-import-recovery"
 import { useNotificationSync } from "~/hooks/use-notification-sync"
+import { usePreferredCurrencySync } from "~/hooks/use-preferred-currency-sync"
 import { useRetentionCleanup } from "~/hooks/use-retention-cleanup"
 import { useShakeListener } from "~/hooks/use-shake-listener"
 import { useTransactionLifecycleSync } from "~/hooks/use-transaction-lifecycle-sync"
@@ -135,6 +136,7 @@ function AppRootLayout() {
   useRetentionCleanup()
   useTransactionLifecycleSync()
   useNotificationSync()
+  usePreferredCurrencySync()
   useImportRecovery()
 
   return (
