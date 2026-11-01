@@ -119,7 +119,8 @@ export default function AddItemScreen() {
     setPercentageStrings((prev) => ({ ...prev, [participantId]: rawValue }))
   }
   const handlePercentageBlur = (participantId: string, rawValue: string) => {
-    const numValue = Number.parseFloat(rawValue)
+    // Accept a decimal comma as well as a point.
+    const numValue = Number.parseFloat(rawValue.replace(",", "."))
     const clamped = Number.isNaN(numValue)
       ? 0
       : Math.max(0, Math.min(numValue, 100))
