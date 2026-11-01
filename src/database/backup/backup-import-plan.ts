@@ -107,6 +107,44 @@ function insertRows(
   }
 }
 
+/**
+ * Migrations 0004 and 0005 repaired data in place without bumping
+ * SCHEMA_VERSION, so an older backup restores the damage they fixed. Run the
+ * same repairs after an import. One statement per run().
+ */
+const POST_IMPORT_REPAIRS = [
+  // A recurring template pointing at a deleted category: clear it.
+  `UPDATE recurring_transactions
+   SET json_transaction_template = json_set(json_transaction_template, '$.categoryId', NULL)
+   WHERE json_valid(json_transaction_template)
+     AND json_extract(json_transaction_template, '$.categoryId') IS NOT NULL
+     AND NOT EXISTS (
+       SELECT 1 FROM categories
+       WHERE categories.id = json_extract(recurring_transactions.json_transaction_template, '$.categoryId')
+     )`,
+  // A template whose account is gone can never generate: disable the rule.
+  `UPDATE recurring_transactions
+   SET disabled = 1
+   WHERE disabled = 0
+     AND json_valid(json_transaction_template)
+     AND NOT EXISTS (
+       SELECT 1 FROM accounts
+       WHERE accounts.id = json_extract(recurring_transactions.json_transaction_template, '$.accountId')
+     )`,
+  // A loan-linked row carries its loan's kind.
+  `UPDATE transactions
+   SET kind = CASE (SELECT loan_type FROM loans WHERE loans.id = transactions.loan_id)
+     WHEN 'lent' THEN 'lent'
+     ELSE 'borrowed'
+   END
+   WHERE loan_id IS NOT NULL
+     AND EXISTS (SELECT 1 FROM loans WHERE loans.id = transactions.loan_id)
+     AND kind != CASE (SELECT loan_type FROM loans WHERE loans.id = transactions.loan_id)
+       WHEN 'lent' THEN 'lent'
+       ELSE 'borrowed'
+     END`,
+]
+
 export function insertBackupData(db: Db, data: MintyFlowBackup["data"]): void {
   // Tier 1: no FK dependencies
   insertRows(db, "categories", data.categories)
@@ -136,4 +174,10 @@ export function insertBackupData(db: Db, data: MintyFlowBackup["data"]): void {
   insertRows(db, "budget_accounts", data.budget_accounts)
   insertRows(db, "budget_categories", data.budget_categories)
   insertRows(db, "goal_accounts", data.goal_accounts)
+
+  repairImportedData(db)
+}
+
+export function repairImportedData(db: Db): void {
+  for (const statement of POST_IMPORT_REPAIRS) db.run(sql.raw(statement))
 }

@@ -139,6 +139,21 @@ async function saveGeneratedExport(
 
 // ─── Export ──────────────────────────────────────────────────────────────────
 
+/**
+ * `SELECT *` from a table, or no rows when it does not exist. A pre-update
+ * backup runs before the migrations that would create a new table, so a plain
+ * select would throw and block the backup.
+ */
+async function selectAll(table: string): Promise<RawRow[]> {
+  const exists = await drizzleDb.all<{ name: string }>(
+    sql.raw(
+      `SELECT name FROM sqlite_master WHERE type = 'table' AND name = '${table}'`,
+    ),
+  )
+  if (exists.length === 0) return []
+  return drizzleDb.all<RawRow>(sql.raw(`SELECT * FROM ${table}`))
+}
+
 /** Fetch all 13 tables from the SQLite DB and return a MintyFlowBackup object. */
 async function buildBackupInMemory(): Promise<MintyFlowBackup> {
   const [
@@ -156,19 +171,19 @@ async function buildBackupInMemory(): Promise<MintyFlowBackup> {
     budgetCategories,
     goalAccounts,
   ] = await Promise.all([
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM categories")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM tags")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM accounts")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM recurring_transactions")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM budgets")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM goals")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM loans")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM transactions")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM transfers")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM transaction_tags")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM budget_accounts")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM budget_categories")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM goal_accounts")),
+    selectAll("categories"),
+    selectAll("tags"),
+    selectAll("accounts"),
+    selectAll("recurring_transactions"),
+    selectAll("budgets"),
+    selectAll("goals"),
+    selectAll("loans"),
+    selectAll("transactions"),
+    selectAll("transfers"),
+    selectAll("transaction_tags"),
+    selectAll("budget_accounts"),
+    selectAll("budget_categories"),
+    selectAll("goal_accounts"),
   ])
 
   return {
