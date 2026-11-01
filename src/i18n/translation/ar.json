@@ -125,7 +125,8 @@
     }
   },
   "profile": {
-    "greeting": "أهلاً",
+    "greeting": "أهلاً!",
+    "greetingWithName": "أهلاً، {{name}}!",
     "edit": {
       "title": "تعديل الملف الشخصي",
       "nameLabel": "الاسم",

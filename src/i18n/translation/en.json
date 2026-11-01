@@ -125,7 +125,8 @@
     }
   },
   "profile": {
-    "greeting": "Hi",
+    "greeting": "Hi!",
+    "greetingWithName": "Hi, {{name}}!",
     "edit": {
       "title": "Edit Profile",
       "nameLabel": "Name",

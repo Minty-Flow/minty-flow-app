@@ -75,7 +75,9 @@ function HomeScreen() {
             <IconSvg name="user-outline" size={26} />
           )}
           <Text variant="large" style={styles.greetingText}>
-            {t("profile.greeting")}, {profileName}!
+            {profileName.trim()
+              ? t("profile.greetingWithName", { name: profileName.trim() })
+              : t("profile.greeting")}
           </Text>
         </Pressable>
 

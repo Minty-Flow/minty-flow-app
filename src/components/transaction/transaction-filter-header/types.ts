@@ -20,11 +20,11 @@ export const EMPTY_HIDDEN_FILTERS: FilterPanelKey[] = []
 
 export const CHIPS_PER_ROW = 4
 
-export const SEARCH_MATCH_OPTIONS: { id: SearchMatchType; label: string }[] = [
-  { id: "smart", label: "Smart" },
-  { id: "partial", label: "Partial match" },
-  { id: "exact", label: "Exact match" },
-  { id: "untitled", label: "Untitled" },
+export const SEARCH_MATCH_OPTIONS: { id: SearchMatchType }[] = [
+  { id: "smart" },
+  { id: "partial" },
+  { id: "exact" },
+  { id: "untitled" },
 ]
 
 export interface TransactionFilterHeaderProps {

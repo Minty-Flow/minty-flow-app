@@ -18,7 +18,6 @@ function getPresetOptions(): PresetOption[] {
   return [
     {
       id: "last30",
-      label: "Last 30 days",
       getRange: () => {
         const now = new Date()
         return { start: startOfDay(subDays(now, 29)), end: endOfDay(now) }
@@ -26,7 +25,6 @@ function getPresetOptions(): PresetOption[] {
     },
     {
       id: "thisWeek",
-      label: "This week",
       getRange: () => {
         const now = new Date()
         return { start: startOfAppWeek(now), end: endOfAppWeek(now) }
@@ -34,7 +32,6 @@ function getPresetOptions(): PresetOption[] {
     },
     {
       id: "thisMonth",
-      label: "This month",
       getRange: () => {
         const now = new Date()
         return { start: startOfMonth(now), end: endOfMonth(now) }
@@ -42,7 +39,6 @@ function getPresetOptions(): PresetOption[] {
     },
     {
       id: "thisYear",
-      label: "This year",
       getRange: () => {
         const now = new Date()
         return { start: startOfYear(now), end: endOfYear(now) }
@@ -50,7 +46,6 @@ function getPresetOptions(): PresetOption[] {
     },
     {
       id: "allTime",
-      label: "All time",
       getRange: () => ({
         start: startOfYear(new Date(2000, 0, 1)),
         end: endOfDay(new Date()),
