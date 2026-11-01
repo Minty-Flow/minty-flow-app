@@ -66,7 +66,7 @@ export default function TrashBinScreen() {
           description: t("screens.settings.trash.empty.toast.errorDescription"),
         })
       })
-  } // Added 't' to dependencies
+  }
   return (
     <ScrollView
       style={settingsStyles.screen}
@@ -79,14 +79,11 @@ export default function TrashBinScreen() {
         style={{
           paddingHorizontal: 20,
         }}
-        // choices={Object.values(RetentionPeriodEnum)}
         choices={choiceLabels}
-        // selectedValue={retentionPeriod}
         selectedValue={selectedLabel}
-        // onSelect={(choice) => setRetentionPeriod(choice)}
         onSelect={(label) => {
           const selected = retentionMapping.find((m) => m.label === label)
-          if (selected) setRetentionPeriod(selected.value) // Saves English "30 days"
+          if (selected) setRetentionPeriod(selected.value)
         }}
       />
 

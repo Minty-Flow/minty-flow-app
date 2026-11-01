@@ -46,7 +46,7 @@ export default function LoansScreen() {
             styles.headerFilterButton,
             isFiltered && { backgroundColor: `${theme.colors.primary}20` },
           ]}
-          accessibilityLabel={t("components.filters.clearAll")}
+          accessibilityLabel={t("components.filters.toggle")}
         >
           <IconSvg
             name={filterVisible ? "filter-2-x-outline" : "filter-2-outline"}

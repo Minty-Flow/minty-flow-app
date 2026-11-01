@@ -479,6 +479,7 @@
           "title": "Calendar formatting",
           "clock": {
             "label": "Clock format",
+            "auto": "Device default",
             "12h": "12-hour",
             "24h": "24-hour"
           },
@@ -1387,6 +1388,7 @@
       }
     },
     "filters": {
+      "toggle": "Filters",
       "searchPlaceholder": "Search by title...",
       "clearAll": "Clear all",
       "includeNotes": "Include notes",

@@ -195,13 +195,6 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
   const categoryBreakdown = linkedCategories
     .map((c) => ({ category: c, spent: spentByCategory[c.id] ?? 0 }))
     .sort((a, b) => b.spent - a.spent)
-  // Uncategorized portion — when total spend exceeds the sum of category
-  // segments (transactions without a linked category, etc.).
-  const categorizedTotal = categoryBreakdown.reduce(
-    (sum, b) => sum + b.spent,
-    0,
-  )
-  const uncategorizedSpent = Math.max(spent - categorizedTotal, 0)
   // Segment widths are percentages of the limit so segments stay proportional
   // to their share of spend. We cap each at 100% so a single over-budget
   // segment doesn't overflow the bar visually.
@@ -273,7 +266,7 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
       </View>
 
       <View style={styles.segmentTrack}>
-        {categoryBreakdown.length > 0 || uncategorizedSpent > 0 ? (
+        {categoryBreakdown.length > 0 ? (
           <View style={styles.segmentRow}>
             {categoryBreakdown.map((b) => (
               <RNView
@@ -286,15 +279,6 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
                 }}
               />
             ))}
-            {uncategorizedSpent > 0 && (
-              <RNView
-                style={{
-                  width: `${segmentPct(uncategorizedSpent)}%` as DimensionValue,
-                  height: "100%",
-                  backgroundColor: progressBarColor,
-                }}
-              />
-            )}
           </View>
         ) : (
           <RNView
@@ -328,21 +312,6 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
               />
             </View>
           ))}
-          {uncategorizedSpent > 0 && (
-            <View style={styles.breakdownRow}>
-              <View style={styles.uncategorizedDot} />
-              <Text style={styles.breakdownName} numberOfLines={1}>
-                {t("screens.settings.budgets.card.uncategorized")}
-              </Text>
-              <Money
-                value={uncategorizedSpent}
-                currency={budget.currencyCode}
-                tone="transfer"
-                hideSign
-                style={styles.breakdownAmount}
-              />
-            </View>
-          )}
         </View>
       )}
 
@@ -500,12 +469,6 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.bodyMedium.fontSize,
     color: theme.colors.onSecondary,
     fontWeight: "600",
-  },
-  uncategorizedDot: {
-    width: 32,
-    height: 32,
-    borderRadius: theme.radius,
-    backgroundColor: theme.colors.secondary,
   },
   accountsText: {
     fontSize: theme.typography.labelSmall.fontSize,
