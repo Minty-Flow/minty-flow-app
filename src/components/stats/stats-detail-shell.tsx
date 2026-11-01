@@ -79,6 +79,7 @@ function toDate(value: string | undefined): Date | undefined {
  */
 function useStatsInitFromParams(): UseStatsInit {
   const params = useLocalSearchParams<{
+    currency?: string
     preset?: string
     from?: string
     to?: string
@@ -100,6 +101,9 @@ export function StatsDetailShell({
   const isDashboard = variant === "dashboard"
   const { theme } = useUnistyles()
   const paramsInit = useStatsInitFromParams()
+  const { currency: currencyParam } = useLocalSearchParams<{
+    currency?: string
+  }>()
   const {
     byCurrency,
     supplementByCurrency,
@@ -114,7 +118,9 @@ export function StatsDetailShell({
     refetch,
   } = useStats(init ?? paramsInit)
 
-  const [selectedCurrency, setSelectedCurrency] = useState<string | null>(null)
+  const [selectedCurrency, setSelectedCurrency] = useState<string | null>(
+    currencyParam ?? null,
+  )
 
   const stats =
     byCurrency.find((s) => s.currency === selectedCurrency) ?? byCurrency[0]
