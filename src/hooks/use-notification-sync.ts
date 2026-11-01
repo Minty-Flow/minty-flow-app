@@ -5,6 +5,7 @@ import {
   onWriteCommitted,
   writeAffectsPendingTransactions,
 } from "~/database/commit-events"
+import i18n from "~/i18n/config"
 import { synchronizePlannedTransactionNotifications } from "~/services/pending-transaction-notifications"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { logger } from "~/utils/logger"
@@ -15,7 +16,7 @@ const WRITE_SETTLE_MS = 500
 /**
  * Syncs pending-transaction notifications: once on mount, whenever the app
  * returns to foreground, whenever the notify/earlyReminderInSeconds
- * preferences change, and after any write that can change a pending
+ * preferences or the language change, and after any write that can change a pending
  * transaction. Runs never overlap, so a sync that starts mid-run repeats once
  * afterwards instead of racing the first.
  */
@@ -65,7 +66,12 @@ export function useNotificationSync(): void {
       }
     })
 
+    // Reminder text is localized when it is scheduled, so a language change
+    // has to reschedule the ones already queued.
+    i18n.on("languageChanged", run)
+
     return () => {
+      i18n.off("languageChanged", run)
       if (settleTimer) clearTimeout(settleTimer)
       writeSub()
       appStateSub.remove()
