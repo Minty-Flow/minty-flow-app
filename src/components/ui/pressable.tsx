@@ -12,6 +12,8 @@ import { useAndroidSoundStore } from "~/stores/android-sound.store"
 interface PressableProps extends RNPressableProps {
   native?: boolean
   disableRipple?: boolean
+  /** Dim the view while pressed on iOS. Off for callers that draw their own pressed state. */
+  iosPressFeedback?: boolean
   ref?: Ref<ComponentRef<typeof RNPressable>>
 }
 
@@ -19,6 +21,7 @@ export const Pressable = ({
   native,
   style,
   disableRipple,
+  iosPressFeedback = true,
   accessibilityRole = "button",
   ref,
   ...props
@@ -50,7 +53,7 @@ export const Pressable = ({
   const withBase = (resolved: RNPressableProps["style"], pressed = false) => [
     Platform.OS === "android" ? pressableStyles.base : undefined,
     resolved as StyleProp<ViewStyle>,
-    Platform.OS === "ios" && pressed && !disableRipple
+    Platform.OS === "ios" && pressed && iosPressFeedback
       ? pressableStyles.pressedIos
       : undefined,
   ]

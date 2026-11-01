@@ -57,6 +57,8 @@ export const TabsMinty = <T,>({
             ]}
             disabled={disabled}
             onPress={() => onValueChange(item.value)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: isActive, disabled }}
           >
             {item.icon && (
               <IconSvg

@@ -88,6 +88,7 @@ export function Chip({
 
   return (
     <Pressable
+      accessibilityState={{ selected }}
       {...rest}
       style={[
         chipStyles.chip,
