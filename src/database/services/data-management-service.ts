@@ -234,15 +234,11 @@ async function generateJsonBackup(baseName?: string): Promise<{
   ])
   const fileName = toFileName("json", baseName)
   const uri = `${dir}${fileName}`
-  // A plain JSON file cannot carry the photo, so only the name goes in.
-  const withExtras = withSettingsAndProfile(backup, false)
-  await FileSystem.writeAsStringAsync(
-    uri,
-    JSON.stringify(withExtras, null, 2),
-    {
-      encoding: FileSystem.EncodingType.UTF8,
-    },
-  )
+  // Data only: the 13 tables, as before. Settings and the profile travel in
+  // the ZIP, which can also carry the profile photo.
+  await FileSystem.writeAsStringAsync(uri, JSON.stringify(backup, null, 2), {
+    encoding: FileSystem.EncodingType.UTF8,
+  })
   return { uri, fileName }
 }
 
@@ -253,12 +249,9 @@ export async function saveJsonToDevice(
   return saveGeneratedExport(uri, fileName)
 }
 
-/** The portable preferences and the profile, added to an export. */
-function withSettingsAndProfile(
-  backup: MintyFlowBackup,
-  includeProfileImage: boolean,
-): MintyFlowBackup {
-  const profile = readBackupProfile(includeProfileImage)
+/** The portable preferences and the profile, added to a ZIP export. */
+function withSettingsAndProfile(backup: MintyFlowBackup): MintyFlowBackup {
+  const profile = readBackupProfile(true)
   return {
     ...backup,
     settings: readPortableSettings(),
@@ -274,7 +267,7 @@ async function generateZipBackup(
     buildBackupInMemory(),
   ])
   const jsonUri = `${dir}${BACKUP_JSON_NAME}`
-  const withExtras = withSettingsAndProfile(backup, true)
+  const withExtras = withSettingsAndProfile(backup)
   await FileSystem.writeAsStringAsync(
     jsonUri,
     JSON.stringify(withExtras, null, 2),

@@ -27,9 +27,9 @@ export interface SavedExport {
 
 export interface MintyFlowBackup {
   meta: BackupMeta
-  /** v6+: portable preferences. Absent in older backups, which restore as before. */
+  /** v6+, ZIP only: portable preferences. Absent in older backups and in data-only JSON. */
   settings?: PortableSettings
-  /** v6+: the profile name and photo file name. Absent in older backups. */
+  /** v6+, ZIP only: the profile name and photo file name. Absent in older backups and in data-only JSON. */
   profile?: BackupProfile
   data: {
     categories: RawRow[]
@@ -68,7 +68,8 @@ export type ValidateBackupResult =
 // v6: an optional `settings` section (portable preferences) and `profile`
 // (name and photo file name). Both are additive and optional, so a v3 to v5
 // backup restores unchanged and leaves the current settings alone. An older
-// app cannot read a v6 backup.
+// app cannot read a v6 backup. Only the ZIP carries the two sections; the
+// data-only JSON keeps its 13 tables.
 export const SCHEMA_VERSION = 6
 
 // v3 is accepted for one release so users can still restore a backup taken
