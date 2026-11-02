@@ -21,6 +21,7 @@ import {
   importBackup,
   type MintyFlowBackup,
   pickBackupFile,
+  pickedFileKind,
   readPickedBackup,
   restoreAttachmentsFromStaging,
   saveCsvToDevice,
@@ -176,6 +177,20 @@ export default function DataManagementScreen() {
       .then((file) => {
         // null means the user cancelled the picker — nothing to report.
         if (!file) return null
+        const kind = pickedFileKind(file.name)
+        if (kind === "csv" || kind === "unsupported") {
+          Toast.error({
+            title: t(
+              kind === "csv"
+                ? "screens.settings.dataManagement.importCsvRejected"
+                : "screens.settings.dataManagement.importUnsupported",
+            ),
+            description: t(
+              "screens.settings.dataManagement.importAcceptedTypes",
+            ),
+          })
+          return null
+        }
         return readPickedBackup(file.uri, file.name)
       })
       .then((picked) => {
@@ -283,9 +298,6 @@ export default function DataManagementScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {!importOnly && (
         <>
-          <Text style={styles.sectionHeader}>
-            {t("screens.settings.dataManagement.sections.export")}
-          </Text>
           {showFileName && (
             <View style={styles.field}>
               <View style={styles.fieldLabelRow}>
@@ -330,6 +342,12 @@ export default function DataManagementScreen() {
               </Text>
             </View>
           )}
+          <Text style={styles.sectionHeader}>
+            {t("screens.settings.dataManagement.sections.backup")}
+          </Text>
+          <Text style={styles.sectionHint}>
+            {t("screens.settings.dataManagement.sections.backupHint")}
+          </Text>
           <View style={styles.grid}>
             <DataCard
               icon="file-zip-outline"
@@ -345,6 +363,15 @@ export default function DataManagementScreen() {
               onPress={() => runExport(saveJsonToDevice, "json")}
               loading={savingType === "json"}
             />
+          </View>
+
+          <Text style={styles.sectionHeader}>
+            {t("screens.settings.dataManagement.sections.spreadsheets")}
+          </Text>
+          <Text style={styles.sectionHint}>
+            {t("screens.settings.dataManagement.sections.spreadsheetsHint")}
+          </Text>
+          <View style={styles.grid}>
             <DataCard
               icon="file-type-csv-outline"
               title={t("screens.settings.dataManagement.exportCsv")}
@@ -358,6 +385,9 @@ export default function DataManagementScreen() {
 
       <Text style={styles.sectionHeader}>
         {t("screens.settings.dataManagement.sections.import")}
+      </Text>
+      <Text style={styles.sectionHint}>
+        {t("screens.settings.dataManagement.sections.importHint")}
       </Text>
       <View style={styles.grid}>
         <DataCard
@@ -460,6 +490,13 @@ const styles = StyleSheet.create((theme) => ({
     padding: 20,
     paddingTop: 12,
     paddingBottom: 60,
+  },
+  sectionHint: {
+    fontSize: theme.typography.labelLarge.fontSize,
+    color: theme.colors.onSecondary,
+    marginBottom: 12,
+    paddingHorizontal: 4,
+    lineHeight: 20,
   },
   sectionHeader: {
     fontSize: theme.typography.labelXSmall.fontSize,

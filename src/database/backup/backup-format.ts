@@ -570,3 +570,18 @@ export function countBackupRecords(backup: MintyFlowBackup): {
   }
   return { total, tableCount }
 }
+
+export type PickedFileKind = "zip" | "json" | "csv" | "unsupported"
+
+/**
+ * What a picked file is, by extension. Import accepts ZIP and JSON backups
+ * only; a CSV export cannot restore anything, so it gets its own answer for a
+ * clear message.
+ */
+export function pickedFileKind(name: string): PickedFileKind {
+  const lower = name.trim().toLowerCase()
+  if (lower.endsWith(".zip")) return "zip"
+  if (lower.endsWith(".json")) return "json"
+  if (lower.endsWith(".csv")) return "csv"
+  return "unsupported"
+}
