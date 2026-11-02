@@ -75,21 +75,66 @@ function fromFloating(d: Date): Date {
   )
 }
 
+type RuleOptions = NonNullable<ConstructorParameters<typeof RRule>[0]>
+
+/**
+ * RFC 5545 skips a date that does not exist: a monthly rule from the 31st
+ * would fire only in 31-day months. People expect the last day of the month
+ * instead (Jan 31, Feb 28, Mar 31, Apr 30), as banking and calendar apps do.
+ *
+ * BYMONTHDAY lists the start day and every day down to 28, and BYSETPOS=-1
+ * keeps the last one that exists in the month, which is the start day or the
+ * month's last day. `floatingStart` carries the local wall-clock day in its
+ * UTC fields.
+ */
+function clampToMonthEnd(
+  options: RuleOptions,
+  floatingStart: Date | null | undefined,
+): RuleOptions {
+  if (!floatingStart) return options
+  if (options.bymonthday != null || options.bysetpos != null) return options
+  const day = floatingStart.getUTCDate()
+
+  if (options.freq === RRule.MONTHLY && day > 28) {
+    const days = Array.from({ length: day - 27 }, (_, i) => 28 + i)
+    return { ...options, bymonthday: days, bysetpos: -1 }
+  }
+  // Feb 29 exists only in leap years; clamp to Feb 28 in the others.
+  if (
+    options.freq === RRule.YEARLY &&
+    floatingStart.getUTCMonth() === 1 &&
+    day === 29 &&
+    options.bymonth == null
+  ) {
+    return { ...options, bymonth: [2], bymonthday: [28, 29], bysetpos: -1 }
+  }
+  return options
+}
+
 /** The same rule, stepping through local wall-clock time. */
 function toLocalRule(rule: RRule): RRule {
   const { dtstart, until, ...rest } = rule.origOptions
-  return new RRule({
-    ...rest,
-    ...(dtstart ? { dtstart: toFloating(dtstart) } : {}),
-    ...(until ? { until: toFloating(until) } : {}),
-  })
+  const floatingStart = dtstart ? toFloating(dtstart) : null
+  return new RRule(
+    clampToMonthEnd(
+      {
+        ...rest,
+        ...(floatingStart ? { dtstart: floatingStart } : {}),
+        ...(until ? { until: toFloating(until) } : {}),
+      },
+      floatingStart,
+    ),
+  )
 }
 
 /**
  * Build an RRULE string from "every {interval} {unit}", a start date, and an
  * optional end date. `until` is normalised to end-of-day (device-local) so an
  * "until Oct 16" rule includes every occurrence that falls on Oct 16.
- * RRule handles month-end roll-over (Jan 31 -> Feb 28/29); never do raw
+ * The string is plain RFC 5545, which skips months that lack the start day
+ * (a monthly rule from Jan 31 would skip February). Occurrences are always
+ * read through `toLocalRule`, which clamps those rules to the last day of the
+ * month, so existing stored rules follow the same behaviour. Never do raw
  * setMonth/setDate arithmetic for intervals.
  */
 export function buildRRuleString(opts: {
@@ -135,13 +180,19 @@ export function countOccurrencesBetween(
   recurrence: Recurrence,
 ): number {
   if (endDate.getTime() < startDate.getTime()) return 0
-  const rule = new RRule({
-    freq: FREQ_BY_UNIT[recurrence.unit],
-    interval: clampInterval(recurrence.interval),
-    dtstart: toFloating(startDate),
-    until: toFloating(endDate),
-  })
-  return rule.between(toFloating(startDate), toFloating(endDate), true).length
+  const floatingStart = toFloating(startDate)
+  const rule = new RRule(
+    clampToMonthEnd(
+      {
+        freq: FREQ_BY_UNIT[recurrence.unit],
+        interval: clampInterval(recurrence.interval),
+        dtstart: floatingStart,
+        until: toFloating(endDate),
+      },
+      floatingStart,
+    ),
+  )
+  return rule.between(floatingStart, toFloating(endDate), true).length
 }
 
 /**

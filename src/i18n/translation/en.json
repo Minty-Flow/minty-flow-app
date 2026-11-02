@@ -1220,7 +1220,9 @@
         "amountInput": "Amount input"
       },
       "loan": {
-        "nameLabel": "Loan name"
+        "nameLabel": "Loan name",
+        "noDueDate": "No due date",
+        "clearDueDate": "Remove due date"
       },
       "deleteLoanSheet": {
         "title": "Delete this loan?",
