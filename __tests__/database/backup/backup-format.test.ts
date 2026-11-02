@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   type MintyFlowBackup,
   normalizeColumnValue,
+  pickedFileKind,
   SCHEMA_VERSION,
   validateBackup,
 } from "~/database/backup/backup-format"
@@ -183,6 +184,23 @@ describe("normalizeColumnValue, dates", () => {
 
   it("leaves an unparseable date for validation to reject", () => {
     expect(normalizeColumnValue("transaction_date", "nope")).toBe("nope")
+  })
+})
+
+describe("pickedFileKind", () => {
+  it("accepts ZIP and JSON backups, in any case", () => {
+    expect(pickedFileKind("minty-2026-01-01.zip")).toBe("zip")
+    expect(pickedFileKind("Backup.JSON")).toBe("json")
+  })
+
+  it("names a CSV so the import can reject it clearly", () => {
+    expect(pickedFileKind("transactions.csv")).toBe("csv")
+  })
+
+  it("marks anything else unsupported", () => {
+    expect(pickedFileKind("notes.txt")).toBe("unsupported")
+    expect(pickedFileKind("backup")).toBe("unsupported")
+    expect(pickedFileKind("backup.json.bak")).toBe("unsupported")
   })
 })
 

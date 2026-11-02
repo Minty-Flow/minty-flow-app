@@ -16,6 +16,11 @@ vi.mock("~/database/utils/import-snapshot", () => ({
     file.snapshot = null
   },
 }))
+vi.mock("~/stores/portable-settings", () => ({
+  readPortableSettings: () => ({}),
+  readBackupProfile: () => null,
+  profileImageForExport: () => null,
+}))
 vi.mock("expo-crypto", () => ({ randomUUID: () => "uuid" }))
 vi.mock("expo-document-picker", () => ({}))
 vi.mock("expo-file-system", () => ({

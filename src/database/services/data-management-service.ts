@@ -50,6 +50,7 @@ export {
   defaultExportBaseName,
   type ExportType,
   type MintyFlowBackup,
+  pickedFileKind,
   validateBackup,
 } from "~/database/backup/backup-format"
 
@@ -492,8 +493,14 @@ export async function pickBackupFile(): Promise<{
   uri: string
   name: string
 } | null> {
+  // ZIP and JSON only. The extension is checked again after the pick
+  // (pickedFileKind), because a file manager may hand back any file.
   const result = await DocumentPicker.getDocumentAsync({
-    type: "*/*",
+    type: [
+      "application/zip",
+      "application/x-zip-compressed",
+      "application/json",
+    ],
     copyToCacheDirectory: true,
   })
 
