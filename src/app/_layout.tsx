@@ -276,13 +276,15 @@ function AppRootLayout() {
                   options={{ title: t("screens.settings.preferences.title") }}
                 />
                 <Stack.Screen
-                  name="settings/data-management/index"
-                  options={{
-                    title: t("screens.settings.dataManagement.title"),
-                  }}
+                  name="settings/backup/index"
+                  options={{ title: t("screens.settings.backup.title") }}
                 />
                 <Stack.Screen
-                  name="settings/data-management/export-history"
+                  name="settings/restore/index"
+                  options={{ title: t("screens.settings.restore.title") }}
+                />
+                <Stack.Screen
+                  name="settings/backup/export-history"
                   options={{
                     title: t("screens.settings.dataManagement.history.title"),
                   }}

@@ -934,6 +934,12 @@
         "customBadge": "Custom",
         "originalRate": "Original: {{rate}}"
       },
+      "backup": {
+        "title": "Backup & export"
+      },
+      "restore": {
+        "title": "Restore & import"
+      },
       "dataManagement": {
         "title": "Data Management",
         "sections": {
