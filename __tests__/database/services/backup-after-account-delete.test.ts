@@ -42,6 +42,11 @@ vi.mock("react-native-zip-archive", () => ({
   zip: async () => {},
   unzip: async () => {},
 }))
+vi.mock("~/stores/portable-settings", () => ({
+  readPortableSettings: () => ({}),
+  readBackupProfile: () => null,
+  profileImageForExport: () => null,
+}))
 vi.mock("~/utils/attachments", () => ({
   attachmentsDirectory: () => ({ list: () => [] }),
 }))

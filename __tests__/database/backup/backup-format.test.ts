@@ -185,3 +185,76 @@ describe("normalizeColumnValue, dates", () => {
     expect(normalizeColumnValue("transaction_date", "nope")).toBe("nope")
   })
 })
+
+describe("settings and profile sections", () => {
+  const base = (extra: Record<string, unknown> = {}) =>
+    JSON.stringify({
+      meta: {
+        version: 1,
+        schemaVersion: SCHEMA_VERSION,
+        exportedAt: now,
+        appId: "minty-flow-app",
+      },
+      data: {
+        categories: [],
+        tags: [],
+        accounts: [],
+        recurring_transactions: [],
+        budgets: [],
+        goals: [],
+        loans: [],
+        transactions: [],
+        transfers: [],
+        transaction_tags: [],
+        budget_accounts: [],
+        budget_categories: [],
+        goal_accounts: [],
+      },
+      ...extra,
+    })
+
+  it("accepts a backup with neither section and adds nothing", () => {
+    const result = validateBackup(base())
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    expect("settings" in result.backup).toBe(false)
+    expect("profile" in result.backup).toBe(false)
+  })
+
+  it("accepts an older schema version without the sections", () => {
+    const old = JSON.parse(base())
+    old.meta.schemaVersion = 5
+    expect(validateBackup(JSON.stringify(old)).success).toBe(true)
+  })
+
+  it("keeps valid settings and the profile", () => {
+    const result = validateBackup(
+      base({
+        settings: { weekStart: { version: 0, state: { weekStart: "monday" } } },
+        profile: { name: "  Sam ", imageFile: "minty_profile_123.jpg" },
+      }),
+    )
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    expect(result.backup.settings?.weekStart.state).toEqual({
+      weekStart: "monday",
+    })
+    expect(result.backup.profile).toEqual({
+      name: "Sam",
+      imageFile: "minty_profile_123.jpg",
+    })
+  })
+
+  it("ignores unreadable sections without blocking the data import", () => {
+    const result = validateBackup(
+      base({
+        settings: "nope",
+        profile: { name: 5, imageFile: "../../etc/passwd" },
+      }),
+    )
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    expect("settings" in result.backup).toBe(false)
+    expect("profile" in result.backup).toBe(false)
+  })
+})
