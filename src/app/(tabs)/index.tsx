@@ -101,6 +101,7 @@ function HomeScreen() {
         filterState={filterState}
         searchState={searchState}
         showUpcoming
+        upcomingHorizonDays={homeTimeframe}
         ListHeaderComponent={summaryHeader}
       />
     </View>

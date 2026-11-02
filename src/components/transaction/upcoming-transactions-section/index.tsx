@@ -37,6 +37,7 @@ import { isUpcoming } from "./utils"
 export function UpcomingTransactionsSection({
   transactions,
   onTransactionPress,
+  horizonDays,
 }: UpcomingTransactionsSectionProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
@@ -53,7 +54,14 @@ export function UpcomingTransactionsSection({
   const upcoming = (() => {
     void autoConfirmVersion
     void foregroundVersion
-    return transactions.filter((r) => !r.isDeleted && isUpcoming(r))
+    const horizonMs =
+      horizonDays === undefined ? null : nowMs + horizonDays * 86_400_000
+    return transactions.filter(
+      (r) =>
+        !r.isDeleted &&
+        isUpcoming(r) &&
+        (horizonMs === null || r.transactionDate.getTime() <= horizonMs),
+    )
   })()
   const upcomingForDisplay = applyTransferLayout(upcoming, transferLayout)
   // Pure split for display. Auto-confirmation is owned entirely by

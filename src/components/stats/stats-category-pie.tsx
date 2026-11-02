@@ -265,7 +265,12 @@ export function StatsCategoryPie({
             {/* GestureDetector wraps only the chart area so touches outside
               the 200×200 canvas don't accidentally register as slice hits */}
             <View style={styles.chartWrapper}>
-              <Pressable onPress={handleChartPress} style={styles.pieContainer}>
+              <Pressable
+                onPress={handleChartPress}
+                style={styles.pieContainer}
+                disableRipple
+                iosPressFeedback={false}
+              >
                 <PolarChart
                   data={pieData}
                   labelKey="id"

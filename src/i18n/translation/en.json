@@ -510,12 +510,7 @@
         },
         "language": {
           "title": "Language",
-          "sectionLabel": "change language",
-          "restart": {
-            "title": "Restart to switch language",
-            "description": "This language reads in the other direction, so the app has to restart. Unsaved changes will be lost.",
-            "confirm": "Restart now"
-          }
+          "sectionLabel": "change language"
         },
         "transactionLocation": {
           "title": "Transaction Location Tracking",

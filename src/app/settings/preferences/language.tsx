@@ -1,8 +1,6 @@
-import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Platform, ScrollView } from "react-native"
 
-import { ConfirmSheet } from "~/components/confirm-sheet"
 import {
   SettingsOptionRow,
   SettingsSection,
@@ -36,8 +34,6 @@ export default function LanguageOptionsScreen() {
   const direction = useLanguageStore((s) => s.direction)
   const setLanguageCode = useLanguageStore((s) => s.setLanguageCode)
 
-  const [pendingCode, setPendingCode] = useState<LangCodeType | null>(null)
-
   const directionOf = (code: LangCodeType) =>
     code === LangCodeEnum.AR ? DirectionEnum.RTL : DirectionEnum.LTR
 
@@ -48,15 +44,6 @@ export default function LanguageOptionsScreen() {
     setLanguageCode(code)
     if (Platform.OS === "web" || directionOf(code) === direction) return
     await reloadApp()
-  }
-
-  const handleSelectLanguage = async (code: LangCodeType) => {
-    // A direction change restarts the app: ask first, it drops unsaved work.
-    if (Platform.OS !== "web" && directionOf(code) !== direction) {
-      setPendingCode(code)
-      return
-    }
-    await applyLanguage(code)
   }
 
   return (
@@ -74,24 +61,10 @@ export default function LanguageOptionsScreen() {
             key={option.value}
             label={option.label}
             selected={languageCode === option.value}
-            onPress={() => handleSelectLanguage(option.value)}
+            onPress={() => applyLanguage(option.value)}
           />
         ))}
       </SettingsSection>
-      <ConfirmSheet
-        visible={pendingCode !== null}
-        onRequestClose={() => setPendingCode(null)}
-        onConfirm={() => (pendingCode ? applyLanguage(pendingCode) : undefined)}
-        title={t("screens.settings.preferences.language.restart.title")}
-        description={t(
-          "screens.settings.preferences.language.restart.description",
-        )}
-        confirmLabel={t(
-          "screens.settings.preferences.language.restart.confirm",
-        )}
-        cancelLabel={t("common.actions.cancel")}
-        icon="refresh-outline"
-      />
     </ScrollView>
   )
 }
