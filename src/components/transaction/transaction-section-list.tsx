@@ -37,6 +37,7 @@ import {
   PendingOptionsEnum,
 } from "~/types/transaction-filters"
 import {
+  applyFiltersAndSearch,
   applyPendingFilter,
   applySearch,
   applyTransactionFilters,
@@ -111,6 +112,11 @@ export function TransactionSectionList({
   const allTimeLabel = t("components.filters.groupByOptions.allTime")
   // Recurring instances render in the upcoming section, never the main list.
   // Pending visibility follows the pending filter; structural filters apply on top.
+  // Upcoming follows the structural filters and search, like the main list.
+  const upcomingSource = useMemo(
+    () => applyFiltersAndSearch(transactionsFull, filterState, searchState),
+    [transactionsFull, filterState, searchState],
+  )
   const sections = useMemo(() => {
     const withoutRecurring = transactionsFull.filter(
       (r) => r.recurringId == null,
@@ -150,7 +156,7 @@ export function TransactionSectionList({
         ))}
       {upcomingVisible && (
         <UpcomingTransactionsSection
-          transactions={transactionsFull}
+          transactions={upcomingSource}
           onTransactionPress={handleOnTransactionPress}
           horizonDays={upcomingHorizonDays}
         />

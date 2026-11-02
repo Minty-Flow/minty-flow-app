@@ -147,7 +147,8 @@
     "home": {
       "summary": {
         "income": "Income",
-        "expense": "Expense"
+        "expense": "Expense",
+        "filtered": "Totals cover the filtered transactions"
       },
       "upcoming": {
         "header": "Upcoming",
