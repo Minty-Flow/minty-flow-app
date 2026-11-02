@@ -76,6 +76,7 @@ Generated on: 2026-11-02T20:25:51.990Z
 │       ├── local-day-key.test.ts
 │       ├── money.test.ts
 │       ├── planning-progress.test.ts
+│       ├── profile-image.test.ts
 │       ├── recurrence.test.ts
 │       ├── stats-date-range.test.ts
 │       ├── timestamp-scheduler.test.ts
@@ -592,6 +593,7 @@ Generated on: 2026-11-02T20:25:51.990Z
 │   │   ├── use-notification-sync.ts
 │   │   ├── use-permission-status.ts
 │   │   ├── use-preferred-currency-sync.ts
+│   │   ├── use-profile-image.ts
 │   │   ├── use-recurring-rule.ts
 │   │   ├── use-retention-cleanup.ts
 │   │   ├── use-scroll-into-view.ts
@@ -696,6 +698,7 @@ Generated on: 2026-11-02T20:25:51.990Z
 │       ├── parse-math-expression.ts
 │       ├── pending-transactions.ts
 │       ├── planning-progress.ts
+│       ├── profile-image.ts
 │       ├── recurrence.ts
 │       ├── reload-app.ts
 │       ├── stats-date-range.ts

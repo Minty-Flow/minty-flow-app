@@ -5,13 +5,14 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { useProfileImage } from "~/hooks/use-profile-image"
 import { useProfileStore } from "~/stores/profile.store"
 import { getInitials } from "~/utils/string-utils"
 
 export const ProfileSection = () => {
   const router = useRouter()
   const name = useProfileStore((s) => s.name)
-  const imageUri = useProfileStore((s) => s.imageUri)
+  const imageUri = useProfileImage()
 
   const { theme } = useUnistyles()
 
