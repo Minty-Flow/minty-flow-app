@@ -12,6 +12,10 @@ import {
 } from "~/database/drizzle/schema"
 import { type DbTransaction, runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
+import {
+  attachmentFilesFromExtra,
+  deleteAttachmentFiles,
+} from "~/database/utils/attachment-files"
 import { generateId } from "~/database/utils/generate-id"
 import { getBalanceDelta } from "~/database/utils/get-balance-delta"
 import { hasAttachmentsFromExtra } from "~/database/utils/has-attachments-from-extra"
@@ -257,7 +261,7 @@ function restoreTransferById(txId: string, db: Db): void {
   }
 }
 
-function destroyTransferById(txId: string, db: Db): void {
+function destroyTransferById(txId: string, db: Db, files?: Set<string>): void {
   const legs = getTransferLegs(txId, db)
 
   for (const leg of legs) {
@@ -278,6 +282,7 @@ function destroyTransferById(txId: string, db: Db): void {
   }
 
   for (const leg of legs) {
+    for (const f of attachmentFilesFromExtra(leg.extra)) files?.add(f)
     db.delete(transactionTags)
       .where(eq(transactionTags.transactionId, leg.id))
       .run()
@@ -1144,13 +1149,31 @@ export async function restoreTransaction(id: string): Promise<void> {
 
 // ── Permanent Destroy ─────────────────────────────────────────────────────────
 
+/**
+ * Run a permanent delete and, once it has committed, remove the attachment
+ * files of every row it destroyed. Deleting before the commit would lose files
+ * a rolled-back delete still references. The set de-duplicates a retried run.
+ */
+async function destroyingTransactions(
+  name: string,
+  fn: (db: DbTransaction, files: Set<string>) => void,
+): Promise<void> {
+  const files = new Set<string>()
+  await runInTransaction(name, (db) => fn(db, files))
+  await deleteAttachmentFiles(files)
+}
+
 export async function destroyTransaction(id: string): Promise<void> {
-  await runInTransaction("transaction.destroy", (db) =>
-    destroyTransactionInTx(db, id),
+  await destroyingTransactions("transaction.destroy", (db, files) =>
+    destroyTransactionInTx(db, id, files),
   )
 }
 
-function destroyTransactionInTx(db: DbTransaction, id: string): void {
+function destroyTransactionInTx(
+  db: DbTransaction,
+  id: string,
+  files: Set<string>,
+): void {
   const now = new Date().toISOString()
 
   const tx = requireTx(db, id)
@@ -1166,7 +1189,7 @@ function destroyTransactionInTx(db: DbTransaction, id: string): void {
     )
     .get()
   if (transferPartner) {
-    destroyTransferById(tx.id, db)
+    destroyTransferById(tx.id, db, files)
     return
   }
 
@@ -1200,6 +1223,7 @@ function destroyTransactionInTx(db: DbTransaction, id: string): void {
       .run()
   }
 
+  for (const f of attachmentFilesFromExtra(tx.extra)) files.add(f)
   db.delete(transactions).where(eq(transactions.id, id)).run()
 }
 
@@ -1533,25 +1557,29 @@ function withoutAttachments(
  * Destroying one leg of a transfer hard-deletes both, so in a batch the second
  * leg's id may already be gone. Skip it instead of failing the whole batch.
  */
-function destroyTransactionIfPresent(db: DbTransaction, id: string): void {
+function destroyTransactionIfPresent(
+  db: DbTransaction,
+  id: string,
+  files: Set<string>,
+): void {
   const exists = db
     .select({ id: transactions.id })
     .from(transactions)
     .where(eq(transactions.id, id))
     .get()
-  if (exists) destroyTransactionInTx(db, id)
+  if (exists) destroyTransactionInTx(db, id, files)
 }
 
 export async function destroyAllDeletedTransactions(): Promise<void> {
   // Select inside the write transaction: a restore queued after the read would
   // otherwise be hard-deleted.
-  await runInTransaction("trash.destroyAll", (db) => {
+  await destroyingTransactions("trash.destroyAll", (db, files) => {
     const deleted = db
       .select(txSelection)
       .from(transactions)
       .where(eq(transactions.isDeleted, 1))
       .all()
-    for (const tx of deleted) destroyTransactionIfPresent(db, tx.id)
+    for (const tx of deleted) destroyTransactionIfPresent(db, tx.id, files)
   })
 }
 
@@ -1564,7 +1592,7 @@ export async function autoPurgeTrash(retentionValue: string): Promise<void> {
   let toPurge: RowTransaction[] = []
 
   try {
-    await runInTransaction("trash.autoPurge", (db) => {
+    await destroyingTransactions("trash.autoPurge", (db, files) => {
       // Read inside the transaction so a concurrent restore is not purged.
       toPurge = db
         .select(txSelection)
@@ -1576,7 +1604,7 @@ export async function autoPurgeTrash(retentionValue: string): Promise<void> {
           ),
         )
         .all()
-      for (const tx of toPurge) destroyTransactionIfPresent(db, tx.id)
+      for (const tx of toPurge) destroyTransactionIfPresent(db, tx.id, files)
     })
     return
   } catch (err) {
@@ -1588,8 +1616,8 @@ export async function autoPurgeTrash(retentionValue: string): Promise<void> {
   // One bad row rolled the batch back; isolate it so the rest still purge.
   for (const tx of toPurge) {
     try {
-      await runInTransaction("trash.autoPurgeRow", (db) =>
-        destroyTransactionIfPresent(db, tx.id),
+      await destroyingTransactions("trash.autoPurgeRow", (db, files) =>
+        destroyTransactionIfPresent(db, tx.id, files),
       )
     } catch (err) {
       logger.error("[autoPurgeTrash] failed to destroy transaction", {

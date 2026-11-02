@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-02T20:27:57.370Z
+Generated on: 2026-11-02T20:25:51.990Z
 ```
 ./
 ├── __tests__/
@@ -36,9 +36,11 @@ Generated on: 2026-11-02T20:27:57.370Z
 │   │   │   ├── delete-recurring-keep-paid.test.ts
 │   │   │   ├── destroy-account-transfer-partner.test.ts
 │   │   │   ├── destroy-account-with-loans.test.ts
+│   │   │   ├── destroy-attachment-files.test.ts
 │   │   │   ├── detach-transfer-from-rule.test.ts
 │   │   │   ├── edit-transfer-validation.test.ts
 │   │   │   ├── empty-trash.test.ts
+│   │   │   ├── import-recovery.test.ts
 │   │   │   ├── loan-hold-guard.test.ts
 │   │   │   ├── loan-type-switch.test.ts
 │   │   │   ├── pending-transfer.test.ts
@@ -77,7 +79,8 @@ Generated on: 2026-11-02T20:27:57.370Z
 │       ├── profile-image.test.ts
 │       ├── recurrence.test.ts
 │       ├── stats-date-range.test.ts
-│       └── timestamp-scheduler.test.ts
+│       ├── timestamp-scheduler.test.ts
+│       └── transaction-list-filters.test.ts
 ├── .github/
 │   └── workflows/
 │       ├── board-sync.yml
@@ -529,7 +532,8 @@ Generated on: 2026-11-02T20:27:57.370Z
 │   ├── database/
 │   │   ├── backup/
 │   │   │   ├── backup-format.ts
-│   │   │   └── backup-import-plan.ts
+│   │   │   ├── backup-import-plan.ts
+│   │   │   └── import-marker.ts
 │   │   ├── drizzle/
 │   │   │   ├── read-models/
 │   │   │   │   ├── account-read-model.ts
@@ -563,6 +567,7 @@ Generated on: 2026-11-02T20:27:57.370Z
 │   │   ├── types/
 │   │   │   └── rows.ts
 │   │   ├── utils/
+│   │   │   ├── attachment-files.ts
 │   │   │   ├── generate-id.ts
 │   │   │   ├── get-balance-delta.ts
 │   │   │   ├── has-attachments-from-extra.ts

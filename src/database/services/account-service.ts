@@ -13,6 +13,10 @@ import {
 } from "~/database/drizzle/schema"
 import { createTransactionInTx } from "~/database/services/ledger-service"
 import { runInTransaction } from "~/database/transaction"
+import {
+  attachmentFilesFromExtra,
+  deleteAttachmentFiles,
+} from "~/database/utils/attachment-files"
 import { generateId } from "~/database/utils/generate-id"
 import { disableRecurringRulesForAccount } from "~/database/utils/recurring-template-refs"
 import i18n from "~/i18n/config"
@@ -190,6 +194,7 @@ export class AccountHasLoansError extends Error {
 
 export async function destroyAccount(id: string): Promise<void> {
   const now = new Date().toISOString()
+  const files = new Set<string>()
 
   await runInTransaction("account.destroy", (db) => {
     // Loans owned by the account, plus any loan that has a row on it (a
@@ -335,6 +340,9 @@ export async function destroyAccount(id: string): Promise<void> {
     }
 
     if (txs.length > 0) {
+      for (const tx of txs) {
+        for (const f of attachmentFilesFromExtra(tx.extra)) files.add(f)
+      }
       db.delete(transactionTags)
         .where(inArray(transactionTags.transactionId, allTxIds))
         .run()
@@ -368,6 +376,9 @@ export async function destroyAccount(id: string): Promise<void> {
     db.delete(goalAccounts).where(eq(goalAccounts.accountId, id)).run()
     db.delete(accounts).where(eq(accounts.id, id)).run()
   })
+
+  // After the commit: a rolled-back destroy must keep its files.
+  await deleteAttachmentFiles(files)
 }
 
 // ── Reorder ───────────────────────────────────────────────────────────────────

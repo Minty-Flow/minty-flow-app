@@ -56,6 +56,9 @@ export function useFormAttachments(
     }),
   )
   const removedUris = useRef<string[]>([])
+  // Files copied into storage during this session. Until the form saves they
+  // belong to no row, so discarding the form must delete them.
+  const addedUris = useRef<string[]>([])
   /**
    * §3.4a: mirrors the attachment list into the registered `attachments` field
    * so react-hook-form sees the change — Save re-enables and the back-guard
@@ -79,6 +82,7 @@ export function useFormAttachments(
           uri: resolveAttachmentUri(await persistAttachment(a.uri, a.name)),
         })),
       )
+      addedUris.current.push(...persisted.map((a) => a.uri))
       const next = [...attachmentState.list, ...persisted]
       setAttachmentState({ list: next })
       mirrorListToForm(next)
@@ -103,6 +107,16 @@ export function useFormAttachments(
   const flushRemovedAttachments = () => {
     for (const uri of removedUris.current) deleteAttachmentFile(uri)
     removedUris.current = []
+    // Saved: the new files now belong to the transaction.
+    addedUris.current = []
+  }
+  /**
+   * Deletes the files added during this session. Call when the form is
+   * discarded without saving, so an abandoned form leaves nothing behind.
+   */
+  const discardAddedAttachments = () => {
+    for (const uri of addedUris.current) deleteAttachmentFile(uri)
+    addedUris.current = []
   }
   const handleSelectFromFiles = async () => {
     try {
@@ -231,6 +245,7 @@ export function useFormAttachments(
     setAttachmentState,
     removeAttachment,
     flushRemovedAttachments,
+    discardAddedAttachments,
     handleSelectFromFiles,
     handleTakePhoto: guarded(takePhoto),
     handleSelectMultipleMedia: guarded(selectMultipleMedia),
