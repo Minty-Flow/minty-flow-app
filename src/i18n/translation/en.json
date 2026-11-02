@@ -4,7 +4,6 @@
       "failed": "Database migration failed. Restart the app or recover from backup.",
       "preparing": "Preparing database..."
     },
-    "failedToOpenLink": "Failed to open browser",
     "actions": {
       "save": "Save",
       "cancel": "Cancel",
@@ -22,13 +21,18 @@
       "saving": "Saving...",
       "create": "Create",
       "saveChanges": "Save Changes",
-      "discard": "Discard"
+      "discard": "Discard",
+      "previous": "Previous",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "undo": "Undo"
     },
     "states": {
       "soon": "Soon"
     },
     "errorBoundary": {
-      "title": "Something went wrong"
+      "title": "Something went wrong",
+      "goHome": "Go to Home"
     },
     "preUpdateBackup": {
       "checking": "Checking your data...",
@@ -40,7 +44,8 @@
       "failed": "Couldn't save the backup. Try again."
     },
     "appLock": {
-      "tapToUnlock": "Tap to unlock"
+      "tapToUnlock": "Tap to unlock",
+      "unlockPrompt": "Unlock {{name}}."
     },
     "developmentNotice": {
       "title": "A quick note",
@@ -77,9 +82,7 @@
       },
       "tabs": {
         "lent": "Lent",
-        "borrowed": "Borrowed",
-        "paid": "Paid",
-        "collected": "Collected"
+        "borrowed": "Borrowed"
       },
       "kinds": {
         "default": "Standard",
@@ -106,7 +109,8 @@
       "goal": "Goal not found.",
       "loan": "Loan not found.",
       "tag": "Tag not found."
-    }
+    },
+    "privacyToggle": "Hide amounts"
   },
   "navigation": {
     "tabs": {
@@ -123,7 +127,8 @@
     }
   },
   "profile": {
-    "greeting": "Hi",
+    "greeting": "Hi!",
+    "greetingWithName": "Hi, {{name}}!",
     "edit": {
       "title": "Edit Profile",
       "nameLabel": "Name",
@@ -156,7 +161,8 @@
           "sheetDescription": "All transactions awaiting confirmation will be confirmed. This cannot be undone."
         },
         "chips": {
-          "daysCount": "Next {{count}} day(s)"
+          "daysCount_one": "Next {{count}} day",
+          "daysCount_other": "Next {{count}} days"
         },
         "a11y": {
           "header": "Upcoming",
@@ -167,7 +173,8 @@
         }
       },
       "emptyState": {
-        "title": "No transactions yet"
+        "title": "No transactions yet",
+        "addFirst": "Add a transaction"
       }
     },
     "accounts": {
@@ -198,6 +205,7 @@
         "namePlaceholder": "Account name",
         "placeholder": "Checking, Savings, etc.",
         "initialBalance": "Initial balance",
+        "currentBalance": "Current balance",
         "excludeFromBalanceLabel": "Exclude from balance",
         "primaryAccountLabel": "Primary account",
         "primaryAccountHint": "This account will be used as the default account for new transactions and other actions.",
@@ -230,10 +238,8 @@
         "title": "Account Details"
       },
       "a11y": {
-        "clear": "Clear account",
         "select": "Select account",
         "selectTo": "Select to account",
-        "clearTo": "Clear to account",
         "add": "Add account",
         "searchPlaceholder": "Search accounts..."
       }
@@ -269,9 +275,7 @@
         "other": "Other",
         "fromBalance": "From balance",
         "savedNode": "Saved",
-        "averagesByDay": "Averages, by day",
-        "toReserves": "To reserves",
-        "fromReserves": "From reserves"
+        "averagesByDay": "Averages, by day"
       },
       "categories": {
         "title": "Categories",
@@ -292,8 +296,7 @@
         "vsAvg": "3-month average:",
         "frequentSentence": "You logged \"{{title}}\" {{count}} times",
         "rhythmSentence": "Your priciest day is {{day}}",
-        "shapeSentence": "Half your purchases are under",
-        "shapeSupport": "Median of {{count}} expenses"
+        "shapeSentence": "Half your purchases are under"
       },
       "netWorth": {
         "title": "Net worth",
@@ -306,29 +309,18 @@
         "more": "More"
       },
       "currency": {
-        "sectionHeader": "{{currency}}",
         "showing": "Showing {{currency}}",
         "tapToSwitch": "Tap to switch"
       },
-      "hero": {
-        "totalExpense": "Total Expense",
-        "totalIncome": "Total Income",
-        "netFlow": "Net Flow",
-        "transactionCount": "{{count}} txn",
-        "onPaceFor": "On pace for ~{{amount}}"
-      },
       "averages": {
-        "title": "Daily Averages",
         "expense": "Avg. Expense",
         "income": "Avg. Income",
         "net": "Avg. Net"
       },
       "chart": {
-        "dailyTrend": "Daily Trend",
         "spendingByCategory": "Spending by Category",
         "uncategorizedLabel": "Uncategorized",
-        "prevPeriod": "Previous",
-        "currentPeriod": "This month"
+        "otherLabel": "Other"
       },
       "pieToggle": {
         "expenses": "Expenses",
@@ -343,12 +335,8 @@
         "noTransactionsEver": "No transactions yet",
         "addFirst": "Add your first transaction"
       },
-      "pendingNotice": "{{count}} scheduled transactions excluded from stats",
-      "balance": {
-        "title": "Net Balance",
-        "opening": "Opening",
-        "closing": "Closing"
-      },
+      "pendingNotice_one": "{{count}} scheduled transaction excluded from stats",
+      "pendingNotice_other": "{{count}} scheduled transactions excluded from stats",
       "delta": {
         "notAvailable": "N/A"
       }
@@ -475,6 +463,7 @@
           "title": "Calendar formatting",
           "clock": {
             "label": "Clock format",
+            "auto": "Device default",
             "12h": "12-hour",
             "24h": "24-hour"
           },
@@ -546,25 +535,26 @@
         "retention": {
           "title": "Retention Period",
           "description": "Automatically clear deleted items after a set period",
-          "daysCount": "{{count}} day",
-          "daysCountPlural": "{{count}} days",
+          "daysCount_one": "{{count}} day",
+          "daysCount_other": "{{count}} days",
           "forever": "Forever"
         },
         "empty": {
           "noTransactions": "No deleted transactions",
-          "label": "Empty trash bin",
           "sheet": {
             "title": "Empty Trash",
-            "description": "All items in the trash will be permanently deleted. This action cannot be undone.",
             "confirm": "Empty Trash",
-            "cancel": "Cancel"
+            "cancel": "Cancel",
+            "description_one": "This permanently deletes {{count}} item from every month. This action cannot be undone.",
+            "description_other": "This permanently deletes {{count}} items from every month. This action cannot be undone."
           },
           "toast": {
             "successTitle": "Trash Emptied",
             "successDescription": "Your trash has been cleared.",
             "errorTitle": "Cleanup Failed",
             "errorDescription": "An unexpected error occurred. Please try again."
-          }
+          },
+          "a11y": "Empty trash"
         },
         "swipeInfo": {
           "title": "Swipe Gestures",
@@ -575,7 +565,8 @@
           "destroyPermanently": "Destroy permanently",
           "moveToTrash": "Move to trash",
           "infoButton": "Swipe gesture help"
-        }
+        },
+        "settingsTitle": "Trash settings"
       },
       "pending": {
         "title": "Scheduled Transactions",
@@ -630,8 +621,10 @@
           "saved": "Saved",
           "spent": "Spent",
           "of": "of",
-          "daysLeft": "{{count}} days left",
-          "overdue": "Overdue by {{count}} days",
+          "daysLeft_one": "{{count}} day left",
+          "daysLeft_other": "{{count}} days left",
+          "overdue_one": "Overdue by {{count}} day",
+          "overdue_other": "Overdue by {{count}} days",
           "noDeadline": "No deadline",
           "allAccounts": "All Accounts",
           "archived": "Archived",
@@ -646,7 +639,7 @@
           "insight": {
             "savePerDay": "Save {{amount}}/day to hit it",
             "spendPerDay": "Spend {{amount}}/day to hit it",
-            "goalReached": "🎉 Goal reached"
+            "goalReached": "Goal reached"
           }
         },
         "detail": {
@@ -711,7 +704,6 @@
           "needsCategory": "Needs a category",
           "dayOf": "day {{current}}/{{total}}",
           "dayXofY": "Day {{current}} of {{total}}",
-          "uncategorized": "Uncategorized",
           "status": {
             "onTrack": "On track",
             "watch": "Watch",
@@ -774,7 +766,6 @@
           "longTerm": "Long term"
         },
         "card": {
-          "paid": "Paid",
           "paidBack": "Paid back",
           "received": "Received",
           "of": "of",
@@ -817,7 +808,8 @@
         },
         "initialTransaction": {
           "title": "Loan: {{name}}"
-        }
+        },
+        "editTitle": "Edit Loan"
       },
       "tags": {
         "title": "Tags",
@@ -877,7 +869,8 @@
           "empty": {
             "title": "No Items",
             "description": "Tap the + button to add an item to split."
-          }
+          },
+          "removed": "Item removed"
         },
         "item": {
           "name": "Item Name",
@@ -894,7 +887,9 @@
           "empty": {
             "title": "No Participants",
             "description": "Add people to split the bill with."
-          }
+          },
+          "count_one": "{{count}} participant",
+          "count_other": "{{count}} participants"
         },
         "summary": {
           "title": "Summary",
@@ -918,7 +913,6 @@
       "exchangeRates": {
         "title": "Exchange Rates",
         "apiTitleSecondary": "Crypto and other rates",
-        "loading": "Loading exchange rates…",
         "searchPlaceholder": "Search currencies...",
         "instructionCaption": "Select an entry to set a custom exchange rate. Note: All exchange rate calculations use USD as a reference.",
         "infoSheet": {
@@ -928,10 +922,8 @@
           "sources": "Sources"
         },
         "errors": {
-          "invalidRate": "Rate must be greater than 0",
           "invalidCurrencyCode": "Invalid currency code. Please use a valid ISO 4217 currency code.",
           "fetchFailed": "Failed to fetch exchange rates. Please check your connection and try again.",
-          "invalidData": "Invalid exchange rate data. Please try again later.",
           "usingCachedRates": "Using cached exchange rates. Rates may be outdated.",
           "rateNotFound": "Exchange rate not found. Please try again or set a custom rate in Settings."
         },
@@ -969,7 +961,7 @@
         "importValidationError": "Invalid JSON backup file",
         "importConfirm": {
           "title": "Overwrite all data?",
-          "warning": "Everything currently in the app will be erased and replaced with the contents of the file you selected. This cannot be undone.",
+          "warning": "Everything currently in the app will be erased and replaced with the contents of the file you selected. This cannot be undone. To keep a copy of your current data, cancel and export a backup first.",
           "recordSummary": "{{count}} records across {{tables}} tables",
           "confirm": "Overwrite",
           "cancel": "Cancel"
@@ -1019,7 +1011,7 @@
         "remindAt": "Remind me at",
         "footerCaption": "Reminders will stop if you don't open the app for 7 consecutive days",
         "notification": {
-          "title": "Time for a check-in! 🍃",
+          "title": "Time for a check-in!",
           "body": "Don't forget to log your transactions for today."
         },
         "a11y": {
@@ -1061,11 +1053,8 @@
       },
       "notFoundTransaction": "Transaction not found.",
       "searchTags": "Search tags...",
-      "createNewTag": "New tag",
       "selectTags": "Select tags",
-      "clearSelection": "Clear selection",
       "kind": {
-        "label": "Kind",
         "info": {
           "a11yOpen": "About transaction types",
           "title": "Transaction types",
@@ -1096,20 +1085,8 @@
         "convertedAmountLabel": "Converted amount",
         "notes": "Notes",
         "notesPlaceholder": "Add notes about this transaction...",
-        "transactionDate": "Transaction date",
-        "fileAttachments": "File attachments",
-        "conversion": "Conversion",
         "conversionRate": "Rate",
-        "category": "Category",
-        "account": "Account",
-        "toAccount": "To Account",
-        "tags": "Tags",
-        "goal": "Goal",
-        "budget": "Budget",
-        "loan": "Loan",
-        "clear": "Clear",
         "addCategories": "categories",
-        "now": "Now",
         "pending": "Pending",
         "pendingHintOn": "The amount won't be deducted from your account until the transaction date arrives.",
         "pendingHintOff": "The amount will be deducted from your account right away, even though it's dated in the future.",
@@ -1117,9 +1094,15 @@
         "addNotes": "Add notes...",
         "moveToTrash": "Move to trash",
         "restore": "Restore",
-        "location": "Location",
         "refundLabel": "Refund",
-        "deleteLoan": "Delete loan"
+        "deleteLoan": "Delete loan",
+        "notesToolbar": {
+          "bold": "Bold",
+          "italic": "Italic",
+          "bulletList": "Bulleted list",
+          "numberedList": "Numbered list",
+          "checklist": "Checklist"
+        }
       },
       "recurrence": {
         "every": "Repeat every",
@@ -1228,24 +1211,15 @@
       },
       "a11y": {
         "closePreview": "Close preview",
-        "selectedSuffix": ", selected",
         "openNotesEditor": "Open notes editor",
-        "setDateTimeNow": "Set date and time to now",
-        "clearCategory": "Clear category",
         "addCategories": "Add categories",
         "selectCategory": "Select {{name}} category",
-        "clearGoal": "Clear goal",
-        "clearBudget": "Clear budget",
-        "clearLoan": "Clear loan",
-        "clearAllTags": "Clear all tags",
         "addTag": "Add tag",
         "noTagsFound": "No tags found",
-        "allTagsSelected": "All tags selected",
         "amountInput": "Amount input"
       },
       "loan": {
-        "nameLabel": "Loan name",
-        "dueDateLabel": "Due date"
+        "nameLabel": "Loan name"
       },
       "deleteLoanSheet": {
         "title": "Delete this loan?",
@@ -1311,7 +1285,8 @@
           "hygiene": "Hygiene",
           "travel": "Travel",
           "hobbies": "Hobbies",
-          "beauty": "Beauty"
+          "beauty": "Beauty",
+          "donations": "Donations"
         },
         "income": {
           "paycheck": "Paycheck",
@@ -1324,14 +1299,14 @@
           "allowance": "Allowance",
           "gifts": "Gifts received",
           "cashback": "Cashback & Refunds",
-          "pension": "Pension"
+          "pension": "Pension",
+          "refunds": "Refunds"
         },
         "essentials": "Essentials",
         "packsTitle": "Fits your life",
         "packsHint": "Add a few extras that match your situation.",
         "addPack": "Add all",
-        "removePack": "Remove",
-        "packs": {}
+        "removePack": "Remove"
       },
       "search": {
         "placeholder": "Search {{tab}} categories..."
@@ -1341,8 +1316,12 @@
         "income": "Income"
       },
       "actions": {
-        "addNew": "Add New Category",
-        "addFromPresets": "Add From Presets"
+        "addNew": "Add New Category"
+      },
+      "sheet": {
+        "title": "Add category",
+        "createOwn": "Create your own",
+        "orPick": "or pick ready-made"
       },
       "form": {
         "title": {
@@ -1383,6 +1362,7 @@
       }
     },
     "filters": {
+      "toggle": "Filters",
       "searchPlaceholder": "Search by title...",
       "clearAll": "Clear all",
       "includeNotes": "Include notes",
@@ -1504,7 +1484,6 @@
       "currency": {
         "title": "Select a currency",
         "triggerLabel": "Currency",
-        "searchPlaceholder": "Search currencies...",
         "noCurrenciesFound": "No currencies found",
         "cryptocurrency": "Cryptocurrency",
         "searchPlaceholderEx": "Search... (country, currency, code)"
@@ -1513,12 +1492,16 @@
     "transactionItem": {
       "recurring": "Recurring",
       "upcoming": "Upcoming",
-      "canceled": "Transaction canceled",
-      "failedToDelete": "Failed to delete"
+      "failedToDelete": "Failed to delete",
+      "movedToTrash": "Moved to trash",
+      "failedToRestore": "Failed to restore"
     },
     "transactionList": {
       "emptyDescription": "Transactions for this period will appear here",
-      "transactionCount": "• {{count}} transactions"
+      "transactionCount_one": "• {{count}} transaction",
+      "transactionCount_other": "• {{count}} transactions",
+      "noMatches": "No matching transactions",
+      "noMatchesDescription": "Change or clear your filters to see more."
     },
     "categoryRow": {
       "transactionCount_one": "{{count}} transaction",
@@ -1535,7 +1518,9 @@
       "createAccount": "Create an account",
       "noAccountsForCurrency": "No accounts for this currency",
       "accountsClearedTitle": "Accounts cleared",
-      "accountsClearedDescription": "Selected accounts were removed because they don't match {{currency}}."
+      "accountsClearedDescription": "Selected accounts were removed because they don't match {{currency}}.",
+      "accountCount_one": "{{count}} account",
+      "accountCount_other": "{{count}} accounts"
     },
     "accountPicker": {
       "noResults": "No accounts found"
@@ -1576,7 +1561,11 @@
       "negative": "Initial balance cannot be negative"
     },
     "endDate": {
-      "requiredForCustom": "End date is required for custom period"
+      "requiredForCustom": "End date is required for custom period",
+      "beforeStart": "End date cannot be before the start date"
+    },
+    "alertThreshold": {
+      "range": "Alert threshold must be between 1 and 100"
     },
     "transaction": {
       "kindTypeMismatch": "This type is not allowed for the selected kind"
@@ -1614,7 +1603,9 @@
         "main": "Main",
         "cash": "Cash",
         "savings": "Savings"
-      }
+      },
+      "createFailed": "Couldn't create your accounts. Try again.",
+      "pickOne": "Pick at least one account to continue"
     },
     "expenseCategories": {
       "title": "Expense categories",

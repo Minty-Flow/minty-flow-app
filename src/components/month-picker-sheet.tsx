@@ -91,6 +91,7 @@ function MonthPickerSheetInner({
               size="icon"
               hitSlop={8}
               onPress={() => changeYear(clampYear(draftYear - 1))}
+              accessibilityLabel={t("common.actions.previous")}
             >
               <ChevronIcon direction="leading" size={24} />
             </Button>
@@ -106,6 +107,7 @@ function MonthPickerSheetInner({
               hitSlop={8}
               disabled={!allowFuture && draftYear >= currentYear}
               onPress={() => changeYear(clampYear(draftYear + 1))}
+              accessibilityLabel={t("common.actions.next")}
             >
               <ChevronIcon direction="trailing" size={24} />
             </Button>

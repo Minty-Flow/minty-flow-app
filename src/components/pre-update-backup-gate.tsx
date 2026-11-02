@@ -14,7 +14,6 @@ import { hasPendingMigrationsWithData } from "~/database/pending-migrations"
 import { saveZipToDevice } from "~/database/services/data-management-service"
 import { useAppLockStore } from "~/stores/app-lock.store"
 import { logger } from "~/utils/logger"
-import { Toast } from "~/utils/toast"
 
 import migrations from "../../drizzle/migrations"
 
@@ -23,6 +22,8 @@ type Phase = "checking" | "prompt" | "ready"
 export function PreUpdateBackupGate({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
   const [phase, setPhase] = useState<Phase>("checking")
+  // Toasts are not mounted yet at this point, so a failure is shown in the sheet.
+  const [failed, setFailed] = useState(false)
   // Reading the store forces its synchronous MMKV rehydration before the
   // export below, so a lazy load can't let an unauthenticated export through.
   const lockAppEnabled = useAppLockStore((s) => s.lockAppEnabled)
@@ -50,11 +51,12 @@ export function PreUpdateBackupGate({ children }: { children: ReactNode }) {
       const saved = await saveZipToDevice("minty-flow-before-update")
       // Cancelling the save dialog keeps the prompt open.
       if (saved.savedToDevice) setPhase("ready")
+      setFailed(false)
     } catch (error) {
       logger.error("Pre-update backup failed", {
         error: error instanceof Error ? error.message : String(error),
       })
-      Toast.error({ title: t("common.preUpdateBackup.failed") })
+      setFailed(true)
     }
   }
 
@@ -72,7 +74,11 @@ export function PreUpdateBackupGate({ children }: { children: ReactNode }) {
         icon="archive"
         title={t("common.preUpdateBackup.title")}
         description={t("common.preUpdateBackup.description")}
-        note={t("common.preUpdateBackup.note")}
+        note={
+          failed
+            ? t("common.preUpdateBackup.failed")
+            : t("common.preUpdateBackup.note")
+        }
         confirmLabel={t("common.preUpdateBackup.saveBackup")}
         cancelLabel={t("common.preUpdateBackup.continueWithout")}
       />

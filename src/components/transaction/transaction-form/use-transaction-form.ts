@@ -703,8 +703,20 @@ export function useTransactionForm({
         : deleteTransaction(transaction.id)
     promise
       .then(() => {
+        const trashedId = transaction.id
         Toast.success({
           title: t("components.transactionForm.toast.movedToTrash"),
+          action: {
+            label: t("common.actions.undo"),
+            onPress: () => {
+              restoreTransaction(trashedId).catch((error) => {
+                logger.error("Failed to undo delete", { error })
+                Toast.error({
+                  title: t("components.transactionItem.failedToRestore"),
+                })
+              })
+            },
+          },
         })
         allowNavigation()
         router.back()
@@ -842,6 +854,10 @@ export function useTransactionForm({
   const accountError = accountErrorKey
     ? t(accountErrorKey as TranslationKey)
     : undefined
+  const toAccountErrorKey = errors.toAccountId?.message
+  const toAccountError = toAccountErrorKey
+    ? t(toAccountErrorKey as TranslationKey)
+    : undefined
 
   return {
     // form primitives
@@ -899,6 +915,7 @@ export function useTransactionForm({
     descriptionErrorKey,
     amountError,
     accountError,
+    toAccountError,
 
     // overlays
     overlays,

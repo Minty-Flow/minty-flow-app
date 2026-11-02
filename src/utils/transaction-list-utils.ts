@@ -13,6 +13,7 @@ import {
 import type {
   GroupByOption,
   SearchMatchType,
+  SearchState,
   TransactionListFilterState,
 } from "~/types/transaction-filters"
 import {
@@ -327,4 +328,25 @@ export function buildTransactionSections(
       b.data[0].transactionDate.getTime() - a.data[0].transactionDate.getTime()
     )
   })
+}
+
+/**
+ * True when the list is narrowed by a filter or search the user set (the
+ * default grouping and an empty search do not count).
+ */
+export function hasActiveFilters(
+  filterState: TransactionListFilterState,
+  searchState: SearchState,
+): boolean {
+  return (
+    searchState.query.length > 0 ||
+    searchState.matchType === "untitled" ||
+    filterState.accountIds.length > 0 ||
+    filterState.categoryIds.length > 0 ||
+    filterState.tagIds.length > 0 ||
+    filterState.pendingFilter !== "all" ||
+    filterState.typeFilters.length > 0 ||
+    filterState.attachmentFilter !== "all" ||
+    filterState.currencyIds.length > 0
+  )
 }

@@ -97,7 +97,9 @@ export function CurrencySheet({
           <View style={currencyAccountStyles.panelRowLeft}>
             <SingleSelectLabel variant="large">{item.code}</SingleSelectLabel>
             <Text variant="muted">
-              {item.accountCount} account{item.accountCount !== 1 ? "s" : ""}
+              {t("components.currencyAccountSelector.accountCount", {
+                count: item.accountCount,
+              })}
             </Text>
           </View>
         </SingleSelectItem>

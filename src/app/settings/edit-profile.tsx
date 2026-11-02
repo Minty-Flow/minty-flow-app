@@ -1,13 +1,19 @@
 import { File, Paths } from "expo-file-system"
 import { Image } from "expo-image"
 import * as ImagePicker from "expo-image-picker"
-import { Stack, useLocalSearchParams, useRouter } from "expo-router"
+import {
+  Stack,
+  useLocalSearchParams,
+  useNavigation,
+  useRouter,
+} from "expo-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 import { useShallow } from "zustand/react/shallow"
 
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { IconSvg } from "~/components/icons"
 import { KeyboardStickyViewMinty } from "~/components/keyboard-sticky-view-minty"
 import { Button } from "~/components/ui/button"
@@ -15,6 +21,7 @@ import { Input } from "~/components/ui/input"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import { useOnboardingStore } from "~/stores/onboarding.store"
 import { useProfileStore } from "~/stores/profile.store"
 import { logger } from "~/utils/logger"
@@ -23,6 +30,7 @@ import { Toast } from "~/utils/toast"
 
 export default function EditProfileScreen() {
   const router = useRouter()
+  const navigation = useNavigation()
   const { t } = useTranslation()
   const { fromOnboarding } = useLocalSearchParams<{ fromOnboarding?: string }>()
   const isFromOnboarding = fromOnboarding === "true"
@@ -40,6 +48,26 @@ export default function EditProfileScreen() {
   const [localImageUri, setLocalImageUri] = useState<string | null>(
     () => imageUri,
   )
+
+  const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
+  const isDirty = localName !== name || localImageUri !== imageUri
+  const { allowNavigation } = useNavigationGuard({
+    navigation,
+    when: isDirty,
+    onBlock: () => setUnsavedSheetVisible(true),
+  })
+  // Leaving without saving: drop the photo file that was copied in for it.
+  const handleDiscard = () => {
+    if (localImageUri && localImageUri !== imageUri) {
+      try {
+        new File(localImageUri).delete()
+      } catch {
+        // already gone: ignore
+      }
+    }
+    allowNavigation()
+    router.back()
+  }
 
   const displayName = localName || "?"
   const initials = getInitials(displayName)
@@ -110,6 +138,7 @@ export default function EditProfileScreen() {
     }
     setName(localName)
     setImageUri(localImageUri)
+    allowNavigation()
     if (isFromOnboarding) {
       setCompleted()
       router.dismissAll()
@@ -180,6 +209,15 @@ export default function EditProfileScreen() {
           </Button>
         </View>
       </KeyboardStickyViewMinty>
+      <ConfirmSheet
+        visible={unsavedSheetVisible}
+        onRequestClose={() => setUnsavedSheetVisible(false)}
+        onConfirm={handleDiscard}
+        title={t("common.sheets.closeWithoutSaving")}
+        description={t("common.sheets.unsavedDescription")}
+        confirmLabel={t("common.actions.discard")}
+        cancelLabel={t("common.actions.cancel")}
+      />
     </View>
   )
 }

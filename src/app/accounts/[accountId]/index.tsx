@@ -10,13 +10,16 @@ import { FilterToggleButton } from "~/components/filter-toggle-button"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { MonthYearPicker } from "~/components/month-year-picker"
-import { RouteLoadingState } from "~/components/route-load-state"
+import {
+  RouteLoadingState,
+  RouteNotFoundState,
+} from "~/components/route-load-state"
 import { TransactionFilterHeader } from "~/components/transaction/transaction-filter-header"
 import { TransactionSectionList } from "~/components/transaction/transaction-section-list"
 import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useAccount } from "~/database/drizzle/read-models/account-read-model"
+import { useAccountsQuery } from "~/database/drizzle/read-models/account-read-model"
 import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import {
   destroyAccount,
@@ -34,6 +37,7 @@ import {
 } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
+import { hasActiveFilters } from "~/utils/transaction-list-utils"
 export default function AccountDetailsScreen() {
   const { accountId } = useLocalSearchParams<{
     accountId: string
@@ -54,7 +58,8 @@ export default function AccountDetailsScreen() {
   const [unarchiveSheetVisible, setUnarchiveSheetVisible] = useState(false)
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
   const [transactionCount, setTransactionCount] = useState(0)
-  const liveAccount = useAccount(accountId ?? "")
+  const accountsQuery = useAccountsQuery()
+  const liveAccount = accountsQuery.data.find((a) => a.id === accountId)
   // Keep the account on screen after it is deleted, so the delete sheet is not
   // unmounted before it has closed and the screen leaves.
   const lastAccount = useRef(liveAccount)
@@ -122,12 +127,17 @@ export default function AccountDetailsScreen() {
       Toast.error({ title: t("common.toast.error") })
     }
   }
+  const filtersApplied = hasActiveFilters(filterState, searchState)
   useLayoutEffect(() => {
     navigation.setOptions({
       title: account?.name ?? "",
       headerRight: () => (
         <View style={{ flexDirection: "row", gap: 4, alignItems: "center" }}>
-          <FilterToggleButton active={showFilters} onPress={toggleFilters} />
+          <FilterToggleButton
+            active={showFilters}
+            onPress={toggleFilters}
+            filtersApplied={filtersApplied}
+          />
           {isArchived ? (
             <>
               <Button
@@ -170,11 +180,16 @@ export default function AccountDetailsScreen() {
     showFilters,
     isArchived,
     toggleFilters,
+    filtersApplied,
   ])
   if (!account) {
-    return <RouteLoadingState />
+    return accountsQuery.status === "loading" ? (
+      <RouteLoadingState />
+    ) : (
+      <RouteNotFoundState message={t("common.notFound.account")} />
+    )
   }
-  const typeLabel = account.type.charAt(0).toUpperCase() + account.type.slice(1)
+  const typeLabel = t(`common.account.types.${account.type}`)
   const headerContent = (
     <>
       {/* Account Header Card */}

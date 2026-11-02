@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useLayoutEffect, useState } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
@@ -80,6 +80,7 @@ function DataCard({
 export default function DataManagementScreen() {
   const { t } = useTranslation()
   const router = useRouter()
+  const importSucceeded = useRef(false)
   const addExport = useExportHistoryStore((s) => s.addExport)
 
   // Onboarding sends the user here purely to restore a backup — exporting and browsing
@@ -248,14 +249,24 @@ export default function DataManagementScreen() {
             title: t("screens.settings.dataManagement.importSuccess"),
           })
         }
-        // Arrived from onboarding: the restore was the whole errand, so land in the app
-        // instead of dropping the user into a settings stack rooted at onboarding.
-        if (importOnly) router.replace("/")
+        importSucceeded.current = true
       })
       .catch(() => {
         if (stagingDir) deleteStagingDir(stagingDir)
         Toast.error({ title: t("screens.settings.dataManagement.importError") })
       })
+  }
+
+  // Arrived from onboarding: the restore was the whole errand, so land in the
+  // app. Navigating inside onConfirm would tear the sheet down mid-close, and
+  // the stack must be cleared first or Back returns to onboarding, where
+  // "Start fresh" would add presets on top of the import.
+  function handleImportConfirmed() {
+    if (!importSucceeded.current) return
+    importSucceeded.current = false
+    if (!importOnly) return
+    router.dismissAll()
+    router.replace("/")
   }
 
   function handleCancelImport() {
@@ -393,6 +404,7 @@ export default function DataManagementScreen() {
         )}
         cancelLabel={t("screens.settings.dataManagement.importConfirm.cancel")}
         onConfirm={handleConfirmImport}
+        onConfirmed={handleImportConfirmed}
         onRequestClose={handleCancelImport}
       />
     </ScrollView>

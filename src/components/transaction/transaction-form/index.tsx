@@ -150,6 +150,7 @@ export function TransactionForm(props: TransactionFormProps) {
               setValue={f.setValue}
               selectedToAccount={f.selectedToAccount}
               transactionType={transactionType}
+              error={f.toAccountError}
             />
 
             {transactionType === TransactionTypeEnum.TRANSFER &&

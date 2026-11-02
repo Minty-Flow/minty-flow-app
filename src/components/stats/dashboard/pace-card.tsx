@@ -13,6 +13,8 @@ interface PaceCardProps {
   current: CurrencyPeriodStats
   previous: CurrencyPeriodStats | null
   currency: string
+  /** The period has days left. Totals are then not comparable with a whole previous period. */
+  inProgress?: boolean
   onPress: () => void
 }
 
@@ -20,6 +22,7 @@ export function PaceCard({
   current,
   previous,
   currency,
+  inProgress = false,
   onPress,
 }: PaceCardProps) {
   const { t } = useTranslation()
@@ -45,11 +48,13 @@ export function PaceCard({
             variant="h4"
             style={styles.totalAmount}
           />
-          <DeltaBadge
-            current={current.totalExpense}
-            previous={previous?.totalExpense}
-            invertedSentiment
-          />
+          {inProgress ? null : (
+            <DeltaBadge
+              current={current.totalExpense}
+              previous={previous?.totalExpense}
+              invertedSentiment
+            />
+          )}
         </View>
         <View style={styles.avgRow}>
           <Text variant="muted" style={styles.label}>
@@ -65,6 +70,13 @@ export function PaceCard({
             variant="small"
             style={styles.avgAmount}
           />
+          {inProgress ? (
+            <DeltaBadge
+              current={current.avgDailyExpense}
+              previous={previous?.avgDailyExpense}
+              invertedSentiment
+            />
+          ) : null}
         </View>
       </View>
     </StatCard>

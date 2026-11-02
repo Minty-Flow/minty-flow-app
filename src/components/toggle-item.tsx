@@ -23,7 +23,13 @@ export const ToggleItem = ({
   onValueChange,
 }: ToggleItemProps) => {
   return (
-    <ListItem style={styles.toggleItem} onPress={() => onValueChange(!value)}>
+    <ListItem
+      style={styles.toggleItem}
+      onPress={() => onValueChange(!value)}
+      accessibilityRole="switch"
+      accessibilityLabel={title}
+      accessibilityState={{ checked: value }}
+    >
       <View style={styles.toggleItemIcon}>
         <IconSvg name={icon} size={20} />
       </View>
@@ -33,7 +39,14 @@ export const ToggleItem = ({
           <Text style={styles.toggleItemDescription}>{description}</Text>
         )}
       </View>
-      <Switch value={value} onValueChange={onValueChange} />
+      {/* The row is the switch for assistive tech; the control is not a second stop. */}
+      <View
+        accessible={false}
+        importantForAccessibility="no-hide-descendants"
+        accessibilityElementsHidden
+      >
+        <Switch value={value} onValueChange={onValueChange} />
+      </View>
     </ListItem>
   )
 }

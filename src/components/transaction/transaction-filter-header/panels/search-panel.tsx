@@ -70,7 +70,11 @@ export function SearchPanel({
           autoCorrect={false}
         />
         {value.length > 0 ? (
-          <Pressable onPress={onClear} style={filterHeaderStyles.clearHit}>
+          <Pressable
+            onPress={onClear}
+            style={filterHeaderStyles.clearHit}
+            accessibilityLabel={t("common.actions.clear")}
+          >
             <IconSvg name="x-outline" size={20} />
           </Pressable>
         ) : null}

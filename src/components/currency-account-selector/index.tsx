@@ -27,6 +27,7 @@ export function CurrencyAccountSelector({
   selectedAccountIds,
   onCurrencyChange,
   onAccountIdsChange,
+  currencyLocked = false,
 }: CurrencyAccountSelectorProps) {
   const { t } = useTranslation()
   const [currencySheetOpen, setCurrencySheetOpen] = useState(false)
@@ -86,6 +87,7 @@ export function CurrencyAccountSelector({
 
         <ListItem
           style={triggerStyles.triggerRow}
+          disabled={currencyLocked}
           onPress={() => setCurrencySheetOpen(true)}
         >
           <View style={triggerStyles.triggerLeft}>
@@ -99,11 +101,15 @@ export function CurrencyAccountSelector({
             )}
           </View>
           <View style={triggerStyles.triggerRight}>
-            <ChevronIcon
-              direction="trailing"
-              size={18}
-              style={triggerStyles.chevronIcon}
-            />
+            {currencyLocked ? (
+              <IconSvg name="lock-outline" size={18} />
+            ) : (
+              <ChevronIcon
+                direction="trailing"
+                size={18}
+                style={triggerStyles.chevronIcon}
+              />
+            )}
           </View>
         </ListItem>
       </View>

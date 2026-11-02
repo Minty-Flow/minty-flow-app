@@ -17,7 +17,6 @@ export type PresetButtonId =
 
 export interface PresetOption {
   id: DateRangePresetId
-  label: string
   getRange: () => { start: Date; end: Date }
 }
 

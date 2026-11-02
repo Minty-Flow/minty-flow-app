@@ -200,6 +200,8 @@ interface FormToAccountPickerProps {
   setValue: SetAccountValue
   selectedToAccount: Account | null | undefined
   transactionType: string
+  /** Shown under the field, e.g. when no destination is picked yet. */
+  error?: string
 }
 
 /** Transfer destination; renders nothing for non-transfer transactions. */
@@ -210,6 +212,7 @@ export function FormToAccountPicker({
   setValue,
   selectedToAccount,
   transactionType,
+  error,
 }: FormToAccountPickerProps) {
   const { t } = useTranslation()
   if (transactionType !== TransactionTypeEnum.TRANSFER) return null
@@ -220,6 +223,7 @@ export function FormToAccountPicker({
       selectedAccount={selectedToAccount}
       triggerBalance={undefined}
       selectLabel={t("screens.accounts.a11y.selectTo")}
+      error={error}
       onSelect={(id) => {
         setValue("toAccountId", id, { shouldDirty: true })
         if (accountId === id) {

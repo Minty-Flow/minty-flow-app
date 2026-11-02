@@ -88,6 +88,7 @@ export function Chip({
 
   return (
     <Pressable
+      accessibilityState={{ selected }}
       {...rest}
       style={[
         chipStyles.chip,
@@ -118,6 +119,7 @@ const chipStyles = StyleSheet.create((theme) => ({
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,
+    minHeight: 40,
     borderRadius: theme.radius,
     gap: 6,
   },

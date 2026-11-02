@@ -57,13 +57,10 @@ Money owed in one direction, tracked to repayment.
   income-shaped). "Collect All" closes a one-time lent loan.
 - **Settle** — repayment toward a `borrowed` loan (user pays it back;
   expense-shaped). "Settle All" closes a one-time borrowed loan.
-- **Paid** / **Collected** — the transaction-form top-tab labels shown when the
-  entry is a repayment against an existing `borrowed` / `lent` loan
-  respectively.
 
 ## Transaction form top tabs
 
 The three-segment selector at the top of the transaction form. Normally
 `Expense` / `Income` / `Transfer`. Relabels to `Lent` / `Borrowed` when the kind
-is `lent`/`borrowed` with no linked loan, and to a single locked `Paid` or
-`Collected` when the entry is a repayment against an existing loan.
+is `lent`/`borrowed` with no linked loan. A repayment against an existing loan
+locks the type tab and account instead of relabelling it.

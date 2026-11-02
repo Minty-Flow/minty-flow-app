@@ -304,7 +304,10 @@ function computePeriodStats(
   }
 
   const net = totalIncome - totalExpense
-  const daySpan = Math.max(1, differenceInDays(to, from) + 1)
+  // A period still in progress has no spending on its future days; dividing by
+  // the whole span would read as a falsely low daily average.
+  const lastDay = to.getTime() > Date.now() ? new Date() : to
+  const daySpan = Math.max(1, differenceInDays(lastDay, from) + 1)
 
   return {
     totalExpense,

@@ -12,6 +12,8 @@ import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { AppData } from "~/constants/app-data"
+import { DirectionEnum } from "~/i18n/language.constants"
+import { useLanguageStore } from "~/stores/language.store"
 
 const TOTAL_PAGES = 3
 interface InfoSlideProps {
@@ -34,11 +36,17 @@ export default function OnboardingScreen() {
   const { t } = useTranslation()
   const router = useRouter()
   const pagerRef = useRef<PagerView>(null)
+  const isRTL = useLanguageStore((s) => s.isRTL)
   const [currentPage, setCurrentPage] = useState(0)
   useFocusEffect(() => {
-    // Android hardware back button → close app
+    // Android hardware back button: step back a page, and close the app only
+    // from the first one.
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      BackHandler.exitApp()
+      if (currentPage > 0) {
+        pagerRef.current?.setPage(currentPage - 1)
+      } else {
+        BackHandler.exitApp()
+      }
       return true // consume the event
     })
     return () => sub.remove()
@@ -65,6 +73,7 @@ export default function OnboardingScreen() {
         ref={pagerRef}
         style={styles.pager}
         initialPage={0}
+        layoutDirection={isRTL ? DirectionEnum.RTL : DirectionEnum.LTR}
         onPageSelected={(e) => setCurrentPage(e.nativeEvent.position)}
       >
         {/* Page 1 — Welcome */}

@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next"
-import { Pressable } from "react-native"
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -10,6 +9,7 @@ import Animated, {
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
+import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { currencyRegistryService } from "~/services/currency-registry"

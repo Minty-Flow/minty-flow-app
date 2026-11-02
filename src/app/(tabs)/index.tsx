@@ -75,7 +75,9 @@ function HomeScreen() {
             <IconSvg name="user-outline" size={26} />
           )}
           <Text variant="large" style={styles.greetingText}>
-            {t("profile.greeting")}, {profileName}!
+            {profileName.trim()
+              ? t("profile.greetingWithName", { name: profileName.trim() })
+              : t("profile.greeting")}
           </Text>
         </Pressable>
 
@@ -99,20 +101,22 @@ function HomeScreen() {
         filterState={filterState}
         searchState={searchState}
         showUpcoming
+        upcomingHorizonDays={homeTimeframe}
         ListHeaderComponent={summaryHeader}
       />
     </View>
   )
 }
 export default HomeScreen
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create((theme, rt) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.surface,
   },
   header: {
     marginHorizontal: 20,
-    marginTop: 40,
+    // Below the status bar / notch whatever the device.
+    marginTop: rt.insets.top + 12,
     marginBottom: 20,
     flexDirection: "row",
     alignItems: "center",

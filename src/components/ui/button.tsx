@@ -40,6 +40,9 @@ export const Button = ({
         ref={ref}
         // native
         role="button"
+        iosPressFeedback={false}
+        // Icon buttons are 40pt; the slop brings the touch area to 48pt.
+        hitSlop={size === "icon" ? 4 : undefined}
         style={(state) => [
           styles.base,
           variantStyles[variant],
@@ -125,19 +128,19 @@ const pressedStyles = StyleSheet.create((theme) => ({
 }))
 const sizeStyles = StyleSheet.create((theme) => ({
   default: {
-    height: 40,
+    minHeight: 44,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
   sm: {
-    height: 36,
+    minHeight: 40,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: theme.radius,
     gap: 6,
   },
   lg: {
-    height: 44,
+    minHeight: 48,
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderRadius: theme.radius,

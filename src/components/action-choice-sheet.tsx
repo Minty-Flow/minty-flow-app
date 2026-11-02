@@ -4,7 +4,7 @@
  * Used for recurring edit / delete scopes and loan collect / settle.
  */
 import { useTranslation } from "react-i18next"
-import { Pressable, View } from "react-native"
+import { View } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import type { IconSvgName } from "~/components/icons"
@@ -12,6 +12,7 @@ import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty
 import { BottomSheet } from "~/components/ui/bottom-sheet"
 import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { ListItem } from "~/components/ui/list-item"
+import { Pressable } from "~/components/ui/pressable"
 import { SheetIconHeader } from "~/components/ui/sheet-icon-header"
 import { Text } from "~/components/ui/text"
 

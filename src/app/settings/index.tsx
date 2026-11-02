@@ -181,7 +181,7 @@ export default function SettingsScreen() {
   )
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create((theme, rt) => ({
   content: {
     marginVertical: 50,
     paddingBottom: 150,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create((theme) => ({
   footer: {
     alignItems: "center",
     gap: 6,
-    paddingTop: 50,
+    paddingTop: rt.insets.top + 12,
   },
   footerTagline: {
     color: theme.colors.semantic.semi,

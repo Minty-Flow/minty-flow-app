@@ -171,20 +171,25 @@ const Card = memo(function Card({
 
         <View style={styles.totalsList}>
           {currencyTotals.length > 0 ? (
-            currencyTotals.map(([currency, amount]) => (
-              <View key={currency} style={styles.currencyRow}>
-                <Text variant="small" style={styles.currencyCode}>
-                  {currency}
-                </Text>
-                <Money
-                  value={amount}
-                  currency={currency}
-                  style={colorStyle}
-                  variant="small"
-                  tone={type}
-                />
-              </View>
-            ))
+            currencyTotals.map(([currency, amount]) => {
+              // Refunds above spending leave a net credit: show it as one,
+              // not as a negative expense.
+              const isNetCredit = !isIncome && amount < 0
+              return (
+                <View key={currency} style={styles.currencyRow}>
+                  <Text variant="small" style={styles.currencyCode}>
+                    {currency}
+                  </Text>
+                  <Money
+                    value={amount}
+                    currency={currency}
+                    style={isNetCredit ? styles.incomeText : colorStyle}
+                    variant="small"
+                    tone={isNetCredit ? TransactionTypeEnum.INCOME : type}
+                  />
+                </View>
+              )
+            })
           ) : (
             <View style={styles.currencyRow}>
               <Text variant="small" style={styles.currencyCode}>

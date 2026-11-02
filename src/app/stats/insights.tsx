@@ -15,6 +15,7 @@ export default function StatsInsightsScreen() {
             router.push({
               pathname: screen,
               params: {
+                currency: stats.currency,
                 preset: activePreset,
                 from: dateRange.from.toISOString(),
                 to: dateRange.to.toISOString(),

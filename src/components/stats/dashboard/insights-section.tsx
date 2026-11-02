@@ -1,3 +1,4 @@
+import { isSameMonth } from "date-fns"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
@@ -47,7 +48,11 @@ export function StatsInsightsSection({
 
       <WrappedCard
         stats={stats}
-        monthLabel={formatMonthName(dateRange.from)}
+        monthLabel={
+          isSameMonth(dateRange.from, dateRange.to)
+            ? formatMonthName(dateRange.from)
+            : formatRangeLabel(dateRange)
+        }
         onPress={() => onNavigate("/stats/wrapped")}
       />
 

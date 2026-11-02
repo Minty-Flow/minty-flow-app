@@ -46,6 +46,15 @@ interface SmartAmountInputProps {
   /** Transaction type (affects currency color) */
   type?: TransactionType
 }
+/**
+ * Parse what is typed, forgiving a dangling "." or operator: "12." is 12 and a
+ * lone "-" is nothing, instead of OK silently doing nothing.
+ */
+function parseSettled(text: string, currencyCode: string): number {
+  const settled = text.replace(/[.+\-*/]+$/, "")
+  return settled === "" ? 0 : parseMajorUnits(settled, currencyCode)
+}
+
 export const SmartAmountInput = ({
   valueMinor,
   onChangeMinor,
@@ -168,7 +177,7 @@ export const SmartAmountInput = ({
     let finalValue = previewMinor ?? 0
     try {
       if (previewMinor === null && displayValue) {
-        finalValue = parseMajorUnits(displayValue, currencyCode)
+        finalValue = parseSettled(displayValue, currencyCode)
       }
     } catch {
       return false
@@ -219,7 +228,7 @@ export const SmartAmountInput = ({
     let finalValue = previewMinor ?? 0
     if (previewMinor === null && displayValue) {
       try {
-        finalValue = parseMajorUnits(displayValue, currencyCode)
+        finalValue = parseSettled(displayValue, currencyCode)
       } catch {
         return
       }

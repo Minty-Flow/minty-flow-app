@@ -4,6 +4,7 @@ import {
 } from "@expo/ui/community/bottom-sheet"
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { ScrollView, useWindowDimensions, View } from "react-native"
+import { useKeyboardState } from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useUnistyles } from "react-native-unistyles"
 
@@ -85,9 +86,13 @@ export function BottomSheet({
   const { theme } = useUnistyles()
   const { height } = useWindowDimensions()
   const insets = useSafeAreaInsets()
-  // The sheet sizes to its content; once that exceeds the screen the content
-  // scrolls inside this cap instead of the sheet growing off-screen.
-  const maxHeight = height - insets.top - insets.bottom - SHEET_CHROME
+  const keyboardHeight = useKeyboardState((state) => state.height)
+  // The sheet sizes to its content, so there is no fixed height. Only when the
+  // content outgrows the space left does it scroll inside this cap. The cap
+  // shrinks with the keyboard, so an input near the bottom is never hidden
+  // under it. `heightFraction` is the opt-in for a sheet that must be tall.
+  const maxHeight =
+    height - insets.top - insets.bottom - SHEET_CHROME - keyboardHeight
   const sheetRef = useRef<BottomSheetMethods>(null)
   const retainedChildren = useRef<ReactNode>(children)
   if (isPresented) retainedChildren.current = children
@@ -118,7 +123,7 @@ export function BottomSheet({
       {heightFraction ? (
         <View
           style={[
-            { height: height * heightFraction },
+            { height: Math.min(height * heightFraction, maxHeight) },
             resolvePadding(contentPadding),
           ]}
         >

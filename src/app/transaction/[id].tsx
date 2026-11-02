@@ -9,7 +9,7 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useActiveAccountsWith } from "~/database/drizzle/read-models/account-read-model"
 import { useAllBudgets } from "~/database/drizzle/read-models/budget-read-model"
-import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
+import { useCategoriesByTypeQuery } from "~/database/drizzle/read-models/category-read-model"
 import { useGoalsByType } from "~/database/drizzle/read-models/goal-read-model"
 import { useAllLoans } from "~/database/drizzle/read-models/loan-read-model"
 import { useTags } from "~/database/drizzle/read-models/tag-read-model"
@@ -79,7 +79,8 @@ function TransactionEditor({
     transaction?.accountId,
     transaction?.relatedAccountId,
   )
-  const categories = useCategoriesByType(transactionType)
+  // Counts feed the picker's "Most used" row.
+  const categories = useCategoriesByTypeQuery(transactionType, true).data
   const tags = useTags()
   const goals = useGoalsByType(transactionTypeToGoalType(transactionType))
   const budgets = useAllBudgets()

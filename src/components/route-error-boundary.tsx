@@ -1,3 +1,4 @@
+import { router } from "expo-router"
 import i18n from "i18next"
 import { Component, type ReactNode } from "react"
 import { StyleSheet } from "react-native-unistyles"
@@ -40,10 +41,30 @@ export class RouteErrorBoundary extends Component<Props, State> {
     this.setState({ error: null })
   }
 
+  // Retry remounts the same screen, which may crash the same way. Home clears
+  // the failing route; Android Back would otherwise exit the app.
+  goHome = () => {
+    this.setState({ error: null })
+    setTimeout(() => {
+      try {
+        if (router.canDismiss()) router.dismissAll()
+        router.replace("/")
+      } catch (error) {
+        logger.error("Error boundary could not go home", {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }, 0)
+  }
+
   render() {
     if (this.state.error) {
       return (
-        <RouteErrorFallback error={this.state.error} onReset={this.reset} />
+        <RouteErrorFallback
+          error={this.state.error}
+          onReset={this.reset}
+          onHome={this.goHome}
+        />
       )
     }
     return this.props.children
@@ -53,9 +74,11 @@ export class RouteErrorBoundary extends Component<Props, State> {
 function RouteErrorFallback({
   error,
   onReset,
+  onHome,
 }: {
   error: Error
   onReset: () => void
+  onHome: () => void
 }) {
   return (
     <View style={styles.container}>
@@ -67,6 +90,9 @@ function RouteErrorFallback({
       </Text>
       <Button onPress={onReset}>
         <Text>{i18n.t("common.actions.retry")}</Text>
+      </Button>
+      <Button variant="secondary" onPress={onHome}>
+        <Text>{i18n.t("common.errorBoundary.goHome")}</Text>
       </Button>
     </View>
   )

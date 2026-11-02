@@ -96,7 +96,9 @@ export const MathToolbar = ({
               color={smartInputStyles.onPrimary.color}
             />
           ) : (
-            <Text style={smartInputStyles.okBtnText}>OK</Text>
+            <Text style={smartInputStyles.okBtnText}>
+              {t("common.actions.ok")}
+            </Text>
           )}
         </Pressable>
       </View>

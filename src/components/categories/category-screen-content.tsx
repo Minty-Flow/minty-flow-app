@@ -48,10 +48,11 @@ export function CategoryScreenContent({
           variant="search"
           active={showSearch}
           onPress={() => setShowSearch((v) => !v)}
+          filtersApplied={searchQuery.trim().length > 0}
         />
       ),
     })
-  }, [navigation, showSearch])
+  }, [navigation, showSearch, searchQuery])
 
   const currentSearchPlaceholder =
     searchPlaceholder ||

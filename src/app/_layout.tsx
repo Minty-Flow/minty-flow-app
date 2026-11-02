@@ -24,6 +24,7 @@ import { TRANSACTION_REMINDERS_CHANNEL_ID } from "~/constants/notification-chann
 import { drizzleDb, expoDb } from "~/database/drizzle/db"
 import { useImportRecovery } from "~/hooks/use-import-recovery"
 import { useNotificationSync } from "~/hooks/use-notification-sync"
+import { usePreferredCurrencySync } from "~/hooks/use-preferred-currency-sync"
 import { useRetentionCleanup } from "~/hooks/use-retention-cleanup"
 import { useShakeListener } from "~/hooks/use-shake-listener"
 import { useTransactionLifecycleSync } from "~/hooks/use-transaction-lifecycle-sync"
@@ -135,6 +136,7 @@ function AppRootLayout() {
   useRetentionCleanup()
   useTransactionLifecycleSync()
   useNotificationSync()
+  usePreferredCurrencySync()
   useImportRecovery()
 
   return (
@@ -221,7 +223,7 @@ function AppRootLayout() {
                   options={modifyTitle(
                     "loanId",
                     t("screens.settings.loans.addNew"),
-                    t("screens.settings.loans.title"),
+                    t("screens.settings.loans.editTitle"),
                   )}
                 />
                 <Stack.Screen
@@ -234,18 +236,16 @@ function AppRootLayout() {
                 />
 
                 <Stack.Screen
+                  name="settings/categories/add"
+                  options={{ title: t("components.categories.sheet.title") }}
+                />
+                <Stack.Screen
                   name="settings/categories/[categoryId]/index"
                   options={{
                     title: t("components.categories.form.title.edit"),
                   }}
                 />
 
-                <Stack.Screen
-                  name="settings/categories/presets"
-                  options={{
-                    title: t("components.categories.actions.addFromPresets"),
-                  }}
-                />
                 <Stack.Screen
                   name="settings/categories/[categoryId]/modify"
                   options={modifyTitle(
@@ -376,7 +376,7 @@ function AppRootLayout() {
                 />
                 <Stack.Screen
                   name="settings/preferences/trash-bin"
-                  options={{ title: t("screens.settings.trash.title") }}
+                  options={{ title: t("screens.settings.trash.settingsTitle") }}
                 />
                 <Stack.Screen
                   name="settings/preferences/reminder"

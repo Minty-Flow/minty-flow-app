@@ -1,7 +1,7 @@
 import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 
-import { getThemeStrict } from "~/styles/theme/registry"
-import type { Account, AccountType } from "~/types/accounts"
+import { toAccount } from "~/database/mappers/account.mapper"
+import type { Account } from "~/types/accounts"
 
 import { drizzleDb } from "../db"
 import { accounts } from "../schema"
@@ -18,22 +18,7 @@ export function useAccountsQuery(): LiveReadModelResult<Account[]> {
       .orderBy(accounts.sortOrder, accounts.createdAt),
   )
 
-  const data = result.data.map((row) => ({
-    id: row.id,
-    name: row.name,
-    type: row.type as AccountType,
-    balance: row.balance,
-    currencyCode: row.currencyCode,
-    icon: row.icon,
-    colorSchemeName: row.colorSchemeName,
-    colorScheme: getThemeStrict(row.colorSchemeName),
-    isPrimary: !!row.isPrimary,
-    excludeFromBalance: !!row.excludeFromBalance,
-    isArchived: !!row.isArchived,
-    sortOrder: row.sortOrder,
-    createdAt: new Date(row.createdAt),
-    updatedAt: new Date(row.updatedAt),
-  }))
+  const data = result.data.map(toAccount)
 
   return createLiveReadModelResult(data, [result])
 }

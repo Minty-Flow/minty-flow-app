@@ -1,9 +1,5 @@
-import {
-  FlatList,
-  type FlatListProps,
-  type ListRenderItem,
-  Pressable,
-} from "react-native"
+import { useTranslation } from "react-i18next"
+import { FlatList, type FlatListProps, type ListRenderItem } from "react-native"
 import Animated, {
   LinearTransition,
   SlideInRight,
@@ -15,6 +11,7 @@ import Animated, {
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
+import { Pressable } from "~/components/ui/pressable"
 import { View } from "~/components/ui/view"
 import { logger } from "~/utils/logger"
 
@@ -62,6 +59,7 @@ function ReorderableRow<T>({
   // Animation values for buttons
   const upButtonScale = useSharedValue(1)
   const downButtonScale = useSharedValue(1)
+  const { t } = useTranslation()
   const itemScale = useSharedValue(1)
 
   // Animated styles for buttons (Use .get() instead of .value)
@@ -125,6 +123,7 @@ function ReorderableRow<T>({
           <AnimatedPressable
             disabled={isFirst}
             onPress={handleMoveUp}
+            accessibilityLabel={t("common.actions.moveUp")}
             style={[
               styles.iconButton,
               upButtonStyle,
@@ -137,6 +136,7 @@ function ReorderableRow<T>({
           <AnimatedPressable
             disabled={isLast}
             onPress={handleMoveDown}
+            accessibilityLabel={t("common.actions.moveDown")}
             style={[
               styles.iconButton,
               downButtonStyle,
@@ -212,11 +212,11 @@ const styles = StyleSheet.create((theme) => ({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
-    gap: 2,
+    gap: 8,
   },
   iconButton: {
-    width: 28,
-    height: 28,
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
   },

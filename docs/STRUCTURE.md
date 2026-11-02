@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-01T11:52:00.758Z
+Generated on: 2026-11-02T19:43:08.519Z
 ```
 ./
 ├── __tests__/
@@ -19,7 +19,8 @@ Generated on: 2026-11-01T11:52:00.758Z
 │   │   └── trash-retention.test.ts
 │   ├── database/
 │   │   ├── backup/
-│   │   │   └── backup-format.test.ts
+│   │   │   ├── backup-format.test.ts
+│   │   │   └── post-import-repairs.test.ts
 │   │   ├── drizzle/
 │   │   │   └── read-models/
 │   │   │       ├── stats-data.test.ts
@@ -67,6 +68,7 @@ Generated on: 2026-11-01T11:52:00.758Z
 │   ├── stores/
 │   │   └── export-history.store.test.ts
 │   └── utils/
+│       ├── chart-path.test.ts
 │       ├── csv.test.ts
 │       ├── live-progress.test.ts
 │       ├── local-day-key.test.ts
@@ -179,8 +181,8 @@ Generated on: 2026-11-01T11:52:00.758Z
 │   │   │   │   ├── [categoryId]/
 │   │   │   │   │   ├── index.tsx
 │   │   │   │   │   └── modify.tsx
-│   │   │   │   ├── index.tsx
-│   │   │   │   └── presets.tsx
+│   │   │   │   ├── add.tsx
+│   │   │   │   └── index.tsx
 │   │   │   ├── data-management/
 │   │   │   │   ├── export-history.tsx
 │   │   │   │   └── index.tsx
@@ -272,6 +274,7 @@ Generated on: 2026-11-01T11:52:00.758Z
 │   │   │   │   ├── category-form-sheets.tsx
 │   │   │   │   ├── category-modify-content.tsx
 │   │   │   │   └── types.ts
+│   │   │   ├── add-category-content.tsx
 │   │   │   ├── category-list.tsx
 │   │   │   ├── category-presets-picker.tsx
 │   │   │   ├── category-row.tsx
@@ -583,6 +586,7 @@ Generated on: 2026-11-01T11:52:00.758Z
 │   │   ├── use-navigation-guard.ts
 │   │   ├── use-notification-sync.ts
 │   │   ├── use-permission-status.ts
+│   │   ├── use-preferred-currency-sync.ts
 │   │   ├── use-recurring-rule.ts
 │   │   ├── use-retention-cleanup.ts
 │   │   ├── use-scroll-into-view.ts
@@ -670,6 +674,7 @@ Generated on: 2026-11-01T11:52:00.758Z
 │   └── utils/
 │       ├── account-types-list.ts
 │       ├── attachments.ts
+│       ├── chart-path.ts
 │       ├── csv.ts
 │       ├── file-icon.ts
 │       ├── format-file-size.ts
