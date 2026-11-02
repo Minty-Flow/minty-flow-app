@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-02T20:20:58.888Z
+Generated on: 2026-11-02T20:25:51.990Z
 ```
 ./
 ├── __tests__/
@@ -36,6 +36,7 @@ Generated on: 2026-11-02T20:20:58.888Z
 │   │   │   ├── delete-recurring-keep-paid.test.ts
 │   │   │   ├── destroy-account-transfer-partner.test.ts
 │   │   │   ├── destroy-account-with-loans.test.ts
+│   │   │   ├── destroy-attachment-files.test.ts
 │   │   │   ├── detach-transfer-from-rule.test.ts
 │   │   │   ├── edit-transfer-validation.test.ts
 │   │   │   ├── empty-trash.test.ts
@@ -565,6 +566,7 @@ Generated on: 2026-11-02T20:20:58.888Z
 │   │   ├── types/
 │   │   │   └── rows.ts
 │   │   ├── utils/
+│   │   │   ├── attachment-files.ts
 │   │   │   ├── generate-id.ts
 │   │   │   ├── get-balance-delta.ts
 │   │   │   ├── has-attachments-from-extra.ts

@@ -289,6 +289,7 @@ export function useTransactionForm({
     setAttachmentState,
     removeAttachment,
     flushRemovedAttachments,
+    discardAddedAttachments,
     handleSelectFromFiles,
     handleTakePhoto,
     handleSelectMultipleMedia,
@@ -397,6 +398,8 @@ export function useTransactionForm({
     }
   }
   const handleConfirmExit = () => {
+    // Leaving without a save (after a save the added list is already empty).
+    discardAddedAttachments()
     allowNavigation()
     router.back()
   }
