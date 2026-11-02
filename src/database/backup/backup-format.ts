@@ -1,3 +1,9 @@
+import {
+  type BackupProfile,
+  type PortableSettings,
+  sanitizeProfile,
+  sanitizeSettings,
+} from "~/database/backup/backup-settings"
 import { hasAttachmentsFromExtra } from "~/database/utils/has-attachments-from-extra"
 import { assertMinorUnits, getMinorUnitDigits } from "~/utils/money"
 
@@ -21,6 +27,10 @@ export interface SavedExport {
 
 export interface MintyFlowBackup {
   meta: BackupMeta
+  /** v6+: portable preferences. Absent in older backups, which restore as before. */
+  settings?: PortableSettings
+  /** v6+: the profile name and photo file name. Absent in older backups. */
+  profile?: BackupProfile
   data: {
     categories: RawRow[]
     tags: RawRow[]
@@ -55,7 +65,11 @@ export type ValidateBackupResult =
 // v5: loans carry `term` (one_time | long_term). A `term`-less loan row (v4 or
 // earlier snapshot) is backfilled to `long_term` on import — every loan created
 // before Slice 4 was a screen-created progress loan.
-export const SCHEMA_VERSION = 5
+// v6: an optional `settings` section (portable preferences) and `profile`
+// (name and photo file name). Both are additive and optional, so a v3 to v5
+// backup restores unchanged and leaves the current settings alone. An older
+// app cannot read a v6 backup.
+export const SCHEMA_VERSION = 6
 
 // v3 is accepted for one release so users can still restore a backup taken
 // before the `kind` migration (local-first: no server copy to fall back on).
@@ -546,7 +560,19 @@ export function validateBackup(json: string): ValidateBackupResult {
       }
     }
 
-    return { success: true, backup: parsed as MintyFlowBackup }
+    // Settings and profile are best effort: an unreadable section is dropped
+    // instead of blocking the data import.
+    const {
+      settings: rawSettings,
+      profile: rawProfile,
+      ...rest
+    } = parsed as Record<string, unknown>
+    const backup = rest as unknown as MintyFlowBackup
+    const settings = sanitizeSettings(rawSettings)
+    if (Object.keys(settings).length > 0) backup.settings = settings
+    const profile = sanitizeProfile(rawProfile)
+    if (profile) backup.profile = profile
+    return { success: true, backup }
   } catch (e) {
     return {
       success: false,
