@@ -147,7 +147,8 @@
     "home": {
       "summary": {
         "income": "دخل",
-        "expense": "مصروف"
+        "expense": "مصروف",
+        "filtered": "الإجماليات تشمل المعاملات المصفّاة فقط"
       },
       "upcoming": {
         "header": "القادمة",
