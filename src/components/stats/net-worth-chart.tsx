@@ -1,3 +1,5 @@
+import { useState } from "react"
+import { Gesture, GestureDetector } from "react-native-gesture-handler"
 import {
   Canvas,
   Circle,
@@ -5,9 +7,7 @@ import {
   LinearGradient,
   Path,
   vec,
-} from "@shopify/react-native-skia"
-import { useState } from "react"
-import { Gesture, GestureDetector } from "react-native-gesture-handler"
+} from "react-native-skia"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 import { scheduleOnRN } from "react-native-worklets"
 

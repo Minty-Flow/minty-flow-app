@@ -1,6 +1,6 @@
-import { Canvas, LinearGradient, Path, vec } from "@shopify/react-native-skia"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { Canvas, LinearGradient, Path, vec } from "react-native-skia"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"

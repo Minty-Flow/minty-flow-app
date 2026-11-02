@@ -1,11 +1,5 @@
-import {
-  Canvas,
-  Group,
-  Path,
-  RoundedRect,
-  Skia,
-} from "@shopify/react-native-skia"
 import { useState } from "react"
+import { Canvas, Group, Path, RoundedRect, Skia } from "react-native-skia"
 import { StyleSheet } from "react-native-unistyles"
 
 import { View } from "~/components/ui/view"

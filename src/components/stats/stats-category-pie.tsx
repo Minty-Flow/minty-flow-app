@@ -1,4 +1,3 @@
-import { Group, Paint } from "@shopify/react-native-skia"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
@@ -9,6 +8,7 @@ import {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated"
+import { Group, Paint } from "react-native-skia"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 import { Pie, PolarChart } from "victory-native"
 
@@ -300,13 +300,6 @@ export function StatsCategoryPie({
                 <View style={styles.centerLabel}>
                   {selectedSlice ? (
                     <>
-                      <Text
-                        variant="muted"
-                        style={styles.centerCurrency}
-                        numberOfLines={1}
-                      >
-                        {selectedSlice.label}
-                      </Text>
                       <Money
                         value={selectedSlice.value}
                         currency={currency}
