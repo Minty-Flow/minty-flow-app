@@ -37,6 +37,10 @@ import {
   useExportHistoryStore,
 } from "~/stores/export-history.store"
 import { useOnboardingStore } from "~/stores/onboarding.store"
+import {
+  applyBackupProfile,
+  applyPortableSettings,
+} from "~/stores/portable-settings"
 import { Toast } from "~/utils/toast"
 
 interface ImportSheetState {
