@@ -191,6 +191,8 @@ export function TransactionForm(props: TransactionFormProps) {
               onDatePress={() => f.openDatePicker("transaction", "date")}
               onTimePress={() => f.openDatePicker("transaction", "time")}
               dueDateMode={f.isLoanKind}
+              hasDueDate={f.hasLoanDueDate}
+              onDueDateChange={f.setHasLoanDueDate}
             />
 
             <FormKindSelector
