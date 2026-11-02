@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-02T20:27:57.370Z
+Generated on: 2026-11-02T20:40:57.573Z
 ```
 ./
 ├── __tests__/
@@ -20,6 +20,7 @@ Generated on: 2026-11-02T20:27:57.370Z
 │   ├── database/
 │   │   ├── backup/
 │   │   │   ├── backup-format.test.ts
+│   │   │   ├── backup-settings.test.ts
 │   │   │   └── post-import-repairs.test.ts
 │   │   ├── drizzle/
 │   │   │   └── read-models/
@@ -529,7 +530,8 @@ Generated on: 2026-11-02T20:27:57.370Z
 │   ├── database/
 │   │   ├── backup/
 │   │   │   ├── backup-format.ts
-│   │   │   └── backup-import-plan.ts
+│   │   │   ├── backup-import-plan.ts
+│   │   │   └── backup-settings.ts
 │   │   ├── drizzle/
 │   │   │   ├── read-models/
 │   │   │   │   ├── account-read-model.ts
@@ -632,6 +634,7 @@ Generated on: 2026-11-02T20:27:57.370Z
 │   │   ├── notification.store.ts
 │   │   ├── onboarding.store.ts
 │   │   ├── pending-transactions.store.ts
+│   │   ├── portable-settings.ts
 │   │   ├── profile.store.ts
 │   │   ├── theme.store.ts
 │   │   ├── toast-style.store.ts

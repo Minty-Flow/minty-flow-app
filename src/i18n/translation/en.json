@@ -963,6 +963,7 @@
           "title": "Overwrite all data?",
           "warning": "Everything currently in the app will be erased and replaced with the contents of the file you selected. This cannot be undone. To keep a copy of your current data, cancel and export a backup first.",
           "recordSummary": "{{count}} records across {{tables}} tables",
+          "restoreSettings": "Also restore settings and profile",
           "confirm": "Overwrite",
           "cancel": "Cancel"
         },
