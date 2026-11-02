@@ -13,6 +13,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context"
 import { UnistylesRuntime, useUnistyles } from "react-native-unistyles"
 
 import { AppLockGate } from "~/components/app-lock-gate"
+import { OnboardingResumeSheet } from "~/components/onboarding-resume-sheet"
 import {
   MigrationState,
   PreUpdateBackupGate,
@@ -100,14 +101,22 @@ function AppRootLayout() {
 
   const isRTL = useLanguageStore((s) => s.isRTL)
   const isOnboardingCompleted = useOnboardingStore((s) => s.isCompleted)
+  const isOnboardingInProgress = useOnboardingStore((s) => s.isInProgress)
   const router = useRouter()
   const segments = useSegments()
 
   useEffect(() => {
-    if (!isOnboardingCompleted && segments[0] !== "onboarding") {
+    // Once the user has picked a path, routes outside onboarding (custom
+    // account, import, profile) must stay reachable; the next launch offers
+    // to resume instead of redirecting.
+    if (
+      !isOnboardingCompleted &&
+      !isOnboardingInProgress &&
+      segments[0] !== "onboarding"
+    ) {
       router.replace("/onboarding")
     }
-  }, [isOnboardingCompleted, segments, router])
+  }, [isOnboardingCompleted, isOnboardingInProgress, segments, router])
 
   useEffect(() => {
     if (Platform.OS === "android") {
@@ -482,6 +491,7 @@ function AppRootLayout() {
             {/* Toasts go under the lock so nothing shows above the blur before unlock. */}
             <ToastManager />
             <AppLockGate />
+            <OnboardingResumeSheet />
 
             <NavigationBar style="auto" />
           </TooltipProvider>

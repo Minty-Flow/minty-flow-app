@@ -22,6 +22,7 @@ import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
+import { useOnboardingResume } from "~/hooks/use-onboarding-resume"
 import { useOnboardingStore } from "~/stores/onboarding.store"
 import { useProfileStore } from "~/stores/profile.store"
 import { logger } from "~/utils/logger"
@@ -34,6 +35,11 @@ export default function EditProfileScreen() {
   const { t } = useTranslation()
   const { fromOnboarding } = useLocalSearchParams<{ fromOnboarding?: string }>()
   const isFromOnboarding = fromOnboarding === "true"
+  useOnboardingResume(
+    isFromOnboarding
+      ? "/settings/edit-profile?fromOnboarding=true"
+      : "/onboarding/start",
+  )
   const setCompleted = useOnboardingStore((s) => s.setCompleted)
   const { name, imageUri, setName, setImageUri } = useProfileStore(
     useShallow((s) => ({

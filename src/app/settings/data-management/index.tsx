@@ -33,6 +33,7 @@ import {
   type ExportRecord,
   useExportHistoryStore,
 } from "~/stores/export-history.store"
+import { useOnboardingStore } from "~/stores/onboarding.store"
 import { Toast } from "~/utils/toast"
 
 interface ImportSheetState {
@@ -87,6 +88,7 @@ export default function DataManagementScreen() {
   // past exports are meaningless before any data exists.
   const { mode } = useLocalSearchParams<{ mode?: string }>()
   const importOnly = mode === "import"
+  const setOnboardingCompleted = useOnboardingStore((s) => s.setCompleted)
 
   // The custom file-name field is hidden until the header button reveals it.
   const [baseName, setBaseName] = useState("")
@@ -264,6 +266,9 @@ export default function DataManagementScreen() {
   function handleImportConfirmed() {
     if (!importSucceeded.current) return
     importSucceeded.current = false
+    // The import replaced the data, so onboarding has nothing left to offer.
+    // A no-op when onboarding is already over.
+    setOnboardingCompleted()
     if (!importOnly) return
     router.dismissAll()
     router.replace("/")

@@ -1572,6 +1572,12 @@
     }
   },
   "onboarding": {
+    "resume": {
+      "title": "Finish setting up?",
+      "description": "You left before finishing setup. Continue where you stopped, or skip it and start using the app.",
+      "continue": "Continue setup",
+      "skip": "Skip"
+    },
     "welcome": {
       "subtitle": "Take charge of your money, one day at a time"
     },
