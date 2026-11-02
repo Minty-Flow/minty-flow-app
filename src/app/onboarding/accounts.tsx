@@ -14,6 +14,7 @@ import { View } from "~/components/ui/view"
 import { AccountPresets } from "~/constants/pre-sets-accounts"
 import { useActiveAccountsQuery } from "~/database/drizzle/read-models/account-read-model"
 import { createAccount } from "~/database/services/account-service"
+import { useOnboardingResume } from "~/hooks/use-onboarding-resume"
 import type { TranslationKey } from "~/i18n/config"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { NewEnum } from "~/types/new"
@@ -21,6 +22,7 @@ import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
 export default function OnboardingAccountsScreen() {
+  useOnboardingResume("/onboarding/accounts")
   const { data: accounts, status } = useActiveAccountsQuery()
   const { t } = useTranslation()
   const router = useRouter()

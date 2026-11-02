@@ -147,7 +147,8 @@
     "home": {
       "summary": {
         "income": "Income",
-        "expense": "Expense"
+        "expense": "Expense",
+        "filtered": "Totals cover the filtered transactions"
       },
       "upcoming": {
         "header": "Upcoming",
@@ -970,6 +971,7 @@
           "title": "Overwrite all data?",
           "warning": "Everything currently in the app will be erased and replaced with the contents of the file you selected. This cannot be undone. To keep a copy of your current data, cancel and export a backup first.",
           "recordSummary": "{{count}} records across {{tables}} tables",
+          "restoreSettings": "Also restore settings and profile",
           "confirm": "Overwrite",
           "cancel": "Cancel"
         },
@@ -1226,7 +1228,9 @@
         "amountInput": "Amount input"
       },
       "loan": {
-        "nameLabel": "Loan name"
+        "nameLabel": "Loan name",
+        "noDueDate": "No due date",
+        "clearDueDate": "Remove due date"
       },
       "deleteLoanSheet": {
         "title": "Delete this loan?",
@@ -1579,6 +1583,12 @@
     }
   },
   "onboarding": {
+    "resume": {
+      "title": "Finish setting up?",
+      "description": "You left before finishing setup. Continue where you stopped, or skip it and start using the app.",
+      "continue": "Continue setup",
+      "skip": "Skip"
+    },
     "welcome": {
       "subtitle": "Take charge of your money, one day at a time"
     },

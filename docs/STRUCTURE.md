@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-02T20:42:40.612Z
+Generated on: 2026-11-02T21:18:23.628Z
 ```
 ./
 ├── __tests__/
@@ -20,6 +20,7 @@ Generated on: 2026-11-02T20:42:40.612Z
 │   ├── database/
 │   │   ├── backup/
 │   │   │   ├── backup-format.test.ts
+│   │   │   ├── backup-settings.test.ts
 │   │   │   └── post-import-repairs.test.ts
 │   │   ├── drizzle/
 │   │   │   └── read-models/
@@ -36,9 +37,11 @@ Generated on: 2026-11-02T20:42:40.612Z
 │   │   │   ├── delete-recurring-keep-paid.test.ts
 │   │   │   ├── destroy-account-transfer-partner.test.ts
 │   │   │   ├── destroy-account-with-loans.test.ts
+│   │   │   ├── destroy-attachment-files.test.ts
 │   │   │   ├── detach-transfer-from-rule.test.ts
 │   │   │   ├── edit-transfer-validation.test.ts
 │   │   │   ├── empty-trash.test.ts
+│   │   │   ├── import-recovery.test.ts
 │   │   │   ├── loan-hold-guard.test.ts
 │   │   │   ├── loan-type-switch.test.ts
 │   │   │   ├── pending-transfer.test.ts
@@ -74,9 +77,11 @@ Generated on: 2026-11-02T20:42:40.612Z
 │       ├── local-day-key.test.ts
 │       ├── money.test.ts
 │       ├── planning-progress.test.ts
+│       ├── profile-image.test.ts
 │       ├── recurrence.test.ts
 │       ├── stats-date-range.test.ts
-│       └── timestamp-scheduler.test.ts
+│       ├── timestamp-scheduler.test.ts
+│       └── transaction-list-filters.test.ts
 ├── .github/
 │   └── workflows/
 │       ├── board-sync.yml
@@ -503,6 +508,7 @@ Generated on: 2026-11-02T20:42:40.612Z
 │   │   ├── money.tsx
 │   │   ├── month-picker-sheet.tsx
 │   │   ├── month-year-picker.tsx
+│   │   ├── onboarding-resume-sheet.tsx
 │   │   ├── pre-update-backup-gate.tsx
 │   │   ├── preset-list-item.tsx
 │   │   ├── privacy-eye-control.tsx
@@ -528,7 +534,9 @@ Generated on: 2026-11-02T20:42:40.612Z
 │   ├── database/
 │   │   ├── backup/
 │   │   │   ├── backup-format.ts
-│   │   │   └── backup-import-plan.ts
+│   │   │   ├── backup-import-plan.ts
+│   │   │   ├── backup-settings.ts
+│   │   │   └── import-marker.ts
 │   │   ├── drizzle/
 │   │   │   ├── read-models/
 │   │   │   │   ├── account-read-model.ts
@@ -562,6 +570,7 @@ Generated on: 2026-11-02T20:42:40.612Z
 │   │   ├── types/
 │   │   │   └── rows.ts
 │   │   ├── utils/
+│   │   │   ├── attachment-files.ts
 │   │   │   ├── generate-id.ts
 │   │   │   ├── get-balance-delta.ts
 │   │   │   ├── has-attachments-from-extra.ts
@@ -585,8 +594,10 @@ Generated on: 2026-11-02T20:42:40.612Z
 │   │   ├── use-modify-route-loader.ts
 │   │   ├── use-navigation-guard.ts
 │   │   ├── use-notification-sync.ts
+│   │   ├── use-onboarding-resume.ts
 │   │   ├── use-permission-status.ts
 │   │   ├── use-preferred-currency-sync.ts
+│   │   ├── use-profile-image.ts
 │   │   ├── use-recurring-rule.ts
 │   │   ├── use-retention-cleanup.ts
 │   │   ├── use-scroll-into-view.ts
@@ -630,6 +641,7 @@ Generated on: 2026-11-02T20:42:40.612Z
 │   │   ├── notification.store.ts
 │   │   ├── onboarding.store.ts
 │   │   ├── pending-transactions.store.ts
+│   │   ├── portable-settings.ts
 │   │   ├── profile.store.ts
 │   │   ├── theme.store.ts
 │   │   ├── toast-style.store.ts
@@ -691,6 +703,7 @@ Generated on: 2026-11-02T20:42:40.612Z
 │       ├── parse-math-expression.ts
 │       ├── pending-transactions.ts
 │       ├── planning-progress.ts
+│       ├── profile-image.ts
 │       ├── recurrence.ts
 │       ├── reload-app.ts
 │       ├── stats-date-range.ts

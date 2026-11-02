@@ -23,6 +23,9 @@ type Props = {
   onTimePress: () => void
   /** Loan kinds: this row is the loan's due date, and pending never applies. */
   dueDateMode?: boolean
+  /** Loan kinds: whether a due date is set. Off by default. */
+  hasDueDate?: boolean
+  onDueDateChange?: (value: boolean) => void
 }
 
 export function FormDateSection({
@@ -31,6 +34,8 @@ export function FormDateSection({
   onDatePress,
   onTimePress,
   dueDateMode = false,
+  hasDueDate = false,
+  onDueDateChange,
 }: Props) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
@@ -41,6 +46,35 @@ export function FormDateSection({
   const isFuture = date.getTime() > startOfNextMinute().getTime()
   const showPending = !dueDateMode && (isFuture || !!isPending)
   const time = formatTimeParts(date)
+
+  if (dueDateMode && !hasDueDate) {
+    return (
+      <View style={transactionFormStyles.dateTimeRow}>
+        <Pressable
+          style={transactionFormStyles.dateButton}
+          onPress={() => {
+            onDueDateChange?.(true)
+            onDatePress()
+          }}
+          accessibilityRole="button"
+        >
+          <DynamicIcon
+            icon="calendar-month"
+            size={22}
+            color={theme.colors.primary}
+            variant="badge"
+          />
+          <Text
+            variant="default"
+            numberOfLines={1}
+            style={transactionFormStyles.dateButtonText}
+          >
+            {t("components.transactionForm.loan.noDueDate")}
+          </Text>
+        </Pressable>
+      </View>
+    )
+  }
 
   return (
     <>
@@ -87,6 +121,17 @@ export function FormDateSection({
           ) : null}
         </Pressable>
       </View>
+
+      {dueDateMode && (
+        <ListItem
+          onPress={() => onDueDateChange?.(false)}
+          accessibilityRole="button"
+        >
+          <Text variant="default">
+            {t("components.transactionForm.loan.clearDueDate")}
+          </Text>
+        </ListItem>
+      )}
 
       {showPending && (
         <Controller

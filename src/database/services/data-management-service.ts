@@ -19,6 +19,13 @@ import {
   insertBackupData,
   resetDatabaseForBackupImport,
 } from "~/database/backup/backup-import-plan"
+import {
+  type ImportSnapshot,
+  isImportCommitted,
+  newImportMarker,
+  readImportMarker,
+  writeImportMarker,
+} from "~/database/backup/import-marker"
 import { drizzleDb } from "~/database/drizzle/db"
 import { runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
@@ -27,6 +34,11 @@ import {
   readSqliteSnapshot,
   writeSqliteSnapshot,
 } from "~/database/utils/import-snapshot"
+import {
+  profileImageForExport,
+  readBackupProfile,
+  readPortableSettings,
+} from "~/stores/portable-settings"
 import { attachmentsDirectory } from "~/utils/attachments"
 import { escapeCsvField, escapeCsvText } from "~/utils/csv"
 import { getFileExtension, getMimeTypeForExtension } from "~/utils/file-icon"
@@ -222,9 +234,15 @@ async function generateJsonBackup(baseName?: string): Promise<{
   ])
   const fileName = toFileName("json", baseName)
   const uri = `${dir}${fileName}`
-  await FileSystem.writeAsStringAsync(uri, JSON.stringify(backup, null, 2), {
-    encoding: FileSystem.EncodingType.UTF8,
-  })
+  // A plain JSON file cannot carry the photo, so only the name goes in.
+  const withExtras = withSettingsAndProfile(backup, false)
+  await FileSystem.writeAsStringAsync(
+    uri,
+    JSON.stringify(withExtras, null, 2),
+    {
+      encoding: FileSystem.EncodingType.UTF8,
+    },
+  )
   return { uri, fileName }
 }
 
@@ -235,6 +253,19 @@ export async function saveJsonToDevice(
   return saveGeneratedExport(uri, fileName)
 }
 
+/** The portable preferences and the profile, added to an export. */
+function withSettingsAndProfile(
+  backup: MintyFlowBackup,
+  includeProfileImage: boolean,
+): MintyFlowBackup {
+  const profile = readBackupProfile(includeProfileImage)
+  return {
+    ...backup,
+    settings: readPortableSettings(),
+    ...(profile ? { profile } : {}),
+  }
+}
+
 async function generateZipBackup(
   baseName?: string,
 ): Promise<{ uri: string; fileName: string }> {
@@ -243,9 +274,10 @@ async function generateZipBackup(
     buildBackupInMemory(),
   ])
   const jsonUri = `${dir}${BACKUP_JSON_NAME}`
+  const withExtras = withSettingsAndProfile(backup, true)
   await FileSystem.writeAsStringAsync(
     jsonUri,
-    JSON.stringify(backup, null, 2),
+    JSON.stringify(withExtras, null, 2),
     {
       encoding: FileSystem.EncodingType.UTF8,
     },
@@ -257,6 +289,11 @@ async function generateZipBackup(
     .list()
     .filter((entry): entry is File => entry instanceof File)
     .map((file) => file.uri)
+  // The profile photo rides in the same flat archive, named by backup.profile.
+  const profileImage = withExtras.profile?.imageFile
+    ? profileImageForExport()
+    : null
+  if (profileImage) attachments.push(profileImage)
 
   try {
     // An array source zips to flat basenames, so the live attachment files are archived
@@ -307,6 +344,28 @@ export async function readPickedBackup(
   }
 }
 
+const PROFILE_IMAGE_PREFIX = /^minty_profile_/
+
+/**
+ * Copy the archive's profile photo into app storage. Call before
+ * restoreAttachmentsFromStaging, which deletes the staging dir.
+ *
+ * @returns true when the photo was copied.
+ */
+export function restoreProfileImageFromStaging(
+  stagingDir: string,
+  imageFile: string,
+): boolean {
+  try {
+    const source = new File(new Directory(stagingDir), imageFile)
+    if (!source.exists) return false
+    source.copy(new File(Paths.document, imageFile), { overwrite: true })
+    return true
+  } catch {
+    return false
+  }
+}
+
 /** Copy an archive's attachment files into permanent storage. Deletes the staging dir. */
 export async function restoreAttachmentsFromStaging(
   stagingDir: string,
@@ -316,7 +375,9 @@ export async function restoreAttachmentsFromStaging(
     .list()
     .filter(
       (entry): entry is File =>
-        entry instanceof File && entry.name !== BACKUP_JSON_NAME,
+        entry instanceof File &&
+        entry.name !== BACKUP_JSON_NAME &&
+        !PROFILE_IMAGE_PREFIX.test(entry.name),
     )
 
   await Promise.all(
@@ -457,12 +518,20 @@ export async function pickBackupFile(): Promise<{
  * Crash between A and B leaves empty DB; snapshot on disk triggers recovery on next launch.
  */
 export async function recoverInterruptedImport(): Promise<boolean> {
-  const snapshot = await readSqliteSnapshot<MintyFlowBackup>()
+  const snapshot = await readSqliteSnapshot<ImportSnapshot>()
   if (!snapshot) return false
+
+  // The import committed and the app died before it deleted the snapshot:
+  // the database holds the imported data, so the snapshot is stale.
+  if (isImportCommitted(snapshot)) {
+    await deleteSqliteSnapshot()
+    return false
+  }
 
   await resetDatabaseForBackupImport()
   await runInTransaction("recover.insert", (db) => {
     insertBackupData(db, snapshot.data)
+    writeImportMarker(db, 0)
   })
   // Delete only after confirmed success
   await deleteSqliteSnapshot()
@@ -610,7 +679,8 @@ export async function importBackup(
     // 3️⃣ Snapshot current DB to disk before any mutation
     // Survives process-kill between reset (A) and insert (B) — recovery reads it on next launch.
     const snapshot = await buildBackupInMemory()
-    await writeSqliteSnapshot(snapshot)
+    const importMarker = newImportMarker(readImportMarker())
+    await writeSqliteSnapshot({ ...snapshot, importMarker })
 
     // 4️⃣ Transaction A: wipe all rows
     // 5️⃣ Transaction B: insert backup data
@@ -618,6 +688,8 @@ export async function importBackup(
       await resetDatabaseForBackupImport()
       await runInTransaction("import.insert", (db) => {
         insertBackupData(db, data)
+        // Commits with the data: recovery uses it to know this import finished.
+        writeImportMarker(db, importMarker)
       })
       // Import succeeded — snapshot no longer needed
       await deleteSqliteSnapshot()
@@ -627,6 +699,7 @@ export async function importBackup(
         await resetDatabaseForBackupImport()
         await runInTransaction("restore.insert", (db) => {
           insertBackupData(db, snapshot.data)
+          writeImportMarker(db, 0)
         })
         // Restore succeeded — snapshot no longer needed
         await deleteSqliteSnapshot()

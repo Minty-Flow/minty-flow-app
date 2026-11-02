@@ -10,7 +10,9 @@ import { IconSvg, type IconSvgName } from "~/components/icons"
 import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty"
 import { Button } from "~/components/ui/button"
 import { Input } from "~/components/ui/input"
+import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
+import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import {
@@ -24,6 +26,7 @@ import {
   pickedFileKind,
   readPickedBackup,
   restoreAttachmentsFromStaging,
+  restoreProfileImageFromStaging,
   saveCsvToDevice,
   saveJsonToDevice,
   saveZipToDevice,
@@ -34,10 +37,17 @@ import {
   type ExportRecord,
   useExportHistoryStore,
 } from "~/stores/export-history.store"
+import { useOnboardingStore } from "~/stores/onboarding.store"
+import {
+  applyBackupProfile,
+  applyPortableSettings,
+} from "~/stores/portable-settings"
 import { Toast } from "~/utils/toast"
 
 interface ImportSheetState {
   visible: boolean
+  /** Apply the backup's preferences and profile after the data is restored. */
+  restoreSettings: boolean
   backup: MintyFlowBackup | null
   recordCount: number
   tableCount: number
@@ -88,6 +98,7 @@ export default function DataManagementScreen() {
   // past exports are meaningless before any data exists.
   const { mode } = useLocalSearchParams<{ mode?: string }>()
   const importOnly = mode === "import"
+  const setOnboardingCompleted = useOnboardingStore((s) => s.setCompleted)
 
   // The custom file-name field is hidden until the header button reveals it.
   const [baseName, setBaseName] = useState("")
@@ -99,6 +110,7 @@ export default function DataManagementScreen() {
   const navigation = useNavigation()
   const [importSheet, setImportSheet] = useState<ImportSheetState>({
     visible: false,
+    restoreSettings: true,
     backup: null,
     recordCount: 0,
     tableCount: 0,
@@ -210,6 +222,7 @@ export default function DataManagementScreen() {
         const { total, tableCount } = countBackupRecords(result.backup)
         setImportSheet({
           visible: true,
+          restoreSettings: true,
           backup: result.backup,
           recordCount: total,
           tableCount,
@@ -243,6 +256,16 @@ export default function DataManagementScreen() {
         // leave the archive's attachments behind.
         // The data is already replaced, so a failed attachment copy must not
         // read as a failed restore.
+        // Preferences and profile apply only now that the data is committed, so
+        // a failed import changes nothing. Off when the user unticks the switch.
+        if (importSheet.restoreSettings) {
+          const imageRestored =
+            !!stagingDir &&
+            !!backup.profile?.imageFile &&
+            restoreProfileImageFromStaging(stagingDir, backup.profile.imageFile)
+          if (backup.settings) applyPortableSettings(backup.settings)
+          if (backup.profile) applyBackupProfile(backup.profile, imageRestored)
+        }
         let attachmentsFailed = false
         if (stagingDir) {
           try {
@@ -279,6 +302,9 @@ export default function DataManagementScreen() {
   function handleImportConfirmed() {
     if (!importSucceeded.current) return
     importSucceeded.current = false
+    // The import replaced the data, so onboarding has nothing left to offer.
+    // A no-op when onboarding is already over.
+    setOnboardingCompleted()
     if (!importOnly) return
     router.dismissAll()
     router.replace("/")
@@ -436,7 +462,33 @@ export default function DataManagementScreen() {
         onConfirm={handleConfirmImport}
         onConfirmed={handleImportConfirmed}
         onRequestClose={handleCancelImport}
-      />
+      >
+        {/* Only when the backup carries them: v3 to v5 backups have neither. */}
+        {(importSheet.backup?.settings || importSheet.backup?.profile) && (
+          <ListItem
+            onPress={() =>
+              setImportSheet((s) => ({
+                ...s,
+                restoreSettings: !s.restoreSettings,
+              }))
+            }
+            accessibilityRole="switch"
+            accessibilityState={{ checked: importSheet.restoreSettings }}
+          >
+            <Text variant="default" style={{ flex: 1 }}>
+              {t(
+                "screens.settings.dataManagement.importConfirm.restoreSettings",
+              )}
+            </Text>
+            <Switch
+              value={importSheet.restoreSettings}
+              onValueChange={(value) =>
+                setImportSheet((s) => ({ ...s, restoreSettings: value }))
+              }
+            />
+          </ListItem>
+        )}
+      </ConfirmSheet>
     </ScrollView>
   )
 }
