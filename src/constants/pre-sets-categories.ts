@@ -65,6 +65,7 @@ const CORE_PRESETS: CategoryPreset[] = [
   expense("travel", "plane"),
   expense("hobbies", "ping-pong-outline"),
   expense("beauty", "perfume-outline"),
+  expense("donations", "heart-handshake-outline"),
 
   income("paycheck", "wallet-outline"),
   income("bonus", "trophy"),
@@ -77,6 +78,7 @@ const CORE_PRESETS: CategoryPreset[] = [
   income("gifts", "gift"),
   income("cashback", "coins-outline"),
   income("pension", "clock"),
+  income("refunds", "receipt-refund-outline"),
 ]
 
 /** Optional extras grouped by life situation. Empty for now. */

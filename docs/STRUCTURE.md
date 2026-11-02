@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-02T13:22:04.355Z
+Generated on: 2026-11-02T13:29:23.045Z
 ```
 ./
 ├── __tests__/
@@ -181,8 +181,8 @@ Generated on: 2026-11-02T13:22:04.355Z
 │   │   │   │   ├── [categoryId]/
 │   │   │   │   │   ├── index.tsx
 │   │   │   │   │   └── modify.tsx
-│   │   │   │   ├── index.tsx
-│   │   │   │   └── presets.tsx
+│   │   │   │   ├── add.tsx
+│   │   │   │   └── index.tsx
 │   │   │   ├── data-management/
 │   │   │   │   ├── export-history.tsx
 │   │   │   │   └── index.tsx
@@ -274,6 +274,7 @@ Generated on: 2026-11-02T13:22:04.355Z
 │   │   │   │   ├── category-form-sheets.tsx
 │   │   │   │   ├── category-modify-content.tsx
 │   │   │   │   └── types.ts
+│   │   │   ├── add-category-content.tsx
 │   │   │   ├── category-list.tsx
 │   │   │   ├── category-presets-picker.tsx
 │   │   │   ├── category-row.tsx

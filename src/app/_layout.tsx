@@ -236,18 +236,16 @@ function AppRootLayout() {
                 />
 
                 <Stack.Screen
+                  name="settings/categories/add"
+                  options={{ title: t("components.categories.sheet.title") }}
+                />
+                <Stack.Screen
                   name="settings/categories/[categoryId]/index"
                   options={{
                     title: t("components.categories.form.title.edit"),
                   }}
                 />
 
-                <Stack.Screen
-                  name="settings/categories/presets"
-                  options={{
-                    title: t("components.categories.actions.addFromPresets"),
-                  }}
-                />
                 <Stack.Screen
                   name="settings/categories/[categoryId]/modify"
                   options={modifyTitle(

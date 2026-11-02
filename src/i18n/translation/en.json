@@ -1290,7 +1290,8 @@
           "hygiene": "Hygiene",
           "travel": "Travel",
           "hobbies": "Hobbies",
-          "beauty": "Beauty"
+          "beauty": "Beauty",
+          "donations": "Donations"
         },
         "income": {
           "paycheck": "Paycheck",
@@ -1303,7 +1304,8 @@
           "allowance": "Allowance",
           "gifts": "Gifts received",
           "cashback": "Cashback & Refunds",
-          "pension": "Pension"
+          "pension": "Pension",
+          "refunds": "Refunds"
         },
         "essentials": "Essentials",
         "packsTitle": "Fits your life",
@@ -1319,8 +1321,12 @@
         "income": "Income"
       },
       "actions": {
-        "addNew": "Add New Category",
-        "addFromPresets": "Add From Presets"
+        "addNew": "Add New Category"
+      },
+      "sheet": {
+        "title": "Add category",
+        "createOwn": "Create your own",
+        "orPick": "or pick ready-made"
       },
       "form": {
         "title": {
