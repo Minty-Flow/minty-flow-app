@@ -7,7 +7,7 @@ import {
   useNavigation,
   useRouter,
 } from "expo-router"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
@@ -26,6 +26,7 @@ import { useOnboardingResume } from "~/hooks/use-onboarding-resume"
 import { useOnboardingStore } from "~/stores/onboarding.store"
 import { useProfileStore } from "~/stores/profile.store"
 import { logger } from "~/utils/logger"
+import { deleteProfileImage, resolveProfileImage } from "~/utils/profile-image"
 import { getInitials } from "~/utils/string-utils"
 import { Toast } from "~/utils/toast"
 
@@ -65,16 +66,16 @@ export default function EditProfileScreen() {
   // Leaving without saving: drop the photo file that was copied in for it.
   const handleDiscard = () => {
     if (localImageUri && localImageUri !== imageUri) {
-      try {
-        new File(localImageUri).delete()
-      } catch {
-        // already gone: ignore
-      }
+      deleteProfileImage(localImageUri)
     }
     allowNavigation()
     router.back()
   }
 
+  const localImageSource = useMemo(
+    () => resolveProfileImage(localImageUri),
+    [localImageUri],
+  )
   const displayName = localName || "?"
   const initials = getInitials(displayName)
 
@@ -116,7 +117,7 @@ export default function EditProfileScreen() {
       // 6. Point the local state at the new file. The previous persisted file
       // is only deleted in handleSave — deleting it here would leave the saved
       // avatar broken when the user backs out without saving (map §6.4).
-      setLocalImageUri(destinationFile.uri)
+      setLocalImageUri(filename)
     } catch (e) {
       logger.error("Failed to pick/save image:", { e })
 
@@ -135,13 +136,7 @@ export default function EditProfileScreen() {
 
   const handleSave = async () => {
     // If the user picked a new image, delete the previously persisted file.
-    if (localImageUri !== imageUri && imageUri) {
-      try {
-        await new File(imageUri).delete()
-      } catch {
-        // file may already be gone — ignore
-      }
-    }
+    if (localImageUri !== imageUri) deleteProfileImage(imageUri)
     setName(localName)
     setImageUri(localImageUri)
     allowNavigation()
@@ -167,9 +162,9 @@ export default function EditProfileScreen() {
         <View style={styles.avatarSection}>
           <Pressable onPress={handlePickImage} style={styles.avatarContainer}>
             <View style={styles.avatar}>
-              {localImageUri ? (
+              {localImageSource ? (
                 <Image
-                  source={{ uri: localImageUri }}
+                  source={{ uri: localImageSource }}
                   style={styles.avatarImage}
                   contentFit="cover"
                 />

@@ -3,6 +3,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
 import { mmkvJSONStorage } from "~/utils/mmkv-storage"
+import { migrateStoredProfileImage } from "~/utils/profile-image"
 
 /**
  * MMKV storage instance for user profile data.
@@ -22,7 +23,10 @@ const profileStorage = createMMKV({
 interface ProfileStore {
   /** The user's profile name */
   name: string
-  /** The URI of the user's profile image, or null if no image is set */
+  /**
+   * The file name of the user's profile image in app storage, or null if no
+   * image is set. Resolve it with `resolveProfileImage`, never use it as a URI.
+   */
   imageUri: string | null
   /**
    * Sets the profile name.
@@ -30,8 +34,8 @@ interface ProfileStore {
    */
   setName: (name: string) => void
   /**
-   * Sets the profile image URI.
-   * @param imageUri - The image URI to set, or null to remove the image
+   * Sets the profile image.
+   * @param imageUri - The image file name to set, or null to remove the image
    */
   setImageUri: (imageUri: string | null) => void
 }
@@ -52,7 +56,7 @@ interface ProfileStore {
  * setName("John Doe")
  *
  * // Set image
- * setImageUri("file:///path/to/image.jpg")
+ * setImageUri("minty_profile_123.jpg")
  *
  * // Remove image
  * setImageUri(null)
@@ -74,6 +78,19 @@ export const useProfileStore = create<ProfileStore>()(
     {
       name: "profile-store",
       storage: mmkvJSONStorage(profileStorage),
+      // v1: the image is a file name, not an absolute URI (which breaks when
+      // the iOS app container path changes).
+      version: 1,
+      migrate: (persisted, version) => {
+        const state = persisted as Partial<ProfileStore>
+        if (version < 1) {
+          return {
+            ...state,
+            imageUri: migrateStoredProfileImage(state.imageUri ?? null),
+          }
+        }
+        return state
+      },
     },
   ),
 )

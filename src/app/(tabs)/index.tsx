@@ -15,6 +15,7 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
 import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
+import { useProfileImage } from "~/hooks/use-profile-image"
 import { useDayKey } from "~/hooks/use-time-reactivity"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { useProfileStore } from "~/stores/profile.store"
@@ -26,7 +27,11 @@ import {
   DEFAULT_SEARCH_STATE,
   DEFAULT_TRANSACTION_LIST_FILTER_STATE,
 } from "~/types/transaction-filters"
-import { buildQueryFilters } from "~/utils/transaction-list-utils"
+import {
+  applyFiltersAndSearch,
+  buildQueryFilters,
+  hasActiveFilters,
+} from "~/utils/transaction-list-utils"
 
 function HomeScreen() {
   const [filterState, setFilterState] = useState<TransactionListFilterState>(
@@ -42,7 +47,7 @@ function HomeScreen() {
   const { t } = useTranslation()
   const router = useRouter()
   const profileName = useProfileStore((s) => s.name)
-  const image = useProfileStore((s) => s.imageUri)
+  const image = useProfileImage()
   const accounts = useActiveAccounts()
   // dayKey re-bumps on app-foreground and at each date change, so "this month"
   // re-derives after a month rollover instead of serving a memoized stale range.
@@ -56,8 +61,16 @@ function HomeScreen() {
       from: new Date(fromDate).toISOString(),
       to: new Date(toDate).toISOString(),
     })
+  // The summary describes the rows the filters keep, like the list below it.
+  const filteredTransactions = useMemo(
+    () => applyFiltersAndSearch(transactionsFull, filterState, searchState),
+    [transactionsFull, filterState, searchState],
+  )
   const summaryHeader = (
-    <SummarySection transactionsWithRelations={transactionsFull} />
+    <SummarySection
+      transactionsWithRelations={filteredTransactions}
+      filtered={hasActiveFilters(filterState, searchState)}
+    />
   )
   if (transactionsStatus === "loading" && transactionsFull.length === 0)
     return <RouteLoadingState />

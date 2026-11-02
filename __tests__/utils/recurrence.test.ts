@@ -137,3 +137,136 @@ describe("local wall-clock time", () => {
     }),
   )
 })
+
+describe("month-end clamping", () => {
+  const range = (from: Date, to: Date) => ({
+    from: from.getTime(),
+    to: to.getTime(),
+  })
+
+  /** Walk the rule the way the recurring sync does. */
+  function occurrences(rule: string, start: Date, end: Date): Date[] {
+    const out: Date[] = []
+    let anchor = new Date(start.getTime() - 1)
+    for (let i = 0; i < 100; i++) {
+      const next = nextAbsoluteOccurrence([rule], range(start, end), anchor)
+      if (!next) break
+      out.push(next)
+      anchor = next
+    }
+    return out
+  }
+
+  const ymd = (d: Date) => [d.getFullYear(), d.getMonth() + 1, d.getDate()]
+
+  it("clamps a monthly rule from the 31st to each month's last day", () => {
+    const start = new Date(2026, 0, 31, 9, 0)
+    const rule = buildRRuleString({
+      interval: 1,
+      unit: "month",
+      startDate: start,
+    })
+    const dates = occurrences(rule, start, new Date(2026, 5, 30, 23, 59))
+    expect(dates.map(ymd)).toEqual([
+      [2026, 1, 31],
+      [2026, 2, 28],
+      [2026, 3, 31],
+      [2026, 4, 30],
+      [2026, 5, 31],
+      [2026, 6, 30],
+    ])
+  })
+
+  it("clamps February to the 29th in a leap year", () => {
+    const start = new Date(2028, 0, 31, 9, 0)
+    const rule = buildRRuleString({
+      interval: 1,
+      unit: "month",
+      startDate: start,
+    })
+    const dates = occurrences(rule, start, new Date(2028, 2, 31, 23, 59))
+    expect(dates.map(ymd)).toEqual([
+      [2028, 1, 31],
+      [2028, 2, 29],
+      [2028, 3, 31],
+    ])
+  })
+
+  it("keeps the 30th where the month has one and clamps February", () => {
+    const start = new Date(2026, 0, 30, 9, 0)
+    const rule = buildRRuleString({
+      interval: 1,
+      unit: "month",
+      startDate: start,
+    })
+    const dates = occurrences(rule, start, new Date(2026, 3, 30, 23, 59))
+    expect(dates.map(ymd)).toEqual([
+      [2026, 1, 30],
+      [2026, 2, 28],
+      [2026, 3, 30],
+      [2026, 4, 30],
+    ])
+  })
+
+  it("steps by the interval before clamping", () => {
+    const start = new Date(2026, 0, 31, 9, 0)
+    const rule = buildRRuleString({
+      interval: 2,
+      unit: "month",
+      startDate: start,
+    })
+    const dates = occurrences(rule, start, new Date(2026, 6, 31, 23, 59))
+    expect(dates.map(ymd)).toEqual([
+      [2026, 1, 31],
+      [2026, 3, 31],
+      [2026, 5, 31],
+      [2026, 7, 31],
+    ])
+  })
+
+  it("clamps a yearly rule from Feb 29 to Feb 28 in non-leap years", () => {
+    const start = new Date(2028, 1, 29, 9, 0)
+    const rule = buildRRuleString({
+      interval: 1,
+      unit: "year",
+      startDate: start,
+    })
+    const dates = occurrences(rule, start, new Date(2032, 11, 31))
+    expect(dates.map(ymd)).toEqual([
+      [2028, 2, 29],
+      [2029, 2, 28],
+      [2030, 2, 28],
+      [2031, 2, 28],
+      [2032, 2, 29],
+    ])
+  })
+
+  it("leaves a rule from the 28th or earlier alone", () => {
+    const start = new Date(2026, 0, 28, 9, 0)
+    const rule = buildRRuleString({
+      interval: 1,
+      unit: "month",
+      startDate: start,
+    })
+    const dates = occurrences(rule, start, new Date(2026, 2, 31))
+    expect(dates.map(ymd)).toEqual([
+      [2026, 1, 28],
+      [2026, 2, 28],
+      [2026, 3, 28],
+    ])
+  })
+
+  it("counts the same occurrences the sync walks", () => {
+    const start = new Date(2026, 0, 31, 9, 0)
+    const end = new Date(2026, 5, 30, 23, 59)
+    const rule = buildRRuleString({
+      interval: 1,
+      unit: "month",
+      startDate: start,
+    })
+    expect(
+      countOccurrencesBetween(start, end, { interval: 1, unit: "month" }),
+    ).toBe(occurrences(rule, start, end).length)
+    expect(occurrences(rule, start, end)).toHaveLength(6)
+  })
+})

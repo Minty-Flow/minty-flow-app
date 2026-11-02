@@ -36,9 +36,11 @@ Generated on: 2026-11-02T20:31:04.607Z
 │   │   │   ├── delete-recurring-keep-paid.test.ts
 │   │   │   ├── destroy-account-transfer-partner.test.ts
 │   │   │   ├── destroy-account-with-loans.test.ts
+│   │   │   ├── destroy-attachment-files.test.ts
 │   │   │   ├── detach-transfer-from-rule.test.ts
 │   │   │   ├── edit-transfer-validation.test.ts
 │   │   │   ├── empty-trash.test.ts
+│   │   │   ├── import-recovery.test.ts
 │   │   │   ├── loan-hold-guard.test.ts
 │   │   │   ├── loan-type-switch.test.ts
 │   │   │   ├── pending-transfer.test.ts
@@ -74,9 +76,11 @@ Generated on: 2026-11-02T20:31:04.607Z
 │       ├── local-day-key.test.ts
 │       ├── money.test.ts
 │       ├── planning-progress.test.ts
+│       ├── profile-image.test.ts
 │       ├── recurrence.test.ts
 │       ├── stats-date-range.test.ts
-│       └── timestamp-scheduler.test.ts
+│       ├── timestamp-scheduler.test.ts
+│       └── transaction-list-filters.test.ts
 ├── .github/
 │   └── workflows/
 │       ├── board-sync.yml
@@ -529,7 +533,8 @@ Generated on: 2026-11-02T20:31:04.607Z
 │   ├── database/
 │   │   ├── backup/
 │   │   │   ├── backup-format.ts
-│   │   │   └── backup-import-plan.ts
+│   │   │   ├── backup-import-plan.ts
+│   │   │   └── import-marker.ts
 │   │   ├── drizzle/
 │   │   │   ├── read-models/
 │   │   │   │   ├── account-read-model.ts
@@ -563,6 +568,7 @@ Generated on: 2026-11-02T20:31:04.607Z
 │   │   ├── types/
 │   │   │   └── rows.ts
 │   │   ├── utils/
+│   │   │   ├── attachment-files.ts
 │   │   │   ├── generate-id.ts
 │   │   │   ├── get-balance-delta.ts
 │   │   │   ├── has-attachments-from-extra.ts
@@ -589,6 +595,7 @@ Generated on: 2026-11-02T20:31:04.607Z
 │   │   ├── use-onboarding-resume.ts
 │   │   ├── use-permission-status.ts
 │   │   ├── use-preferred-currency-sync.ts
+│   │   ├── use-profile-image.ts
 │   │   ├── use-recurring-rule.ts
 │   │   ├── use-retention-cleanup.ts
 │   │   ├── use-scroll-into-view.ts
@@ -693,6 +700,7 @@ Generated on: 2026-11-02T20:31:04.607Z
 │       ├── parse-math-expression.ts
 │       ├── pending-transactions.ts
 │       ├── planning-progress.ts
+│       ├── profile-image.ts
 │       ├── recurrence.ts
 │       ├── reload-app.ts
 │       ├── stats-date-range.ts
