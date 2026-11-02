@@ -19,6 +19,13 @@ import {
   insertBackupData,
   resetDatabaseForBackupImport,
 } from "~/database/backup/backup-import-plan"
+import {
+  type ImportSnapshot,
+  isImportCommitted,
+  newImportMarker,
+  readImportMarker,
+  writeImportMarker,
+} from "~/database/backup/import-marker"
 import { drizzleDb } from "~/database/drizzle/db"
 import { runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
@@ -450,12 +457,20 @@ export async function pickBackupFile(): Promise<{
  * Crash between A and B leaves empty DB; snapshot on disk triggers recovery on next launch.
  */
 export async function recoverInterruptedImport(): Promise<boolean> {
-  const snapshot = await readSqliteSnapshot<MintyFlowBackup>()
+  const snapshot = await readSqliteSnapshot<ImportSnapshot>()
   if (!snapshot) return false
+
+  // The import committed and the app died before it deleted the snapshot:
+  // the database holds the imported data, so the snapshot is stale.
+  if (isImportCommitted(snapshot)) {
+    await deleteSqliteSnapshot()
+    return false
+  }
 
   await resetDatabaseForBackupImport()
   await runInTransaction("recover.insert", (db) => {
     insertBackupData(db, snapshot.data)
+    writeImportMarker(db, 0)
   })
   // Delete only after confirmed success
   await deleteSqliteSnapshot()
@@ -603,7 +618,8 @@ export async function importBackup(
     // 3️⃣ Snapshot current DB to disk before any mutation
     // Survives process-kill between reset (A) and insert (B) — recovery reads it on next launch.
     const snapshot = await buildBackupInMemory()
-    await writeSqliteSnapshot(snapshot)
+    const importMarker = newImportMarker(readImportMarker())
+    await writeSqliteSnapshot({ ...snapshot, importMarker })
 
     // 4️⃣ Transaction A: wipe all rows
     // 5️⃣ Transaction B: insert backup data
@@ -611,6 +627,8 @@ export async function importBackup(
       await resetDatabaseForBackupImport()
       await runInTransaction("import.insert", (db) => {
         insertBackupData(db, data)
+        // Commits with the data: recovery uses it to know this import finished.
+        writeImportMarker(db, importMarker)
       })
       // Import succeeded — snapshot no longer needed
       await deleteSqliteSnapshot()
@@ -620,6 +638,7 @@ export async function importBackup(
         await resetDatabaseForBackupImport()
         await runInTransaction("restore.insert", (db) => {
           insertBackupData(db, snapshot.data)
+          writeImportMarker(db, 0)
         })
         // Restore succeeded — snapshot no longer needed
         await deleteSqliteSnapshot()

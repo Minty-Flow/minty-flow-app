@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-02T19:43:08.519Z
+Generated on: 2026-11-02T20:16:12.356Z
 ```
 ./
 ├── __tests__/
@@ -39,6 +39,7 @@ Generated on: 2026-11-02T19:43:08.519Z
 │   │   │   ├── detach-transfer-from-rule.test.ts
 │   │   │   ├── edit-transfer-validation.test.ts
 │   │   │   ├── empty-trash.test.ts
+│   │   │   ├── import-recovery.test.ts
 │   │   │   ├── loan-hold-guard.test.ts
 │   │   │   ├── loan-type-switch.test.ts
 │   │   │   ├── pending-transfer.test.ts
@@ -528,7 +529,8 @@ Generated on: 2026-11-02T19:43:08.519Z
 │   ├── database/
 │   │   ├── backup/
 │   │   │   ├── backup-format.ts
-│   │   │   └── backup-import-plan.ts
+│   │   │   ├── backup-import-plan.ts
+│   │   │   └── import-marker.ts
 │   │   ├── drizzle/
 │   │   │   ├── read-models/
 │   │   │   │   ├── account-read-model.ts
