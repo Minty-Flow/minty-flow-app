@@ -978,6 +978,12 @@
         "customBadge": "مخصص",
         "originalRate": "الأصلي: {{rate}}"
       },
+      "backup": {
+        "title": "نسخ احتياطي وتصدير"
+      },
+      "restore": {
+        "title": "استعادة واستيراد"
+      },
       "dataManagement": {
         "title": "إدارة البيانات",
         "sections": {
