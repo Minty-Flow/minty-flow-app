@@ -29,9 +29,10 @@ export function attachmentsDirectory(): Directory {
  *   changes across iOS reinstalls, so an absolute path would not survive the restore
  *   it exists for.
  */
-// ponytail: orphaned attachment files are never GC'd — a picked-then-discarded form
-// leaks one, and an import leaves the previous data's files behind. Add a startup
-// sweep against has_attachments rows if disk complaints appear.
+// ponytail: a discarded form and a destroyed transaction or account now delete their
+// files, but an import still leaves the previous data's files behind, and files
+// orphaned before that fix stay. Add a startup sweep against has_attachments rows if
+// disk complaints appear.
 export async function persistAttachment(
   sourceUri: string,
   name: string,
