@@ -68,6 +68,19 @@ export function applyTransactionFilters(
   return out
 }
 
+/**
+ * The rows the user's structural filters and search keep, before the pending
+ * filter, recurring split and grouping. The home summary and the Upcoming
+ * section read this so they describe the same rows as the list under them.
+ */
+export function applyFiltersAndSearch(
+  list: TransactionWithRelations[],
+  filterState: TransactionListFilterState,
+  searchState: SearchState,
+): TransactionWithRelations[] {
+  return applySearch(applyTransactionFilters(list, filterState), searchState)
+}
+
 /** Apply the pending filter; "all"/"notPending" keep only confirmed rows, "pending" keeps only pending rows. */
 export function applyPendingFilter(
   list: TransactionWithRelations[],

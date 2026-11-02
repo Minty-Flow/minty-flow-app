@@ -26,7 +26,11 @@ import {
   DEFAULT_SEARCH_STATE,
   DEFAULT_TRANSACTION_LIST_FILTER_STATE,
 } from "~/types/transaction-filters"
-import { buildQueryFilters } from "~/utils/transaction-list-utils"
+import {
+  applyFiltersAndSearch,
+  buildQueryFilters,
+  hasActiveFilters,
+} from "~/utils/transaction-list-utils"
 
 function HomeScreen() {
   const [filterState, setFilterState] = useState<TransactionListFilterState>(
@@ -56,8 +60,16 @@ function HomeScreen() {
       from: new Date(fromDate).toISOString(),
       to: new Date(toDate).toISOString(),
     })
+  // The summary describes the rows the filters keep, like the list below it.
+  const filteredTransactions = useMemo(
+    () => applyFiltersAndSearch(transactionsFull, filterState, searchState),
+    [transactionsFull, filterState, searchState],
+  )
   const summaryHeader = (
-    <SummarySection transactionsWithRelations={transactionsFull} />
+    <SummarySection
+      transactionsWithRelations={filteredTransactions}
+      filtered={hasActiveFilters(filterState, searchState)}
+    />
   )
   if (transactionsStatus === "loading" && transactionsFull.length === 0)
     return <RouteLoadingState />

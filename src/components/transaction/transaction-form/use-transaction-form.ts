@@ -249,6 +249,8 @@ export function useTransactionForm({
   // State lags a render, so two quick taps both pass an `isSaving` check.
   const submitLatch = useRef(false)
   const isLoanKind = kind === "lent" || kind === "borrowed"
+  // A new loan has no due date until the user picks one.
+  const [hasLoanDueDate, setHasLoanDueDate] = useState(false)
   const [recurring, setRecurring] = useReducer(mergeReducer<RecurringState>, {
     recurrence: { interval: 1, unit: "month" },
     until: null,
@@ -591,9 +593,9 @@ export function useTransactionForm({
                 term: "one_time",
                 accountId: data.accountId,
                 categoryId: data.categoryId,
-                // The single date field is the due date; the opening
+                // The date field is the optional due date; the opening
                 // cash-flow entry is dated now (the money moved today).
-                dueDate: data.transactionDate.getTime(),
+                dueDate: hasLoanDueDate ? data.transactionDate.getTime() : null,
               },
               {
                 title: data.title?.trim() || null,
@@ -898,6 +900,8 @@ export function useTransactionForm({
     // kind
     kind,
     isLoanKind,
+    hasLoanDueDate,
+    setHasLoanDueDate,
     setKind,
     canEditKind,
     lockedFields,
