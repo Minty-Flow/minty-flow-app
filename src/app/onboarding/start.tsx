@@ -12,15 +12,17 @@ import { useOnboardingStore } from "~/stores/onboarding.store"
 export default function OnboardingStartScreen() {
   const { t } = useTranslation()
   const router = useRouter()
-  const setCompleted = useOnboardingStore((s) => s.setCompleted)
+  const startOnboarding = useOnboardingStore((s) => s.startOnboarding)
 
+  // Completion comes at the end of the flow (the last step, or a finished
+  // import); quitting before that resumes onboarding on the next launch.
   const handleImport = () => {
-    setCompleted()
+    startOnboarding("/onboarding/start")
     router.push("/settings/data-management?mode=import")
   }
 
   const handleFresh = () => {
-    setCompleted()
+    startOnboarding("/onboarding/accounts")
     router.push("/onboarding/accounts")
   }
 

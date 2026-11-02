@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-02T20:40:57.573Z
+Generated on: 2026-11-02T20:31:04.607Z
 ```
 ./
 ├── __tests__/
@@ -508,6 +508,7 @@ Generated on: 2026-11-02T20:40:57.573Z
 │   │   ├── money.tsx
 │   │   ├── month-picker-sheet.tsx
 │   │   ├── month-year-picker.tsx
+│   │   ├── onboarding-resume-sheet.tsx
 │   │   ├── pre-update-backup-gate.tsx
 │   │   ├── preset-list-item.tsx
 │   │   ├── privacy-eye-control.tsx
@@ -592,6 +593,7 @@ Generated on: 2026-11-02T20:40:57.573Z
 │   │   ├── use-modify-route-loader.ts
 │   │   ├── use-navigation-guard.ts
 │   │   ├── use-notification-sync.ts
+│   │   ├── use-onboarding-resume.ts
 │   │   ├── use-permission-status.ts
 │   │   ├── use-preferred-currency-sync.ts
 │   │   ├── use-profile-image.ts
