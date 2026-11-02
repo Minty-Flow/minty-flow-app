@@ -18,7 +18,7 @@ export default function OnboardingStartScreen() {
   // import); quitting before that resumes onboarding on the next launch.
   const handleImport = () => {
     startOnboarding("/onboarding/start")
-    router.push("/settings/data-management?mode=import")
+    router.push("/settings/restore?fromOnboarding=true")
   }
 
   const handleFresh = () => {

@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-02T21:18:23.628Z
+Generated on: 2026-11-02T21:41:19.699Z
 ```
 ./
 ├── __tests__/
@@ -172,6 +172,9 @@ Generated on: 2026-11-02T21:18:23.628Z
 │   │   │   ├── index.tsx
 │   │   │   └── start.tsx
 │   │   ├── settings/
+│   │   │   ├── backup/
+│   │   │   │   ├── export-history.tsx
+│   │   │   │   └── index.tsx
 │   │   │   ├── bill-splitter/
 │   │   │   │   ├── add-item.tsx
 │   │   │   │   ├── index.tsx
@@ -189,8 +192,6 @@ Generated on: 2026-11-02T21:18:23.628Z
 │   │   │   │   ├── add.tsx
 │   │   │   │   └── index.tsx
 │   │   │   ├── data-management/
-│   │   │   │   ├── export-history.tsx
-│   │   │   │   └── index.tsx
 │   │   │   ├── goals/
 │   │   │   │   ├── [goalId]/
 │   │   │   │   │   ├── index.tsx
@@ -219,6 +220,8 @@ Generated on: 2026-11-02T21:18:23.628Z
 │   │   │   │   ├── transaction-location.tsx
 │   │   │   │   ├── transfers.tsx
 │   │   │   │   └── trash-bin.tsx
+│   │   │   ├── restore/
+│   │   │   │   └── index.tsx
 │   │   │   ├── tags/
 │   │   │   │   ├── [tagId].tsx
 │   │   │   │   └── index.tsx
@@ -500,6 +503,7 @@ Generated on: 2026-11-02T21:18:23.628Z
 │   │   ├── app-lock-gate.tsx
 │   │   ├── color-variant-inline.tsx
 │   │   ├── confirm-sheet.tsx
+│   │   ├── data-card.tsx
 │   │   ├── dynamic-icon.tsx
 │   │   ├── external-link.tsx
 │   │   ├── filter-toggle-button.tsx

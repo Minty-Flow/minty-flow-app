@@ -104,9 +104,14 @@ const settingsGroups: SettingsGroup[] = [
         icon: "puzzle-outline",
       },
       {
-        titleKey: "screens.settings.dataManagement.title",
-        route: "/settings/data-management",
-        icon: "database-outline",
+        titleKey: "screens.settings.backup.title",
+        route: "/settings/backup",
+        icon: "database-export-outline",
+      },
+      {
+        titleKey: "screens.settings.restore.title",
+        route: "/settings/restore",
+        icon: "database-import-outline",
       },
     ],
   },
