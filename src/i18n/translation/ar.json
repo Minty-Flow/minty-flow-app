@@ -1279,7 +1279,9 @@
         "markDeposited": "تحديد كمُودعة"
       },
       "loan": {
-        "nameLabel": "اسم القرض"
+        "nameLabel": "اسم القرض",
+        "noDueDate": "بلا تاريخ استحقاق",
+        "clearDueDate": "إزالة تاريخ الاستحقاق"
       },
       "deleteLoanSheet": {
         "title": "حذف هذا القرض؟",
