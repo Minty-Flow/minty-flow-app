@@ -74,6 +74,7 @@ export const useToastStore = create<ToastStore>((set) => ({
       onShow: options.onShow,
       onHide: options.onHide,
       onPress: options.onPress,
+      action: options.action,
     }
 
     set((state) => ({
