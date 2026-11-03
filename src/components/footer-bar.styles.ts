@@ -6,7 +6,7 @@ export const footerBarStyles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     gap: 12,
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 12,
     backgroundColor: theme.colors.surface,
     borderTopWidth: 1,
     borderTopColor: theme.colors.semantic.semi,
