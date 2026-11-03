@@ -19,6 +19,7 @@ import {
   editAccountsSchema,
 } from "~/schemas/accounts.schema"
 import { currencyRegistryService } from "~/services/currency-registry"
+import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { getThemeStrict } from "~/styles/theme/registry"
 import { AccountTypeEnum } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
@@ -40,8 +41,10 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
   const handleGoBack = () => {
     router.back()
   }
-  const usdCurrency = currencyRegistryService.getCurrencyByCode("USD")
-  const useCode = usdCurrency?.code ?? "USD"
+  // New accounts start in the preferred currency, falling back to USD.
+  const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
+  const useCode =
+    currencyRegistryService.getCurrencyByCode(preferredCurrency)?.code ?? "USD"
   const {
     control,
     handleSubmit: handleFormSubmit,

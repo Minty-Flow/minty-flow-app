@@ -109,7 +109,11 @@ export default function OnboardingAccountsScreen() {
 
         <CurrencySelectorSheet
           selectedCurrencyCode={currency}
-          onCurrencySelected={setChosenCurrency}
+          onCurrencySelected={(code) => {
+            setChosenCurrency(code)
+            // Saved now so "Add new account" opens in the same currency.
+            setCurrency(code)
+          }}
         />
         <Text variant="muted" style={styles.currencyHint}>
           {t("onboarding.accounts.currencyHint")}
