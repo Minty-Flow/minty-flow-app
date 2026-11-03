@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Controller } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
@@ -32,6 +33,7 @@ export function AccountModifyContent({
   transactionCount = 0,
 }: AccountModifyContentProps) {
   const { t } = useTranslation()
+  const [footerHeight, setFooterHeight] = useState(0)
   const {
     isAddMode,
     control,
@@ -76,6 +78,7 @@ export function AccountModifyContent({
   return (
     <View style={modifyFormStyles.container}>
       <ScrollIntoViewProvider
+        keyboardInset={footerHeight}
         scrollViewStyle={modifyFormStyles.scrollView}
         contentContainerStyle={modifyFormStyles.scrollContent}
       >
@@ -182,6 +185,7 @@ export function AccountModifyContent({
       </ScrollIntoViewProvider>
 
       <ModifyFormFooter
+        onHeightChange={setFooterHeight}
         formName={formName}
         isAddMode={isAddMode}
         isDirty={isDirty}

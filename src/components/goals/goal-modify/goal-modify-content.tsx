@@ -58,6 +58,7 @@ export function GoalModifyContent({
   accounts,
 }: GoalModifyContentProps) {
   const { t } = useTranslation()
+  const [footerHeight, setFooterHeight] = useState(0)
   const router = useRouter()
   const { theme } = useUnistyles()
   const isAddMode = goalModifyId === NewEnum.NEW || !goalModifyId
@@ -208,6 +209,7 @@ export function GoalModifyContent({
   return (
     <View style={modifyFormStyles.container}>
       <ScrollIntoViewProvider
+        keyboardInset={footerHeight}
         scrollViewStyle={modifyFormStyles.scrollView}
         contentContainerStyle={modifyFormStyles.scrollContent}
       >
@@ -400,6 +402,7 @@ export function GoalModifyContent({
       </ScrollIntoViewProvider>
 
       <ModifyFormFooter
+        onHeightChange={setFooterHeight}
         formName={formName}
         isAddMode={isAddMode}
         isDirty={isDirty}

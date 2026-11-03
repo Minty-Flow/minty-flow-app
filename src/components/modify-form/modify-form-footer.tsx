@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next"
 
+import { FooterBar } from "~/components/footer-bar"
+import { footerBarStyles } from "~/components/footer-bar.styles"
+import { KeyboardStickyFooter } from "~/components/keyboard-sticky-footer"
 import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
-import { View } from "~/components/ui/view"
-
-import { modifyFormStyles } from "./modify-form.styles"
 
 interface ModifyFormFooterProps {
   formName: string
@@ -15,6 +15,8 @@ interface ModifyFormFooterProps {
   hideSave?: boolean
   onCancel: () => void
   onSave: () => void
+  /** Footer height, for the screen's `ScrollIntoViewProvider.keyboardInset`. */
+  onHeightChange?: (height: number) => void
 }
 
 /** Cancel / Create-or-Save footer shared by every create / edit form. */
@@ -26,38 +28,41 @@ export function ModifyFormFooter({
   hideSave = false,
   onCancel,
   onSave,
+  onHeightChange,
 }: ModifyFormFooterProps) {
   const { t } = useTranslation()
 
   return (
-    <View style={modifyFormStyles.actions}>
-      <Button
-        variant="outline"
-        onPress={onCancel}
-        style={modifyFormStyles.button}
-      >
-        <Text variant="default" style={modifyFormStyles.cancelText}>
-          {t("common.actions.cancel")}
-        </Text>
-      </Button>
-      {!hideSave && (
+    <KeyboardStickyFooter onHeightChange={onHeightChange}>
+      <FooterBar>
         <Button
-          variant="default"
-          onPress={onSave}
-          style={modifyFormStyles.button}
-          disabled={
-            !formName.trim() || (!isAddMode && !isDirty) || isSubmitting
-          }
+          variant="secondary"
+          onPress={onCancel}
+          style={footerBarStyles.button}
         >
-          <Text variant="default" style={modifyFormStyles.saveText}>
-            {isSubmitting
-              ? t("common.actions.saving")
-              : isAddMode
-                ? t("common.actions.create")
-                : t("common.actions.saveChanges")}
+          <Text variant="default" style={footerBarStyles.cancelText}>
+            {t("common.actions.cancel")}
           </Text>
         </Button>
-      )}
-    </View>
+        {!hideSave && (
+          <Button
+            variant="default"
+            onPress={onSave}
+            style={footerBarStyles.button}
+            disabled={
+              !formName.trim() || (!isAddMode && !isDirty) || isSubmitting
+            }
+          >
+            <Text variant="default" style={footerBarStyles.saveText}>
+              {isSubmitting
+                ? t("common.actions.saving")
+                : isAddMode
+                  ? t("common.actions.create")
+                  : t("common.actions.saveChanges")}
+            </Text>
+          </Button>
+        )}
+      </FooterBar>
+    </KeyboardStickyFooter>
   )
 }

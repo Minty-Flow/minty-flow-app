@@ -1,11 +1,15 @@
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ScrollView, TextInput } from "react-native"
+import { TextInput } from "react-native"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { AddNameSheet } from "~/components/bill-splitter/add-name-sheet"
+import { FooterBar } from "~/components/footer-bar"
+import { footerBarStyles } from "~/components/footer-bar.styles"
 import { IconSvg } from "~/components/icons"
+import { KeyboardStickyFooter } from "~/components/keyboard-sticky-footer"
 import { Money } from "~/components/money"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { Button } from "~/components/ui/button"
@@ -78,6 +82,7 @@ export default function AddItemScreen() {
     },
   )
   const [addNameVisible, setAddNameVisible] = useState(false)
+  const [footerHeight, setFooterHeight] = useState(0)
   const [multiplierExpanded, setMultiplierExpanded] = useState(
     editItem ? editItem.quantity !== 1 : false,
   )
@@ -190,7 +195,8 @@ export default function AddItemScreen() {
     !name.trim() || selectedCount === 0 || (!splitEvenly && !isExact)
   return (
     <View style={styles.container}>
-      <ScrollView
+      <KeyboardAwareScrollView
+        bottomOffset={24 + footerHeight}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
@@ -397,30 +403,34 @@ export default function AddItemScreen() {
             </Text>
           </View>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Footer: Cancel + Save side by side, matching budget-modify pattern */}
-      <View style={styles.footer}>
-        <Button
-          variant="outline"
-          onPress={handleCancel}
-          style={styles.footerButton}
-        >
-          <Text style={styles.cancelText}>{t("common.actions.cancel")}</Text>
-        </Button>
-        <Button
-          variant="default"
-          onPress={handleSave}
-          style={styles.footerButton}
-          disabled={isSaveDisabled}
-        >
-          <Text style={styles.saveText}>
-            {isEditMode
-              ? t("common.actions.save")
-              : t("screens.settings.billSplitter.actions.addItem")}
-          </Text>
-        </Button>
-      </View>
+      <KeyboardStickyFooter onHeightChange={setFooterHeight}>
+        <FooterBar>
+          <Button
+            variant="secondary"
+            onPress={handleCancel}
+            style={footerBarStyles.button}
+          >
+            <Text style={footerBarStyles.cancelText}>
+              {t("common.actions.cancel")}
+            </Text>
+          </Button>
+          <Button
+            variant="default"
+            onPress={handleSave}
+            style={footerBarStyles.button}
+            disabled={isSaveDisabled}
+          >
+            <Text style={footerBarStyles.saveText}>
+              {isEditMode
+                ? t("common.actions.save")
+                : t("screens.settings.billSplitter.actions.addItem")}
+            </Text>
+          </Button>
+        </FooterBar>
+      </KeyboardStickyFooter>
 
       <AddNameSheet
         visible={addNameVisible}
@@ -596,26 +606,5 @@ const styles = StyleSheet.create((theme) => ({
   percentageTotalValue: {
     fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "700",
-  },
-  // Footer — Cancel + Save side by side (matches budget-modify actions pattern)
-  footer: {
-    flexDirection: "row",
-    gap: 10,
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-  },
-  footerButton: {
-    flex: 1,
-  },
-  cancelText: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-    fontWeight: "600",
-    color: theme.colors.onSurface,
-  },
-  saveText: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-    fontWeight: "600",
-    color: theme.colors.onPrimary,
   },
 }))
