@@ -1203,6 +1203,7 @@
         "restoredDescription": "Transaction restored.",
         "restoreFailed": "Failed to restore transaction",
         "couldNotSelectFile": "Could not select file",
+        "attachmentsDroppedRecurring": "Attachments removed: recurring entries can't keep files",
         "permissionRequired": "Permission required",
         "cameraPermission": "Camera access is needed to take a photo.",
         "libraryPermission": "Photo library access is needed.",
