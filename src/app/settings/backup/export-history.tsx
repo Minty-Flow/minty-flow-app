@@ -1,7 +1,7 @@
 import * as FileSystem from "expo-file-system/legacy"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FlatList, Share } from "react-native"
+import { FlatList, Platform, Share } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 import { useShallow } from "zustand/react/shallow"
 
@@ -135,11 +135,15 @@ function ActionSheet({
           label={t("screens.settings.dataManagement.history.saveAs")}
           onPress={onSave}
         />
-        <ActionButton
-          icon="share-outline"
-          label={t("screens.settings.dataManagement.history.share")}
-          onPress={onShare}
-        />
+        {/* Android's Share reads `message`, not `url`, so a file is never
+            attached there; "Save as" covers it. */}
+        {Platform.OS !== "android" && (
+          <ActionButton
+            icon="share-outline"
+            label={t("screens.settings.dataManagement.history.share")}
+            onPress={onShare}
+          />
+        )}
         <ActionButton
           icon="trash-outline"
           label={t("screens.settings.dataManagement.history.remove")}

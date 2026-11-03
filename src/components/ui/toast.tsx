@@ -1,4 +1,5 @@
-import { Platform } from "react-native"
+import { useEffect, useRef } from "react"
+import { useTranslation } from "react-i18next"
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -25,6 +26,7 @@ type ToastItemProps = {
   onHide: (id: string) => void
 }
 const ToastItem = ({ toast, onHide }: ToastItemProps) => {
+  const { t } = useTranslation()
   // Capture toast properties for use in worklets
   const toastPosition = toast.position
   const toastAutoHide = toast.autoHide
@@ -36,7 +38,7 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
   const opacity = useSharedValue(0)
   const scale = useSharedValue(0.8)
   const progressWidth = useSharedValue(100)
-  const autoHideTimer = useSharedValue(0)
+  const autoHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasAnimated = useSharedValue(false)
   const handleHide = () => {
     onHide(toastId)
@@ -145,18 +147,25 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
           easing: Easing.linear,
         })
       }
-      // Auto-hide with exit animation
+      // Auto-hide with exit animation. Reanimated's withDelay is skipped under
+      // reduced motion and hid every toast on frame 1 (§10.2), so the pause
+      // runs as a plain JS timer on the RN thread.
       if (toastAutoHide) {
-        // Use a dedicated timer for auto-hide
-        autoHideTimer.value = withDelay(
-          toastVisibilityTime,
-          withTiming(1, { duration: 0 }, () => {
-            scheduleOnRN(triggerHide)
-          }),
-        )
+        scheduleOnRN(scheduleAutoHide)
       }
     })
   }
+  // Component-scope function so the UI worklet can hand it to scheduleOnRN
+  // by reference (locally-defined closures are not allowed).
+  const scheduleAutoHide = () => {
+    autoHideTimer.current = setTimeout(triggerHide, toastVisibilityTime)
+  }
+  useEffect(
+    () => () => {
+      if (autoHideTimer.current) clearTimeout(autoHideTimer.current)
+    },
+    [],
+  )
   return (
     <AnimatedPressable
       style={[toastStyles.container, animatedStyle]}
@@ -171,9 +180,23 @@ const ToastItem = ({ toast, onHide }: ToastItemProps) => {
             <Text style={toastStyles.text2}>{toast.description}</Text>
           )}
         </View>
+        {toast.action ? (
+          <Pressable
+            onPress={() => {
+              toast.action?.onPress()
+              triggerHide()
+            }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={toastStyles.actionButton}
+            accessibilityLabel={toast.action.label}
+          >
+            <Text style={toastStyles.actionText}>{toast.action.label}</Text>
+          </Pressable>
+        ) : null}
         {toast.showCloseIcon && (
           <Pressable
             onPress={triggerHide}
+            accessibilityLabel={t("common.actions.close")}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={toastStyles.closeButton}
           >
@@ -276,7 +299,7 @@ const toastItemStyles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.primary,
   },
 }))
-const toastStyles = StyleSheet.create((theme) => ({
+const toastStyles = StyleSheet.create((theme, rt) => ({
   overlay: {
     position: "absolute",
     top: 0,
@@ -291,7 +314,8 @@ const toastStyles = StyleSheet.create((theme) => ({
     top: 0,
     left: 0,
     right: 0,
-    paddingTop: Platform.select({ ios: 60, android: 50, web: 20, default: 50 }),
+    // Clear the status bar / notch / camera cutout on every device.
+    paddingTop: rt.insets.top + 12,
     paddingHorizontal: 16,
     gap: 8,
     alignItems: "center",
@@ -306,12 +330,7 @@ const toastStyles = StyleSheet.create((theme) => ({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingBottom: Platform.select({
-      ios: 40,
-      android: 50,
-      web: 20,
-      default: 50,
-    }),
+    paddingBottom: rt.insets.bottom + 16,
     paddingHorizontal: 16,
     gap: 8,
     alignItems: "center",
@@ -360,6 +379,16 @@ const toastStyles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.onSecondary,
   },
+  actionButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginLeft: 8,
+  },
+  actionText: {
+    ...theme.typography.titleSmall,
+    fontWeight: "700",
+    color: theme.colors.primary,
+  },
   closeButton: {
     padding: 4,
     marginLeft: 8,
@@ -370,7 +399,8 @@ const toastStyles = StyleSheet.create((theme) => ({
     left: 0,
     right: 0,
     height: 4,
-    backgroundColor: "rgba(0,0,0,0.1)",
+    // Themed track: a fixed black tint vanishes on dark surfaces.
+    backgroundColor: `${theme.colors.onSecondary}26`,
     borderBottomLeftRadius: theme.radius,
     borderBottomRightRadius: theme.radius,
     overflow: "hidden",

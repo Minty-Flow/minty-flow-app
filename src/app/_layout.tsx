@@ -13,6 +13,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context"
 import { UnistylesRuntime, useUnistyles } from "react-native-unistyles"
 
 import { AppLockGate } from "~/components/app-lock-gate"
+import { OnboardingResumeSheet } from "~/components/onboarding-resume-sheet"
 import {
   MigrationState,
   PreUpdateBackupGate,
@@ -20,12 +21,15 @@ import {
 import { RouteErrorBoundary } from "~/components/route-error-boundary"
 import { ToastManager } from "~/components/ui/toast"
 import { TooltipProvider } from "~/components/ui/tooltip"
+import { TRANSACTION_REMINDERS_CHANNEL_ID } from "~/constants/notification-channels"
 import { drizzleDb, expoDb } from "~/database/drizzle/db"
 import { useImportRecovery } from "~/hooks/use-import-recovery"
 import { useNotificationSync } from "~/hooks/use-notification-sync"
+import { usePreferredCurrencySync } from "~/hooks/use-preferred-currency-sync"
 import { useRetentionCleanup } from "~/hooks/use-retention-cleanup"
 import { useShakeListener } from "~/hooks/use-shake-listener"
 import { useTransactionLifecycleSync } from "~/hooks/use-transaction-lifecycle-sync"
+import i18n from "~/i18n/config"
 import { DirectionEnum } from "~/i18n/language.constants"
 import { useLanguageStore } from "~/stores/language.store"
 import { useOnboardingStore } from "~/stores/onboarding.store"
@@ -35,6 +39,17 @@ import { logger } from "~/utils/logger"
 import migrations from "../../drizzle/migrations"
 
 // TODO: code of conduct to be added alongside contributions rules
+
+// Registered at app start, not by whichever settings screen happens to load
+// first, so a reminder shows while the app is open.
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+})
 
 export default function RootLayout() {
   return (
@@ -58,12 +73,23 @@ function DrizzleMigratedApp() {
 
   if (migration.error) {
     return (
-      <MigrationState message="Database migration failed. Restart the app or recover from backup." />
+      <MigrationState
+        message={i18n.t("common.migration.failed", {
+          defaultValue:
+            "Database migration failed. Restart the app or recover from backup.",
+        })}
+      />
     )
   }
 
   if (!migration.success) {
-    return <MigrationState message="Preparing database..." />
+    return (
+      <MigrationState
+        message={i18n.t("common.migration.preparing", {
+          defaultValue: "Preparing database...",
+        })}
+      />
+    )
   }
 
   return <AppRootLayout />
@@ -75,21 +101,32 @@ function AppRootLayout() {
 
   const isRTL = useLanguageStore((s) => s.isRTL)
   const isOnboardingCompleted = useOnboardingStore((s) => s.isCompleted)
+  const isOnboardingInProgress = useOnboardingStore((s) => s.isInProgress)
   const router = useRouter()
   const segments = useSegments()
 
   useEffect(() => {
-    if (!isOnboardingCompleted && segments[0] !== "onboarding") {
+    // Once the user has picked a path, routes outside onboarding (custom
+    // account, import, profile) must stay reachable; the next launch offers
+    // to resume instead of redirecting.
+    if (
+      !isOnboardingCompleted &&
+      !isOnboardingInProgress &&
+      segments[0] !== "onboarding"
+    ) {
       router.replace("/onboarding")
     }
-  }, [isOnboardingCompleted, segments, router])
+  }, [isOnboardingCompleted, isOnboardingInProgress, segments, router])
 
   useEffect(() => {
     if (Platform.OS === "android") {
-      Notifications.setNotificationChannelAsync("transaction-reminders", {
-        name: "Transaction Reminders",
-        importance: Notifications.AndroidImportance.HIGH,
-      }).catch(() => {})
+      Notifications.setNotificationChannelAsync(
+        TRANSACTION_REMINDERS_CHANNEL_ID,
+        {
+          name: "Transaction Reminders",
+          importance: Notifications.AndroidImportance.HIGH,
+        },
+      ).catch(() => {})
     }
   }, [])
 
@@ -108,6 +145,7 @@ function AppRootLayout() {
   useRetentionCleanup()
   useTransactionLifecycleSync()
   useNotificationSync()
+  usePreferredCurrencySync()
   useImportRecovery()
 
   return (
@@ -194,7 +232,7 @@ function AppRootLayout() {
                   options={modifyTitle(
                     "loanId",
                     t("screens.settings.loans.addNew"),
-                    t("screens.settings.loans.title"),
+                    t("screens.settings.loans.editTitle"),
                   )}
                 />
                 <Stack.Screen
@@ -207,18 +245,16 @@ function AppRootLayout() {
                 />
 
                 <Stack.Screen
+                  name="settings/categories/add"
+                  options={{ title: t("components.categories.sheet.title") }}
+                />
+                <Stack.Screen
                   name="settings/categories/[categoryId]/index"
                   options={{
                     title: t("components.categories.form.title.edit"),
                   }}
                 />
 
-                <Stack.Screen
-                  name="settings/categories/presets"
-                  options={{
-                    title: t("components.categories.actions.addFromPresets"),
-                  }}
-                />
                 <Stack.Screen
                   name="settings/categories/[categoryId]/modify"
                   options={modifyTitle(
@@ -240,13 +276,15 @@ function AppRootLayout() {
                   options={{ title: t("screens.settings.preferences.title") }}
                 />
                 <Stack.Screen
-                  name="settings/data-management/index"
-                  options={{
-                    title: t("screens.settings.dataManagement.title"),
-                  }}
+                  name="settings/backup/index"
+                  options={{ title: t("screens.settings.backup.title") }}
                 />
                 <Stack.Screen
-                  name="settings/data-management/export-history"
+                  name="settings/restore/index"
+                  options={{ title: t("screens.settings.restore.title") }}
+                />
+                <Stack.Screen
+                  name="settings/backup/export-history"
                   options={{
                     title: t("screens.settings.dataManagement.history.title"),
                   }}
@@ -349,7 +387,7 @@ function AppRootLayout() {
                 />
                 <Stack.Screen
                   name="settings/preferences/trash-bin"
-                  options={{ title: t("screens.settings.trash.title") }}
+                  options={{ title: t("screens.settings.trash.settingsTitle") }}
                 />
                 <Stack.Screen
                   name="settings/preferences/reminder"
@@ -452,8 +490,10 @@ function AppRootLayout() {
               </Stack>
             </RouteErrorBoundary>
 
-            <AppLockGate />
+            {/* Toasts go under the lock so nothing shows above the blur before unlock. */}
             <ToastManager />
+            <AppLockGate />
+            <OnboardingResumeSheet />
 
             <NavigationBar style="auto" />
           </TooltipProvider>

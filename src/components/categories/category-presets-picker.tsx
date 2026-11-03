@@ -93,19 +93,24 @@ function PickerInner({
 
   const handleDone = () => {
     startTransition(async () => {
-      const toCreate = allPresets.filter((p) => selected.has(presetKey(p)))
-      try {
-        await Promise.all(
-          toCreate.map((preset) =>
-            createCategory({
-              name: t(preset.name),
-              type: preset.type,
-              icon: preset.icon,
-              colorSchemeName: preset.colorSchemeName,
-            }),
-          ),
-        )
-      } catch (error) {
+      // Skip presets already added: after a partial failure the retry must not
+      // create the ones that succeeded a second time.
+      const toCreate = allPresets.filter(
+        (p) => selected.has(presetKey(p)) && !addedKeys.has(presetKey(p)),
+      )
+      const results = await Promise.allSettled(
+        toCreate.map((preset) =>
+          createCategory({
+            name: t(preset.name),
+            type: preset.type,
+            icon: preset.icon,
+            colorSchemeName: preset.colorSchemeName,
+          }),
+        ),
+      )
+      const failed = results.find((r) => r.status === "rejected")
+      if (failed?.status === "rejected") {
+        const error = failed.reason
         logger.error("Error creating preset categories", { error })
         Toast.error({
           title: t("common.toast.error"),

@@ -162,7 +162,7 @@ export const FormTagFields = ({
             setValue("colorSchemeName", scheme, { shouldDirty: true })
           }}
           onClearSelection={() =>
-            setValue("colorSchemeName", undefined, {
+            setValue("colorSchemeName", null, {
               shouldDirty: true,
             })
           }

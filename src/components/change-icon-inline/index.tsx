@@ -4,6 +4,7 @@
  */
 
 import * as Clipboard from "expo-clipboard"
+import { File, Paths } from "expo-file-system"
 import * as ImagePicker from "expo-image-picker"
 import type { ComponentRef } from "react"
 import { useRef, useState } from "react"
@@ -21,6 +22,7 @@ import {
   getLastGrapheme,
   isSingleEmojiOrLetter,
 } from "~/utils/is-single-emoji-or-letter"
+import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
 import { changeIconInlineStyles as styles } from "./change-icon-inline.styles"
@@ -145,7 +147,16 @@ export function ChangeIconInline({
       quality: 0.8,
     })
     if (!result.canceled && result.assets[0]) {
-      setImageUri(result.assets[0].uri)
+      try {
+        // The picker hands back a cache file the OS may purge, which would
+        // blank the icon. Keep a copy in the app's document storage.
+        const copy = new File(Paths.document, `minty_icon_${Date.now()}.jpg`)
+        await new File(result.assets[0].uri).copy(copy)
+        setImageUri(copy.uri)
+      } catch (e) {
+        logger.error("Failed to copy icon image", { e })
+        Toast.error({ title: t("common.toast.error") })
+      }
     }
   }
 

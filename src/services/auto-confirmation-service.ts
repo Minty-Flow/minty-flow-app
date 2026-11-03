@@ -87,7 +87,19 @@ class AutoConfirmationService {
    * This removes the implicit store dependency and makes it explicit.
    */
   configure(config: AutoConfirmConfig) {
+    const changed =
+      this.config === null ||
+      Object.entries(config).some(
+        ([key, value]) =>
+          this.config?.[key as keyof AutoConfirmConfig] !== value,
+      )
     this.config = config
+    // An armed timeout was set under the old switches; drop it and re-read the
+    // pending set now instead of waiting for the next 60 s sweep.
+    if (changed) {
+      this.clearAllSchedules()
+      if (this.isActive) void this.sweep().catch(() => {})
+    }
   }
 
   start() {
@@ -219,12 +231,27 @@ class AutoConfirmationService {
     const timeout = setTimeout(() => {
       this.scheduledTimeouts.delete(transactionId)
       if (this.isCapped(transactionId)) return
-      void this.confirmTransaction(transactionId, updateDate).then((ok) => {
+      void this.confirmIfStillEligible(transactionId, updateDate).then((ok) => {
         if (ok) this.bump()
       })
     }, msUntil)
 
     this.scheduledTimeouts.set(transactionId, timeout)
+  }
+
+  /**
+   * The row may have been edited, trashed or un-preapproved after its timeout
+   * was armed, so re-read it before confirming.
+   */
+  private async confirmIfStillEligible(
+    transactionId: string,
+    updateDate: boolean,
+  ): Promise<boolean> {
+    const row = (await getPendingTransactions()).find(
+      (pending) => pending.id === transactionId,
+    )
+    if (!row || !this.shouldAutoConfirm(row)) return false
+    return this.confirmTransaction(transactionId, updateDate)
   }
 
   /** Returns true if the row was confirmed without throwing. Never rejects. */

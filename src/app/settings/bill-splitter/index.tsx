@@ -26,6 +26,7 @@ import {
 } from "~/stores/bill-splitter.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { BillItem } from "~/types/bill-splitter"
+import { Toast } from "~/utils/toast"
 export default function BillSplitterScreen() {
   const { data: accounts, status } = useActiveAccountsQuery()
   const { t } = useTranslation()
@@ -38,6 +39,7 @@ export default function BillSplitterScreen() {
   const accountId = useBillSplitterStore((s) => s.accountId)
   const setAccountId = useBillSplitterStore((s) => s.setAccountId)
   const removeItem = useBillSplitterStore((s) => s.removeItem)
+  const addItem = useBillSplitterStore((s) => s.addItem)
   const clearBill = useBillSplitterStore((s) => s.clearBill)
   const setCurrencyCode = useBillSplitterStore((s) => s.setCurrencyCode)
   const [infoVisible, setInfoVisible] = useState(false)
@@ -45,7 +47,13 @@ export default function BillSplitterScreen() {
   const [accountPickerOpen, setAccountPickerOpen] = useState(false)
   const selectedAccount = accounts.find((a) => a.id === accountId) ?? null
   const currency = selectedAccount?.currencyCode ?? preferredCurrency
-  useEffect(() => setCurrencyCode(currency), [currency, setCurrencyCode])
+  // §6.1: the first render has no accounts, so `currency` is the preferred one;
+  // rescaling through it and back again drops a digit in 3-decimal currencies.
+  // Only sync once the real account (or its absence) is known.
+  useEffect(() => {
+    if (status === "loading" || status === "error") return
+    setCurrencyCode(currency)
+  }, [currency, setCurrencyCode, status])
   const total = getBillTotal(items)
   const allocated = getAllocatedTotal(items)
   // Progress bar fill percentage, clamped to 0–100
@@ -90,7 +98,19 @@ export default function BillSplitterScreen() {
     <BillItemCard
       item={item}
       participants={participants}
-      onDelete={() => removeItem(item.id)}
+      currency={currency}
+      onDelete={() => {
+        const { id: _id, ...removed } = item
+        removeItem(item.id)
+        Toast.show({
+          type: "info",
+          title: t("screens.settings.billSplitter.items.removed"),
+          action: {
+            label: t("common.actions.undo"),
+            onPress: () => addItem(removed),
+          },
+        })
+      }}
       onEdit={() =>
         router.push({
           pathname: "/settings/bill-splitter/add-item",
@@ -219,8 +239,9 @@ export default function BillSplitterScreen() {
                   color={theme.colors.onSecondary}
                 />
                 <Text style={styles.participantsChipText}>
-                  {participants.length}{" "}
-                  {t("screens.settings.billSplitter.names.title").toLowerCase()}
+                  {t("screens.settings.billSplitter.names.count", {
+                    count: participants.length,
+                  })}
                 </Text>
               </Pressable>
             </View>

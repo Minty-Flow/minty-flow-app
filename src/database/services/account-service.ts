@@ -1,18 +1,22 @@
-import { and, count, eq, inArray, or, sql } from "drizzle-orm"
+import { and, count, eq, inArray, isNotNull, or, sql } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
 import {
   accounts,
   budgetAccounts,
+  budgets,
   goalAccounts,
   loans,
-  recurringTransactions,
   transactions,
   transactionTags,
   transfers,
 } from "~/database/drizzle/schema"
 import { createTransactionInTx } from "~/database/services/ledger-service"
 import { runInTransaction } from "~/database/transaction"
+import {
+  attachmentFilesFromExtra,
+  deleteAttachmentFiles,
+} from "~/database/utils/attachment-files"
 import { generateId } from "~/database/utils/generate-id"
 import { disableRecurringRulesForAccount } from "~/database/utils/recurring-template-refs"
 import i18n from "~/i18n/config"
@@ -21,7 +25,7 @@ import type {
   UpdateAccountsFormSchema,
 } from "~/schemas/accounts.schema"
 import { TransactionTypeEnum } from "~/types/transactions"
-import { assertMinorUnits, rescaleMinorUnits } from "~/utils/money"
+import { assertMinorUnits } from "~/utils/money"
 
 // ── Create ───────────────────────────────────────────────────────────────────
 
@@ -88,101 +92,13 @@ export async function updateAccount(
       .where(eq(accounts.id, id))
       .get()
     if (!existing) throw new Error(`Account ${id} not found`)
-    let comparableBalance = existing.balance
-
+    // Transactions, loans and recurring rules hold amounts in the account's
+    // minor units, and the edit form locks the currency once the account exists.
     if (
-      updates.currencyCode &&
+      updates.currencyCode !== undefined &&
       updates.currencyCode !== existing.currencyCode
     ) {
-      const nextCurrencyCode = updates.currencyCode
-      comparableBalance = rescaleMinorUnits(
-        existing.balance,
-        existing.currencyCode,
-        nextCurrencyCode,
-      )
-      const txRows = db
-        .select({
-          id: transactions.id,
-          amount: transactions.amount,
-          accountBalanceBefore: transactions.accountBalanceBefore,
-        })
-        .from(transactions)
-        .where(eq(transactions.accountId, id))
-        .all()
-      for (const transaction of txRows) {
-        db.update(transactions)
-          .set({
-            amount: rescaleMinorUnits(
-              transaction.amount,
-              existing.currencyCode,
-              nextCurrencyCode,
-            ),
-            accountBalanceBefore: rescaleMinorUnits(
-              transaction.accountBalanceBefore,
-              existing.currencyCode,
-              nextCurrencyCode,
-            ),
-            updatedAt: now,
-          })
-          .where(eq(transactions.id, transaction.id))
-          .run()
-      }
-
-      const loanRows = db
-        .select({
-          id: loans.id,
-          principalAmount: loans.principalAmount,
-        })
-        .from(loans)
-        .where(eq(loans.accountId, id))
-        .all()
-      for (const loan of loanRows) {
-        db.update(loans)
-          .set({
-            principalAmount: rescaleMinorUnits(
-              loan.principalAmount,
-              existing.currencyCode,
-              nextCurrencyCode,
-            ),
-            updatedAt: now,
-          })
-          .where(eq(loans.id, loan.id))
-          .run()
-      }
-
-      const recurringRows = db
-        .select({
-          id: recurringTransactions.id,
-          jsonTransactionTemplate:
-            recurringTransactions.jsonTransactionTemplate,
-        })
-        .from(recurringTransactions)
-        .all()
-      const recurringUpdates: [string, string][] = []
-      for (const recurring of recurringRows) {
-        const template = JSON.parse(recurring.jsonTransactionTemplate) as {
-          accountId?: string
-          amount?: number
-        }
-        if (template.accountId !== id || template.amount === undefined) continue
-        template.amount = rescaleMinorUnits(
-          template.amount,
-          existing.currencyCode,
-          nextCurrencyCode,
-        )
-        recurringUpdates.push([JSON.stringify(template), recurring.id])
-      }
-      for (const [template, recurringId] of recurringUpdates) {
-        db.update(recurringTransactions)
-          .set({ jsonTransactionTemplate: template })
-          .where(eq(recurringTransactions.id, recurringId))
-          .run()
-      }
-
-      db.update(accounts)
-        .set({ balance: comparableBalance, updatedAt: now })
-        .where(eq(accounts.id, id))
-        .run()
+      throw new Error("An account's currency cannot be changed")
     }
 
     if (updates.isPrimary === true) {
@@ -196,9 +112,6 @@ export async function updateAccount(
       .set({
         ...(updates.name !== undefined ? { name: updates.name } : {}),
         ...(updates.type !== undefined ? { type: updates.type } : {}),
-        ...(updates.currencyCode !== undefined
-          ? { currencyCode: updates.currencyCode }
-          : {}),
         ...(updates.icon !== undefined ? { icon: updates.icon ?? null } : {}),
         ...(updates.colorSchemeName !== undefined
           ? { colorSchemeName: updates.colorSchemeName ?? null }
@@ -221,9 +134,9 @@ export async function updateAccount(
     if (
       updates.balance !== undefined &&
       typeof updates.balance === "number" &&
-      updates.balance !== comparableBalance
+      updates.balance !== existing.balance
     ) {
-      const delta = updates.balance - comparableBalance
+      const delta = updates.balance - existing.balance
       createTransactionInTx(db, {
         amount: Math.abs(delta),
         type:
@@ -281,15 +194,39 @@ export class AccountHasLoansError extends Error {
 
 export async function destroyAccount(id: string): Promise<void> {
   const now = new Date().toISOString()
+  const files = new Set<string>()
 
   await runInTransaction("account.destroy", (db) => {
-    const accountLoans = db
-      .select({ name: loans.name })
-      .from(loans)
-      .where(eq(loans.accountId, id))
-      .all()
-    if (accountLoans.length > 0) {
-      throw new AccountHasLoansError(accountLoans.map((loan) => loan.name))
+    // Loans owned by the account, plus any loan that has a row on it (a
+    // repayment can live on a different account). Deleting either would leave
+    // the loan pointing at a row that no longer exists.
+    const loanIds = new Set(
+      db
+        .select({ id: loans.id })
+        .from(loans)
+        .where(eq(loans.accountId, id))
+        .all()
+        .map((row) => row.id),
+    )
+    for (const row of db
+      .selectDistinct({ loanId: transactions.loanId })
+      .from(transactions)
+      .where(
+        and(eq(transactions.accountId, id), isNotNull(transactions.loanId)),
+      )
+      .all()) {
+      if (row.loanId) loanIds.add(row.loanId)
+    }
+    if (loanIds.size > 0) {
+      const accountLoans = db
+        .select({ name: loans.name })
+        .from(loans)
+        .where(inArray(loans.id, [...loanIds]))
+        .orderBy(loans.name)
+        .all()
+      if (accountLoans.length > 0) {
+        throw new AccountHasLoansError(accountLoans.map((loan) => loan.name))
+      }
     }
 
     const txs = db
@@ -403,6 +340,9 @@ export async function destroyAccount(id: string): Promise<void> {
     }
 
     if (txs.length > 0) {
+      for (const tx of txs) {
+        for (const f of attachmentFilesFromExtra(tx.extra)) files.add(f)
+      }
       db.delete(transactionTags)
         .where(inArray(transactionTags.transactionId, allTxIds))
         .run()
@@ -410,10 +350,35 @@ export async function destroyAccount(id: string): Promise<void> {
     }
 
     disableRecurringRulesForAccount(db, id)
+    // Switch off budgets left with no account, before the links are removed
+    // (mirrors what deleting a category does).
+    db.update(budgets)
+      .set({ isActive: 0, updatedAt: now })
+      .where(
+        and(
+          eq(budgets.isActive, 1),
+          inArray(
+            budgets.id,
+            db
+              .select({ id: budgetAccounts.budgetId })
+              .from(budgetAccounts)
+              .where(eq(budgetAccounts.accountId, id)),
+          ),
+          sql`NOT EXISTS (
+            SELECT 1 FROM ${budgetAccounts}
+            WHERE ${budgetAccounts.budgetId} = ${budgets.id}
+              AND ${budgetAccounts.accountId} <> ${id}
+          )`,
+        ),
+      )
+      .run()
     db.delete(budgetAccounts).where(eq(budgetAccounts.accountId, id)).run()
     db.delete(goalAccounts).where(eq(goalAccounts.accountId, id)).run()
     db.delete(accounts).where(eq(accounts.id, id)).run()
   })
+
+  // After the commit: a rolled-back destroy must keep its files.
+  await deleteAttachmentFiles(files)
 }
 
 // ── Reorder ───────────────────────────────────────────────────────────────────

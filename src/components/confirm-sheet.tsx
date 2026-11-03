@@ -2,7 +2,7 @@
  * Reusable confirm bottom sheet.
  * Use for delete confirmations or other destructive/important actions.
  */
-import { useEffect, useRef, useState } from "react"
+import { type ReactNode, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { View } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
@@ -52,6 +52,8 @@ interface ConfirmSheetProps {
    * only through its buttons. Default true.
    */
   dismissable?: boolean
+  /** Extra content between the note and the buttons (e.g. an option switch). */
+  children?: ReactNode
 }
 export function ConfirmSheet({
   visible,
@@ -67,6 +69,7 @@ export function ConfirmSheet({
   note,
   closeOnConfirm = true,
   dismissable = true,
+  children,
 }: ConfirmSheetProps) {
   const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
@@ -154,6 +157,8 @@ export function ConfirmSheet({
             {shown.note}
           </Text>
         ) : null}
+
+        {children}
 
         <View style={styles.actions}>
           <Button

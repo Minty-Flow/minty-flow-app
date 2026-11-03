@@ -37,6 +37,7 @@ import { isUpcoming } from "./utils"
 export function UpcomingTransactionsSection({
   transactions,
   onTransactionPress,
+  horizonDays,
 }: UpcomingTransactionsSectionProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
@@ -53,7 +54,14 @@ export function UpcomingTransactionsSection({
   const upcoming = (() => {
     void autoConfirmVersion
     void foregroundVersion
-    return transactions.filter((r) => !r.isDeleted && isUpcoming(r))
+    const horizonMs =
+      horizonDays === undefined ? null : nowMs + horizonDays * 86_400_000
+    return transactions.filter(
+      (r) =>
+        !r.isDeleted &&
+        isUpcoming(r) &&
+        (horizonMs === null || r.transactionDate.getTime() <= horizonMs),
+    )
   })()
   const upcomingForDisplay = applyTransferLayout(upcoming, transferLayout)
   // Pure split for display. Auto-confirmation is owned entirely by
@@ -65,7 +73,7 @@ export function UpcomingTransactionsSection({
     const recurringList: TransactionWithRelations[] = []
     const pendingList: TransactionWithRelations[] = []
     for (const row of upcomingForDisplay) {
-      if (row.extra?.recurringId) {
+      if (row.recurringId) {
         recurringList.push(row)
       } else {
         pendingList.push(row)
@@ -82,9 +90,7 @@ export function UpcomingTransactionsSection({
   const [recurringToDelete, setRecurringToDelete] =
     useState<TransactionWithRelations | null>(null)
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
-  const recurringRule = useRecurringRule(
-    recurringToDelete?.extra?.recurringId ?? null,
-  )
+  const recurringRule = useRecurringRule(recurringToDelete?.recurringId ?? null)
   const handleConfirm = async (transactionId: string) => {
     const opts = { updateTransactionDate: updateDateUponConfirmation }
     try {
@@ -114,7 +120,7 @@ export function UpcomingTransactionsSection({
   const openConfirmAllSheet = () => setConfirmAllSheetVisible(true)
   const closeConfirmAllSheet = () => setConfirmAllSheetVisible(false)
   const handleBeforeDelete = (row: TransactionWithRelations) => {
-    if (row.extra?.recurringId) {
+    if (row.recurringId) {
       setRecurringToDelete(row)
       setDeleteSheetVisible(true)
       return true
@@ -145,7 +151,7 @@ export function UpcomingTransactionsSection({
 
       {recurringToDelete &&
         recurringRule &&
-        recurringRule.id === recurringToDelete.extra?.recurringId && (
+        recurringRule.id === recurringToDelete.recurringId && (
           <DeleteRecurringSheet
             visible={deleteSheetVisible}
             transaction={recurringToDelete}

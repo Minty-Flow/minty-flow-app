@@ -114,8 +114,10 @@ describe("deleting a category", () => {
     const before = drizzleDb.select().from(transactions).all().length
 
     await deleteCategoryById("cat-1")
+    // A monthly rule anchored on the 31st skips a 30-day month, so the next
+    // occurrence can be up to 61 days out (e.g. Oct 31 → Dec 31).
     await synchronizeAllRecurringTransactions(
-      new Date(Date.now() + 40 * DAY_MS),
+      new Date(Date.now() + 70 * DAY_MS),
     )
 
     expect(categoryOf(ruleId)).toBeNull()

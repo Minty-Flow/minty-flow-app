@@ -21,6 +21,10 @@ import {
   transactions,
 } from "~/database/drizzle/schema"
 import {
+  deleteTransaction,
+  updateTransaction,
+} from "~/database/services/ledger-service"
+import {
   createLoanWithOpeningEntry,
   updateLoanById,
 } from "~/database/services/loan-service"
@@ -186,5 +190,106 @@ describe("align loan row kind migration", () => {
       type: "expense",
       kind: "lent",
     })
+  })
+})
+
+describe("updateLoanById account change", () => {
+  drizzleDb
+    .insert(accounts)
+    .values([
+      {
+        id: "acc-2",
+        name: "Savings",
+        type: "savings",
+        balance: 10_000,
+        currencyCode: "USD",
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: "acc-jpy",
+        name: "Yen",
+        type: "checking",
+        balance: 10_000,
+        currencyCode: "JPY",
+        createdAt: now,
+        updatedAt: now,
+      },
+    ])
+    .run()
+
+  it("moves a loan that has only its opening entry", async () => {
+    const { loanId, transactionId } = await createLent()
+    await updateLoanById(loanId, { accountId: "acc-2" })
+    expect(rowOf(transactionId)?.accountId).toBe("acc-2")
+  })
+
+  it("refuses an account change once a repayment exists", async () => {
+    const { loanId, transactionId } = await createLent()
+    drizzleDb
+      .insert(transactions)
+      .values({
+        id: "repayment-acct",
+        accountId: "acc-1",
+        amount: 500,
+        type: "income",
+        kind: "lent",
+        loanId,
+        transactionDate: new Date(2026, 0, 6).toISOString(),
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run()
+
+    await expect(
+      updateLoanById(loanId, { accountId: "acc-2" }),
+    ).rejects.toThrow("account")
+
+    expect(rowOf(transactionId)?.accountId).toBe("acc-1")
+    expect(rowOf("repayment-acct")?.accountId).toBe("acc-1")
+    expect(
+      drizzleDb
+        .select({ accountId: loans.accountId })
+        .from(loans)
+        .where(eq(loans.id, loanId))
+        .get()?.accountId,
+    ).toBe("acc-1")
+  })
+
+  it("will not carry the amount into an account of another currency", async () => {
+    const { loanId, transactionId } = await createLent()
+    await expect(
+      updateLoanById(loanId, { accountId: "acc-jpy" }),
+    ).rejects.toThrow("currency")
+    expect(rowOf(transactionId)?.accountId).toBe("acc-1")
+
+    await updateLoanById(loanId, { accountId: "acc-jpy", principalAmount: 300 })
+    expect(rowOf(transactionId)).toMatchObject({
+      accountId: "acc-jpy",
+      amount: 300,
+    })
+  })
+
+  it("keeps the opening amount in sync when the entry is edited directly", async () => {
+    const { loanId, transactionId } = await createLent()
+    await updateTransaction(transactionId, { amount: 1_000 })
+
+    // The opening entry mirrors principal_amount; an edit must not desync it.
+    expect(rowOf(transactionId)?.amount).toBe(2_000)
+    expect(
+      drizzleDb
+        .select({ principalAmount: loans.principalAmount })
+        .from(loans)
+        .where(eq(loans.id, loanId))
+        .get()?.principalAmount,
+    ).toBe(2_000)
+  })
+
+  it("refuses to delete an opening entry on its own", async () => {
+    const { transactionId } = await createLent()
+    await expect(deleteTransaction(transactionId)).rejects.toThrow(
+      "opening entry",
+    )
+    expect(rowOf(transactionId)?.isDeleted).toBe(0)
   })
 })

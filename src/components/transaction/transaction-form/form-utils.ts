@@ -35,6 +35,7 @@ export function getDefaultValues(
       subtype: null,
       kind: initialKind ?? "default",
       conversionRate: null,
+      attachments: null,
       ...prefill,
     }
   }
@@ -79,6 +80,7 @@ export function getDefaultValues(
     subtype: transaction.subtype === "refund" ? "refund" : null,
     kind: initialKind ?? transaction.kind ?? "default",
     conversionRate: null,
+    attachments: transaction?.extra?.attachments ?? null,
   }
 }
 

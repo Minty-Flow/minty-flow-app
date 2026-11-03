@@ -14,10 +14,15 @@ import { drizzleDb } from "~/database/drizzle/db"
 import {
   accounts,
   recurringTransactions,
+  tags,
   transactions,
 } from "~/database/drizzle/schema"
-import { applyRecurringEditScope } from "~/database/services/recurring-transaction-service"
+import {
+  applyRecurringEditScope,
+  createRecurringRule,
+} from "~/database/services/recurring-transaction-service"
 import type { RecurringEditPayload } from "~/schemas/transactions.schema"
+import { buildRRuleString } from "~/utils/recurrence"
 
 const now = "2026-01-01T00:00:00.000Z"
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -135,6 +140,27 @@ describe("applyRecurringEditScope this_and_future", () => {
     })
     .run()
 
+  it("rolls the detach back when the edit throws", async () => {
+    seedRule("rule-atomic")
+
+    await expect(
+      applyRecurringEditScope({
+        scope: "this",
+        transactionId: "rule-atomic-t0",
+        transactionDate: EDITED,
+        ruleId: "rule-atomic",
+        payload: editPayload(EDITED, { amount: 10.5 }),
+      }),
+    ).rejects.toThrow()
+
+    const row = drizzleDb
+      .select({ recurringId: transactions.recurringId })
+      .from(transactions)
+      .where(eq(transactions.id, "rule-atomic-t0"))
+      .get()
+    expect(row?.recurringId).toBe("rule-atomic")
+  })
+
   it("keeps every future instance on its own date", async () => {
     seedRule("rule-keep")
 
@@ -169,6 +195,27 @@ describe("applyRecurringEditScope this_and_future", () => {
       "2026-03-17T00:00:00.000Z",
       "2026-04-17T00:00:00.000Z",
     ])
+  })
+
+  it("re-anchors the rule on a date shift so the next sync keeps the cadence", async () => {
+    seedRule("rule-reanchor")
+
+    await applyRecurringEditScope({
+      scope: "this_and_future",
+      transactionId: "rule-reanchor-t0",
+      transactionDate: EDITED,
+      ruleId: "rule-reanchor",
+      payload: editPayload(new Date(EDITED.getTime() + 2 * DAY_MS)),
+    })
+
+    const rule = drizzleDb
+      .select({ rules: recurringTransactions.rules })
+      .from(recurringTransactions)
+      .where(eq(recurringTransactions.id, "rule-reanchor"))
+      .get()
+    // The rule's DTSTART must move with the shift, or the next sync would
+    // generate on the old monthly grid (map §2.3).
+    expect(rule?.rules).toContain("DTSTART:20260217")
   })
 
   it("leaves future instances pending when a confirmed instance is edited", async () => {
@@ -217,5 +264,108 @@ describe("applyRecurringEditScope this_and_future", () => {
     expect(rowsOf("rule-manual-changed").map((r) => r.manual)).toEqual([
       1, 1, 1,
     ])
+  })
+
+  it("writes tags, subtype, extra and description into the rule template", async () => {
+    seedRule("rule-template")
+    drizzleDb
+      .insert(tags)
+      .values(
+        ["tag-a", "tag-b"].map((id) => ({
+          id,
+          name: id,
+          type: "generic",
+          createdAt: now,
+          updatedAt: now,
+        })),
+      )
+      .run()
+
+    await applyRecurringEditScope({
+      scope: "this_and_future",
+      transactionId: "rule-template-t0",
+      transactionDate: EDITED,
+      ruleId: "rule-template",
+      payload: editPayload(EDITED, {
+        tags: ["tag-a", "tag-b"],
+        subtype: "refund",
+        description: "shared plan",
+        extra: {
+          note: "keep",
+          recurringId: "rule-template",
+          recurringInitialDate: "123",
+        },
+      }),
+    })
+
+    const row = drizzleDb
+      .select({ template: recurringTransactions.jsonTransactionTemplate })
+      .from(recurringTransactions)
+      .where(eq(recurringTransactions.id, "rule-template"))
+      .get()
+    const template = JSON.parse(row?.template ?? "{}")
+    expect(template.tags).toEqual(["tag-a", "tag-b"])
+    expect(template.subtype).toBe("refund")
+    expect(template.description).toBe("shared plan")
+    expect(template.extra).toEqual({ note: "keep" })
+  })
+})
+
+describe("createRecurringRule cross-currency transfer", () => {
+  function seedCurrencyAccount(id: string, currencyCode: string) {
+    drizzleDb
+      .insert(accounts)
+      .values({
+        id,
+        name: id,
+        type: "checking",
+        balance: 100_000,
+        currencyCode,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run()
+  }
+
+  const ruleInput = {
+    amount: 1_000,
+    type: "transfer",
+    accountId: "xfer-usd",
+    categoryId: null,
+    title: "Transfer",
+    description: null,
+    subtype: null,
+    tags: [],
+    kind: "repetitive" as const,
+    transferToAccountId: "xfer-jpy",
+    range: { from: Date.now(), to: new Date(2099, 11, 31).getTime() },
+    rules: [
+      buildRRuleString({ interval: 1, unit: "month", startDate: new Date() }),
+    ],
+  }
+
+  it("refuses a rule with no conversion rate", async () => {
+    seedCurrencyAccount("xfer-usd", "USD")
+    seedCurrencyAccount("xfer-jpy", "JPY")
+    await expect(createRecurringRule(ruleInput)).rejects.toThrow(
+      /conversion rate/,
+    )
+  })
+
+  it("stores the rate on the rule template", async () => {
+    seedCurrencyAccount("xfer-usd-2", "USD")
+    seedCurrencyAccount("xfer-jpy-2", "JPY")
+    const ruleId = await createRecurringRule({
+      ...ruleInput,
+      accountId: "xfer-usd-2",
+      transferToAccountId: "xfer-jpy-2",
+      conversionRate: 150,
+    })
+    const row = drizzleDb
+      .select({ template: recurringTransactions.jsonTransactionTemplate })
+      .from(recurringTransactions)
+      .where(eq(recurringTransactions.id, ruleId))
+      .get()
+    expect(JSON.parse(row?.template ?? "{}").conversionRate).toBe(150)
   })
 })

@@ -141,3 +141,20 @@ describe("the update and its adjustment are one write", () => {
     expect(adjustments("atomic")).toHaveLength(0)
   })
 })
+
+describe("updateAccount currency", () => {
+  it("refuses to change the currency but accepts the unchanged one", async () => {
+    seedAccount("locked-currency")
+    await expect(
+      updateAccount("locked-currency", { currencyCode: "JPY" }),
+    ).rejects.toThrow(/currency/)
+    await updateAccount("locked-currency", {
+      currencyCode: "USD",
+      name: "renamed",
+    })
+    expect(account("locked-currency")).toMatchObject({
+      currencyCode: "USD",
+      name: "renamed",
+    })
+  })
+})

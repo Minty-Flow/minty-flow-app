@@ -9,17 +9,25 @@ const PURGE_THROTTLE_MS = 60 * 60 * 1000 // 1 hour
 /**
  * Subscribes to trash retention settings and runs retention cleanup when they change.
  * Syncs with reality: DB + user preference. Skips purge if one ran in the last hour
- * to avoid redundant work when settings flicker or multiple mounts occur.
+ * for the same retention period, to avoid redundant work when multiple mounts
+ * occur. A changed period always purges: a shorter one has just made more
+ * items due.
  */
 export function useRetentionCleanup(): void {
   const retentionPeriod = useTrashBinStore((s) => s.retentionPeriod)
-  const lastPurgeRef = useRef<number>(0)
+  const lastPurgeRef = useRef<{ at: number; period: typeof retentionPeriod }>({
+    at: 0,
+    period: retentionPeriod,
+  })
 
   const isRunningRef = useRef(false)
 
   useEffect(() => {
     const now = Date.now()
-    if (now - lastPurgeRef.current < PURGE_THROTTLE_MS) return
+    const last = lastPurgeRef.current
+    if (last.period === retentionPeriod && now - last.at < PURGE_THROTTLE_MS) {
+      return
+    }
     if (isRunningRef.current) return
     isRunningRef.current = true
     // Keep the purge out of the first render and its transitions.
@@ -28,7 +36,7 @@ export function useRetentionCleanup(): void {
       started = true
       autoPurgeTrash(retentionPeriod)
         .then(() => {
-          lastPurgeRef.current = Date.now()
+          lastPurgeRef.current = { at: Date.now(), period: retentionPeriod }
         })
         .catch((e) => logger.error("Trash purge failed", { error: String(e) }))
         .finally(() => {

@@ -17,20 +17,12 @@ import { PermissionBanner } from "~/components/ui/permission-banner"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { TRANSACTION_REMINDERS_CHANNEL_ID } from "~/constants/notification-channels"
 import { useNotificationPermissionStatus } from "~/hooks/use-permission-status"
 import { useNotificationStore } from "~/stores/notification.store"
 import { formatReadableTime } from "~/utils/time-utils"
 
 const DAILY_REMINDER_ID = "daily-check-in-reminder"
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-})
 
 export default function ReminderScreen() {
   const { permissionStatus, refreshPermissionStatus } =
@@ -59,7 +51,7 @@ export default function ReminderScreen() {
     return date
   })()
 
-  const handleRequestPermission = async () => {
+  const handleRequestPermission = async (): Promise<boolean> => {
     if (Platform.OS === "android") {
       await Notifications.setNotificationChannelAsync("default", {
         name: "Default",
@@ -72,7 +64,9 @@ export default function ReminderScreen() {
 
     if (status !== Notifications.PermissionStatus.GRANTED) {
       await Linking.openSettings()
+      return false
     }
+    return true
   }
 
   const scheduleDailyReminder = async (time: Date) => {
@@ -86,6 +80,7 @@ export default function ReminderScreen() {
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        channelId: TRANSACTION_REMINDERS_CHANNEL_ID,
         hour: time.getHours(),
         minute: time.getMinutes(),
       },
@@ -95,8 +90,13 @@ export default function ReminderScreen() {
   const handleToggleDailyReminder = async (value: boolean) => {
     setDailyReminderEnabled(value)
     if (value) {
-      if (permissionStatus !== Notifications.PermissionStatus.GRANTED) {
-        await handleRequestPermission()
+      if (
+        permissionStatus !== Notifications.PermissionStatus.GRANTED &&
+        !(await handleRequestPermission())
+      ) {
+        // Nothing would fire; leave the switch off instead of lying.
+        setDailyReminderEnabled(false)
+        return
       }
       await scheduleDailyReminder(dailyReminderDate)
     } else {

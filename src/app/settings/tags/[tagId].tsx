@@ -38,6 +38,7 @@ interface EditTagScreenInnerProps {
 }
 function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
   const { t } = useTranslation()
+  const [footerHeight, setFooterHeight] = useState(0)
   const router = useRouter()
   const navigation = useNavigation()
   const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
@@ -64,8 +65,15 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
   const iconBasedType = (type?: TagKindType): IconSvgName => {
     if (type === TagKindEnum.CONTACT) return "address-book-outline"
     if (type === TagKindEnum.LOCATION) return "map-outline"
-    return "tag"
+    return "tag-outline"
   }
+  // A type switch swaps the icon only while it is still a type default; a
+  // custom icon the user picked stays.
+  const TYPE_DEFAULT_ICONS: string[] = [
+    "tag-outline",
+    "address-book-outline",
+    "map-outline",
+  ]
   const handleConfirm = () => {
     router.back()
   }
@@ -121,6 +129,7 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
   return (
     <View style={styles.container}>
       <ScrollIntoViewProvider
+        keyboardInset={footerHeight}
         scrollViewStyle={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
@@ -128,7 +137,9 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
           value={formType}
           onValueChange={(value) => {
             setValue("type", value, { shouldDirty: true })
-            setValue("icon", iconBasedType(value), { shouldDirty: true })
+            if (!formIcon || TYPE_DEFAULT_ICONS.includes(formIcon)) {
+              setValue("icon", iconBasedType(value), { shouldDirty: true })
+            }
           }}
         />
 
@@ -150,6 +161,7 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
       </ScrollIntoViewProvider>
 
       <ModifyFormFooter
+        onHeightChange={setFooterHeight}
         formName={formName}
         isAddMode={isAddMode}
         isDirty={isDirty}

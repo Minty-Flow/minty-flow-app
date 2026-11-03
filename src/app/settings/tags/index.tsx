@@ -5,13 +5,11 @@ import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { FilterToggleButton } from "~/components/filter-toggle-button"
-import { IconSvg } from "~/components/icons"
 import { RouteLoadingState } from "~/components/route-load-state"
 import { SearchInput } from "~/components/search-input"
 import { TagCard } from "~/components/tags/tag-card"
 import { EmptyState } from "~/components/ui/empty-state"
-import { ListItem } from "~/components/ui/list-item"
-import { Text } from "~/components/ui/text"
+import { Fab } from "~/components/ui/fab"
 import { View } from "~/components/ui/view"
 import { useTagsQuery } from "~/database/drizzle/read-models/tag-read-model"
 import { NewEnum } from "~/types/new"
@@ -44,10 +42,11 @@ export default function TagsScreen() {
           variant="search"
           active={showSearch}
           onPress={() => setShowSearch((v) => !v)}
+          filtersApplied={searchQuery.trim().length > 0}
         />
       ),
     })
-  }, [navigation, showSearch])
+  }, [navigation, showSearch, searchQuery])
 
   if (status === "loading") return <RouteLoadingState />
 
@@ -72,14 +71,6 @@ export default function TagsScreen() {
         renderItem={({ item: tag }) => <TagCard tag={tag} />}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        ListHeaderComponent={
-          <ListItem style={styles.newTagButton} onPress={handleAddTag}>
-            <IconSvg name="plus-outline" size={24} />
-            <Text variant="default" style={styles.newTagText}>
-              {t("screens.settings.tags.newTag")}
-            </Text>
-          </ListItem>
-        }
         ListEmptyComponent={
           <View style={styles.emptyWrapper}>
             <EmptyState
@@ -92,6 +83,10 @@ export default function TagsScreen() {
             />
           </View>
         }
+      />
+      <Fab
+        onPress={handleAddTag}
+        accessibilityLabel={t("screens.settings.tags.newTag")}
       />
     </View>
   )
@@ -113,15 +108,8 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   listContent: {
-    paddingBottom: 40,
-  },
-  newTagButton: {
-    gap: 12,
-    marginVertical: 15,
-  },
-  newTagText: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-    fontWeight: "500",
-    color: theme.colors.onSurface,
+    // Room for the floating add button below the last tag.
+    paddingTop: 12,
+    paddingBottom: 96,
   },
 }))

@@ -84,6 +84,10 @@ export function MonthYearPicker({
       onSelect(localYear, newMonth)
     }
   }
+  // In preset mode the parent owns the range (chevrons move it), so the sheet
+  // opens on the range shown, not on the props the picker first mounted with.
+  const sheetYear = isPresetMode ? dateRange.from.getFullYear() : localYear
+  const sheetMonth = isPresetMode ? dateRange.from.getMonth() : localMonth
   const handleSheetSelect = (year: number, month: number) => {
     setLocalYear(year)
     setLocalMonth(month)
@@ -94,7 +98,12 @@ export function MonthYearPicker({
       {/* Top row: chevrons + pill */}
       <View style={styles.topRow}>
         {navigable && (
-          <Button variant="secondary" size="icon" onPress={goPrev}>
+          <Button
+            variant="secondary"
+            size="icon"
+            onPress={goPrev}
+            accessibilityLabel={t("common.actions.previous")}
+          >
             <ChevronIcon direction="leading" size={24} />
           </Button>
         )}
@@ -109,7 +118,12 @@ export function MonthYearPicker({
         </Pressable>
 
         {navigable && (
-          <Button variant="secondary" size="icon" onPress={goNext}>
+          <Button
+            variant="secondary"
+            size="icon"
+            onPress={goNext}
+            accessibilityLabel={t("common.actions.next")}
+          >
             <ChevronIcon direction="trailing" size={24} />
           </Button>
         )}
@@ -117,8 +131,8 @@ export function MonthYearPicker({
 
       <MonthPickerSheet
         visible={monthSheetVisible}
-        year={localYear}
-        month={localMonth}
+        year={sheetYear}
+        month={sheetMonth}
         onSelect={handleSheetSelect}
         allowFuture={allowFuture}
         onClose={() => setMonthSheetVisible(false)}

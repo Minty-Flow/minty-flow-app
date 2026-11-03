@@ -66,8 +66,8 @@ export function buildTransactionPayload(
     goalId: data.goalId ?? null,
     budgetId: data.budgetId ?? null,
     loanId: data.loanId ?? null,
-    location: data.location,
-    extra: Object.keys(builtExtra).length > 0 ? builtExtra : undefined,
+    location: data.location ?? null,
+    extra: Object.keys(builtExtra).length > 0 ? builtExtra : null,
     subtype: data.subtype ?? undefined,
   }
 
@@ -76,7 +76,10 @@ export function buildTransactionPayload(
   const resolvedIsPending = effectiveIsPending
   const resolvedKind: TransactionKind =
     data.kind === "upcoming"
-      ? "upcoming"
+      ? // Turning the switch off on an upcoming row makes it a plain row.
+        resolvedIsPending
+        ? "upcoming"
+        : "default"
       : resolvedIsPending && (data.kind ?? "default") === "default"
         ? "upcoming"
         : (data.kind ?? "default")

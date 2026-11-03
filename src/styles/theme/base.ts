@@ -20,12 +20,14 @@ export const DEFAULT_LIGHT_BASE: MintyColorScheme = {
   error: "#FF4040",
   onError: "#F5F6FA",
   semantic: {
-    income: "#32CC70",
-    expense: "#FF4040",
+    // Darker than the dark-mode values so text passes 4.5:1 on the light
+    // surface and on every pastel card secondary (map §10.1).
+    income: "#0D6330",
+    expense: "#9C2A1C",
     semi: "#6A666D",
     success: "#32CC70",
-    warning: "#FFA500",
-    info: "#4A90E2",
+    warning: "#7A4A00",
+    info: "#175198",
   },
   shadow: "rgba(0, 0, 0, 0.08)",
   boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",

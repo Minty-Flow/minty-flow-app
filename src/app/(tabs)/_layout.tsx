@@ -1,13 +1,14 @@
-import { useRouter } from "expo-router"
+import { useFocusEffect, useRouter } from "expo-router"
 import {
   type ComponentProps,
   Fragment,
+  useCallback,
   useEffect,
   useRef,
   useState,
 } from "react"
 import { useTranslation } from "react-i18next"
-import { Alert, View as RNView } from "react-native"
+import { Alert, BackHandler, View as RNView } from "react-native"
 import { usePagerView } from "react-native-pager-view"
 import Animated, {
   createAnimatedComponent,
@@ -105,6 +106,9 @@ const AnimatedFABOption = ({
   const progress = useSharedValue(0)
   const pos = FAB_OPTION_POSITIONS[index]
   const tooltipProps = useTooltipTrigger({ text: option.label })
+  const isRTL = useLanguageStore((s) => s.isRTL)
+  // `left` mirrors in RTL but translateX does not, so flip the fly-in too.
+  const dir = isRTL ? -1 : 1
   useEffect(() => {
     if (isExpanded) {
       progress.value = withDelay(index * STAGGER_MS, withSpring(1, OPEN_SPRING))
@@ -121,7 +125,7 @@ const AnimatedFABOption = ({
       // an invisible option stacked under the "+" and opens a transaction.
       pointerEvents: p > 0.6 ? "auto" : "none",
       transform: [
-        { translateX: pos.left * (p - 1) },
+        { translateX: dir * pos.left * (p - 1) },
         { translateY: pos.top * (p - 1) },
         { scale: p },
       ],
@@ -210,6 +214,25 @@ const TabLayout = () => {
   const toggleFab = () => {
     setFabExpanded((prev) => !prev)
   }
+  // Android Back: close the FAB fan first, then step to Home, and only then
+  // leave the app. Only while this screen is focused, so a pushed screen keeps
+  // its own back behaviour.
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+        if (fabExpanded) {
+          setFabExpanded(false)
+          return true
+        }
+        if (activePage !== 0) {
+          setPage(0)
+          return true
+        }
+        return false
+      })
+      return () => sub.remove()
+    }, [fabExpanded, activePage, setPage]),
+  )
   const fabOptionsByType: Record<string, FABOption> = {
     income: {
       icon: "chevrons-down-outline",

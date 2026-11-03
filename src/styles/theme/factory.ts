@@ -6,6 +6,10 @@
 import type { MintyColorScheme, UnistylesTheme } from "./types"
 import { typography } from "./typography"
 
+/** The spacing and icon scales are the same in every theme. */
+const SPACE = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const
+const ICON_SIZE = { sm: 16, md: 20, lg: 24, xl: 32 } as const
+
 /**
  * Append hex alpha to 6-char hex (0-255 scale, e.g. 0x16 = 8.6%)
  */
@@ -72,6 +76,8 @@ export class ThemeFactory {
       name: this.name,
       iconName: this.iconName,
       radius: this.mintyColorScheme.radius,
+      space: SPACE,
+      iconSize: ICON_SIZE,
       rippleColor: hexWithAlpha(this.mintyColorScheme.onSurface, 0x16),
       typography,
     }

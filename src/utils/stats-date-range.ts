@@ -78,8 +78,9 @@ export function buildStatsDateRange(
 
     case "last30": {
       const to = now
-      const from = startOfDay(subDays(now, 30))
-      const prevTo = subDays(from, 1)
+      // 30 calendar days including today, matching the previous 30-day window.
+      const from = startOfDay(subDays(now, 29))
+      const prevTo = endOfDay(subDays(from, 1))
       const prevFrom = startOfDay(subDays(prevTo, 29))
       return {
         preset,
@@ -134,8 +135,8 @@ export function buildStatsDateRange(
         spanDays <= 14 ? "day" : spanDays <= 90 ? "week" : "month"
 
       // Mirror the same span into the past
-      const prevTo = subDays(from, 1)
-      const prevFrom = subDays(prevTo, spanDays)
+      const prevTo = endOfDay(subDays(from, 1))
+      const prevFrom = startOfDay(subDays(prevTo, spanDays))
 
       return {
         preset,
@@ -307,8 +308,8 @@ export function navigateRange(
       const shift = (spanDays + 1) * d
       const from = addDays(range.from, shift)
       const to = addDays(range.to, shift)
-      const previousTo = subDays(from, 1)
-      const previousFrom = subDays(previousTo, spanDays)
+      const previousTo = endOfDay(subDays(from, 1))
+      const previousFrom = startOfDay(subDays(previousTo, spanDays))
       return { ...range, from, to, previousFrom, previousTo }
     }
 

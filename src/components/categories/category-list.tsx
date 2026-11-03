@@ -3,15 +3,12 @@ import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/icons"
 import { RouteLoadingState } from "~/components/route-load-state"
-import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
-import { Text } from "~/components/ui/text"
+import { Fab } from "~/components/ui/fab"
 import { View } from "~/components/ui/view"
 import { useCategoriesByTypeQuery } from "~/database/drizzle/read-models/category-read-model"
 import type { Category, CategoryType } from "~/types/categories"
-import { NewEnum } from "~/types/new"
 
 import { CategoryRow } from "./category-row"
 
@@ -21,42 +18,6 @@ interface CategoryListProps {
   updatedCategory?: string
   deletedCategory?: string
   searchQuery?: string
-}
-interface CategoryListHeaderProps {
-  onAddCategory: () => void
-  onAddFromPresets: () => void
-}
-function CategoryListHeader({
-  onAddCategory,
-  onAddFromPresets,
-}: CategoryListHeaderProps) {
-  const { t } = useTranslation()
-  return (
-    <View style={styles.headerContainer}>
-      <Button
-        variant="secondary"
-        size="default"
-        onPress={onAddCategory}
-        style={styles.headerButton}
-      >
-        <IconSvg name="plus-outline" size={20} />
-        <Text variant="default" style={styles.headerButtonText}>
-          {t("components.categories.actions.addNew")}
-        </Text>
-      </Button>
-      <Button
-        variant="secondary"
-        size="default"
-        onPress={onAddFromPresets}
-        style={styles.headerButton}
-      >
-        <IconSvg name="category-plus-outline" size={20} />
-        <Text variant="default" style={styles.headerButtonText}>
-          {t("components.categories.actions.addFromPresets")}
-        </Text>
-      </Button>
-    </View>
-  )
 }
 export const CategoryList = ({
   type,
@@ -68,6 +29,11 @@ export const CategoryList = ({
   const { data: categories, status } = useCategoriesByTypeQuery(type, true)
   const router = useRouter()
   const { t } = useTranslation()
+  const handleAdd = () =>
+    router.push({
+      pathname: "/settings/categories/add",
+      params: { type },
+    })
   const typeLabel = t(`components.categories.types.${type}`)
   // Clear URL params when screen comes into focus
   // The reactive observe will automatically update the list
@@ -82,27 +48,10 @@ export const CategoryList = ({
       router.setParams({ deletedCategory: undefined })
     }
   })
-  const handleAddCategory = () => {
-    router.push({
-      pathname: "/settings/categories/[categoryId]/modify",
-      params: {
-        categoryId: NewEnum.NEW,
-        initialType: type,
-      },
-    })
-  }
-  const handleAddFromPresets = () => {
-    router.push({
-      pathname: "/settings/categories/presets",
-      params: {
-        type,
-      },
-    })
-  }
-  const header = (
-    <CategoryListHeader
-      onAddCategory={handleAddCategory}
-      onAddFromPresets={handleAddFromPresets}
+  const addControls = (
+    <Fab
+      onPress={handleAdd}
+      accessibilityLabel={t("components.categories.actions.addNew")}
     />
   )
   const filteredCategories = categories.filter((category) => {
@@ -131,50 +80,43 @@ export const CategoryList = ({
       )
     }
     return (
-      <View style={styles.emptyWrapper}>
-        {header}
-        <EmptyState
-          icon="category-outline"
-          title={t("components.categories.empty.noCategories.title", {
-            type: typeLabel,
-          })}
-          description={t(
-            "components.categories.empty.noCategories.description",
-          )}
-        />
+      <View style={styles.screen}>
+        <View style={styles.emptyWrapper}>
+          <EmptyState
+            icon="category-outline"
+            title={t("components.categories.empty.noCategories.title", {
+              type: typeLabel,
+            })}
+            description={t(
+              "components.categories.empty.noCategories.description",
+            )}
+          />
+        </View>
+        {addControls}
       </View>
     )
   }
   return (
-    <FlatList
-      data={filteredCategories}
-      keyExtractor={keyExtractor}
-      renderItem={renderItem}
-      contentContainerStyle={styles.listContent}
-      ListHeaderComponent={header}
-    />
+    <View style={styles.screen}>
+      <FlatList
+        data={filteredCategories}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        contentContainerStyle={styles.listContent}
+      />
+      {addControls}
+    </View>
   )
 }
 const styles = StyleSheet.create((theme) => ({
   listContent: {
+    paddingTop: 10,
     paddingBottom: 100,
     paddingHorizontal: 20,
     gap: 10,
   },
-  headerContainer: {
-    paddingVertical: 10,
-    gap: 10,
-  },
-  headerButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    width: "100%",
-  },
-  headerButtonText: {
-    ...theme.typography.titleSmall,
-    fontWeight: "600",
+  screen: {
+    flex: 1,
   },
   emptyWrapper: {
     flex: 1,

@@ -14,6 +14,7 @@ import { View } from "~/components/ui/view"
 import { AccountPresets } from "~/constants/pre-sets-accounts"
 import { useActiveAccountsQuery } from "~/database/drizzle/read-models/account-read-model"
 import { createAccount } from "~/database/services/account-service"
+import { useOnboardingResume } from "~/hooks/use-onboarding-resume"
 import type { TranslationKey } from "~/i18n/config"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { NewEnum } from "~/types/new"
@@ -21,6 +22,7 @@ import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
 export default function OnboardingAccountsScreen() {
+  useOnboardingResume("/onboarding/accounts")
   const { data: accounts, status } = useActiveAccountsQuery()
   const { t } = useTranslation()
   const router = useRouter()
@@ -44,6 +46,8 @@ export default function OnboardingAccountsScreen() {
     })
   }
 
+  // The app needs somewhere to put a transaction, so keep at least one.
+  const canContinue = accounts.length > 0 || selectedKeys.size > 0
   const handleNext = () => {
     startTransition(async () => {
       const toCreate = AccountPresets.filter(
@@ -54,7 +58,7 @@ export default function OnboardingAccountsScreen() {
       if (toCreate.length > 0) {
         try {
           await Promise.all(
-            toCreate.map((preset) =>
+            toCreate.map((preset, index) =>
               createAccount({
                 name: t(preset.name as TranslationKey),
                 type: preset.type,
@@ -62,7 +66,9 @@ export default function OnboardingAccountsScreen() {
                 balance: 0,
                 currencyCode: preferredCurrency,
                 colorSchemeName: "",
-                isPrimary: false,
+                // With no primary yet, the first one becomes it, so the
+                // transaction form starts with a default account.
+                isPrimary: index === 0 && !accounts.some((a) => a.isPrimary),
                 excludeFromBalance: false,
               }),
             ),
@@ -71,7 +77,7 @@ export default function OnboardingAccountsScreen() {
           logger.error("Error creating preset accounts", { error })
           Toast.error({
             title: t("common.toast.error"),
-            description: t("common.toast.error"),
+            description: t("onboarding.accounts.createFailed"),
           })
           return
         }
@@ -148,9 +154,14 @@ export default function OnboardingAccountsScreen() {
       </ScrollView>
 
       <View style={styles.buttonRow}>
+        {canContinue ? null : (
+          <Text variant="muted" style={styles.pickOneHint}>
+            {t("onboarding.accounts.pickOne")}
+          </Text>
+        )}
         <Button
           onPress={handleNext}
-          disabled={saving}
+          disabled={saving || !canContinue}
           style={styles.nextButton}
         >
           <Text style={styles.nextButtonText}>
@@ -259,6 +270,10 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
     paddingVertical: 16,
     backgroundColor: theme.colors.surface,
+  },
+  pickOneHint: {
+    textAlign: "center",
+    marginBottom: 8,
   },
   nextButton: {
     width: "100%",

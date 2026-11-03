@@ -1,3 +1,4 @@
+import { endOfDay } from "date-fns"
 import { and, eq, isNotNull, sql } from "drizzle-orm"
 import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 
@@ -75,7 +76,10 @@ export function useLoansQuery(): LiveReadModelResult<Loan[]> {
         icon: row.icon,
         colorSchemeName: row.colorSchemeName,
         colorScheme: getThemeStrict(row.colorSchemeName),
-        isOverdue: row.dueDate != null && new Date() > new Date(row.dueDate),
+        // The due date keeps the time it was picked; the loan is overdue only
+        // once that whole day has passed.
+        isOverdue:
+          row.dueDate != null && new Date() > endOfDay(new Date(row.dueDate)),
         repaidAmount,
         remainingAmount,
         progress,

@@ -1,31 +1,48 @@
 import { File, Paths } from "expo-file-system"
 import { Image } from "expo-image"
 import * as ImagePicker from "expo-image-picker"
-import { Stack, useLocalSearchParams, useRouter } from "expo-router"
-import { useState } from "react"
+import {
+  Stack,
+  useLocalSearchParams,
+  useNavigation,
+  useRouter,
+} from "expo-router"
+import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 import { useShallow } from "zustand/react/shallow"
 
+import { ConfirmSheet } from "~/components/confirm-sheet"
+import { FooterBar } from "~/components/footer-bar"
+import { footerBarStyles } from "~/components/footer-bar.styles"
 import { IconSvg } from "~/components/icons"
-import { KeyboardStickyViewMinty } from "~/components/keyboard-sticky-view-minty"
+import { KeyboardStickyFooter } from "~/components/keyboard-sticky-footer"
 import { Button } from "~/components/ui/button"
 import { Input } from "~/components/ui/input"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { useNavigationGuard } from "~/hooks/use-navigation-guard"
+import { useOnboardingResume } from "~/hooks/use-onboarding-resume"
 import { useOnboardingStore } from "~/stores/onboarding.store"
 import { useProfileStore } from "~/stores/profile.store"
 import { logger } from "~/utils/logger"
+import { deleteProfileImage, resolveProfileImage } from "~/utils/profile-image"
 import { getInitials } from "~/utils/string-utils"
 import { Toast } from "~/utils/toast"
 
 export default function EditProfileScreen() {
   const router = useRouter()
+  const navigation = useNavigation()
   const { t } = useTranslation()
   const { fromOnboarding } = useLocalSearchParams<{ fromOnboarding?: string }>()
   const isFromOnboarding = fromOnboarding === "true"
+  useOnboardingResume(
+    isFromOnboarding
+      ? "/settings/edit-profile?fromOnboarding=true"
+      : "/onboarding/start",
+  )
   const setCompleted = useOnboardingStore((s) => s.setCompleted)
   const { name, imageUri, setName, setImageUri } = useProfileStore(
     useShallow((s) => ({
@@ -41,6 +58,26 @@ export default function EditProfileScreen() {
     () => imageUri,
   )
 
+  const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
+  const isDirty = localName !== name || localImageUri !== imageUri
+  const { allowNavigation } = useNavigationGuard({
+    navigation,
+    when: isDirty,
+    onBlock: () => setUnsavedSheetVisible(true),
+  })
+  // Leaving without saving: drop the photo file that was copied in for it.
+  const handleDiscard = () => {
+    if (localImageUri && localImageUri !== imageUri) {
+      deleteProfileImage(localImageUri)
+    }
+    allowNavigation()
+    router.back()
+  }
+
+  const localImageSource = useMemo(
+    () => resolveProfileImage(localImageUri),
+    [localImageUri],
+  )
   const displayName = localName || "?"
   const initials = getInitials(displayName)
 
@@ -79,19 +116,10 @@ export default function EditProfileScreen() {
       // 5. Copy to app storage (permanent)
       await sourceFile.copy(destinationFile)
 
-      // 6. Delete the previous local copy before swapping the URI so stale files don't accumulate.
-      // Awaited to prevent a race condition where rapid successive picks could interleave
-      // the deletion of the previous file with the copy of the new one.
-      if (localImageUri) {
-        try {
-          await new File(localImageUri).delete()
-        } catch {
-          // file may already be gone — ignore
-        }
-      }
-
-      // 7. Save URI (this is your "permanentUri")
-      setLocalImageUri(destinationFile.uri)
+      // 6. Point the local state at the new file. The previous persisted file
+      // is only deleted in handleSave — deleting it here would leave the saved
+      // avatar broken when the user backs out without saving (map §6.4).
+      setLocalImageUri(filename)
     } catch (e) {
       logger.error("Failed to pick/save image:", { e })
 
@@ -102,29 +130,18 @@ export default function EditProfileScreen() {
     }
   }
 
-  const handleRemoveImage = async () => {
-    if (localImageUri) {
-      try {
-        const file = new File(localImageUri)
-        await file.delete()
-      } catch (e) {
-        logger.error("File already gone or deletion failed", { e })
-      }
-    }
+  const handleRemoveImage = () => {
+    // Backing out without saving must keep the persisted avatar intact, so the
+    // file is deleted only in handleSave (map §6.4).
     setLocalImageUri(null)
   }
 
   const handleSave = async () => {
     // If the user picked a new image, delete the previously persisted file.
-    if (localImageUri !== imageUri && imageUri) {
-      try {
-        await new File(imageUri).delete()
-      } catch {
-        // file may already be gone — ignore
-      }
-    }
+    if (localImageUri !== imageUri) deleteProfileImage(imageUri)
     setName(localName)
     setImageUri(localImageUri)
+    allowNavigation()
     if (isFromOnboarding) {
       setCompleted()
       router.dismissAll()
@@ -147,9 +164,9 @@ export default function EditProfileScreen() {
         <View style={styles.avatarSection}>
           <Pressable onPress={handlePickImage} style={styles.avatarContainer}>
             <View style={styles.avatar}>
-              {localImageUri ? (
+              {localImageSource ? (
                 <Image
-                  source={{ uri: localImageUri }}
+                  source={{ uri: localImageSource }}
                   style={styles.avatarImage}
                   contentFit="cover"
                 />
@@ -184,17 +201,26 @@ export default function EditProfileScreen() {
       </ScrollView>
 
       {/* Save Button */}
-      <KeyboardStickyViewMinty>
-        <View style={styles.buttonContainer}>
-          <Button onPress={handleSave} style={styles.saveButton}>
+      <KeyboardStickyFooter>
+        <FooterBar>
+          <Button onPress={handleSave} style={footerBarStyles.button}>
             <Text>
               {isFromOnboarding
                 ? t("onboarding.actions.done")
                 : t("common.actions.save")}
             </Text>
           </Button>
-        </View>
-      </KeyboardStickyViewMinty>
+        </FooterBar>
+      </KeyboardStickyFooter>
+      <ConfirmSheet
+        visible={unsavedSheetVisible}
+        onRequestClose={() => setUnsavedSheetVisible(false)}
+        onConfirm={handleDiscard}
+        title={t("common.sheets.closeWithoutSaving")}
+        description={t("common.sheets.unsavedDescription")}
+        confirmLabel={t("common.actions.discard")}
+        cancelLabel={t("common.actions.cancel")}
+      />
     </View>
   )
 }
@@ -275,13 +301,5 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSecondary,
     marginBottom: 8,
     letterSpacing: 0.5,
-  },
-  buttonContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: theme.colors.surface,
-  },
-  saveButton: {
-    width: "100%",
   },
 }))

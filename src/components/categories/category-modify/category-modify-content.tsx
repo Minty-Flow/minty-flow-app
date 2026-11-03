@@ -45,6 +45,7 @@ export function CategoryModifyContent({
   category,
 }: CategoryModifyContentProps) {
   const { t } = useTranslation()
+  const [footerHeight, setFooterHeight] = useState(0)
   const router = useRouter()
   const isAddMode = categoryModifyId === NewEnum.NEW || !categoryModifyId
   const handleGoBack = () => {
@@ -176,7 +177,7 @@ export function CategoryModifyContent({
     setValue("colorSchemeName", schemeName, { shouldDirty: true })
   }
   const handleColorCleared = () => {
-    setValue("colorSchemeName", undefined, { shouldDirty: true })
+    setValue("colorSchemeName", null, { shouldDirty: true })
   }
   const currentColorScheme = getThemeStrict(formColorSchemeName)
   if (!isAddMode && !category) {
@@ -185,6 +186,7 @@ export function CategoryModifyContent({
   return (
     <View style={modifyFormStyles.container}>
       <ScrollIntoViewProvider
+        keyboardInset={footerHeight}
         scrollViewStyle={modifyFormStyles.scrollView}
         contentContainerStyle={modifyFormStyles.scrollContent}
       >
@@ -232,6 +234,7 @@ export function CategoryModifyContent({
       </ScrollIntoViewProvider>
 
       <ModifyFormFooter
+        onHeightChange={setFooterHeight}
         formName={formName}
         isAddMode={isAddMode}
         isDirty={isDirty}

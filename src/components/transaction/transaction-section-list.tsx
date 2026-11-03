@@ -27,6 +27,7 @@ import { View } from "~/components/ui/view"
 import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
 import { useSingleOpenSwipeable } from "~/hooks/use-transaction-list-state"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
+import { NewEnum } from "~/types/new"
 import type {
   SearchState,
   TransactionListFilterState,
@@ -36,6 +37,7 @@ import {
   PendingOptionsEnum,
 } from "~/types/transaction-filters"
 import {
+  applyFiltersAndSearch,
   applyPendingFilter,
   applySearch,
   applyTransactionFilters,
@@ -53,6 +55,8 @@ interface TransactionSectionListProps {
   searchState?: SearchState
   /** Whether to show the upcoming transactions section above the list. */
   showUpcoming?: boolean
+  /** Hide upcoming rows dated further ahead than this many days. */
+  upcomingHorizonDays?: number
   /** Additional content rendered at the top of the list (before upcoming). */
   ListHeaderComponent?: ComponentType<unknown> | ReactElement | null
 }
@@ -92,6 +96,7 @@ export function TransactionSectionList({
   filterState,
   searchState = DEFAULT_SEARCH_STATE,
   showUpcoming = true,
+  upcomingHorizonDays,
   ListHeaderComponent,
 }: TransactionSectionListProps) {
   const { t } = useTranslation()
@@ -107,9 +112,14 @@ export function TransactionSectionList({
   const allTimeLabel = t("components.filters.groupByOptions.allTime")
   // Recurring instances render in the upcoming section, never the main list.
   // Pending visibility follows the pending filter; structural filters apply on top.
+  // Upcoming follows the structural filters and search, like the main list.
+  const upcomingSource = useMemo(
+    () => applyFiltersAndSearch(transactionsFull, filterState, searchState),
+    [transactionsFull, filterState, searchState],
+  )
   const sections = useMemo(() => {
     const withoutRecurring = transactionsFull.filter(
-      (r) => !r.extra?.recurringId,
+      (r) => r.recurringId == null,
     )
     const byPending = applyPendingFilter(
       withoutRecurring,
@@ -146,19 +156,38 @@ export function TransactionSectionList({
         ))}
       {upcomingVisible && (
         <UpcomingTransactionsSection
-          transactions={transactionsFull}
+          transactions={upcomingSource}
           onTransactionPress={handleOnTransactionPress}
+          horizonDays={upcomingHorizonDays}
         />
       )}
     </>
   )
   const emptyList = (
     <View style={styles.emptyStateWrapper}>
-      <EmptyState
-        icon="receipt-outline"
-        title={t("screens.home.emptyState.title")}
-        description={t("components.transactionList.emptyDescription")}
-      />
+      {transactionsFull.length > 0 ? (
+        // Rows exist but the filters hide them all: say so instead of
+        // claiming there are no transactions.
+        <EmptyState
+          icon="filter-2-search-outline"
+          title={t("components.transactionList.noMatches")}
+          description={t("components.transactionList.noMatchesDescription")}
+        />
+      ) : (
+        <EmptyState
+          icon="receipt-outline"
+          title={t("screens.home.emptyState.title")}
+          description={t("components.transactionList.emptyDescription")}
+          action={{
+            label: t("screens.home.emptyState.addFirst"),
+            onPress: () =>
+              router.push({
+                pathname: "/transaction/[id]",
+                params: { id: NewEnum.NEW },
+              }),
+          }}
+        />
+      )}
     </View>
   )
   const renderItem = useCallback(

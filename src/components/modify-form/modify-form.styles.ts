@@ -49,24 +49,4 @@ export const modifyFormStyles = StyleSheet.create((theme) => ({
     fontWeight: "600",
     color: theme.colors.error,
   },
-  actions: {
-    flexDirection: "row",
-    gap: 10,
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-  },
-  button: {
-    flex: 1,
-  },
-  cancelText: {
-    ...theme.typography.titleSmall,
-    fontWeight: "600",
-    color: theme.colors.onSurface,
-  },
-  saveText: {
-    ...theme.typography.titleSmall,
-    fontWeight: "600",
-    color: theme.colors.onPrimary,
-  },
 }))

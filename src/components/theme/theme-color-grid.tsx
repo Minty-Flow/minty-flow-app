@@ -28,6 +28,9 @@ export function ThemeColorGrid({
               isSelected && themeScreenStyles.colorOptionSelected,
             ]}
             onPress={() => onThemeSelect(scheme.name as ThemeMode)}
+            accessibilityRole="radio"
+            accessibilityLabel={scheme.name}
+            accessibilityState={{ selected: isSelected }}
           >
             <View
               style={[

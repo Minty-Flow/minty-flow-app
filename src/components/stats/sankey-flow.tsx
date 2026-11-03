@@ -1,11 +1,5 @@
-import {
-  Canvas,
-  Group,
-  Path,
-  RoundedRect,
-  Skia,
-} from "@shopify/react-native-skia"
 import { useState } from "react"
+import { Canvas, Group, Path, RoundedRect, Skia } from "react-native-skia"
 import { StyleSheet } from "react-native-unistyles"
 
 import { View } from "~/components/ui/view"
@@ -76,38 +70,16 @@ export function SankeyFlow({
   const [width, setWidth] = useState(0)
   const geometry = (() => {
     if (width === 0 || left.length === 0 || right.length === 0) return null
-    // 1. Auto-balance left and right totals to prevent geometry collapse
-    const rawLeftTotal = left.reduce((s, n) => s + n.value, 0)
-    const rawRightTotal = right.reduce((s, n) => s + n.value, 0)
-    const diff = rawLeftTotal - rawRightTotal
-    const balancedLeft = [...left]
-    const balancedRight = [...right]
-    if (Math.abs(diff) > 0.01) {
-      if (diff > 0) {
-        // Income > Spending: Auto-inject "To reserves" node on the right
-        balancedRight.push({
-          label: "To reserves",
-          color: "#2D3748",
-          value: diff,
-        })
-      } else {
-        // Spending > Income: Auto-inject "From reserves" node on the left
-        balancedLeft.push({
-          label: "From reserves",
-          color: "#4A2020",
-          value: Math.abs(diff),
-        })
-      }
-    }
+    // The caller balances the two sides (cash-flow adds its own "from
+    // balance" / net nodes), so each column is placed as given.
     const total = Math.max(
-      rawLeftTotal,
-      rawRightTotal,
-      balancedLeft.reduce((s, n) => s + n.value, 0),
+      left.reduce((s, n) => s + n.value, 0),
+      right.reduce((s, n) => s + n.value, 0),
     )
     if (total <= 0) return null
     // 2. Position outer nodes
-    const leftNodes = placeColumn(balancedLeft, height, total)
-    const rightNodes = placeColumn(balancedRight, height, total)
+    const leftNodes = placeColumn(left, height, total)
+    const rightNodes = placeColumn(right, height, total)
     const hubWidth = 3
     const hubLeft = width / 2 - hubWidth / 2
     const hubRight = hubLeft + hubWidth

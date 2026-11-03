@@ -17,9 +17,11 @@ import { EmptyState } from "~/components/ui/empty-state"
 import { View } from "~/components/ui/view"
 import {
   type TransactionWithRelations,
+  useDeletedTransactionCount,
   useTransactions,
 } from "~/database/drizzle/read-models/transaction-read-model"
 import {
+  destroyAllDeletedTransactions,
   destroyTransaction,
   restoreTransaction,
 } from "~/database/services/ledger-service"
@@ -35,6 +37,7 @@ import {
   applySearch,
   applyTransactionFilters,
   applyTransferLayout,
+  hasActiveFilters,
 } from "~/utils/transaction-list-utils"
 
 export default function TrashScreen() {
@@ -54,6 +57,8 @@ export default function TrashScreen() {
   const [pendingDestroyItem, setPendingDestroyItem] =
     useState<TransactionWithRelations | null>(null)
   const [showSwipeInfo, setShowSwipeInfo] = useState(false)
+  const [emptyVisible, setEmptyVisible] = useState(false)
+  const deletedCount = useDeletedTransactionCount()
   const transferLayout = useTransfersPreferencesStore((s) => s.layout)
   const { items: allDeleted, status: transactionsStatus } = useTransactions({
     from: month.from,
@@ -64,6 +69,7 @@ export default function TrashScreen() {
     applySearch(applyTransactionFilters(allDeleted, filterState), searchState),
     transferLayout,
   )
+  const filtersApplied = hasActiveFilters(filterState, searchState)
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -76,11 +82,25 @@ export default function TrashScreen() {
           >
             <IconSvg name="info-circle-outline" size={20} />
           </Button>
-          <FilterToggleButton active={showFilters} onPress={toggleFilters} />
+          {deletedCount > 0 ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              onPress={() => setEmptyVisible(true)}
+              accessibilityLabel={t("screens.settings.trash.empty.a11y")}
+            >
+              <IconSvg name="trash-outline" size={20} />
+            </Button>
+          ) : null}
+          <FilterToggleButton
+            active={showFilters}
+            onPress={toggleFilters}
+            filtersApplied={filtersApplied}
+          />
         </View>
       ),
     })
-  }, [navigation, showFilters, t, toggleFilters])
+  }, [navigation, showFilters, t, toggleFilters, deletedCount, filtersApplied])
   if (transactionsStatus === "loading" && allDeleted.length === 0)
     return <RouteLoadingState />
   const handleRestore = (item: TransactionWithRelations) => async () => {
@@ -116,6 +136,22 @@ export default function TrashScreen() {
       })
     }
   }
+  const handleEmptyConfirmed = () =>
+    destroyAllDeletedTransactions()
+      .then(() =>
+        Toast.success({
+          title: t("screens.settings.trash.empty.toast.successTitle"),
+          description: t(
+            "screens.settings.trash.empty.toast.successDescription",
+          ),
+        }),
+      )
+      .catch(() =>
+        Toast.error({
+          title: t("screens.settings.trash.empty.toast.errorTitle"),
+          description: t("screens.settings.trash.empty.toast.errorDescription"),
+        }),
+      )
   const renderItem = ({ item }: { item: TransactionWithRelations }) => (
     <TransactionItem
       transactionWithRelations={item}
@@ -124,7 +160,7 @@ export default function TrashScreen() {
       onRestore={handleRestore(item)}
       onWillOpen={handleWillOpen}
       rightActionAccessibilityLabel={t(
-        "screens.settings.trash.a11y.moveToTrash",
+        "screens.settings.trash.a11y.destroyPermanently",
       )}
       leftActionAccessibilityLabel={t("screens.settings.trash.a11y.restore")}
     />
@@ -174,6 +210,19 @@ export default function TrashScreen() {
         description={t("components.transactionForm.destroySheet.description")}
         confirmLabel={t("common.actions.delete")}
         cancelLabel={t("common.actions.cancel")}
+        variant="destructive"
+        icon="trash-outline"
+      />
+      <ConfirmSheet
+        visible={emptyVisible}
+        onRequestClose={() => setEmptyVisible(false)}
+        onConfirm={handleEmptyConfirmed}
+        title={t("screens.settings.trash.empty.sheet.title")}
+        description={t("screens.settings.trash.empty.sheet.description", {
+          count: deletedCount,
+        })}
+        confirmLabel={t("screens.settings.trash.empty.sheet.confirm")}
+        cancelLabel={t("screens.settings.trash.empty.sheet.cancel")}
         variant="destructive"
         icon="trash-outline"
       />

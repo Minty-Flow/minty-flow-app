@@ -214,6 +214,8 @@ export interface StatsRawRow {
   subtype: string | null
   /** Non-null when the row is a loan opening entry or repayment (excluded from generic totals). */
   loanId: string | null
+  /** Loan cash flows keep this kind even after the loan row is deleted. */
+  kind: string | null
   /** Transaction title/description */
   title: string | null | undefined
 }

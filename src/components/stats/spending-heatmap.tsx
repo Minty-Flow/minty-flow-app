@@ -1,4 +1,4 @@
-import { eachDayOfInterval, isValid } from "date-fns"
+import { eachDayOfInterval, isValid, max, subWeeks } from "date-fns"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
@@ -53,6 +53,8 @@ function buildExpenseByKey(dailyData: DailyDataPoint[]): Map<string, number> {
   return expenseByKey
 }
 
+const MAX_HEATMAP_WEEKS = 53
+
 function buildWeeks(
   from: Date,
   to: Date,
@@ -61,8 +63,25 @@ function buildWeeks(
 ) {
   if (!isValidRange(from, to)) return []
 
-  const days = eachDayOfInterval({ start: from, end: to })
-  const firstDateKey = formatDateKey(from)
+  // An all-time range starts in 2000, which would draw ~1,400 week columns.
+  // Start at the first day with spending, and never more than a year back.
+  const keysWithSpending = [...expenseByKey]
+    .filter(([, expense]) => expense > 0)
+    .map(([key]) => key)
+    .sort()
+  const firstSpendingKey = keysWithSpending[0]
+  const firstSpending = firstSpendingKey
+    ? new Date(`${firstSpendingKey}T00:00:00`)
+    : null
+  const start = max(
+    [
+      from,
+      subWeeks(to, MAX_HEATMAP_WEEKS),
+      ...(firstSpending && isValid(firstSpending) ? [firstSpending] : []),
+    ].filter((d) => d <= to),
+  )
+  const days = eachDayOfInterval({ start, end: to })
+  const firstDateKey = formatDateKey(start)
   const weeks: HeatmapWeek[] = []
   for (const day of days) {
     const weekKey = formatDateKey(startOfAppWeek(day, weekStartsOn))

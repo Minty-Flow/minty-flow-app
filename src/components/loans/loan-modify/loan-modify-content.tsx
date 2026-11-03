@@ -57,9 +57,11 @@ export function LoanModifyContent({
   prefill,
 }: LoanModifyContentProps) {
   const { t } = useTranslation()
+  const [footerHeight, setFooterHeight] = useState(0)
   const router = useRouter()
   const { theme } = useUnistyles()
   const isAddMode = loanModifyId === NewEnum.NEW || !loanModifyId
+  const hasRepayments = !isAddMode && (loan?.repaidAmount ?? 0) > 0
   const handleGoBack = () => {
     router.back()
   }
@@ -227,6 +229,7 @@ export function LoanModifyContent({
   return (
     <View style={modifyFormStyles.container}>
       <ScrollIntoViewProvider
+        keyboardInset={footerHeight}
         scrollViewStyle={modifyFormStyles.scrollView}
         contentContainerStyle={modifyFormStyles.scrollContent}
       >
@@ -248,7 +251,7 @@ export function LoanModifyContent({
             activeValue={formLoanType}
             // Repayments tell the opening entry apart by type, so the type
             // is fixed once any exist.
-            disabled={!isAddMode && (loan?.repaidAmount ?? 0) > 0}
+            disabled={hasRepayments}
             onValueChange={(v) => {
               setValue("loanType", v, { shouldDirty: true })
               // Reset category selection — the valid set changes when loan type changes
@@ -295,6 +298,9 @@ export function LoanModifyContent({
               selectedAccount={selectedAccount}
               balanceAtTransaction={null}
               transaction={null}
+              // Repayments stay on the account they were made on, so the
+              // loan's account is fixed once any exist.
+              disabled={hasRepayments}
               accountError={
                 errors.accountId
                   ? t(errors.accountId.message as TranslationKey)
@@ -437,6 +443,7 @@ export function LoanModifyContent({
       </ScrollIntoViewProvider>
 
       <ModifyFormFooter
+        onHeightChange={setFooterHeight}
         formName={formName}
         isAddMode={isAddMode}
         isDirty={isDirty}

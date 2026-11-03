@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { StyleSheet } from "react-native-unistyles"
+import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import {
   AccountCard,
@@ -14,19 +14,33 @@ import { ReorderableList } from "~/components/reorderable-list"
 import { RouteLoadingState } from "~/components/route-load-state"
 import { SearchInput } from "~/components/search-input"
 import { Button } from "~/components/ui/button"
+import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
 import { useAccountPeriodTotals } from "~/database/drizzle/read-models/progress-read-model"
 import { updateAccountsOrder } from "~/database/services/account-service"
+import { useDayKey } from "~/hooks/use-time-reactivity"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
 import type { Account } from "~/types/accounts"
 import { NewEnum } from "~/types/new"
 import { logger } from "~/utils/logger"
 import { getMonthRange } from "~/utils/time-utils"
+import { Toast } from "~/utils/toast"
+
+/**
+ * Local month bounds for "now". `_dayKey` is a cache key, not data: React
+ * Compiler drops memo dependencies the computation does not read, so the day
+ * has to be an argument for the range to re-derive after a rollover.
+ */
+function currentMonthRange(_dayKey: string) {
+  const now = new Date()
+  return getMonthRange(now.getFullYear(), now.getMonth())
+}
 
 function AccountsScreen() {
   const { t } = useTranslation()
+  const { theme } = useUnistyles()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [isReorderMode, setIsReorderMode] = useState(false)
@@ -35,10 +49,11 @@ function AccountsScreen() {
     (s) => s.excludeFromTotals,
   )
   const accounts = useActiveAccounts()
-  const { fromDate, toDate } = (() => {
-    const now = new Date()
-    return getMonthRange(now.getFullYear(), now.getMonth())
-  })()
+  const dayKey = useDayKey()
+  const { fromDate, toDate } = useMemo(
+    () => currentMonthRange(dayKey),
+    [dayKey],
+  )
   const { totals: totalsByAccount, isReady: totalsReady } =
     useAccountPeriodTotals(
       new Date(fromDate),
@@ -67,7 +82,9 @@ function AccountsScreen() {
       a.name.toLowerCase().includes(searchQuery.toLowerCase()),
   )
   const displayAccounts = isReorderMode ? reorderedAccounts : filteredAccounts
-  const balancesByCurrency = displayAccounts
+  // The headline is the user's whole balance: a search or a reorder in
+  // progress must not change it.
+  const balancesByCurrency = accountsWithMonthTotals
     .filter((account) => !account.excludeFromBalance)
     .reduce(
       (acc, account) => {
@@ -101,6 +118,7 @@ function AccountsScreen() {
       setReorderedAccounts([])
     } catch (error) {
       logger.error("Failed to save account order", { error })
+      Toast.error({ title: t("common.toast.error") })
     }
   }
   const handleCancelReorder = () => {
@@ -217,12 +235,19 @@ function AccountsScreen() {
         ListFooterComponent={
           !isReorderMode ? (
             <View style={styles.footer}>
-              <Button onPress={handleAddAccount} variant="secondary">
-                <IconSvg name="plus-outline" size={24} />
-                <Text variant="default">
+              <Pressable
+                style={styles.newAccountButton}
+                onPress={handleAddAccount}
+              >
+                <IconSvg
+                  name="plus-outline"
+                  size={32}
+                  color={theme.colors.onSecondary}
+                />
+                <Text variant="default" style={styles.newAccountText}>
                   {t("screens.accounts.addNewAccount")}
                 </Text>
-              </Button>
+              </Pressable>
             </View>
           ) : null
         }
@@ -231,7 +256,7 @@ function AccountsScreen() {
   )
 }
 export default AccountsScreen
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create((theme, rt) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.surface,
@@ -246,7 +271,7 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 50,
+    marginTop: rt.insets.top + 12,
     marginBottom: 10,
   },
   actionButtons: {
@@ -287,5 +312,20 @@ const styles = StyleSheet.create((theme) => ({
   },
   footer: {
     marginBottom: 40,
+  },
+  // Same look as the "new account" row on the All accounts screen.
+  newAccountButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    paddingVertical: 20,
+    backgroundColor: theme.colors.secondary,
+    borderRadius: theme.radius,
+  },
+  newAccountText: {
+    ...theme.typography.titleSmall,
+    fontWeight: "600",
+    color: theme.colors.onSecondary,
   },
 }))

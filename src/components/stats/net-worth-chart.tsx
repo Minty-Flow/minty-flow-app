@@ -1,3 +1,5 @@
+import { useState } from "react"
+import { Gesture, GestureDetector } from "react-native-gesture-handler"
 import {
   Canvas,
   Circle,
@@ -5,9 +7,7 @@ import {
   LinearGradient,
   Path,
   vec,
-} from "@shopify/react-native-skia"
-import { useState } from "react"
-import { Gesture, GestureDetector } from "react-native-gesture-handler"
+} from "react-native-skia"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 import { scheduleOnRN } from "react-native-worklets"
 
@@ -15,6 +15,7 @@ import { Money } from "~/components/money"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { BalanceTimelinePoint, StatsDateRange } from "~/types/stats"
+import { buildLineChartPaths } from "~/utils/chart-path"
 import { toMajorUnits } from "~/utils/money"
 import { formatNumber } from "~/utils/number-format"
 import {
@@ -62,30 +63,12 @@ export function NetWorthChart({
   if (points.length < 2) return null
 
   const plotHeight = CHART_HEIGHT - LABEL_HEIGHT
-  const values = points.map((p) => p.balance)
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const span = max - min || 1
-  const usable = plotHeight - PLOT_PAD * 2
-  const xAt = (i: number) => (i / (points.length - 1)) * width
-  const yAt = (v: number) => PLOT_PAD + (1 - (v - min) / span) * usable
-
-  const line: string[] = []
-  const area: string[] = []
-  points.forEach((p, i) => {
-    const x = xAt(i)
-    const y = yAt(p.balance)
-    if (i === 0) {
-      line.push(`M ${x} ${y}`)
-      area.push(`M ${x} ${plotHeight}`, `L ${x} ${y}`)
-    } else {
-      line.push(`L ${x} ${y}`)
-      area.push(`L ${x} ${y}`)
-    }
-  })
-  area.push(`L ${width} ${plotHeight}`, "Z")
-  const linePath = line.join(" ")
-  const areaPath = area.join(" ")
+  const { linePath, areaPath, min, span, xAt, yAt } = buildLineChartPaths(
+    points.map((p) => p.balance),
+    width,
+    plotHeight,
+    PLOT_PAD,
+  )
 
   const gridValues = Array.from({ length: Y_TICKS }, (_, i) =>
     Math.round(min + (span * i) / (Y_TICKS - 1)),
@@ -125,9 +108,11 @@ export function NetWorthChart({
         >
           {width > 0 ? (
             <Canvas style={styles.canvas}>
-              {gridValues.map((v) => (
+              {gridValues.map((v, i) => (
                 <Line
-                  key={v}
+                  // A flat timeline repeats the same value, so key by position.
+                  // biome-ignore lint/suspicious/noArrayIndexKey: grid lines have no identity beyond position
+                  key={`${i}-${v}`}
                   p1={vec(0, yAt(v))}
                   p2={vec(width, yAt(v))}
                   color={`${theme.colors.semantic.semi}30`}
@@ -232,6 +217,9 @@ const styles = StyleSheet.create((theme) => ({
   },
   chartArea: {
     height: CHART_HEIGHT,
+    // Skia and the pan gesture work in physical x, so keep the whole chart
+    // (labels and tooltip too) left-to-right even in an RTL layout.
+    direction: "ltr",
   },
   canvas: {
     height: CHART_HEIGHT - LABEL_HEIGHT,

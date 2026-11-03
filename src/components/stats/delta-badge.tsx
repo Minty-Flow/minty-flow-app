@@ -41,26 +41,38 @@ export function DeltaBadge({
 
   // "Good" depends on sentiment: for expense, decrease is good; for income, increase is good
   const isGood = invertedSentiment ? isNegative : isPositive
+  const isNeutral = delta === 0
 
   const formattedDelta = formatPercent(delta, { showSign: isPositive })
   const iconName = isPositive ? "trending-up-outline" : "trending-down-outline"
   const iconSize = size === "sm" ? 12 : 14
 
   return (
-    <View style={[styles.container, isGood ? styles.goodBg : styles.badBg]}>
+    <View
+      style={[
+        styles.container,
+        isNeutral ? styles.neutralBg : isGood ? styles.goodBg : styles.badBg,
+      ]}
+    >
       <Text
         style={[
           size === "sm" ? styles.textSm : styles.textMd,
-          isGood ? styles.goodText : styles.badText,
+          isNeutral
+            ? styles.neutralText
+            : isGood
+              ? styles.goodText
+              : styles.badText,
         ]}
       >
         {formattedDelta}
       </Text>
-      <IconSvg
-        name={iconName}
-        size={iconSize}
-        color={isGood ? styles.goodText.color : styles.badText.color}
-      />
+      {isNeutral ? null : (
+        <IconSvg
+          name={iconName}
+          size={iconSize}
+          color={isGood ? styles.goodText.color : styles.badText.color}
+        />
+      )}
     </View>
   )
 }
@@ -79,6 +91,12 @@ const styles = StyleSheet.create((theme) => ({
   },
   badBg: {
     backgroundColor: `${theme.colors.semantic.expense}18`,
+  },
+  neutralBg: {
+    backgroundColor: `${theme.colors.semantic.semi}18`,
+  },
+  neutralText: {
+    color: theme.colors.semantic.semi,
   },
   goodText: {
     color: theme.colors.semantic.income,

@@ -46,3 +46,40 @@ describe("addBudgetSchema on an empty form", () => {
     ).toEqual({})
   })
 })
+
+describe("addBudgetSchema ranges", () => {
+  const valid = {
+    ...emptyForm,
+    name: "Food",
+    currencyCode: "USD",
+    accountIds: ["a"],
+    amount: 100,
+    categoryIds: ["c"],
+  }
+
+  it("rejects an end date before the start date", () => {
+    expect(
+      issuesByField({
+        ...valid,
+        period: "custom",
+        endDate: new Date(2025, 11, 31).getTime(),
+      }),
+    ).toEqual({ endDate: "validation.endDate.beforeStart" })
+  })
+
+  it("accepts an end date on the start day", () => {
+    expect(
+      issuesByField({
+        ...valid,
+        period: "custom",
+        endDate: new Date(2026, 0, 1).getTime(),
+      }),
+    ).toEqual({})
+  })
+
+  it("gives the alert threshold its own message", () => {
+    expect(issuesByField({ ...valid, alertThreshold: 150 })).toEqual({
+      alertThreshold: "validation.alertThreshold.range",
+    })
+  })
+})

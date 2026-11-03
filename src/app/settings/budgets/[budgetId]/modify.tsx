@@ -8,7 +8,7 @@ import {
 } from "~/components/route-load-state"
 import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
 import { useBudgetsQuery } from "~/database/drizzle/read-models/budget-read-model"
-import { useCategoriesByType } from "~/database/drizzle/read-models/category-read-model"
+import { useCategoriesByTypeQuery } from "~/database/drizzle/read-models/category-read-model"
 import { useModifyRouteLoader } from "~/hooks/use-modify-route-loader"
 import { NewEnum } from "~/types/new"
 import { TransactionTypeEnum } from "~/types/transactions"
@@ -26,7 +26,11 @@ export default function ModifyBudgetScreen() {
     notFoundMessage: t("common.notFound.budget"),
   })
   const accounts = useActiveAccounts()
-  const categories = useCategoriesByType(TransactionTypeEnum.EXPENSE)
+  // Counts feed the picker's "Most used" row.
+  const categories = useCategoriesByTypeQuery(
+    TransactionTypeEnum.EXPENSE,
+    true,
+  ).data
 
   if (loadState.mode === "new") {
     return (

@@ -13,6 +13,7 @@ import {
 import type {
   GroupByOption,
   SearchMatchType,
+  SearchState,
   TransactionListFilterState,
 } from "~/types/transaction-filters"
 import {
@@ -65,6 +66,19 @@ export function applyTransactionFilters(
   }
 
   return out
+}
+
+/**
+ * The rows the user's structural filters and search keep, before the pending
+ * filter, recurring split and grouping. The home summary and the Upcoming
+ * section read this so they describe the same rows as the list under them.
+ */
+export function applyFiltersAndSearch(
+  list: TransactionWithRelations[],
+  filterState: TransactionListFilterState,
+  searchState: SearchState,
+): TransactionWithRelations[] {
+  return applySearch(applyTransactionFilters(list, filterState), searchState)
 }
 
 /** Apply the pending filter; "all"/"notPending" keep only confirmed rows, "pending" keeps only pending rows. */
@@ -147,10 +161,17 @@ function getDefaultDateRange(timeframeDays: number) {
   }
 }
 
-/** Build query filters for the DB: only date range. */
+/**
+ * Build query filters for the DB: only date range.
+ *
+ * `_dayKey` is a cache key, not data: React Compiler drops memo dependencies the
+ * computation does not read, so the day has to be an argument for the range to
+ * re-derive after a rollover.
+ */
 export function buildQueryFilters(
   selectedRange: { start: Date; end: Date } | null,
   homeTimeframe: number,
+  _dayKey: string,
 ) {
   return selectedRange
     ? {
@@ -320,4 +341,25 @@ export function buildTransactionSections(
       b.data[0].transactionDate.getTime() - a.data[0].transactionDate.getTime()
     )
   })
+}
+
+/**
+ * True when the list is narrowed by a filter or search the user set (the
+ * default grouping and an empty search do not count).
+ */
+export function hasActiveFilters(
+  filterState: TransactionListFilterState,
+  searchState: SearchState,
+): boolean {
+  return (
+    searchState.query.length > 0 ||
+    searchState.matchType === "untitled" ||
+    filterState.accountIds.length > 0 ||
+    filterState.categoryIds.length > 0 ||
+    filterState.tagIds.length > 0 ||
+    filterState.pendingFilter !== "all" ||
+    filterState.typeFilters.length > 0 ||
+    filterState.attachmentFilter !== "all" ||
+    filterState.currencyIds.length > 0
+  )
 }

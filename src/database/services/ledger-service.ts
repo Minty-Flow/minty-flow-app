@@ -5,21 +5,28 @@ import { getTrashRetentionDays } from "~/constants/trash-retention"
 import { drizzleDb } from "~/database/drizzle/db"
 import {
   accounts,
+  loans,
   transactions,
   transactionTags,
   transfers,
 } from "~/database/drizzle/schema"
 import { type DbTransaction, runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
+import {
+  attachmentFilesFromExtra,
+  deleteAttachmentFiles,
+} from "~/database/utils/attachment-files"
 import { generateId } from "~/database/utils/generate-id"
 import { getBalanceDelta } from "~/database/utils/get-balance-delta"
 import { hasAttachmentsFromExtra } from "~/database/utils/has-attachments-from-extra"
+import { getOpeningTypeForLoan } from "~/domain/transaction-kind"
 import type {
   CreateTransferParams,
   EditTransferFields,
   RecurringEditPayload,
   TransactionFormValues,
 } from "~/schemas/transactions.schema"
+import type { LoanType } from "~/types/loans"
 import type { TransactionKind, TransactionType } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import {
@@ -80,6 +87,24 @@ function requireTx(db: Db, id: string): RowTransaction {
     .get()
   if (!row) throw new Error(`Transaction ${id} not found`)
   return row
+}
+
+/**
+ * True when the row is its loan's opening cash-flow entry, whose amount must
+ * mirror the loan's `principal_amount` (map §1.5).
+ */
+function isLoanOpeningEntry(
+  db: Db,
+  tx: Pick<RowTransaction, "loan_id" | "type">,
+): boolean {
+  if (tx.loan_id == null) return false
+  const loan = db
+    .select({ loanType: loans.loanType })
+    .from(loans)
+    .where(eq(loans.id, tx.loan_id))
+    .get()
+  if (!loan) return false
+  return tx.type === getOpeningTypeForLoan(loan.loanType as LoanType)
 }
 
 function getTagIdsForTx(db: Db, txId: string): string[] {
@@ -236,7 +261,7 @@ function restoreTransferById(txId: string, db: Db): void {
   }
 }
 
-function destroyTransferById(txId: string, db: Db): void {
+function destroyTransferById(txId: string, db: Db, files?: Set<string>): void {
   const legs = getTransferLegs(txId, db)
 
   for (const leg of legs) {
@@ -257,6 +282,7 @@ function destroyTransferById(txId: string, db: Db): void {
   }
 
   for (const leg of legs) {
+    for (const f of attachmentFilesFromExtra(leg.extra)) files?.add(f)
     db.delete(transactionTags)
       .where(eq(transactionTags.transactionId, leg.id))
       .run()
@@ -361,7 +387,7 @@ export async function createTransaction(
 }
 
 type TransferRecurringOptions = {
-  recurringId: string
+  recurringId?: string
   isPending: boolean
   subtype?: string | null
   extra?: Record<string, string> | null
@@ -395,6 +421,9 @@ export function createTransferInTx(
   )
   const dateIso = new Date(dateMs).toISOString()
   const isPending = recurringOptions?.isPending ?? false
+  // A pending row cannot keep kind "default" (CSI-2), and the form cannot pick
+  // "upcoming" on a transfer because that kind switches the type.
+  const kind = recurringOptions?.kind ?? (isPending ? "upcoming" : "default")
   const title = params.title ?? "Transfer"
   const extraJson = recurringOptions?.extra
     ? JSON.stringify(recurringOptions.extra)
@@ -418,6 +447,15 @@ export function createTransferInTx(
     .get()
 
   if (!fromAcc || !toAcc) throw new Error("One or both accounts not found.")
+
+  if (
+    fromAcc.currencyCode !== toAcc.currencyCode &&
+    !(params.conversionRate != null && params.conversionRate > 0)
+  ) {
+    throw new Error(
+      "A conversion rate is required for cross-currency transfers.",
+    )
+  }
 
   const creditAmount =
     fromAcc.currencyCode !== toAcc.currencyCode &&
@@ -448,7 +486,7 @@ export function createTransferInTx(
       accountBalanceBefore: isPending ? 0 : fromAcc.balance,
       subtype: recurringOptions?.subtype ?? null,
       // transfers are pending+default by design (migration 0001 & deriveKind exclude type='transfer' from 'upcoming') — CSI-2 assert intentionally not applied here
-      kind: recurringOptions?.kind ?? "default",
+      kind,
       extra: extraJson,
       hasAttachments: 0,
       recurringId: recurringOptions?.recurringId ?? null,
@@ -477,7 +515,7 @@ export function createTransferInTx(
       requiresManualConfirmation: 0,
       accountBalanceBefore: isPending ? 0 : toAcc.balance,
       subtype: recurringOptions?.subtype ?? null,
-      kind: recurringOptions?.kind ?? "default",
+      kind,
       extra: extraJson,
       hasAttachments: 0,
       recurringId: recurringOptions?.recurringId ?? null,
@@ -553,6 +591,18 @@ function updateTransactionInTx(
   // A trashed row is not part of any balance; editing it would move one.
   if (tx.is_deleted) throw new Error(`Transaction ${id} is in the trash`)
 
+  // ES-6: a transfer's legs must stay a transfer. The type switch would orphan
+  // one leg and move both balances; the form locks the tab, this is defence.
+  if (
+    data.type !== undefined &&
+    data.type !== "transfer" &&
+    getTransferRow(id, db)
+  ) {
+    throw new Error(
+      "A transfer's legs cannot be changed to a plain expense or income.",
+    )
+  }
+
   const oldPending = !!tx.is_pending
   const oldAmount = tx.amount
   const oldType = tx.type
@@ -570,7 +620,12 @@ function updateTransactionInTx(
       : (tx.kind ?? "default")
 
   const newPending = data.isPending !== undefined ? data.isPending : oldPending
-  const newAmount = data.amount !== undefined ? data.amount : oldAmount
+  // A loan opening entry's amount mirrors principal_amount (map §1.5); the
+  // loan form owns it. Silently keep the stored value, like the other locks.
+  const newAmount =
+    data.amount !== undefined && !isLoanOpeningEntry(db, tx)
+      ? data.amount
+      : oldAmount
   const newType = data.type !== undefined && !isLoanLinked ? data.type : oldType
   const newSubtype =
     data.subtype !== undefined ? (data.subtype ?? null) : oldSubtype
@@ -682,7 +737,9 @@ function updateTransactionInTx(
 
   db.update(transactions)
     .set({
-      ...(data.amount !== undefined ? { amount: data.amount } : {}),
+      ...(data.amount !== undefined || isLoanOpeningEntry(db, tx)
+        ? { amount: newAmount }
+        : {}),
       ...(data.type !== undefined && !isLoanLinked ? { type: data.type } : {}),
       kind: nextKind,
       ...(data.transactionDate !== undefined
@@ -755,14 +812,19 @@ export async function editTransfer(
       throw new Error(`Transfer ${txId} is in the trash`)
     }
 
-    const debitRow = tx.amount < 0 ? tx : paired
-    const creditRow = tx.amount > 0 ? tx : paired
-    if (debitRow === creditRow) {
-      throw new Error("Could not identify debit/credit legs.")
-    }
+    // The transfers row says which leg is the debit; the sign of a leg's
+    // amount cannot, because an amount of 0 has none.
+    const debitRow = partnerInfo.isDebit ? tx : paired
+    const creditRow = partnerInfo.isDebit ? paired : tx
 
     const newFromAccountId = fields.fromAccountId ?? debitRow.account_id
     const newToAccountId = fields.toAccountId ?? creditRow.account_id
+    if (newFromAccountId === newToAccountId) {
+      throw new Error("Cannot transfer to the same account.")
+    }
+    if (fields.amount !== undefined && fields.amount <= 0) {
+      throw new Error("Transfer amount must be positive.")
+    }
     const newDateMs = toDateMs(
       fields.transactionDate as number | Date | undefined,
       new Date(debitRow.transaction_date).getTime(),
@@ -801,7 +863,11 @@ export async function editTransfer(
         ? toMajorUnits(oldCreditAmount, oldToAccount.currencyCode) /
           toMajorUnits(oldDebitAmount, oldFromAccount.currencyCode)
         : 1
-    const newConversionRate = fields.conversionRate ?? oldImpliedRate
+    const newConversionRate =
+      fields.conversionRate ??
+      (newFromAccount.currencyCode === newToAccount.currencyCode
+        ? 1
+        : oldImpliedRate)
     const newCreditAmount =
       newConversionRate > 0
         ? convertMinorUnits(
@@ -842,7 +908,8 @@ export async function editTransfer(
         amount: -newDebitAmount,
         transactionDate: newDateIso,
         accountId: newFromAccountId,
-        accountBalanceBefore: fromBalanceBefore,
+        // A pending leg is not part of the balance, so it has no "before".
+        accountBalanceBefore: debitRow.is_pending ? 0 : fromBalanceBefore,
         ...(fields.title !== undefined ? { title: fields.title ?? null } : {}),
         ...(fields.notes !== undefined
           ? { description: fields.notes ?? null }
@@ -857,7 +924,7 @@ export async function editTransfer(
         amount: newCreditAmount,
         transactionDate: newDateIso,
         accountId: newToAccountId,
-        accountBalanceBefore: toBalanceBefore,
+        accountBalanceBefore: creditRow.is_pending ? 0 : toBalanceBefore,
         ...(fields.title !== undefined ? { title: fields.title ?? null } : {}),
         ...(fields.notes !== undefined
           ? { description: fields.notes ?? null }
@@ -963,6 +1030,14 @@ function deleteTransactionInTx(db: DbTransaction, id: string): void {
   const tx = requireTx(db, id)
   if (tx.is_deleted) return
 
+  // A loan's opening entry is deleted with the loan, not on its own; leaving
+  // it would keep the loan open without its principal row (map §3.9).
+  if (isLoanOpeningEntry(db, tx)) {
+    throw new Error(
+      "A loan's opening entry cannot be deleted on its own; delete the loan.",
+    )
+  }
+
   const transferPartner = db
     .select({ id: transfers.id })
     .from(transfers)
@@ -1029,6 +1104,14 @@ export async function restoreTransaction(id: string): Promise<void> {
       return
     }
 
+    if (tx.type === "transfer" && tx.is_deleted) {
+      // Destroying an account removes the transfer link and trashes the other
+      // account's leg. Restoring that leg alone would put back half a transfer.
+      throw new Error(
+        "This transfer's other leg was removed with its account and cannot be restored.",
+      )
+    }
+
     if (!tx.is_deleted) return
 
     db.update(transactions)
@@ -1066,13 +1149,31 @@ export async function restoreTransaction(id: string): Promise<void> {
 
 // ── Permanent Destroy ─────────────────────────────────────────────────────────
 
+/**
+ * Run a permanent delete and, once it has committed, remove the attachment
+ * files of every row it destroyed. Deleting before the commit would lose files
+ * a rolled-back delete still references. The set de-duplicates a retried run.
+ */
+async function destroyingTransactions(
+  name: string,
+  fn: (db: DbTransaction, files: Set<string>) => void,
+): Promise<void> {
+  const files = new Set<string>()
+  await runInTransaction(name, (db) => fn(db, files))
+  await deleteAttachmentFiles(files)
+}
+
 export async function destroyTransaction(id: string): Promise<void> {
-  await runInTransaction("transaction.destroy", (db) =>
-    destroyTransactionInTx(db, id),
+  await destroyingTransactions("transaction.destroy", (db, files) =>
+    destroyTransactionInTx(db, id, files),
   )
 }
 
-function destroyTransactionInTx(db: DbTransaction, id: string): void {
+function destroyTransactionInTx(
+  db: DbTransaction,
+  id: string,
+  files: Set<string>,
+): void {
   const now = new Date().toISOString()
 
   const tx = requireTx(db, id)
@@ -1088,7 +1189,7 @@ function destroyTransactionInTx(db: DbTransaction, id: string): void {
     )
     .get()
   if (transferPartner) {
-    destroyTransferById(tx.id, db)
+    destroyTransferById(tx.id, db, files)
     return
   }
 
@@ -1122,6 +1223,7 @@ function destroyTransactionInTx(db: DbTransaction, id: string): void {
       .run()
   }
 
+  for (const f of attachmentFilesFromExtra(tx.extra)) files.add(f)
   db.delete(transactions).where(eq(transactions.id, id)).run()
 }
 
@@ -1238,6 +1340,11 @@ function confirmTransactionInTx(
         .run()
     }
   } else {
+    if (legs.some((leg) => leg.loan_id != null)) {
+      // Re-pending a lent/borrowed row would produce the pending+loan-kind
+      // state that `assertPendingKindAllowed` forbids.
+      throw new Error("A loan-linked transaction cannot be put on hold.")
+    }
     for (const leg of legs) {
       const delta = getBalanceDelta(
         leg.amount,
@@ -1296,10 +1403,31 @@ function getRuleInstanceIds(
     .map((row) => row.id)
 }
 
+/**
+ * `keepPaid` spares confirmed instances: they are history the user already
+ * lived, and deleting the schedule must not rewrite balances. `alsoId` is the
+ * row the user explicitly deleted, which goes even when it is paid.
+ */
+export interface DeleteInstancesOptions {
+  keepPaid?: boolean
+  alsoId?: string
+}
+
+function pickInstanceIds(
+  ruleId: string,
+  { keepPaid = false, alsoId }: DeleteInstancesOptions,
+  fromDate?: Date,
+): string[] {
+  const ids = getRuleInstanceIds(ruleId, { fromDate, pendingOnly: keepPaid })
+  if (keepPaid && alsoId && !ids.includes(alsoId)) ids.push(alsoId)
+  return ids
+}
+
 export async function deleteAllRecurringInstances(
   ruleId: string,
+  opts: DeleteInstancesOptions = {},
 ): Promise<void> {
-  const ids = getRuleInstanceIds(ruleId)
+  const ids = pickInstanceIds(ruleId, opts)
   await runInTransaction("recurring.deleteAll", (db) => {
     for (const id of ids) deleteTransactionInTx(db, id)
   })
@@ -1308,8 +1436,9 @@ export async function deleteAllRecurringInstances(
 export async function deleteFutureRecurringInstances(
   ruleId: string,
   fromDate: Date,
+  opts: DeleteInstancesOptions = {},
 ): Promise<void> {
-  const ids = getRuleInstanceIds(ruleId, { fromDate })
+  const ids = pickInstanceIds(ruleId, opts, fromDate)
   await runInTransaction("recurring.deleteFuture", (db) => {
     for (const id of ids) deleteTransactionInTx(db, id)
   })
@@ -1318,11 +1447,43 @@ export async function deleteFutureRecurringInstances(
 export async function detachFromRule(id: string): Promise<void> {
   const now = new Date().toISOString()
   await runInTransaction("transaction.detach", (db) => {
-    db.update(transactions)
-      .set({ recurringId: null, updatedAt: now })
-      .where(eq(transactions.id, id))
-      .run()
+    // A transfer is two rows under one rule; detaching one leg would leave the
+    // other for a later "delete this and future" to remove on its own.
+    const ids = [id]
+    const partner = getPartnerTxId(id, db)
+    if (partner) ids.push(partner.partnerId)
+    // Older screens read `extra.recurringId`, so drop the copy kept there too.
+    for (const row of db
+      .select({ id: transactions.id, extra: transactions.extra })
+      .from(transactions)
+      .where(inArray(transactions.id, ids))
+      .all()) {
+      db.update(transactions)
+        .set({
+          recurringId: null,
+          extra: withoutRuleKeys(row.extra),
+          updatedAt: now,
+        })
+        .where(eq(transactions.id, row.id))
+        .run()
+    }
   })
+}
+
+function withoutRuleKeys(extra: string | null): string | null {
+  if (!extra) return extra
+  try {
+    const parsed: unknown = JSON.parse(extra)
+    if (typeof parsed !== "object" || parsed === null) return extra
+    const {
+      recurringId: _id,
+      recurringInitialDate: _date,
+      ...rest
+    } = parsed as Record<string, unknown>
+    return Object.keys(rest).length > 0 ? JSON.stringify(rest) : null
+  } catch {
+    return extra
+  }
 }
 
 /**
@@ -1373,11 +1534,21 @@ export async function updateFutureRecurringInstances(
           ? payload.requiresManualConfirmation
           : undefined,
         tags: payload.tags,
-        extra: payload.extra,
+        // Attachment URIs point at one file; sharing them would let deleting
+        // one instance's attachment delete the file for every instance.
+        extra: withoutAttachments(payload.extra),
         subtype: payload.subtype,
       })
     }
   })
+}
+
+function withoutAttachments(
+  extra: RecurringEditPayload["extra"],
+): RecurringEditPayload["extra"] {
+  if (!extra || !("attachments" in extra)) return extra
+  const { attachments: _attachments, ...rest } = extra
+  return rest
 }
 
 // ── Trash helpers ─────────────────────────────────────────────────────────────
@@ -1386,23 +1557,29 @@ export async function updateFutureRecurringInstances(
  * Destroying one leg of a transfer hard-deletes both, so in a batch the second
  * leg's id may already be gone. Skip it instead of failing the whole batch.
  */
-function destroyTransactionIfPresent(db: DbTransaction, id: string): void {
+function destroyTransactionIfPresent(
+  db: DbTransaction,
+  id: string,
+  files: Set<string>,
+): void {
   const exists = db
     .select({ id: transactions.id })
     .from(transactions)
     .where(eq(transactions.id, id))
     .get()
-  if (exists) destroyTransactionInTx(db, id)
+  if (exists) destroyTransactionInTx(db, id, files)
 }
 
 export async function destroyAllDeletedTransactions(): Promise<void> {
-  const deleted = drizzleDb
-    .select(txSelection)
-    .from(transactions)
-    .where(eq(transactions.isDeleted, 1))
-    .all()
-  await runInTransaction("trash.destroyAll", (db) => {
-    for (const tx of deleted) destroyTransactionIfPresent(db, tx.id)
+  // Select inside the write transaction: a restore queued after the read would
+  // otherwise be hard-deleted.
+  await destroyingTransactions("trash.destroyAll", (db, files) => {
+    const deleted = db
+      .select(txSelection)
+      .from(transactions)
+      .where(eq(transactions.isDeleted, 1))
+      .all()
+    for (const tx of deleted) destroyTransactionIfPresent(db, tx.id, files)
   })
 }
 
@@ -1412,17 +1589,22 @@ export async function autoPurgeTrash(retentionValue: string): Promise<void> {
 
   const cutoff = startOfDay(subDays(new Date(), days)).toISOString()
 
-  const toPurge = drizzleDb
-    .select(txSelection)
-    .from(transactions)
-    .where(
-      and(eq(transactions.isDeleted, 1), lt(transactions.deletedAt, cutoff)),
-    )
-    .all()
+  let toPurge: RowTransaction[] = []
 
   try {
-    await runInTransaction("trash.autoPurge", (db) => {
-      for (const tx of toPurge) destroyTransactionIfPresent(db, tx.id)
+    await destroyingTransactions("trash.autoPurge", (db, files) => {
+      // Read inside the transaction so a concurrent restore is not purged.
+      toPurge = db
+        .select(txSelection)
+        .from(transactions)
+        .where(
+          and(
+            eq(transactions.isDeleted, 1),
+            lt(transactions.deletedAt, cutoff),
+          ),
+        )
+        .all()
+      for (const tx of toPurge) destroyTransactionIfPresent(db, tx.id, files)
     })
     return
   } catch (err) {
@@ -1434,8 +1616,8 @@ export async function autoPurgeTrash(retentionValue: string): Promise<void> {
   // One bad row rolled the batch back; isolate it so the rest still purge.
   for (const tx of toPurge) {
     try {
-      await runInTransaction("trash.autoPurgeRow", (db) =>
-        destroyTransactionIfPresent(db, tx.id),
+      await destroyingTransactions("trash.autoPurgeRow", (db, files) =>
+        destroyTransactionIfPresent(db, tx.id, files),
       )
     } catch (err) {
       logger.error("[autoPurgeTrash] failed to destroy transaction", {

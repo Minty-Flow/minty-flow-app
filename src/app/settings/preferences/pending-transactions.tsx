@@ -124,6 +124,7 @@ export default function PendingTransactionsPreferencesScreen() {
       const { status } = await Notifications.requestPermissionsAsync()
       await refreshPermissionStatus()
       if (status !== Notifications.PermissionStatus.GRANTED) {
+        setNotify(false)
         await Linking.openSettings()
       }
     }

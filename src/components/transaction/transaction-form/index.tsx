@@ -1,8 +1,10 @@
+import { useState } from "react"
 import { Controller } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
+import { KeyboardStickyFooter } from "~/components/keyboard-sticky-footer"
 import { FormLocationPicker } from "~/components/location/form-location-picker"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { InfoBanner } from "~/components/ui/info-banner"
@@ -44,6 +46,7 @@ export function TransactionForm(props: TransactionFormProps) {
   const { theme } = useUnistyles()
   const f = useTransactionForm(props)
   const readOnly = isFormReadOnly(transaction)
+  const [footerHeight, setFooterHeight] = useState(0)
 
   const showUntitledForBlankTitle = useTransactionItemAppearanceStore(
     (s) => s.showUntitledForBlankTitle,
@@ -72,10 +75,22 @@ export function TransactionForm(props: TransactionFormProps) {
           value={f.topTabType}
           onChange={f.onTopTabChange}
           hiddenSlots={f.tabHiddenSlots}
+          lockedTo={
+            transaction?.isTransfer && transaction.transferId
+              ? 2
+              : f.lockedFields.has("type")
+                ? f.topTabType === TransactionTypeEnum.INCOME
+                  ? 1
+                  : 0
+                : null
+          }
         />
       </View>
 
-      <UpcomingBanner transaction={transaction} />
+      <UpcomingBanner
+        transaction={transaction}
+        allowNavigation={f.allowNavigation}
+      />
       {readOnly ? (
         <View style={transactionFormStyles.trashedNotice}>
           <InfoBanner
@@ -86,6 +101,7 @@ export function TransactionForm(props: TransactionFormProps) {
       ) : null}
 
       <ScrollIntoViewProvider
+        keyboardInset={footerHeight}
         contentContainerStyle={transactionFormStyles.content}
         scrollViewProps={{
           keyboardShouldPersistTaps: "handled",
@@ -101,6 +117,28 @@ export function TransactionForm(props: TransactionFormProps) {
             ]}
             pointerEvents={readOnly ? "none" : "auto"}
           >
+            {/* Title first: it names the entry before the details below. */}
+            <View style={transactionFormStyles.nameSection}>
+              <Controller
+                control={f.control}
+                name="title"
+                render={({ field: { value, onChange } }) => (
+                  <Input
+                    value={value ?? ""}
+                    onChangeText={onChange}
+                    placeholder={titlePlaceholder}
+                    variant="title"
+                    placeholderTextColor={theme.colors.semantic.semi}
+                  />
+                )}
+              />
+              {f.titleErrorKey ? (
+                <Text style={transactionFormStyles.fieldError}>
+                  {t(f.titleErrorKey as TranslationKey)}
+                </Text>
+              ) : null}
+            </View>
+
             {/* Amount */}
             <View style={transactionFormStyles.balanceSection}>
               <SmartAmountInput
@@ -126,6 +164,7 @@ export function TransactionForm(props: TransactionFormProps) {
               transaction={transaction}
               accountError={f.accountError}
               onAccountChange={f.handleAccountChange}
+              disabled={f.lockedFields.has("accountId")}
             />
 
             {/* Transfer: to-account sits right under from-account, then the
@@ -137,6 +176,7 @@ export function TransactionForm(props: TransactionFormProps) {
               setValue={f.setValue}
               selectedToAccount={f.selectedToAccount}
               transactionType={transactionType}
+              error={f.toAccountError}
             />
 
             {transactionType === TransactionTypeEnum.TRANSFER &&
@@ -177,17 +217,21 @@ export function TransactionForm(props: TransactionFormProps) {
               onDatePress={() => f.openDatePicker("transaction", "date")}
               onTimePress={() => f.openDatePicker("transaction", "time")}
               dueDateMode={f.isLoanKind}
+              hasDueDate={f.hasLoanDueDate}
+              onDueDateChange={f.setHasLoanDueDate}
             />
 
             <FormKindSelector
               kind={f.kind}
               onSelect={f.setKind}
               isNew={f.isNew}
+              type={f.topTabType}
               locked={!f.canEditKind}
               linkedLoan={f.linkedLoan}
             />
             <FormKindCard
               kind={f.kind}
+              backedByRule={f.isNew || !!f.recurringRule}
               recurrence={f.recurring.recurrence}
               until={f.recurring.until}
               occurrenceCount={f.occurrenceCount}
@@ -205,27 +249,6 @@ export function TransactionForm(props: TransactionFormProps) {
               onUntilReset={() => f.setRecurring({ until: null })}
             />
 
-            <View style={transactionFormStyles.nameSection}>
-              <Controller
-                control={f.control}
-                name="title"
-                render={({ field: { value, onChange } }) => (
-                  <Input
-                    value={value ?? ""}
-                    onChangeText={onChange}
-                    placeholder={titlePlaceholder}
-                    variant="title"
-                    placeholderTextColor={theme.colors.semantic.semi}
-                  />
-                )}
-              />
-              {f.titleErrorKey ? (
-                <Text style={transactionFormStyles.fieldError}>
-                  {t(f.titleErrorKey as TranslationKey)}
-                </Text>
-              ) : null}
-            </View>
-
             <FormNotesSection
               description={f.description}
               descriptionErrorKey={f.descriptionErrorKey}
@@ -240,7 +263,8 @@ export function TransactionForm(props: TransactionFormProps) {
             {/* Goal: hidden for transfers and loan kinds (a loan isn't saving
                 toward a goal), filtered by selected account */}
             {transactionType !== TransactionTypeEnum.TRANSFER &&
-              !f.isLoanKind && (
+              !f.isLoanKind &&
+              !f.isNewRecurringRule && (
                 <FormGoalPicker
                   goals={f.accountGoals}
                   goalId={f.goalId}
@@ -256,7 +280,8 @@ export function TransactionForm(props: TransactionFormProps) {
             {/* Budget: hidden for transfers and loan kinds (a loan isn't
                 spending), filtered by account + category */}
             {transactionType !== TransactionTypeEnum.TRANSFER &&
-              !f.isLoanKind && (
+              !f.isLoanKind &&
+              !f.isNewRecurringRule && (
                 <FormBudgetPicker
                   budgets={f.accountBudgets}
                   budgetId={f.budgetId}
@@ -272,7 +297,8 @@ export function TransactionForm(props: TransactionFormProps) {
             {/* Loan link: hidden for transfers and for the loan kinds (the
                 loan card owns linking there). */}
             {transactionType !== TransactionTypeEnum.TRANSFER &&
-              !f.isLoanKind && (
+              !f.isLoanKind &&
+              !f.isNewRecurringRule && (
                 <FormLoanPicker
                   loans={f.accountLoans}
                   loanId={f.loanId}
@@ -321,33 +347,35 @@ export function TransactionForm(props: TransactionFormProps) {
                 </ListItem>
               )}
 
-            <FormAttachmentsSection
-              list={f.attachmentState.list}
-              preview={f.attachmentState.preview}
-              fileToOpen={f.attachmentState.fileToOpen}
-              toRemove={f.attachmentState.toRemove}
-              addFilesExpanded={f.attachmentState.addFilesExpanded}
-              onToggleAddFiles={() =>
-                f.setAttachmentState({
-                  addFilesExpanded: !f.attachmentState.addFilesExpanded,
-                })
-              }
-              onClosePreview={() => f.setAttachmentState({ preview: null })}
-              onCancelFileOpen={() =>
-                f.setAttachmentState({ fileToOpen: null })
-              }
-              onPreview={(a) => f.setAttachmentState({ preview: a })}
-              onOpenExternal={(a) => f.setAttachmentState({ fileToOpen: a })}
-              onRemoveRequest={(a) => f.setAttachmentState({ toRemove: a })}
-              onRemoveConfirm={f.removeAttachment}
-              onRemoveCancel={() => f.setAttachmentState({ toRemove: null })}
-              onSelectFromFiles={f.handleSelectFromFiles}
-              onTakePhoto={f.handleTakePhoto}
-              onSelectMultipleMedia={f.handleSelectMultipleMedia}
-              onSelectSinglePhoto={f.handleSelectSinglePhoto}
-            />
+            {!f.isNewRecurringRule && (
+              <FormAttachmentsSection
+                list={f.attachmentState.list}
+                preview={f.attachmentState.preview}
+                fileToOpen={f.attachmentState.fileToOpen}
+                toRemove={f.attachmentState.toRemove}
+                addFilesExpanded={f.attachmentState.addFilesExpanded}
+                onToggleAddFiles={() =>
+                  f.setAttachmentState({
+                    addFilesExpanded: !f.attachmentState.addFilesExpanded,
+                  })
+                }
+                onClosePreview={() => f.setAttachmentState({ preview: null })}
+                onCancelFileOpen={() =>
+                  f.setAttachmentState({ fileToOpen: null })
+                }
+                onPreview={(a) => f.setAttachmentState({ preview: a })}
+                onOpenExternal={(a) => f.setAttachmentState({ fileToOpen: a })}
+                onRemoveRequest={(a) => f.setAttachmentState({ toRemove: a })}
+                onRemoveConfirm={f.removeAttachment}
+                onRemoveCancel={() => f.setAttachmentState({ toRemove: null })}
+                onSelectFromFiles={f.handleSelectFromFiles}
+                onTakePhoto={f.handleTakePhoto}
+                onSelectMultipleMedia={f.handleSelectMultipleMedia}
+                onSelectSinglePhoto={f.handleSelectSinglePhoto}
+              />
+            )}
 
-            {f.locationEnabled && (
+            {f.locationEnabled && !f.isNewRecurringRule && (
               <View style={transactionFormStyles.fieldBlock}>
                 <FormLocationPicker
                   location={f.location}
@@ -372,14 +400,17 @@ export function TransactionForm(props: TransactionFormProps) {
         </View>
       </ScrollIntoViewProvider>
 
-      <FormFooter
-        isNew={f.isNew}
-        isSaving={f.isSaving}
-        isDirty={f.isDirty}
-        readOnly={readOnly}
-        onCancel={f.handleCancelPress}
-        onSave={f.submit}
-      />
+      {/* Rides on top of the keyboard so Save stays reachable while typing. */}
+      <KeyboardStickyFooter onHeightChange={setFooterHeight}>
+        <FormFooter
+          isNew={f.isNew}
+          isSaving={f.isSaving}
+          isDirty={f.hasUnsavedChanges}
+          readOnly={readOnly}
+          onCancel={f.handleCancelPress}
+          onSave={f.submit}
+        />
+      </KeyboardStickyFooter>
 
       {f.datePickerAndroidElement}
 
@@ -393,6 +424,7 @@ export function TransactionForm(props: TransactionFormProps) {
         recurrenceForEdit={f.recurring.recurrence}
         untilForEdit={f.recurring.until}
         onConfirmExit={f.handleConfirmExit}
+        onRecurringSaved={f.handleRecurringSaved}
         onDestroyConfirm={f.handleDestroyConfirm}
         onDeleteLoanConfirm={f.handleDeleteLoanConfirm}
         onLocationConfirm={f.handleLocationConfirm}

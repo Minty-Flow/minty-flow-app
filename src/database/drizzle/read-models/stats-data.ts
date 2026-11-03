@@ -31,6 +31,7 @@ import type {
 } from "~/types/stats"
 import type { TransactionType } from "~/types/transactions"
 import {
+  TransactionKindEnum,
   TransactionSubTypeEnum,
   TransactionTypeEnum,
 } from "~/types/transactions"
@@ -57,18 +58,36 @@ import {
  * Loan cash flows (opening entry + repayments) are excluded entirely.
  * Refunds are real expenses — they contribute a negative amount.
  */
-function isRealExpense(row: { type: string; loanId: string | null }): boolean {
+function isRealExpense(row: {
+  type: string
+  loanId: string | null
+  kind: string | null
+}): boolean {
   if (row.type !== TransactionTypeEnum.EXPENSE) return false
-  return row.loanId == null
+  // Loan cash flows are excluded by kind too, because deleting a loan nulls
+  // loanId but keeps the lent/borrowed kind (map §1.4).
+  return (
+    row.loanId == null &&
+    row.kind !== TransactionKindEnum.LENT &&
+    row.kind !== TransactionKindEnum.BORROWED
+  )
 }
 
 /**
  * True when the row counts as real income for statistics purposes.
  * Loan cash flows (opening entry + repayments) are excluded entirely.
  */
-function isRealIncome(row: { type: string; loanId: string | null }): boolean {
+function isRealIncome(row: {
+  type: string
+  loanId: string | null
+  kind: string | null
+}): boolean {
   if (row.type !== TransactionTypeEnum.INCOME) return false
-  return row.loanId == null
+  return (
+    row.loanId == null &&
+    row.kind !== TransactionKindEnum.LENT &&
+    row.kind !== TransactionKindEnum.BORROWED
+  )
 }
 
 /**
@@ -82,6 +101,7 @@ function expenseContribution(row: {
   subtype: string | null
   amount: number
   loanId: string | null
+  kind: string | null
 }): number {
   if (!isRealExpense(row)) return 0
   const abs = Math.abs(row.amount)
@@ -112,9 +132,10 @@ async function fetchStatsTransactions(
     subtype: string | null
     title: string | null
     loan_id: string | null
+    kind: string | null
   }>(sql`
     SELECT t.id, t.account_id, t.category_id, t.amount, t.type, t.transaction_date,
-            t.subtype, t.title, t.loan_id
+            t.subtype, t.title, t.loan_id, t.kind
      FROM transactions t
      WHERE t.is_deleted = 0
        AND t.is_pending = 0
@@ -149,6 +170,7 @@ async function fetchStatsTransactions(
       accountId: tx.account_id,
       subtype: tx.subtype,
       loanId: tx.loan_id ?? null,
+      kind: tx.kind ?? null,
       title: tx.title,
     } satisfies StatsRawRow
   })
@@ -239,8 +261,8 @@ async function fetchPendingSummary(
     if (tx.type === TransactionTypeEnum.EXPENSE) {
       if (!isLoanFlow) {
         if (tx.subtype === TransactionSubTypeEnum.REFUND) {
-          // Pending refund reduces pending expense
-          existing.totalExpense = Math.max(0, existing.totalExpense - abs)
+          // Pending refund reduces pending expense; floored once, after the loop
+          existing.totalExpense -= abs
         } else {
           existing.totalExpense += abs
         }
@@ -252,6 +274,10 @@ async function fetchPendingSummary(
     }
     existing.count++
     result.set(currency, existing)
+  }
+
+  for (const summary of result.values()) {
+    summary.totalExpense = Math.max(0, summary.totalExpense)
   }
 
   return result
@@ -273,11 +299,15 @@ function computePeriodStats(
   for (const row of rows) {
     totalExpense += expenseContribution(row)
     if (isRealIncome(row)) totalIncome += Math.abs(row.amount)
-    count++
+    // Loan rows are left out of the totals, so they are left out of the count.
+    if (row.loanId == null) count++
   }
 
   const net = totalIncome - totalExpense
-  const daySpan = Math.max(1, differenceInDays(to, from) + 1)
+  // A period still in progress has no spending on its future days; dividing by
+  // the whole span would read as a falsely low daily average.
+  const lastDay = to.getTime() > Date.now() ? new Date() : to
+  const daySpan = Math.max(1, differenceInDays(lastDay, from) + 1)
 
   return {
     totalExpense,
@@ -682,7 +712,7 @@ function computeByAccount(
 
 function computeTopTransactions(rows: StatsRawRow[]): TopTransactionItem[] {
   return rows
-    .filter((r) => r.type === TransactionTypeEnum.EXPENSE)
+    .filter((r) => expenseContribution(r) > 0)
     .sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))
     .slice(0, 5)
     .map((r) => ({
@@ -737,8 +767,18 @@ async function computeCurrencyStats(
   const previousByCurrency = groupByCurrency(previousRows)
   const balanceByCurrency = groupBalanceByCurrency(balanceRows)
 
+  // A currency whose only activity in the range is a transfer has no income or
+  // expense rows, but its balance still moved.
+  const movedBalanceCurrencies = balanceRows
+    .filter((r) => r.date >= range.from && r.date <= range.to)
+    .map((r) => r.currencyCode)
+
   const currencies = [
-    ...new Set([...currentByCurrency.keys(), ...previousByCurrency.keys()]),
+    ...new Set([
+      ...currentByCurrency.keys(),
+      ...previousByCurrency.keys(),
+      ...movedBalanceCurrencies,
+    ]),
   ]
 
   const results = await Promise.all(
@@ -760,7 +800,10 @@ async function computeCurrencyStats(
         categoryBreakdown.length > 0 ? (categoryBreakdown[0] ?? null) : null
 
       const currencyAccounts = accounts.filter(
-        (a) => a.currency_code === currency && !a.exclude_from_balance,
+        (a) =>
+          a.currency_code === currency &&
+          !a.exclude_from_balance &&
+          !a.is_archived,
       )
 
       const { timeline, opening, closing } = computeBalanceTimeline(

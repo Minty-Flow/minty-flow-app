@@ -1,9 +1,17 @@
 import { endOfDay } from "date-fns"
-import { and, count, desc, eq } from "drizzle-orm"
+import { and, count, desc, eq, sql } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
-import { recurringTransactions, transactions } from "~/database/drizzle/schema"
-import { type DbTransaction, runInTransaction } from "~/database/transaction"
+import {
+  accounts,
+  recurringTransactions,
+  transactions,
+} from "~/database/drizzle/schema"
+import {
+  type DbTransaction,
+  runInAsyncTransaction,
+  runInTransaction,
+} from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
 import type {
   RecurringEditPayload,
@@ -64,6 +72,8 @@ export interface RecurringTransactionTemplate {
   tags: string[] | null
   extra: Record<string, string> | null
   kind: TransactionKind
+  /** Stored rate for cross-currency transfer rules. */
+  conversionRate?: number | null
 }
 
 /** Template plus the raw scheduling columns, for the edit screen. */
@@ -122,31 +132,6 @@ function advanceCursor(db: DbTransaction, ruleId: string, iso: string): void {
     .run()
 }
 
-async function getInitialDateMs(txId: string): Promise<number> {
-  const row = drizzleDb
-    .select({
-      extra: transactions.extra,
-      transaction_date: transactions.transactionDate,
-    })
-    .from(transactions)
-    .where(eq(transactions.id, txId))
-    .get()
-  if (!row) return 0
-  if (row.extra) {
-    try {
-      const extra = JSON.parse(row.extra) as Record<string, string>
-      const raw = extra.recurringInitialDate
-      if (raw) {
-        const n = parseInt(raw, 10)
-        if (!Number.isNaN(n)) return n
-      }
-    } catch {
-      // ignore
-    }
-  }
-  return new Date(row.transaction_date).getTime()
-}
-
 // ── CRUD ─────────────────────────────────────────────────────────────────────
 
 interface CreateRecurringRuleInput {
@@ -162,6 +147,7 @@ interface CreateRecurringRuleInput {
   rules: string[]
   transferToAccountId?: string | null
   kind: TransactionKind
+  conversionRate?: number | null
 }
 
 export async function createRecurringRule(
@@ -170,6 +156,29 @@ export async function createRecurringRule(
   assertMinorUnits(data.amount)
   const id = generateId()
   const now = new Date().toISOString()
+
+  if (data.type === "transfer") {
+    const currencyOf = (accountId: string) =>
+      drizzleDb
+        .select({ currencyCode: accounts.currencyCode })
+        .from(accounts)
+        .where(eq(accounts.id, accountId))
+        .get()?.currencyCode
+    const fromCurrency = currencyOf(data.accountId)
+    const toCurrency = data.transferToAccountId
+      ? currencyOf(data.transferToAccountId)
+      : undefined
+    if (
+      fromCurrency &&
+      toCurrency &&
+      fromCurrency !== toCurrency &&
+      !(data.conversionRate != null && data.conversionRate > 0)
+    ) {
+      throw new Error(
+        "A conversion rate is required for cross-currency transfers.",
+      )
+    }
+  }
 
   const template: Omit<RecurringTransactionTemplate, "id"> = {
     amount: data.amount,
@@ -182,6 +191,7 @@ export async function createRecurringRule(
     tags: data.tags,
     extra: null,
     kind: data.kind,
+    conversionRate: data.conversionRate ?? null,
   }
 
   await runInTransaction("recurring.create", (db) => {
@@ -221,6 +231,9 @@ type RecurringRuleTemplateUpdate = Partial<{
   categoryId: string | null
   accountId: string
   type: string
+  subtype: TransactionSubType | null
+  tags: string[] | null
+  extra: Record<string, string> | null
 }>
 
 async function updateRecurringRuleTemplate(
@@ -246,6 +259,9 @@ async function updateRecurringRuleTemplate(
     ...(fields.categoryId !== undefined && { categoryId: fields.categoryId }),
     ...(fields.accountId !== undefined && { accountId: fields.accountId }),
     ...(fields.type !== undefined && { type: fields.type }),
+    ...(fields.subtype !== undefined && { subtype: fields.subtype }),
+    ...(fields.tags !== undefined && { tags: fields.tags }),
+    ...(fields.extra !== undefined && { extra: fields.extra }),
   }
 
   await runInTransaction("recurring.updateTemplate", (db) => {
@@ -256,7 +272,52 @@ async function updateRecurringRuleTemplate(
   })
 }
 
+/**
+ * An instance's `extra` carries the keys the sync stamps on it. They belong to
+ * that occurrence, not to the template every later occurrence is built from.
+ */
+function templateExtra(
+  extra: Record<string, string> | null | undefined,
+): Record<string, string> | null | undefined {
+  if (!extra) return extra
+  const { recurringId: _id, recurringInitialDate: _date, ...rest } = extra
+  return Object.keys(rest).length > 0 ? rest : null
+}
+
 const FOREVER_MS = new Date(2099, 11, 31).getTime()
+
+/**
+ * Re-anchor a rule's rrule to a new start date (a "this and future" date
+ * shift). Rewrites only `rules`; the range, cursor and template are untouched
+ * so the shift never regenerates or loses instances.
+ */
+async function reanchorRecurringRule(
+  ruleId: string,
+  recurrence: Recurrence,
+  startDate: Date,
+): Promise<void> {
+  const rule = drizzleDb
+    .select(recurringSelection)
+    .from(recurringTransactions)
+    .where(eq(recurringTransactions.id, ruleId))
+    .get()
+  if (!rule) return
+
+  const range = parseTimeRange(rule)
+  const rrule = buildRRuleString({
+    interval: recurrence.interval,
+    unit: recurrence.unit,
+    startDate,
+    until: range.to >= FOREVER_MS ? null : new Date(range.to),
+  })
+
+  await runInTransaction("recurring.reanchor", (db) => {
+    db.update(recurringTransactions)
+      .set({ rules: JSON.stringify([rrule]) })
+      .where(eq(recurringTransactions.id, ruleId))
+      .run()
+  })
+}
 
 /**
  * ES-8 — rewrite a rule's recurrence (interval/unit) and/or its "until".
@@ -268,7 +329,7 @@ const FOREVER_MS = new Date(2099, 11, 31).getTime()
  */
 async function updateRecurringRule(
   ruleId: string,
-  opts: { recurrence: Recurrence; until: Date | null },
+  opts: { recurrence: Recurrence; until: Date | null; sync?: boolean },
 ): Promise<void> {
   const rule = drizzleDb
     .select(recurringSelection)
@@ -312,7 +373,7 @@ async function updateRecurringRule(
       .run()
   })
 
-  await synchronizeAllRecurringTransactions()
+  if (opts.sync !== false) await synchronizeAllRecurringTransactions()
 }
 
 export type RecurringEditScope = "this" | "this_and_future"
@@ -342,75 +403,94 @@ export async function applyRecurringEditScope({
     updateTransaction,
   } = await import("./ledger-service")
 
-  if (scope === "this") {
-    await detachFromRule(transactionId)
-    await updateTransaction(transactionId, payload)
-    return
-  }
+  let recurrenceChanged = false
+  // One transaction for every step: a failure halfway through must not leave
+  // the instance detached or the future instances rewritten without the rule.
+  await runInAsyncTransaction("recurring.editScope", async () => {
+    if (scope === "this") {
+      await detachFromRule(transactionId)
+      await updateTransaction(transactionId, payload)
+      return
+    }
 
-  // Detect real cadence change by comparing incoming values against stored rule.
-  // Field-only edits (amount/title/category only) must not trigger delete + regenerate.
-  const storedRule = await findRecurringById(ruleId)
-  const storedRec = storedRule
-    ? parseRecurrence(storedRule.rules[0] ?? "")
-    : null
-  const incomingUntilMs = until ? endOfDay(until).getTime() : FOREVER_MS
-  const recurrenceChanged =
-    !!recurrence &&
-    !!storedRec &&
-    !!storedRule &&
-    (recurrence.interval !== storedRec.interval ||
-      recurrence.unit !== storedRec.unit ||
-      incomingUntilMs !== storedRule.range.to)
+    // Detect real cadence change by comparing incoming values against stored rule.
+    // Field-only edits (amount/title/category only) must not trigger delete + regenerate.
+    const storedRule = await findRecurringById(ruleId)
+    const storedRec = storedRule
+      ? parseRecurrence(storedRule.rules[0] ?? "")
+      : null
+    const incomingUntilMs = until ? endOfDay(until).getTime() : FOREVER_MS
+    recurrenceChanged =
+      !!recurrence &&
+      !!storedRec &&
+      !!storedRule &&
+      (recurrence.interval !== storedRec.interval ||
+        recurrence.unit !== storedRec.unit ||
+        incomingUntilMs !== storedRule.range.to)
 
-  if (recurrenceChanged && recurrence) {
-    // Delete forward instances FIRST when cadence changes.
-    // Cutoff: fromDate = transactionDate + 1ms spares the edited instance.
-    // deleteFutureRecurringInstances filters gte(transactionDate, fromDate),
-    // so +1ms ensures the edited instance's timestamp is strictly less.
-    const fromDate = new Date(transactionDate.getTime() + 1)
-    await deleteFutureRecurringInstances(ruleId, fromDate)
-  } else if (!recurrenceChanged) {
-    // Pure field-only edit: update field values on future instances.
-    const edited = drizzleDb
-      .select({
-        requiresManualConfirmation: transactions.requiresManualConfirmation,
+    if (recurrenceChanged && recurrence) {
+      // Delete forward instances FIRST when cadence changes.
+      // Cutoff: fromDate = transactionDate + 1ms spares the edited instance.
+      // deleteFutureRecurringInstances filters gte(transactionDate, fromDate),
+      // so +1ms ensures the edited instance's timestamp is strictly less.
+      const fromDate = new Date(transactionDate.getTime() + 1)
+      await deleteFutureRecurringInstances(ruleId, fromDate)
+    } else if (!recurrenceChanged) {
+      // Pure field-only edit: update field values on future instances.
+      const edited = drizzleDb
+        .select({
+          requiresManualConfirmation: transactions.requiresManualConfirmation,
+        })
+        .from(transactions)
+        .where(eq(transactions.id, transactionId))
+        .get()
+      const dateShiftMs =
+        payload.transactionDate.getTime() - transactionDate.getTime()
+      await updateFutureRecurringInstances(ruleId, transactionDate, payload, {
+        dateShiftMs,
+        // Copy the flag only when the user changed it on the edited instance.
+        applyManualConfirmation:
+          !!edited &&
+          payload.requiresManualConfirmation !== undefined &&
+          (payload.requiresManualConfirmation ? 1 : 0) !==
+            edited.requiresManualConfirmation,
       })
-      .from(transactions)
-      .where(eq(transactions.id, transactionId))
-      .get()
-    await updateFutureRecurringInstances(ruleId, transactionDate, payload, {
-      dateShiftMs:
-        payload.transactionDate.getTime() - transactionDate.getTime(),
-      // Copy the flag only when the user changed it on the edited instance.
-      applyManualConfirmation:
-        !!edited &&
-        payload.requiresManualConfirmation !== undefined &&
-        (payload.requiresManualConfirmation ? 1 : 0) !==
-          edited.requiresManualConfirmation,
-    })
-  }
+      // A date shift moves the grid: re-anchor the rrule so the next sync keeps
+      // generating on the new cadence instead of the old one (map §2.3).
+      if (dateShiftMs !== 0 && storedRec && storedRule) {
+        await reanchorRecurringRule(ruleId, storedRec, payload.transactionDate)
+      }
+    }
 
-  // Update template fields.
-  await updateRecurringRuleTemplate(ruleId, {
-    amount: payload.amount,
-    title: payload.title,
-    categoryId: payload.categoryId,
-    accountId: payload.accountId,
-    type: payload.type,
+    // Update template fields.
+    await updateRecurringRuleTemplate(ruleId, {
+      amount: payload.amount,
+      title: payload.title,
+      description: payload.description,
+      categoryId: payload.categoryId,
+      accountId: payload.accountId,
+      type: payload.type,
+      subtype: payload.subtype,
+      tags: payload.tags,
+      extra: templateExtra(payload.extra),
+    })
+
+    // Update recurrence/until if cadence changed.
+    // With forward instances deleted, effectiveLast no longer stalls the sync.
+    if (recurrenceChanged && recurrence) {
+      await updateRecurringRule(ruleId, {
+        recurrence,
+        until: until ?? null,
+        sync: false,
+      })
+    }
+
+    // Update the edited instance.
+    await updateTransaction(transactionId, payload)
   })
 
-  // Update recurrence/until if cadence changed.
-  // With forward instances deleted, effectiveLast no longer stalls the sync.
-  if (recurrenceChanged && recurrence) {
-    await updateRecurringRule(ruleId, {
-      recurrence,
-      until: until ?? null,
-    })
-  }
-
-  // Update the edited instance.
-  await updateTransaction(transactionId, payload)
+  // The sync pass enqueues its own write, so it has to run after the commit.
+  if (recurrenceChanged) await synchronizeAllRecurringTransactions()
 }
 
 export async function applyRecurringDeleteScope({
@@ -430,19 +510,27 @@ export async function applyRecurringDeleteScope({
     deleteTransaction,
   } = await import("./ledger-service")
 
-  switch (scope) {
-    case "this":
-      await deleteTransaction(transactionId)
-      return
-    case "all":
-      await deleteAllRecurringInstances(ruleId)
-      await disableRecurringRule(ruleId)
-      return
-    case "this_and_future":
-      await deleteFutureRecurringInstances(ruleId, transactionDate)
-      await disableRecurringRule(ruleId)
-      return
-  }
+  await runInAsyncTransaction("recurring.deleteScope", async () => {
+    switch (scope) {
+      case "this":
+        await deleteTransaction(transactionId)
+        return
+      case "all":
+        await deleteAllRecurringInstances(ruleId, {
+          keepPaid: true,
+          alsoId: transactionId,
+        })
+        await disableRecurringRule(ruleId)
+        return
+      case "this_and_future":
+        await deleteFutureRecurringInstances(ruleId, transactionDate, {
+          keepPaid: true,
+          alsoId: transactionId,
+        })
+        await disableRecurringRule(ruleId)
+        return
+    }
+  })
 }
 
 // ── Sync ──────────────────────────────────────────────────────────────────────
@@ -546,8 +634,16 @@ async function synchronizeRecurringTransaction(
       // duplicate-prevention mechanism.
       // ------------------------------------------------------------------
 
-      const relatedTxIds = drizzleDb
-        .select({ id: transactions.id })
+      // One aggregate instead of a query per instance, on every catch-up pass.
+      const effectiveLastMs = drizzleDb
+        .select({
+          max: sql<number | null>`MAX(COALESCE(
+            CASE WHEN json_valid(${transactions.extra})
+              THEN CAST(json_extract(${transactions.extra}, '$.recurringInitialDate') AS INTEGER)
+            END,
+            CAST(strftime('%s', ${transactions.transactionDate}) AS INTEGER) * 1000
+          ))`,
+        })
         .from(transactions)
         .where(
           and(
@@ -555,15 +651,9 @@ async function synchronizeRecurringTransaction(
             eq(transactions.isDeleted, 0),
           ),
         )
-        .all()
+        .get()?.max
 
-      if (relatedTxIds.length > 0) {
-        const initialDates = await Promise.all(
-          relatedTxIds.map((r) => getInitialDateMs(r.id)),
-        )
-
-        const effectiveLastMs = Math.max(...initialDates)
-
+      if (effectiveLastMs != null) {
         if (nextOccurrence.getTime() <= effectiveLastMs) {
           // An instance for this slot, or a later one, already exists, so the
           // cursor is behind (an interrupted write, or a rewritten rule). Catch
@@ -670,6 +760,7 @@ async function synchronizeRecurringTransaction(
               transactionDate: nextOccurrence,
               title: template.title ?? undefined,
               notes: template.description ?? undefined,
+              conversionRate: template.conversionRate ?? undefined,
             },
             {
               recurringId: ruleId,

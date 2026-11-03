@@ -303,8 +303,13 @@ export function TransactionFilterHeader({
     },
   ]
   const hiddenFilterSet = new Set(hiddenFilters)
+  // A pill with nothing behind it would do nothing: the date pill needs a
+  // range handler and the currency pill needs accounts to list currencies.
   const visiblePills = pills.filter(
-    (p) => !hiddenFilterSet.has(p.key as FilterPanelKey),
+    (p) =>
+      !hiddenFilterSet.has(p.key as FilterPanelKey) &&
+      !(p.key === "date" && !onDateRangeChange) &&
+      !(p.key === "currency" && availableCurrencies.length === 0),
   )
   return (
     <View style={filterHeaderStyles.container}>

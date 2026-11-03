@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest"
 
 import {
   type MintyFlowBackup,
+  normalizeColumnValue,
+  pickedFileKind,
   SCHEMA_VERSION,
   validateBackup,
 } from "~/database/backup/backup-format"
@@ -96,7 +98,7 @@ describe("validateBackup, recurring rules", () => {
     const result = validateBackup(backupWith([rule("gone", { disabled: 0 })]))
     expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.message).toBe("Invalid recurring money template (row 0)")
+      expect(result.message).toBe("Invalid recurring rule (row 0)")
     }
   })
 
@@ -112,6 +114,51 @@ describe("validateBackup, recurring rules", () => {
     expect(result.success).toBe(false)
   })
 
+  it("rejects an enabled rule whose category is not in the backup", () => {
+    const withCategory = JSON.parse(template("acc-1")) as Record<
+      string,
+      unknown
+    >
+    withCategory.categoryId = "gone"
+    const result = validateBackup(
+      backupWith([
+        rule("acc-1", {
+          disabled: 0,
+          json_transaction_template: JSON.stringify(withCategory),
+        }),
+      ]),
+    )
+    expect(result.success).toBe(false)
+  })
+
+  it("rejects an enabled rule whose transfer account is not in the backup", () => {
+    const result = validateBackup(
+      backupWith([
+        rule("acc-1", { disabled: 0, transfer_to_account_id: "gone" }),
+      ]),
+    )
+    expect(result.success).toBe(false)
+  })
+
+  it("accepts a disabled rule whose transfer account is gone", () => {
+    const result = validateBackup(
+      backupWith([
+        rule("acc-1", { disabled: 1, transfer_to_account_id: "gone" }),
+      ]),
+    )
+    expect(result.success).toBe(true)
+  })
+
+  it("rejects a transaction date that does not parse", () => {
+    const result = validateBackup(
+      backupWith([rule("acc-1", { disabled: 1 })]).replace(
+        '"transactions":[]',
+        '"transactions":[{"id":"tx-1","amount":100,"transaction_date":"nope"}]',
+      ),
+    )
+    expect(result.success).toBe(false)
+  })
+
   it("still rejects a rule whose template is not JSON", () => {
     const result = validateBackup(
       backupWith([
@@ -119,5 +166,113 @@ describe("validateBackup, recurring rules", () => {
       ]),
     )
     expect(result.success).toBe(false)
+  })
+})
+
+describe("normalizeColumnValue, dates", () => {
+  it("turns a date-only string into an ISO timestamp", () => {
+    expect(normalizeColumnValue("transaction_date", "2026-03-04")).toBe(
+      "2026-03-04T00:00:00.000Z",
+    )
+  })
+
+  it("normalizes an offset-carrying timestamp to UTC", () => {
+    expect(
+      normalizeColumnValue("transaction_date", "2026-03-04T12:00:00+03:00"),
+    ).toBe("2026-03-04T09:00:00.000Z")
+  })
+
+  it("leaves an unparseable date for validation to reject", () => {
+    expect(normalizeColumnValue("transaction_date", "nope")).toBe("nope")
+  })
+})
+
+describe("pickedFileKind", () => {
+  it("accepts ZIP and JSON backups, in any case", () => {
+    expect(pickedFileKind("minty-2026-01-01.zip")).toBe("zip")
+    expect(pickedFileKind("Backup.JSON")).toBe("json")
+  })
+
+  it("names a CSV so the import can reject it clearly", () => {
+    expect(pickedFileKind("transactions.csv")).toBe("csv")
+  })
+
+  it("marks anything else unsupported", () => {
+    expect(pickedFileKind("notes.txt")).toBe("unsupported")
+    expect(pickedFileKind("backup")).toBe("unsupported")
+    expect(pickedFileKind("backup.json.bak")).toBe("unsupported")
+  })
+})
+
+describe("settings and profile sections", () => {
+  const base = (extra: Record<string, unknown> = {}) =>
+    JSON.stringify({
+      meta: {
+        version: 1,
+        schemaVersion: SCHEMA_VERSION,
+        exportedAt: now,
+        appId: "minty-flow-app",
+      },
+      data: {
+        categories: [],
+        tags: [],
+        accounts: [],
+        recurring_transactions: [],
+        budgets: [],
+        goals: [],
+        loans: [],
+        transactions: [],
+        transfers: [],
+        transaction_tags: [],
+        budget_accounts: [],
+        budget_categories: [],
+        goal_accounts: [],
+      },
+      ...extra,
+    })
+
+  it("accepts a backup with neither section and adds nothing", () => {
+    const result = validateBackup(base())
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    expect("settings" in result.backup).toBe(false)
+    expect("profile" in result.backup).toBe(false)
+  })
+
+  it("accepts an older schema version without the sections", () => {
+    const old = JSON.parse(base())
+    old.meta.schemaVersion = 5
+    expect(validateBackup(JSON.stringify(old)).success).toBe(true)
+  })
+
+  it("keeps valid settings and the profile", () => {
+    const result = validateBackup(
+      base({
+        settings: { weekStart: { version: 0, state: { weekStart: "monday" } } },
+        profile: { name: "  Sam ", imageFile: "minty_profile_123.jpg" },
+      }),
+    )
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    expect(result.backup.settings?.weekStart.state).toEqual({
+      weekStart: "monday",
+    })
+    expect(result.backup.profile).toEqual({
+      name: "Sam",
+      imageFile: "minty_profile_123.jpg",
+    })
+  })
+
+  it("ignores unreadable sections without blocking the data import", () => {
+    const result = validateBackup(
+      base({
+        settings: "nope",
+        profile: { name: 5, imageFile: "../../etc/passwd" },
+      }),
+    )
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    expect("settings" in result.backup).toBe(false)
+    expect("profile" in result.backup).toBe(false)
   })
 })

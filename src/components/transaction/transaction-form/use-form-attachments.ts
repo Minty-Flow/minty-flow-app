@@ -1,13 +1,16 @@
 import * as DocumentPicker from "expo-document-picker"
 import * as ImagePicker from "expo-image-picker"
 import { useReducer, useRef } from "react"
+import type { UseFormSetValue } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
+import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import type { Transaction, TransactionAttachment } from "~/types/transactions"
 import {
   deleteAttachmentFile,
   persistAttachment,
   resolveAttachmentUri,
+  toStoredAttachment,
 } from "~/utils/attachments"
 import { getFileExtension } from "~/utils/file-icon"
 import { logger } from "~/utils/logger"
@@ -15,7 +18,10 @@ import { Toast } from "~/utils/toast"
 
 import { mergeReducer } from "./form-utils"
 import type { AttachmentState } from "./types"
-export function useFormAttachments(transaction: Transaction | null) {
+export function useFormAttachments(
+  transaction: Transaction | null,
+  setValue: UseFormSetValue<TransactionFormValues>,
+) {
   const { t } = useTranslation()
   const [attachmentState, setAttachmentState] = useReducer(
     mergeReducer<AttachmentState>,
@@ -50,6 +56,19 @@ export function useFormAttachments(transaction: Transaction | null) {
     }),
   )
   const removedUris = useRef<string[]>([])
+  // Files copied into storage during this session. Until the form saves they
+  // belong to no row, so discarding the form must delete them.
+  const addedUris = useRef<string[]>([])
+  /**
+   * §3.4a: mirrors the attachment list into the registered `attachments` field
+   * so react-hook-form sees the change — Save re-enables and the back-guard
+   * prompts instead of silently dropping new files.
+   */
+  const mirrorListToForm = (list: TransactionAttachment[]) => {
+    const json =
+      list.length > 0 ? JSON.stringify(list.map(toStoredAttachment)) : null
+    setValue("attachments", json, { shouldDirty: true })
+  }
   /**
    * Copies each picked file into permanent storage, then appends them in a single
    * dispatch — `mergeReducer` has no functional form, so one dispatch per file would
@@ -63,7 +82,10 @@ export function useFormAttachments(transaction: Transaction | null) {
           uri: resolveAttachmentUri(await persistAttachment(a.uri, a.name)),
         })),
       )
-      setAttachmentState({ list: [...attachmentState.list, ...persisted] })
+      addedUris.current.push(...persisted.map((a) => a.uri))
+      const next = [...attachmentState.list, ...persisted]
+      setAttachmentState({ list: next })
+      mirrorListToForm(next)
     } catch (e) {
       logger.error("Failed to save attachment", { e })
       Toast.error({
@@ -73,9 +95,9 @@ export function useFormAttachments(transaction: Transaction | null) {
   }
   const removeAttachment = (uri: string) => {
     removedUris.current.push(uri)
-    setAttachmentState({
-      list: attachmentState.list.filter((x) => x.uri !== uri),
-    })
+    const next = attachmentState.list.filter((x) => x.uri !== uri)
+    setAttachmentState({ list: next })
+    mirrorListToForm(next)
   }
   /**
    * Deletes the files of attachments removed during this edit. Call only after a
@@ -85,6 +107,25 @@ export function useFormAttachments(transaction: Transaction | null) {
   const flushRemovedAttachments = () => {
     for (const uri of removedUris.current) deleteAttachmentFile(uri)
     removedUris.current = []
+    // Saved: the new files now belong to the transaction.
+    addedUris.current = []
+  }
+  /**
+   * Deletes the files added during this session. Call when the form is
+   * discarded without saving, so an abandoned form leaves nothing behind.
+   */
+  const discardAddedAttachments = () => {
+    for (const uri of addedUris.current) deleteAttachmentFile(uri)
+    addedUris.current = []
+  }
+  /**
+   * Empties the list of a form that has no saved row yet: every file in it was
+   * copied this session, so they are deleted along with the list.
+   */
+  const clearAttachments = () => {
+    discardAddedAttachments()
+    setAttachmentState({ list: [] })
+    mirrorListToForm([])
   }
   const handleSelectFromFiles = async () => {
     try {
@@ -111,12 +152,12 @@ export function useFormAttachments(transaction: Transaction | null) {
       })
     }
   }
-  const handleTakePhoto = async () => {
+  const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync()
     if (status !== "granted") {
       Toast.error({
-        title: "Permission required",
-        description: "Camera access is needed to take a photo.",
+        title: t("components.transactionForm.toast.permissionRequired"),
+        description: t("components.transactionForm.toast.cameraPermission"),
       })
       return
     }
@@ -138,12 +179,12 @@ export function useFormAttachments(transaction: Transaction | null) {
       },
     ])
   }
-  const handleSelectMultipleMedia = async () => {
+  const selectMultipleMedia = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (status !== "granted") {
       Toast.error({
-        title: "Permission required",
-        description: "Photo library access is needed.",
+        title: t("components.transactionForm.toast.permissionRequired"),
+        description: t("components.transactionForm.toast.libraryPermission"),
       })
       return
     }
@@ -168,12 +209,12 @@ export function useFormAttachments(transaction: Transaction | null) {
       }),
     )
   }
-  const handleSelectSinglePhoto = async () => {
+  const selectSinglePhoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (status !== "granted") {
       Toast.error({
-        title: "Permission required",
-        description: "Photo library access is needed.",
+        title: t("components.transactionForm.toast.permissionRequired"),
+        description: t("components.transactionForm.toast.libraryPermission"),
       })
       return
     }
@@ -196,14 +237,28 @@ export function useFormAttachments(transaction: Transaction | null) {
       },
     ])
   }
+  // A picker can throw (no camera, revoked permission, copy failure); say so
+  // instead of leaving an unhandled rejection behind.
+  const guarded = (pick: () => Promise<void>) => async () => {
+    try {
+      await pick()
+    } catch (e) {
+      logger.error("Attachment picker error", { e })
+      Toast.error({
+        title: t("components.transactionForm.toast.couldNotSelectFile"),
+      })
+    }
+  }
   return {
     attachmentState,
     setAttachmentState,
     removeAttachment,
     flushRemovedAttachments,
+    discardAddedAttachments,
+    clearAttachments,
     handleSelectFromFiles,
-    handleTakePhoto,
-    handleSelectMultipleMedia,
-    handleSelectSinglePhoto,
+    handleTakePhoto: guarded(takePhoto),
+    handleSelectMultipleMedia: guarded(selectMultipleMedia),
+    handleSelectSinglePhoto: guarded(selectSinglePhoto),
   }
 }

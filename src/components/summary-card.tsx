@@ -18,6 +18,8 @@ import {
 const EMPTY_EXTRA_BY_CURRENCY: Record<string, number> = {}
 interface SummarySectionProps {
   transactionsWithRelations: TransactionWithRelations[]
+  /** A filter or search narrows the rows: say the totals cover only those. */
+  filtered?: boolean
 }
 /**
  * SummarySection component provides a unified view for transaction totals.
@@ -26,6 +28,7 @@ interface SummarySectionProps {
  */
 export const SummarySection = ({
   transactionsWithRelations,
+  filtered = false,
 }: SummarySectionProps) => {
   const { t } = useTranslation()
   const excludeFromTotals = useTransfersPreferencesStore(
@@ -84,19 +87,26 @@ export const SummarySection = ({
     }
   }, [transactionsWithRelations, excludeFromTotals])
   return (
-    <View style={styles.sectionContainer}>
-      <Card
-        type={TransactionTypeEnum.INCOME}
-        label={t("screens.home.summary.income")}
-        rows={incomeRows}
-        extraByCurrency={extraIncomeByCurrency}
-      />
-      <Card
-        type={TransactionTypeEnum.EXPENSE}
-        label={t("screens.home.summary.expense")}
-        rows={expenseRows}
-        extraByCurrency={extraExpenseByCurrency}
-      />
+    <View>
+      <View style={styles.sectionContainer}>
+        <Card
+          type={TransactionTypeEnum.INCOME}
+          label={t("screens.home.summary.income")}
+          rows={incomeRows}
+          extraByCurrency={extraIncomeByCurrency}
+        />
+        <Card
+          type={TransactionTypeEnum.EXPENSE}
+          label={t("screens.home.summary.expense")}
+          rows={expenseRows}
+          extraByCurrency={extraExpenseByCurrency}
+        />
+      </View>
+      {filtered && (
+        <Text variant="small" style={styles.filteredNote}>
+          {t("screens.home.summary.filtered")}
+        </Text>
+      )}
     </View>
   )
 }
@@ -171,20 +181,25 @@ const Card = memo(function Card({
 
         <View style={styles.totalsList}>
           {currencyTotals.length > 0 ? (
-            currencyTotals.map(([currency, amount]) => (
-              <View key={currency} style={styles.currencyRow}>
-                <Text variant="small" style={styles.currencyCode}>
-                  {currency}
-                </Text>
-                <Money
-                  value={amount}
-                  currency={currency}
-                  style={colorStyle}
-                  variant="small"
-                  tone={type}
-                />
-              </View>
-            ))
+            currencyTotals.map(([currency, amount]) => {
+              // Refunds above spending leave a net credit: show it as one,
+              // not as a negative expense.
+              const isNetCredit = !isIncome && amount < 0
+              return (
+                <View key={currency} style={styles.currencyRow}>
+                  <Text variant="small" style={styles.currencyCode}>
+                    {currency}
+                  </Text>
+                  <Money
+                    value={amount}
+                    currency={currency}
+                    style={isNetCredit ? styles.incomeText : colorStyle}
+                    variant="small"
+                    tone={isNetCredit ? TransactionTypeEnum.INCOME : type}
+                  />
+                </View>
+              )
+            })
           ) : (
             <View style={styles.currencyRow}>
               <Text variant="small" style={styles.currencyCode}>
@@ -216,6 +231,12 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     gap: 12,
     marginHorizontal: 20,
+  },
+  filteredNote: {
+    marginHorizontal: 20,
+    marginTop: 8,
+    color: theme.colors.onSecondary,
+    opacity: 0.6,
   },
   card: {
     flex: 1,

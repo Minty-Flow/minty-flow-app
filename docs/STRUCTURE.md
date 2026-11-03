@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-10-17T07:53:25.356Z
+Generated on: 2026-11-03T09:10:46.199Z
 ```
 ./
 ├── __tests__/
@@ -7,28 +7,44 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   │   ├── accounts/
 │   │   │   └── account-update-payload.test.ts
 │   │   ├── smart-amount-input/
-│   │   │   └── format-amount.test.ts
-│   │   └── transaction/
-│   │       └── transaction-form/
-│   │           ├── transfer-edit-from-credit-leg.test.ts
-│   │           └── transfer-rate.test.ts
+│   │   │   ├── format-amount.test.ts
+│   │   │   └── max-amount-input-length.test.ts
+│   │   ├── transaction/
+│   │   │   └── transaction-form/
+│   │   │       ├── transfer-edit-from-credit-leg.test.ts
+│   │   │       └── transfer-rate.test.ts
+│   │   ├── date-range-presets.test.ts
+│   │   └── transaction-form-payload.test.ts
 │   ├── constants/
 │   │   └── trash-retention.test.ts
 │   ├── database/
 │   │   ├── backup/
-│   │   │   └── backup-format.test.ts
+│   │   │   ├── backup-format.test.ts
+│   │   │   ├── backup-settings.test.ts
+│   │   │   └── post-import-repairs.test.ts
 │   │   ├── drizzle/
 │   │   │   └── read-models/
-│   │   │       └── stats-data.test.ts
+│   │   │       ├── stats-data.test.ts
+│   │   │       └── trash-by-deletion-date.test.ts
 │   │   ├── services/
 │   │   │   ├── account-balance-adjustment.test.ts
 │   │   │   ├── backup-after-account-delete.test.ts
 │   │   │   ├── balance-service.test.ts
 │   │   │   ├── budget-category-delete.test.ts
+│   │   │   ├── budget-period-bounds.test.ts
 │   │   │   ├── category-delete.test.ts
+│   │   │   ├── color-clear.test.ts
+│   │   │   ├── delete-recurring-keep-paid.test.ts
+│   │   │   ├── destroy-account-transfer-partner.test.ts
 │   │   │   ├── destroy-account-with-loans.test.ts
+│   │   │   ├── destroy-attachment-files.test.ts
+│   │   │   ├── detach-transfer-from-rule.test.ts
+│   │   │   ├── edit-transfer-validation.test.ts
 │   │   │   ├── empty-trash.test.ts
+│   │   │   ├── import-recovery.test.ts
+│   │   │   ├── loan-hold-guard.test.ts
 │   │   │   ├── loan-type-switch.test.ts
+│   │   │   ├── pending-transfer.test.ts
 │   │   │   ├── recurring-failure-isolation.test.ts
 │   │   │   ├── recurring-sync-concurrency.test.ts
 │   │   │   ├── recurring-sync-cursor.test.ts
@@ -37,8 +53,10 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   │   │   ├── recurring-transaction-service.test.ts
 │   │   │   ├── trash-auto-purge.test.ts
 │   │   │   └── trashed-transactions-read-only.test.ts
-│   │   └── utils/
-│   │       └── get-balance-delta.test.ts
+│   │   ├── utils/
+│   │   │   └── get-balance-delta.test.ts
+│   │   ├── commit-events.test.ts
+│   │   └── transaction-nesting.test.ts
 │   ├── helpers/
 │   │   ├── create-test-db.test.ts
 │   │   └── create-test-db.ts
@@ -46,13 +64,24 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   │   ├── accounts.schema.test.ts
 │   │   └── budgets.schema.test.ts
 │   ├── services/
+│   │   ├── currency-registry.test.ts
 │   │   ├── exchange-rate-sources.test.ts
 │   │   ├── exchange-rates.test.ts
 │   │   └── pending-transaction-notifications.test.ts
+│   ├── stores/
+│   │   └── export-history.store.test.ts
 │   └── utils/
+│       ├── chart-path.test.ts
+│       ├── csv.test.ts
 │       ├── live-progress.test.ts
+│       ├── local-day-key.test.ts
 │       ├── money.test.ts
-│       └── recurrence.test.ts
+│       ├── planning-progress.test.ts
+│       ├── profile-image.test.ts
+│       ├── recurrence.test.ts
+│       ├── stats-date-range.test.ts
+│       ├── timestamp-scheduler.test.ts
+│       └── transaction-list-filters.test.ts
 ├── .github/
 │   └── workflows/
 │       ├── board-sync.yml
@@ -143,6 +172,9 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   │   │   ├── index.tsx
 │   │   │   └── start.tsx
 │   │   ├── settings/
+│   │   │   ├── backup/
+│   │   │   │   ├── export-history.tsx
+│   │   │   │   └── index.tsx
 │   │   │   ├── bill-splitter/
 │   │   │   │   ├── add-item.tsx
 │   │   │   │   ├── index.tsx
@@ -157,10 +189,7 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   │   │   │   ├── [categoryId]/
 │   │   │   │   │   ├── index.tsx
 │   │   │   │   │   └── modify.tsx
-│   │   │   │   ├── index.tsx
-│   │   │   │   └── presets.tsx
-│   │   │   ├── data-management/
-│   │   │   │   ├── export-history.tsx
+│   │   │   │   ├── add.tsx
 │   │   │   │   └── index.tsx
 │   │   │   ├── goals/
 │   │   │   │   ├── [goalId]/
@@ -190,6 +219,8 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   │   │   │   ├── transaction-location.tsx
 │   │   │   │   ├── transfers.tsx
 │   │   │   │   └── trash-bin.tsx
+│   │   │   ├── restore/
+│   │   │   │   └── index.tsx
 │   │   │   ├── tags/
 │   │   │   │   ├── [tagId].tsx
 │   │   │   │   └── index.tsx
@@ -250,6 +281,7 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   │   │   │   ├── category-form-sheets.tsx
 │   │   │   │   ├── category-modify-content.tsx
 │   │   │   │   └── types.ts
+│   │   │   ├── add-category-content.tsx
 │   │   │   ├── category-list.tsx
 │   │   │   ├── category-presets-picker.tsx
 │   │   │   ├── category-row.tsx
@@ -470,14 +502,19 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   │   ├── app-lock-gate.tsx
 │   │   ├── color-variant-inline.tsx
 │   │   ├── confirm-sheet.tsx
+│   │   ├── data-card.tsx
 │   │   ├── dynamic-icon.tsx
 │   │   ├── external-link.tsx
 │   │   ├── filter-toggle-button.tsx
+│   │   ├── footer-bar.styles.ts
+│   │   ├── footer-bar.tsx
 │   │   ├── info-sheet.tsx
+│   │   ├── keyboard-sticky-footer.tsx
 │   │   ├── keyboard-sticky-view-minty.tsx
 │   │   ├── money.tsx
 │   │   ├── month-picker-sheet.tsx
 │   │   ├── month-year-picker.tsx
+│   │   ├── onboarding-resume-sheet.tsx
 │   │   ├── pre-update-backup-gate.tsx
 │   │   ├── preset-list-item.tsx
 │   │   ├── privacy-eye-control.tsx
@@ -494,6 +531,7 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   │   ├── app-data.ts
 │   │   ├── fab-button.ts
 │   │   ├── minty-icons-selection.ts
+│   │   ├── notification-channels.ts
 │   │   ├── pre-sets-accounts.ts
 │   │   ├── pre-sets-categories.ts
 │   │   └── trash-retention.ts
@@ -502,7 +540,9 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   ├── database/
 │   │   ├── backup/
 │   │   │   ├── backup-format.ts
-│   │   │   └── backup-import-plan.ts
+│   │   │   ├── backup-import-plan.ts
+│   │   │   ├── backup-settings.ts
+│   │   │   └── import-marker.ts
 │   │   ├── drizzle/
 │   │   │   ├── read-models/
 │   │   │   │   ├── account-read-model.ts
@@ -536,11 +576,13 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   │   ├── types/
 │   │   │   └── rows.ts
 │   │   ├── utils/
+│   │   │   ├── attachment-files.ts
 │   │   │   ├── generate-id.ts
 │   │   │   ├── get-balance-delta.ts
 │   │   │   ├── has-attachments-from-extra.ts
 │   │   │   ├── import-snapshot.ts
 │   │   │   └── recurring-template-refs.ts
+│   │   ├── commit-events.ts
 │   │   ├── db.ts
 │   │   ├── pending-migrations.ts
 │   │   ├── transaction.ts
@@ -558,7 +600,10 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   │   ├── use-modify-route-loader.ts
 │   │   ├── use-navigation-guard.ts
 │   │   ├── use-notification-sync.ts
+│   │   ├── use-onboarding-resume.ts
 │   │   ├── use-permission-status.ts
+│   │   ├── use-preferred-currency-sync.ts
+│   │   ├── use-profile-image.ts
 │   │   ├── use-recurring-rule.ts
 │   │   ├── use-retention-cleanup.ts
 │   │   ├── use-scroll-into-view.ts
@@ -602,6 +647,7 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   │   ├── notification.store.ts
 │   │   ├── onboarding.store.ts
 │   │   ├── pending-transactions.store.ts
+│   │   ├── portable-settings.ts
 │   │   ├── profile.store.ts
 │   │   ├── theme.store.ts
 │   │   ├── toast-style.store.ts
@@ -646,6 +692,8 @@ Generated on: 2026-10-17T07:53:25.356Z
 │   └── utils/
 │       ├── account-types-list.ts
 │       ├── attachments.ts
+│       ├── chart-path.ts
+│       ├── csv.ts
 │       ├── file-icon.ts
 │       ├── format-file-size.ts
 │       ├── get-week-start-on.ts
@@ -661,11 +709,13 @@ Generated on: 2026-10-17T07:53:25.356Z
 │       ├── parse-math-expression.ts
 │       ├── pending-transactions.ts
 │       ├── planning-progress.ts
+│       ├── profile-image.ts
 │       ├── recurrence.ts
 │       ├── reload-app.ts
 │       ├── stats-date-range.ts
 │       ├── string-utils.ts
 │       ├── time-utils.ts
+│       ├── timestamp-scheduler.ts
 │       ├── toast.ts
 │       └── transaction-list-utils.ts
 ├── .env.local

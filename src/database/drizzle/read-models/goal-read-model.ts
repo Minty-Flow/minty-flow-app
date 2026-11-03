@@ -1,10 +1,11 @@
+import { and, eq } from "drizzle-orm"
 import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Goal, GoalType } from "~/types/goals"
 
 import { drizzleDb } from "../db"
-import { goalAccounts, goals } from "../schema"
+import { goalAccounts, goals, transactions } from "../schema"
 import {
   createLiveReadModelResult,
   type LiveReadModelResult,
@@ -59,4 +60,25 @@ export function useArchivedGoalsQuery(): LiveReadModelResult<Goal[]> {
 
 export function useGoalsByType(goalType: GoalType): Goal[] {
   return useAllGoals().filter((goal) => goal.goalType === goalType)
+}
+
+/**
+ * True when a live transaction is linked to the goal. Progress is filtered by
+ * the goal's currency, so the currency must stay put once a link exists.
+ */
+export function useGoalHasLinkedTransactions(goalId: string | undefined) {
+  const result = useLiveQuery(
+    drizzleDb
+      .select({ id: transactions.id })
+      .from(transactions)
+      .where(
+        and(
+          // An unsaved goal has no id yet, so nothing can link to it.
+          eq(transactions.goalId, goalId ?? ""),
+          eq(transactions.isDeleted, 0),
+        ),
+      )
+      .limit(1),
+  )
+  return Boolean(goalId) && result.data.length > 0
 }

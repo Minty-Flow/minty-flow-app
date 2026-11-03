@@ -46,7 +46,8 @@ export function useFormLocation(
     closeLocationPicker()
   }
   const handleClearLocation = () => {
-    setValue("location", undefined, { shouldDirty: true })
+    // null (not undefined) so the service persists the removal.
+    setValue("location", null, { shouldDirty: true })
   }
   return { isCapturingLocation, handleLocationConfirm, handleClearLocation }
 }

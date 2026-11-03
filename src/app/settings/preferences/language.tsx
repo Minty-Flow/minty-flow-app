@@ -34,14 +34,15 @@ export default function LanguageOptionsScreen() {
   const direction = useLanguageStore((s) => s.direction)
   const setLanguageCode = useLanguageStore((s) => s.setLanguageCode)
 
-  const handleSelectLanguage = async (code: LangCodeType) => {
-    const newDirection =
-      code === LangCodeEnum.AR ? DirectionEnum.RTL : DirectionEnum.LTR
+  const directionOf = (code: LangCodeType) =>
+    code === LangCodeEnum.AR ? DirectionEnum.RTL : DirectionEnum.LTR
+
+  const applyLanguage = async (code: LangCodeType) => {
     // Strings switch live. forceRTL (called by the store) only takes effect on a
-    // JS reload, so a direction change reloads the app, with no confirmation.
-    // The persisted store already holds the new language when the reload runs.
+    // JS reload, so a direction change reloads the app. The persisted store
+    // already holds the new language when the reload runs.
     setLanguageCode(code)
-    if (Platform.OS === "web" || newDirection === direction) return
+    if (Platform.OS === "web" || directionOf(code) === direction) return
     await reloadApp()
   }
 
@@ -60,7 +61,7 @@ export default function LanguageOptionsScreen() {
             key={option.value}
             label={option.label}
             selected={languageCode === option.value}
-            onPress={() => handleSelectLanguage(option.value)}
+            onPress={() => applyLanguage(option.value)}
           />
         ))}
       </SettingsSection>

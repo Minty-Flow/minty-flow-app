@@ -12,18 +12,22 @@ import { Chip } from "~/components/ui/chips"
 import { ListItem } from "~/components/ui/list-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import type { TransactionKind } from "~/types/transactions"
+import { type TransactionKind, TransactionTypeEnum } from "~/types/transactions"
 
 import { transactionFormStyles } from "./form.styles"
 import { KIND_ICONS, KIND_LABEL_KEYS, KIND_ORDER } from "./kind-info"
 import { KindInfoSheet } from "./kind-info-sheet"
 
 const isLoanKind = (k: TransactionKind) => k === "lent" || k === "borrowed"
+const isRecurringKind = (k: TransactionKind) =>
+  k === "subscription" || k === "repetitive"
 
 type Props = {
   kind: TransactionKind
   onSelect: (kind: TransactionKind) => void
   isNew: boolean
+  /** Current top tab; a transfer cannot also be a recurring kind. */
+  type: string
   /** Kind can't change (tied to a loan or a recurring rule). */
   locked: boolean
   /** The loan this transaction belongs to, when there is one. */
@@ -34,6 +38,7 @@ export function FormKindSelector({
   kind,
   onSelect,
   isNew,
+  type,
   locked,
   linkedLoan,
 }: Props) {
@@ -44,11 +49,21 @@ export function FormKindSelector({
     return <LockedKindRow kind={kind} linkedLoan={linkedLoan} />
   }
 
-  // An existing transaction can't become a loan, so lent / borrowed are only
-  // offered when creating (the current kind always stays visible).
-  const kinds = isNew
-    ? KIND_ORDER
-    : KIND_ORDER.filter((k) => k === kind || !isLoanKind(k))
+  // An existing transaction can't become a loan or start a rule, so those
+  // kinds are only offered when creating (the current kind always stays
+  // visible). A transfer can't carry a recurrence at all.
+  const kinds = (
+    isNew
+      ? KIND_ORDER
+      : KIND_ORDER.filter(
+          (k) => k === kind || (!isLoanKind(k) && !isRecurringKind(k)),
+        )
+  ).filter(
+    (k) =>
+      k === kind ||
+      !isRecurringKind(k) ||
+      type !== TransactionTypeEnum.TRANSFER,
+  )
 
   return (
     <View style={transactionFormStyles.fieldBlock}>

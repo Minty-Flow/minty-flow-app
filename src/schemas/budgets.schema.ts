@@ -1,3 +1,4 @@
+import { startOfDay } from "date-fns"
 import { z } from "zod"
 
 import type { BudgetPeriod } from "~/types/budgets"
@@ -27,7 +28,12 @@ const addBudgetSchema = z
     startDate: z.number(),
     endDate: z.number().nullable().optional(),
     categoryIds: z.array(z.string()).min(1, "validation.required.categories"),
-    alertThreshold: z.number().min(1).max(100).nullable().optional(),
+    alertThreshold: z
+      .number()
+      .min(1, "validation.alertThreshold.range")
+      .max(100, "validation.alertThreshold.range")
+      .nullable()
+      .optional(),
     isActive: z.boolean(),
   })
   .superRefine((data, ctx) => {
@@ -35,6 +41,16 @@ const addBudgetSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "validation.endDate.requiredForCustom",
+        path: ["endDate"],
+      })
+    }
+    if (
+      data.endDate != null &&
+      startOfDay(data.endDate).getTime() < startOfDay(data.startDate).getTime()
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "validation.endDate.beforeStart",
         path: ["endDate"],
       })
     }

@@ -65,6 +65,18 @@ export default function PrivacyScreen() {
     }
   }
 
+  const handleLockAfterClosingChange = async (value: boolean) => {
+    // Turning it off weakens the lock, so it needs the same confirmation as
+    // turning the lock off.
+    if (!value) {
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: t("screens.settings.privacy.biometric.confirmDisable"),
+      })
+      if (!result.success) return
+    }
+    setLockAfterClosing(value)
+  }
+
   const { t } = useTranslation()
 
   const settings: PrivacySetting[] = [
@@ -85,7 +97,7 @@ export default function PrivacyScreen() {
     {
       id: "lockApp",
       label: t("screens.settings.privacy.settings.lockApp"),
-      icon: "password-mobile-phone-outline",
+      icon: "password-fingerprint",
       value: lockAppEnabled,
       onValueChange: handleLockAppChange,
     },
@@ -94,7 +106,7 @@ export default function PrivacyScreen() {
       label: t("screens.settings.privacy.settings.lockAfterClosing"),
       icon: "lock-outline",
       value: lockAfterClosing,
-      onValueChange: setLockAfterClosing,
+      onValueChange: handleLockAfterClosingChange,
       disabled: !lockAppEnabled,
     },
   ]

@@ -54,6 +54,28 @@ type TooltipTriggerProps = Pick<
 const TooltipContext = createContext<TooltipContextType | null>(null)
 const TOOLTIP_SPACING = 0
 const SCREEN_EDGE_PADDING = 8
+const styles = StyleSheet.create((t) => ({
+  tooltip: {
+    position: "absolute",
+    backgroundColor: t.colors.secondary,
+    paddingHorizontal: 12,
+    paddingVertical: 2,
+    borderRadius: t.radius,
+    shadowColor: t.colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+    maxWidth: 200,
+    zIndex: 10000,
+  },
+  tooltipText: {
+    color: t.colors.onSecondary,
+    fontSize: t.typography.labelMedium.fontSize,
+    textAlign: "center",
+  },
+}))
+
 export const TooltipProvider = ({ children }: { children: ReactNode }) => {
   const { width: screenWidth } = useWindowDimensions()
   const isRTL = useLanguageStore((s) => s.isRTL)
@@ -133,27 +155,6 @@ export const TooltipProvider = ({ children }: { children: ReactNode }) => {
     setTooltip(null)
     setTooltipSize({ width: 0, height: 0 })
   }
-  const styles = StyleSheet.create((t) => ({
-    tooltip: {
-      position: "absolute",
-      backgroundColor: t.colors.secondary,
-      paddingHorizontal: 12,
-      paddingVertical: 2,
-      borderRadius: t.radius,
-      shadowColor: t.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
-      elevation: 5,
-      maxWidth: 200,
-      zIndex: 10000,
-    },
-    tooltipText: {
-      color: t.colors.onSecondary,
-      fontSize: t.typography.labelMedium.fontSize,
-      textAlign: "center",
-    },
-  }))
   return (
     <TooltipContext.Provider value={{ showTooltip, hideTooltip }}>
       {children}

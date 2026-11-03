@@ -6,7 +6,6 @@ import type { TransactionType } from "~/types/transactions"
 
 import { Text } from "../ui/text"
 import { View } from "../ui/view"
-import { MAX_AMOUNT_INPUT_LENGTH } from "./math-utils"
 import { smartInputStyles } from "./styles"
 
 interface AmountInputRowProps {
@@ -15,6 +14,7 @@ interface AmountInputRowProps {
   displayValue: string
   placeholder: string
   inputRef: RefObject<TextInput | null>
+  maxLength: number
   onChangeText: (text: string) => void
   onSubmitEditing: () => void
   onFocus: () => void
@@ -27,6 +27,7 @@ export const AmountInputRow = ({
   displayValue,
   placeholder,
   inputRef,
+  maxLength,
   onChangeText,
   onSubmitEditing,
   onFocus,
@@ -58,7 +59,7 @@ export const AmountInputRow = ({
         accessibilityValue={{ text: displayValue || placeholder }}
         onFocus={onFocus}
         onBlur={onBlur}
-        maxLength={MAX_AMOUNT_INPUT_LENGTH}
+        maxLength={maxLength}
       />
     </View>
   )

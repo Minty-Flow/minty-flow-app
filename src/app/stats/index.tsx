@@ -27,6 +27,7 @@ export default function StatsScreen() {
           router.push({
             pathname: screen,
             params: {
+              currency: stats.currency,
               preset: activePreset,
               from: dateRange.from.toISOString(),
               to: dateRange.to.toISOString(),
@@ -49,6 +50,7 @@ export default function StatsScreen() {
                 current={stats.current}
                 previous={stats.previous}
                 currency={stats.currency}
+                inProgress={dateRange.to.getTime() > Date.now()}
                 onPress={() => pushDetail("/stats/cash-flow")}
               />
             </View>

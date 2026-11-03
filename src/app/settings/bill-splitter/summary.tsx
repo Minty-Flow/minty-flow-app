@@ -1,9 +1,11 @@
 import { useRouter } from "expo-router"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { FooterBar } from "~/components/footer-bar"
+import { footerBarStyles } from "~/components/footer-bar.styles"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { Button } from "~/components/ui/button"
@@ -11,6 +13,7 @@ import { EmptyState } from "~/components/ui/empty-state"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-model"
 import {
   getBillSummary,
   getBillTotal,
@@ -41,8 +44,20 @@ export default function SummaryScreen() {
   const totalBill = getBillTotal(items)
   // Amount the payer themselves owes (their own share of the bill)
   const payerEntry = summary.find((s) => s.participantId === payerId) ?? null
+  // Debtors whose loan form was already opened, so a re-tap does not queue a
+  // second loan for the same person.
+  const [doneIds, setDoneIds] = useState<string[]>([])
+  const accounts = useActiveAccounts()
+  // An archived or deleted account would prefill the loan form with a dead id.
+  const hasValidAccount = accounts.some((a) => a.id === accountId)
+  const hasPendingDebtor = summary.some(
+    (s) =>
+      s.participantId !== payerId &&
+      s.owedAmount > 0 &&
+      !doneIds.includes(s.participantId),
+  )
   const handleGenerateLoan = (entry: BillSummaryEntry) => {
-    if (!accountId) {
+    if (!accountId || !hasValidAccount) {
       Toast.warn({
         title: t("screens.settings.billSplitter.summary.noAccount"),
       })
@@ -54,6 +69,7 @@ export default function SummaryScreen() {
       })
       return
     }
+    setDoneIds((ids) => [...ids, entry.participantId])
     router.push({
       pathname: "/settings/loans/[loanId]/modify",
       params: {
@@ -186,25 +202,26 @@ export default function SummaryScreen() {
       />
 
       {/* Bottom action — disabled until payer is selected */}
-      <View style={styles.footer}>
+      <FooterBar>
         <Button
           onPress={() => {
-            const debtors = summary.filter(
-              (s) => s.participantId !== payerId && s.owedAmount > 0,
+            // One form per tap: pushing several at once stacks them.
+            const next = summary.find(
+              (s) =>
+                s.participantId !== payerId &&
+                s.owedAmount > 0 &&
+                !doneIds.includes(s.participantId),
             )
-            if (debtors.length === 0) return
-            for (const debtor of debtors) {
-              handleGenerateLoan(debtor)
-            }
+            if (next) handleGenerateLoan(next)
           }}
-          disabled={!payerId}
-          style={styles.footerButton}
+          disabled={!payerId || !hasPendingDebtor}
+          style={footerBarStyles.button}
         >
           <Text>
             {t("screens.settings.billSplitter.actions.generateLoans")}
           </Text>
         </Button>
-      </View>
+      </FooterBar>
     </View>
   )
 }
@@ -221,7 +238,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   listContent: {
     padding: 20,
-    paddingBottom: 120,
+    paddingBottom: 20,
     gap: 10,
   },
   separator: {
@@ -319,17 +336,5 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
-  },
-  // Footer
-  footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 20,
-    paddingBottom: 24,
-  },
-  footerButton: {
-    width: "100%",
   },
 }))

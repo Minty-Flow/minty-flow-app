@@ -16,15 +16,21 @@ import {
   type TransactionWithRelations,
   useTransactions,
 } from "~/database/drizzle/read-models/transaction-read-model"
+import { confirmTransaction } from "~/database/services/ledger-service"
 import { useRecurringRule } from "~/hooks/use-recurring-rule"
 import {
   useSelectedMonth,
   useSingleOpenSwipeable,
   useTransactionListFilters,
 } from "~/hooks/use-transaction-list-state"
+import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
+import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
+import { Toast } from "~/utils/toast"
 import {
   applySearch,
   applyTransactionFilters,
+  applyTransferLayout,
+  hasActiveFilters,
 } from "~/utils/transaction-list-utils"
 export default function PendingTransactionsScreen() {
   const { t } = useTranslation()
@@ -46,25 +52,32 @@ export default function PendingTransactionsScreen() {
   const [recurringToDelete, setRecurringToDelete] =
     useState<TransactionWithRelations | null>(null)
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
-  const recurringRule = useRecurringRule(
-    recurringToDelete?.extra?.recurringId ?? null,
-  )
+  const recurringRule = useRecurringRule(recurringToDelete?.recurringId ?? null)
   const { items: allPending, status: transactionsStatus } = useTransactions({
     from: month.from,
     to: month.to,
     isPending: true,
   })
-  const transactionsFull = applySearch(
-    applyTransactionFilters(allPending, filterState),
-    searchState,
+  const transferLayout = useTransfersPreferencesStore((s) => s.layout)
+  const transactionsFull = applyTransferLayout(
+    applySearch(applyTransactionFilters(allPending, filterState), searchState),
+    transferLayout,
   )
+  const updateDateUponConfirmation = usePendingTransactionsStore(
+    (s) => s.updateDateUponConfirmation,
+  )
+  const filtersApplied = hasActiveFilters(filterState, searchState)
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <FilterToggleButton active={showFilters} onPress={toggleFilters} />
+        <FilterToggleButton
+          active={showFilters}
+          onPress={toggleFilters}
+          filtersApplied={filtersApplied}
+        />
       ),
     })
-  }, [navigation, showFilters, toggleFilters])
+  }, [navigation, showFilters, toggleFilters, filtersApplied])
   if (transactionsStatus === "loading" && allPending.length === 0)
     return <RouteLoadingState />
   const handleDeleteDone = () => {
@@ -73,18 +86,30 @@ export default function PendingTransactionsScreen() {
   // Recurring spawns must route through the 3-option scope modal, not a plain
   // soft-delete — same guard the transaction form and Upcoming section use.
   const handleBeforeDelete = (row: TransactionWithRelations) => {
-    if (row.extra?.recurringId) {
+    if (row.recurringId) {
       setRecurringToDelete(row)
       setDeleteSheetVisible(true)
       return true
     }
     return false
   }
+  const handleConfirm = async (transactionId: string) => {
+    try {
+      await confirmTransaction(transactionId, {
+        updateTransactionDate: updateDateUponConfirmation,
+      })
+    } catch {
+      Toast.error({
+        title: t("components.transactionForm.toast.upcomingConfirmFailed"),
+      })
+    }
+  }
   const renderItem = ({ item }: { item: TransactionWithRelations }) => (
     <TransactionItem
       transactionWithRelations={item}
       onPress={() => router.push(`/transaction/${item.id}`)}
       onBeforeDelete={handleBeforeDelete}
+      onConfirm={() => handleConfirm(item.id)}
       onDelete={handleDeleteDone}
       onWillOpen={handleWillOpen}
     />
@@ -130,7 +155,7 @@ export default function PendingTransactionsScreen() {
 
       {recurringToDelete &&
         recurringRule &&
-        recurringRule.id === recurringToDelete.extra?.recurringId && (
+        recurringRule.id === recurringToDelete.recurringId && (
           <DeleteRecurringSheet
             visible={deleteSheetVisible}
             transaction={recurringToDelete}

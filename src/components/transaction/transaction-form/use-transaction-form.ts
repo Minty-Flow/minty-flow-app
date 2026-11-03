@@ -25,14 +25,13 @@ import { createRecurringRule } from "~/database/services/recurring-transaction-s
 import { getRepaymentTypeForLoan } from "~/domain/transaction-kind"
 import { useBalanceAtTransaction } from "~/hooks/use-balance-before"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
-import { useRecurringRule } from "~/hooks/use-recurring-rule"
+import { useRecurringRuleState } from "~/hooks/use-recurring-rule"
 import type { TranslationKey } from "~/i18n/config"
 import {
   type TransactionFormValues,
   transactionSchema,
 } from "~/schemas/transactions.schema"
 import { currencyRegistryService } from "~/services/currency-registry"
-import { synchronizePlannedTransactionNotifications } from "~/services/pending-transaction-notifications"
 import { useTransactionLocationStore } from "~/stores/transaction-location.store"
 import { NewEnum } from "~/types/new"
 import {
@@ -101,7 +100,8 @@ export function useTransactionForm({
     locationPickerVisible: false,
     pendingEditPayload: null,
   })
-  const recurringRule = useRecurringRule(transaction?.recurringId ?? null)
+  const { rule: recurringRule, loading: recurringRuleLoading } =
+    useRecurringRuleState(transaction?.recurringId ?? null)
   const defaultValues = getDefaultValues(
     transaction,
     accounts,
@@ -114,6 +114,7 @@ export function useTransactionForm({
     control,
     handleSubmit,
     watch,
+    getValues,
     setValue,
     formState: { errors, isDirty },
   } = useForm<TransactionFormValues>({
@@ -166,7 +167,13 @@ export function useTransactionForm({
       ? [2]
       : kind === "upcoming"
         ? [2]
-        : []
+        : // An existing row that is not a transfer cannot become one: the
+          // service refuses it and the other leg would be orphaned.
+          !isNew &&
+            transaction &&
+            transaction.type !== TransactionTypeEnum.TRANSFER
+          ? [2]
+          : []
   const selectedAccount = accounts.find((a) => a.id === accountId)
   // Filter goals to only those linked to the selected account
   const accountGoals = accountId
@@ -239,16 +246,35 @@ export function useTransactionForm({
       ? accounts.find((a) => a.id === toAccountId)
       : null
   const [isSaving, setIsSaving] = useState(false)
+  // State lags a render, so two quick taps both pass an `isSaving` check.
+  const submitLatch = useRef(false)
   const isLoanKind = kind === "lent" || kind === "borrowed"
-  const { allowNavigation } = useNavigationGuard({
-    navigation,
-    when: isDirty && !isSaving,
-    onBlock: () => setOverlays({ unsavedSheetVisible: true }),
-  })
+  // A new loan has no due date until the user picks one.
+  const [hasLoanDueDate, setHasLoanDueDate] = useState(false)
   const [recurring, setRecurring] = useReducer(mergeReducer<RecurringState>, {
     recurrence: { interval: 1, unit: "month" },
     until: null,
     startDate: watch("transactionDate"),
+  })
+  // §3.4b: a cadence-only edit never touched react-hook-form, so Save stayed
+  // disabled. The seeding effect stores the rule baseline in `seededCadenceRef`;
+  // diff the card against it and treat a change as dirty.
+  const seededFromRuleRef = useRef(false)
+  const seededCadenceRef = useRef<RecurringState | null>(null)
+  const isCadenceDirty = (() => {
+    const seeded = seededCadenceRef.current
+    if (!seeded) return false
+    return (
+      recurring.recurrence.interval !== seeded.recurrence.interval ||
+      recurring.recurrence.unit !== seeded.recurrence.unit ||
+      (recurring.until?.getTime() ?? null) !== (seeded.until?.getTime() ?? null)
+    )
+  })()
+  const hasUnsavedChanges = isDirty || isCadenceDirty
+  const { allowNavigation } = useNavigationGuard({
+    navigation,
+    when: hasUnsavedChanges && !isSaving,
+    onBlock: () => setOverlays({ unsavedSheetVisible: true }),
   })
   const { conversionRate, isConversionRateLoading, setConversionRate } =
     useFormConversionRate(
@@ -263,11 +289,13 @@ export function useTransactionForm({
     setAttachmentState,
     removeAttachment,
     flushRemovedAttachments,
+    discardAddedAttachments,
+    clearAttachments,
     handleSelectFromFiles,
     handleTakePhoto,
     handleSelectMultipleMedia,
     handleSelectSinglePhoto,
-  } = useFormAttachments(transaction)
+  } = useFormAttachments(transaction, setValue)
   const {
     datePicker,
     setDatePicker,
@@ -294,6 +322,9 @@ export function useTransactionForm({
     })
   })()
   const isRecurringKind = kind === "subscription" || kind === "repetitive"
+  // A new rule keeps only the fields its template holds; goal, budget, loan
+  // link, attachments and location belong to single transactions.
+  const isNewRecurringRule = isNew && isRecurringKind
   const occurrenceCount = recurring.until
     ? countOccurrencesBetween(
         recurring.startDate,
@@ -311,24 +342,26 @@ export function useTransactionForm({
   }, [isNew, isRecurringKind, date, recurring.startDate])
   // ES-8: seed the recurrence card from the stored rule exactly once when
   // editing a rule-linked instance. After this the user's card edits win.
-  const seededFromRuleRef = useRef(false)
   useEffect(() => {
     if (seededFromRuleRef.current) return
     if (!transaction?.recurringId || !recurringRule) return
     seededFromRuleRef.current = true
     const to = recurringRule.range.to
-    setRecurring({
+    seededCadenceRef.current = {
       recurrence: parseRecurrence(recurringRule.rules[0] ?? ""),
       until: to >= new Date(2099, 0, 1).getTime() ? null : new Date(to),
       startDate: new Date(recurringRule.range.from), // RS-2 anchor
-    })
+    }
+    setRecurring(seededCadenceRef.current)
   }, [transaction?.recurringId, recurringRule])
   // ES-4/5/8: kind is locked once a transaction is tied to a loan or a
   // recurring rule (recurrence editing lands in Slice 2, loan wiring in Slice 4).
   const canEditKind =
     isNew || (transaction?.loanId == null && transaction?.recurringId == null)
   const lockedFields: ReadonlySet<string> = new Set<string>(
-    transaction?.loanId ? ["kind", "type", "loanId", "toAccountId"] : [],
+    transaction?.loanId
+      ? ["kind", "type", "accountId", "loanId", "toAccountId"]
+      : [],
   )
   // LX-2: the loan's opening entry can't be deleted on its own — deleting it
   // deletes the loan. A repayment deletes normally (progress recomputes on read).
@@ -350,6 +383,21 @@ export function useTransactionForm({
       setValue("toAccountId", partials.toAccountId, { shouldDirty: true })
     }
     setValue("kind", next, { shouldDirty: true })
+    // A new recurring rule cannot carry attachments (the rule template has no
+    // place for them), and its form hides the section. Drop what was already
+    // added so a hidden file is never saved or left behind.
+    if (
+      isNew &&
+      (next === "subscription" || next === "repetitive") &&
+      attachmentState.list.length > 0
+    ) {
+      clearAttachments()
+      Toast.warn({
+        title: t(
+          "components.transactionForm.toast.attachmentsDroppedRecurring",
+        ),
+      })
+    }
     if (next === "lent" || next === "borrowed") {
       const newType =
         next === "lent"
@@ -366,11 +414,20 @@ export function useTransactionForm({
     }
   }
   const handleConfirmExit = () => {
+    // Leaving without a save (after a save the added list is already empty).
+    discardAddedAttachments()
     allowNavigation()
     router.back()
   }
+  // The edit-scope sheet saved the row: drop the files the user removed.
+  const handleRecurringSaved = () => {
+    flushRemovedAttachments()
+    handleConfirmExit()
+  }
   const onSubmit = async (data: TransactionFormValues) => {
-    if (isSaving) return
+    // Until the rule loads, a recurring row would save as a plain update.
+    if (submitLatch.current || recurringRuleLoading) return
+    submitLatch.current = true
     setIsSaving(true)
     try {
       // ─── Transfer ─────────────────────────────────────────────────────────
@@ -425,10 +482,14 @@ export function useTransactionForm({
           notes: data.description?.trim() || null,
         }
         if (isNew) {
-          await createTransfer({
-            ...transferPayload,
-            transactionDate: effectiveDate.getTime(),
-          })
+          await createTransfer(
+            {
+              ...transferPayload,
+              transactionDate: effectiveDate.getTime(),
+            },
+            // A future-dated transfer is pending like any other row.
+            { isPending: data.isPending },
+          )
           Toast.success({
             title: t("components.transactionForm.toast.transferCreated"),
           })
@@ -461,7 +522,7 @@ export function useTransactionForm({
         usdCode,
         attachmentsJson,
         effectiveDate,
-        recurringEnabled: isNew && isRecurringKind,
+        recurringEnabled: isNewRecurringRule,
       })
       if (isNew) {
         if (data.kind === "subscription" || data.kind === "repetitive") {
@@ -548,9 +609,9 @@ export function useTransactionForm({
                 term: "one_time",
                 accountId: data.accountId,
                 categoryId: data.categoryId,
-                // The single date field is the due date; the opening
+                // The date field is the optional due date; the opening
                 // cash-flow entry is dated now (the money moved today).
-                dueDate: data.transactionDate.getTime(),
+                dueDate: hasLoanDueDate ? data.transactionDate.getTime() : null,
               },
               {
                 title: data.title?.trim() || null,
@@ -564,7 +625,6 @@ export function useTransactionForm({
             Toast.success({
               title: t("components.transactionForm.toast.transactionCreated"),
             })
-            synchronizePlannedTransactionNotifications().catch(() => {})
           } catch (loanErr) {
             logger.error("Failed to save loan", {
               message:
@@ -593,7 +653,6 @@ export function useTransactionForm({
             }
           }
           await createTransaction(payload)
-          synchronizePlannedTransactionNotifications().catch(() => {})
           Toast.success({
             title: t("components.transactionForm.toast.transactionCreated"),
           })
@@ -614,13 +673,16 @@ export function useTransactionForm({
               tags: payload.tags ?? [],
               extra: payload.extra,
               subtype: payload.subtype,
+              goalId: payload.goalId,
+              budgetId: payload.budgetId,
+              loanId: payload.loanId,
+              location: payload.location,
             },
             editRecurringSheetVisible: true,
           })
           return
         }
         await updateTransaction(transaction.id, payload)
-        synchronizePlannedTransactionNotifications().catch(() => {})
         Toast.success({
           title: t("components.transactionForm.toast.transactionUpdated"),
         })
@@ -634,11 +696,12 @@ export function useTransactionForm({
       })
       Toast.error({ title: t("components.transactionForm.toast.saveFailed") })
     } finally {
+      submitLatch.current = false
       setIsSaving(false)
     }
   }
   const handleCancelPress = () => {
-    if (isDirty) {
+    if (hasUnsavedChanges) {
       setOverlays({ unsavedSheetVisible: true })
     } else {
       allowNavigation()
@@ -646,7 +709,7 @@ export function useTransactionForm({
     }
   }
   const handleDeleteConfirm = () => {
-    if (!transaction) return
+    if (!transaction || recurringRuleLoading) return
     if (isLoanOpeningEntry) {
       setOverlays({ deleteLoanSheetVisible: true })
       return
@@ -661,9 +724,20 @@ export function useTransactionForm({
         : deleteTransaction(transaction.id)
     promise
       .then(() => {
-        synchronizePlannedTransactionNotifications().catch(() => {})
+        const trashedId = transaction.id
         Toast.success({
           title: t("components.transactionForm.toast.movedToTrash"),
+          action: {
+            label: t("common.actions.undo"),
+            onPress: () => {
+              restoreTransaction(trashedId).catch((error) => {
+                logger.error("Failed to undo delete", { error })
+                Toast.error({
+                  title: t("components.transactionItem.failedToRestore"),
+                })
+              })
+            },
+          },
         })
         allowNavigation()
         router.back()
@@ -680,7 +754,6 @@ export function useTransactionForm({
     setOverlays({ deleteLoanSheetVisible: false })
     try {
       await deleteLoanById(transaction.loanId)
-      synchronizePlannedTransactionNotifications().catch(() => {})
       Toast.success({
         title: t("components.transactionForm.toast.loanDeleted"),
       })
@@ -697,7 +770,6 @@ export function useTransactionForm({
     if (!transaction?.isDeleted) return
     try {
       await restoreTransaction(transaction.id)
-      synchronizePlannedTransactionNotifications().catch(() => {})
       Toast.success({
         title: t("components.transactionForm.toast.restored"),
         description: t("components.transactionForm.toast.restoredDescription"),
@@ -742,6 +814,12 @@ export function useTransactionForm({
     )
   }
   const handleTransactionTypeChange = (type: TransactionFormValues["type"]) => {
+    // Expense and income categories are disjoint, so a kept selection would
+    // save the row under a category the user can no longer see.
+    if (type !== getValues("type")) {
+      setValue("categoryId", null, { shouldDirty: true })
+      setValue("budgetId", null, { shouldDirty: true })
+    }
     onTransactionTypeChange(type)
     setValue("type", type, { shouldDirty: true })
     // Clear goal when switching types (different goal types apply)
@@ -797,6 +875,10 @@ export function useTransactionForm({
   const accountError = accountErrorKey
     ? t(accountErrorKey as TranslationKey)
     : undefined
+  const toAccountErrorKey = errors.toAccountId?.message
+  const toAccountError = toAccountErrorKey
+    ? t(toAccountErrorKey as TranslationKey)
+    : undefined
 
   return {
     // form primitives
@@ -805,7 +887,8 @@ export function useTransactionForm({
     setValue,
     errors,
     isDirty,
-    isSaving,
+    hasUnsavedChanges,
+    isSaving: isSaving || recurringRuleLoading,
     isNew,
     submit: handleSubmit(onSubmit),
 
@@ -833,6 +916,8 @@ export function useTransactionForm({
     // kind
     kind,
     isLoanKind,
+    hasLoanDueDate,
+    setHasLoanDueDate,
     setKind,
     canEditKind,
     lockedFields,
@@ -853,6 +938,7 @@ export function useTransactionForm({
     descriptionErrorKey,
     amountError,
     accountError,
+    toAccountError,
 
     // overlays
     overlays,
@@ -863,6 +949,7 @@ export function useTransactionForm({
     setRecurring,
     occurrenceCount,
     isRecurringKind,
+    isNewRecurringRule,
     recurringRule,
 
     // conversion rate
@@ -898,7 +985,9 @@ export function useTransactionForm({
     handleRefundToggle,
     handleCategorySelect,
     handleCategoryClear,
+    allowNavigation,
     handleConfirmExit,
+    handleRecurringSaved,
     handleCancelPress,
     handleDeleteConfirm,
     handleDeleteLoanConfirm,

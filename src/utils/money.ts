@@ -44,7 +44,9 @@ export function parseMajorUnits(input: string, currencyCode: string): number {
 }
 
 export function normalizeMajorUnitInput(input: string): string | null {
-  const compact = input.trim().replace(/\s/gu, "")
+  // Drop currency symbols and letters first, so a pasted "$12.50" still reads.
+  const compact = input.replace(/[^\d+\-*/.,]/gu, "")
+  if (compact === "" && input.trim() !== "") return null
   const parts = compact.split(/([+\-*/])/)
   for (let index = 0; index < parts.length; index += 2) {
     const value = parts[index]
@@ -52,6 +54,11 @@ export function normalizeMajorUnitInput(input: string): string | null {
     if (/^\d*(?:\.\d*)?$/.test(value)) continue
     if (/^\d{1,3}(?:,\d{3})+(?:\.\d*)?$/.test(value)) {
       parts[index] = value.replaceAll(",", "")
+      continue
+    }
+    // A single comma with one or two digits after it is a decimal comma.
+    if (/^\d*,\d{1,2}$/.test(value)) {
+      parts[index] = value.replace(",", ".")
       continue
     }
     return null
@@ -63,6 +70,8 @@ export function toMajorUnits(minorUnits: number, currencyCode: string): number {
   return assertMinorUnits(minorUnits) / 10 ** getMinorUnitDigits(currencyCode)
 }
 
+const RATE_SCALE_DIGITS = 12
+
 export function convertMinorUnits(
   minorUnits: number,
   fromCurrency: string,
@@ -72,11 +81,19 @@ export function convertMinorUnits(
   if (!Number.isFinite(rate) || rate <= 0) {
     throw new Error(`Invalid conversion rate: ${rate}`)
   }
-  const converted =
-    toMajorUnits(minorUnits, fromCurrency) *
-    rate *
-    10 ** getMinorUnitDigits(toCurrency)
-  return roundToSafeInteger(converted)
+  assertMinorUnits(minorUnits)
+  // Integer arithmetic: a float product can land a hair under .5 and round
+  // the wrong way. The rate is scaled to 12 decimals, then everything is a
+  // BigInt ratio rounded half away from zero.
+  const scaledRate = BigInt(rate.toFixed(RATE_SCALE_DIGITS).replace(".", ""))
+  const numerator =
+    BigInt(Math.abs(minorUnits)) *
+    scaledRate *
+    10n ** BigInt(getMinorUnitDigits(toCurrency))
+  const denominator =
+    10n ** BigInt(getMinorUnitDigits(fromCurrency) + RATE_SCALE_DIGITS)
+  const rounded = (numerator * 2n + denominator) / (denominator * 2n)
+  return assertMinorUnits(Number(minorUnits < 0 ? -rounded : rounded))
 }
 
 /** Preserve the displayed decimal amount when only its currency exponent changes. */

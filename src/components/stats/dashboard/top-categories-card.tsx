@@ -5,7 +5,7 @@ import { Money } from "~/components/money"
 import { getCategoryColor } from "~/components/stats/get-category-color"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { getThemeVariantPalette, shuffleArray } from "~/styles/theme/utils"
+import { getFallbackPalette } from "~/styles/theme/utils"
 import type { CategoryBreakdownItem } from "~/types/stats"
 
 import { StatCard } from "./stat-card"
@@ -24,7 +24,7 @@ export function TopCategoriesCard({
   const { theme } = useUnistyles()
   const top = breakdown.filter((b) => b.totalExpense > 0).slice(0, 3)
   const maxExpense = top[0]?.totalExpense ?? 0
-  const fallbackPalette = shuffleArray(getThemeVariantPalette(theme.name))
+  const fallbackPalette = getFallbackPalette(theme.name)
   return (
     <StatCard
       title={t("screens.stats.dashboard.topCategories")}

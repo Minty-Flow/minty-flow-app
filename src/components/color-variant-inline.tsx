@@ -173,6 +173,9 @@ export function ColorVariantInline({
                             styles.colorOptionSelected(scheme.primary),
                         ]}
                         onPress={() => handleColorSelect(scheme)}
+                        accessibilityRole="radio"
+                        accessibilityLabel={variantName}
+                        accessibilityState={{ selected: isSelected }}
                       >
                         <View
                           style={[

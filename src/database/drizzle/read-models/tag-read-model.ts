@@ -1,11 +1,11 @@
-import { count, sql } from "drizzle-orm"
+import { count, eq, sql } from "drizzle-orm"
 import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Tag, TagKindType } from "~/types/tags"
 
 import { drizzleDb } from "../db"
-import { tags, transactionTags } from "../schema"
+import { tags, transactions, transactionTags } from "../schema"
 import {
   createLiveReadModelResult,
   type LiveReadModelResult,
@@ -27,7 +27,12 @@ export function useTagsQuery(withCounts = false): LiveReadModelResult<Tag[]> {
         count: count(),
       })
       .from(transactionTags)
-      .where(withCounts ? undefined : sql`1 = 0`)
+      .innerJoin(
+        transactions,
+        eq(transactionTags.transactionId, transactions.id),
+      )
+      // Trashed rows are not counted, matching the category read model.
+      .where(withCounts ? eq(transactions.isDeleted, 0) : sql`1 = 0`)
       .groupBy(transactionTags.tagId),
     [withCounts],
   )

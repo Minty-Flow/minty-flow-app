@@ -30,6 +30,7 @@ import { Separator } from "~/components/ui/separator"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
+import { useGoalHasLinkedTransactions } from "~/database/drizzle/read-models/goal-read-model"
 import {
   archiveGoalById,
   createGoal,
@@ -57,6 +58,7 @@ export function GoalModifyContent({
   accounts,
 }: GoalModifyContentProps) {
   const { t } = useTranslation()
+  const [footerHeight, setFooterHeight] = useState(0)
   const router = useRouter()
   const { theme } = useUnistyles()
   const isAddMode = goalModifyId === NewEnum.NEW || !goalModifyId
@@ -87,6 +89,7 @@ export function GoalModifyContent({
   const formName = watch("name")
   const formIcon = watch("icon")
   const formColorSchemeName = watch("colorSchemeName")
+  const hasLinkedTransactions = useGoalHasLinkedTransactions(goal?.id)
   const formCurrencyCode = watch("currencyCode")
   const formAccountIds = watch("accountIds")
   const formTargetAmount = watch("targetAmount")
@@ -189,7 +192,7 @@ export function GoalModifyContent({
     setValue("colorSchemeName", schemeName, { shouldDirty: true })
   }
   const handleColorCleared = () => {
-    setValue("colorSchemeName", undefined, { shouldDirty: true })
+    setValue("colorSchemeName", null, { shouldDirty: true })
   }
   const handleClearDate = () => {
     setValue("targetDate", null, { shouldDirty: true })
@@ -206,6 +209,7 @@ export function GoalModifyContent({
   return (
     <View style={modifyFormStyles.container}>
       <ScrollIntoViewProvider
+        keyboardInset={footerHeight}
         scrollViewStyle={modifyFormStyles.scrollView}
         contentContainerStyle={modifyFormStyles.scrollContent}
       >
@@ -273,6 +277,7 @@ export function GoalModifyContent({
               accounts={accounts}
               selectedCurrency={formCurrencyCode || null}
               selectedAccountIds={formAccountIds}
+              currencyLocked={hasLinkedTransactions}
               onCurrencyChange={(code) => {
                 if (formCurrencyCode && code !== formCurrencyCode) {
                   setValue(
@@ -397,6 +402,7 @@ export function GoalModifyContent({
       </ScrollIntoViewProvider>
 
       <ModifyFormFooter
+        onHeightChange={setFooterHeight}
         formName={formName}
         isAddMode={isAddMode}
         isDirty={isDirty}

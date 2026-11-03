@@ -104,9 +104,14 @@ const settingsGroups: SettingsGroup[] = [
         icon: "puzzle-outline",
       },
       {
-        titleKey: "screens.settings.dataManagement.title",
-        route: "/settings/data-management",
-        icon: "database-outline",
+        titleKey: "screens.settings.backup.title",
+        route: "/settings/backup",
+        icon: "database-export-outline",
+      },
+      {
+        titleKey: "screens.settings.restore.title",
+        route: "/settings/restore",
+        icon: "database-import-outline",
       },
     ],
   },
@@ -181,7 +186,7 @@ export default function SettingsScreen() {
   )
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create((theme, rt) => ({
   content: {
     marginVertical: 50,
     paddingBottom: 150,
@@ -189,7 +194,7 @@ const styles = StyleSheet.create((theme) => ({
   footer: {
     alignItems: "center",
     gap: 6,
-    paddingTop: 50,
+    paddingTop: rt.insets.top + 12,
   },
   footerTagline: {
     color: theme.colors.semantic.semi,

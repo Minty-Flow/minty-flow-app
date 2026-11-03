@@ -22,8 +22,11 @@ import { isFormReadOnly } from "./form-utils"
  */
 export function UpcomingBanner({
   transaction,
+  allowNavigation,
 }: {
   transaction: TransactionWithRelations | null
+  /** Lifts the unsaved-changes guard so leaving after a confirm isn't blocked. */
+  allowNavigation: () => void
 }) {
   const { t } = useTranslation()
   const router = useRouter()
@@ -47,6 +50,7 @@ export function UpcomingBanner({
       await confirmTransaction(transaction.id, {
         updateTransactionDate: updateDateUponConfirmation,
       })
+      allowNavigation()
       router.back()
     } catch {
       setConfirming(false)

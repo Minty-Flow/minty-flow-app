@@ -1,3 +1,6 @@
+import { sql } from "drizzle-orm"
+
+import { emitWriteCommitted } from "./commit-events"
 import { drizzleDb } from "./drizzle/db"
 import { enqueueWrite } from "./write-queue"
 
@@ -51,7 +54,8 @@ function assertSynchronous<T>(
  * transaction context. This lets services call other services without
  * deadlocking the queue.
  *
- * @param name - Reserved human-readable label for call-site clarity.
+ * @param name - Human-readable label. Listeners registered with
+ *   `onWriteCommitted` receive it after the outermost transaction commits.
  * @param fn - Async callback that receives the open database instance and
  *   performs all reads/writes. Its return value is forwarded to the caller.
  * @returns A promise that resolves with `fn`'s return value once the
@@ -59,14 +63,15 @@ function assertSynchronous<T>(
  *
  */
 export async function runInTransaction<T>(
-  _name: string,
+  name: string,
   fn: (db: DbTransaction) => T,
 ): Promise<T> {
-  // Re-entrant: if already inside a queued tx context, bypass queue to avoid deadlock.
+  // Re-entrant: run inside the transaction that is already open. Opening a
+  // second one here issued a nested BEGIN whose writes were discarded.
   if (txDepth > 0) {
     txDepth++
     try {
-      return drizzleDb.transaction(assertSynchronous(fn))
+      return assertSynchronous(fn)(drizzleDb as unknown as DbTransaction)
     } finally {
       txDepth--
     }
@@ -76,7 +81,48 @@ export async function runInTransaction<T>(
     txDepth++
 
     try {
-      return drizzleDb.transaction(assertSynchronous(fn))
+      const result = drizzleDb.transaction(assertSynchronous(fn))
+      emitWriteCommitted(name)
+      return result
+    } finally {
+      txDepth--
+    }
+  })
+}
+
+/**
+ * Same contract as {@link runInTransaction}, but the callback may await.
+ *
+ * Drizzle's expo-sqlite transactions are synchronous, so a scope that must be
+ * all-or-nothing across several awaited service calls (each of which joins the
+ * open transaction when `txDepth > 0`) manages BEGIN/COMMIT itself. The write
+ * queue still serialises the whole span, so no other writer interleaves.
+ */
+export async function runInAsyncTransaction<T>(
+  name: string,
+  fn: (db: DbTransaction) => Promise<T>,
+): Promise<T> {
+  const db = drizzleDb as unknown as DbTransaction
+  if (txDepth > 0) {
+    txDepth++
+    try {
+      return await fn(db)
+    } finally {
+      txDepth--
+    }
+  }
+
+  return enqueueWrite(async () => {
+    txDepth++
+    drizzleDb.run(sql.raw("BEGIN"))
+    try {
+      const result = await fn(db)
+      drizzleDb.run(sql.raw("COMMIT"))
+      emitWriteCommitted(name)
+      return result
+    } catch (error) {
+      drizzleDb.run(sql.raw("ROLLBACK"))
+      throw error
     } finally {
       txDepth--
     }

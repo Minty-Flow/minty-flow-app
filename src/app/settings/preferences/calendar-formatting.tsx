@@ -64,12 +64,15 @@ export default function CalendarFormattingScreen() {
       showsVerticalScrollIndicator={false}
     >
       <SettingsSection title={t(calendarKey("clock.label"))}>
-        {(["12h", "24h"] as const).map((format) => (
+        {(["auto", "12h", "24h"] as const).map((format) => (
           <SettingsOptionRow
             key={format}
             label={t(calendarKey(`clock.${format}`))}
-            description={formatClockPreview(now, format)}
-            selected={activeClock === format}
+            description={formatClockPreview(
+              now,
+              format === "auto" ? activeClock : format,
+            )}
+            selected={clockFormat === format}
             onPress={() => setClockFormat(format as ClockFormatPreference)}
           />
         ))}

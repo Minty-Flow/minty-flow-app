@@ -19,6 +19,13 @@ import {
   insertBackupData,
   resetDatabaseForBackupImport,
 } from "~/database/backup/backup-import-plan"
+import {
+  type ImportSnapshot,
+  isImportCommitted,
+  newImportMarker,
+  readImportMarker,
+  writeImportMarker,
+} from "~/database/backup/import-marker"
 import { drizzleDb } from "~/database/drizzle/db"
 import { runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
@@ -27,7 +34,13 @@ import {
   readSqliteSnapshot,
   writeSqliteSnapshot,
 } from "~/database/utils/import-snapshot"
+import {
+  profileImageForExport,
+  readBackupProfile,
+  readPortableSettings,
+} from "~/stores/portable-settings"
 import { attachmentsDirectory } from "~/utils/attachments"
+import { escapeCsvField, escapeCsvText } from "~/utils/csv"
 import { getFileExtension, getMimeTypeForExtension } from "~/utils/file-icon"
 import { logger } from "~/utils/logger"
 import { minorUnitsToDecimalString } from "~/utils/money"
@@ -37,6 +50,7 @@ export {
   defaultExportBaseName,
   type ExportType,
   type MintyFlowBackup,
+  pickedFileKind,
   validateBackup,
 } from "~/database/backup/backup-format"
 
@@ -138,6 +152,21 @@ async function saveGeneratedExport(
 
 // ─── Export ──────────────────────────────────────────────────────────────────
 
+/**
+ * `SELECT *` from a table, or no rows when it does not exist. A pre-update
+ * backup runs before the migrations that would create a new table, so a plain
+ * select would throw and block the backup.
+ */
+async function selectAll(table: string): Promise<RawRow[]> {
+  const exists = await drizzleDb.all<{ name: string }>(
+    sql.raw(
+      `SELECT name FROM sqlite_master WHERE type = 'table' AND name = '${table}'`,
+    ),
+  )
+  if (exists.length === 0) return []
+  return drizzleDb.all<RawRow>(sql.raw(`SELECT * FROM ${table}`))
+}
+
 /** Fetch all 13 tables from the SQLite DB and return a MintyFlowBackup object. */
 async function buildBackupInMemory(): Promise<MintyFlowBackup> {
   const [
@@ -155,19 +184,19 @@ async function buildBackupInMemory(): Promise<MintyFlowBackup> {
     budgetCategories,
     goalAccounts,
   ] = await Promise.all([
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM categories")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM tags")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM accounts")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM recurring_transactions")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM budgets")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM goals")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM loans")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM transactions")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM transfers")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM transaction_tags")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM budget_accounts")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM budget_categories")),
-    drizzleDb.all<RawRow>(sql.raw("SELECT * FROM goal_accounts")),
+    selectAll("categories"),
+    selectAll("tags"),
+    selectAll("accounts"),
+    selectAll("recurring_transactions"),
+    selectAll("budgets"),
+    selectAll("goals"),
+    selectAll("loans"),
+    selectAll("transactions"),
+    selectAll("transfers"),
+    selectAll("transaction_tags"),
+    selectAll("budget_accounts"),
+    selectAll("budget_categories"),
+    selectAll("goal_accounts"),
   ])
 
   return {
@@ -205,6 +234,8 @@ async function generateJsonBackup(baseName?: string): Promise<{
   ])
   const fileName = toFileName("json", baseName)
   const uri = `${dir}${fileName}`
+  // Data only: the 13 tables, as before. Settings and the profile travel in
+  // the ZIP, which can also carry the profile photo.
   await FileSystem.writeAsStringAsync(uri, JSON.stringify(backup, null, 2), {
     encoding: FileSystem.EncodingType.UTF8,
   })
@@ -218,6 +249,16 @@ export async function saveJsonToDevice(
   return saveGeneratedExport(uri, fileName)
 }
 
+/** The portable preferences and the profile, added to a ZIP export. */
+function withSettingsAndProfile(backup: MintyFlowBackup): MintyFlowBackup {
+  const profile = readBackupProfile(true)
+  return {
+    ...backup,
+    settings: readPortableSettings(),
+    ...(profile ? { profile } : {}),
+  }
+}
+
 async function generateZipBackup(
   baseName?: string,
 ): Promise<{ uri: string; fileName: string }> {
@@ -226,9 +267,10 @@ async function generateZipBackup(
     buildBackupInMemory(),
   ])
   const jsonUri = `${dir}${BACKUP_JSON_NAME}`
+  const withExtras = withSettingsAndProfile(backup)
   await FileSystem.writeAsStringAsync(
     jsonUri,
-    JSON.stringify(backup, null, 2),
+    JSON.stringify(withExtras, null, 2),
     {
       encoding: FileSystem.EncodingType.UTF8,
     },
@@ -240,6 +282,11 @@ async function generateZipBackup(
     .list()
     .filter((entry): entry is File => entry instanceof File)
     .map((file) => file.uri)
+  // The profile photo rides in the same flat archive, named by backup.profile.
+  const profileImage = withExtras.profile?.imageFile
+    ? profileImageForExport()
+    : null
+  if (profileImage) attachments.push(profileImage)
 
   try {
     // An array source zips to flat basenames, so the live attachment files are archived
@@ -290,6 +337,28 @@ export async function readPickedBackup(
   }
 }
 
+const PROFILE_IMAGE_PREFIX = /^minty_profile_/
+
+/**
+ * Copy the archive's profile photo into app storage. Call before
+ * restoreAttachmentsFromStaging, which deletes the staging dir.
+ *
+ * @returns true when the photo was copied.
+ */
+export function restoreProfileImageFromStaging(
+  stagingDir: string,
+  imageFile: string,
+): boolean {
+  try {
+    const source = new File(new Directory(stagingDir), imageFile)
+    if (!source.exists) return false
+    source.copy(new File(Paths.document, imageFile), { overwrite: true })
+    return true
+  } catch {
+    return false
+  }
+}
+
 /** Copy an archive's attachment files into permanent storage. Deletes the staging dir. */
 export async function restoreAttachmentsFromStaging(
   stagingDir: string,
@@ -299,7 +368,9 @@ export async function restoreAttachmentsFromStaging(
     .list()
     .filter(
       (entry): entry is File =>
-        entry instanceof File && entry.name !== BACKUP_JSON_NAME,
+        entry instanceof File &&
+        entry.name !== BACKUP_JSON_NAME &&
+        !PROFILE_IMAGE_PREFIX.test(entry.name),
     )
 
   await Promise.all(
@@ -352,28 +423,14 @@ async function generateCsvExport(
     "created_at",
   ]
 
-  function escapeCsvField(value: unknown): string {
-    if (value === null || value === undefined) return ""
-    const str = String(value)
-    if (
-      str.includes(",") ||
-      str.includes('"') ||
-      str.includes("\n") ||
-      str.includes("\r")
-    ) {
-      return `"${str.replace(/"/g, '""')}"`
-    }
-    return str
-  }
-
   const rows = transactions.map((r) =>
     [
       escapeCsvField(r.id),
       escapeCsvField(r.transaction_date), // already ISO string in SQLite
       escapeCsvField(r.type),
       escapeCsvField(minorUnitsToDecimalString(r.amount, r.currency_code)),
-      escapeCsvField(r.title),
-      escapeCsvField(r.description),
+      escapeCsvText(r.title),
+      escapeCsvText(r.description),
       escapeCsvField(r.category_id),
       escapeCsvField(r.account_id),
       escapeCsvField(r.is_pending),
@@ -429,8 +486,14 @@ export async function pickBackupFile(): Promise<{
   uri: string
   name: string
 } | null> {
+  // ZIP and JSON only. The extension is checked again after the pick
+  // (pickedFileKind), because a file manager may hand back any file.
   const result = await DocumentPicker.getDocumentAsync({
-    type: "*/*",
+    type: [
+      "application/zip",
+      "application/x-zip-compressed",
+      "application/json",
+    ],
     copyToCacheDirectory: true,
   })
 
@@ -448,12 +511,20 @@ export async function pickBackupFile(): Promise<{
  * Crash between A and B leaves empty DB; snapshot on disk triggers recovery on next launch.
  */
 export async function recoverInterruptedImport(): Promise<boolean> {
-  const snapshot = await readSqliteSnapshot<MintyFlowBackup>()
+  const snapshot = await readSqliteSnapshot<ImportSnapshot>()
   if (!snapshot) return false
+
+  // The import committed and the app died before it deleted the snapshot:
+  // the database holds the imported data, so the snapshot is stale.
+  if (isImportCommitted(snapshot)) {
+    await deleteSqliteSnapshot()
+    return false
+  }
 
   await resetDatabaseForBackupImport()
   await runInTransaction("recover.insert", (db) => {
     insertBackupData(db, snapshot.data)
+    writeImportMarker(db, 0)
   })
   // Delete only after confirmed success
   await deleteSqliteSnapshot()
@@ -601,7 +672,8 @@ export async function importBackup(
     // 3️⃣ Snapshot current DB to disk before any mutation
     // Survives process-kill between reset (A) and insert (B) — recovery reads it on next launch.
     const snapshot = await buildBackupInMemory()
-    await writeSqliteSnapshot(snapshot)
+    const importMarker = newImportMarker(readImportMarker())
+    await writeSqliteSnapshot({ ...snapshot, importMarker })
 
     // 4️⃣ Transaction A: wipe all rows
     // 5️⃣ Transaction B: insert backup data
@@ -609,6 +681,8 @@ export async function importBackup(
       await resetDatabaseForBackupImport()
       await runInTransaction("import.insert", (db) => {
         insertBackupData(db, data)
+        // Commits with the data: recovery uses it to know this import finished.
+        writeImportMarker(db, importMarker)
       })
       // Import succeeded — snapshot no longer needed
       await deleteSqliteSnapshot()
@@ -618,6 +692,7 @@ export async function importBackup(
         await resetDatabaseForBackupImport()
         await runInTransaction("restore.insert", (db) => {
           insertBackupData(db, snapshot.data)
+          writeImportMarker(db, 0)
         })
         // Restore succeeded — snapshot no longer needed
         await deleteSqliteSnapshot()

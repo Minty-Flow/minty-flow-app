@@ -180,7 +180,8 @@ const styles = UnistylesSheet.create((theme) => ({
     gap: 6,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: theme.colors.shadow,
+    // White hint text over map tiles needs a real scrim to stay readable.
+    backgroundColor: "rgba(0,0,0,0.6)",
   },
   hintIcon: {
     color: "white",
@@ -205,7 +206,7 @@ const styles = UnistylesSheet.create((theme) => ({
     justifyContent: "center",
   },
   clearIcon: {
-    color: "white",
+    color: theme.colors.onSurface,
   },
   // ── Placeholder card ───────────────────────────────────────────────────
   placeholder: {

@@ -38,6 +38,8 @@ interface AccountPickerFieldProps {
   /** Placeholder + accessibility label while closed. */
   selectLabel: string
   error?: string
+  /** Shows the account but does not open the picker. */
+  disabled?: boolean
   onSelect: (accountId: string) => void
 }
 
@@ -48,6 +50,7 @@ function AccountPickerField({
   triggerBalance,
   selectLabel,
   error,
+  disabled,
   onSelect,
 }: AccountPickerFieldProps) {
   const { theme } = useUnistyles()
@@ -59,7 +62,10 @@ function AccountPickerField({
           transactionFormStyles.accountTrigger,
           selectedAccount && transactionFormStyles.accountTriggerSelected,
           error && selectedAccount && transactionFormStyles.accountTriggerError,
+          disabled && transactionFormStyles.accountTriggerDisabled,
         ]}
+        disabled={disabled}
+        accessibilityState={{ disabled: !!disabled }}
         onPress={() => setOpen(true)}
         accessibilityLabel={selectLabel}
       >
@@ -138,10 +144,12 @@ interface FormAccountPickerProps {
   balanceAtTransaction: number | null
   transaction: {
     id: string
+    accountId: string
   } | null
   accountError: string | undefined
   /** Called after the selected account changes (new id or cleared). */
   onAccountChange?: (newAccountId: string) => void
+  disabled?: boolean
 }
 
 export function FormAccountPicker({
@@ -154,6 +162,7 @@ export function FormAccountPicker({
   transaction,
   accountError,
   onAccountChange,
+  disabled,
 }: FormAccountPickerProps) {
   const { t } = useTranslation()
   return (
@@ -161,13 +170,18 @@ export function FormAccountPicker({
       accounts={accounts}
       selectedId={accountId}
       selectedAccount={selectedAccount}
+      // The balance-at-time belongs to the transaction's own account; after
+      // switching accounts the picked one shows its live balance.
       triggerBalance={
-        transaction && balanceAtTransaction !== null
+        transaction &&
+        balanceAtTransaction !== null &&
+        accountId === transaction.accountId
           ? balanceAtTransaction
           : undefined
       }
       selectLabel={t("screens.accounts.a11y.select")}
       error={accountError}
+      disabled={disabled}
       onSelect={(id) => {
         setValue("accountId", id, { shouldDirty: true })
         if (toAccountId === id) {
@@ -186,6 +200,8 @@ interface FormToAccountPickerProps {
   setValue: SetAccountValue
   selectedToAccount: Account | null | undefined
   transactionType: string
+  /** Shown under the field, e.g. when no destination is picked yet. */
+  error?: string
 }
 
 /** Transfer destination; renders nothing for non-transfer transactions. */
@@ -196,6 +212,7 @@ export function FormToAccountPicker({
   setValue,
   selectedToAccount,
   transactionType,
+  error,
 }: FormToAccountPickerProps) {
   const { t } = useTranslation()
   if (transactionType !== TransactionTypeEnum.TRANSFER) return null
@@ -206,6 +223,7 @@ export function FormToAccountPicker({
       selectedAccount={selectedToAccount}
       triggerBalance={undefined}
       selectLabel={t("screens.accounts.a11y.selectTo")}
+      error={error}
       onSelect={(id) => {
         setValue("toAccountId", id, { shouldDirty: true })
         if (accountId === id) {

@@ -125,3 +125,18 @@ export function shuffleArray<T>(items: T[]): T[] {
   }
   return result
 }
+
+const fallbackPalettes = new Map<string, string[]>()
+
+/**
+ * Shuffled variant palette, fixed per theme for the session so every chart
+ * paints an uncoloured category the same and a re-render does not reshuffle it.
+ */
+export function getFallbackPalette(themeName: string): string[] {
+  let palette = fallbackPalettes.get(themeName)
+  if (!palette) {
+    palette = shuffleArray(getThemeVariantPalette(themeName))
+    fallbackPalettes.set(themeName, palette)
+  }
+  return palette
+}
