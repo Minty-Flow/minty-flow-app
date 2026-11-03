@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from "drizzle-orm"
+import { and, eq, inArray, isNotNull, notInArray, sql } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
 import {
@@ -8,9 +8,13 @@ import {
   loans,
   transactions,
 } from "~/database/drizzle/schema"
-import { runInTransaction } from "~/database/transaction"
+import { type DbTransaction, runInTransaction } from "~/database/transaction"
 import { generateId } from "~/database/utils/generate-id"
-import { clearCategoryFromRecurringTemplates } from "~/database/utils/recurring-template-refs"
+import {
+  clearCategoryFromRecurringTemplates,
+  countRecurringTemplatesUsingCategory,
+  moveCategoryInRecurringTemplates,
+} from "~/database/utils/recurring-template-refs"
 import type {
   AddCategoriesFormSchema,
   UpdateCategoriesFormSchema,
@@ -131,7 +135,65 @@ export async function getLoansUsingCategory(
     .map((loan) => loan.name)
 }
 
-export async function deleteCategoryById(id: string): Promise<void> {
+/** What deleting a category touches, shown before the user confirms. */
+export interface CategoryDeleteImpact {
+  /** Transactions of the category, trashed ones included. */
+  transactionCount: number
+  recurringRuleCount: number
+}
+
+export async function getCategoryDeleteImpact(
+  categoryId: string,
+): Promise<CategoryDeleteImpact> {
+  const transactionCount =
+    drizzleDb
+      .select({ count: sql<number>`count(*)` })
+      .from(transactions)
+      .where(eq(transactions.categoryId, categoryId))
+      .get()?.count ?? 0
+  return {
+    transactionCount,
+    recurringRuleCount: countRecurringTemplatesUsingCategory(
+      drizzleDb,
+      categoryId,
+    ),
+  }
+}
+
+/** Why a category cannot take over another category's transactions. */
+export type CategoryMoveTargetReason =
+  | "same-category"
+  | "not-found"
+  | "type-mismatch"
+
+/**
+ * Thrown by {@link deleteCategoryById} when the category to move to is not
+ * valid. The service checks it so the rule holds whatever the UI offers.
+ */
+export class CategoryMoveTargetError extends Error {
+  readonly reason: CategoryMoveTargetReason
+
+  constructor(reason: CategoryMoveTargetReason) {
+    super(`Cannot move transactions to this category: ${reason}`)
+    this.name = "CategoryMoveTargetError"
+    this.reason = reason
+  }
+}
+
+export interface DeleteCategoryOptions {
+  /**
+   * Give the category's transactions, recurring rules and budget links to this
+   * category instead of leaving the transactions uncategorized. It must exist
+   * and have the same type.
+   */
+  moveToCategoryId?: string
+}
+
+export async function deleteCategoryById(
+  id: string,
+  options: DeleteCategoryOptions = {},
+): Promise<void> {
+  const targetId = options.moveToCategoryId
   await runInTransaction("category.delete", (db) => {
     const categoryLoans = db
       .select({ name: loans.name })
@@ -142,24 +204,114 @@ export async function deleteCategoryById(id: string): Promise<void> {
     if (categoryLoans.length > 0) {
       throw new CategoryHasLoansError(categoryLoans.map((loan) => loan.name))
     }
-    // Switch off the budgets that would be left with no category. Do it
-    // before the delete: the cascade removes the links.
-    db.update(budgets)
-      .set({ isActive: 0, updatedAt: new Date().toISOString() })
-      .where(losesLastCategory(id))
-      .run()
-    // A budget picks its transactions by category, and the transaction form
-    // only offers a budget whose categories include the transaction's, so an
-    // uncategorized transaction cannot keep its budget either.
-    db.update(transactions)
-      .set({
-        categoryId: null,
-        budgetId: null,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(transactions.categoryId, id))
-      .run()
-    clearCategoryFromRecurringTemplates(db, id)
+    if (targetId !== undefined) {
+      moveCategoryContents(db, id, targetId)
+    } else {
+      // Switch off the budgets that would be left with no category. Do it
+      // before the delete: the cascade removes the links.
+      db.update(budgets)
+        .set({ isActive: 0, updatedAt: new Date().toISOString() })
+        .where(losesLastCategory(id))
+        .run()
+      // A budget picks its transactions by category, and the transaction form
+      // only offers a budget whose categories include the transaction's, so an
+      // uncategorized transaction cannot keep its budget either.
+      db.update(transactions)
+        .set({
+          categoryId: null,
+          budgetId: null,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(transactions.categoryId, id))
+        .run()
+      clearCategoryFromRecurringTemplates(db, id)
+    }
     db.delete(categories).where(eq(categories.id, id)).run()
   })
+}
+
+/**
+ * Hand a category's transactions, recurring rules and budget links to
+ * `targetId`. Runs inside the delete transaction, before the category row goes.
+ */
+function moveCategoryContents(
+  db: DbTransaction,
+  id: string,
+  targetId: string,
+): void {
+  if (targetId === id) throw new CategoryMoveTargetError("same-category")
+  const source = db
+    .select({ type: categories.type })
+    .from(categories)
+    .where(eq(categories.id, id))
+    .get()
+  const target = db
+    .select({ type: categories.type })
+    .from(categories)
+    .where(eq(categories.id, targetId))
+    .get()
+  if (!target || !source) throw new CategoryMoveTargetError("not-found")
+  if (target.type !== source.type) {
+    throw new CategoryMoveTargetError("type-mismatch")
+  }
+
+  // A budget that has the deleted category but not the target: if the
+  // deleted one is its only category the budget takes the target, otherwise
+  // the link is simply removed by the cascade and the others stay.
+  const hasTarget = db
+    .select({ budgetId: budgetCategories.budgetId })
+    .from(budgetCategories)
+    .where(eq(budgetCategories.categoryId, targetId))
+  const onlyCategoryBudgets = db
+    .select({ id: budgetCategories.budgetId })
+    .from(budgetCategories)
+    .where(
+      and(
+        eq(budgetCategories.categoryId, id),
+        notInArray(budgetCategories.budgetId, hasTarget),
+        sql`NOT EXISTS (
+          SELECT 1 FROM ${budgetCategories} AS other
+          WHERE other.budget_id = ${budgetCategories.budgetId}
+            AND other.category_id <> ${id}
+        )`,
+      ),
+    )
+    .all()
+    .map((row) => row.id)
+  if (onlyCategoryBudgets.length > 0) {
+    db.update(budgetCategories)
+      .set({ categoryId: targetId })
+      .where(
+        and(
+          eq(budgetCategories.categoryId, id),
+          inArray(budgetCategories.budgetId, onlyCategoryBudgets),
+        ),
+      )
+      .run()
+  }
+
+  // A transaction keeps its budget only when that budget includes the new
+  // category (the transaction form offers no other).
+  const now = new Date().toISOString()
+  db.update(transactions)
+    .set({ budgetId: null, updatedAt: now })
+    .where(
+      and(
+        eq(transactions.categoryId, id),
+        isNotNull(transactions.budgetId),
+        notInArray(
+          transactions.budgetId,
+          db
+            .select({ budgetId: budgetCategories.budgetId })
+            .from(budgetCategories)
+            .where(eq(budgetCategories.categoryId, targetId)),
+        ),
+      ),
+    )
+    .run()
+  db.update(transactions)
+    .set({ categoryId: targetId, updatedAt: now })
+    .where(eq(transactions.categoryId, id))
+    .run()
+  moveCategoryInRecurringTemplates(db, id, targetId)
 }
