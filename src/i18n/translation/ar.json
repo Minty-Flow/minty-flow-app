@@ -1236,6 +1236,7 @@
         "restoredDescription": "تم استعادة المعاملة.",
         "restoreFailed": "فشل الاستعادة",
         "couldNotSelectFile": "تعذر اختيار الملف",
+        "attachmentsDroppedRecurring": "تمت إزالة المرفقات: لا تدعم المعاملات المتكررة الملفات",
         "permissionRequired": "الإذن مطلوب",
         "cameraPermission": "يلزم الوصول إلى الكاميرا لالتقاط صورة.",
         "libraryPermission": "يلزم الوصول إلى مكتبة الصور.",

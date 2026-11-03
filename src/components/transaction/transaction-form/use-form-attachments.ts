@@ -118,6 +118,15 @@ export function useFormAttachments(
     for (const uri of addedUris.current) deleteAttachmentFile(uri)
     addedUris.current = []
   }
+  /**
+   * Empties the list of a form that has no saved row yet: every file in it was
+   * copied this session, so they are deleted along with the list.
+   */
+  const clearAttachments = () => {
+    discardAddedAttachments()
+    setAttachmentState({ list: [] })
+    mirrorListToForm([])
+  }
   const handleSelectFromFiles = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -246,6 +255,7 @@ export function useFormAttachments(
     removeAttachment,
     flushRemovedAttachments,
     discardAddedAttachments,
+    clearAttachments,
     handleSelectFromFiles,
     handleTakePhoto: guarded(takePhoto),
     handleSelectMultipleMedia: guarded(selectMultipleMedia),
