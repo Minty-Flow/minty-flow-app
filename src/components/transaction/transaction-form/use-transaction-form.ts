@@ -290,6 +290,7 @@ export function useTransactionForm({
     removeAttachment,
     flushRemovedAttachments,
     discardAddedAttachments,
+    clearAttachments,
     handleSelectFromFiles,
     handleTakePhoto,
     handleSelectMultipleMedia,
@@ -382,6 +383,21 @@ export function useTransactionForm({
       setValue("toAccountId", partials.toAccountId, { shouldDirty: true })
     }
     setValue("kind", next, { shouldDirty: true })
+    // A new recurring rule cannot carry attachments (the rule template has no
+    // place for them), and its form hides the section. Drop what was already
+    // added so a hidden file is never saved or left behind.
+    if (
+      isNew &&
+      (next === "subscription" || next === "repetitive") &&
+      attachmentState.list.length > 0
+    ) {
+      clearAttachments()
+      Toast.warn({
+        title: t(
+          "components.transactionForm.toast.attachmentsDroppedRecurring",
+        ),
+      })
+    }
     if (next === "lent" || next === "borrowed") {
       const newType =
         next === "lent"
