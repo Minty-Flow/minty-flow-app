@@ -113,6 +113,28 @@ export function TransactionForm(props: TransactionFormProps) {
             ]}
             pointerEvents={readOnly ? "none" : "auto"}
           >
+            {/* Title first: it names the entry before the details below. */}
+            <View style={transactionFormStyles.nameSection}>
+              <Controller
+                control={f.control}
+                name="title"
+                render={({ field: { value, onChange } }) => (
+                  <Input
+                    value={value ?? ""}
+                    onChangeText={onChange}
+                    placeholder={titlePlaceholder}
+                    variant="title"
+                    placeholderTextColor={theme.colors.semantic.semi}
+                  />
+                )}
+              />
+              {f.titleErrorKey ? (
+                <Text style={transactionFormStyles.fieldError}>
+                  {t(f.titleErrorKey as TranslationKey)}
+                </Text>
+              ) : null}
+            </View>
+
             {/* Amount */}
             <View style={transactionFormStyles.balanceSection}>
               <SmartAmountInput
@@ -222,27 +244,6 @@ export function TransactionForm(props: TransactionFormProps) {
               onUntilPress={() => f.openDatePicker("recurringEnd")}
               onUntilReset={() => f.setRecurring({ until: null })}
             />
-
-            <View style={transactionFormStyles.nameSection}>
-              <Controller
-                control={f.control}
-                name="title"
-                render={({ field: { value, onChange } }) => (
-                  <Input
-                    value={value ?? ""}
-                    onChangeText={onChange}
-                    placeholder={titlePlaceholder}
-                    variant="title"
-                    placeholderTextColor={theme.colors.semantic.semi}
-                  />
-                )}
-              />
-              {f.titleErrorKey ? (
-                <Text style={transactionFormStyles.fieldError}>
-                  {t(f.titleErrorKey as TranslationKey)}
-                </Text>
-              ) : null}
-            </View>
 
             <FormNotesSection
               description={f.description}
