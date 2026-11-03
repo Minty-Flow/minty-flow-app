@@ -1,6 +1,9 @@
 import { getLocales } from "expo-localization"
 
-import { LangCodeEnum, type LangCodeType } from "~/i18n/language.constants"
+import {
+  type LangCodeType,
+  SupportedLanguages,
+} from "~/i18n/language.constants"
 import { currencyRegistryService } from "~/services/currency-registry"
 
 /**
@@ -9,8 +12,7 @@ import { currencyRegistryService } from "~/services/currency-registry"
  */
 export function getSupportedDeviceLanguage(): LangCodeType | null {
   const code = getLocales()[0]?.languageCode
-  const supported = Object.values(LangCodeEnum) as string[]
-  return code && supported.includes(code) ? (code as LangCodeType) : null
+  return SupportedLanguages.find((l) => l.code === code)?.code ?? null
 }
 
 /** The currency of the device region when the registry knows it, else null. */

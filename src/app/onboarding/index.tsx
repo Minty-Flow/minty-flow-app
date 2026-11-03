@@ -1,31 +1,25 @@
 import { Redirect, useRouter } from "expo-router"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { Platform } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
+import { IconSvg } from "~/components/icons"
 import { Button } from "~/components/ui/button"
+import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import {
-  DirectionEnum,
+  getLanguageDirection,
   LangCodeEnum,
   type LangCodeType,
+  SupportedLanguages,
 } from "~/i18n/language.constants"
 import { useLanguageStore } from "~/stores/language.store"
 import { useOnboardingStore } from "~/stores/onboarding.store"
 import { getSupportedDeviceLanguage } from "~/utils/device-locale"
 import { reloadApp } from "~/utils/reload-app"
-
-// Each language is labelled in its own script, so anyone can find theirs
-// whatever language the screen is currently in.
-const languageOptions: { value: LangCodeType; label: string }[] = [
-  { value: LangCodeEnum.EN, label: "English" },
-  { value: LangCodeEnum.AR, label: "العربية" },
-]
-
-const directionOf = (code: LangCodeType) =>
-  code === LangCodeEnum.AR ? DirectionEnum.RTL : DirectionEnum.LTR
 
 /**
  * First onboarding screen. Kept apart from the currency step on purpose: a
@@ -34,6 +28,7 @@ const directionOf = (code: LangCodeType) =>
  * language and direction.
  */
 export default function OnboardingLanguageScreen() {
+  const { t } = useTranslation()
   const router = useRouter()
   const isLanguageChosen = useOnboardingStore((s) => s.isLanguageChosen)
   const setLanguageChosen = useOnboardingStore((s) => s.setLanguageChosen)
@@ -50,7 +45,7 @@ export default function OnboardingLanguageScreen() {
     setLanguageCode(selected)
     router.replace("/onboarding/slides")
     // forceRTL only takes effect on a JS reload.
-    if (Platform.OS !== "web" && directionOf(selected) !== direction) {
+    if (Platform.OS !== "web" && getLanguageDirection(selected) !== direction) {
       await reloadApp()
     }
   }
@@ -58,15 +53,18 @@ export default function OnboardingLanguageScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Language · اللغة</Text>
+        <View style={styles.header}>
+          <IconSvg name="world-map-outline" size={64} />
+          <Text style={styles.title}>{t("onboarding.language.title")}</Text>
+        </View>
         <View style={styles.list}>
-          {languageOptions.map((option) => {
-            const isSelected = option.value === selected
+          {SupportedLanguages.map((option) => {
+            const isSelected = option.code === selected
             return (
               <Pressable
-                key={option.value}
+                key={option.code}
                 style={[styles.option, isSelected && styles.optionSelected]}
-                onPress={() => setSelected(option.value)}
+                onPress={() => setSelected(option.code)}
               >
                 <Text
                   style={[
@@ -74,7 +72,7 @@ export default function OnboardingLanguageScreen() {
                     isSelected && styles.optionLabelSelected,
                   ]}
                 >
-                  {option.label}
+                  {option.nativeName}
                 </Text>
               </Pressable>
             )
@@ -83,7 +81,12 @@ export default function OnboardingLanguageScreen() {
       </View>
       <View style={styles.footer}>
         <Button onPress={handleContinue} style={styles.button}>
-          <Text style={styles.buttonText}>Continue · متابعة</Text>
+          <Text style={styles.buttonText}>{t("onboarding.actions.next")}</Text>
+          <ChevronIcon
+            direction="trailing"
+            color={styles.buttonIconColor.color}
+            size={18}
+          />
         </Button>
       </View>
     </View>
@@ -101,8 +104,12 @@ const styles = StyleSheet.create((theme) => ({
     paddingTop: 96,
     gap: 32,
   },
+  header: {
+    gap: 20,
+  },
   title: {
-    fontSize: theme.typography.displayMedium.fontSize,
+    fontSize: theme.typography.headlineMedium.fontSize,
+    lineHeight: theme.typography.headlineMedium.fontSize * 1.3,
     fontWeight: "700",
     color: theme.colors.onSurface,
   },
@@ -136,6 +143,9 @@ const styles = StyleSheet.create((theme) => ({
   },
   button: {
     width: "100%",
+  },
+  buttonIconColor: {
+    color: theme.colors.onPrimary,
   },
   buttonText: {
     fontSize: theme.typography.bodyLarge.fontSize,

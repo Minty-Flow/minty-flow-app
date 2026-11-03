@@ -1590,6 +1590,9 @@
     }
   },
   "onboarding": {
+    "language": {
+      "title": "Choose your language"
+    },
     "resume": {
       "title": "Finish setting up?",
       "description": "You left before finishing setup. Continue where you stopped, or skip it and start using the app.",

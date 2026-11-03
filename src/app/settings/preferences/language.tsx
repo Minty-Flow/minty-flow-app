@@ -7,26 +7,12 @@ import {
   settingsStyles,
 } from "~/components/settings/settings-list"
 import {
-  DirectionEnum,
-  LangCodeEnum,
+  getLanguageDirection,
   type LangCodeType,
+  SupportedLanguages,
 } from "~/i18n/language.constants"
 import { useLanguageStore } from "~/stores/language.store"
 import { reloadApp } from "~/utils/reload-app"
-
-const languageOptions: {
-  value: LangCodeType
-  label: string
-}[] = [
-  {
-    value: LangCodeEnum.EN,
-    label: "English",
-  },
-  {
-    value: LangCodeEnum.AR,
-    label: "العربية",
-  },
-]
 
 export default function LanguageOptionsScreen() {
   const { t } = useTranslation()
@@ -34,15 +20,13 @@ export default function LanguageOptionsScreen() {
   const direction = useLanguageStore((s) => s.direction)
   const setLanguageCode = useLanguageStore((s) => s.setLanguageCode)
 
-  const directionOf = (code: LangCodeType) =>
-    code === LangCodeEnum.AR ? DirectionEnum.RTL : DirectionEnum.LTR
-
   const applyLanguage = async (code: LangCodeType) => {
     // Strings switch live. forceRTL (called by the store) only takes effect on a
     // JS reload, so a direction change reloads the app. The persisted store
     // already holds the new language when the reload runs.
     setLanguageCode(code)
-    if (Platform.OS === "web" || directionOf(code) === direction) return
+    if (Platform.OS === "web" || getLanguageDirection(code) === direction)
+      return
     await reloadApp()
   }
 
@@ -56,12 +40,12 @@ export default function LanguageOptionsScreen() {
       <SettingsSection
         title={t("screens.settings.preferences.language.sectionLabel")}
       >
-        {languageOptions.map((option) => (
+        {SupportedLanguages.map((option) => (
           <SettingsOptionRow
-            key={option.value}
-            label={option.label}
-            selected={languageCode === option.value}
-            onPress={() => applyLanguage(option.value)}
+            key={option.code}
+            label={option.nativeName}
+            selected={languageCode === option.code}
+            onPress={() => applyLanguage(option.code)}
           />
         ))}
       </SettingsSection>
