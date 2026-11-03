@@ -166,7 +166,11 @@ export default function OnboardingAccountsScreen() {
 
         <Pressable
           style={styles.addNewButton}
-          onPress={() => router.push(`/accounts/${NewEnum.NEW}/modify`)}
+          onPress={() => {
+            // The form starts in the preferred currency; make it the one shown.
+            setCurrency(currency)
+            router.push(`/accounts/${NewEnum.NEW}/modify`)
+          }}
         >
           <View style={styles.addNewIconWrap}>
             <IconSvg name="plus-outline" size={24} />
