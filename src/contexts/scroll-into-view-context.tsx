@@ -25,6 +25,11 @@ const ScrollIntoViewContext = createContext<ScrollIntoViewContextValue | null>(
 
 interface ScrollIntoViewProviderProps {
   children: ReactNode
+  /**
+   * Extra space kept below the focused field, on top of the default gap. Set it
+   * to the height of anything pinned above the keyboard (a sticky footer).
+   */
+  keyboardInset?: number
   /** Optional style for the ScrollView. */
   scrollViewStyle?: StyleProp<ViewStyle>
   /** Optional contentContainerStyle for the ScrollView. */
@@ -43,6 +48,7 @@ interface ScrollIntoViewProviderProps {
 
 export function ScrollIntoViewProvider({
   children,
+  keyboardInset = 0,
   scrollViewStyle,
   contentContainerStyle,
   scrollViewProps,
@@ -60,7 +66,7 @@ export function ScrollIntoViewProvider({
             while it is open, so the lower half of a form stays reachable. */}
         <KeyboardAwareScrollView
           ref={scrollRef}
-          bottomOffset={KEYBOARD_BOTTOM_OFFSET}
+          bottomOffset={KEYBOARD_BOTTOM_OFFSET + keyboardInset}
           onScroll={(e) => {
             scrollYRef.current = e.nativeEvent.contentOffset.y
           }}

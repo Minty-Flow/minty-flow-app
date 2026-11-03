@@ -470,6 +470,7 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   },
   footer: {
     flexDirection: "row",
+    backgroundColor: theme.colors.surface,
     paddingHorizontal: H_PAD,
     paddingTop: 2 * FORM_GAP,
     paddingBottom: 2 * FORM_GAP,

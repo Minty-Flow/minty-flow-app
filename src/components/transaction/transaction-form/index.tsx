@@ -1,8 +1,10 @@
+import { useState } from "react"
 import { Controller } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
+import { KeyboardStickyViewMinty } from "~/components/keyboard-sticky-view-minty"
 import { FormLocationPicker } from "~/components/location/form-location-picker"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { InfoBanner } from "~/components/ui/info-banner"
@@ -44,6 +46,7 @@ export function TransactionForm(props: TransactionFormProps) {
   const { theme } = useUnistyles()
   const f = useTransactionForm(props)
   const readOnly = isFormReadOnly(transaction)
+  const [footerHeight, setFooterHeight] = useState(0)
 
   const showUntitledForBlankTitle = useTransactionItemAppearanceStore(
     (s) => s.showUntitledForBlankTitle,
@@ -98,6 +101,7 @@ export function TransactionForm(props: TransactionFormProps) {
       ) : null}
 
       <ScrollIntoViewProvider
+        keyboardInset={footerHeight}
         contentContainerStyle={transactionFormStyles.content}
         scrollViewProps={{
           keyboardShouldPersistTaps: "handled",
@@ -396,14 +400,19 @@ export function TransactionForm(props: TransactionFormProps) {
         </View>
       </ScrollIntoViewProvider>
 
-      <FormFooter
-        isNew={f.isNew}
-        isSaving={f.isSaving}
-        isDirty={f.hasUnsavedChanges}
-        readOnly={readOnly}
-        onCancel={f.handleCancelPress}
-        onSave={f.submit}
-      />
+      {/* Rides on top of the keyboard so Save stays reachable while typing. */}
+      <KeyboardStickyViewMinty>
+        <View onLayout={(e) => setFooterHeight(e.nativeEvent.layout.height)}>
+          <FormFooter
+            isNew={f.isNew}
+            isSaving={f.isSaving}
+            isDirty={f.hasUnsavedChanges}
+            readOnly={readOnly}
+            onCancel={f.handleCancelPress}
+            onSave={f.submit}
+          />
+        </View>
+      </KeyboardStickyViewMinty>
 
       {f.datePickerAndroidElement}
 
