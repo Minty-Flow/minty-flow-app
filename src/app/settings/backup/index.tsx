@@ -1,7 +1,7 @@
 import { useNavigation, useRouter } from "expo-router"
 import { useLayoutEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ScrollView } from "react-native"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { StyleSheet } from "react-native-unistyles"
 
 import { ActionItem } from "~/components/action-item"
@@ -104,7 +104,11 @@ export default function BackupScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <KeyboardAwareScrollView
+      bottomOffset={24}
+      style={styles.container}
+      contentContainerStyle={styles.content}
+    >
       {showFileName && (
         <View style={styles.field}>
           <View style={styles.fieldLabelRow}>
@@ -199,7 +203,7 @@ export default function BackupScreen() {
           onPress={() => router.push("/settings/backup/export-history")}
         />
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   )
 }
 

@@ -57,6 +57,7 @@ export function LoanModifyContent({
   prefill,
 }: LoanModifyContentProps) {
   const { t } = useTranslation()
+  const [footerHeight, setFooterHeight] = useState(0)
   const router = useRouter()
   const { theme } = useUnistyles()
   const isAddMode = loanModifyId === NewEnum.NEW || !loanModifyId
@@ -228,6 +229,7 @@ export function LoanModifyContent({
   return (
     <View style={modifyFormStyles.container}>
       <ScrollIntoViewProvider
+        keyboardInset={footerHeight}
         scrollViewStyle={modifyFormStyles.scrollView}
         contentContainerStyle={modifyFormStyles.scrollContent}
       >
@@ -441,6 +443,7 @@ export function LoanModifyContent({
       </ScrollIntoViewProvider>
 
       <ModifyFormFooter
+        onHeightChange={setFooterHeight}
         formName={formName}
         isAddMode={isAddMode}
         isDirty={isDirty}

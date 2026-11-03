@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
-import { KeyboardStickyViewMinty } from "~/components/keyboard-sticky-view-minty"
+import { KeyboardStickyFooter } from "~/components/keyboard-sticky-footer"
 import { FormLocationPicker } from "~/components/location/form-location-picker"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { InfoBanner } from "~/components/ui/info-banner"
@@ -401,18 +401,16 @@ export function TransactionForm(props: TransactionFormProps) {
       </ScrollIntoViewProvider>
 
       {/* Rides on top of the keyboard so Save stays reachable while typing. */}
-      <KeyboardStickyViewMinty>
-        <View onLayout={(e) => setFooterHeight(e.nativeEvent.layout.height)}>
-          <FormFooter
-            isNew={f.isNew}
-            isSaving={f.isSaving}
-            isDirty={f.hasUnsavedChanges}
-            readOnly={readOnly}
-            onCancel={f.handleCancelPress}
-            onSave={f.submit}
-          />
-        </View>
-      </KeyboardStickyViewMinty>
+      <KeyboardStickyFooter onHeightChange={setFooterHeight}>
+        <FormFooter
+          isNew={f.isNew}
+          isSaving={f.isSaving}
+          isDirty={f.hasUnsavedChanges}
+          readOnly={readOnly}
+          onCancel={f.handleCancelPress}
+          onSave={f.submit}
+        />
+      </KeyboardStickyFooter>
 
       {f.datePickerAndroidElement}
 

@@ -38,6 +38,7 @@ interface EditTagScreenInnerProps {
 }
 function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
   const { t } = useTranslation()
+  const [footerHeight, setFooterHeight] = useState(0)
   const router = useRouter()
   const navigation = useNavigation()
   const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
@@ -128,6 +129,7 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
   return (
     <View style={styles.container}>
       <ScrollIntoViewProvider
+        keyboardInset={footerHeight}
         scrollViewStyle={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
@@ -159,6 +161,7 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
       </ScrollIntoViewProvider>
 
       <ModifyFormFooter
+        onHeightChange={setFooterHeight}
         formName={formName}
         isAddMode={isAddMode}
         isDirty={isDirty}

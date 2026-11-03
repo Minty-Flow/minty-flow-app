@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-03T08:41:45.841Z
+Generated on: 2026-11-03T08:52:41.716Z
 ```
 ./
 ├── __tests__/
@@ -507,6 +507,7 @@ Generated on: 2026-11-03T08:41:45.841Z
 │   │   ├── external-link.tsx
 │   │   ├── filter-toggle-button.tsx
 │   │   ├── info-sheet.tsx
+│   │   ├── keyboard-sticky-footer.tsx
 │   │   ├── keyboard-sticky-view-minty.tsx
 │   │   ├── money.tsx
 │   │   ├── month-picker-sheet.tsx

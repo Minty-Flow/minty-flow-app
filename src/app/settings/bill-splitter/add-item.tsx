@@ -1,11 +1,13 @@
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ScrollView, TextInput } from "react-native"
+import { TextInput } from "react-native"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { AddNameSheet } from "~/components/bill-splitter/add-name-sheet"
 import { IconSvg } from "~/components/icons"
+import { KeyboardStickyFooter } from "~/components/keyboard-sticky-footer"
 import { Money } from "~/components/money"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { Button } from "~/components/ui/button"
@@ -78,6 +80,7 @@ export default function AddItemScreen() {
     },
   )
   const [addNameVisible, setAddNameVisible] = useState(false)
+  const [footerHeight, setFooterHeight] = useState(0)
   const [multiplierExpanded, setMultiplierExpanded] = useState(
     editItem ? editItem.quantity !== 1 : false,
   )
@@ -190,7 +193,8 @@ export default function AddItemScreen() {
     !name.trim() || selectedCount === 0 || (!splitEvenly && !isExact)
   return (
     <View style={styles.container}>
-      <ScrollView
+      <KeyboardAwareScrollView
+        bottomOffset={24 + footerHeight}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
@@ -397,30 +401,32 @@ export default function AddItemScreen() {
             </Text>
           </View>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Footer: Cancel + Save side by side, matching budget-modify pattern */}
-      <View style={styles.footer}>
-        <Button
-          variant="outline"
-          onPress={handleCancel}
-          style={styles.footerButton}
-        >
-          <Text style={styles.cancelText}>{t("common.actions.cancel")}</Text>
-        </Button>
-        <Button
-          variant="default"
-          onPress={handleSave}
-          style={styles.footerButton}
-          disabled={isSaveDisabled}
-        >
-          <Text style={styles.saveText}>
-            {isEditMode
-              ? t("common.actions.save")
-              : t("screens.settings.billSplitter.actions.addItem")}
-          </Text>
-        </Button>
-      </View>
+      <KeyboardStickyFooter onHeightChange={setFooterHeight}>
+        <View style={styles.footer}>
+          <Button
+            variant="outline"
+            onPress={handleCancel}
+            style={styles.footerButton}
+          >
+            <Text style={styles.cancelText}>{t("common.actions.cancel")}</Text>
+          </Button>
+          <Button
+            variant="default"
+            onPress={handleSave}
+            style={styles.footerButton}
+            disabled={isSaveDisabled}
+          >
+            <Text style={styles.saveText}>
+              {isEditMode
+                ? t("common.actions.save")
+                : t("screens.settings.billSplitter.actions.addItem")}
+            </Text>
+          </Button>
+        </View>
+      </KeyboardStickyFooter>
 
       <AddNameSheet
         visible={addNameVisible}

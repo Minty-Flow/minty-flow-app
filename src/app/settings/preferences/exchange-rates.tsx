@@ -2,6 +2,7 @@ import { useNavigation } from "expo-router"
 import { Suspense, use, useLayoutEffect, useReducer, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { StyleSheet } from "react-native-unistyles"
 
 import { ExternalLink } from "~/components/external-link"
@@ -272,6 +273,9 @@ function ExchangeRatesContent({
         ListHeaderComponent={listHeader}
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"
+        renderScrollComponent={(props) => (
+          <KeyboardAwareScrollView bottomOffset={24} {...props} />
+        )}
         style={styles.list}
         contentInsetAdjustmentBehavior="automatic"
       />

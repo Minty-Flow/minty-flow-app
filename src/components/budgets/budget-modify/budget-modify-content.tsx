@@ -69,6 +69,7 @@ export function BudgetModifyContent({
   categories,
 }: BudgetModifyContentProps) {
   const { t } = useTranslation()
+  const [footerHeight, setFooterHeight] = useState(0)
   const router = useRouter()
   const isAddMode = budgetModifyId === NewEnum.NEW || !budgetModifyId
   const handleGoBack = () => {
@@ -217,6 +218,7 @@ export function BudgetModifyContent({
   return (
     <View style={modifyFormStyles.container}>
       <ScrollIntoViewProvider
+        keyboardInset={footerHeight}
         scrollViewStyle={modifyFormStyles.scrollView}
         contentContainerStyle={modifyFormStyles.scrollContent}
       >
@@ -498,6 +500,7 @@ export function BudgetModifyContent({
       </ScrollIntoViewProvider>
 
       <ModifyFormFooter
+        onHeightChange={setFooterHeight}
         formName={formName}
         isAddMode={isAddMode}
         isDirty={isDirty}
