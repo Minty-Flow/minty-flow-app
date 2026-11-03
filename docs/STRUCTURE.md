@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-03T08:52:41.716Z
+Generated on: 2026-11-03T08:56:52.406Z
 ```
 ./
 ├── __tests__/
@@ -506,6 +506,8 @@ Generated on: 2026-11-03T08:52:41.716Z
 │   │   ├── dynamic-icon.tsx
 │   │   ├── external-link.tsx
 │   │   ├── filter-toggle-button.tsx
+│   │   ├── footer-bar.styles.ts
+│   │   ├── footer-bar.tsx
 │   │   ├── info-sheet.tsx
 │   │   ├── keyboard-sticky-footer.tsx
 │   │   ├── keyboard-sticky-view-minty.tsx

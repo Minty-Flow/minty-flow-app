@@ -14,8 +14,10 @@ import { StyleSheet } from "react-native-unistyles"
 import { useShallow } from "zustand/react/shallow"
 
 import { ConfirmSheet } from "~/components/confirm-sheet"
+import { FooterBar } from "~/components/footer-bar"
+import { footerBarStyles } from "~/components/footer-bar.styles"
 import { IconSvg } from "~/components/icons"
-import { KeyboardStickyViewMinty } from "~/components/keyboard-sticky-view-minty"
+import { KeyboardStickyFooter } from "~/components/keyboard-sticky-footer"
 import { Button } from "~/components/ui/button"
 import { Input } from "~/components/ui/input"
 import { Pressable } from "~/components/ui/pressable"
@@ -199,17 +201,17 @@ export default function EditProfileScreen() {
       </ScrollView>
 
       {/* Save Button */}
-      <KeyboardStickyViewMinty>
-        <View style={styles.buttonContainer}>
-          <Button onPress={handleSave} style={styles.saveButton}>
+      <KeyboardStickyFooter>
+        <FooterBar>
+          <Button size="lg" onPress={handleSave} style={footerBarStyles.button}>
             <Text>
               {isFromOnboarding
                 ? t("onboarding.actions.done")
                 : t("common.actions.save")}
             </Text>
           </Button>
-        </View>
-      </KeyboardStickyViewMinty>
+        </FooterBar>
+      </KeyboardStickyFooter>
       <ConfirmSheet
         visible={unsavedSheetVisible}
         onRequestClose={() => setUnsavedSheetVisible(false)}
@@ -299,13 +301,5 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSecondary,
     marginBottom: 8,
     letterSpacing: 0.5,
-  },
-  buttonContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: theme.colors.surface,
-  },
-  saveButton: {
-    width: "100%",
   },
 }))

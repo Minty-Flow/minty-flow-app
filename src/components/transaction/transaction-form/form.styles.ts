@@ -468,19 +468,6 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
   attachmentRemoveBtn: {
     marginRight: H_PAD,
   },
-  footer: {
-    flexDirection: "row",
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: H_PAD,
-    paddingTop: 2 * FORM_GAP,
-    paddingBottom: 2 * FORM_GAP,
-    gap: ELEMENT_GAP,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.semantic.semi,
-  },
-  footerButton: {
-    flex: 1,
-  },
   deleteButtonBlock: {
     marginTop: FORM_GAP,
     marginBottom: FORM_GAP,
@@ -496,16 +483,6 @@ export const transactionFormStyles = StyleSheet.create((theme) => ({
     color: theme.colors.error,
   },
 
-  cancelText: {
-    ...theme.typography.titleSmall,
-    fontWeight: "600",
-    color: theme.colors.onSurface,
-  },
-  saveText: {
-    ...theme.typography.titleSmall,
-    fontWeight: "600",
-    color: theme.colors.onPrimary,
-  },
   saveSpinner: {
     marginVertical: MICRO_GAP,
   },

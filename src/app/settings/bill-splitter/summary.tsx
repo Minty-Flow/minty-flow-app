@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { FooterBar } from "~/components/footer-bar"
+import { footerBarStyles } from "~/components/footer-bar.styles"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { Button } from "~/components/ui/button"
@@ -200,7 +202,7 @@ export default function SummaryScreen() {
       />
 
       {/* Bottom action — disabled until payer is selected */}
-      <View style={styles.footer}>
+      <FooterBar>
         <Button
           onPress={() => {
             // One form per tap: pushing several at once stacks them.
@@ -213,13 +215,14 @@ export default function SummaryScreen() {
             if (next) handleGenerateLoan(next)
           }}
           disabled={!payerId || !hasPendingDebtor}
-          style={styles.footerButton}
+          size="lg"
+          style={footerBarStyles.button}
         >
           <Text>
             {t("screens.settings.billSplitter.actions.generateLoans")}
           </Text>
         </Button>
-      </View>
+      </FooterBar>
     </View>
   )
 }
@@ -236,7 +239,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   listContent: {
     padding: 20,
-    paddingBottom: 120,
+    paddingBottom: 20,
     gap: 10,
   },
   separator: {
@@ -334,17 +337,5 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,
-  },
-  // Footer
-  footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 20,
-    paddingBottom: 24,
-  },
-  footerButton: {
-    width: "100%",
   },
 }))

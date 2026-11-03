@@ -6,6 +6,8 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { AddNameSheet } from "~/components/bill-splitter/add-name-sheet"
+import { FooterBar } from "~/components/footer-bar"
+import { footerBarStyles } from "~/components/footer-bar.styles"
 import { IconSvg } from "~/components/icons"
 import { KeyboardStickyFooter } from "~/components/keyboard-sticky-footer"
 import { Money } from "~/components/money"
@@ -405,27 +407,31 @@ export default function AddItemScreen() {
 
       {/* Footer: Cancel + Save side by side, matching budget-modify pattern */}
       <KeyboardStickyFooter onHeightChange={setFooterHeight}>
-        <View style={styles.footer}>
+        <FooterBar>
           <Button
             variant="outline"
+            size="lg"
             onPress={handleCancel}
-            style={styles.footerButton}
+            style={footerBarStyles.button}
           >
-            <Text style={styles.cancelText}>{t("common.actions.cancel")}</Text>
+            <Text style={footerBarStyles.cancelText}>
+              {t("common.actions.cancel")}
+            </Text>
           </Button>
           <Button
             variant="default"
+            size="lg"
             onPress={handleSave}
-            style={styles.footerButton}
+            style={footerBarStyles.button}
             disabled={isSaveDisabled}
           >
-            <Text style={styles.saveText}>
+            <Text style={footerBarStyles.saveText}>
               {isEditMode
                 ? t("common.actions.save")
                 : t("screens.settings.billSplitter.actions.addItem")}
             </Text>
           </Button>
-        </View>
+        </FooterBar>
       </KeyboardStickyFooter>
 
       <AddNameSheet
@@ -602,26 +608,5 @@ const styles = StyleSheet.create((theme) => ({
   percentageTotalValue: {
     fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "700",
-  },
-  // Footer — Cancel + Save side by side (matches budget-modify actions pattern)
-  footer: {
-    flexDirection: "row",
-    gap: 10,
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-  },
-  footerButton: {
-    flex: 1,
-  },
-  cancelText: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-    fontWeight: "600",
-    color: theme.colors.onSurface,
-  },
-  saveText: {
-    fontSize: theme.typography.bodyLarge.fontSize,
-    fontWeight: "600",
-    color: theme.colors.onPrimary,
   },
 }))

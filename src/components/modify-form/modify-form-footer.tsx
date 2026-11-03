@@ -1,11 +1,10 @@
 import { useTranslation } from "react-i18next"
 
+import { FooterBar } from "~/components/footer-bar"
+import { footerBarStyles } from "~/components/footer-bar.styles"
 import { KeyboardStickyFooter } from "~/components/keyboard-sticky-footer"
 import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
-import { View } from "~/components/ui/view"
-
-import { modifyFormStyles } from "./modify-form.styles"
 
 interface ModifyFormFooterProps {
   formName: string
@@ -35,26 +34,28 @@ export function ModifyFormFooter({
 
   return (
     <KeyboardStickyFooter onHeightChange={onHeightChange}>
-      <View style={modifyFormStyles.actions}>
+      <FooterBar>
         <Button
           variant="outline"
+          size="lg"
           onPress={onCancel}
-          style={modifyFormStyles.button}
+          style={footerBarStyles.button}
         >
-          <Text variant="default" style={modifyFormStyles.cancelText}>
+          <Text variant="default" style={footerBarStyles.cancelText}>
             {t("common.actions.cancel")}
           </Text>
         </Button>
         {!hideSave && (
           <Button
             variant="default"
+            size="lg"
             onPress={onSave}
-            style={modifyFormStyles.button}
+            style={footerBarStyles.button}
             disabled={
               !formName.trim() || (!isAddMode && !isDirty) || isSubmitting
             }
           >
-            <Text variant="default" style={modifyFormStyles.saveText}>
+            <Text variant="default" style={footerBarStyles.saveText}>
               {isSubmitting
                 ? t("common.actions.saving")
                 : isAddMode
@@ -63,7 +64,7 @@ export function ModifyFormFooter({
             </Text>
           </Button>
         )}
-      </View>
+      </FooterBar>
     </KeyboardStickyFooter>
   )
 }
