@@ -409,8 +409,7 @@ export default function AddItemScreen() {
       <KeyboardStickyFooter onHeightChange={setFooterHeight}>
         <FooterBar>
           <Button
-            variant="outline"
-            size="lg"
+            variant="secondary"
             onPress={handleCancel}
             style={footerBarStyles.button}
           >
@@ -420,7 +419,6 @@ export default function AddItemScreen() {
           </Button>
           <Button
             variant="default"
-            size="lg"
             onPress={handleSave}
             style={footerBarStyles.button}
             disabled={isSaveDisabled}

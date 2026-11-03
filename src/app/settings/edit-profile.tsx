@@ -203,7 +203,7 @@ export default function EditProfileScreen() {
       {/* Save Button */}
       <KeyboardStickyFooter>
         <FooterBar>
-          <Button size="lg" onPress={handleSave} style={footerBarStyles.button}>
+          <Button onPress={handleSave} style={footerBarStyles.button}>
             <Text>
               {isFromOnboarding
                 ? t("onboarding.actions.done")

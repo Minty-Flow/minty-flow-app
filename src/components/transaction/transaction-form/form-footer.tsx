@@ -33,8 +33,7 @@ export function FormFooter({
   return (
     <FooterBar>
       <Button
-        variant="outline"
-        size="lg"
+        variant="secondary"
         onPress={onCancel}
         style={footerBarStyles.button}
         disabled={isSaving}
@@ -46,7 +45,6 @@ export function FormFooter({
       {readOnly ? null : (
         <Button
           variant="default"
-          size="lg"
           onPress={onSave}
           style={footerBarStyles.button}
           disabled={isSaving || (!isNew && !isDirty)}

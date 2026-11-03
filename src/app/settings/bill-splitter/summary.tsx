@@ -215,7 +215,6 @@ export default function SummaryScreen() {
             if (next) handleGenerateLoan(next)
           }}
           disabled={!payerId || !hasPendingDebtor}
-          size="lg"
           style={footerBarStyles.button}
         >
           <Text>

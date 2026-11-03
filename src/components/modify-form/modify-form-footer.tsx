@@ -36,8 +36,7 @@ export function ModifyFormFooter({
     <KeyboardStickyFooter onHeightChange={onHeightChange}>
       <FooterBar>
         <Button
-          variant="outline"
-          size="lg"
+          variant="secondary"
           onPress={onCancel}
           style={footerBarStyles.button}
         >
@@ -48,7 +47,6 @@ export function ModifyFormFooter({
         {!hideSave && (
           <Button
             variant="default"
-            size="lg"
             onPress={onSave}
             style={footerBarStyles.button}
             disabled={
