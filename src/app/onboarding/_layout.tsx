@@ -23,6 +23,10 @@ export default function OnboardingLayout() {
         options={{ headerShown: false, gestureEnabled: false }}
       />
       <Stack.Screen
+        name="slides"
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
         name="start"
         options={{ ...headerStyles, title: t("onboarding.start.title") }}
       />

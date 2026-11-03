@@ -1,221 +1,145 @@
-import { Image } from "expo-image"
-import { useFocusEffect, useRouter } from "expo-router"
-import { useRef, useState } from "react"
-import { useTranslation } from "react-i18next"
-import { BackHandler } from "react-native"
-import PagerView from "react-native-pager-view"
+import { Redirect, useRouter } from "expo-router"
+import { useState } from "react"
+import { Platform } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
-import { IconSvg } from "~/components/icons"
 import { Button } from "~/components/ui/button"
-import { ChevronIcon } from "~/components/ui/chevron-icon"
+import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { AppData } from "~/constants/app-data"
-import { DirectionEnum } from "~/i18n/language.constants"
+import {
+  DirectionEnum,
+  LangCodeEnum,
+  type LangCodeType,
+} from "~/i18n/language.constants"
 import { useLanguageStore } from "~/stores/language.store"
+import { useOnboardingStore } from "~/stores/onboarding.store"
+import { getSupportedDeviceLanguage } from "~/utils/device-locale"
+import { reloadApp } from "~/utils/reload-app"
 
-const TOTAL_PAGES = 3
-interface InfoSlideProps {
-  icon: React.ReactNode
-  title: string
-  description: string
-}
-function InfoSlide({ icon, title, description }: InfoSlideProps) {
-  return (
-    <View style={styles.infoSlide}>
-      <View style={styles.infoIconBox}>{icon}</View>
-      <View style={styles.infoTextContainer}>
-        <Text style={styles.infoTitle}>{title}</Text>
-        <Text style={styles.infoDescription}>{description}</Text>
-      </View>
-    </View>
-  )
-}
-export default function OnboardingScreen() {
-  const { t } = useTranslation()
+// Each language is labelled in its own script, so anyone can find theirs
+// whatever language the screen is currently in.
+const languageOptions: { value: LangCodeType; label: string }[] = [
+  { value: LangCodeEnum.EN, label: "English" },
+  { value: LangCodeEnum.AR, label: "العربية" },
+]
+
+const directionOf = (code: LangCodeType) =>
+  code === LangCodeEnum.AR ? DirectionEnum.RTL : DirectionEnum.LTR
+
+/**
+ * First onboarding screen. Kept apart from the currency step on purpose: a
+ * direction change reloads the app, which would wipe anything chosen here.
+ * After the reload the user lands on the next step already in the right
+ * language and direction.
+ */
+export default function OnboardingLanguageScreen() {
   const router = useRouter()
-  const pagerRef = useRef<PagerView>(null)
-  const isRTL = useLanguageStore((s) => s.isRTL)
-  const [currentPage, setCurrentPage] = useState(0)
-  useFocusEffect(() => {
-    // Android hardware back button: step back a page, and close the app only
-    // from the first one.
-    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (currentPage > 0) {
-        pagerRef.current?.setPage(currentPage - 1)
-      } else {
-        BackHandler.exitApp()
-      }
-      return true // consume the event
-    })
-    return () => sub.remove()
-  })
-  const goToPage = (page: number) => {
-    pagerRef.current?.setPage(page)
-    // State is updated via onPageSelected — not set here to avoid drift if the
-    // PagerView scroll is rejected or interrupted mid-animation.
-  }
-  const goNext = () => {
-    if (currentPage < TOTAL_PAGES - 1) {
-      goToPage(currentPage + 1)
-    } else {
-      router.push("/onboarding/start")
+  const isLanguageChosen = useOnboardingStore((s) => s.isLanguageChosen)
+  const setLanguageChosen = useOnboardingStore((s) => s.setLanguageChosen)
+  const direction = useLanguageStore((s) => s.direction)
+  const setLanguageCode = useLanguageStore((s) => s.setLanguageCode)
+  const [selected, setSelected] = useState<LangCodeType>(
+    () => getSupportedDeviceLanguage() ?? LangCodeEnum.EN,
+  )
+
+  if (isLanguageChosen) return <Redirect href="/onboarding/slides" />
+
+  const handleContinue = async () => {
+    setLanguageChosen()
+    setLanguageCode(selected)
+    router.replace("/onboarding/slides")
+    // forceRTL only takes effect on a JS reload.
+    if (Platform.OS !== "web" && directionOf(selected) !== direction) {
+      await reloadApp()
     }
   }
-  const nextLabel =
-    currentPage === TOTAL_PAGES - 1
-      ? t("onboarding.actions.getStarted")
-      : t("onboarding.actions.next")
+
   return (
     <View style={styles.container}>
-      <PagerView
-        ref={pagerRef}
-        style={styles.pager}
-        initialPage={0}
-        layoutDirection={isRTL ? DirectionEnum.RTL : DirectionEnum.LTR}
-        onPageSelected={(e) => setCurrentPage(e.nativeEvent.position)}
-      >
-        {/* Page 1 — Welcome */}
-        <View key="0" style={styles.page}>
-          <InfoSlide
-            icon={
-              <Image
-                source={require("~/assets/images/icon.png")}
-                style={styles.appLogoImage}
-                contentFit="cover"
-              />
-            }
-            title={AppData.name}
-            description={t("onboarding.welcome.subtitle")}
-          />
+      <View style={styles.content}>
+        <Text style={styles.title}>Language · اللغة</Text>
+        <View style={styles.list}>
+          {languageOptions.map((option) => {
+            const isSelected = option.value === selected
+            return (
+              <Pressable
+                key={option.value}
+                style={[styles.option, isSelected && styles.optionSelected]}
+                onPress={() => setSelected(option.value)}
+              >
+                <Text
+                  style={[
+                    styles.optionLabel,
+                    isSelected && styles.optionLabelSelected,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </Pressable>
+            )
+          })}
         </View>
-
-        {/* Page 2 — Free & open-source */}
-        <View key="1" style={styles.page}>
-          <InfoSlide
-            icon={<IconSvg name="world-map-outline" size={80} />}
-            title={t("onboarding.openSource.title")}
-            description={t("onboarding.openSource.description")}
-          />
-        </View>
-
-        {/* Page 3 — You control your data */}
-        <View key="2" style={styles.page}>
-          <InfoSlide
-            icon={<IconSvg name="shield-checkered-outline" size={80} />}
-            title={t("onboarding.privacy.title")}
-            description={t("onboarding.privacy.description")}
-          />
-        </View>
-      </PagerView>
-
-      {/* Bottom navigation */}
-      <View style={styles.bottomNav}>
-        <View style={styles.dotsContainer}>
-          <View
-            style={[
-              styles.dot,
-              currentPage === 0 ? styles.dotActive : styles.dotInactive,
-            ]}
-          />
-          <View
-            style={[
-              styles.dot,
-              currentPage === 1 ? styles.dotActive : styles.dotInactive,
-            ]}
-          />
-          <View
-            style={[
-              styles.dot,
-              currentPage === 2 ? styles.dotActive : styles.dotInactive,
-            ]}
-          />
-        </View>
-        <Button onPress={goNext}>
-          <Text>{nextLabel}</Text>
-          <ChevronIcon
-            direction="trailing"
-            color={styles.nextButtonIconColor.color}
-            size={18}
-          />
+      </View>
+      <View style={styles.footer}>
+        <Button onPress={handleContinue} style={styles.button}>
+          <Text style={styles.buttonText}>Continue · متابعة</Text>
         </Button>
       </View>
     </View>
   )
 }
+
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.surface,
   },
-  pager: {
+  content: {
     flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 96,
+    gap: 32,
   },
-  page: {
-    flex: 1,
-  },
-  // ── Info slides ──────────────────────────────────────
-  infoSlide: {
-    flex: 1,
-    paddingHorizontal: 32,
-    paddingTop: 80,
-    paddingBottom: 16,
-  },
-  infoIconBox: {
-    width: 160,
-    height: 160,
-    borderRadius: theme.radius * 2,
-    backgroundColor: theme.colors.secondary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 48,
-    overflow: "hidden",
-  },
-  appLogoImage: {
-    width: 160,
-    height: 160,
-  },
-  infoTextContainer: {
-    gap: 16,
-  },
-  infoTitle: {
+  title: {
     fontSize: theme.typography.displayMedium.fontSize,
     fontWeight: "700",
-    color: theme.colors.primary,
-    lineHeight: 44,
-  },
-  infoDescription: {
-    fontSize: theme.typography.bodyLarge.fontSize,
     color: theme.colors.onSurface,
-    lineHeight: 24,
   },
-  // ── Bottom navigation ──────────────────────────────
-  bottomNav: {
-    flexDirection: "row",
-    alignItems: "center",
+  list: {
+    gap: 12,
+  },
+  option: {
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    borderRadius: theme.radius,
+    backgroundColor: theme.colors.secondary,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+  },
+  optionSelected: {
+    borderColor: theme.colors.primary,
+    backgroundColor: `${theme.colors.primary}18`,
+  },
+  optionLabel: {
+    fontSize: theme.typography.bodyLarge.fontSize,
+    fontWeight: "600",
+    color: theme.colors.onSurface,
+  },
+  optionLabelSelected: {
+    color: theme.colors.primary,
+  },
+  footer: {
     paddingHorizontal: 24,
     paddingBottom: 40,
     paddingTop: 16,
   },
-  dotsContainer: {
-    flex: 1,
-    flexDirection: "row",
-    gap: 6,
-    alignItems: "center",
+  button: {
+    width: "100%",
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  dotActive: {
-    backgroundColor: theme.colors.primary,
-  },
-  dotInactive: {
-    backgroundColor: theme.colors.secondary,
-  },
-  nextButtonIconColor: {
+  buttonText: {
+    fontSize: theme.typography.bodyLarge.fontSize,
+    fontWeight: "600",
     color: theme.colors.onPrimary,
   },
 }))

@@ -1629,6 +1629,7 @@
         "savings": "Savings"
       },
       "createFailed": "Couldn't create your accounts. Try again.",
+      "currencyHint": "Used for your accounts. You can change it later.",
       "pickOne": "Pick at least one account to continue"
     },
     "expenseCategories": {

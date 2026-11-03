@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-03T09:10:46.199Z
+Generated on: 2026-11-03T10:50:54.545Z
 ```
 ./
 ├── __tests__/
@@ -170,6 +170,7 @@ Generated on: 2026-11-03T09:10:46.199Z
 │   │   │   ├── expense-categories.tsx
 │   │   │   ├── income-categories.tsx
 │   │   │   ├── index.tsx
+│   │   │   ├── slides.tsx
 │   │   │   └── start.tsx
 │   │   ├── settings/
 │   │   │   ├── backup/
@@ -694,6 +695,7 @@ Generated on: 2026-11-03T09:10:46.199Z
 │       ├── attachments.ts
 │       ├── chart-path.ts
 │       ├── csv.ts
+│       ├── device-locale.ts
 │       ├── file-icon.ts
 │       ├── format-file-size.ts
 │       ├── get-week-start-on.ts
