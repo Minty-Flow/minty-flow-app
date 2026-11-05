@@ -12,6 +12,7 @@ import {
   useUnistyles,
 } from "react-native-unistyles"
 
+import { IconSvg } from "~/components/icons"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -53,31 +54,31 @@ function NotesModalContent({
   const toolbarButtons = [
     {
       key: "bold",
-      glyph: "B",
+      icon: "bold-outline",
       active: isBold,
       onPress: () => editorRef.current?.toggleBold(),
     },
     {
       key: "italic",
-      glyph: "I",
+      icon: "italic-outline",
       active: isItalic,
       onPress: () => editorRef.current?.toggleItalic(),
     },
     {
       key: "bulletList",
-      glyph: "•",
+      icon: "list-outline",
       active: isUL,
       onPress: () => editorRef.current?.toggleUnorderedList(),
     },
     {
       key: "numberedList",
-      glyph: "1.",
+      icon: "list-numbers-outline",
       active: isOL,
       onPress: () => editorRef.current?.toggleOrderedList(),
     },
     {
       key: "checklist",
-      glyph: "☑",
+      icon: "list-check-outline",
       active: isChecklist,
       onPress: () => editorRef.current?.toggleCheckboxList(false),
     },
@@ -139,20 +140,11 @@ function NotesModalContent({
             )}
             accessibilityState={{ selected: btn.active }}
           >
-            <Text
-              style={[
-                styles.toolbarLabel,
-                {
-                  color: btn.active
-                    ? theme.colors.primary
-                    : theme.colors.onSurface,
-                },
-                btn.key === "bold" && { fontWeight: "700" },
-                btn.key === "italic" && { fontStyle: "italic" },
-              ]}
-            >
-              {btn.glyph}
-            </Text>
+            <IconSvg
+              name={btn.icon}
+              size={20}
+              color={btn.active ? theme.colors.primary : theme.colors.onSurface}
+            />
           </Pressable>
         ))}
       </View>
@@ -254,10 +246,6 @@ const styles = UnistylesSheet.create((theme) => ({
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 8,
-  },
-  toolbarLabel: {
-    ...theme.typography.titleSmall,
-    fontWeight: "600",
   },
   content: {
     flex: 1,
