@@ -1,13 +1,16 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { StyleSheet } from "react-native-unistyles"
 
 import { CategoryPickerSheet } from "~/components/category-picker/category-picker-sheet"
-import { SelectorTrigger } from "~/components/selectors/selector-parts"
-import { Pressable } from "~/components/ui/pressable"
+import { IconSvg } from "~/components/icons"
+import { modifyFormStyles } from "~/components/modify-form/modify-form.styles"
+import { Button } from "~/components/ui/button"
+import { ChevronIcon } from "~/components/ui/chevron-icon"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { Category } from "~/types/categories"
+
+import { categoryMoveRowStyles as styles } from "./category-move-row.styles"
 
 interface CategoryMoveRowProps {
   /** Categories that can take over: same type, not the one being deleted. */
@@ -28,22 +31,50 @@ export function CategoryMoveRow({
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const selected = targets.find((c) => c.id === selectedId)
+  const label = t("components.categories.form.move.label")
+  const value =
+    selected?.name ?? t("components.categories.form.move.placeholder")
 
   return (
-    <View>
-      <SelectorTrigger
-        icon="category-outline"
-        label={t("components.categories.form.move.label")}
-        value={selected?.name ?? t("components.categories.form.move.none")}
-        editable
+    <View style={styles.container}>
+      <Text variant="small" style={modifyFormStyles.label}>
+        {label}
+      </Text>
+      <Button
+        variant="secondary"
+        style={modifyFormStyles.actionButton}
+        accessibilityLabel={`${label} ${value}`}
         onPress={() => setOpen(true)}
-      />
+      >
+        <IconSvg
+          name="category-outline"
+          size={20}
+          color={styles.triggerIcon.color}
+        />
+        <Text numberOfLines={1} style={styles.triggerText}>
+          {value}
+        </Text>
+        <ChevronIcon
+          direction="trailing"
+          size={20}
+          color={styles.triggerIcon.color}
+        />
+      </Button>
+      <Text variant="muted">
+        {t(
+          selected
+            ? "components.categories.form.move.hintSelected"
+            : "components.categories.form.move.hintNone",
+        )}
+      </Text>
       {selected ? (
-        <Pressable style={styles.clear} onPress={() => onChange(null)}>
-          <Text variant="small" style={styles.clearText}>
-            {t("components.categories.form.move.clear")}
-          </Text>
-        </Pressable>
+        <Button
+          variant="link"
+          style={styles.clear}
+          onPress={() => onChange(null)}
+        >
+          <Text>{t("components.categories.form.move.clear")}</Text>
+        </Button>
       ) : null}
 
       <CategoryPickerSheet
@@ -57,14 +88,3 @@ export function CategoryMoveRow({
     </View>
   )
 }
-
-const styles = StyleSheet.create((theme) => ({
-  clear: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-  },
-  clearText: {
-    color: theme.colors.primary,
-  },
-}))

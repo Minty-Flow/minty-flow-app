@@ -1360,7 +1360,7 @@
           "descriptionEmpty": "Deleting this category cannot be undone.",
           "descriptionRules_one": "{{count}} recurring rule uses it too.",
           "descriptionRules_other": "{{count}} recurring rules use it too.",
-          "descriptionMove": "Its transactions, recurring rules and budget links move to {{name}}. This cannot be undone."
+          "descriptionMove": "Its transactions and recurring rules move to {{name}}. Budgets that use only this category switch to it. Transactions keep their budget only if it includes {{name}}. This cannot be undone."
         },
         "toast": {
           "notFound": "Category not found",
@@ -1371,9 +1371,11 @@
           "updateFailed": "Failed to update category. Please try again."
         },
         "move": {
-          "label": "Move transactions to",
-          "none": "Leave uncategorized",
-          "clear": "Leave uncategorized instead"
+          "label": "When deleted, move its transactions and recurring rules to",
+          "placeholder": "Choose a category",
+          "hintNone": "If you don't choose one, they lose their category.",
+          "hintSelected": "Budgets that use only this category switch to the new one.",
+          "clear": "Don't move them"
         }
       },
       "empty": {

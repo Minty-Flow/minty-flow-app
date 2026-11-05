@@ -17,7 +17,7 @@ import { RouteLoadingState } from "~/components/route-load-state"
 import { Separator } from "~/components/ui/separator"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
-import { useCategories } from "~/database/drizzle/read-models/category-read-model"
+import { useCategoriesQuery } from "~/database/drizzle/read-models/category-read-model"
 import {
   type BudgetLosingLastCategory,
   type CategoryDeleteImpact,
@@ -92,7 +92,7 @@ export function CategoryModifyContent({
     null,
   )
   const [moveToCategoryId, setMoveToCategoryId] = useState<string | null>(null)
-  const allCategories = useCategories()
+  const { data: allCategories } = useCategoriesQuery(true)
   const moveTargets = allCategories.filter(
     (c) => c.type === category?.type && c.id !== categoryModifyId,
   )

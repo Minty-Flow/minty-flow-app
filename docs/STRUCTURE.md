@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-03T21:34:08.684Z
+Generated on: 2026-11-05T08:15:07.035Z
 ```
 ./
 ├── __tests__/
@@ -281,6 +281,7 @@ Generated on: 2026-11-03T21:34:08.684Z
 │   │   │   ├── category-modify/
 │   │   │   │   ├── category-form-sheets.tsx
 │   │   │   │   ├── category-modify-content.tsx
+│   │   │   │   ├── category-move-row.styles.ts
 │   │   │   │   ├── category-move-row.tsx
 │   │   │   │   └── types.ts
 │   │   │   ├── add-category-content.tsx

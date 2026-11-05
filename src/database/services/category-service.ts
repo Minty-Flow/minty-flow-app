@@ -255,20 +255,14 @@ function moveCategoryContents(
     throw new CategoryMoveTargetError("type-mismatch")
   }
 
-  // A budget that has the deleted category but not the target: if the
-  // deleted one is its only category the budget takes the target, otherwise
-  // the link is simply removed by the cascade and the others stay.
-  const hasTarget = db
-    .select({ budgetId: budgetCategories.budgetId })
-    .from(budgetCategories)
-    .where(eq(budgetCategories.categoryId, targetId))
+  // A budget whose only category is the deleted one takes the target. Any
+  // other budget simply loses the link through the cascade.
   const onlyCategoryBudgets = db
     .select({ id: budgetCategories.budgetId })
     .from(budgetCategories)
     .where(
       and(
         eq(budgetCategories.categoryId, id),
-        notInArray(budgetCategories.budgetId, hasTarget),
         sql`NOT EXISTS (
           SELECT 1 FROM ${budgetCategories} AS other
           WHERE other.budget_id = ${budgetCategories.budgetId}
