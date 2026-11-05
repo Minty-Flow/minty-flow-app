@@ -1357,7 +1357,10 @@
           "descriptionBudgets_one": "The budget {{names}} uses this category as its only one and will be switched off until you give it a category.",
           "descriptionBudgets_other": "The budgets {{names}} use this category as their only one and will be switched off until you give each a category.",
           "deleteAnyway": "Delete anyway",
-          "descriptionEmpty": "Deleting this category cannot be undone."
+          "descriptionEmpty": "Deleting this category cannot be undone.",
+          "descriptionRules_one": "{{count}} recurring rule uses it too.",
+          "descriptionRules_other": "{{count}} recurring rules use it too.",
+          "descriptionMove": "Its transactions and recurring rules move to {{name}}. Budgets that use only this category switch to it. Transactions keep their budget only if it includes {{name}}. This cannot be undone."
         },
         "toast": {
           "notFound": "Category not found",
@@ -1366,6 +1369,13 @@
           "deleteFailed": "Failed to delete category. Please try again.",
           "createFailed": "Failed to create category. Please try again.",
           "updateFailed": "Failed to update category. Please try again."
+        },
+        "move": {
+          "label": "When deleted, move its transactions and recurring rules to",
+          "placeholder": "Choose a category",
+          "hintNone": "If you don't choose one, they lose their category.",
+          "hintSelected": "Budgets that use only this category switch to the new one.",
+          "clear": "Don't move them"
         }
       },
       "empty": {

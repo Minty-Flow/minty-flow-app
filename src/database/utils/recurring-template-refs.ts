@@ -29,6 +29,34 @@ export function clearCategoryFromRecurringTemplates(
     .run()
 }
 
+/** Point every recurring template that uses `fromId` at `toId` instead. */
+export function moveCategoryInRecurringTemplates(
+  db: DbTransaction,
+  fromId: string,
+  toId: string,
+): void {
+  db.update(recurringTransactions)
+    .set({
+      jsonTransactionTemplate: sql`json_set(${recurringTransactions.jsonTransactionTemplate}, '$.categoryId', ${toId})`,
+    })
+    .where(sql`${templateField("categoryId")} = ${fromId}`)
+    .run()
+}
+
+/** How many recurring rules have a template that uses `categoryId`. */
+export function countRecurringTemplatesUsingCategory(
+  db: Pick<DbTransaction, "select">,
+  categoryId: string,
+): number {
+  return (
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(recurringTransactions)
+      .where(sql`${templateField("categoryId")} = ${categoryId}`)
+      .get()?.count ?? 0
+  )
+}
+
 /**
  * Disable every recurring rule that generates into, or transfers to, an
  * account that is about to be destroyed. Call it before the account row goes:

@@ -108,7 +108,7 @@ export const CategoryList = ({
     </View>
   )
 }
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create({
   listContent: {
     paddingTop: 10,
     paddingBottom: 100,
@@ -122,4 +122,4 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
     marginHorizontal: 20,
   },
-}))
+})
