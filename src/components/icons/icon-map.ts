@@ -306,6 +306,7 @@ import ArrowUpRight from "./outline/ArrowUpRight"
 import Asterisk from "./outline/Asterisk"
 import BasketOutline from "./outline/Basket"
 import BellOutline from "./outline/Bell"
+import BoldOutline from "./outline/Bold"
 import Brush from "./outline/Brush"
 import Building from "./outline/Building"
 import BuildingBank from "./outline/BuildingBank"
@@ -377,9 +378,13 @@ import HistoryToggle from "./outline/HistoryToggle"
 import HomeDollar from "./outline/HomeDollar"
 import HomeShare from "./outline/HomeShare"
 import InfoCircleOutline from "./outline/InfoCircle"
+import ItalicOutline from "./outline/Italic"
 import Language from "./outline/Language"
 import LibraryPhoto from "./outline/LibraryPhoto"
+import ListOutline from "./outline/List"
+import ListCheckOutline from "./outline/ListCheck"
 import ListDetailsOutline from "./outline/ListDetails"
+import ListNumbersOutline from "./outline/ListNumbers"
 import LockOutline from "./outline/Lock"
 import LockOpen from "./outline/LockOpen"
 import MapOutline from "./outline/Map"
@@ -1808,6 +1813,21 @@ const ICON_MAP = {
   },
   get "list-details-outline"() {
     return ListDetailsOutline
+  },
+  get "bold-outline"() {
+    return BoldOutline
+  },
+  get "italic-outline"() {
+    return ItalicOutline
+  },
+  get "list-outline"() {
+    return ListOutline
+  },
+  get "list-check-outline"() {
+    return ListCheckOutline
+  },
+  get "list-numbers-outline"() {
+    return ListNumbersOutline
   },
   get "map-pin-outline"() {
     return MapPinOutline
