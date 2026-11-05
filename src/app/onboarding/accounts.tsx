@@ -18,6 +18,7 @@ import { createAccount } from "~/database/services/account-service"
 import { useOnboardingResume } from "~/hooks/use-onboarding-resume"
 import type { TranslationKey } from "~/i18n/config"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
+import { useOnboardingStore } from "~/stores/onboarding.store"
 import { NewEnum } from "~/types/new"
 import { getDeviceCurrency } from "~/utils/device-locale"
 import { logger } from "~/utils/logger"
@@ -31,11 +32,13 @@ export default function OnboardingAccountsScreen() {
   const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
   const setCurrency = useMoneyFormattingStore((s) => s.setCurrency)
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
-  const [chosenCurrency, setChosenCurrency] = useState<string | null>(null)
+  const chosenCurrency = useOnboardingStore((s) => s.chosenCurrency)
+  const setChosenCurrency = useOnboardingStore((s) => s.setChosenCurrency)
   const [saving, startTransition] = useTransition()
   if (status === "loading") return <RouteLoadingState />
 
-  // The primary account's currency wins on resume, then the device region.
+  // An explicit pick wins, then the primary account's currency on resume, then
+  // the currency of the device's first locale.
   const currency =
     chosenCurrency ??
     accounts.find((a) => a.isPrimary)?.currencyCode ??
@@ -59,7 +62,8 @@ export default function OnboardingAccountsScreen() {
   // The app needs somewhere to put a transaction, so keep at least one.
   const canContinue = accounts.length > 0 || selectedKeys.size > 0
   const handleNext = () => {
-    // New accounts get this currency, and the preferred one follows it.
+    // New accounts get this currency, and the preferred one follows it until
+    // onboarding ends. After that it follows the primary account again.
     setCurrency(currency)
     startTransition(async () => {
       const toCreate = AccountPresets.filter(

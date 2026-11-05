@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-03T19:43:55.198Z
+Generated on: 2026-11-05T08:33:16.239Z
 ```
 ./
 ├── __tests__/
@@ -60,6 +60,8 @@ Generated on: 2026-11-03T19:43:55.198Z
 │   ├── helpers/
 │   │   ├── create-test-db.test.ts
 │   │   └── create-test-db.ts
+│   ├── i18n/
+│   │   └── language.constants.test.ts
 │   ├── schemas/
 │   │   ├── accounts.schema.test.ts
 │   │   └── budgets.schema.test.ts
@@ -69,7 +71,8 @@ Generated on: 2026-11-03T19:43:55.198Z
 │   │   ├── exchange-rates.test.ts
 │   │   └── pending-transaction-notifications.test.ts
 │   ├── stores/
-│   │   └── export-history.store.test.ts
+│   │   ├── export-history.store.test.ts
+│   │   └── onboarding.store.test.ts
 │   └── utils/
 │       ├── chart-path.test.ts
 │       ├── csv.test.ts

@@ -7,6 +7,7 @@ import i18n, { ensureLanguageLoaded } from "~/i18n/config"
 import {
   DirectionEnum,
   type DirectionType,
+  getLanguageDirection,
   LangCodeEnum,
   type LangCodeType,
 } from "~/i18n/language.constants"
@@ -46,8 +47,7 @@ export const useLanguageStore = create<LanguageStore>()(
 
         /* ───────── Actions ───────── */
         setLanguageCode: (value) => {
-          const newDirection =
-            value === LangCodeEnum.AR ? DirectionEnum.RTL : DirectionEnum.LTR
+          const newDirection = getLanguageDirection(value)
           const shouldBeRTL = newDirection === DirectionEnum.RTL
 
           ensureLanguageLoaded(value)

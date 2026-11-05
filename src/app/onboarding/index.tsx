@@ -1,4 +1,4 @@
-import { Redirect, useRouter } from "expo-router"
+import { Redirect } from "expo-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Platform } from "react-native"
@@ -29,7 +29,6 @@ import { reloadApp } from "~/utils/reload-app"
  */
 export default function OnboardingLanguageScreen() {
   const { t } = useTranslation()
-  const router = useRouter()
   const isLanguageChosen = useOnboardingStore((s) => s.isLanguageChosen)
   const setLanguageChosen = useOnboardingStore((s) => s.setLanguageChosen)
   const direction = useLanguageStore((s) => s.direction)
@@ -43,7 +42,7 @@ export default function OnboardingLanguageScreen() {
   const handleContinue = async () => {
     setLanguageChosen()
     setLanguageCode(selected)
-    router.replace("/onboarding/slides")
+    // The Redirect above moves on to the slides once the flag is set.
     // forceRTL only takes effect on a JS reload.
     if (Platform.OS !== "web" && getLanguageDirection(selected) !== direction) {
       await reloadApp()

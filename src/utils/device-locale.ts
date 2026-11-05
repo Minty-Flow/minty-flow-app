@@ -15,7 +15,12 @@ export function getSupportedDeviceLanguage(): LangCodeType | null {
   return SupportedLanguages.find((l) => l.code === code)?.code ?? null
 }
 
-/** The currency of the device region when the registry knows it, else null. */
+/**
+ * The currency of the device's first locale when the registry knows it, else
+ * null. This follows the locale, not the user's location: most Android devices
+ * have no separate region setting, so `en-US` gives USD in any country. Only
+ * used to pre-fill the currency row; the user can change it there.
+ */
 export function getDeviceCurrency(): string | null {
   const code = getLocales()[0]?.currencyCode
   return code && currencyRegistryService.isCurrencyCodeValid(code) ? code : null
