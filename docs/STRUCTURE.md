@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-04T23:44:54.892Z
+Generated on: 2026-11-05T08:17:08.826Z
 ```
 ./
 ├── __tests__/
@@ -33,6 +33,7 @@ Generated on: 2026-11-04T23:44:54.892Z
 │   │   │   ├── budget-category-delete.test.ts
 │   │   │   ├── budget-period-bounds.test.ts
 │   │   │   ├── category-delete.test.ts
+│   │   │   ├── category-move.test.ts
 │   │   │   ├── color-clear.test.ts
 │   │   │   ├── delete-recurring-keep-paid.test.ts
 │   │   │   ├── destroy-account-transfer-partner.test.ts
@@ -280,6 +281,8 @@ Generated on: 2026-11-04T23:44:54.892Z
 │   │   │   ├── category-modify/
 │   │   │   │   ├── category-form-sheets.tsx
 │   │   │   │   ├── category-modify-content.tsx
+│   │   │   │   ├── category-move-row.styles.ts
+│   │   │   │   ├── category-move-row.tsx
 │   │   │   │   └── types.ts
 │   │   │   ├── add-category-content.tsx
 │   │   │   ├── category-list.tsx

@@ -94,7 +94,6 @@ export const TransactionItem = ({
 }: TransactionItemProps) => {
   const swipeableRef = useRef<SwipeableMethods | null>(null)
   const { t } = useTranslation()
-  const { theme } = useUnistyles()
   const {
     id,
     account,

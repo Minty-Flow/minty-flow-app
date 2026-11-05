@@ -34,8 +34,6 @@ import { createTag, updateTagById } from "~/database/services/tag-service"
 import { addBudgetSchema } from "~/schemas/budgets.schema"
 import { addGoalSchema } from "~/schemas/goals.schema"
 
-const now = "2026-01-01T00:00:00.000Z"
-
 async function seedAccount(id: string) {
   return createAccount({
     name: id,
