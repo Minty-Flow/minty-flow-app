@@ -7,6 +7,7 @@ import { StyleSheet } from "react-native-unistyles"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { RouteLoadingState } from "~/components/route-load-state"
+import { CurrencySelectorSheet } from "~/components/selectors/currency-selector-sheet"
 import { Button } from "~/components/ui/button"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -17,7 +18,9 @@ import { createAccount } from "~/database/services/account-service"
 import { useOnboardingResume } from "~/hooks/use-onboarding-resume"
 import type { TranslationKey } from "~/i18n/config"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
+import { useOnboardingStore } from "~/stores/onboarding.store"
 import { NewEnum } from "~/types/new"
+import { getDeviceCurrency } from "~/utils/device-locale"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
@@ -27,10 +30,20 @@ export default function OnboardingAccountsScreen() {
   const { t } = useTranslation()
   const router = useRouter()
   const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
+  const setCurrency = useMoneyFormattingStore((s) => s.setCurrency)
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
+  const chosenCurrency = useOnboardingStore((s) => s.chosenCurrency)
+  const setChosenCurrency = useOnboardingStore((s) => s.setChosenCurrency)
   const [saving, startTransition] = useTransition()
   if (status === "loading") return <RouteLoadingState />
 
+  // An explicit pick wins, then the primary account's currency on resume, then
+  // the currency of the device's first locale.
+  const currency =
+    chosenCurrency ??
+    accounts.find((a) => a.isPrimary)?.currencyCode ??
+    getDeviceCurrency() ??
+    preferredCurrency
   const existingKeys = new Set(accounts.map((a) => `${a.icon}:${a.type}`))
 
   const togglePreset = (key: string) => {
@@ -49,6 +62,9 @@ export default function OnboardingAccountsScreen() {
   // The app needs somewhere to put a transaction, so keep at least one.
   const canContinue = accounts.length > 0 || selectedKeys.size > 0
   const handleNext = () => {
+    // New accounts get this currency, and the preferred one follows it until
+    // onboarding ends. After that it follows the primary account again.
+    setCurrency(currency)
     startTransition(async () => {
       const toCreate = AccountPresets.filter(
         (p) =>
@@ -64,7 +80,7 @@ export default function OnboardingAccountsScreen() {
                 type: preset.type,
                 icon: preset.icon,
                 balance: 0,
-                currencyCode: preferredCurrency,
+                currencyCode: currency,
                 colorSchemeName: "",
                 // With no primary yet, the first one becomes it, so the
                 // transaction form starts with a default account.
@@ -94,6 +110,18 @@ export default function OnboardingAccountsScreen() {
         contentContainerStyle={styles.scrollContent}
       >
         <Text style={styles.subtitle}>{t("onboarding.accounts.hint")}</Text>
+
+        <CurrencySelectorSheet
+          selectedCurrencyCode={currency}
+          onCurrencySelected={(code) => {
+            setChosenCurrency(code)
+            // Saved now so "Add new account" opens in the same currency.
+            setCurrency(code)
+          }}
+        />
+        <Text variant="muted" style={styles.currencyHint}>
+          {t("onboarding.accounts.currencyHint")}
+        </Text>
 
         <Text style={styles.sectionLabel}>
           {t("onboarding.accounts.suggested")}
@@ -142,7 +170,11 @@ export default function OnboardingAccountsScreen() {
 
         <Pressable
           style={styles.addNewButton}
-          onPress={() => router.push(`/accounts/${NewEnum.NEW}/modify`)}
+          onPress={() => {
+            // The form starts in the preferred currency; make it the one shown.
+            setCurrency(currency)
+            router.push(`/accounts/${NewEnum.NEW}/modify`)
+          }}
         >
           <View style={styles.addNewIconWrap}>
             <IconSvg name="plus-outline" size={24} />
@@ -190,6 +222,10 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.labelLarge.fontSize,
     color: theme.colors.onSecondary,
     lineHeight: 20,
+    marginBottom: 24,
+  },
+  currencyHint: {
+    marginTop: 8,
     marginBottom: 24,
   },
   sectionLabel: {

@@ -1600,6 +1600,9 @@
     }
   },
   "onboarding": {
+    "language": {
+      "title": "Choose your language"
+    },
     "resume": {
       "title": "Finish setting up?",
       "description": "You left before finishing setup. Continue where you stopped, or skip it and start using the app.",
@@ -1639,6 +1642,7 @@
         "savings": "Savings"
       },
       "createFailed": "Couldn't create your accounts. Try again.",
+      "currencyHint": "The accounts you add here will use this currency. An account's currency can't be changed after it's created.",
       "pickOne": "Pick at least one account to continue"
     },
     "expenseCategories": {

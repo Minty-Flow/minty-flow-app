@@ -1,5 +1,5 @@
 # Project Structure
-Generated on: 2026-11-05T08:17:08.826Z
+Generated on: 2026-11-05T08:36:38.090Z
 ```
 ./
 ├── __tests__/
@@ -61,6 +61,8 @@ Generated on: 2026-11-05T08:17:08.826Z
 │   ├── helpers/
 │   │   ├── create-test-db.test.ts
 │   │   └── create-test-db.ts
+│   ├── i18n/
+│   │   └── language.constants.test.ts
 │   ├── schemas/
 │   │   ├── accounts.schema.test.ts
 │   │   └── budgets.schema.test.ts
@@ -70,7 +72,8 @@ Generated on: 2026-11-05T08:17:08.826Z
 │   │   ├── exchange-rates.test.ts
 │   │   └── pending-transaction-notifications.test.ts
 │   ├── stores/
-│   │   └── export-history.store.test.ts
+│   │   ├── export-history.store.test.ts
+│   │   └── onboarding.store.test.ts
 │   └── utils/
 │       ├── chart-path.test.ts
 │       ├── csv.test.ts
@@ -171,6 +174,7 @@ Generated on: 2026-11-05T08:17:08.826Z
 │   │   │   ├── expense-categories.tsx
 │   │   │   ├── income-categories.tsx
 │   │   │   ├── index.tsx
+│   │   │   ├── slides.tsx
 │   │   │   └── start.tsx
 │   │   ├── settings/
 │   │   │   ├── backup/
@@ -697,6 +701,7 @@ Generated on: 2026-11-05T08:17:08.826Z
 │       ├── attachments.ts
 │       ├── chart-path.ts
 │       ├── csv.ts
+│       ├── device-locale.ts
 │       ├── file-icon.ts
 │       ├── format-file-size.ts
 │       ├── get-week-start-on.ts
