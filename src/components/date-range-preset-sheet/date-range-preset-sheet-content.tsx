@@ -24,6 +24,12 @@ import type {
   PresetButtonId,
   PresetOption,
 } from "./types"
+
+const laterDate = (a: Date, b: Date) =>
+  new Date(Math.max(a.getTime(), b.getTime()))
+const earlierDate = (a: Date, b: Date) =>
+  new Date(Math.min(a.getTime(), b.getTime()))
+
 export const DateRangePresetSheetContent = ({
   initialStart,
   initialEnd,
@@ -45,13 +51,13 @@ export const DateRangePresetSheetContent = ({
     onConfirm: (date) =>
       setCustomRange((prev) => ({
         start: date,
-        end: date > prev.end ? date : prev.end,
+        end: laterDate(date, prev.end),
       })),
   })
   const endDatePicker = useDateTimePicker({
     onConfirm: (date) =>
       setCustomRange((prev) => ({
-        start: date < prev.start ? date : prev.start,
+        start: earlierDate(date, prev.start),
         end: date,
       })),
   })
@@ -64,10 +70,8 @@ export const DateRangePresetSheetContent = ({
     onRequestClose()
   }
   const handleCustomDone = () => {
-    const start =
-      customRange.start < customRange.end ? customRange.start : customRange.end
-    const end =
-      customRange.start < customRange.end ? customRange.end : customRange.start
+    const start = earlierDate(customRange.start, customRange.end)
+    const end = laterDate(customRange.start, customRange.end)
     onSave(startOfDay(start), endOfDay(end), "custom")
     onRequestClose()
   }

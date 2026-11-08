@@ -13,22 +13,25 @@ Two Stats dashboard cards remain dimmed `soon` placeholders (`src/app/(tabs)/sta
 **A1.** `src/utils/recurrence.ts` — add `nextNOccurrences(ruleStrings, range, anchor, n)`: bounded loop around the existing `nextAbsoluteOccurrence`, advancing anchor each call, stopping at `n` results or on `null`. Same file, no new imports. (S)
 
 **A2.** `src/database/services/recurring-transaction-service.ts` — add `listActiveRecurringRules(anchor = new Date())`:
+
 - Base query: `SELECT * FROM recurring_transactions WHERE disabled = 0` — same predicate `synchronizeAllRecurringTransactions` already uses.
 - Reuse the file's existing private `parseTemplate` / `parseTimeRange` / `parseRules` helpers.
 - Batch-join `accounts` and `categories` for currency/name/icon using Drizzle queries.
 - Per rule: `nextOccurrence` via `nextAbsoluteOccurrence`; `monthlyEquivalent` = amount × an approximate frequency multiplier read off the parsed RRule (`DAILY ×30.44`, `WEEKLY ×4.345`, biweekly `×2.17`, `MONTHLY ×1`, `YEARLY ÷12`) — add this multiplier helper to `recurrence.ts` alongside A1, marked with a `ponytail:` comment naming it as a deliberate approximation, not calendar-exact projection.
 - Return sorted by `nextOccurrence` ascending.
-(M)
+  (M)
 
 **A3.** `src/components/stats/dashboard/recurring-card.tsx` — new half-width `StatCard` (`icon="repeat-outline"`). Body: `stats.expenseBySubtype.recurring` vs `.oneTime` as a compact 2-segment ratio bar — copy `TopCategoriesCard`'s track/fill pattern (`src/components/stats/dashboard/top-categories-card.tsx`). Zero new data — pure props from the already-fetched `CurrencyStats`, matching every other card's "no self-fetch" rule. (S)
 
 **A4.** `src/app/stats/recurring.tsx` — new detail screen, mirrors `src/app/stats/wrapped.tsx`'s `WrappedContent` shape exactly: local `useState<ActiveRecurringRule[]>`, fetch in a `useEffect` with a `fetchIdRef` race guard, `useDebouncedCallback` (`src/hooks/use-debounced-callback.ts`), and refresh from the Drizzle live-query signal. Layout:
+
 - Top: `expenseBySubtype` recurring-vs-one-time bar (from the shell's `stats`, free) — same visual language as A3.
 - Below: plain row list of active rules (title, category icon, next-due date, monthly-equivalent amount) — plain `View`/`Text`/`Money` rows like `ByAccountList` in `src/app/stats/net-worth.tsx`, no new list component.
 - Empty state: no active rules → `Text variant="muted"`, no bespoke empty-state component needed.
-(M)
+  (M)
 
 **A5.** Wire-up (S):
+
 - `src/app/(tabs)/stats-view.tsx` — replace the `soon` Recurring `StatCard` in the `halfRow` with `<RecurringCard stats={stats} onPress={() => pushDetail("/stats/recurring")} />`.
 - `src/app/_layout.tsx` (~line 101+) — register `stats/recurring` `<Stack.Screen>` next to the other 5 stats detail routes, title from `screens.stats.recurring.title`.
 - i18n: `screens.stats.recurring.*` (title key follows the existing `screens.stats.{netWorth,calendar,wrapped}.title` pattern; add screen-specific strings like `noActiveRules`, row labels) in both `en.json` and `ar.json`; run `pnpm check-i18n-keys`.
@@ -44,11 +47,13 @@ Two Stats dashboard cards remain dimmed `soon` placeholders (`src/app/(tabs)/sta
 **B4.** `src/components/stats/dashboard/spending-map-card.tsx` — new full-width `StatCard`, reuses the existing "map" icon the current stub references. Body: pin count + top address text from B1's `locationSummary` — no map render in the compact card, just text, consistent with how `CalendarCard` degrades to a text fallback when empty. (S)
 
 **B5.** `src/app/stats/spending-map.tsx` — new detail screen, same local-fetch pattern as A4 but keyed on `dateRange` (the map IS period-scoped, unlike Recurring's rule list). Layout: map (B3's WebView component) first, then a ranked list of top locations underneath — group pins by address string, sum expense, sort desc (same fetched data, no new query). Two empty states:
+
 1. `useTransactionLocationStore().isEnabled === false` → actionable card: "Enable location tracking" → `router.push("/settings/preferences/transaction-location")`.
 2. `isEnabled === true` but zero pins in range → plain "No location-tagged transactions yet" text.
-(M)
+   (M)
 
 **B6.** Wire-up (S):
+
 - `src/app/(tabs)/stats-view.tsx` — replace the `soon` Spending Map `StatCard` with `<SpendingMapCard stats={stats} onPress={() => pushDetail("/stats/spending-map")} />`.
 - `src/app/_layout.tsx` — register `stats/spending-map` `<Stack.Screen>`.
 - i18n: `screens.stats.spendingMap.*` (title already exists as a card-title key; add `enableLocationCta`, `noPinsYet`, list labels) in both `en.json`/`ar.json`; run `pnpm check-i18n-keys`.

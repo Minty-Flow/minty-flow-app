@@ -21,7 +21,6 @@
 [![GitHub - Releases](https://img.shields.io/badge/GitHub-Releases-161b22?style=for-the-badge&logo=github&logoColor=C0FFCA&labelColor=21262d)](https://github.com/Minty-Flow/minty-flow-app/releases)
 [![Minty Flow - Website](https://img.shields.io/badge/Minty_Flow-Website-161b22?style=for-the-badge&logo=googlechrome&logoColor=C0FFCA&labelColor=21262d)](https://minty-flow.github.io)
 
-
 > **iOS support is coming.** The app is built with React Native and the iOS build works locally — a public TestFlight release is in progress.
 
 ---
@@ -84,14 +83,14 @@ pnpm ios        # iOS (macOS only)
 
 ### Useful commands
 
-| Command | Description |
-|---|---|
-| `pnpm lint` | Biome lint check |
-| `pnpm lint:fix` | Lint and auto-fix |
-| `pnpm types` | TypeScript type check |
-| `pnpm structure` | Regenerate docs/STRUCTURE.md |
-| `pnpm check-i18n-keys` | Find missing translation keys |
-| `pnpm unused-styles` | Find unused unistyles StyleSheets |
+| Command                        | Description                                |
+| ------------------------------ | ------------------------------------------ |
+| `pnpm lint`                    | Biome lint check                           |
+| `pnpm lint:fix`                | Lint and auto-fix                          |
+| `pnpm types`                   | TypeScript type check                      |
+| `pnpm structure`               | Regenerate docs/STRUCTURE.md               |
+| `pnpm check-i18n-keys`         | Find missing translation keys              |
+| `pnpm unused-styles`           | Find unused unistyles StyleSheets          |
 | `pnpm check-number-formatting` | Verify centralized number formatting rules |
 
 **Pre-commit hook** (husky): runs `pnpm structure` → `pnpm lint:fix` → `pnpm check-number-formatting` → `pnpm types` automatically. All four must pass.
@@ -108,6 +107,7 @@ or Prettier. To get inline lint diagnostics and format-on-save in your editor:
    - JetBrains — [Biome plugin](https://plugins.jetbrains.com/plugin/22761-biome)
 2. **Install Biome globally** so the extension can resolve the CLI outside the
    project sandbox:
+
    ```bash
    pnpm add -g @biomejs/biome
    ```
@@ -176,5 +176,3 @@ Minty Flow currently ships in:
 > Want to see Minty Flow in your language? Follow the
 > [Translation guide](CONTRIBUTING.md#translation-guide) — no coding required,
 > and contributors are credited here.
-
-

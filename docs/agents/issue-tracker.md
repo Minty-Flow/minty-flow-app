@@ -5,7 +5,7 @@ Issues and specs for this repo live in one of two places:
 - **Local markdown** in `.scratch/`, which is gitignored: scratch planning that
   does not need to be shared.
 - **GitHub issues** on the MintyFlowApp project board (org project 3): work
-  other people should see. A new issue lands in the *Backlog* column on its
+  other people should see. A new issue lands in the _Backlog_ column on its
   own.
 
 **Ask the owner which one before writing any ticket, spec or backlog item.**
