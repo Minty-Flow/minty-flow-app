@@ -171,6 +171,7 @@ export function insertBackupData(db: Db, data: MintyFlowBackup["data"]): void {
 
   // Tier 5: join tables
   insertRows(db, "transaction_tags", data.transaction_tags)
+  insertRows(db, "transaction_items", data.transaction_items)
   insertRows(db, "budget_accounts", data.budget_accounts)
   insertRows(db, "budget_categories", data.budget_categories)
   insertRows(db, "goal_accounts", data.goal_accounts)

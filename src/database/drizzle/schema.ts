@@ -210,6 +210,30 @@ export const transactionTags = sqliteTable(
   ],
 )
 
+/** Named, priced line items under one transaction (a grocery run). */
+export const transactionItems = sqliteTable(
+  "transaction_items",
+  {
+    id: text("id").primaryKey().notNull(),
+    transactionId: text("transaction_id")
+      .notNull()
+      .references(() => transactions.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    /** Price of one unit, in the account's minor units. */
+    unitPrice: integer("unit_price").notNull(),
+    quantity: integer("quantity").notNull().default(1),
+    sortOrder: integer("sort_order").notNull().default(0),
+  },
+  (table) => [
+    check(
+      "transaction_items_unit_price_check",
+      safeIntegerCheck(table.unitPrice),
+    ),
+    check("transaction_items_quantity_check", sql`${table.quantity} >= 1`),
+    index("idx_titem_tx").on(table.transactionId),
+  ],
+)
+
 export const transfers = sqliteTable(
   "transfers",
   {

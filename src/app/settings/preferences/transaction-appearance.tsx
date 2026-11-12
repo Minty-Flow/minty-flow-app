@@ -46,6 +46,7 @@ const BASE_TX = {
   transferSourceAmount: null,
   recurringId: null,
   tagIds: [],
+  items: [],
 }
 
 const MOCK_ACCOUNT = {

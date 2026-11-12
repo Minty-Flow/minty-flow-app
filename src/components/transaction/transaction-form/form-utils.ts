@@ -2,10 +2,30 @@ import type { TransactionWithRelations } from "~/database/drizzle/read-models/tr
 import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import type { Account } from "~/types/accounts"
 import {
+  type TransactionItem,
   type TransactionKind,
   type TransactionType,
   TransactionTypeEnum,
 } from "~/types/transactions"
+
+/**
+ * Line items fit a one-off expense or income. Not transfers, recurring kinds
+ * (their template has no items) or loan kinds.
+ */
+export function canHaveItems(
+  type: TransactionType,
+  kind: TransactionKind | undefined,
+): boolean {
+  return (
+    type !== TransactionTypeEnum.TRANSFER &&
+    (kind === undefined || kind === "default" || kind === "upcoming")
+  )
+}
+
+/** Sum of every line (unit price × quantity), in minor units. */
+export function itemsTotal(items: TransactionItem[]): number {
+  return items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
+}
 
 export function getDefaultValues(
   transaction: TransactionWithRelations | null,
@@ -31,6 +51,7 @@ export function getDefaultValues(
       description: "",
       isPending: false,
       tags: [],
+      items: [],
       location: undefined,
       subtype: null,
       kind: initialKind ?? "default",
@@ -71,6 +92,7 @@ export function getDefaultValues(
     description: transaction.description ?? "",
     isPending: transaction.isPending,
     tags: initialTagIds,
+    items: transaction.items,
     goalId: transaction.goalId ?? null,
     budgetId: transaction.budgetId ?? null,
     loanId: transaction.loanId ?? null,

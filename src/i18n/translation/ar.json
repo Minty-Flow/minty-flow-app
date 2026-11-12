@@ -1302,6 +1302,24 @@
       "deleteLoanSheet": {
         "title": "حذف هذا القرض؟",
         "description": "يُحذف القرض. تبقى معاملاته في سجلّك دون ارتباط بأي قرض."
+      },
+      "items": {
+        "toggle": "تفصيل العناصر",
+        "addItem": "إضافة عنصر",
+        "editItem": "تعديل العنصر",
+        "name": "اسم العنصر",
+        "namePlaceholder": "مثال: حليب",
+        "unitPrice": "سعر الوحدة",
+        "quantity": "الكمية",
+        "total": "مجموع العناصر",
+        "a11y": {
+          "count_zero": "لا عناصر",
+          "count_one": "عنصر واحد",
+          "count_two": "عنصران",
+          "count_few": "{{count}} عناصر",
+          "count_many": "{{count}} عنصراً",
+          "count_other": "{{count}} عنصر"
+        }
       }
     },
     "recurring": {
@@ -1675,7 +1693,8 @@
       "toAccountForTransfer": "يرجى اختيار حساب الوجهة للتحويل.",
       "category": "الفئة مطلوبة",
       "accounts": "يرجى اختيار حساب واحد على الأقل",
-      "categories": "يرجى اختيار فئة واحدة على الأقل"
+      "categories": "يرجى اختيار فئة واحدة على الأقل",
+      "itemName": "اسم العنصر مطلوب"
     },
     "tooLong": {
       "name": "الاسم طويل جداً"

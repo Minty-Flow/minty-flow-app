@@ -7,6 +7,12 @@ import {
   TransactionTypeEnum,
 } from "~/types/transactions"
 
+export const transactionItemSchema = z.object({
+  name: z.string().trim().min(1, "validation.required.itemName").max(255),
+  unitPrice: z.number().int("validation.amount.invalid").gte(0),
+  quantity: z.number().int().gte(1).lte(9999),
+})
+
 export const transactionSchema = z
   .object({
     amount: z
@@ -29,6 +35,8 @@ export const transactionSchema = z
      */
     requiresManualConfirmation: z.boolean().nullable().optional(),
     tags: z.array(z.string()).default([]),
+    /** Line items; their sum fills `amount`, which stays editable. Omitted on update = unchanged. */
+    items: z.array(transactionItemSchema).optional(),
     goalId: z.string().nullable().optional(),
     budgetId: z.string().nullable().optional(),
     loanId: z.string().nullable().optional(),

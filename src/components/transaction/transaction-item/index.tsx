@@ -340,6 +340,7 @@ export const TransactionItem = ({
           displayTitle={displayTitle}
           subtitleText={subtitleText}
           isRefund={subtype === TransactionSubTypeEnum.REFUND}
+          itemCount={transactionWithRelations.items.length}
         />
         <TransactionItemRight
           amount={amount}

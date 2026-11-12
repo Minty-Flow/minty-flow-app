@@ -6,6 +6,7 @@ import { drizzleDb } from "~/database/drizzle/db"
 import {
   accounts,
   loans,
+  transactionItems,
   transactions,
   transactionTags,
   transfers,
@@ -27,7 +28,11 @@ import type {
   TransactionFormValues,
 } from "~/schemas/transactions.schema"
 import type { LoanType } from "~/types/loans"
-import type { TransactionKind, TransactionType } from "~/types/transactions"
+import type {
+  TransactionItem,
+  TransactionKind,
+  TransactionType,
+} from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import {
   assertMinorUnits,
@@ -114,6 +119,29 @@ function getTagIdsForTx(db: Db, txId: string): string[] {
     .where(eq(transactionTags.transactionId, txId))
     .all()
     .map((r) => r.tagId)
+}
+
+/** Replace a transaction's line items with `items`, in order. */
+function replaceItems(db: Db, txId: string, items: TransactionItem[]): void {
+  db.delete(transactionItems)
+    .where(eq(transactionItems.transactionId, txId))
+    .run()
+  if (!items.length) return
+  db.insert(transactionItems)
+    .values(
+      items.map((item, index) => {
+        assertMinorUnits(item.unitPrice * item.quantity)
+        return {
+          id: generateId(),
+          transactionId: txId,
+          name: item.name,
+          unitPrice: item.unitPrice,
+          quantity: item.quantity,
+          sortOrder: index,
+        }
+      }),
+    )
+    .run()
 }
 
 function toDateMs(v: number | Date | undefined, fallback: number): number {
@@ -374,6 +402,8 @@ export function createTransactionInTx(
       .onConflictDoNothing()
       .run()
   }
+
+  if (data.items?.length) replaceItems(db, id, data.items)
 
   return id
 }
@@ -729,6 +759,8 @@ function updateTransactionInTx(
         .run()
     }
   }
+
+  if (data.items !== undefined) replaceItems(db, id, data.items)
 
   // -- Transaction row update --
   const extra = data.extra !== undefined ? (data.extra ?? null) : null

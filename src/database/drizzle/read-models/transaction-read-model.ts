@@ -20,16 +20,18 @@ import type {
   RowAccount,
   RowCategory,
   RowTransaction,
+  RowTransactionItem,
   RowTransactionTag,
 } from "~/database/types/rows"
 import type { Account } from "~/types/accounts"
 import type { Category } from "~/types/categories"
-import type { Transaction } from "~/types/transactions"
+import type { Transaction, TransactionItem } from "~/types/transactions"
 
 import { drizzleDb } from "../db"
 import {
   accounts,
   categories,
+  transactionItems,
   transactions,
   transactionTags,
   transfers,
@@ -50,6 +52,8 @@ export interface TransactionWithRelations extends Transaction {
    */
   transferSourceAmount: number | null
   tagIds: string[]
+  /** Line items in their saved order; empty for a single-amount transaction. */
+  items: TransactionItem[]
 }
 
 export interface TransactionFilters {
@@ -138,6 +142,15 @@ const tagSelection = {
   tag_id: transactionTags.tagId,
 }
 
+const itemSelection = {
+  id: transactionItems.id,
+  transaction_id: transactionItems.transactionId,
+  name: transactionItems.name,
+  unit_price: transactionItems.unitPrice,
+  quantity: transactionItems.quantity,
+  sort_order: transactionItems.sortOrder,
+}
+
 const transferSelection = {
   id: transfers.id,
   from_transaction_id: transfers.fromTransactionId,
@@ -190,12 +203,14 @@ function hydrateTransactionRows({
   accountRows,
   categoryRows,
   tagRows,
+  itemRows,
   transferRows,
 }: {
   rows: RowTransaction[]
   accountRows: RowAccount[]
   categoryRows: RowCategory[]
   tagRows: RowTransactionTag[]
+  itemRows: RowTransactionItem[]
   transferRows: RowTransfer[]
 }): TransactionWithRelations[] {
   const txIds = new Set(rows.map((row) => row.id))
@@ -214,6 +229,13 @@ function hydrateTransactionRows({
     const tagIds = tagMap.get(row.transaction_id) ?? []
     tagIds.push(row.tag_id)
     tagMap.set(row.transaction_id, tagIds)
+  }
+  const itemMap = new Map<string, RowTransactionItem[]>()
+  for (const row of itemRows) {
+    if (!txIds.has(row.transaction_id)) continue
+    const list = itemMap.get(row.transaction_id) ?? []
+    list.push(row)
+    itemMap.set(row.transaction_id, list)
   }
 
   const transferMap = new Map<
@@ -263,13 +285,20 @@ function hydrateTransactionRows({
       conversionRate: tf?.conversionRate ?? null,
       transferSourceAmount: tf?.sourceAmount ?? null,
       tagIds: tagMap.get(row.id) ?? [],
+      items: (itemMap.get(row.id) ?? [])
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map((item) => ({
+          name: item.name,
+          unitPrice: item.unit_price,
+          quantity: item.quantity,
+        })),
     }
   })
 }
 
 /**
- * The five queries a hydrated transaction list needs, shared by the live hook
- * and the one-off loader. Tags and transfers are scoped to the loaded
+ * The six queries a hydrated transaction list needs, shared by the live hook
+ * and the one-off loader. Tags, items and transfers are scoped to the loaded
  * transactions with a subquery (not an id list, which would hit SQLite's
  * bound-variable limit).
  */
@@ -297,6 +326,10 @@ function buildTransactionQueries(filters: TransactionFilters) {
       .select(tagSelection)
       .from(transactionTags)
       .where(inArray(transactionTags.transactionId, matching())),
+    items: drizzleDb
+      .select(itemSelection)
+      .from(transactionItems)
+      .where(inArray(transactionItems.transactionId, matching())),
     transfers: drizzleDb
       .select(transferSelection)
       .from(transfers)
@@ -324,6 +357,10 @@ export function useTransactions(filters: TransactionFilters): {
     filterHash,
     transactionsResult.updatedAt,
   ])
+  const itemsResult = useLiveQuery(queries.items, [
+    filterHash,
+    transactionsResult.updatedAt,
+  ])
   const transfersResult = useLiveQuery(queries.transfers, [
     filterHash,
     transactionsResult.updatedAt,
@@ -336,6 +373,7 @@ export function useTransactions(filters: TransactionFilters): {
         accountRows: accountsResult.data,
         categoryRows: categoriesResult.data,
         tagRows: tagLinksResult.data,
+        itemRows: itemsResult.data,
         transferRows: transfersResult.data,
       }),
     [
@@ -343,6 +381,7 @@ export function useTransactions(filters: TransactionFilters): {
       accountsResult.data,
       categoriesResult.data,
       tagLinksResult.data,
+      itemsResult.data,
       transfersResult.data,
     ],
   )
@@ -354,12 +393,14 @@ export function useTransactions(filters: TransactionFilters): {
       accountsResult.error ??
       categoriesResult.error ??
       tagLinksResult.error ??
+      itemsResult.error ??
       transfersResult.error)
         ? "error"
         : transactionsResult.updatedAt === undefined ||
             accountsResult.updatedAt === undefined ||
             categoriesResult.updatedAt === undefined ||
             tagLinksResult.updatedAt === undefined ||
+            itemsResult.updatedAt === undefined ||
             transfersResult.updatedAt === undefined
           ? "loading"
           : "ready",
@@ -375,6 +416,7 @@ export async function getTransactions(
     accountRows: queries.accounts.all(),
     categoryRows: queries.categories.all(),
     tagRows: queries.tags.all(),
+    itemRows: queries.items.all(),
     transferRows: queries.transfers.all(),
   })
 }

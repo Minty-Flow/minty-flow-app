@@ -24,6 +24,7 @@ function row(
   accountId: string,
   categoryId: string,
   title: string,
+  itemNames: string[] = [],
 ): TransactionWithRelations {
   return {
     id,
@@ -31,6 +32,7 @@ function row(
     categoryId,
     title,
     tagIds: [],
+    items: itemNames.map((name) => ({ name, unitPrice: 100, quantity: 1 })),
     type: "expense",
     extra: null,
   } as unknown as TransactionWithRelations
@@ -40,6 +42,7 @@ const rows = [
   row("1", "cash", "food", "Lunch"),
   row("2", "bank", "food", "Dinner"),
   row("3", "cash", "rent", "Rent"),
+  row("4", "bank", "food", "Groceries", ["Milk", "Bread"]),
 ]
 const ids = (list: TransactionWithRelations[]) => list.map((r) => r.id)
 
@@ -50,7 +53,7 @@ describe("applyFiltersAndSearch", () => {
       DEFAULT_TRANSACTION_LIST_FILTER_STATE,
       DEFAULT_SEARCH_STATE,
     )
-    expect(ids(out)).toEqual(["1", "2", "3"])
+    expect(ids(out)).toEqual(["1", "2", "3", "4"])
   })
 
   it("narrows by account and category", () => {
@@ -77,5 +80,14 @@ describe("applyFiltersAndSearch", () => {
     expect(
       hasActiveFilters(DEFAULT_TRANSACTION_LIST_FILTER_STATE, search),
     ).toBe(true)
+  })
+
+  it("finds a transaction by one of its item names", () => {
+    const out = applyFiltersAndSearch(
+      rows,
+      DEFAULT_TRANSACTION_LIST_FILTER_STATE,
+      { ...DEFAULT_SEARCH_STATE, query: "milk" },
+    )
+    expect(ids(out)).toEqual(["4"])
   })
 })
