@@ -53,24 +53,24 @@ New module `src/domain/transaction-kind.ts` (pure, no IO, unit-testable). Single
 source of truth; the zod schema, the form hook, and the ledger service all
 import it — none re-encode the rules.
 
-| kind | allowed `type` |
-|---|---|
-| `default` | expense, income, transfer |
-| `upcoming` | expense, income |
+| kind           | allowed `type`            |
+| -------------- | ------------------------- |
+| `default`      | expense, income, transfer |
+| `upcoming`     | expense, income           |
 | `subscription` | expense, income, transfer |
-| `repetitive` | expense, income, transfer |
-| `lent` | expense |
-| `borrowed` | income |
+| `repetitive`   | expense, income, transfer |
+| `lent`         | expense                   |
+| `borrowed`     | income                    |
 
-*(transfer is allowed for subscription/repetitive because recurring transfers
-already exist via `recurring_transactions.transfer_to_account_id`.)*
+_(transfer is allowed for subscription/repetitive because recurring transfers
+already exist via `recurring_transactions.transfer_to_account_id`.)_
 
 Linked-loan repayment type:
 
 | linked loan `loanType` | repayment `type` | top-tab label |
-|---|---|---|
-| `lent` | income | Collected |
-| `borrowed` | expense | Paid |
+| ---------------------- | ---------------- | ------------- |
+| `lent`                 | income           | Collected     |
+| `borrowed`             | expense          | Paid          |
 
 Exports:
 
@@ -130,23 +130,23 @@ Audit result (Slice 3, ticket 01 — 2026-08-30): one gap found and fixed
 - [x] account list balances / account detail totals — list reads stored `accounts.balance` (ledger-service guards every mutation with `if (!isPending)`); `accounts/[accountId]/index.tsx` in/out totals do `if (t.isPending || t.isDeleted) continue`
 - [x] category totals (`stats/categories`) — reads `useStats()` → `fetchAllStatsData` (guarded); no direct transaction sum
 - [x] net-worth / cash-flow / calendar stat screens — all consume `useStats()` data via props; no direct transaction access
-- [x] `recurring-transaction-service` — only *creates* rows with `isPending`; performs no summation and routes writes through the ledger service
+- [x] `recurring-transaction-service` — only _creates_ rows with `isPending`; performs no summation and routes writes through the ledger service
 
 ### CSI-4 — `kind` persistence, every write path
 
-| path | `kind` written | notes |
-|---|---|---|
-| normal create | from form | validated against CSI-1 |
-| normal update | from form | subject to edit-semantics locks (ES-*) |
-| upcoming create | `upcoming` (+ `is_pending=1`) | |
-| upcoming confirm (`confirmTransaction`) | `default` | only when confirmed row was `upcoming`; clears pending |
-| recurring spawn | template kind (`subscription`/`repetitive`) | preserved on past **and** future/pending instances |
-| transfer create/edit | `default` (or `subscription`/`repetitive` for a recurring transfer) | never `upcoming`/`lent`/`borrowed` |
-| loan opening entry | `lent` / `borrowed` | written in the same tx as the loan row (LA-1) |
-| loan repayment | linked loan's `lent` / `borrowed` | |
-| import (older snapshot) | backfill-derive, else `default` | shares the `0001` backfill logic (see DM-1) |
-| restore | unchanged | soft-delete/restore never mutates `kind` |
-| destroy | n/a | hard delete |
+| path                                    | `kind` written                                                      | notes                                                  |
+| --------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------ |
+| normal create                           | from form                                                           | validated against CSI-1                                |
+| normal update                           | from form                                                           | subject to edit-semantics locks (ES-*)                 |
+| upcoming create                         | `upcoming` (+ `is_pending=1`)                                       |                                                        |
+| upcoming confirm (`confirmTransaction`) | `default`                                                           | only when confirmed row was `upcoming`; clears pending |
+| recurring spawn                         | template kind (`subscription`/`repetitive`)                         | preserved on past **and** future/pending instances     |
+| transfer create/edit                    | `default` (or `subscription`/`repetitive` for a recurring transfer) | never `upcoming`/`lent`/`borrowed`                     |
+| loan opening entry                      | `lent` / `borrowed`                                                 | written in the same tx as the loan row (LA-1)          |
+| loan repayment                          | linked loan's `lent` / `borrowed`                                   |                                                        |
+| import (older snapshot)                 | backfill-derive, else `default`                                     | shares the `0001` backfill logic (see DM-1)            |
+| restore                                 | unchanged                                                           | soft-delete/restore never mutates `kind`               |
+| destroy                                 | n/a                                                                 | hard delete                                            |
 
 No transaction duplicate/copy feature exists. The "conversion" in the form is
 cross-currency FX for transfers, not a kind change — not a persistence path.
@@ -159,7 +159,7 @@ Top → bottom in the form body:
 
 1. **Top tabs** — 3 segments, relabelled per kind (state machine below)
 2. **Amount**
-3. **Account** *(Decision 1 — moved up here; drives Amount's currency)*
+3. **Account** _(Decision 1 — moved up here; drives Amount's currency)_
 4. **Category** (hidden for `transfer`)
 5. **Date** (hidden when kind ∈ {`subscription`, `repetitive`})
 6. **Kind selector** + inline **kind card** (recurrence card / loan card / none)
@@ -172,13 +172,13 @@ Top → bottom in the form body:
 
 ## Top-tab label state machine
 
-| kind | linked loan | tab labels | tab 0 | tab 1 | tab 2 |
-|---|---|---|---|---|---|
-| default / upcoming | – | Expense / Income / Transfer | expense | income | transfer (hidden for `upcoming`) |
-| subscription / repetitive | – | Expense / Income / Transfer | expense | income | transfer |
-| lent / borrowed | none (new loan) | Lent / Borrowed | expense | income | hidden |
-| lent / borrowed | existing `lent` loan | Collected | hidden | income (locked) | hidden |
-| lent / borrowed | existing `borrowed` loan | Paid | expense (locked) | hidden | hidden |
+| kind                      | linked loan              | tab labels                  | tab 0            | tab 1           | tab 2                            |
+| ------------------------- | ------------------------ | --------------------------- | ---------------- | --------------- | -------------------------------- |
+| default / upcoming        | –                        | Expense / Income / Transfer | expense          | income          | transfer (hidden for `upcoming`) |
+| subscription / repetitive | –                        | Expense / Income / Transfer | expense          | income          | transfer                         |
+| lent / borrowed           | none (new loan)          | Lent / Borrowed             | expense          | income          | hidden                           |
+| lent / borrowed           | existing `lent` loan     | Collected                   | hidden           | income (locked) | hidden                           |
+| lent / borrowed           | existing `borrowed` loan | Paid                        | expense (locked) | hidden          | hidden                           |
 
 - Selecting tab 0 / tab 1 while kind ∈ {lent, borrowed} sets `kind` + `type`
   together via `getKindForLoanType` inverse (tab 0 → lent+expense, tab 1 →
@@ -214,14 +214,14 @@ no-op):
 1. `ALTER TABLE transactions ADD COLUMN kind …` (above)
 2. `UPDATE transactions SET kind='repetitive'
    WHERE (recurring_id IS NOT NULL OR subtype='recurring') AND kind='default';`
-   *(the durable "is a recurring instance" signal in this codebase is
+   _(the durable "is a recurring instance" signal in this codebase is
    `recurring_id`; current code never writes `subtype='recurring'` — that value
-   is only possible in Flutter-era legacy rows, kept in the OR as belt-and-braces.)*
+   is only possible in Flutter-era legacy rows, kept in the OR as belt-and-braces.)_
 3. `UPDATE transactions SET kind = CASE
       (SELECT loan_type FROM loans WHERE loans.id = transactions.loan_id)
       WHEN 'lent' THEN 'lent' WHEN 'borrowed' THEN 'borrowed' ELSE kind END
    WHERE loan_id IS NOT NULL AND kind IN ('default','repetitive');`
-   *(loan link wins over recurring)*
+   _(loan link wins over recurring)_
 4. `UPDATE transactions SET kind='upcoming'
    WHERE is_pending=1 AND kind='default' AND type <> 'transfer';`
 
@@ -230,7 +230,7 @@ no-op):
 account detail, category detail, `summary-card`, and
 `stats-data.computeExpenseBySubtype` still filter on `LOAN_*` / `recurring` /
 `one-time`, and `loan-service.createLoan` + the loan Collect/Settle flow still
-*write* `LOAN_*`. `kind` is the new axis and is now on every row; `subtype`
+_write_ `LOAN_*`. `kind` is the new axis and is now on every row; `subtype`
 keeps its legacy values. Retiring `LOAN_*` onto `kind`+`type`+opening-entry
 helper is **Slice 4** (loans engine); retiring `recurring`/`one-time` (and
 reworking/removing `computeExpenseBySubtype`) rides with the later slice that
@@ -248,17 +248,17 @@ file back and the next launch retries cleanly.
 - [ ] every `0000` index still present (`SELECT name FROM sqlite_master WHERE
       type='index'`) — additive migration cannot drop them; confirm anyway
 - [ ] no triggers existed in `0000` to lose (verify) — additive migration is
-      inherently rebuild-free
+  inherently rebuild-free
 - [ ] `#(kind='repetitive')` == pre-migration `#((recurring_id IS NOT NULL OR
       subtype='recurring') AND loan_id IS NULL)`
 - [ ] `#(kind IN ('lent','borrowed'))` == pre-migration `#(loan_id IS NOT NULL)`;
-      each matches its loan's `loan_type`
+  each matches its loan's `loan_type`
 - [ ] `#(kind='upcoming')` == pre-migration `#(is_pending=1 AND type<>'transfer'
       AND recurring_id IS NULL AND subtype IS NOT 'recurring' AND loan_id IS NULL)`
 - [ ] `#(kind='default')` == the remainder; no row left `kind IS NULL`
 - [ ] pending recurring instances are `repetitive`, not `upcoming`
 - [ ] `subtype` column untouched — every pre-migration `subtype` value (incl.
-      `refund`, `loan_*`, `recurring`, `one-time`) is exactly as before
+  `refund`, `loan_*`, `recurring`, `one-time`) is exactly as before
 - [ ] re-running the file against the migrated DB changes nothing
 
 ### Types / rows / mappers / schema / ledger
@@ -290,17 +290,17 @@ file back and the next launch retries cleanly.
 (preserve history), then split `index.tsx` and add the new files.
 `src/app/transaction/[id].tsx` is the only importer.
 
-| File | Responsibility |
-|---|---|
-| `index.tsx` | Thin coordinator (~150–200 lines). Renders the fixed skeleton, wires the hook, places pickers. No submit/branch logic. |
-| `use-transaction-form.ts` | **Deep module.** Owns the RHF instance, `kind` state, `recurrence` state, `loanDraft` state, `linkedLoanId`, tab-label derivation, `onKindChange` transition matrix, and all submit / delete / restore / destroy branching. Returns a stable object (see below). |
-| `use-transaction-form.submit.ts` | Pure builders: `buildTransactionPayload`, `buildRecurringRuleInput`, `buildLoanCreateInput`. No IO — unit-testable. |
-| `on-kind-change.ts` | Pure `onKindChange(prev, next, state) → partial state` transition function (see ES / KT rules). |
-| `transaction-top-tabs.tsx` | Replaces `transaction-type-selector.tsx`. Props: `labels`, `value`, `onChange`, `hiddenSlots?`, `lockedTo?`. |
-| `form-kind-selector.tsx` | `ListItem` → bottom-sheet of 6 kinds; renders the active kind card beneath. |
-| `form-kind-card.tsx` | Switch → `RecurrenceCard` (S2) / `LoanCard` (S4) / `null`. |
-| carried by the `git mv`, reused | `form-account-picker`, `form-to-account-picker`, `form-conversion-section`, `form-category-picker`, `form-goal-picker`, `form-budget-picker`, `form-tags-picker`, `form-date-section`, `form-notes-section`, `form-attachments-section`, `form-footer`, `form-delete-actions`, `form-modals`, `use-form-*`, `form.styles.ts`. |
-| dropped / repurposed | `form-recurring-section.tsx` → `RecurrenceCard`; `form-loan-picker.tsx` → the "link existing loan" picker inside `LoanCard`. |
+| File                             | Responsibility                                                                                                                                                                                                                                                                                                                |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.tsx`                      | Thin coordinator (~150–200 lines). Renders the fixed skeleton, wires the hook, places pickers. No submit/branch logic.                                                                                                                                                                                                        |
+| `use-transaction-form.ts`        | **Deep module.** Owns the RHF instance, `kind` state, `recurrence` state, `loanDraft` state, `linkedLoanId`, tab-label derivation, `onKindChange` transition matrix, and all submit / delete / restore / destroy branching. Returns a stable object (see below).                                                              |
+| `use-transaction-form.submit.ts` | Pure builders: `buildTransactionPayload`, `buildRecurringRuleInput`, `buildLoanCreateInput`. No IO — unit-testable.                                                                                                                                                                                                           |
+| `on-kind-change.ts`              | Pure `onKindChange(prev, next, state) → partial state` transition function (see ES / KT rules).                                                                                                                                                                                                                               |
+| `transaction-top-tabs.tsx`       | Replaces `transaction-type-selector.tsx`. Props: `labels`, `value`, `onChange`, `hiddenSlots?`, `lockedTo?`.                                                                                                                                                                                                                  |
+| `form-kind-selector.tsx`         | `ListItem` → bottom-sheet of 6 kinds; renders the active kind card beneath.                                                                                                                                                                                                                                                   |
+| `form-kind-card.tsx`             | Switch → `RecurrenceCard` (S2) / `LoanCard` (S4) / `null`.                                                                                                                                                                                                                                                                    |
+| carried by the `git mv`, reused  | `form-account-picker`, `form-to-account-picker`, `form-conversion-section`, `form-category-picker`, `form-goal-picker`, `form-budget-picker`, `form-tags-picker`, `form-date-section`, `form-notes-section`, `form-attachments-section`, `form-footer`, `form-delete-actions`, `form-modals`, `use-form-*`, `form.styles.ts`. |
+| dropped / repurposed             | `form-recurring-section.tsx` → `RecurrenceCard`; `form-loan-picker.tsx` → the "link existing loan" picker inside `LoanCard`.                                                                                                                                                                                                  |
 
 `src/app/transaction/[id].tsx` — import v4; `initialType`/`initialSubtype`
 plumbing becomes `initialKind` (still from route params; keeps `?type=`,
@@ -318,16 +318,16 @@ the edit-semantics locks (ES-*).
 
 ### ES — transaction edit semantics
 
-| scenario | allowed via normal form? |
-|---|---|
-| **ES-1** `default ↔ upcoming` | Yes. Just the kind + `is_pending`. `updateTransaction`'s existing balance reconciliation applies/reverses the delta on the pending transition. |
-| **ES-2** `subscription ↔ repetitive` (on an instance) | Yes — label only. Updates the instance `kind`. If the instance is rule-linked, also update the rule template's kind marker via the `this_and_future` scope path. |
-| **ES-3** `subscription/repetitive → default/upcoming` on a rule-linked instance | Yes, but it **detaches** the instance from the rule (`detachFromRule`, same as the existing "this" edit scope) — the rule keeps generating. Warn in the recurring-edit scope modal. |
-| **ES-4** any kind → `lent`/`borrowed` on an **existing** transaction | **No.** Creating a loan link on edit is disallowed; user creates a fresh transaction. `canEditKind` is false when editing and target is lent/borrowed. |
-| **ES-5** loan-linked transaction (opening or repayment): change `kind`, `type`, or `loanId` | **No.** `lockedFields` includes `kind`, `type`, `loanId`, `toAccountId`. Enforced in the hook (controls disabled) **and** re-asserted in `updateTransaction` (ignore/throw on a changed locked field). |
-| **ES-6** loan **opening entry**: change `amount` / `account` / `category` | **No** via the transaction form — these define the loan. Editable only through the loan editor (`settings/loans/[loanId]/modify`), which updates the loan row and the opening entry together in one tx. The transaction form may still edit `date`, `title`, `notes`, `attachments`, `tags`. |
-| **ES-7** loan **repayment**: change `amount` | Yes, within `0 < amount ≤ remainingAmount + thisRepayment` (this row already counts toward `remaining`). `account`/`category`/`date`/`title`/`notes` editable. Recompute progress on save; may close/re-open the loan (LP-*). |
-| **ES-8** recurring **rule** recurrence (interval/unit/until) | Editable via the `this_and_future` scope only — rebuilds `rules` + `range` (S2). `this` scope edits the single instance's date only. |
+| scenario                                                                                    | allowed via normal form?                                                                                                                                                                                                                                                                     |
+| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ES-1** `default ↔ upcoming`                                                               | Yes. Just the kind + `is_pending`. `updateTransaction`'s existing balance reconciliation applies/reverses the delta on the pending transition.                                                                                                                                               |
+| **ES-2** `subscription ↔ repetitive` (on an instance)                                       | Yes — label only. Updates the instance `kind`. If the instance is rule-linked, also update the rule template's kind marker via the `this_and_future` scope path.                                                                                                                             |
+| **ES-3** `subscription/repetitive → default/upcoming` on a rule-linked instance             | Yes, but it **detaches** the instance from the rule (`detachFromRule`, same as the existing "this" edit scope) — the rule keeps generating. Warn in the recurring-edit scope modal.                                                                                                          |
+| **ES-4** any kind → `lent`/`borrowed` on an **existing** transaction                        | **No.** Creating a loan link on edit is disallowed; user creates a fresh transaction. `canEditKind` is false when editing and target is lent/borrowed.                                                                                                                                       |
+| **ES-5** loan-linked transaction (opening or repayment): change `kind`, `type`, or `loanId` | **No.** `lockedFields` includes `kind`, `type`, `loanId`, `toAccountId`. Enforced in the hook (controls disabled) **and** re-asserted in `updateTransaction` (ignore/throw on a changed locked field).                                                                                       |
+| **ES-6** loan **opening entry**: change `amount` / `account` / `category`                   | **No** via the transaction form — these define the loan. Editable only through the loan editor (`settings/loans/[loanId]/modify`), which updates the loan row and the opening entry together in one tx. The transaction form may still edit `date`, `title`, `notes`, `attachments`, `tags`. |
+| **ES-7** loan **repayment**: change `amount`                                                | Yes, within `0 < amount ≤ remainingAmount + thisRepayment` (this row already counts toward `remaining`). `account`/`category`/`date`/`title`/`notes` editable. Recompute progress on save; may close/re-open the loan (LP-*).                                                                |
+| **ES-8** recurring **rule** recurrence (interval/unit/until)                                | Editable via the `this_and_future` scope only — rebuilds `rules` + `range` (S2). `this` scope edits the single instance's date only.                                                                                                                                                         |
 
 `transactionSchema` cannot see loan data; ES-5/6/7 amount bounds are enforced in
 `use-transaction-form.submit.ts` + a guard in the ledger/loan service, not zod.
@@ -337,13 +337,13 @@ the edit-semantics locks (ES-*).
 Never clears user content (amount, account, category, date, title, notes,
 attachments, tags). Only resets kind-scoped scratch state:
 
-| next | reset |
-|---|---|
-| `default`, `upcoming` | clear `recurrence`; clear `loanDraft`; clear `linkedLoanId` if it was set by lent/borrowed; keep `toAccountId` only if `type==='transfer'` |
-| `subscription`, `repetitive` | init `recurrence` to `{interval:1, unit:'month'}` if empty; clear `loanDraft` / `linkedLoanId`; hide Date (start = `transactionDate`, RS-1) |
-| `subscription ↔ repetitive` | keep `recurrence` |
-| `lent`, `borrowed` | clear `recurrence`; init `loanDraft` (`name = title || category?.name`); set `type` (lent→expense, borrowed→income); clear `toAccountId` + conversion |
-| leaving `transfer` (any next) | clear `toAccountId`, `conversionRate` |
+| next                          | reset                                                                                                                                       |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `default`, `upcoming`         | clear `recurrence`; clear `loanDraft`; clear `linkedLoanId` if it was set by lent/borrowed; keep `toAccountId` only if `type==='transfer'`  |
+| `subscription`, `repetitive`  | init `recurrence` to `{interval:1, unit:'month'}` if empty; clear `loanDraft` / `linkedLoanId`; hide Date (start = `transactionDate`, RS-1) |
+| `subscription ↔ repetitive`   | keep `recurrence`                                                                                                                           |
+| `lent`, `borrowed`            | clear `recurrence`; init `loanDraft` (`name = title                                                                                         |     | category?.name`); set `type`(lent→expense, borrowed→income); clear`toAccountId` + conversion |
+| leaving `transfer` (any next) | clear `toAccountId`, `conversionRate`                                                                                                       |
 
 In **edit** mode, `setKind` is a no-op when `!canEditKind` (ES-4/ES-5).
 
@@ -369,7 +369,10 @@ In **edit** mode, `setKind` is a no-op when `!canEditKind` (ES-4/ES-5).
 
 ```ts
 export type RecurrenceUnit = "day" | "week" | "month" | "year"
-export interface Recurrence { interval: number; unit: RecurrenceUnit }  // interval: integer 1..999
+export interface Recurrence {
+  interval: number
+  unit: RecurrenceUnit
+} // interval: integer 1..999
 ```
 
 Delete `RecurringFrequency`, `RECURRING_OPTIONS`, every `"biweekly"` branch. Keep
@@ -609,7 +612,7 @@ Every multi-write loan operation runs in **one** `runInTransaction`
 ### `loan-card.tsx` (kind ∈ {lent, borrowed})
 
 - **New loan** (default): `name` input (default `title || category?.name`),
-  optional `dueDate`. Principal = the form `amount` (editable — it *is* the
+  optional `dueDate`. Principal = the form `amount` (editable — it _is_ the
   principal). Account + category from the form.
 - **"Link existing loan instead"** switch → shows the repurposed loan picker
   filtered to loans whose `loanType` matches the active tab (not by
@@ -635,15 +638,15 @@ Submit (`use-transaction-form.submit.ts` + hook):
 
 ### LX — deletion & restore of loan transactions
 
-| action from the transaction screen | behavior |
-|---|---|
-| **LX-1** delete a **repayment** (soft) | Allowed. Recompute progress on the next read — may re-open a closed one-time loan or drop a long-term below 1. |
-| **LX-2** delete the **opening entry** (soft) | **Blocked** in the transaction form while the loan exists. The delete action routes to "Delete loan", which follows the existing loan-delete semantics (removes the loan + its linked transactions); if repayments exist, it warns first. |
-| **LX-3** delete the repayment that caused promotion | Promotion is **not** reversed — the loan stays `long_term`. (One-way; avoids thrash.) |
-| **LX-4** delete a repayment on a **closed** one-time loan | Allowed; re-opens the loan (`progress` drops below 1). |
-| **LX-5** restore a soft-deleted repayment | Re-adds it to progress; may re-close / re-complete. |
-| **LX-6** `destroy` (hard) a repayment | Same progress recompute, permanent. |
-| **LX-7** restore a soft-deleted opening entry | Only reachable via loan restore; the loan and its opening entry restore together. |
+| action from the transaction screen                        | behavior                                                                                                                                                                                                                                  |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **LX-1** delete a **repayment** (soft)                    | Allowed. Recompute progress on the next read — may re-open a closed one-time loan or drop a long-term below 1.                                                                                                                            |
+| **LX-2** delete the **opening entry** (soft)              | **Blocked** in the transaction form while the loan exists. The delete action routes to "Delete loan", which follows the existing loan-delete semantics (removes the loan + its linked transactions); if repayments exist, it warns first. |
+| **LX-3** delete the repayment that caused promotion       | Promotion is **not** reversed — the loan stays `long_term`. (One-way; avoids thrash.)                                                                                                                                                     |
+| **LX-4** delete a repayment on a **closed** one-time loan | Allowed; re-opens the loan (`progress` drops below 1).                                                                                                                                                                                    |
+| **LX-5** restore a soft-deleted repayment                 | Re-adds it to progress; may re-close / re-complete.                                                                                                                                                                                       |
+| **LX-6** `destroy` (hard) a repayment                     | Same progress recompute, permanent.                                                                                                                                                                                                       |
+| **LX-7** restore a soft-deleted opening entry             | Only reachable via loan restore; the loan and its opening entry restore together.                                                                                                                                                         |
 
 `FormDeleteActions` in the form must branch on `isLoanOpeningTransaction` (LX-2)
 vs repayment (LX-1) vs neither.
@@ -699,7 +702,9 @@ header:
 ```ts
 const displayTitle =
   trimmedTitle ??
-  (showUntitledForBlankTitle ? untitledLabel : (category?.name ?? untitledLabel))
+  (showUntitledForBlankTitle
+    ? untitledLabel
+    : (category?.name ?? untitledLabel))
 ```
 
 ### Screens
@@ -751,7 +756,7 @@ row insertion is `src/database/backup/backup-import-plan.ts` `insertRows()`;
 - **One-release backward window (revised — live users, no server backup).**
   `validateBackup` accepts `MIN_SUPPORTED_SCHEMA_VERSION (3) ≤ meta.schemaVersion
   ≤ SCHEMA_VERSION (4)` and still refuses anything older or newer with a clear
-  message. v3 → v4 differs *only* by the additive `transactions.kind` column, and
+  message. v3 → v4 differs _only_ by the additive `transactions.kind` column, and
   `insertRows` already backfills a missing `kind` via `deriveKind`, so a v3
   backup restores losslessly. This deliberately relaxes the previous
   "reject every non-current version" policy for exactly one column bump; drop
@@ -827,7 +832,7 @@ repo's existing defensive-migration patterns.
 - **Guarded + idempotent backfills** so a retry after a partial apply is a
   no-op.
 - **Transaction behavior (verified).** `useMigrations` → `migrate()` →
-  `SQLiteAsyncDialect.migrate` (drizzle-orm `sqlite-core/dialect`) runs *all*
+  `SQLiteAsyncDialect.migrate` (drizzle-orm `sqlite-core/dialect`) runs _all_
   pending migrations, and records each in `__drizzle_migrations`, inside a
   single `session.transaction(...)`. A failure in any statement rolls back every
   pending migration, so no extra `BEGIN; … COMMIT;` is needed in the `.sql`

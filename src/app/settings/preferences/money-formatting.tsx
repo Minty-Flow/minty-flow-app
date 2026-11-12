@@ -6,6 +6,7 @@ import { Money } from "~/components/money"
 import {
   SettingsOptionRow,
   SettingsSection,
+  SettingsSwitchRow,
   settingsStyles,
 } from "~/components/settings/settings-list"
 import { Text } from "~/components/ui/text"
@@ -26,6 +27,10 @@ export default function MoneyFormattingScreen() {
   const preferredCurrency = useMoneyFormattingStore((s) => s.preferredCurrency)
   const setCurrencyLook = useMoneyFormattingStore((s) => s.setCurrencyLook)
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
+  const showBalanceOnHome = useMoneyFormattingStore((s) => s.showBalanceOnHome)
+  const setShowBalanceOnHome = useMoneyFormattingStore(
+    (s) => s.setShowBalanceOnHome,
+  )
   const exampleAmount = 123_456
   const { t } = useTranslation()
 
@@ -67,6 +72,23 @@ export default function MoneyFormattingScreen() {
             onPress={() => setCurrencyLook(value)}
           />
         ))}
+      </SettingsSection>
+
+      <SettingsSection
+        title={t(
+          "screens.settings.preferences.appearance.moneyFormatting.homeLabel",
+        )}
+      >
+        <SettingsSwitchRow
+          label={t(
+            "screens.settings.preferences.appearance.moneyFormatting.showBalanceOnHome.label",
+          )}
+          description={t(
+            "screens.settings.preferences.appearance.moneyFormatting.showBalanceOnHome.description",
+          )}
+          value={showBalanceOnHome}
+          onValueChange={setShowBalanceOnHome}
+        />
       </SettingsSection>
     </ScrollView>
   )

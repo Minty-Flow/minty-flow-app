@@ -28,13 +28,14 @@ import { FormDateSection } from "./form-date-section"
 import { FormDeleteActions } from "./form-delete-actions"
 import { FormFooter } from "./form-footer"
 import { FormGoalPicker } from "./form-goal-picker"
+import { FormItemsSection } from "./form-items-section"
 import { FormKindCard } from "./form-kind-card"
 import { FormKindSelector } from "./form-kind-selector"
 import { FormLoanPicker } from "./form-loan-picker"
 import { FormNotesSection } from "./form-notes-section"
 import { FormOverlays } from "./form-overlays"
 import { FormTagsPicker } from "./form-tags-picker"
-import { isFormReadOnly } from "./form-utils"
+import { canHaveItems, isFormReadOnly } from "./form-utils"
 import { TransactionTopTabs } from "./transaction-top-tabs"
 import type { TransactionFormProps } from "./types"
 import { UpcomingBanner } from "./upcoming-banner"
@@ -153,6 +154,17 @@ export function TransactionForm(props: TransactionFormProps) {
                 type={transactionType}
               />
             </View>
+
+            {/* Shown while items exist even if the type no longer allows
+                them, so the user can see what a save will drop. */}
+            {(canHaveItems(transactionType, f.kind) || f.items.length > 0) && (
+              <FormItemsSection
+                items={f.items}
+                currencyCode={f.selectedAccount?.currencyCode}
+                amount={f.amount ?? 0}
+                onChange={f.setItems}
+              />
+            )}
 
             <FormAccountPicker
               accounts={accounts}

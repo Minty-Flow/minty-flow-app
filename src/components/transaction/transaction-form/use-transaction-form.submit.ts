@@ -3,6 +3,8 @@ import type { TransactionFormValues } from "~/schemas/transactions.schema"
 import type { Account } from "~/types/accounts"
 import type { TransactionKind } from "~/types/transactions"
 
+import { canHaveItems } from "./form-utils"
+
 export interface BuildPayloadCtx {
   isNew: boolean
   transaction: TransactionWithRelations | null
@@ -87,5 +89,7 @@ export function buildTransactionPayload(
     ...payload,
     kind: resolvedKind,
     isPending: resolvedKind === "upcoming" ? true : resolvedIsPending,
+    // A switch to a transfer or a recurring/loan kind drops the items.
+    items: canHaveItems(data.type, resolvedKind) ? (data.items ?? []) : [],
   }
 }

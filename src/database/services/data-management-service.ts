@@ -26,9 +26,10 @@ import {
   readImportMarker,
   writeImportMarker,
 } from "~/database/backup/import-marker"
+import { upgradeBackupData } from "~/database/backup/upgrade-backup-data"
 import { drizzleDb } from "~/database/drizzle/db"
 import { runInTransaction } from "~/database/transaction"
-import type { RowTransaction } from "~/database/types/rows"
+import type { RowTransaction, RowTransactionItem } from "~/database/types/rows"
 import {
   deleteSqliteSnapshot,
   readSqliteSnapshot,
@@ -167,7 +168,7 @@ async function selectAll(table: string): Promise<RawRow[]> {
   return drizzleDb.all<RawRow>(sql.raw(`SELECT * FROM ${table}`))
 }
 
-/** Fetch all 13 tables from the SQLite DB and return a MintyFlowBackup object. */
+/** Fetch every data table from the SQLite DB and return a MintyFlowBackup object. */
 async function buildBackupInMemory(): Promise<MintyFlowBackup> {
   const [
     categories,
@@ -180,6 +181,7 @@ async function buildBackupInMemory(): Promise<MintyFlowBackup> {
     transactions,
     transfers,
     transactionTags,
+    transactionItems,
     budgetAccounts,
     budgetCategories,
     goalAccounts,
@@ -194,6 +196,7 @@ async function buildBackupInMemory(): Promise<MintyFlowBackup> {
     selectAll("transactions"),
     selectAll("transfers"),
     selectAll("transaction_tags"),
+    selectAll("transaction_items"),
     selectAll("budget_accounts"),
     selectAll("budget_categories"),
     selectAll("goal_accounts"),
@@ -217,6 +220,7 @@ async function buildBackupInMemory(): Promise<MintyFlowBackup> {
       transactions,
       transfers,
       transaction_tags: transactionTags,
+      transaction_items: transactionItems,
       budget_accounts: budgetAccounts,
       budget_categories: budgetCategories,
       goal_accounts: goalAccounts,
@@ -234,7 +238,7 @@ async function generateJsonBackup(baseName?: string): Promise<{
   ])
   const fileName = toFileName("json", baseName)
   const uri = `${dir}${fileName}`
-  // Data only: the 13 tables, as before. Settings and the profile travel in
+  // Data only: the data tables, as before. Settings and the profile travel in
   // the ZIP, which can also carry the profile photo.
   await FileSystem.writeAsStringAsync(uri, JSON.stringify(backup, null, 2), {
     encoding: FileSystem.EncodingType.UTF8,
@@ -404,6 +408,16 @@ async function generateCsvExport(
     ),
   )
 
+  const itemRows = drizzleDb.all<RowTransactionItem>(
+    sql.raw(`SELECT * FROM transaction_items ORDER BY sort_order`),
+  )
+  const itemsByTx = new Map<string, RowTransactionItem[]>()
+  for (const item of itemRows) {
+    const list = itemsByTx.get(item.transaction_id) ?? []
+    list.push(item)
+    itemsByTx.set(item.transaction_id, list)
+  }
+
   const headers = [
     "id",
     "date",
@@ -420,6 +434,7 @@ async function generateCsvExport(
     "recurring_id",
     "subtype",
     "location",
+    "items",
     "created_at",
   ]
 
@@ -440,6 +455,15 @@ async function generateCsvExport(
       escapeCsvField(r.recurring_id),
       escapeCsvField(r.subtype),
       escapeCsvField(r.location),
+      // "Milk x2 @ 1.50; Bread x1 @ 2.00": unit prices in the account currency.
+      escapeCsvText(
+        (itemsByTx.get(r.id) ?? [])
+          .map(
+            (item) =>
+              `${item.name} x${item.quantity} @ ${minorUnitsToDecimalString(item.unit_price, r.currency_code)}`,
+          )
+          .join("; ") || null,
+      ),
       escapeCsvField(r.created_at),
     ].join(","),
   )
@@ -521,6 +545,8 @@ export async function recoverInterruptedImport(): Promise<boolean> {
     return false
   }
 
+  // A snapshot written by an older app version holds data at its schema.
+  upgradeBackupData(snapshot.meta.schemaVersion, snapshot.data)
   await resetDatabaseForBackupImport()
   await runInTransaction("recover.insert", (db) => {
     insertBackupData(db, snapshot.data)
@@ -595,6 +621,13 @@ export async function importBackup(
       if (!validTagIds.has(row.tag_id as string)) {
         throw new Error(
           `transaction_tags row references invalid tag_id ${row.tag_id}`,
+        )
+      }
+    }
+    for (const row of data.transaction_items) {
+      if (!validTransactionIds.has(row.transaction_id as string)) {
+        throw new Error(
+          `transaction_items row references invalid transaction_id ${row.transaction_id}`,
         )
       }
     }

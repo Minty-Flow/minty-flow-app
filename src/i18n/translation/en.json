@@ -371,6 +371,11 @@
             "title": "Money Formatting",
             "previewLabel": "Preview",
             "displayFormatLabel": "Display format",
+            "homeLabel": "Home screen",
+            "showBalanceOnHome": {
+              "label": "Show balance on home",
+              "description": "Show your total balance above the income and expense summary"
+            },
             "options": {
               "symbol": {
                 "label": "Symbol",
@@ -1173,7 +1178,8 @@
         "errors": {
           "invalidExpression": "Invalid expression",
           "divisionByZero": "Cannot divide by zero",
-          "invalidResult": "Invalid result"
+          "invalidResult": "Invalid result",
+          "tooLarge": "Amount too large"
         }
       },
       "attachments": {
@@ -1242,6 +1248,41 @@
       "deleteLoanSheet": {
         "title": "Delete this loan?",
         "description": "This removes the loan. Its transactions stay in your history, no longer linked to a loan."
+      },
+      "items": {
+        "toggle": "Itemize",
+        "addItem": "Add item",
+        "editItem": "Edit item",
+        "name": "Item name",
+        "namePlaceholder": "e.g. Milk",
+        "unitPrice": "Price per unit",
+        "quantity": "Quantity",
+        "total": "Items total",
+        "a11y": {
+          "count_one": "{{count}} item",
+          "count_other": "{{count}} items",
+          "added": "Added {{name}}",
+          "addRecent": "Add {{name}}, {{price}}",
+          "recentAdded_one": ", {{count}} added",
+          "recentAdded_other": ", {{count}} added",
+          "newName": "New item name",
+          "priceEach": "Price each",
+          "decrease": "Decrease quantity",
+          "increase": "Increase quantity",
+          "remove": "Remove item"
+        },
+        "recent": "Recent",
+        "newPlaceholder": "Add an item",
+        "needName": "Add a name",
+        "needPrice": "Add a price",
+        "removed": "Removed {{name}}",
+        "breakdown": "{{count}} × {{price}}",
+        "confirmOff": {
+          "title_one": "Remove {{count}} item?",
+          "title_other": "Remove {{count}} items?",
+          "description": "The amount will stay {{amount}}, and you can edit it."
+        },
+        "chooseAccount": "Choose an account to itemize this transaction."
       }
     },
     "recurring": {
@@ -1278,53 +1319,67 @@
         "selectedCount": "{{count}} selected",
         "noneSelected": "None selected",
         "expense": {
-          "eatingOut": "Eating out",
           "groceries": "Groceries",
-          "drinks": "Drinks & Beverages",
-          "education": "Education",
-          "health": "Health",
+          "eatingOut": "Eating out",
           "transport": "Transport",
-          "gas": "Fuel",
+          "housing": "Housing",
+          "utilities": "Utilities",
+          "health": "Health",
           "shopping": "Shopping",
           "entertainment": "Entertainment",
-          "subscriptions": "Online subscriptions",
+          "subscriptions": "Subscriptions",
           "gifts": "Gifts",
-          "rent": "Rent",
-          "utils": "Utils",
-          "taxes": "Taxes",
-          "insurance": "Insurance",
-          "petCare": "Pet care",
+          "fuel": "Fuel",
+          "carMaintenance": "Car maintenance",
+          "parking": "Parking",
           "childCare": "Child care",
+          "education": "Education",
+          "petCare": "Pet care",
+          "insurance": "Insurance",
+          "taxes": "Taxes",
           "fitness": "Fitness",
+          "beauty": "Beauty",
+          "hygiene": "Hygiene",
+          "drinks": "Coffee & drinks",
+          "snacks": "Snacks",
           "gadgets": "Gadgets",
           "services": "Services",
-          "snacks": "Snacks",
           "stationery": "Stationery",
-          "hygiene": "Hygiene",
           "travel": "Travel",
           "hobbies": "Hobbies",
-          "beauty": "Beauty",
           "donations": "Donations"
         },
         "income": {
-          "paycheck": "Paycheck",
-          "bonus": "Bonus",
-          "freelance": "Freelance",
-          "business": "Business income",
+          "salary": "Salary",
+          "gifts": "Gifts received",
+          "refunds": "Refunds",
+          "cashback": "Cashback",
           "investments": "Investments",
           "interest": "Interest",
           "rental": "Rental income",
+          "business": "Business income",
+          "freelance": "Freelance",
           "allowance": "Allowance",
-          "gifts": "Gifts received",
-          "cashback": "Cashback & Refunds",
-          "pension": "Pension",
-          "refunds": "Refunds"
+          "pension": "Pension"
+        },
+        "packs": {
+          "car": "Car",
+          "kids": "Kids",
+          "pets": "Pets",
+          "homeBills": "Home & bills",
+          "selfCare": "Self-care",
+          "foodExtras": "Food extras",
+          "workTech": "Work & tech",
+          "lifestyle": "Lifestyle",
+          "investing": "Investing",
+          "business": "Business",
+          "support": "Support"
         },
         "essentials": "Essentials",
         "packsTitle": "Fits your life",
         "packsHint": "Add a few extras that match your situation.",
-        "addPack": "Add all",
-        "removePack": "Remove"
+        "addPack": "Choose all",
+        "removePack": "Clear"
       },
       "search": {
         "placeholder": "Search {{tab}} categories..."
@@ -1357,7 +1412,10 @@
           "descriptionBudgets_one": "The budget {{names}} uses this category as its only one and will be switched off until you give it a category.",
           "descriptionBudgets_other": "The budgets {{names}} use this category as their only one and will be switched off until you give each a category.",
           "deleteAnyway": "Delete anyway",
-          "descriptionEmpty": "Deleting this category cannot be undone."
+          "descriptionEmpty": "Deleting this category cannot be undone.",
+          "descriptionRules_one": "{{count}} recurring rule uses it too.",
+          "descriptionRules_other": "{{count}} recurring rules use it too.",
+          "descriptionMove": "Its transactions and recurring rules move to {{name}}. Budgets that use only this category switch to it. Transactions keep their budget only if it includes {{name}}. This cannot be undone."
         },
         "toast": {
           "notFound": "Category not found",
@@ -1366,6 +1424,13 @@
           "deleteFailed": "Failed to delete category. Please try again.",
           "createFailed": "Failed to create category. Please try again.",
           "updateFailed": "Failed to update category. Please try again."
+        },
+        "move": {
+          "label": "When deleted, move its transactions and recurring rules to",
+          "placeholder": "Choose a category",
+          "hintNone": "If you don't choose one, they lose their category.",
+          "hintSelected": "Budgets that use only this category switch to the new one.",
+          "clear": "Don't move them"
         }
       },
       "empty": {
@@ -1565,7 +1630,8 @@
       "toAccountForTransfer": "Please select a destination account for the transfer.",
       "category": "Category is required",
       "accounts": "Please select at least one account",
-      "categories": "Please select at least one category"
+      "categories": "Please select at least one category",
+      "itemName": "Item name is required"
     },
     "tooLong": {
       "name": "Name is too long"
@@ -1590,6 +1656,9 @@
     }
   },
   "onboarding": {
+    "language": {
+      "title": "Choose your language"
+    },
     "resume": {
       "title": "Finish setting up?",
       "description": "You left before finishing setup. Continue where you stopped, or skip it and start using the app.",
@@ -1629,6 +1698,7 @@
         "savings": "Savings"
       },
       "createFailed": "Couldn't create your accounts. Try again.",
+      "currencyHint": "The accounts you add here will use this currency. An account's currency can't be changed after it's created.",
       "pickOne": "Pick at least one account to continue"
     },
     "expenseCategories": {

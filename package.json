@@ -1,7 +1,7 @@
 {
   "name": "minty-flow-app",
   "main": "index.ts",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "scripts": {
     "android": "expo run:android",
     "android:emu": "expo run:android --device Pixel_10",
@@ -82,7 +82,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.6",
+    "@biomejs/biome": "^2.6.6",
     "@react-native-community/cli": "latest",
     "@svgr/cli": "^8.1.0",
     "@types/node": "^25.9.1",

@@ -104,7 +104,9 @@ function walk(dir: string, prefix: string = "", depth: number = 0): string {
 
 function run(): void {
   const tree = `# Project Structure
+
 Generated on: ${new Date().toISOString()}
+
 \`\`\`
 ${ROOT}/
 ${walk(ROOT)}

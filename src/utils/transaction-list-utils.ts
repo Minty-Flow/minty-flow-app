@@ -182,7 +182,8 @@ export function buildQueryFilters(
 }
 
 /**
- * Search over title (and notes when included), honouring the match type:
+ * Search over title, line-item names (and notes when included), honouring the
+ * match type:
  * - `untitled` keeps rows with no title, ignoring the query.
  * - `exact` matches the full field; `smart`/`partial` match a substring.
  * An empty query is a no-op for every type except `untitled`.
@@ -211,6 +212,7 @@ export function applySearch(
   return list.filter(
     (r) =>
       fieldMatches(r.title) ||
+      r.items.some((item) => fieldMatches(item.name)) ||
       (searchState.includeNotes && fieldMatches(r.description)),
   )
 }

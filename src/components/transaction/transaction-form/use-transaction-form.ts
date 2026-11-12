@@ -35,6 +35,7 @@ import { currencyRegistryService } from "~/services/currency-registry"
 import { useTransactionLocationStore } from "~/stores/transaction-location.store"
 import { NewEnum } from "~/types/new"
 import {
+  type TransactionItem,
   type TransactionKind,
   type TransactionLocation,
   TransactionSubTypeEnum,
@@ -51,7 +52,7 @@ import {
 import { Toast } from "~/utils/toast"
 
 import { EMPTY_TAG_IDS } from "./constants"
-import { getDefaultValues, mergeReducer } from "./form-utils"
+import { getDefaultValues, itemsTotal, mergeReducer } from "./form-utils"
 import { KIND_ICONS } from "./kind-info"
 import { onKindChange } from "./on-kind-change"
 import { checkTransferRate } from "./transfer-rate"
@@ -104,7 +105,6 @@ export function useTransactionForm({
     useRecurringRuleState(transaction?.recurringId ?? null)
   const defaultValues = getDefaultValues(
     transaction,
-    accounts,
     transactionType,
     initialTagIds,
     prefill,
@@ -129,6 +129,7 @@ export function useTransactionForm({
   const date = watch("transactionDate")
   const description = watch("description")
   const tagIds = watch("tags")
+  const items = watch("items") ?? []
   const goalId = watch("goalId")
   const budgetId = watch("budgetId")
   const loanId = watch("loanId")
@@ -806,6 +807,12 @@ export function useTransactionForm({
   }
   const setTags = (ids: string[]) =>
     setValue("tags", ids, { shouldDirty: true })
+  // The items' sum fills the amount; the user can still change it after.
+  const setItems = (next: TransactionItem[]) => {
+    setValue("items", next, { shouldDirty: true })
+    if (next.length > 0)
+      setValue("amount", itemsTotal(next), { shouldDirty: true })
+  }
   const removeTag = (tagId: string) => {
     setValue(
       "tags",
@@ -995,6 +1002,8 @@ export function useTransactionForm({
     handleDestroy,
     handleDestroyConfirm,
     setTags,
+    items,
+    setItems,
     removeTag,
   }
 }

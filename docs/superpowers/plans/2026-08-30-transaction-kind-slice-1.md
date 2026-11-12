@@ -6,7 +6,7 @@
 
 **Tech Stack:** Expo SDK 57, React Native New Arch, Drizzle ORM + expo-sqlite, `drizzle-orm/expo-sqlite/migrator` (`useMigrations`), react-hook-form + zod v4, react-native-unistyles v3, i18next, Biome, TypeScript (`tsc --noEmit`). **No test framework** — verification is `pnpm types` + `pnpm lint` + committed `node` check scripts (`node:sqlite`, `node:assert`) + explicit manual QA in the running app.
 
-**Spec:** `docs/superpowers/specs/2026-08-30-transaction-form-kind-redesign-design.md` (rev 2, approved). This plan implements **Slice 1** only. Read the spec's *Cross-slice invariants* (CSI-1…CSI-4), *ES-1…ES-8*, *KT matrix*, and *Slice 1* sections alongside this plan.
+**Spec:** `docs/superpowers/specs/2026-08-30-transaction-form-kind-redesign-design.md` (rev 2, approved). This plan implements **Slice 1** only. Read the spec's _Cross-slice invariants_ (CSI-1…CSI-4), _ES-1…ES-8_, _KT matrix_, and _Slice 1_ sections alongside this plan.
 
 ## Global Constraints
 
@@ -17,7 +17,7 @@
 - **All unistyles StyleSheets use the callback form** `StyleSheet.create((theme) => ({…}))`, co-located in `*.styles.ts`.
 - **Pre-commit hook runs** `pnpm structure`, `pnpm lint:fix` (stages fixes), `pnpm check-number-formatting`, `pnpm types` — all must pass. Every "Commit" step assumes this gate.
 - **i18n:** every user-facing string is a key present in **both** `src/i18n/translation/en.json` and `ar.json`; `pnpm check-i18n-keys` must pass.
-- **Migrations are additive and forward-only.** `drizzle-orm`'s async sqlite migrator wraps *all* pending migration files in **one** `session.transaction()` (verified in `node_modules/drizzle-orm/sqlite-core/dialect.cjs` `async migrate`), so a failing statement rolls the whole thing back and the next launch retries cleanly — **do not** add explicit `BEGIN`/`COMMIT` to `.sql` files. Statements are still written guarded + idempotent.
+- **Migrations are additive and forward-only.** `drizzle-orm`'s async sqlite migrator wraps _all_ pending migration files in **one** `session.transaction()` (verified in `node_modules/drizzle-orm/sqlite-core/dialect.cjs` `async migrate`), so a failing statement rolls the whole thing back and the next launch retries cleanly — **do not** add explicit `BEGIN`/`COMMIT` to `.sql` files. Statements are still written guarded + idempotent.
 - **Do not read/inspect `src/components/icons/**`.**
 
 ---
@@ -26,45 +26,45 @@
 
 **New files**
 
-| File | Responsibility |
-|---|---|
-| `src/domain/transaction-kind.ts` | Pure CSI-1 module: kind↔type matrix, loan-type↔kind/repayment-type maps, `isKindTypeValid`. No IO. **Type-only imports only** (`import type …`) so Node's type-stripping elides them and the `.mts` check scripts can load the file with zero runtime resolution. |
-| `src/domain/transaction-kind.assertions.ts` | Compile-time exhaustiveness assertions (`satisfies`, `assertNever`). Imported nowhere; picked up by `tsc`. |
-| `scripts/checks/verify-transaction-kind.mts` | Runnable `node:assert` sanity check for the CSI-1 module. `node ./scripts/checks/verify-transaction-kind.mts`. |
-| `scripts/checks/verify-migration-0001.mts` | Runnable `node:sqlite` validation of migration `0001` against a copied `.db` file. `node ./scripts/checks/verify-migration-0001.mts <path-to-copy.db>`. |
-| `drizzle/0001_<name>.sql` | `ALTER TABLE transactions ADD COLUMN kind …` + 4 guarded backfill `UPDATE`s. |
-| `src/components/transaction/transaction-form-v4/**` | `git mv` of `transaction-form-v3/` (history preserved), then split. |
-| `src/components/transaction/transaction-form-v4/use-transaction-form.ts` | Deep hook: RHF instance, `kind` state, tab-label derivation, `onKindChange` wiring, `canEditKind`/`lockedFields`, submit/delete/restore/destroy branching. |
-| `src/components/transaction/transaction-form-v4/use-transaction-form.submit.ts` | Pure `buildTransactionPayload(data, ctx)` (+ stubs `buildRecurringRuleInput`, `buildLoanCreateInput` returning `never`-guarded TODOs for Slices 2/4 — see Task 9). |
-| `src/components/transaction/transaction-form-v4/on-kind-change.ts` | Pure `onKindChange(prev, next, state) → Partial<KindScratchState>`. |
-| `src/components/transaction/transaction-form-v4/transaction-top-tabs.tsx` | Replaces `transaction-type-selector.tsx`. Props: `labels`, `value`, `onChange`, `hiddenSlots?`, `lockedTo?`. |
-| `src/components/transaction/transaction-form-v4/form-kind-selector.tsx` | `ListItem` → bottom-sheet of the 6 kinds; renders `FormKindCard` beneath. |
-| `src/components/transaction/transaction-form-v4/form-kind-card.tsx` | `switch(kind)` → placeholder cards for subscription/repetitive/lent/borrowed (real cards land in Slices 2/4); `null` for default/upcoming. |
+| File                                                                            | Responsibility                                                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/domain/transaction-kind.ts`                                                | Pure CSI-1 module: kind↔type matrix, loan-type↔kind/repayment-type maps, `isKindTypeValid`. No IO. **Type-only imports only** (`import type …`) so Node's type-stripping elides them and the `.mts` check scripts can load the file with zero runtime resolution. |
+| `src/domain/transaction-kind.assertions.ts`                                     | Compile-time exhaustiveness assertions (`satisfies`, `assertNever`). Imported nowhere; picked up by `tsc`.                                                                                                                                                        |
+| `scripts/checks/verify-transaction-kind.mts`                                    | Runnable `node:assert` sanity check for the CSI-1 module. `node ./scripts/checks/verify-transaction-kind.mts`.                                                                                                                                                    |
+| `scripts/checks/verify-migration-0001.mts`                                      | Runnable `node:sqlite` validation of migration `0001` against a copied `.db` file. `node ./scripts/checks/verify-migration-0001.mts <path-to-copy.db>`.                                                                                                           |
+| `drizzle/0001_<name>.sql`                                                       | `ALTER TABLE transactions ADD COLUMN kind …` + 4 guarded backfill `UPDATE`s.                                                                                                                                                                                      |
+| `src/components/transaction/transaction-form-v4/**`                             | `git mv` of `transaction-form-v3/` (history preserved), then split.                                                                                                                                                                                               |
+| `src/components/transaction/transaction-form-v4/use-transaction-form.ts`        | Deep hook: RHF instance, `kind` state, tab-label derivation, `onKindChange` wiring, `canEditKind`/`lockedFields`, submit/delete/restore/destroy branching.                                                                                                        |
+| `src/components/transaction/transaction-form-v4/use-transaction-form.submit.ts` | Pure `buildTransactionPayload(data, ctx)` (+ stubs `buildRecurringRuleInput`, `buildLoanCreateInput` returning `never`-guarded TODOs for Slices 2/4 — see Task 9).                                                                                                |
+| `src/components/transaction/transaction-form-v4/on-kind-change.ts`              | Pure `onKindChange(prev, next, state) → Partial<KindScratchState>`.                                                                                                                                                                                               |
+| `src/components/transaction/transaction-form-v4/transaction-top-tabs.tsx`       | Replaces `transaction-type-selector.tsx`. Props: `labels`, `value`, `onChange`, `hiddenSlots?`, `lockedTo?`.                                                                                                                                                      |
+| `src/components/transaction/transaction-form-v4/form-kind-selector.tsx`         | `ListItem` → bottom-sheet of the 6 kinds; renders `FormKindCard` beneath.                                                                                                                                                                                         |
+| `src/components/transaction/transaction-form-v4/form-kind-card.tsx`             | `switch(kind)` → placeholder cards for subscription/repetitive/lent/borrowed (real cards land in Slices 2/4); `null` for default/upcoming.                                                                                                                        |
 
 **Modified files**
 
-| File | Change |
-|---|---|
-| `src/types/transactions.ts` | Add `TransactionKindEnum` + `TransactionKind`; add `kind` to `Transaction`. (Keep `TransactionSubTypeEnum` values until Task 11.) |
-| `src/database/types/rows.ts` | `RowTransaction.kind: string`. |
-| `src/database/drizzle/schema.ts` | `kind` column def + CHECK. |
-| `src/database/drizzle/read-models/transaction-read-model.ts` | `kind: transactions.kind` in `txSelection`. |
-| `src/database/mappers/transaction.mapper.ts` | Map `kind` (`(row.kind as TransactionKind) ?? "default"`). |
-| `src/schemas/transactions.schema.ts` | `kind: z.enum(TransactionKindEnum).optional()`; `superRefine` → `isKindTypeValid`. |
-| `src/database/services/ledger-service.ts` | Persist `kind` (`data.kind ?? "default"`) in `createTransaction` + `updateTransaction`; CSI-2 pending assert; `confirmTransaction` resets `kind` → `"default"` for an `upcoming` row; ES-5 locked-field re-assert in `updateTransaction`. |
-| `src/database/services/recurring-transaction-service.ts` | `RecurringTransactionTemplate` + `CreateRecurringRuleInput` carry `kind`; `parseTemplate` default; spawn passes `kind` into `createTransaction` (CSI-4). |
-| `src/database/services/data-management-service.ts`, `src/database/utils/import-snapshot.ts` | Export `kind`; on import of a pre-`kind` snapshot, backfill via shared `deriveKind`; bump snapshot version; reject newer-than-supported snapshots. |
-| `drizzle/meta/_journal.json`, `drizzle/migrations.js` | Register `0001`. |
-| `src/app/transaction/[id].tsx` | Import `transaction-form-v4`; `initialType` plumbing → keep, add `initialKind` from `?kind=` param. |
-| `src/components/transaction/transaction-form-v4/index.tsx` | Reduced to coordinator (~200 lines): skeleton + new field order + wire hook. |
-| `src/components/transaction/transaction-form-v4/types.ts` | `TransactionFormV4Props`: **drop** `initialSubtype` + `onSubtypeChange` (dead plumbing — the parent never reads `subtype`). **Add** `initialKind?: TransactionKind`. **Keep** `transactionType` + `onTransactionTypeChange` — the parent's `useCategoriesByType(transactionType)` / `useGoalsByType(...)` depend on them, so the form must still notify the parent on every type change (including a kind→lent/borrowed that forces a type). |
-| `src/components/transaction/transaction-form-v4/form-utils.ts` | `getDefaultValues` sets `kind`. |
-| various consumers of `TransactionSubTypeEnum.RECURRING/ONE_TIME/LOAN_*` | Task 11: switch to `kind`. |
+| File                                                                                        | Change                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/types/transactions.ts`                                                                 | Add `TransactionKindEnum` + `TransactionKind`; add `kind` to `Transaction`. (Keep `TransactionSubTypeEnum` values until Task 11.)                                                                                                                                                                                                                                                                                                            |
+| `src/database/types/rows.ts`                                                                | `RowTransaction.kind: string`.                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `src/database/drizzle/schema.ts`                                                            | `kind` column def + CHECK.                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `src/database/drizzle/read-models/transaction-read-model.ts`                                | `kind: transactions.kind` in `txSelection`.                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `src/database/mappers/transaction.mapper.ts`                                                | Map `kind` (`(row.kind as TransactionKind) ?? "default"`).                                                                                                                                                                                                                                                                                                                                                                                   |
+| `src/schemas/transactions.schema.ts`                                                        | `kind: z.enum(TransactionKindEnum).optional()`; `superRefine` → `isKindTypeValid`.                                                                                                                                                                                                                                                                                                                                                           |
+| `src/database/services/ledger-service.ts`                                                   | Persist `kind` (`data.kind ?? "default"`) in `createTransaction` + `updateTransaction`; CSI-2 pending assert; `confirmTransaction` resets `kind` → `"default"` for an `upcoming` row; ES-5 locked-field re-assert in `updateTransaction`.                                                                                                                                                                                                    |
+| `src/database/services/recurring-transaction-service.ts`                                    | `RecurringTransactionTemplate` + `CreateRecurringRuleInput` carry `kind`; `parseTemplate` default; spawn passes `kind` into `createTransaction` (CSI-4).                                                                                                                                                                                                                                                                                     |
+| `src/database/services/data-management-service.ts`, `src/database/utils/import-snapshot.ts` | Export `kind`; on import of a pre-`kind` snapshot, backfill via shared `deriveKind`; bump snapshot version; reject newer-than-supported snapshots.                                                                                                                                                                                                                                                                                           |
+| `drizzle/meta/_journal.json`, `drizzle/migrations.js`                                       | Register `0001`.                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `src/app/transaction/[id].tsx`                                                              | Import `transaction-form-v4`; `initialType` plumbing → keep, add `initialKind` from `?kind=` param.                                                                                                                                                                                                                                                                                                                                          |
+| `src/components/transaction/transaction-form-v4/index.tsx`                                  | Reduced to coordinator (~200 lines): skeleton + new field order + wire hook.                                                                                                                                                                                                                                                                                                                                                                 |
+| `src/components/transaction/transaction-form-v4/types.ts`                                   | `TransactionFormV4Props`: **drop** `initialSubtype` + `onSubtypeChange` (dead plumbing — the parent never reads `subtype`). **Add** `initialKind?: TransactionKind`. **Keep** `transactionType` + `onTransactionTypeChange` — the parent's `useCategoriesByType(transactionType)` / `useGoalsByType(...)` depend on them, so the form must still notify the parent on every type change (including a kind→lent/borrowed that forces a type). |
+| `src/components/transaction/transaction-form-v4/form-utils.ts`                              | `getDefaultValues` sets `kind`.                                                                                                                                                                                                                                                                                                                                                                                                              |
+| various consumers of `TransactionSubTypeEnum.RECURRING/ONE_TIME/LOAN_*`                     | Task 11: switch to `kind`.                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 **Deleted**
 
-| File | Reason |
-|---|---|
+| File                                                       | Reason                                                                      |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------- |
 | `src/components/transaction/transaction-type-selector.tsx` | Replaced by `transaction-top-tabs.tsx` (Task 7). Only importer is the form. |
 
 ---
@@ -72,12 +72,14 @@
 ## Task 1: Migration `0001` — add `transactions.kind` + backfill
 
 **Files:**
+
 - Modify: `src/database/drizzle/schema.ts` (transactions table, near line 98 `subtype`)
 - Create: `drizzle/0001_<name>.sql` (via `drizzle-kit generate`, then hand-edited)
 - Modify: `drizzle/meta/_journal.json`, `drizzle/migrations.js`
 - Create: `scripts/checks/verify-migration-0001.mts`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: a `kind TEXT NOT NULL DEFAULT 'default'` column on `transactions` with `CHECK (kind IN ('default','upcoming','subscription','repetitive','lent','borrowed'))`, backfilled per spec Slice 1 steps 2–5. `scripts/checks/verify-migration-0001.mts` — CLI validator.
 
@@ -104,8 +106,7 @@ Leave the existing `transactions_subtype_check` untouched.
 
 Run: `pnpm exec drizzle-kit generate`
 Expected: creates `drizzle/0001_<random-name>.sql` containing roughly
-`ALTER TABLE \`transactions\` ADD \`kind\` text DEFAULT 'default' NOT NULL;`
-and updates `drizzle/meta/_journal.json` (+ a new `0001_snapshot.json`).
+`ALTER TABLE \`transactions\` ADD \`kind\` text DEFAULT 'default' NOT NULL;`and updates`drizzle/meta/_journal.json`(+ a new`0001_snapshot.json`).
 
 If `drizzle-kit` emits a full table rebuild instead of `ALTER TABLE ADD COLUMN` (it may, because of the new CHECK), **discard the generated body** and hand-write the file as below — additive only, no rebuild.
 
@@ -229,6 +230,7 @@ Obtain a production-shaped SQLite file: in the running app go to Settings → Da
 Copy it to `/tmp/minty-copy.db`, then apply the migration statements manually:
 
 Run:
+
 ```bash
 sqlite3 /tmp/minty-copy.db < drizzle/0001_<name>.sql
 node ./scripts/checks/verify-migration-0001.mts /tmp/minty-copy.db
@@ -253,12 +255,14 @@ git commit -m "feat(db): add transactions.kind column with backfill migration 00
 ## Task 2: `TransactionKind` domain type + read-layer plumbing
 
 **Files:**
+
 - Modify: `src/types/transactions.ts:34-54`
 - Modify: `src/database/types/rows.ts:28-52`
 - Modify: `src/database/drizzle/read-models/transaction-read-model.ts` (`txSelection`, ~line 65-88)
 - Modify: `src/database/mappers/transaction.mapper.ts:24-48`
 
 **Interfaces:**
+
 - Consumes: the `kind` column from Task 1.
 - Produces:
   - `TransactionKindEnum` (const) + `type TransactionKind` from `~/types/transactions`
@@ -287,7 +291,7 @@ export type TransactionKind =
 In the `Transaction` interface (around line 71), add after `type`:
 
 ```ts
-  kind: TransactionKind
+kind: TransactionKind
 ```
 
 Do **not** change `TransactionSubTypeEnum` yet (Task 11).
@@ -297,7 +301,7 @@ Do **not** change `TransactionSubTypeEnum` yet (Task 11).
 In `src/database/types/rows.ts`, in `RowTransaction`, add after `subtype: string | null`:
 
 ```ts
-  kind: string
+kind: string
 ```
 
 - [ ] **Step 3: Select `kind` in the read model**
@@ -339,11 +343,13 @@ git commit -m "feat: thread transaction kind through the read layer"
 ## Task 3: `src/domain/transaction-kind.ts` — CSI-1 helper
 
 **Files:**
+
 - Create: `src/domain/transaction-kind.ts`
 - Create: `src/domain/transaction-kind.assertions.ts`
 - Create: `scripts/checks/verify-transaction-kind.mts`
 
 **Interfaces:**
+
 - Consumes: `TransactionType`, `TransactionKind`, `TransactionKindEnum` from `../types/transactions`; `LoanType` from `../types/loans`.
 - Produces (imported by Tasks 4, 8, 9, 10):
   - `ALLOWED_TYPES_BY_KIND: Record<TransactionKind, readonly TransactionType[]>`
@@ -474,11 +480,10 @@ const _exhaustive: Record<TransactionKind, readonly TransactionType[]> =
 void _exhaustive
 
 // lent/borrowed are single-type.
-type _LentIsExpenseOnly = (typeof ALLOWED_TYPES_BY_KIND)["lent"] extends readonly [
-  "expense",
-]
-  ? true
-  : never
+type _LentIsExpenseOnly =
+  (typeof ALLOWED_TYPES_BY_KIND)["lent"] extends readonly ["expense"]
+    ? true
+    : never
 const _lentOk: _LentIsExpenseOnly = true
 void _lentOk
 ```
@@ -500,9 +505,11 @@ git commit -m "feat: add transaction-kind domain helper (CSI-1)"
 ## Task 4: zod schema — `kind` field + `isKindTypeValid` refinement
 
 **Files:**
+
 - Modify: `src/schemas/transactions.schema.ts:8-43`
 
 **Interfaces:**
+
 - Consumes: `TransactionKindEnum` (Task 2), `isKindTypeValid` (Task 3).
 - Produces: `TransactionFormValues` gains optional `kind?: TransactionKind`; the schema rejects any `(kind, type)` pair failing `isKindTypeValid`.
 
@@ -517,7 +524,11 @@ In `src/schemas/transactions.schema.ts`, add to the object (near `type: z.enum(T
 Add imports:
 
 ```ts
-import { TransactionKindEnum, TransactionSubTypeEnum, TransactionTypeEnum } from "~/types/transactions"
+import {
+  TransactionKindEnum,
+  TransactionSubTypeEnum,
+  TransactionTypeEnum,
+} from "~/types/transactions"
 import { isKindTypeValid } from "~/domain/transaction-kind"
 ```
 
@@ -526,21 +537,21 @@ import { isKindTypeValid } from "~/domain/transaction-kind"
 In the `.superRefine((data, ctx) => { … })` block, replace the existing transfer check with:
 
 ```ts
-    const kind = data.kind ?? "default"
-    if (!isKindTypeValid(kind, data.type)) {
-      ctx.addIssue({
-        code: "custom",
-        message: "validation.transaction.kindTypeMismatch",
-        path: ["type"],
-      })
-    }
-    if (data.type === TransactionTypeEnum.TRANSFER && !data.toAccountId) {
-      ctx.addIssue({
-        code: "custom",
-        message: "validation.required.toAccountForTransfer",
-        path: ["toAccountId"],
-      })
-    }
+const kind = data.kind ?? "default"
+if (!isKindTypeValid(kind, data.type)) {
+  ctx.addIssue({
+    code: "custom",
+    message: "validation.transaction.kindTypeMismatch",
+    path: ["type"],
+  })
+}
+if (data.type === TransactionTypeEnum.TRANSFER && !data.toAccountId) {
+  ctx.addIssue({
+    code: "custom",
+    message: "validation.required.toAccountForTransfer",
+    path: ["toAccountId"],
+  })
+}
 ```
 
 - [ ] **Step 3: Add the i18n key**
@@ -569,9 +580,11 @@ git commit -m "feat(schema): add transaction kind field with kind/type validatio
 ## Task 5: ledger service — persist `kind`, CSI-2 assert, confirm reset, ES-5 lock
 
 **Files:**
+
 - Modify: `src/database/services/ledger-service.ts` (`createTransaction` ~278-350, `updateTransaction` ~504-560, `confirmTransaction` ~1078-1180)
 
 **Interfaces:**
+
 - Consumes: `TransactionFormValues.kind` (Task 4).
 - Produces: every write path persists `kind` (`data.kind ?? "default"`); `is_pending=1` with a disallowed kind throws in `__DEV__` / logs in prod; `confirmTransaction` sets `kind='default'` when clearing an `upcoming` row; `updateTransaction` ignores attempts to change `kind`/`type`/`loanId` on a loan-linked row.
 
@@ -600,17 +613,17 @@ In `createTransaction`, in the `db.insert(transactions).values({ … })` object,
 Immediately before the `db.insert`, add the CSI-2 assert:
 
 ```ts
-    const kind = data.kind ?? "default"
-    if (
-      data.isPending &&
-      kind !== "upcoming" &&
-      kind !== "subscription" &&
-      kind !== "repetitive"
-    ) {
-      const msg = `Refusing to create pending transaction with kind='${kind}'`
-      if (__DEV__) throw new Error(msg)
-      logger.error(msg, { kind })
-    }
+const kind = data.kind ?? "default"
+if (
+  data.isPending &&
+  kind !== "upcoming" &&
+  kind !== "subscription" &&
+  kind !== "repetitive"
+) {
+  const msg = `Refusing to create pending transaction with kind='${kind}'`
+  if (__DEV__) throw new Error(msg)
+  logger.error(msg, { kind })
+}
 ```
 
 - [ ] **Step 3: Persist `kind` + ES-5 lock in `updateTransaction`**
@@ -618,9 +631,9 @@ Immediately before the `db.insert`, add the CSI-2 assert:
 In `updateTransaction`, after `const tx = requireTx(db, id)` and the existing `old*` reads, add:
 
 ```ts
-    const isLoanLinked = tx.loan_id != null
-    const nextKind =
-      data.kind !== undefined && !isLoanLinked ? data.kind : (tx.kind ?? "default")
+const isLoanLinked = tx.loan_id != null
+const nextKind =
+  data.kind !== undefined && !isLoanLinked ? data.kind : (tx.kind ?? "default")
 ```
 
 ES-5: when `isLoanLinked`, ignore incoming `kind` / `type` / `loanId` changes (do not throw — the form disables them; this is defence in depth). Ensure the `newType` / `newAccountId` etc. computations use the locked values when `isLoanLinked` (for `type`: `const newType = data.type !== undefined && !isLoanLinked ? data.type : oldType`).
@@ -664,9 +677,11 @@ git commit -m "feat(ledger): persist transaction kind; enforce pending-kind inva
 ## Task 6: recurring spawn persists template `kind` (CSI-4)
 
 **Files:**
+
 - Modify: `src/database/services/recurring-transaction-service.ts` (`RecurringTransactionTemplate` ~46-57, `parseTemplate` ~61-82, `CreateRecurringRuleInput` ~127-139, `createRecurringRule` ~141-179, `synchronizeRecurringTransaction` txData build ~457-471)
 
 **Interfaces:**
+
 - Consumes: `TransactionKind` (Task 2).
 - Produces: `RecurringTransactionTemplate.kind: TransactionKind`; `createRecurringRule` accepts `kind`; spawned instances (past and future/pending) carry the template's `kind`.
 
@@ -723,11 +738,13 @@ git commit -m "feat(recurring): persist kind on spawned instances (CSI-4)"
 ## Task 7: shared `deriveKind` + import/export snapshot (DM-1, CSI-4)
 
 **Files:**
+
 - Create: `src/domain/derive-kind.ts`
 - Modify: `src/database/services/data-management-service.ts`, `src/database/utils/import-snapshot.ts`
 - Modify: `scripts/checks/verify-transaction-kind.mts`
 
 **Interfaces:**
+
 - Consumes: `TransactionKind` (Task 2).
 - Produces: `deriveKind({ subtype, isPending, type, loanType }): TransactionKind` — the same rules as migration `0001`, for importing pre-`kind` snapshots. Export includes `kind` (transactions); import defaults `kind` via `deriveKind` and `loan.term` handling is deferred to Slice 4 (import just preserves absence). Snapshot version bumped; newer-than-supported snapshots rejected.
 
@@ -738,12 +755,66 @@ Add to `scripts/checks/verify-transaction-kind.mts`:
 ```ts
 import { deriveKind } from "../../src/domain/derive-kind.ts"
 
-assert.equal(deriveKind({ subtype: "recurring", isPending: false, type: "expense", loanType: null, recurringId: null }), "repetitive")
-assert.equal(deriveKind({ subtype: null, isPending: true, type: "expense", loanType: null, recurringId: "R1" }), "repetitive") // recurring_id wins over pending
-assert.equal(deriveKind({ subtype: null, isPending: true, type: "expense", loanType: null, recurringId: null }), "upcoming")
-assert.equal(deriveKind({ subtype: null, isPending: true, type: "transfer", loanType: null, recurringId: null }), "default")
-assert.equal(deriveKind({ subtype: null, isPending: false, type: "expense", loanType: "lent", recurringId: "R1" }), "lent") // loan wins over recurring
-assert.equal(deriveKind({ subtype: null, isPending: false, type: "income", loanType: null, recurringId: null }), "default")
+assert.equal(
+  deriveKind({
+    subtype: "recurring",
+    isPending: false,
+    type: "expense",
+    loanType: null,
+    recurringId: null,
+  }),
+  "repetitive",
+)
+assert.equal(
+  deriveKind({
+    subtype: null,
+    isPending: true,
+    type: "expense",
+    loanType: null,
+    recurringId: "R1",
+  }),
+  "repetitive",
+) // recurring_id wins over pending
+assert.equal(
+  deriveKind({
+    subtype: null,
+    isPending: true,
+    type: "expense",
+    loanType: null,
+    recurringId: null,
+  }),
+  "upcoming",
+)
+assert.equal(
+  deriveKind({
+    subtype: null,
+    isPending: true,
+    type: "transfer",
+    loanType: null,
+    recurringId: null,
+  }),
+  "default",
+)
+assert.equal(
+  deriveKind({
+    subtype: null,
+    isPending: false,
+    type: "expense",
+    loanType: "lent",
+    recurringId: "R1",
+  }),
+  "lent",
+) // loan wins over recurring
+assert.equal(
+  deriveKind({
+    subtype: null,
+    isPending: false,
+    type: "income",
+    loanType: null,
+    recurringId: null,
+  }),
+  "default",
+)
 ```
 
 Run: `node ./scripts/checks/verify-transaction-kind.mts` → FAIL (module missing).
@@ -769,7 +840,8 @@ export interface DeriveKindInput {
 export function deriveKind(input: DeriveKindInput): TransactionKind {
   if (input.loanType === "lent") return "lent"
   if (input.loanType === "borrowed") return "borrowed"
-  if (input.recurringId != null || input.subtype === "recurring") return "repetitive"
+  if (input.recurringId != null || input.subtype === "recurring")
+    return "repetitive"
   if (input.isPending && input.type !== "transfer") return "upcoming"
   return "default"
 }
@@ -786,9 +858,10 @@ In `data-management-service.ts`, find where transaction rows are serialised for 
 - [ ] **Step 5: Wire into import**
 
 In `import-snapshot.ts`, when inserting a transaction from a snapshot:
+
 - if the row has `kind`, use it;
 - else `deriveKind({ subtype: row.subtype ?? null, isPending: !!row.isPending, type: row.type, loanType: <lent/borrowed of row.loanId's loan if resolvable, else null>, recurringId: row.recurringId ?? null })`.
-If the snapshot's version is **newer** than this app supports, reject with the existing error path (grep for how version mismatch is currently handled; if only older is handled, add a `throw` with an i18n'd message key `screens.dataManagement.import.versionTooNew` in both `en.json` and `ar.json`).
+  If the snapshot's version is **newer** than this app supports, reject with the existing error path (grep for how version mismatch is currently handled; if only older is handled, add a `throw` with an i18n'd message key `screens.dataManagement.import.versionTooNew` in both `en.json` and `ar.json`).
 
 - [ ] **Step 6: Verify**
 
@@ -811,6 +884,7 @@ git commit -m "feat(data-management): export/import transaction kind with derive
 ## Task 8: `git mv` v3 → v4 + wire the route
 
 **Files:**
+
 - Rename: `src/components/transaction/transaction-form-v3/` → `src/components/transaction/transaction-form-v4/`
 - Modify: `src/app/transaction/[id].tsx` (imports `TransactionFormV3`)
 - Modify: `src/components/transaction/transaction-form-v4/index.tsx` (export name), `types.ts`
@@ -818,6 +892,7 @@ git commit -m "feat(data-management): export/import transaction kind with derive
 - Modify: `src/components/inline-category-picker/index.tsx` — a comment (`// Mirror the constants from transaction-form-v3/form.styles.ts`); update the path in the comment.
 
 **Interfaces:**
+
 - Consumes: nothing new.
 - Produces: `TransactionFormV4` exported from `~/components/transaction/transaction-form-v4`; route renders it. Behaviour identical to before.
 
@@ -826,6 +901,7 @@ git commit -m "feat(data-management): export/import transaction kind with derive
 - [ ] **Step 1: Move the directory preserving history**
 
 Run:
+
 ```bash
 git mv src/components/transaction/transaction-form-v3 src/components/transaction/transaction-form-v4
 ```
@@ -863,11 +939,13 @@ git commit -m "refactor: rename transaction-form-v3 to v4 (no behaviour change)"
 ## Task 9: extract `useTransactionForm` hook + pure builders (behaviour-preserving)
 
 **Files:**
+
 - Create: `src/components/transaction/transaction-form-v4/use-transaction-form.ts`
 - Create: `src/components/transaction/transaction-form-v4/use-transaction-form.submit.ts`
 - Modify: `src/components/transaction/transaction-form-v4/index.tsx` (shrink to coordinator)
 
 **Interfaces:**
+
 - Consumes: existing v4 sub-components, `useFormAttachments`, `useFormConversionRate`, `useFormDatePicker`, `useFormLocation`, `useRecurringRule`, `useNavigationGuard`.
 - Produces: `useTransactionForm(props): { control, watch, setValue, errors, isDirty, isSaving, transactionType, setTransactionType, recurring, setRecurring, /* … all handlers currently in index.tsx … */ submit, handleCancelPress, handleDeleteConfirm, handleRestore, handleDestroy, handleDestroyConfirm, addTag, removeTag, modals, setModals, datePicker, setDatePicker, openDatePicker, confirmIosDate, handleSetNow, datePickerAndroidElement, … }`. `buildTransactionPayload(data, ctx)` — pure, returns the object currently assembled inline as `payload`.
 
@@ -881,7 +959,10 @@ import type { Account } from "~/types/accounts"
 
 export interface BuildPayloadCtx {
   isNew: boolean
-  transaction: { extra: Record<string, string> | null; requiresManualConfirmation: boolean } | null
+  transaction: {
+    extra: Record<string, string> | null
+    requiresManualConfirmation: boolean
+  } | null
   selectedAccount: Account | undefined
   usdCode: string
   attachmentsJson: string | null
@@ -952,12 +1033,14 @@ git commit -m "refactor(transaction-form): extract useTransactionForm hook + pur
 ## Task 10: `TransactionTopTabs` + top-tab state machine
 
 **Files:**
+
 - Create: `src/components/transaction/transaction-form-v4/transaction-top-tabs.tsx`
 - Delete: `src/components/transaction/transaction-type-selector.tsx`
 - Modify: `use-transaction-form.ts` (add `tabLabels`, `tabHiddenSlots`, `tabLockedTo`, `topTabType`, `onTopTabChange`), `index.tsx` (use the new component)
 - Modify: `src/i18n/translation/en.json`, `ar.json`
 
 **Interfaces:**
+
 - Consumes: `getKindForLoanType` (Task 3), the hook's `kind` + `linkedLoanId` (Task 11 supplies `linkedLoanId`; for this task it is always `null`).
 - Produces: `<TransactionTopTabs labels={[string,string,string]} value={TransactionType} onChange={(t)=>void} hiddenSlots={number[]} lockedTo={number|null} />`. Hook exposes `tabLabels`, `tabHiddenSlots`, `tabLockedTo`, `topTabType`, `onTopTabChange`.
 
@@ -967,13 +1050,17 @@ Port `transaction-type-selector.tsx` markup/styles into `transaction-form-v4/tra
 
 - [ ] **Step 2: Derive tab state in the hook**
 
-In `use-transaction-form.ts`, add (spec *Top-tab label state machine*):
+In `use-transaction-form.ts`, add (spec _Top-tab label state machine_):
 
 ```ts
 const kind = watch("kind") ?? "default"
 const tabLabels: [string, string, string] =
   kind === "lent" || kind === "borrowed"
-    ? [t("common.transaction.tabs.lent"), t("common.transaction.tabs.borrowed"), ""]
+    ? [
+        t("common.transaction.tabs.lent"),
+        t("common.transaction.tabs.borrowed"),
+        "",
+      ]
     : [
         t("common.transaction.types.expense"),
         t("common.transaction.types.income"),
@@ -993,6 +1080,7 @@ Replace `<TransactionTypeSelector value={…} onChange={…} />` with `<Transact
 - [ ] **Step 4: i18n keys**
 
 Add under `common.transaction` in `en.json` + `ar.json`:
+
 - `"tabs": { "lent": "Lent", "borrowed": "Borrowed", "paid": "Paid", "collected": "Collected" }`
 - ar: `{ "lent": "أقرضت", "borrowed": "اقترضت", "paid": "مدفوع", "collected": "محصّل" }`
 
@@ -1017,11 +1105,13 @@ git commit -m "feat(transaction-form): TransactionTopTabs with kind-driven label
 ## Task 11: kind selector + kind-card shell + `onKindChange` + new field order
 
 **Files:**
+
 - Create: `src/components/transaction/transaction-form-v4/form-kind-selector.tsx`, `form-kind-card.tsx`, `on-kind-change.ts`
 - Modify: `use-transaction-form.ts` (kind state, `setKind`, `linkedLoanId` placeholder, `canEditKind`, `lockedFields`), `index.tsx` (field reorder + render kind selector), `form-utils.ts` (`getDefaultValues` sets `kind`), `types.ts` (`initialKind`)
 - Modify: `src/i18n/translation/en.json`, `ar.json`
 
 **Interfaces:**
+
 - Consumes: `getAllowedTransactionTypes` / `isKindTypeValid` (Task 3), `TransactionKindEnum` (Task 2).
 - Produces:
   - `onKindChange(prev: TransactionKind, next: TransactionKind, state: KindScratchState): Partial<KindScratchState>` where `KindScratchState = { recurring: RecurringState; loanDraft: LoanDraft | null; linkedLoanId: string | null; toAccountId: string | undefined }`
@@ -1033,14 +1123,20 @@ git commit -m "feat(transaction-form): TransactionTopTabs with kind-driven label
 `on-kind-change.ts` must stay **runtime-import-free** (type-only imports; inline
 any default-state literal it needs) so the `.mts` check can load it. If it must
 pull a runtime constant, skip the runnable check for it and rely on `pnpm types`
-+ Step 8 manual QA instead.
+
+- Step 8 manual QA instead.
 
 Add to `scripts/checks/verify-transaction-kind.mts`:
 
 ```ts
 import { onKindChange } from "../../src/components/transaction/transaction-form-v4/on-kind-change.ts"
 
-const base = { recurring: { enabled: true }, loanDraft: { name: "x" }, linkedLoanId: "L1", toAccountId: "A2" } as any
+const base = {
+  recurring: { enabled: true },
+  loanDraft: { name: "x" },
+  linkedLoanId: "L1",
+  toAccountId: "A2",
+} as any
 // leaving a recurring kind clears recurrence + loan scratch
 const toDefault = onKindChange("subscription", "default", base)
 assert.equal(toDefault.recurring?.enabled ?? false, false)
@@ -1056,6 +1152,7 @@ Run it → FAIL (module missing). Then create `on-kind-change.ts` as a pure func
 - [ ] **Step 2: Kind state in the hook**
 
 In `use-transaction-form.ts`:
+
 - initialise `kind` from `props.initialKind ?? props.transaction?.kind ?? "default"` (store in RHF via `setValue("kind", …)` at mount, and `watch("kind")`).
 - `setKind(next)`: if `!canEditKind` return; compute `onKindChange(kind, next, scratch)`, apply the returned partials (`setRecurring`, `setLoanDraft`, `setValue("toAccountId", …)`), then `setValue("kind", next, { shouldDirty: true })`. If `next` is `lent`/`borrowed` set `type` per `getKindForLoanType` inverse; if `next` ∈ {upcoming} set `type` to `expense` when current is `transfer`.
 - `canEditKind`: `isNew || (transaction?.loan_id == null && transaction?.recurringId == null)` (ES-4/ES-5/ES-8 — recurrence editing is Slice 2, so lock kind on rule-linked rows here).
@@ -1086,7 +1183,7 @@ Reorder the coordinator JSX to: TopTabs → Amount → **Account** (`FormAccount
 
 - [ ] **Step 6: i18n keys**
 
-Add under `common.transaction`: `"kinds": { "default": "Standard", "upcoming": "Upcoming", "subscription": "Subscription", "repetitive": "Repeating", "lent": "Lent", "borrowed": "Borrowed" }` (+ Arabic). Add under `components.transactionForm`: `"kind": { "label": "Kind", "recurrenceComingSoon": "Recurrence settings arrive in a later update", "loanComingSoon": "Loan settings arrive in a later update" }` (+ Arabic). *(The "coming soon" placeholder strings exist only until Slices 2/4; keep them real keys so `check-i18n-keys` passes.)*
+Add under `common.transaction`: `"kinds": { "default": "Standard", "upcoming": "Upcoming", "subscription": "Subscription", "repetitive": "Repeating", "lent": "Lent", "borrowed": "Borrowed" }` (+ Arabic). Add under `components.transactionForm`: `"kind": { "label": "Kind", "recurrenceComingSoon": "Recurrence settings arrive in a later update", "loanComingSoon": "Loan settings arrive in a later update" }` (+ Arabic). _(The "coming soon" placeholder strings exist only until Slices 2/4; keep them real keys so `check-i18n-keys` passes.)_
 
 - [ ] **Step 7: Verify**
 
@@ -1096,6 +1193,7 @@ Expected: all PASS.
 - [ ] **Step 8: Manual QA (spec ES / KT)**
 
 Run: `pnpm ios`.
+
 - New expense: field order is TopTabs, Amount, Account, Category, Date, Kind, Title, Notes, Attachments. Save works.
 - Kind → Upcoming: tab 2 (Transfer) hides; save → transaction is pending, does not hit balance; confirming it from the pending list flips it to Standard.
 - Kind → Lent: tabs relabel to Lent/Borrowed; placeholder loan card shows; saving still produces a plain expense (loan wiring is Slice 4) — acceptable for this slice, note it.
@@ -1128,10 +1226,11 @@ every user with existing loans. This task removes that step and verifies the
 genuinely-dead form plumbing is gone.
 
 **Files:**
+
 - Modify: `drizzle/0001_deep_daredevil.sql` — delete the final
-  `UPDATE ... SET \`subtype\` = NULL ...` statement and the
-  `--> statement-breakpoint` before it. `0001` has not shipped; editing it in
-  place is correct (devices that already applied it skip by `folderMillis`; no
+  `UPDATE ... SET \`subtype\` = NULL ...`statement and the
+ `--> statement-breakpoint`before it.`0001`has not shipped; editing it in
+  place is correct (devices that already applied it skip by`folderMillis`; no
   real user has run it).
 - Modify: `scripts/checks/verify-migration-0001.mts` — delete the
   "only 'refund' subtype remains" assertion (`subtype IS NOT NULL AND subtype <>
@@ -1146,8 +1245,8 @@ genuinely-dead form plumbing is gone.
 - [ ] **Step 1: Remove step 5 from the migration**
 
 In `drizzle/0001_deep_daredevil.sql`, delete the last statement (the
-`SET \`subtype\` = NULL` one) and the `--> statement-breakpoint` line directly
-above it. The file now ends after the `kind = 'upcoming'` UPDATE.
+`SET \`subtype\` = NULL`one) and the`--> statement-breakpoint`line directly
+above it. The file now ends after the`kind = 'upcoming'` UPDATE.
 
 - [ ] **Step 2: Relax the verify script**
 
@@ -1158,6 +1257,7 @@ Every other assertion stays.
 - [ ] **Step 3: Confirm the dead form plumbing is actually gone**
 
 Run:
+
 ```bash
 rg -n "TransactionTypeSelector|transaction-form-v3|initialSubtype|onSubtypeChange" src
 ```
@@ -1168,6 +1268,7 @@ into `loan_*` / `recurring` / `one-time` / `biweekly` — those are other slices
 - [ ] **Step 4: Verify**
 
 Run:
+
 ```bash
 node ./scripts/checks/verify-migration-0001.mts <a fixture db>   # if you can build one cheaply; else skip
 pnpm types && pnpm lint && node ./scripts/checks/verify-transaction-kind.mts
@@ -1195,29 +1296,29 @@ git commit -m "refactor: reduce transaction subtype to refund-only; kind is now 
 
 **1. Spec coverage (Slice 1 scope):**
 
-| Spec item | Task |
-|---|---|
-| DB `0001` additive `ADD COLUMN` + guarded backfill | 1 |
-| `0001` validation checklist | 1 (Step 5–7, `verify-migration-0001.mts`) |
-| `TransactionKindEnum` / `TransactionKind` / `Transaction.kind` | 2 |
-| `RowTransaction.kind`, `txSelection`, `mapTransaction` | 2 |
-| CSI-1 `src/domain/transaction-kind.ts` + all exports | 3 |
-| zod `kind` + `isKindTypeValid` superRefine | 4 |
-| CSI-2 pending assert | 5 (create + update) |
-| `confirmTransaction` resets `upcoming` → `default` | 5 |
-| ES-5 locked-field re-assert in `updateTransaction` | 5, 11 |
-| CSI-4 persistence: create, update, confirm | 5 |
-| CSI-4 persistence: recurring spawn | 6 |
-| CSI-4 persistence: import; DM-1 `deriveKind`, version bump, reject-newer | 7 |
-| v3 → v4 `git mv`, coordinator + `useTransactionForm` + pure builder | 8, 9 |
-| `on-kind-change.ts` (KT matrix) | 11 |
-| Top-tab state machine + `TransactionTopTabs` | 10 |
-| Kind selector + kind-card shell | 11 |
-| New field order (account under amount, date before kind, title after) | 11 |
-| ES-1…ES-8 locks (`canEditKind`, `lockedFields`) | 11 (+ 5 server side) |
-| Delete `transaction-type-selector.tsx` | 10 |
+| Spec item                                                                                       | Task                                                                             |
+| ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| DB `0001` additive `ADD COLUMN` + guarded backfill                                              | 1                                                                                |
+| `0001` validation checklist                                                                     | 1 (Step 5–7, `verify-migration-0001.mts`)                                        |
+| `TransactionKindEnum` / `TransactionKind` / `Transaction.kind`                                  | 2                                                                                |
+| `RowTransaction.kind`, `txSelection`, `mapTransaction`                                          | 2                                                                                |
+| CSI-1 `src/domain/transaction-kind.ts` + all exports                                            | 3                                                                                |
+| zod `kind` + `isKindTypeValid` superRefine                                                      | 4                                                                                |
+| CSI-2 pending assert                                                                            | 5 (create + update)                                                              |
+| `confirmTransaction` resets `upcoming` → `default`                                              | 5                                                                                |
+| ES-5 locked-field re-assert in `updateTransaction`                                              | 5, 11                                                                            |
+| CSI-4 persistence: create, update, confirm                                                      | 5                                                                                |
+| CSI-4 persistence: recurring spawn                                                              | 6                                                                                |
+| CSI-4 persistence: import; DM-1 `deriveKind`, version bump, reject-newer                        | 7                                                                                |
+| v3 → v4 `git mv`, coordinator + `useTransactionForm` + pure builder                             | 8, 9                                                                             |
+| `on-kind-change.ts` (KT matrix)                                                                 | 11                                                                               |
+| Top-tab state machine + `TransactionTopTabs`                                                    | 10                                                                               |
+| Kind selector + kind-card shell                                                                 | 11                                                                               |
+| New field order (account under amount, date before kind, title after)                           | 11                                                                               |
+| ES-1…ES-8 locks (`canEditKind`, `lockedFields`)                                                 | 11 (+ 5 server side)                                                             |
+| Delete `transaction-type-selector.tsx`                                                          | 10                                                                               |
 | Drop migration `0001` `subtype`-NULL step (loan filters read it); confirm form-plumbing cleanup | 12 (re-scoped — `subtype`-value retirement moved to Slice 4 / later stats slice) |
-| i18n keys (kind labels, tab labels, validation) both `en`+`ar` | 4, 10, 11 |
+| i18n keys (kind labels, tab labels, validation) both `en`+`ar`                                  | 4, 10, 11                                                                        |
 
 Out of scope by design (Slices 2–5): real `RecurrenceCard`/interval-unit, real `LoanCard`/one-time-vs-long-term, full "upcoming" UX + CSI-3 stats audit, title display-time derivation. `FormKindCard` renders placeholders for subscription/repetitive/lent/borrowed until then; `buildTransactionPayload` does the minimal `upcoming ⇒ isPending`.
 

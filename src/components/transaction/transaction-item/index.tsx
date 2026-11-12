@@ -94,7 +94,6 @@ export const TransactionItem = ({
 }: TransactionItemProps) => {
   const swipeableRef = useRef<SwipeableMethods | null>(null)
   const { t } = useTranslation()
-  const { theme } = useUnistyles()
   const {
     id,
     account,
@@ -341,6 +340,7 @@ export const TransactionItem = ({
           displayTitle={displayTitle}
           subtitleText={subtitleText}
           isRefund={subtype === TransactionSubTypeEnum.REFUND}
+          itemCount={transactionWithRelations.items.length}
         />
         <TransactionItemRight
           amount={amount}

@@ -62,6 +62,7 @@ export const PORTABLE_SETTINGS: Record<string, SettingsSpec> = {
       currencyLook: oneOf("symbol", "code", "name"),
       hideOnStartup: isBoolean,
       maskOnShake: isBoolean,
+      showBalanceOnHome: isBoolean,
     },
   },
   calendarFormat: {

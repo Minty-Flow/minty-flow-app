@@ -27,40 +27,43 @@
 
 ## File Structure
 
-| File | Responsibility | Task |
-|---|---|---|
-| `src/types/transactions.ts` | **Add** `RecurrenceUnit`, `Recurrence`. **Delete** `RecurringFrequency`, `RecurringEndEnum`, `RecurringEndType`. | 1, 2 |
-| `src/utils/recurrence.ts` | Interval+unit ⇄ RRULE: `buildRRuleString`, `countOccurrencesBetween`, **new** `parseRecurrence`. `nextAbsoluteOccurrence` unchanged. | 1 |
-| `scripts/checks/verify-recurrence.mts` | **New.** `node:assert` coverage for `recurrence.ts` (round-trip, legacy parse, ×N counting, clamps). | 1 |
-| `src/components/transaction/transaction-form-v4/types.ts` | `RecurringState` → `{ recurrence: Recurrence; until: Date | null; startDate: Date }`. `DatePickerTarget` drops `"recurringStart"`. | 2 |
-| `src/components/transaction/transaction-form-v4/constants.ts` | **Delete** `RECURRING_OPTIONS`, `ENDS_ON_OCCURRENCE_PRESETS`. | 2 |
-| `src/components/transaction/transaction-form-v4/on-kind-change.ts` | Rewrite `disabledRecurring`/`enabledRecurring` → `freshRecurrence()` (new shape). | 2 |
-| `src/components/transaction/transaction-form-v4/form-utils.ts` | **Delete** `getRecurrenceDisplayLabel`. `getDefaultValues` unchanged. | 2 |
-| `src/components/transaction/transaction-form-v4/use-form-date-picker.tsx` | `applyTarget`: `"recurringEnd"` writes `until`; drop `"recurringStart"`. | 2 |
-| `src/components/transaction/transaction-form-v4/use-transaction-form.ts` | `recurring` reducer init (new shape); `occurrenceCount` derive; drop `endsOnType` / `recurringEndDateOccurrenceCount` / `handleRecurringToggle`; submit create branch keys off `kind`; pass `kind: data.kind` to `createRecurringRule`; ES-8 recurrence edit payload. | 2, 3, 4 |
-| `src/components/transaction/transaction-form-v4/form-recurring-section.tsx` | **Delete.** | 2 |
-| `src/components/transaction/transaction-form-v4/recurrence-card.tsx` | **New.** Discrete "every [N] [unit]" + "Until [date|Forever] · ×N" + reset. | 2 |
-| `src/components/transaction/transaction-form-v4/recurrence-unit-modal.tsx` | **New.** Small `Modal` list: day / week / month / year. | 2 |
-| `src/components/transaction/transaction-form-v4/form-kind-card.tsx` | `subscription`/`repetitive` → `<RecurrenceCard/>` (was a "coming soon" stub). | 2 |
-| `src/components/transaction/transaction-form-v4/form-kind-selector.tsx` | `KINDS` → `["default","upcoming","subscription","repetitive"]`. | 2 |
-| `src/components/transaction/transaction-form-v4/index.tsx` | Remove `<FormRecurringSection>` block; Date gate keys off `kind`; refund gate drops `recurring.enabled`; pass recurrence props to `<FormKindCard>`. | 2 |
-| `src/database/services/recurring-transaction-service.ts` | **New** `updateRecurringRule(ruleId, { recurrence, until })`. | 4 |
-| `src/components/transaction/edit-recurring-modal.tsx` | Accept + forward optional `recurrence` / `until` to `applyRecurringEditScope`. | 4 |
-| `src/components/transaction/transaction-form-v4/form-modals.tsx` | Pass `recurrence` / `until` through to `EditRecurringModal`. | 4 |
-| `src/i18n/translation/en.json`, `ar.json` | Add `recurrence.*`; delete dead `components.recurring.frequency.*` + `components.transactionForm.recurring.*`. | 5 |
+| File                                                                        | Responsibility                                                                                                                                                                                                                                                        | Task                                                                 |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `src/types/transactions.ts`                                                 | **Add** `RecurrenceUnit`, `Recurrence`. **Delete** `RecurringFrequency`, `RecurringEndEnum`, `RecurringEndType`.                                                                                                                                                      | 1, 2                                                                 |
+| `src/utils/recurrence.ts`                                                   | Interval+unit ⇄ RRULE: `buildRRuleString`, `countOccurrencesBetween`, **new** `parseRecurrence`. `nextAbsoluteOccurrence` unchanged.                                                                                                                                  | 1                                                                    |
+| `scripts/checks/verify-recurrence.mts`                                      | **New.** `node:assert` coverage for `recurrence.ts` (round-trip, legacy parse, ×N counting, clamps).                                                                                                                                                                  | 1                                                                    |
+| `src/components/transaction/transaction-form-v4/types.ts`                   | `RecurringState` → `{ recurrence: Recurrence; until: Date                                                                                                                                                                                                             | null; startDate: Date }`. `DatePickerTarget`drops`"recurringStart"`. | 2   |
+| `src/components/transaction/transaction-form-v4/constants.ts`               | **Delete** `RECURRING_OPTIONS`, `ENDS_ON_OCCURRENCE_PRESETS`.                                                                                                                                                                                                         | 2                                                                    |
+| `src/components/transaction/transaction-form-v4/on-kind-change.ts`          | Rewrite `disabledRecurring`/`enabledRecurring` → `freshRecurrence()` (new shape).                                                                                                                                                                                     | 2                                                                    |
+| `src/components/transaction/transaction-form-v4/form-utils.ts`              | **Delete** `getRecurrenceDisplayLabel`. `getDefaultValues` unchanged.                                                                                                                                                                                                 | 2                                                                    |
+| `src/components/transaction/transaction-form-v4/use-form-date-picker.tsx`   | `applyTarget`: `"recurringEnd"` writes `until`; drop `"recurringStart"`.                                                                                                                                                                                              | 2                                                                    |
+| `src/components/transaction/transaction-form-v4/use-transaction-form.ts`    | `recurring` reducer init (new shape); `occurrenceCount` derive; drop `endsOnType` / `recurringEndDateOccurrenceCount` / `handleRecurringToggle`; submit create branch keys off `kind`; pass `kind: data.kind` to `createRecurringRule`; ES-8 recurrence edit payload. | 2, 3, 4                                                              |
+| `src/components/transaction/transaction-form-v4/form-recurring-section.tsx` | **Delete.**                                                                                                                                                                                                                                                           | 2                                                                    |
+| `src/components/transaction/transaction-form-v4/recurrence-card.tsx`        | **New.** Discrete "every [N] [unit]" + "Until [date                                                                                                                                                                                                                   | Forever] · ×N" + reset.                                              | 2   |
+| `src/components/transaction/transaction-form-v4/recurrence-unit-modal.tsx`  | **New.** Small `Modal` list: day / week / month / year.                                                                                                                                                                                                               | 2                                                                    |
+| `src/components/transaction/transaction-form-v4/form-kind-card.tsx`         | `subscription`/`repetitive` → `<RecurrenceCard/>` (was a "coming soon" stub).                                                                                                                                                                                         | 2                                                                    |
+| `src/components/transaction/transaction-form-v4/form-kind-selector.tsx`     | `KINDS` → `["default","upcoming","subscription","repetitive"]`.                                                                                                                                                                                                       | 2                                                                    |
+| `src/components/transaction/transaction-form-v4/index.tsx`                  | Remove `<FormRecurringSection>` block; Date gate keys off `kind`; refund gate drops `recurring.enabled`; pass recurrence props to `<FormKindCard>`.                                                                                                                   | 2                                                                    |
+| `src/database/services/recurring-transaction-service.ts`                    | **New** `updateRecurringRule(ruleId, { recurrence, until })`.                                                                                                                                                                                                         | 4                                                                    |
+| `src/components/transaction/edit-recurring-modal.tsx`                       | Accept + forward optional `recurrence` / `until` to `applyRecurringEditScope`.                                                                                                                                                                                        | 4                                                                    |
+| `src/components/transaction/transaction-form-v4/form-modals.tsx`            | Pass `recurrence` / `until` through to `EditRecurringModal`.                                                                                                                                                                                                          | 4                                                                    |
+| `src/i18n/translation/en.json`, `ar.json`                                   | Add `recurrence.*`; delete dead `components.recurring.frequency.*` + `components.transactionForm.recurring.*`.                                                                                                                                                        | 5                                                                    |
 
 ---
 
 ## Task 1: `recurrence.ts` — interval + unit RRULE API
 
 **Files:**
+
 - Modify: `src/types/transactions.ts` (add `RecurrenceUnit`, `Recurrence` — additive; leave `RecurringFrequency` for now)
 - Modify: `src/utils/recurrence.ts` (rewrite `buildRRuleString`, `countOccurrencesBetween`; add `parseRecurrence`; keep `nextAbsoluteOccurrence`)
 - Modify: `src/components/transaction/transaction-form-v4/use-transaction-form.ts` (fix the two call sites so the project still type-checks — a temporary local `FREQ_TO_UNIT` map, deleted in Task 2)
 - Create: `scripts/checks/verify-recurrence.mts`
 
 **Interfaces:**
+
 - Produces:
+
   ```ts
   // src/types/transactions.ts
   export type RecurrenceUnit = "day" | "week" | "month" | "year"
@@ -389,6 +392,7 @@ git commit -m "feat(recurrence): interval+unit RRULE API + parseRecurrence"
 ## Task 2: interval+unit recurrence in the form (state, card, kind selector)
 
 **Files:**
+
 - Modify: `src/components/transaction/transaction-form-v4/types.ts` (`RecurringState`, `DatePickerTarget`)
 - Modify: `src/components/transaction/transaction-form-v4/constants.ts` (delete `RECURRING_OPTIONS`, `ENDS_ON_OCCURRENCE_PRESETS`)
 - Modify: `src/components/transaction/transaction-form-v4/on-kind-change.ts`
@@ -406,8 +410,10 @@ git commit -m "feat(recurrence): interval+unit RRULE API + parseRecurrence"
 - Create: temporary i18n keys used by the card (`recurrence.*`) — final wording/`ar.json` parity is Task 5, but the keys must exist now so `pnpm check-i18n-keys` passes. Add the real English strings here and mirrored Arabic; Task 5 only audits.
 
 **Interfaces:**
+
 - Consumes: `Recurrence`, `RecurrenceUnit`, `buildRRuleString`, `countOccurrencesBetween` (Task 1).
 - Produces:
+
   ```ts
   // types.ts
   export type RecurringState = {
@@ -450,7 +456,7 @@ git commit -m "feat(recurrence): interval+unit RRULE API + parseRecurrence"
 // replace the RecurrenceUnit/... imports block to include Recurrence
 import type {
   Recurrence,
-  RecurrenceUnit,               // used by other files importing from here
+  RecurrenceUnit, // used by other files importing from here
   TransactionAttachment,
   TransactionKind,
   TransactionType,
@@ -495,7 +501,11 @@ const RECURRING_KINDS = new Set<TransactionKind>(["subscription", "repetitive"])
 const DEFAULT_RECURRENCE: Recurrence = { interval: 1, unit: "month" }
 
 function freshRecurrence(): RecurringState {
-  return { recurrence: { ...DEFAULT_RECURRENCE }, until: null, startDate: new Date() }
+  return {
+    recurrence: { ...DEFAULT_RECURRENCE },
+    until: null,
+    startDate: new Date(),
+  }
 }
 
 export function onKindChange(
@@ -551,7 +561,10 @@ const kindScratch = {
   toAccountId: "A2",
 } as any
 const toDefault = onKindChange("subscription", "default", kindScratch)
-assert.deepEqual(toDefault.recurring?.recurrence, { interval: 1, unit: "month" })
+assert.deepEqual(toDefault.recurring?.recurrence, {
+  interval: 1,
+  unit: "month",
+})
 assert.equal(toDefault.recurring?.until, null)
 assert.equal(toDefault.loanDraft, null)
 assert.equal(toDefault.linkedLoanId, null)
@@ -626,7 +639,11 @@ Add `import { endOfDay } from "date-fns"`.
 ```ts
 // RS-1: a new subscription/repetitive starts at the form's transactionDate
 // (which is `new Date()` at open for these kinds — Date field is hidden).
-if (isNew && isRecurringKind && recurring.startDate !== watch("transactionDate")) {
+if (
+  isNew &&
+  isRecurringKind &&
+  recurring.startDate !== watch("transactionDate")
+) {
   // reducer merge is cheap + idempotent; no effect needed
   setRecurring({ startDate: watch("transactionDate") })
 }
@@ -677,7 +694,9 @@ await createRecurringRule({
 7. `effectiveDate` (line ~432): it currently branches on `recurring.enabled`. Change to `isRecurringKind`:
 
 ```ts
-const effectiveDate = isRecurringKind ? recurring.startDate : data.transactionDate
+const effectiveDate = isRecurringKind
+  ? recurring.startDate
+  : data.transactionDate
 ```
 
 8. Return object: remove `endsOnType`, `recurringEndDateOccurrenceCount`, `handleRecurringToggle`; add `occurrenceCount`, `isRecurringKind`. Keep `recurring`, `setRecurring`, `openDatePicker`.
@@ -712,7 +731,12 @@ type Props = {
   onClose: () => void
 }
 
-export function RecurrenceUnitModal({ visible, value, onSelect, onClose }: Props) {
+export function RecurrenceUnitModal({
+  visible,
+  value,
+  onSelect,
+  onClose,
+}: Props) {
   const { t } = useTranslation()
   return (
     <Modal
@@ -722,7 +746,10 @@ export function RecurrenceUnitModal({ visible, value, onSelect, onClose }: Props
       statusBarTranslucent
       accessibilityViewIsModal
     >
-      <SafeAreaView style={modalStyles.modalContainer} edges={["top", "bottom"]}>
+      <SafeAreaView
+        style={modalStyles.modalContainer}
+        edges={["top", "bottom"]}
+      >
         <View style={modalStyles.header}>
           <Text variant="default" style={modalStyles.headerTitle}>
             {t("components.transactionForm.recurrence.unitTitle")}
@@ -735,7 +762,10 @@ export function RecurrenceUnitModal({ visible, value, onSelect, onClose }: Props
           {UNITS.map((u) => (
             <ListItem
               key={u}
-              style={[modalStyles.item, u === value && modalStyles.itemSelected]}
+              style={[
+                modalStyles.item,
+                u === value && modalStyles.itemSelected,
+              ]}
               onPress={() => {
                 onSelect(u)
                 onClose()
@@ -815,22 +845,39 @@ export function RecurrenceCard({
           {t("components.transactionForm.recurrence.every")}
         </Text>
       </View>
-      <View style={transactionFormStyles.recurrenceRow /* new style: flexDirection row, gap 8, alignItems center */}>
+      <View
+        style={
+          transactionFormStyles.recurrenceRow /* new style: flexDirection row, gap 8, alignItems center */
+        }
+      >
         <Pressable
-          onPress={() => onIntervalChange(clampInterval(recurrence.interval - 1))}
+          onPress={() =>
+            onIntervalChange(clampInterval(recurrence.interval - 1))
+          }
           disabled={recurrence.interval <= 1}
-          accessibilityLabel={t("components.transactionForm.recurrence.decrement")}
+          accessibilityLabel={t(
+            "components.transactionForm.recurrence.decrement",
+          )}
           style={transactionFormStyles.stepperButton /* new style */}
         >
           <Text variant="large">−</Text>
         </Pressable>
-        <Text variant="large" style={transactionFormStyles.stepperValue /* new style, min width, textAlign center, writingDirection ltr */}>
+        <Text
+          variant="large"
+          style={
+            transactionFormStyles.stepperValue /* new style, min width, textAlign center, writingDirection ltr */
+          }
+        >
           {recurrence.interval}
         </Text>
         <Pressable
-          onPress={() => onIntervalChange(clampInterval(recurrence.interval + 1))}
+          onPress={() =>
+            onIntervalChange(clampInterval(recurrence.interval + 1))
+          }
           disabled={recurrence.interval >= 999}
-          accessibilityLabel={t("components.transactionForm.recurrence.increment")}
+          accessibilityLabel={t(
+            "components.transactionForm.recurrence.increment",
+          )}
           style={transactionFormStyles.stepperButton}
         >
           <Text variant="large">+</Text>
@@ -838,11 +885,17 @@ export function RecurrenceCard({
 
         <Pressable
           onPress={() => setUnitModal(true)}
-          style={transactionFormStyles.recurrenceUnitButton /* new style: flex 1 row space-between */}
+          style={
+            transactionFormStyles.recurrenceUnitButton /* new style: flex 1 row space-between */
+          }
           accessibilityRole="button"
         >
           <Text variant="default">{unitLabel}</Text>
-          <ChevronIcon direction="trailing" size={20} style={transactionFormStyles.chevronIcon} />
+          <ChevronIcon
+            direction="trailing"
+            size={20}
+            style={transactionFormStyles.chevronIcon}
+          />
         </Pressable>
       </View>
 
@@ -855,7 +908,9 @@ export function RecurrenceCard({
           <Pressable
             onPress={onUntilReset}
             style={transactionFormStyles.clearButton}
-            accessibilityLabel={t("components.transactionForm.recurrence.reset")}
+            accessibilityLabel={t(
+              "components.transactionForm.recurrence.reset",
+            )}
           >
             <Text variant="small" style={transactionFormStyles.clearButtonText}>
               {t("components.transactionForm.recurrence.reset")}
@@ -863,8 +918,16 @@ export function RecurrenceCard({
           </Pressable>
         )}
       </View>
-      <ListItem style={transactionFormStyles.inlineDateRow} onPress={onUntilPress}>
-        <DynamicIcon icon="calendar-outline" size={20} color={theme.colors.primary} variant="badge" />
+      <ListItem
+        style={transactionFormStyles.inlineDateRow}
+        onPress={onUntilPress}
+      >
+        <DynamicIcon
+          icon="calendar-outline"
+          size={20}
+          color={theme.colors.primary}
+          variant="badge"
+        />
         <Text
           variant="default"
           style={[
@@ -874,7 +937,11 @@ export function RecurrenceCard({
         >
           {untilLabel}
         </Text>
-        <ChevronIcon direction="trailing" size={20} style={transactionFormStyles.chevronIcon} />
+        <ChevronIcon
+          direction="trailing"
+          size={20}
+          style={transactionFormStyles.chevronIcon}
+        />
       </ListItem>
 
       {occurrenceCount === 0 && (
@@ -944,7 +1011,9 @@ export function FormKindCard(props: Props) {
 ```
 
 `index.tsx`:
+
 - `<FormKindCard kind={f.kind} />` → pass the recurrence props:
+
   ```tsx
   <FormKindCard
     kind={f.kind}
@@ -962,8 +1031,14 @@ export function FormKindCard(props: Props) {
 - Delete the entire `{!f.isRefund && f.kind !== "subscription" && f.kind !== "repetitive" && (<FormRecurringSection .../>)}` block (lines ~274-323) and the `FormRecurringSection` import.
 
 `form-kind-selector.tsx`:
+
 ```ts
-const KINDS: TransactionKind[] = ["default", "upcoming", "subscription", "repetitive"]
+const KINDS: TransactionKind[] = [
+  "default",
+  "upcoming",
+  "subscription",
+  "repetitive",
+]
 ```
 (Leave the `lent`/`borrowed` comment; those wait for Slice 4.)
 
@@ -1036,6 +1111,7 @@ git commit -m "feat(transaction-form): interval+unit recurrence card; subscripti
 > Most of this landed in Task 2 Step 6. This task is the **verification + hardening** pass: confirm the "(×N)" the card shows equals what the synchroniser spawns, and that `until < start` is blocked in both the card (×0 message) and the submit guard.
 
 **Files:**
+
 - Modify: `src/components/transaction/transaction-form-v4/use-transaction-form.submit.ts` — only if a recurrence concern belongs in the pure builder (see Step 2); otherwise no code change and this task is a review gate.
 - Modify: `scripts/checks/verify-recurrence.mts` — add the "count == spawn" cross-check.
 
@@ -1056,7 +1132,12 @@ for (const rec of [
 ] as const) {
   const n = countOccurrencesBetween(from, untilEod, rec)
   const spawned = new RRule({
-    freq: { day: RRule.DAILY, week: RRule.WEEKLY, month: RRule.MONTHLY, year: RRule.YEARLY }[rec.unit],
+    freq: {
+      day: RRule.DAILY,
+      week: RRule.WEEKLY,
+      month: RRule.MONTHLY,
+      year: RRule.YEARLY,
+    }[rec.unit],
     interval: rec.interval,
     dtstart: from,
     until: untilEod,
@@ -1086,14 +1167,17 @@ git commit -m "test(recurrence): pin count==spawn; verify RS-3/RS-4 in submit"
 ## Task 4: edit an existing rule — `parseRecurrence` init + `updateRecurringRule` + ES-8
 
 **Files:**
+
 - Modify: `src/database/services/recurring-transaction-service.ts` — add `updateRecurringRule`; extend `applyRecurringEditScope`
 - Modify: `src/components/transaction/edit-recurring-modal.tsx` — accept `recurrence` / `until`
 - Modify: `src/components/transaction/transaction-form-v4/form-modals.tsx` — forward them
 - Modify: `src/components/transaction/transaction-form-v4/use-transaction-form.ts` — init `recurring` from the rule on edit; pass card recurrence into the edit-modal payload
 
 **Interfaces:**
+
 - Consumes: `parseRecurrence` (Task 1), `buildRRuleString` (Task 1), `RecurringState` (Task 2).
 - Produces:
+
   ```ts
   // recurring-transaction-service.ts
   export async function updateRecurringRule(
@@ -1112,7 +1196,11 @@ git commit -m "test(recurrence): pin count==spawn; verify RS-3/RS-4 in submit"
 ```ts
 import { and, count, desc, eq, lte } from "drizzle-orm"
 // ...
-import type { Recurrence, TransactionKind, TransactionSubType } from "~/types/transactions"
+import type {
+  Recurrence,
+  TransactionKind,
+  TransactionSubType,
+} from "~/types/transactions"
 import { buildRRuleString, nextAbsoluteOccurrence } from "~/utils/recurrence"
 import { endOfDay } from "date-fns"
 
@@ -1277,6 +1365,7 @@ git commit -m "feat(recurring): updateRecurringRule + ES-8 recurrence edit via t
 ## Task 5: i18n audit + dead-code sweep + full verification
 
 **Files:**
+
 - Modify: `src/i18n/translation/en.json`, `src/i18n/translation/ar.json`
 - Modify: `src/components/transaction/transaction-form-v4/form-utils.ts` (confirm `getRecurrenceDisplayLabel` gone; imports pruned)
 - Grep-driven deletions only
@@ -1341,30 +1430,30 @@ git commit -m "chore(recurrence): drop dead frequency model + i18n keys; Slice 2
 
 **1. Spec coverage**
 
-| Spec item (Slice 2) | Task |
-|---|---|
-| `Recurrence` / `RecurrenceUnit` types; delete `RecurringFrequency`, `RECURRING_OPTIONS`, `biweekly` | 1 (add), 2 (delete) |
-| `buildRRuleString({interval,unit,startDate,until?})`, `count` removed | 1 |
-| `countOccurrencesBetween` = `between(...,inc=true).length`, counts first | 1 (+ 3 pin) |
-| `parseRecurrence` — missing INTERVAL→1, bad FREQ→`{1,month}`, malformed→fallback (no throw), clamp | 1 |
-| RS-1 start = `transactionDate`, Date hidden | 2 (Step 6.5, Step 9 Date gate) |
-| RS-2 edit keeps `range.from` | 4 (updateRecurringRule, seed) |
-| RS-3 until → end-of-day; Forever → `2099-12-31` sentinel | 1 (`buildRRuleString`), 2 (submit), 4 |
-| RS-4 until < start → ×0 + blocks save | 2 (submit guard), 2 (card ×0), 3 (QA) |
-| RS-5 shared anchor for count + spawn | 3 (assertion) |
-| `recurrence-card.tsx` replaces `form-recurring-section.tsx`; discrete controls | 2 |
-| stepper (1..999) + unit modal | 2 (inline stepper + `recurrence-unit-modal.tsx`) |
-| "Until [date\|Forever]" + `×N` + reset ✕ | 2 |
-| default `{interval:1,unit:'month'}`, `until:null` | 2 (`freshRecurrence`, reducer init) |
-| edit init from `parseRecurrence(rule.rules[0])` + `rule.range` | 4 |
-| ES-8 `this_and_future` rewrites `rules`+`range`, resets `last_generated` | 4 (`updateRecurringRule`, `applyRecurringEditScope`) |
-| `this` scope edits single instance only | 4 (unchanged path) |
-| No migration; legacy strings at read time | 1 (`parseRecurrence`), Global Constraints |
-| CSI-4 — `kind: data.kind` on `createRecurringRule` (was `"repetitive"`) | 2 (Step 6.6) |
-| CSI-2 — pending recurring instance keeps its kind | unchanged; guarded by existing `synchronizeRecurringTransaction` + assert |
-| i18n `recurrence.every/until/forever/reset` + `recurrence.unit.*` plurals, en + ar | 2 (add), 5 (audit) |
-| RTL — `×N` + stepper LTR | 2 (Step 8 style note), 5 (QA) |
-| Old-value cleanup: `biweekly`, `RecurringFrequency`, `RECURRING_OPTIONS`, `endAfterOccurrences` → Slice 2 | 2, 5 (grep sweep) |
+| Spec item (Slice 2)                                                                                       | Task                                                                      |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `Recurrence` / `RecurrenceUnit` types; delete `RecurringFrequency`, `RECURRING_OPTIONS`, `biweekly`       | 1 (add), 2 (delete)                                                       |
+| `buildRRuleString({interval,unit,startDate,until?})`, `count` removed                                     | 1                                                                         |
+| `countOccurrencesBetween` = `between(...,inc=true).length`, counts first                                  | 1 (+ 3 pin)                                                               |
+| `parseRecurrence` — missing INTERVAL→1, bad FREQ→`{1,month}`, malformed→fallback (no throw), clamp        | 1                                                                         |
+| RS-1 start = `transactionDate`, Date hidden                                                               | 2 (Step 6.5, Step 9 Date gate)                                            |
+| RS-2 edit keeps `range.from`                                                                              | 4 (updateRecurringRule, seed)                                             |
+| RS-3 until → end-of-day; Forever → `2099-12-31` sentinel                                                  | 1 (`buildRRuleString`), 2 (submit), 4                                     |
+| RS-4 until < start → ×0 + blocks save                                                                     | 2 (submit guard), 2 (card ×0), 3 (QA)                                     |
+| RS-5 shared anchor for count + spawn                                                                      | 3 (assertion)                                                             |
+| `recurrence-card.tsx` replaces `form-recurring-section.tsx`; discrete controls                            | 2                                                                         |
+| stepper (1..999) + unit modal                                                                             | 2 (inline stepper + `recurrence-unit-modal.tsx`)                          |
+| "Until [date\|Forever]" + `×N` + reset ✕                                                                  | 2                                                                         |
+| default `{interval:1,unit:'month'}`, `until:null`                                                         | 2 (`freshRecurrence`, reducer init)                                       |
+| edit init from `parseRecurrence(rule.rules[0])` + `rule.range`                                            | 4                                                                         |
+| ES-8 `this_and_future` rewrites `rules`+`range`, resets `last_generated`                                  | 4 (`updateRecurringRule`, `applyRecurringEditScope`)                      |
+| `this` scope edits single instance only                                                                   | 4 (unchanged path)                                                        |
+| No migration; legacy strings at read time                                                                 | 1 (`parseRecurrence`), Global Constraints                                 |
+| CSI-4 — `kind: data.kind` on `createRecurringRule` (was `"repetitive"`)                                   | 2 (Step 6.6)                                                              |
+| CSI-2 — pending recurring instance keeps its kind                                                         | unchanged; guarded by existing `synchronizeRecurringTransaction` + assert |
+| i18n `recurrence.every/until/forever/reset` + `recurrence.unit.*` plurals, en + ar                        | 2 (add), 5 (audit)                                                        |
+| RTL — `×N` + stepper LTR                                                                                  | 2 (Step 8 style note), 5 (QA)                                             |
+| Old-value cleanup: `biweekly`, `RecurringFrequency`, `RECURRING_OPTIONS`, `endAfterOccurrences` → Slice 2 | 2, 5 (grep sweep)                                                         |
 
 No gaps.
 

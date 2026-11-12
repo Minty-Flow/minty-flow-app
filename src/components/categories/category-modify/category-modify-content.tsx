@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useNavigation, useRouter } from "expo-router"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
@@ -17,12 +17,15 @@ import { RouteLoadingState } from "~/components/route-load-state"
 import { Separator } from "~/components/ui/separator"
 import { View } from "~/components/ui/view"
 import { ScrollIntoViewProvider } from "~/contexts/scroll-into-view-context"
+import { useCategoriesQuery } from "~/database/drizzle/read-models/category-read-model"
 import {
   type BudgetLosingLastCategory,
+  type CategoryDeleteImpact,
   CategoryHasLoansError,
   createCategory,
   deleteCategoryById,
   getBudgetsLosingLastCategory,
+  getCategoryDeleteImpact,
   getLoansUsingCategory,
   updateCategoryById,
 } from "~/database/services/category-service"
@@ -38,6 +41,7 @@ import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
 
 import { CategoryFormSheets } from "./category-form-sheets"
+import { CategoryMoveRow } from "./category-move-row"
 import type { CategoryModifyContentProps } from "./types"
 export function CategoryModifyContent({
   categoryModifyId,
@@ -84,6 +88,27 @@ export function CategoryModifyContent({
   const [budgetsLosingCategory, setBudgetsLosingCategory] = useState<
     BudgetLosingLastCategory[]
   >([])
+  const [deleteImpact, setDeleteImpact] = useState<CategoryDeleteImpact | null>(
+    null,
+  )
+  const [moveToCategoryId, setMoveToCategoryId] = useState<string | null>(null)
+  const { data: allCategories } = useCategoriesQuery(true)
+  const moveTargets = allCategories.filter(
+    (c) => c.type === category?.type && c.id !== categoryModifyId,
+  )
+  const moveTarget = moveTargets.find((c) => c.id === moveToCategoryId)
+  const hasContentToMove =
+    (deleteImpact?.transactionCount ?? 0) +
+      (deleteImpact?.recurringRuleCount ?? 0) >
+    0
+
+  useEffect(() => {
+    if (isAddMode || !categoryModifyId) return
+    getCategoryDeleteImpact(categoryModifyId)
+      .then(setDeleteImpact)
+      .catch((error) => logger.error("Error reading category usage", { error }))
+  }, [isAddMode, categoryModifyId])
+
   const onSubmit = async (data: AddCategoriesFormSchema) => {
     const trimmedName = data.name.trim()
     try {
@@ -149,7 +174,9 @@ export function CategoryModifyContent({
         })
         return false
       }
-      await deleteCategoryById(categoryModifyId)
+      await deleteCategoryById(categoryModifyId, {
+        moveToCategoryId: moveTarget?.id,
+      })
     } catch (error) {
       logger.error("Error deleting category", { error })
       Toast.error({
@@ -225,6 +252,13 @@ export function CategoryModifyContent({
 
         {!isAddMode && (
           <View style={modifyFormStyles.deleteSection}>
+            {hasContentToMove && moveTargets.length > 0 ? (
+              <CategoryMoveRow
+                targets={moveTargets}
+                selectedId={moveTarget?.id ?? null}
+                onChange={setMoveToCategoryId}
+              />
+            ) : null}
             <FormDeleteButton
               label={t("components.categories.form.deleteLabel")}
               onPress={handleDeletePress}
@@ -249,6 +283,8 @@ export function CategoryModifyContent({
         isAddMode={isAddMode}
         category={category}
         budgetsLosingCategory={budgetsLosingCategory}
+        recurringRuleCount={deleteImpact?.recurringRuleCount ?? 0}
+        moveTargetName={moveTarget?.name}
         onCloseDeleteSheet={() => setDeleteSheetVisible(false)}
         onCloseUnsavedSheet={() => setUnsavedSheetVisible(false)}
         onConfirmDelete={handleDelete}

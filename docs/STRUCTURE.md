@@ -1,5 +1,7 @@
 # Project Structure
-Generated on: 2026-11-03T09:10:46.199Z
+
+Generated on: 2026-11-12T10:42:28.504Z
+
 ```
 ./
 ├── __tests__/
@@ -11,11 +13,14 @@ Generated on: 2026-11-03T09:10:46.199Z
 │   │   │   └── max-amount-input-length.test.ts
 │   │   ├── transaction/
 │   │   │   └── transaction-form/
+│   │   │       ├── form-items.test.ts
 │   │   │       ├── transfer-edit-from-credit-leg.test.ts
-│   │   │       └── transfer-rate.test.ts
+│   │   │       ├── transfer-rate.test.ts
+│   │   │       └── with-primary-account.test.ts
 │   │   ├── date-range-presets.test.ts
 │   │   └── transaction-form-payload.test.ts
 │   ├── constants/
+│   │   ├── category-presets.test.ts
 │   │   └── trash-retention.test.ts
 │   ├── database/
 │   │   ├── backup/
@@ -24,8 +29,11 @@ Generated on: 2026-11-03T09:10:46.199Z
 │   │   │   └── post-import-repairs.test.ts
 │   │   ├── drizzle/
 │   │   │   └── read-models/
+│   │   │       ├── recent-items.test.ts
 │   │   │       ├── stats-data.test.ts
 │   │   │       └── trash-by-deletion-date.test.ts
+│   │   ├── migrations/
+│   │   │   └── rescale-low-price-crypto.test.ts
 │   │   ├── services/
 │   │   │   ├── account-balance-adjustment.test.ts
 │   │   │   ├── backup-after-account-delete.test.ts
@@ -33,6 +41,7 @@ Generated on: 2026-11-03T09:10:46.199Z
 │   │   │   ├── budget-category-delete.test.ts
 │   │   │   ├── budget-period-bounds.test.ts
 │   │   │   ├── category-delete.test.ts
+│   │   │   ├── category-move.test.ts
 │   │   │   ├── color-clear.test.ts
 │   │   │   ├── delete-recurring-keep-paid.test.ts
 │   │   │   ├── destroy-account-transfer-partner.test.ts
@@ -51,6 +60,7 @@ Generated on: 2026-11-03T09:10:46.199Z
 │   │   │   ├── recurring-sync.test.ts
 │   │   │   ├── recurring-template-refs.test.ts
 │   │   │   ├── recurring-transaction-service.test.ts
+│   │   │   ├── transaction-items.test.ts
 │   │   │   ├── trash-auto-purge.test.ts
 │   │   │   └── trashed-transactions-read-only.test.ts
 │   │   ├── utils/
@@ -60,6 +70,8 @@ Generated on: 2026-11-03T09:10:46.199Z
 │   ├── helpers/
 │   │   ├── create-test-db.test.ts
 │   │   └── create-test-db.ts
+│   ├── i18n/
+│   │   └── language.constants.test.ts
 │   ├── schemas/
 │   │   ├── accounts.schema.test.ts
 │   │   └── budgets.schema.test.ts
@@ -69,8 +81,11 @@ Generated on: 2026-11-03T09:10:46.199Z
 │   │   ├── exchange-rates.test.ts
 │   │   └── pending-transaction-notifications.test.ts
 │   ├── stores/
-│   │   └── export-history.store.test.ts
+│   │   ├── bill-splitter.store.test.ts
+│   │   ├── export-history.store.test.ts
+│   │   └── onboarding.store.test.ts
 │   └── utils/
+│       ├── account-balances.test.ts
 │       ├── chart-path.test.ts
 │       ├── csv.test.ts
 │       ├── live-progress.test.ts
@@ -133,13 +148,17 @@ Generated on: 2026-11-03T09:10:46.199Z
 │   │   ├── 0002_snapshot.json
 │   │   ├── 0003_snapshot.json
 │   │   ├── 0004_snapshot.json
-│   │   └── 0005_snapshot.json
+│   │   ├── 0005_snapshot.json
+│   │   ├── 0006_snapshot.json
+│   │   └── 0007_snapshot.json
 │   ├── 0000_safe_maximus.sql
 │   ├── 0001_deep_daredevil.sql
 │   ├── 0002_famous_bastion.sql
 │   ├── 0003_transaction_composite_indexes.sql
 │   ├── 0004_repair_recurring_template_refs.sql
 │   ├── 0005_align_loan_row_kind.sql
+│   ├── 0006_transaction_items.sql
+│   ├── 0007_rescale_low_price_crypto.sql
 │   ├── migrations.d.ts
 │   └── migrations.js
 ├── plugins/
@@ -170,6 +189,7 @@ Generated on: 2026-11-03T09:10:46.199Z
 │   │   │   ├── expense-categories.tsx
 │   │   │   ├── income-categories.tsx
 │   │   │   ├── index.tsx
+│   │   │   ├── slides.tsx
 │   │   │   └── start.tsx
 │   │   ├── settings/
 │   │   │   ├── backup/
@@ -263,7 +283,9 @@ Generated on: 2026-11-03T09:10:46.199Z
 │   │   │   ├── account-card.tsx
 │   │   │   ├── account-delete-error.ts
 │   │   │   ├── account-picker-sheet.tsx
-│   │   │   └── account-type-inline.tsx
+│   │   │   ├── account-type-inline.tsx
+│   │   │   ├── total-balance.styles.ts
+│   │   │   └── total-balance.tsx
 │   │   ├── bill-splitter/
 │   │   │   ├── add-name-sheet.tsx
 │   │   │   └── bill-item-card.tsx
@@ -280,6 +302,8 @@ Generated on: 2026-11-03T09:10:46.199Z
 │   │   │   ├── category-modify/
 │   │   │   │   ├── category-form-sheets.tsx
 │   │   │   │   ├── category-modify-content.tsx
+│   │   │   │   ├── category-move-row.styles.ts
+│   │   │   │   ├── category-move-row.tsx
 │   │   │   │   └── types.ts
 │   │   │   ├── add-category-content.tsx
 │   │   │   ├── category-list.tsx
@@ -426,6 +450,8 @@ Generated on: 2026-11-03T09:10:46.199Z
 │   │   │   │   ├── form-delete-actions.tsx
 │   │   │   │   ├── form-footer.tsx
 │   │   │   │   ├── form-goal-picker.tsx
+│   │   │   │   ├── form-items-section.tsx
+│   │   │   │   ├── form-items.styles.ts
 │   │   │   │   ├── form-kind-card.tsx
 │   │   │   │   ├── form-kind-selector.tsx
 │   │   │   │   ├── form-loan-picker.tsx
@@ -435,11 +461,14 @@ Generated on: 2026-11-03T09:10:46.199Z
 │   │   │   │   ├── form-utils.ts
 │   │   │   │   ├── form.styles.ts
 │   │   │   │   ├── index.tsx
+│   │   │   │   ├── item-editor-sheet.tsx
+│   │   │   │   ├── item-entry-row.tsx
 │   │   │   │   ├── kind-info-sheet.tsx
 │   │   │   │   ├── kind-info.ts
 │   │   │   │   ├── on-kind-change.ts
 │   │   │   │   ├── recurrence-card.tsx
 │   │   │   │   ├── recurrence-unit-sheet.tsx
+│   │   │   │   ├── step-button.tsx
 │   │   │   │   ├── tag-picker-sheet.tsx
 │   │   │   │   ├── transaction-top-tabs.tsx
 │   │   │   │   ├── transfer-rate.ts
@@ -542,7 +571,8 @@ Generated on: 2026-11-03T09:10:46.199Z
 │   │   │   ├── backup-format.ts
 │   │   │   ├── backup-import-plan.ts
 │   │   │   ├── backup-settings.ts
-│   │   │   └── import-marker.ts
+│   │   │   ├── import-marker.ts
+│   │   │   └── upgrade-backup-data.ts
 │   │   ├── drizzle/
 │   │   │   ├── read-models/
 │   │   │   │   ├── account-read-model.ts
@@ -555,6 +585,7 @@ Generated on: 2026-11-03T09:10:46.199Z
 │   │   │   │   ├── stats-data.ts
 │   │   │   │   ├── stats-read-model.ts
 │   │   │   │   ├── tag-read-model.ts
+│   │   │   │   ├── transaction-item-read-model.ts
 │   │   │   │   └── transaction-read-model.ts
 │   │   │   ├── db.ts
 │   │   │   └── schema.ts
@@ -690,10 +721,12 @@ Generated on: 2026-11-03T09:10:46.199Z
 │   │   ├── transaction-filters.ts
 │   │   └── transactions.ts
 │   └── utils/
+│       ├── account-balances.ts
 │       ├── account-types-list.ts
 │       ├── attachments.ts
 │       ├── chart-path.ts
 │       ├── csv.ts
+│       ├── device-locale.ts
 │       ├── file-icon.ts
 │       ├── format-file-size.ts
 │       ├── get-week-start-on.ts

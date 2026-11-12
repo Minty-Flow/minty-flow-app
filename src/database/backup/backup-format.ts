@@ -4,6 +4,7 @@ import {
   sanitizeProfile,
   sanitizeSettings,
 } from "~/database/backup/backup-settings"
+import { upgradeBackupData } from "~/database/backup/upgrade-backup-data"
 import { hasAttachmentsFromExtra } from "~/database/utils/has-attachments-from-extra"
 import { assertMinorUnits, getMinorUnitDigits } from "~/utils/money"
 
@@ -42,6 +43,8 @@ export interface MintyFlowBackup {
     transactions: RawRow[]
     transfers: RawRow[]
     transaction_tags: RawRow[]
+    /** v7+. Filled with `[]` when validating an older backup. */
+    transaction_items: RawRow[]
     budget_accounts: RawRow[]
     budget_categories: RawRow[]
     goal_accounts: RawRow[]
@@ -69,8 +72,13 @@ export type ValidateBackupResult =
 // (name and photo file name). Both are additive and optional, so a v3 to v5
 // backup restores unchanged and leaves the current settings alone. An older
 // app cannot read a v6 backup. Only the ZIP carries the two sections; the
-// data-only JSON keeps its 13 tables.
-export const SCHEMA_VERSION = 6
+// data-only JSON keeps its data tables.
+// v7: a `transaction_items` table (line items under a transaction). Additive:
+// a v3 to v6 backup has no items and restores with none.
+// v8: PEPE and SHIB use 2 minor digits instead of 8 (#161). An older backup's
+// amounts in those currencies are rescaled on import (upgradeBackupData), the
+// same as migration 0007 does to live data.
+export const SCHEMA_VERSION = 8
 
 // v3 is accepted for one release so users can still restore a backup taken
 // before the `kind` migration (local-first: no server copy to fall back on).
@@ -217,12 +225,21 @@ export const ALLOWED_COLUMNS: Record<string, string[]> = {
     "updated_at",
   ],
   transaction_tags: ["transaction_id", "tag_id"],
+  transaction_items: [
+    "id",
+    "transaction_id",
+    "name",
+    "unit_price",
+    "quantity",
+    "sort_order",
+  ],
   budget_accounts: ["budget_id", "account_id", "created_at"],
   budget_categories: ["budget_id", "category_id", "created_at"],
   goal_accounts: ["goal_id", "account_id", "created_at"],
 }
 
 export const RESET_ORDER = [
+  "transaction_items",
   "transaction_tags",
   "budget_accounts",
   "budget_categories",
@@ -387,6 +404,9 @@ export function validateBackup(json: string): ValidateBackupResult {
       "budget_categories",
       "goal_accounts",
     ]
+    // Older backups: add what later versions expect, rescale PEPE/SHIB.
+    upgradeBackupData(meta.schemaVersion, data)
+    requiredTables.push("transaction_items")
     for (const table of requiredTables) {
       if (!Array.isArray((data as Record<string, unknown>)[table])) {
         return {
@@ -403,6 +423,7 @@ export function validateBackup(json: string): ValidateBackupResult {
       goals: ["target_amount"],
       loans: ["principal_amount"],
       transactions: ["amount", "account_balance_before"],
+      transaction_items: ["unit_price"],
     }
     for (const [table, columns] of Object.entries(moneyColumns)) {
       const rows = data[table] as RawRow[]

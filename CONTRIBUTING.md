@@ -43,15 +43,15 @@ issue (Backlog → Ready)
 
 1. **Start.** `git switch dev && git pull && git switch -c feat/xyz`. Open a
    draft PR into `dev` with `Closes #n` in the body (moves the card to
-   *In progress*).
+   _In progress_).
 2. **Work.** Conventional Commits, one logical change per PR. CI runs only on
    PRs into `main`, not on PRs into `dev`, so run `pnpm verify` (lint,
    number-formatting check, `tsc --noEmit`, tests) before merging.
 3. **Merge to dev.** Mark the PR ready and merge (squash is fine). The card
-   moves to *In review*. Delete the temp branch and test from `dev`.
+   moves to _In review_. Delete the temp branch and test from `dev`.
 4. **Release.** When `dev` is validated, open a PR `dev → main` repeating the
    `Closes #n` lines (omit issues still waiting). Merging closes the issues
-   and the project sets them to *Done*.
+   and the project sets them to _Done_.
 5. **Hotfix.** Branch off `main` as `fix/*`, PR into `main`, then merge `main`
    back into `dev`.
 
@@ -159,7 +159,7 @@ you'd rather not be).
 - Money is always stored and passed as integer minor units. Use
   `src/utils/money.ts` and `src/components/money.tsx` — never hand-roll with
   `parseFloat`, `toFixed`, or `Intl.NumberFormat`.
-- Comment only when the *why* is non-obvious. Prefixes: `BUG`, `FIXME`,
+- Comment only when the _why_ is non-obvious. Prefixes: `BUG`, `FIXME`,
   `HACK`, `XXX`, `TODO`.
 
 See [`docs/STRUCTURE.md`](docs/STRUCTURE.md) for the full project layout.

@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react"
+import { type ReactNode, type Ref, useState } from "react"
 import {
   TextInput as RNTextInput,
   type TextInputProps as RNTextInputProps,
@@ -6,6 +6,8 @@ import {
 } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 export interface InputProps extends RNTextInputProps {
+  /** Reaches the inner TextInput (React 19 passes `ref` as a prop). */
+  ref?: Ref<RNTextInput>
   error?: boolean
   success?: boolean
   native?: boolean

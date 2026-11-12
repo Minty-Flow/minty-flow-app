@@ -87,6 +87,8 @@ export const SmartAmountInput = ({
   // An amount cannot become minor units without a currency, so typing is
   // refused until one is chosen and this message says why.
   const [currencyHintShown, setCurrencyHintShown] = useState(false)
+  // Set when a keystroke would pass the safe-integer cap and was refused.
+  const [tooLarge, setTooLarge] = useState(false)
   const requireCurrency = () => {
     if (!hasCurrency) setCurrencyHintShown(true)
     return hasCurrency
@@ -140,17 +142,18 @@ export const SmartAmountInput = ({
     if (normalized === null) return
     const sanitized = sanitizeAmountInput(normalized)
     if (exceedsFractionDigits(sanitized, maximumFractionDigits)) return
-    if (sanitized.length <= maxAmountInputLength(maximumFractionDigits)) {
-      setIsEditing(true)
-      setInputValue(sanitized)
-      if (!showMathToolbar) {
-        try {
-          onChangeMinor(
-            sanitized ? parseMajorUnits(sanitized, currencyCode) : 0,
-          )
-        } catch {
-          // Keep the incomplete editing value until it becomes valid.
-        }
+    if (sanitized.length > maxAmountInputLength(maximumFractionDigits)) {
+      setTooLarge(true)
+      return
+    }
+    setTooLarge(false)
+    setIsEditing(true)
+    setInputValue(sanitized)
+    if (!showMathToolbar) {
+      try {
+        onChangeMinor(sanitized ? parseMajorUnits(sanitized, currencyCode) : 0)
+      } catch {
+        // Keep the incomplete editing value until it becomes valid.
       }
     }
   }
@@ -196,6 +199,7 @@ export const SmartAmountInput = ({
   }
   const handleBackspace = () => {
     if (!requireCurrency()) return
+    setTooLarge(false)
     setIsEditing(true)
     const currentValue = isEditing
       ? inputValue
@@ -213,6 +217,7 @@ export const SmartAmountInput = ({
     }
   }
   const handleClear = () => {
+    setTooLarge(false)
     setIsEditing(true)
     setInputValue("")
     if (!showMathToolbar) {
@@ -250,7 +255,9 @@ export const SmartAmountInput = ({
   const shownError =
     !hasCurrency && currencyHintShown
       ? t("validation.required.currency")
-      : error
+      : tooLarge
+        ? t("components.transactionForm.amountInput.errors.tooLarge")
+        : error
   const displayPreview =
     previewMinor !== null
       ? formatAmountPreview(previewMinor, currencyCode)

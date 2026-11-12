@@ -7,6 +7,18 @@ import { mmkvJSONStorage } from "~/utils/mmkv-storage"
 const onboardingStorage = createMMKV({ id: "onboarding-storage" })
 
 interface OnboardingStore {
+  /**
+   * The user confirmed a language on the first screen. A text-direction change
+   * reloads the app, and this keeps the next launch from asking again.
+   */
+  isLanguageChosen: boolean
+  setLanguageChosen: () => void
+  /**
+   * The currency picked on the accounts step, or null if none was picked.
+   * Persisted so the pick survives quitting and resuming onboarding.
+   */
+  chosenCurrency: string | null
+  setChosenCurrency: (currencyCode: string) => void
   /** Onboarding is over: the user finished, imported a backup or skipped. */
   isCompleted: boolean
   /**
@@ -27,13 +39,22 @@ interface OnboardingStore {
 export const useOnboardingStore = create<OnboardingStore>()(
   persist(
     (set) => ({
+      isLanguageChosen: false,
+      setLanguageChosen: () => set({ isLanguageChosen: true }),
+      chosenCurrency: null,
+      setChosenCurrency: (chosenCurrency) => set({ chosenCurrency }),
       isCompleted: false,
       isInProgress: false,
       resumePath: null,
       startOnboarding: (resumePath) => set({ isInProgress: true, resumePath }),
       setResumePath: (resumePath) => set({ resumePath }),
       setCompleted: () =>
-        set({ isCompleted: true, isInProgress: false, resumePath: null }),
+        set({
+          isCompleted: true,
+          isInProgress: false,
+          resumePath: null,
+          chosenCurrency: null,
+        }),
     }),
     {
       name: "onboarding-store",

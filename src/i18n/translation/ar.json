@@ -383,6 +383,11 @@
             "title": "تنسيق الأموال",
             "previewLabel": "معاينة",
             "displayFormatLabel": "تنسيق العرض",
+            "homeLabel": "الشاشة الرئيسية",
+            "showBalanceOnHome": {
+              "label": "إظهار الرصيد في الرئيسية",
+              "description": "إظهار رصيدك الإجمالي فوق ملخص الدخل والمصروفات"
+            },
             "options": {
               "symbol": {
                 "label": "الرمز",
@@ -1206,7 +1211,8 @@
         "errors": {
           "invalidExpression": "تعبير غير صالح",
           "divisionByZero": "لا يمكن القسمة على صفر",
-          "invalidResult": "نتيجة غير صالحة"
+          "invalidResult": "نتيجة غير صالحة",
+          "tooLarge": "المبلغ كبير جداً"
         }
       },
       "attachments": {
@@ -1302,6 +1308,53 @@
       "deleteLoanSheet": {
         "title": "حذف هذا القرض؟",
         "description": "يُحذف القرض. تبقى معاملاته في سجلّك دون ارتباط بأي قرض."
+      },
+      "items": {
+        "toggle": "تفصيل العناصر",
+        "addItem": "إضافة عنصر",
+        "editItem": "تعديل العنصر",
+        "name": "اسم العنصر",
+        "namePlaceholder": "مثال: حليب",
+        "unitPrice": "سعر الوحدة",
+        "quantity": "الكمية",
+        "total": "مجموع العناصر",
+        "a11y": {
+          "count_zero": "لا عناصر",
+          "count_one": "عنصر واحد",
+          "count_two": "عنصران",
+          "count_few": "{{count}} عناصر",
+          "count_many": "{{count}} عنصراً",
+          "count_other": "{{count}} عنصر",
+          "added": "تمت إضافة {{name}}",
+          "addRecent": "إضافة {{name}}، {{price}}",
+          "recentAdded_zero": "",
+          "recentAdded_one": "، أُضيف {{count}}",
+          "recentAdded_two": "، أُضيف {{count}}",
+          "recentAdded_few": "، أُضيف {{count}}",
+          "recentAdded_many": "، أُضيف {{count}}",
+          "recentAdded_other": "، أُضيف {{count}}",
+          "newName": "اسم العنصر الجديد",
+          "priceEach": "سعر الوحدة",
+          "decrease": "إنقاص الكمية",
+          "increase": "زيادة الكمية",
+          "remove": "إزالة العنصر"
+        },
+        "recent": "الأخيرة",
+        "newPlaceholder": "أضف عنصراً",
+        "needName": "أضف اسماً",
+        "needPrice": "أضف سعراً",
+        "removed": "تمت إزالة {{name}}",
+        "breakdown": "{{count}} × {{price}}",
+        "confirmOff": {
+          "title_zero": "إزالة العناصر؟",
+          "title_one": "إزالة عنصر واحد؟",
+          "title_two": "إزالة عنصرين؟",
+          "title_few": "إزالة {{count}} عناصر؟",
+          "title_many": "إزالة {{count}} عنصراً؟",
+          "title_other": "إزالة {{count}} عنصر؟",
+          "description": "سيبقى المبلغ {{amount}}، ويمكنك تعديله."
+        },
+        "chooseAccount": "اختر حساباً لتفصيل هذه المعاملة إلى عناصر."
       }
     },
     "recurring": {
@@ -1338,53 +1391,67 @@
         "selectedCount": "{{count}} محدد",
         "noneSelected": "لم يتم التحديد",
         "expense": {
-          "eatingOut": "الأكل خارج المنزل",
           "groceries": "البقالة",
-          "drinks": "المشروبات",
-          "education": "التعليم",
-          "health": "الصحة",
+          "eatingOut": "الأكل خارج المنزل",
           "transport": "المواصلات",
-          "gas": "الوقود",
+          "housing": "السكن",
+          "utilities": "الفواتير والمرافق",
+          "health": "الصحة",
           "shopping": "التسوق",
           "entertainment": "الترفيه",
-          "subscriptions": "الاشتراكات الإلكترونية",
+          "subscriptions": "الاشتراكات",
           "gifts": "الهدايا",
-          "rent": "الإيجار",
-          "utils": "المرافق",
-          "taxes": "الضرائب",
-          "insurance": "التأمين",
-          "petCare": "رعاية الحيوانات الأليفة",
+          "fuel": "الوقود",
+          "carMaintenance": "صيانة السيارة",
+          "parking": "مواقف السيارات",
           "childCare": "رعاية الأطفال",
+          "education": "التعليم",
+          "petCare": "رعاية الحيوانات الأليفة",
+          "insurance": "التأمين",
+          "taxes": "الضرائب",
           "fitness": "اللياقة البدنية",
+          "beauty": "الجمال",
+          "hygiene": "النظافة الشخصية",
+          "drinks": "القهوة والمشروبات",
+          "snacks": "الوجبات الخفيفة",
           "gadgets": "الأجهزة",
           "services": "الخدمات",
-          "snacks": "الوجبات الخفيفة",
           "stationery": "القرطاسية",
-          "hygiene": "النظافة الشخصية",
           "travel": "السفر",
           "hobbies": "الهوايات",
-          "beauty": "الجمال",
           "donations": "التبرعات"
         },
         "income": {
-          "paycheck": "الراتب",
-          "bonus": "المكافآت",
-          "freelance": "العمل الحر",
-          "business": "دخل الأعمال",
+          "salary": "الراتب",
+          "gifts": "الهدايا المستلمة",
+          "refunds": "المبالغ المستردة",
+          "cashback": "الاسترداد النقدي",
           "investments": "الاستثمارات",
           "interest": "الفوائد",
           "rental": "دخل الإيجار",
+          "business": "دخل الأعمال",
+          "freelance": "العمل الحر",
           "allowance": "المصروف",
-          "gifts": "الهدايا المستلمة",
-          "cashback": "الاسترداد النقدي",
-          "pension": "المعاش",
-          "refunds": "المبالغ المستردة"
+          "pension": "المعاش"
+        },
+        "packs": {
+          "car": "السيارة",
+          "kids": "الأطفال",
+          "pets": "الحيوانات الأليفة",
+          "homeBills": "المنزل والفواتير",
+          "selfCare": "العناية بالنفس",
+          "foodExtras": "إضافات الطعام",
+          "workTech": "العمل والتقنية",
+          "lifestyle": "نمط الحياة",
+          "investing": "الاستثمار",
+          "business": "الأعمال",
+          "support": "الدعم"
         },
         "essentials": "الأساسيات",
         "packsTitle": "حسب أسلوب حياتك",
         "packsHint": "أضف بعض الفئات التي تناسب وضعك.",
-        "addPack": "إضافة الكل",
-        "removePack": "إزالة"
+        "addPack": "اختيار الكل",
+        "removePack": "مسح"
       },
       "search": {
         "placeholder": "بحث في فئات {{tab}}..."
@@ -1425,7 +1492,14 @@
           "descriptionBudgets_zero": "تستخدم الميزانيات {{names}} هذه الفئة كفئتها الوحيدة وسيتم إيقافها حتى تضيف فئة لكل منها.",
           "descriptionBudgets_two": "تستخدم الميزانيات {{names}} هذه الفئة كفئتها الوحيدة وسيتم إيقافها حتى تضيف فئة لكل منها.",
           "descriptionBudgets_few": "تستخدم الميزانيات {{names}} هذه الفئة كفئتها الوحيدة وسيتم إيقافها حتى تضيف فئة لكل منها.",
-          "descriptionBudgets_many": "تستخدم الميزانيات {{names}} هذه الفئة كفئتها الوحيدة وسيتم إيقافها حتى تضيف فئة لكل منها."
+          "descriptionBudgets_many": "تستخدم الميزانيات {{names}} هذه الفئة كفئتها الوحيدة وسيتم إيقافها حتى تضيف فئة لكل منها.",
+          "descriptionRules_zero": "{{count}} قاعدة متكررة تستخدمها أيضًا.",
+          "descriptionRules_one": "قاعدة متكررة واحدة تستخدمها أيضًا.",
+          "descriptionRules_two": "قاعدتان متكررتان تستخدمانها أيضًا.",
+          "descriptionRules_few": "{{count}} قواعد متكررة تستخدمها أيضًا.",
+          "descriptionRules_many": "{{count}} قاعدة متكررة تستخدمها أيضًا.",
+          "descriptionRules_other": "{{count}} قاعدة متكررة تستخدمها أيضًا.",
+          "descriptionMove": "سيتم نقل معاملاتها وقواعدها المتكررة إلى {{name}}. ستنتقل إليها الميزانيات التي تستخدم هذه الفئة فقط. تحتفظ المعاملات بميزانيتها فقط إذا كانت تشمل {{name}}. لا يمكن التراجع عن ذلك."
         },
         "toast": {
           "notFound": "الفئة غير موجودة",
@@ -1434,6 +1508,13 @@
           "deleteFailed": "فشل حذف الفئة. يرجى المحاولة مرة أخرى.",
           "createFailed": "فشل إنشاء الفئة. يرجى المحاولة مرة أخرى.",
           "updateFailed": "فشل تحديث الفئة. يرجى المحاولة مرة أخرى."
+        },
+        "move": {
+          "label": "عند الحذف، انقل معاملاتها وقواعدها المتكررة إلى",
+          "placeholder": "اختر فئة",
+          "hintNone": "إذا لم تختر فئة، ستفقد فئتها.",
+          "hintSelected": "ستنتقل الميزانيات التي تستخدم هذه الفئة فقط إلى الفئة الجديدة.",
+          "clear": "عدم نقلها"
         }
       },
       "empty": {
@@ -1661,7 +1742,8 @@
       "toAccountForTransfer": "يرجى اختيار حساب الوجهة للتحويل.",
       "category": "الفئة مطلوبة",
       "accounts": "يرجى اختيار حساب واحد على الأقل",
-      "categories": "يرجى اختيار فئة واحدة على الأقل"
+      "categories": "يرجى اختيار فئة واحدة على الأقل",
+      "itemName": "اسم العنصر مطلوب"
     },
     "tooLong": {
       "name": "الاسم طويل جداً"
@@ -1686,6 +1768,9 @@
     }
   },
   "onboarding": {
+    "language": {
+      "title": "اختر لغتك"
+    },
     "resume": {
       "title": "إكمال الإعداد؟",
       "description": "غادرت قبل إنهاء الإعداد. تابع من حيث توقفت، أو تخطَّه وابدأ باستخدام التطبيق.",
@@ -1725,6 +1810,7 @@
         "savings": "مدخرات"
       },
       "createFailed": "تعذّر إنشاء حساباتك. حاول مرة أخرى.",
+      "currencyHint": "ستستخدم الحسابات التي تضيفها هنا هذه العملة. لا يمكن تغيير عملة الحساب بعد إنشائه.",
       "pickOne": "اختر حساباً واحداً على الأقل للمتابعة"
     },
     "expenseCategories": {

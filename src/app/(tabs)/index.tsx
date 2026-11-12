@@ -3,6 +3,7 @@ import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
+import { TotalBalance } from "~/components/accounts/total-balance"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { PrivacyEyeControl } from "~/components/privacy-eye-control"
@@ -17,6 +18,7 @@ import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-m
 import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import { useProfileImage } from "~/hooks/use-profile-image"
 import { useDayKey } from "~/hooks/use-time-reactivity"
+import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { useProfileStore } from "~/stores/profile.store"
 import type {
@@ -49,6 +51,7 @@ function HomeScreen() {
   const profileName = useProfileStore((s) => s.name)
   const image = useProfileImage()
   const accounts = useActiveAccounts()
+  const showBalanceOnHome = useMoneyFormattingStore((s) => s.showBalanceOnHome)
   // dayKey re-bumps on app-foreground and at each date change, so "this month"
   // re-derives after a month rollover instead of serving a memoized stale range.
   const dayKey = useDayKey()
@@ -67,10 +70,18 @@ function HomeScreen() {
     [transactionsFull, filterState, searchState],
   )
   const summaryHeader = (
-    <SummarySection
-      transactionsWithRelations={filteredTransactions}
-      filtered={hasActiveFilters(filterState, searchState)}
-    />
+    <>
+      {/* The whole balance, like the accounts screen: filters and the timeframe do not change it. */}
+      {showBalanceOnHome ? (
+        <View style={styles.balance}>
+          <TotalBalance accounts={accounts} />
+        </View>
+      ) : null}
+      <SummarySection
+        transactionsWithRelations={filteredTransactions}
+        filtered={hasActiveFilters(filterState, searchState)}
+      />
+    </>
   )
   if (transactionsStatus === "loading" && transactionsFull.length === 0)
     return <RouteLoadingState />
@@ -125,6 +136,10 @@ const styles = StyleSheet.create((theme, rt) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.surface,
+  },
+  balance: {
+    marginHorizontal: 20,
+    marginBottom: 16,
   },
   header: {
     marginHorizontal: 20,
