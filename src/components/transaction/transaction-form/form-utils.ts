@@ -9,21 +9,19 @@ import {
 
 export function getDefaultValues(
   transaction: TransactionWithRelations | null,
-  accounts: Account[],
   transactionType: TransactionType,
   initialTagIds: string[] = [],
   prefill?: Partial<TransactionFormValues>,
   initialKind?: TransactionKind,
 ): TransactionFormValues {
-  const defaultAccountId = accounts.find((a) => a.isPrimary)?.id ?? ""
-
   if (!transaction) {
     // prefill values win over computed defaults (e.g. pre-selected account/category/loan)
     return {
       amount: 0,
       type: transactionType,
       transactionDate: new Date(),
-      accountId: defaultAccountId,
+      // No default account: the user picks one (or a prefill passes it).
+      accountId: "",
       toAccountId:
         transactionType === TransactionTypeEnum.TRANSFER ? "" : undefined,
       categoryId: null,
