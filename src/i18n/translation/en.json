@@ -1378,8 +1378,8 @@
         "essentials": "Essentials",
         "packsTitle": "Fits your life",
         "packsHint": "Add a few extras that match your situation.",
-        "addPack": "Add all",
-        "removePack": "Remove"
+        "addPack": "Choose all",
+        "removePack": "Clear"
       },
       "search": {
         "placeholder": "Search {{tab}} categories..."

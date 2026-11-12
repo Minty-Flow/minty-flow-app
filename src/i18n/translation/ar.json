@@ -1450,8 +1450,8 @@
         "essentials": "الأساسيات",
         "packsTitle": "حسب أسلوب حياتك",
         "packsHint": "أضف بعض الفئات التي تناسب وضعك.",
-        "addPack": "إضافة الكل",
-        "removePack": "إزالة"
+        "addPack": "اختيار الكل",
+        "removePack": "مسح"
       },
       "search": {
         "placeholder": "بحث في فئات {{tab}}..."
