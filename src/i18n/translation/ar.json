@@ -1331,7 +1331,8 @@
           "priceEach": "سعر الوحدة",
           "decrease": "إنقاص الكمية",
           "increase": "زيادة الكمية",
-          "remove": "إزالة العنصر"
+          "remove": "إزالة العنصر",
+          "editPrice": "تعديل سعر {{name}}"
         },
         "recent": "الأخيرة",
         "newPlaceholder": "أضف عنصراً",
@@ -1347,7 +1348,8 @@
           "title_many": "إزالة {{count}} عنصراً؟",
           "title_other": "إزالة {{count}} عنصر؟",
           "description": "سيبقى المبلغ {{amount}}، ويمكنك تعديله."
-        }
+        },
+        "chooseAccount": "اختر حساباً لتفصيل هذه المعاملة إلى عناصر."
       }
     },
     "recurring": {

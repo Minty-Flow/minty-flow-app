@@ -1263,7 +1263,8 @@
           "priceEach": "Price each",
           "decrease": "Decrease quantity",
           "increase": "Increase quantity",
-          "remove": "Remove item"
+          "remove": "Remove item",
+          "editPrice": "Edit price of {{name}}"
         },
         "recent": "Recent",
         "newPlaceholder": "Add an item",
@@ -1275,7 +1276,8 @@
           "title_one": "Remove {{count}} item?",
           "title_other": "Remove {{count}} items?",
           "description": "The amount will stay {{amount}}, and you can edit it."
-        }
+        },
+        "chooseAccount": "Choose an account to itemize this transaction."
       }
     },
     "recurring": {

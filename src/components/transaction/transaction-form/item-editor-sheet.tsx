@@ -13,12 +13,13 @@ import { useSheetOpenKey } from "~/hooks/use-sheet-open-key"
 import type { TransactionItem } from "~/types/transactions"
 
 import { formItemsStyles as styles } from "./form-items.styles"
+import { StepButton } from "./step-button"
 
 const MAX_QUANTITY = 9999
 
 interface Props {
   visible: boolean
-  /** The item being edited, or null to add a new one. */
+  /** The line being edited; null only while the sheet has never opened. */
   item: TransactionItem | null
   currencyCode: string
   onSave: (item: TransactionItem) => void
@@ -50,6 +51,7 @@ function ItemEditorSheetInner({
     MAX_QUANTITY,
   )
   const canSave = name.trim().length > 0
+  const stepTo = (next: number) => setQuantityText(String(next))
 
   const handleSave = () => {
     if (!canSave) return
@@ -63,11 +65,7 @@ function ItemEditorSheetInner({
         <SheetIconHeader
           icon="list-outline"
           accentColor={theme.colors.primary}
-          title={t(
-            item
-              ? "components.transactionForm.items.editItem"
-              : "components.transactionForm.items.addItem",
-          )}
+          title={t("components.transactionForm.items.editItem")}
         />
 
         <Input
@@ -76,7 +74,6 @@ function ItemEditorSheetInner({
           maxLength={255}
           placeholder={t("components.transactionForm.items.namePlaceholder")}
           accessibilityLabel={t("components.transactionForm.items.name")}
-          autoFocus={!item}
         />
 
         <SmartAmountInput
@@ -91,41 +88,49 @@ function ItemEditorSheetInner({
           <Text variant="default">
             {t("components.transactionForm.items.quantity")}
           </Text>
-          {/* Input's wrapper fills the row; the box keeps it narrow. */}
-          <View style={styles.quantityBox}>
-            <Input
-              value={quantityText}
-              onChangeText={(text) => setQuantityText(text.replace(/\D/g, ""))}
-              onBlur={() => setQuantityText(String(quantity))}
-              keyboardType="number-pad"
-              maxLength={4}
-              style={styles.quantityInput}
-              accessibilityLabel={t(
-                "components.transactionForm.items.quantity",
-              )}
+          <View style={styles.stepper}>
+            <StepButton
+              icon="minus-outline"
+              disabled={quantity <= 1}
+              onPress={() => stepTo(quantity - 1)}
+              label={t("components.transactionForm.items.a11y.decrease")}
+            />
+            {/* Input's wrapper fills its parent; the box keeps it narrow. */}
+            <View style={styles.quantityBox}>
+              <Input
+                value={quantityText}
+                onChangeText={(text) =>
+                  setQuantityText(text.replace(/\D/g, ""))
+                }
+                onBlur={() => setQuantityText(String(quantity))}
+                keyboardType="number-pad"
+                maxLength={4}
+                style={styles.quantityInput}
+                accessibilityLabel={t(
+                  "components.transactionForm.items.quantity",
+                )}
+              />
+            </View>
+            <StepButton
+              icon="plus-outline"
+              disabled={quantity >= MAX_QUANTITY}
+              onPress={() => stepTo(quantity + 1)}
+              label={t("components.transactionForm.items.a11y.increase")}
             />
           </View>
         </View>
 
         <View style={styles.buttonRow}>
-          {item ? (
-            <Button
-              variant="outline"
-              onPress={() => {
-                onDelete()
-                onClose()
-              }}
-              style={styles.button}
-            >
-              <Text style={styles.deleteText}>
-                {t("common.actions.delete")}
-              </Text>
-            </Button>
-          ) : (
-            <Button variant="outline" onPress={onClose} style={styles.button}>
-              <Text>{t("common.actions.cancel")}</Text>
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            onPress={() => {
+              onDelete()
+              onClose()
+            }}
+            style={styles.button}
+          >
+            <Text style={styles.deleteText}>{t("common.actions.delete")}</Text>
+          </Button>
           <Button
             onPress={handleSave}
             disabled={!canSave}

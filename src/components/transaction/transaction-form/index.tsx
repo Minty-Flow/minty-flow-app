@@ -160,7 +160,7 @@ export function TransactionForm(props: TransactionFormProps) {
             {(canHaveItems(transactionType, f.kind) || f.items.length > 0) && (
               <FormItemsSection
                 items={f.items}
-                currencyCode={f.selectedAccount?.currencyCode ?? "USD"}
+                currencyCode={f.selectedAccount?.currencyCode}
                 amount={f.amount ?? 0}
                 onChange={f.setItems}
               />

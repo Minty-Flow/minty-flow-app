@@ -4,8 +4,8 @@ import { useUnistyles } from "react-native-unistyles"
 
 import { ConfirmSheet } from "~/components/confirm-sheet"
 import { DynamicIcon } from "~/components/dynamic-icon"
-import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
+import { Input } from "~/components/ui/input"
 import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Switch } from "~/components/ui/switch"
@@ -13,21 +13,29 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TransactionItem } from "~/types/transactions"
 import { TransactionTypeEnum } from "~/types/transactions"
+import { minorUnitsToDecimalString } from "~/utils/money"
 import { formatMoney } from "~/utils/number-format"
 import { Toast } from "~/utils/toast"
 
 import { transactionFormStyles } from "./form.styles"
 import { formItemsStyles as styles } from "./form-items.styles"
-import { addOrIncrementItem, itemsTotal } from "./form-utils"
+import {
+  addOrIncrementItem,
+  itemsTotal,
+  parsePriceInput,
+  sanitizePriceInput,
+} from "./form-utils"
 import { ItemEditorSheet } from "./item-editor-sheet"
 import { ItemEntryRow } from "./item-entry-row"
+import { StepButton } from "./step-button"
 
 const MAX_QUANTITY = 9999
 const UNDO_MS = 4000
 
 interface Props {
   items: TransactionItem[]
-  currencyCode: string
+  /** The account's currency; undefined until an account is chosen. */
+  currencyCode: string | undefined
   /** Current form amount, quoted when turning Itemize off. */
   amount: number
   onChange: (items: TransactionItem[]) => void
@@ -38,12 +46,28 @@ interface Props {
  * stepper, recent-item chips and an inline entry row. Off keeps the single
  * amount as before.
  */
-export function FormItemsSection({
+export function FormItemsSection({ currencyCode, ...props }: Props) {
+  if (currencyCode)
+    return <ItemsSection currencyCode={currencyCode} {...props} />
+  return <NoAccountHint />
+}
+
+/** Prices and recent items follow the account's currency, so pick one first. */
+function NoAccountHint() {
+  const { t } = useTranslation()
+  return (
+    <Text variant="small" style={styles.noAccount}>
+      {t("components.transactionForm.items.chooseAccount")}
+    </Text>
+  )
+}
+
+function ItemsSection({
   items,
   currencyCode,
   amount,
   onChange,
-}: Props) {
+}: Props & { currencyCode: string }) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const [enabled, setEnabled] = useState(items.length > 0)
@@ -61,6 +85,24 @@ export function FormItemsSection({
     if (!enabled) return setEnabled(true)
     if (items.length > 0) return setConfirmOff(true)
     setEnabled(false)
+  }
+
+  // The "each" line turns into a price field; Return or leaving it saves.
+  const [priceEdit, setPriceEdit] = useState<{
+    index: number
+    text: string
+  } | null>(null)
+  const commitPrice = () => {
+    if (!priceEdit) return
+    const price = parsePriceInput(priceEdit.text, currencyCode)
+    setPriceEdit(null)
+    // An emptied field keeps the old price.
+    if (price === null) return
+    onChange(
+      items.map((it, i) =>
+        i === priceEdit.index ? { ...it, unitPrice: price } : it,
+      ),
+    )
   }
 
   const setQuantity = (index: number, quantity: number) =>
@@ -115,74 +157,110 @@ export function FormItemsSection({
               key={index}
               style={styles.row}
             >
-              <Pressable
-                style={styles.rowMain}
-                onPress={() => {
-                  setEditing(index)
-                  setSheetVisible(true)
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={t(
-                  "components.transactionForm.items.editItem",
-                )}
-                accessibilityHint={item.name}
-              >
-                <Text variant="default" numberOfLines={1} style={styles.name}>
-                  {item.name}
-                </Text>
-                <Text variant="small" style={styles.each}>
-                  {t("components.transactionForm.items.each", {
-                    price: formatMoney(item.unitPrice, currencyCode, {
-                      hideSign: true,
-                    }),
-                  })}
-                </Text>
-              </Pressable>
-
-              <View style={styles.stepper}>
-                <Pressable
-                  style={styles.stepButton}
-                  onPress={() =>
-                    item.quantity > 1
-                      ? setQuantity(index, item.quantity - 1)
-                      : remove(index)
-                  }
-                  accessibilityRole="button"
-                  accessibilityLabel={t(
-                    item.quantity > 1
-                      ? "components.transactionForm.items.a11y.decrease"
-                      : "components.transactionForm.items.a11y.remove",
+              <View style={styles.rowInner}>
+                <View style={styles.rowMain}>
+                  <Pressable
+                    onPress={() => {
+                      setEditing(index)
+                      setSheetVisible(true)
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={t(
+                      "components.transactionForm.items.editItem",
+                    )}
+                    accessibilityHint={item.name}
+                  >
+                    <Text
+                      variant="default"
+                      numberOfLines={1}
+                      style={styles.name}
+                    >
+                      {item.name}
+                    </Text>
+                  </Pressable>
+                  {priceEdit?.index === index ? (
+                    <Input
+                      autoFocus
+                      value={priceEdit.text}
+                      onChangeText={(text) =>
+                        setPriceEdit({
+                          index,
+                          text: sanitizePriceInput(text, currencyCode),
+                        })
+                      }
+                      onSubmitEditing={commitPrice}
+                      onBlur={commitPrice}
+                      keyboardType="decimal-pad"
+                      returnKeyType="done"
+                      selectTextOnFocus
+                      style={styles.inlinePrice}
+                      accessibilityLabel={t(
+                        "components.transactionForm.items.a11y.priceEach",
+                      )}
+                    />
+                  ) : (
+                    <Pressable
+                      onPress={() =>
+                        setPriceEdit({
+                          index,
+                          text: minorUnitsToDecimalString(
+                            item.unitPrice,
+                            currencyCode,
+                          ),
+                        })
+                      }
+                      accessibilityRole="button"
+                      accessibilityLabel={t(
+                        "components.transactionForm.items.a11y.editPrice",
+                        { name: item.name },
+                      )}
+                      hitSlop={8}
+                    >
+                      <Text variant="small" style={styles.each}>
+                        {t("components.transactionForm.items.each", {
+                          price: formatMoney(item.unitPrice, currencyCode, {
+                            hideSign: true,
+                          }),
+                        })}
+                      </Text>
+                    </Pressable>
                   )}
-                >
-                  <IconSvg
-                    name={item.quantity > 1 ? "minus-outline" : "x-outline"}
-                    size={18}
+                </View>
+
+                <View style={styles.stepper}>
+                  <StepButton
+                    icon="minus-outline"
+                    onPress={() =>
+                      item.quantity > 1
+                        ? setQuantity(index, item.quantity - 1)
+                        : remove(index)
+                    }
+                    label={t(
+                      item.quantity > 1
+                        ? "components.transactionForm.items.a11y.decrease"
+                        : "components.transactionForm.items.a11y.remove",
+                    )}
                   />
-                </Pressable>
-                <Text variant="default" style={styles.stepCount}>
-                  {item.quantity}
-                </Text>
-                <Pressable
-                  style={styles.stepButton}
-                  disabled={item.quantity >= MAX_QUANTITY}
-                  onPress={() => setQuantity(index, item.quantity + 1)}
-                  accessibilityRole="button"
-                  accessibilityLabel={t(
-                    "components.transactionForm.items.a11y.increase",
-                  )}
-                >
-                  <IconSvg name="plus-outline" size={18} />
-                </Pressable>
-              </View>
+                  <Text variant="default" style={styles.stepCount}>
+                    {item.quantity}
+                  </Text>
+                  <StepButton
+                    icon="plus-outline"
+                    disabled={item.quantity >= MAX_QUANTITY}
+                    onPress={() => setQuantity(index, item.quantity + 1)}
+                    label={t("components.transactionForm.items.a11y.increase")}
+                  />
+                </View>
 
-              <Money
-                value={item.unitPrice * item.quantity}
-                currency={currencyCode}
-                tone={TransactionTypeEnum.INCOME}
-                hideSign
-                variant="default"
-                style={styles.lineTotal}
-              />
+                <Money
+                  value={item.unitPrice * item.quantity}
+                  currency={currencyCode}
+                  tone={TransactionTypeEnum.INCOME}
+                  hideSign
+                  variant="default"
+                  style={styles.lineTotal}
+                />
+              </View>
             </View>
           ))}
 

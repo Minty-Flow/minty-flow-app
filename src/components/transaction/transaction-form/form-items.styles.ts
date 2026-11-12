@@ -9,18 +9,26 @@ export const formItemsStyles = StyleSheet.create((theme) => ({
     marginBottom: 12,
   },
   row: {
+    paddingHorizontal: H_PAD,
+  },
+  // The divider sits on the inner row so it lines up with the content.
+  rowInner: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 4,
     paddingVertical: 6,
-    paddingHorizontal: H_PAD,
-    borderBottomWidth: 1,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: theme.colors.semantic.semi,
   },
   rowMain: {
     flex: 1,
     minHeight: 44,
     justifyContent: "center",
+    gap: 2,
+  },
+  inlinePrice: {
+    paddingVertical: 4,
+    fontVariant: ["tabular-nums"],
   },
   name: {
     color: theme.colors.onSurface,
@@ -38,13 +46,26 @@ export const formItemsStyles = StyleSheet.create((theme) => ({
     alignItems: "center",
     justifyContent: "center",
   },
+  stepCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.semantic.semi,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stepDisabled: {
+    opacity: 0.4,
+  },
   stepCount: {
     minWidth: 24,
     textAlign: "center",
     fontVariant: ["tabular-nums"],
   },
   lineTotal: {
-    minWidth: 64,
+    minWidth: 72,
+    fontWeight: "600",
     textAlign: "right",
     fontVariant: ["tabular-nums"],
   },
@@ -90,7 +111,7 @@ export const formItemsStyles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   entryPrice: {
-    width: 112,
+    width: 128,
   },
   priceInput: {
     textAlign: "right",
@@ -117,8 +138,13 @@ export const formItemsStyles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 8,
+    paddingTop: 12,
     paddingHorizontal: H_PAD,
+  },
+  noAccount: {
+    paddingHorizontal: H_PAD,
+    marginBottom: 12,
+    color: theme.colors.onSecondary,
   },
   totalLabel: {
     fontWeight: "600",
@@ -135,7 +161,7 @@ export const formItemsStyles = StyleSheet.create((theme) => ({
     gap: 12,
   },
   quantityBox: {
-    width: 96,
+    width: 72,
   },
   quantityInput: {
     textAlign: "center",
