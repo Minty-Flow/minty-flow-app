@@ -4,6 +4,7 @@ import {
   sanitizeProfile,
   sanitizeSettings,
 } from "~/database/backup/backup-settings"
+import { upgradeBackupData } from "~/database/backup/upgrade-backup-data"
 import { hasAttachmentsFromExtra } from "~/database/utils/has-attachments-from-extra"
 import { assertMinorUnits, getMinorUnitDigits } from "~/utils/money"
 
@@ -74,7 +75,10 @@ export type ValidateBackupResult =
 // data-only JSON keeps its data tables.
 // v7: a `transaction_items` table (line items under a transaction). Additive:
 // a v3 to v6 backup has no items and restores with none.
-export const SCHEMA_VERSION = 7
+// v8: PEPE and SHIB use 2 minor digits instead of 8 (#161). An older backup's
+// amounts in those currencies are rescaled on import (upgradeBackupData), the
+// same as migration 0007 does to live data.
+export const SCHEMA_VERSION = 8
 
 // v3 is accepted for one release so users can still restore a backup taken
 // before the `kind` migration (local-first: no server copy to fall back on).
@@ -400,10 +404,8 @@ export function validateBackup(json: string): ValidateBackupResult {
       "budget_categories",
       "goal_accounts",
     ]
-    // Items arrived in v7; an older backup has none.
-    if (meta.schemaVersion < 7 && data.transaction_items === undefined) {
-      data.transaction_items = []
-    }
+    // Older backups: add what later versions expect, rescale PEPE/SHIB.
+    upgradeBackupData(meta.schemaVersion, data)
     requiredTables.push("transaction_items")
     for (const table of requiredTables) {
       if (!Array.isArray((data as Record<string, unknown>)[table])) {

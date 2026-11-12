@@ -549,6 +549,16 @@ const ISO4217_CURRENCIES: ReadonlyArray<
   { code: "ZWG", name: "Zimbabwe Gold", country: "ZIMBABWE" },
 ] as const
 
+/**
+ * Minor-unit digits for crypto. Tokens priced near $0.00001 use 2 so real
+ * holdings stay under the safe-integer cap (#161); the rest use 8. Changing a
+ * code here reinterprets stored amounts: it needs a rescale migration and a
+ * backup-format bump (see migration 0007 and SCHEMA_VERSION 8).
+ */
+export const LOW_PRICE_CRYPTO_CODES = ["PEPE", "SHIB"] as const
+export const cryptoMinorUnitDigits = (code: string): number =>
+  (LOW_PRICE_CRYPTO_CODES as readonly string[]).includes(code) ? 2 : 8
+
 // Crypto currencies supported by exchange rate APIs
 const CRYPTO_CURRENCIES: ReadonlyArray<
   Omit<Currency, "symbol" | "country" | "minorUnitDigits">
@@ -699,7 +709,7 @@ class CurrencyRegistryService {
       ...currency,
       country: "",
       symbol: currency.code,
-      minorUnitDigits: 8,
+      minorUnitDigits: cryptoMinorUnitDigits(currency.code),
     }))
   }
 
@@ -760,7 +770,7 @@ class CurrencyRegistryService {
         ...crypto,
         country: "",
         symbol: crypto.code,
-        minorUnitDigits: 8,
+        minorUnitDigits: cryptoMinorUnitDigits(crypto.code),
       })
     }
 
