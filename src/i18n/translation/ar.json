@@ -1338,7 +1338,7 @@
         "needName": "أضف اسماً",
         "needPrice": "أضف سعراً",
         "removed": "تمت إزالة {{name}}",
-        "each": "{{price}} للوحدة",
+        "breakdown": "{{count}} × {{price}}",
         "confirmOff": {
           "title_zero": "إزالة العناصر؟",
           "title_one": "إزالة عنصر واحد؟",

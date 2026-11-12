@@ -148,13 +148,17 @@ function ItemsSection({
                   <Text variant="default" numberOfLines={1} style={styles.name}>
                     {item.name}
                   </Text>
-                  <Text variant="small" style={styles.each}>
-                    {t("components.transactionForm.items.each", {
-                      price: formatMoney(item.unitPrice, currencyCode, {
-                        hideSign: true,
-                      }),
-                    })}
-                  </Text>
+                  {/* At one, the unit price equals the line total: skip it. */}
+                  {item.quantity > 1 ? (
+                    <Text variant="small" style={styles.each}>
+                      {t("components.transactionForm.items.breakdown", {
+                        count: item.quantity,
+                        price: formatMoney(item.unitPrice, currencyCode, {
+                          hideSign: true,
+                        }),
+                      })}
+                    </Text>
+                  ) : null}
                 </Pressable>
 
                 <View style={styles.stepper}>

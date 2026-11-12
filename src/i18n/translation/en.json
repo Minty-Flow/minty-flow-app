@@ -1270,7 +1270,7 @@
         "needName": "Add a name",
         "needPrice": "Add a price",
         "removed": "Removed {{name}}",
-        "each": "{{price}} each",
+        "breakdown": "{{count}} × {{price}}",
         "confirmOff": {
           "title_one": "Remove {{count}} item?",
           "title_other": "Remove {{count}} items?",
