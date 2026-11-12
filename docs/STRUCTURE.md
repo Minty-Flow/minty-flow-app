@@ -80,6 +80,7 @@ Generated on: 2026-11-12T09:05:51.622Z
 │   │   ├── export-history.store.test.ts
 │   │   └── onboarding.store.test.ts
 │   └── utils/
+│       ├── account-balances.test.ts
 │       ├── chart-path.test.ts
 │       ├── csv.test.ts
 │       ├── live-progress.test.ts
@@ -275,7 +276,9 @@ Generated on: 2026-11-12T09:05:51.622Z
 │   │   │   ├── account-card.tsx
 │   │   │   ├── account-delete-error.ts
 │   │   │   ├── account-picker-sheet.tsx
-│   │   │   └── account-type-inline.tsx
+│   │   │   ├── account-type-inline.tsx
+│   │   │   ├── total-balance.styles.ts
+│   │   │   └── total-balance.tsx
 │   │   ├── bill-splitter/
 │   │   │   ├── add-name-sheet.tsx
 │   │   │   └── bill-item-card.tsx
@@ -710,6 +713,7 @@ Generated on: 2026-11-12T09:05:51.622Z
 │   │   ├── transaction-filters.ts
 │   │   └── transactions.ts
 │   └── utils/
+│       ├── account-balances.ts
 │       ├── account-types-list.ts
 │       ├── attachments.ts
 │       ├── chart-path.ts

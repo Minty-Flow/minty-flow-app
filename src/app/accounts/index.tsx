@@ -7,8 +7,8 @@ import {
   AccountCard,
   type AccountCardProps,
 } from "~/components/accounts/account-card"
+import { TotalBalance } from "~/components/accounts/total-balance"
 import { IconSvg } from "~/components/icons"
-import { Money } from "~/components/money"
 import { PrivacyEyeControl } from "~/components/privacy-eye-control"
 import { ReorderableList } from "~/components/reorderable-list"
 import { RouteLoadingState } from "~/components/route-load-state"
@@ -82,30 +82,6 @@ function AccountsScreen() {
       a.name.toLowerCase().includes(searchQuery.toLowerCase()),
   )
   const displayAccounts = isReorderMode ? reorderedAccounts : filteredAccounts
-  // The headline is the user's whole balance: a search or a reorder in
-  // progress must not change it.
-  const balancesByCurrency = accountsWithMonthTotals
-    .filter((account) => !account.excludeFromBalance)
-    .reduce(
-      (acc, account) => {
-        const existing = acc.find(
-          (item) => item.currency === account.currencyCode,
-        )
-        if (existing) {
-          existing.balance += account.balance
-        } else {
-          acc.push({
-            currency: account.currencyCode,
-            balance: account.balance,
-          })
-        }
-        return acc
-      },
-      [] as {
-        currency: string
-        balance: number
-      }[],
-    )
   const handleToggleReorder = () => {
     if (searchQuery.length > 0) setSearchQuery("")
     if (!isReorderMode) setReorderedAccounts(accountsWithMonthTotals)
@@ -159,25 +135,8 @@ function AccountsScreen() {
       </View>
 
       <View style={styles.header}>
-        <Text variant="small" style={styles.sectionLabel}>
-          {t("screens.accounts.totalBalance")}
-        </Text>
-
-        <View style={styles.balanceContainer}>
-          {balancesByCurrency.map((item) => (
-            <View key={item.currency} style={styles.balanceRow}>
-              <Text variant="default" style={styles.currencyLabel}>
-                {item.currency}
-              </Text>
-              <Money
-                value={item.balance}
-                variant="h3"
-                currency={item.currency}
-                style={styles.balanceAmount}
-              />
-            </View>
-          ))}
-        </View>
+        {/* The headline is the whole balance: a search or reorder must not change it. */}
+        <TotalBalance accounts={accounts} />
 
         <View style={styles.accountsCountContainer}>
           <Text variant="small" style={styles.sectionLabel}>
@@ -279,23 +238,11 @@ const styles = StyleSheet.create((theme, rt) => ({
     gap: 5,
   },
   header: {},
-  balanceContainer: { gap: 5 },
   sectionLabel: {
     fontSize: theme.typography.labelSmall.fontSize,
     fontWeight: "600",
     color: theme.colors.semantic.semi,
     letterSpacing: 0.8,
-  },
-  balanceRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  currencyLabel: {
-    fontSize: theme.typography.labelLarge.fontSize,
-  },
-  balanceAmount: {
-    ...theme.typography.displaySmall,
-    fontWeight: "600",
   },
   accountsCountContainer: {
     flexDirection: "row",

@@ -30,6 +30,9 @@ interface MoneyFormattingStore {
   // 3. Mask money when device is shaken
   maskOnShake: boolean
 
+  // 4. Show the total balance above the summary on home
+  showBalanceOnHome: boolean
+
   setCurrency: (currency: string) => void
   setCurrencyLook: (value: MoneyFormatType) => void
 
@@ -43,6 +46,8 @@ interface MoneyFormattingStore {
   setHideOnStartup: (value: boolean) => void
 
   setMaskOnShake: (value: boolean) => void
+
+  setShowBalanceOnHome: (value: boolean) => void
 }
 
 export const useMoneyFormattingStore = create<MoneyFormattingStore>()(
@@ -59,6 +64,8 @@ export const useMoneyFormattingStore = create<MoneyFormattingStore>()(
 
       maskOnShake: false,
 
+      showBalanceOnHome: false,
+
       setCurrency: (currency) => set({ preferredCurrency: currency }),
       setCurrencyLook: (currencyLook) => set({ currencyLook }),
 
@@ -73,6 +80,8 @@ export const useMoneyFormattingStore = create<MoneyFormattingStore>()(
       setHideOnStartup: (value) => set({ hideOnStartup: value }),
 
       setMaskOnShake: (value) => set({ maskOnShake: value }),
+
+      setShowBalanceOnHome: (value) => set({ showBalanceOnHome: value }),
     }),
     {
       name: "money-formatting-store",
@@ -95,6 +104,7 @@ export const useMoneyFormattingStore = create<MoneyFormattingStore>()(
         currencyLook: state.currencyLook,
         hideOnStartup: state.hideOnStartup,
         maskOnShake: state.maskOnShake,
+        showBalanceOnHome: state.showBalanceOnHome,
       }),
     },
   ),

@@ -383,6 +383,11 @@
             "title": "تنسيق الأموال",
             "previewLabel": "معاينة",
             "displayFormatLabel": "تنسيق العرض",
+            "homeLabel": "الشاشة الرئيسية",
+            "showBalanceOnHome": {
+              "label": "إظهار الرصيد في الرئيسية",
+              "description": "إظهار رصيدك الإجمالي فوق ملخص الدخل والمصروفات"
+            },
             "options": {
               "symbol": {
                 "label": "الرمز",
