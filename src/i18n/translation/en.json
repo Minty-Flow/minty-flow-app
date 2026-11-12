@@ -28,7 +28,8 @@
       "undo": "Undo"
     },
     "states": {
-      "soon": "Soon"
+      "soon": "Soon",
+      "new": "New"
     },
     "errorBoundary": {
       "title": "Something went wrong",
@@ -371,11 +372,6 @@
             "title": "Money Formatting",
             "previewLabel": "Preview",
             "displayFormatLabel": "Display format",
-            "homeLabel": "Home screen",
-            "showBalanceOnHome": {
-              "label": "Show balance on home",
-              "description": "Show your total balance above the income and expense summary"
-            },
             "options": {
               "symbol": {
                 "label": "Symbol",
@@ -463,6 +459,13 @@
             "title": "Button Placement",
             "subtitle": "Drag the buttons to reorder",
             "info": "This order is reflected in the transaction buttons on the home screen"
+          },
+          "homeScreen": {
+            "title": "Home screen",
+            "showBalanceOnHome": {
+              "label": "Show balance on home",
+              "description": "Show your total balance above the income and expense summary"
+            }
           }
         },
         "calendarFormat": {

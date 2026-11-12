@@ -74,7 +74,7 @@ function HomeScreen() {
       {/* The whole balance, like the accounts screen: filters and the timeframe do not change it. */}
       {showBalanceOnHome ? (
         <View style={styles.balance}>
-          <TotalBalance accounts={accounts} />
+          <TotalBalance accounts={accounts} compact />
         </View>
       ) : null}
       <SummarySection
@@ -139,7 +139,12 @@ const styles = StyleSheet.create((theme, rt) => ({
   },
   balance: {
     marginHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 12,
+    borderRadius: theme.radius,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.semantic.semi,
+    backgroundColor: theme.colors.surface,
   },
   header: {
     marginHorizontal: 20,

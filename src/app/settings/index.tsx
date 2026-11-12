@@ -16,6 +16,7 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { AppData } from "~/constants/app-data"
 import type { TranslationKey } from "~/i18n/config"
+import { useWhatsNewStore } from "~/stores/whats-new.store"
 
 interface SettingsItem {
   titleKey: TranslationKey
@@ -120,6 +121,7 @@ const settingsGroups: SettingsGroup[] = [
 export default function SettingsScreen() {
   const router = useRouter()
   const { t } = useTranslation()
+  const homeScreenSeen = useWhatsNewStore((s) => s.homeScreenSeen)
 
   return (
     <ScrollView
@@ -148,6 +150,7 @@ export default function SettingsScreen() {
               title={t(item.titleKey)}
               onPress={() => router.push(item.route)}
               soon={item.soon}
+              isNew={item.route === "/settings/preferences" && !homeScreenSeen}
             />
           ))}
         </SettingsSection>

@@ -377,6 +377,7 @@ import HandSanitizer from "./outline/HandSanitizer"
 import Hash from "./outline/Hash"
 import HeartHandshake from "./outline/HeartHandshake"
 import HistoryToggle from "./outline/HistoryToggle"
+import HomeCog from "./outline/HomeCog"
 import HomeDollar from "./outline/HomeDollar"
 import HomeShare from "./outline/HomeShare"
 import InfoCircleOutline from "./outline/InfoCircle"
@@ -830,6 +831,9 @@ const ICON_MAP = {
   },
 
   // People & Social
+  get "home-cog-outline"() {
+    return HomeCog
+  },
   get "home-dollar-outline"() {
     return HomeDollar
   },

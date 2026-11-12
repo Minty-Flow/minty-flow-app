@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-11-12T11:31:07.636Z
+Generated on: 2026-11-12T13:26:16.435Z
 
 ```
 ./
@@ -226,6 +226,7 @@ Generated on: 2026-11-12T11:31:07.636Z
 │   │   │   │   ├── button-placement.tsx
 │   │   │   │   ├── calendar-formatting.tsx
 │   │   │   │   ├── exchange-rates.tsx
+│   │   │   │   ├── home-screen.tsx
 │   │   │   │   ├── index.tsx
 │   │   │   │   ├── language.tsx
 │   │   │   │   ├── money-formatting.tsx
@@ -688,7 +689,8 @@ Generated on: 2026-11-12T11:31:07.636Z
 │   │   ├── transfers-preferences.store.ts
 │   │   ├── trash-bin.store.ts
 │   │   ├── upcoming-section.store.ts
-│   │   └── week-start.store.ts
+│   │   ├── week-start.store.ts
+│   │   └── whats-new.store.ts
 │   ├── styles/
 │   │   ├── theme/
 │   │   │   ├── schemes/
