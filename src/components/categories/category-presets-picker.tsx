@@ -13,7 +13,6 @@ import { DynamicIcon } from "~/components/dynamic-icon"
 import { PresetListItem } from "~/components/preset-list-item"
 import { RouteLoadingState } from "~/components/route-load-state"
 import { Button } from "~/components/ui/button"
-import { Checkbox } from "~/components/ui/checkbox"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -85,7 +84,6 @@ function PickerInner({
   const allKeys = availableKeys(allPresets)
   const allSelected =
     allKeys.length > 0 && allKeys.every((k) => selected.has(k))
-  const someSelected = allKeys.some((k) => selected.has(k))
 
   const handleDone = () => {
     startTransition(async () => {
@@ -149,24 +147,16 @@ function PickerInner({
               })
             : t("components.categories.presets.noneSelected")}
         </Text>
-        {/* A tri-state box, not "Add all": it selects, the bottom button adds. */}
         <Pressable
-          style={styles.selectAll}
+          style={styles.pillButton}
           onPress={() => setMany(allKeys, !allSelected)}
-          disabled={allKeys.length === 0}
-          accessibilityRole="checkbox"
-          accessibilityLabel={t("components.categories.presets.selectAll")}
-          accessibilityState={{
-            checked: allSelected ? true : someSelected ? "mixed" : false,
-          }}
+          hitSlop={8}
         >
-          <Text style={styles.selectAllLabel}>
-            {t("components.categories.presets.selectAll")}
+          <Text style={styles.pillButtonText}>
+            {allSelected
+              ? t("components.categories.presets.deselectAll")
+              : t("components.categories.presets.selectAll")}
           </Text>
-          <Checkbox
-            checked={allSelected}
-            indeterminate={someSelected && !allSelected}
-          />
         </Pressable>
       </View>
 
@@ -194,7 +184,6 @@ function PickerInner({
         {packs.map((pack) => {
           const keys = availableKeys(pack.presets)
           const packOn = keys.length > 0 && keys.every((k) => selected.has(k))
-          const packSome = keys.some((k) => selected.has(k))
           return (
             <View key={pack.id} style={styles.pack}>
               <View style={styles.packHeader}>
@@ -202,21 +191,17 @@ function PickerInner({
                 <Text style={styles.packName}>{t(pack.name)}</Text>
                 {keys.length > 0 ? (
                   <Pressable
-                    style={styles.packToggle}
+                    style={styles.pillButton}
                     onPress={() => setMany(keys, !packOn)}
+                    hitSlop={8}
                     accessibilityRole="checkbox"
-                    accessibilityLabel={t(
-                      "components.categories.presets.selectPack",
-                      { name: t(pack.name) },
-                    )}
-                    accessibilityState={{
-                      checked: packOn ? true : packSome ? "mixed" : false,
-                    }}
+                    accessibilityState={{ checked: packOn }}
                   >
-                    <Checkbox
-                      checked={packOn}
-                      indeterminate={packSome && !packOn}
-                    />
+                    <Text style={styles.pillButtonText}>
+                      {packOn
+                        ? t("components.categories.presets.removePack")
+                        : t("components.categories.presets.addPack")}
+                    </Text>
                   </Pressable>
                 ) : null}
               </View>
@@ -256,23 +241,16 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "600",
     color: theme.colors.onSecondary,
   },
-  selectAll: {
-    minHeight: 44,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingLeft: 8,
+  pillButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: `${theme.colors.primary}18`,
   },
-  selectAllLabel: {
+  pillButtonText: {
     fontSize: theme.typography.labelMedium.fontSize,
     fontWeight: "600",
-    color: theme.colors.onSecondary,
-  },
-  packToggle: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
+    color: theme.colors.primary,
   },
   list: {
     flex: 1,

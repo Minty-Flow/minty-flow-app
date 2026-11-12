@@ -1387,6 +1387,7 @@
       "presets": {
         "addSelected": "إضافة {{count}} محدد",
         "selectAll": "تحديد الكل",
+        "deselectAll": "إلغاء تحديد الكل",
         "selectedCount": "{{count}} محدد",
         "noneSelected": "لم يتم التحديد",
         "expense": {
@@ -1449,7 +1450,8 @@
         "essentials": "الأساسيات",
         "packsTitle": "حسب أسلوب حياتك",
         "packsHint": "أضف بعض الفئات التي تناسب وضعك.",
-        "selectPack": "تحديد الكل في {{name}}"
+        "addPack": "إضافة الكل",
+        "removePack": "إزالة"
       },
       "search": {
         "placeholder": "بحث في فئات {{tab}}..."
