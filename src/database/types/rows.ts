@@ -107,6 +107,16 @@ export interface RowTransactionTag {
   tag_id: string
 }
 
+/** Raw row from the `transaction_items` table. `unit_price` is minor units. */
+export interface RowTransactionItem {
+  id: string
+  transaction_id: string
+  name: string
+  unit_price: number
+  quantity: number
+  sort_order: number
+}
+
 /**
  * Raw row from the `budgets` table.
  *

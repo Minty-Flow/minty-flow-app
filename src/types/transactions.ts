@@ -67,6 +67,13 @@ export interface TransactionLocation {
  * `transfers` join table — the `transactions` table no longer carries
  * `is_transfer`, `transfer_id`, or `related_account_id` columns.
  */
+/** One named, priced line under a transaction. `unitPrice` is minor units. */
+export interface TransactionItem {
+  name: string
+  unitPrice: number
+  quantity: number
+}
+
 export interface Transaction {
   id: string
   type: TransactionType // "expense" | "income" | "transfer"

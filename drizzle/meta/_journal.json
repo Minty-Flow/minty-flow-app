@@ -43,6 +43,13 @@
       "when": 1791884358000,
       "tag": "0005_align_loan_row_kind",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1794470689035,
+      "tag": "0006_transaction_items",
+      "breakpoints": true
     }
   ]
 }

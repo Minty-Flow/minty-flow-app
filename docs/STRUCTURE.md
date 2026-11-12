@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-11-12T07:56:04.539Z
+Generated on: 2026-11-12T09:05:51.622Z
 
 ```
 ./
@@ -13,6 +13,7 @@ Generated on: 2026-11-12T07:56:04.539Z
 │   │   │   └── max-amount-input-length.test.ts
 │   │   ├── transaction/
 │   │   │   └── transaction-form/
+│   │   │       ├── form-items.test.ts
 │   │   │       ├── transfer-edit-from-credit-leg.test.ts
 │   │   │       └── transfer-rate.test.ts
 │   │   ├── date-range-presets.test.ts
@@ -26,6 +27,7 @@ Generated on: 2026-11-12T07:56:04.539Z
 │   │   │   └── post-import-repairs.test.ts
 │   │   ├── drizzle/
 │   │   │   └── read-models/
+│   │   │       ├── recent-items.test.ts
 │   │   │       ├── stats-data.test.ts
 │   │   │       └── trash-by-deletion-date.test.ts
 │   │   ├── services/
@@ -54,6 +56,7 @@ Generated on: 2026-11-12T07:56:04.539Z
 │   │   │   ├── recurring-sync.test.ts
 │   │   │   ├── recurring-template-refs.test.ts
 │   │   │   ├── recurring-transaction-service.test.ts
+│   │   │   ├── transaction-items.test.ts
 │   │   │   ├── trash-auto-purge.test.ts
 │   │   │   └── trashed-transactions-read-only.test.ts
 │   │   ├── utils/
@@ -140,13 +143,15 @@ Generated on: 2026-11-12T07:56:04.539Z
 │   │   ├── 0002_snapshot.json
 │   │   ├── 0003_snapshot.json
 │   │   ├── 0004_snapshot.json
-│   │   └── 0005_snapshot.json
+│   │   ├── 0005_snapshot.json
+│   │   └── 0006_snapshot.json
 │   ├── 0000_safe_maximus.sql
 │   ├── 0001_deep_daredevil.sql
 │   ├── 0002_famous_bastion.sql
 │   ├── 0003_transaction_composite_indexes.sql
 │   ├── 0004_repair_recurring_template_refs.sql
 │   ├── 0005_align_loan_row_kind.sql
+│   ├── 0006_transaction_items.sql
 │   ├── migrations.d.ts
 │   └── migrations.js
 ├── plugins/
@@ -438,6 +443,8 @@ Generated on: 2026-11-12T07:56:04.539Z
 │   │   │   │   ├── form-delete-actions.tsx
 │   │   │   │   ├── form-footer.tsx
 │   │   │   │   ├── form-goal-picker.tsx
+│   │   │   │   ├── form-items-section.tsx
+│   │   │   │   ├── form-items.styles.ts
 │   │   │   │   ├── form-kind-card.tsx
 │   │   │   │   ├── form-kind-selector.tsx
 │   │   │   │   ├── form-loan-picker.tsx
@@ -447,11 +454,14 @@ Generated on: 2026-11-12T07:56:04.539Z
 │   │   │   │   ├── form-utils.ts
 │   │   │   │   ├── form.styles.ts
 │   │   │   │   ├── index.tsx
+│   │   │   │   ├── item-editor-sheet.tsx
+│   │   │   │   ├── item-entry-row.tsx
 │   │   │   │   ├── kind-info-sheet.tsx
 │   │   │   │   ├── kind-info.ts
 │   │   │   │   ├── on-kind-change.ts
 │   │   │   │   ├── recurrence-card.tsx
 │   │   │   │   ├── recurrence-unit-sheet.tsx
+│   │   │   │   ├── step-button.tsx
 │   │   │   │   ├── tag-picker-sheet.tsx
 │   │   │   │   ├── transaction-top-tabs.tsx
 │   │   │   │   ├── transfer-rate.ts
@@ -567,6 +577,7 @@ Generated on: 2026-11-12T07:56:04.539Z
 │   │   │   │   ├── stats-data.ts
 │   │   │   │   ├── stats-read-model.ts
 │   │   │   │   ├── tag-read-model.ts
+│   │   │   │   ├── transaction-item-read-model.ts
 │   │   │   │   └── transaction-read-model.ts
 │   │   │   ├── db.ts
 │   │   │   └── schema.ts

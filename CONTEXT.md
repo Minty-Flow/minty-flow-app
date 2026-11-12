@@ -15,6 +15,11 @@ units. Its meaning is fixed by two independent axes plus one flag:
 - **refund** — an expense entry that increases the balance (a returned
   purchase). The only surviving `subtype` value.
 
+- **item** — an optional named line under a one-off expense or income
+  (name, unit price, quantity). The items' sum fills the amount, which the user
+  may still change (tax, discount). Stats and budgets count the transaction,
+  not its items.
+
 ### kind values
 
 - **default** — an ordinary, already-happened entry.

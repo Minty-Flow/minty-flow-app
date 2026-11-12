@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
@@ -14,6 +15,8 @@ type TransactionItemLeftProps = {
   displayTitle: string
   subtitleText: string
   isRefund?: boolean
+  /** Line items under the transaction; a count shows next to the title. */
+  itemCount?: number
 }
 
 export const TransactionItemLeft = ({
@@ -22,8 +25,10 @@ export const TransactionItemLeft = ({
   displayTitle,
   subtitleText,
   isRefund,
+  itemCount = 0,
 }: TransactionItemLeftProps) => {
   const { theme } = useUnistyles()
+  const { t } = useTranslation()
   return (
     <View style={transactionItemStyles.leftSection}>
       <DynamicIcon
@@ -48,6 +53,23 @@ export const TransactionItemLeft = ({
           >
             {displayTitle}
           </Text>
+          {itemCount > 0 && (
+            <View
+              style={transactionItemStyles.itemCount}
+              accessible
+              accessibilityLabel={t(
+                "components.transactionForm.items.a11y.count",
+                { count: itemCount },
+              )}
+            >
+              <IconSvg
+                name="list-outline"
+                size={12}
+                color={theme.colors.onSecondary}
+              />
+              <Text style={transactionItemStyles.subtitle}>{itemCount}</Text>
+            </View>
+          )}
         </View>
         <View style={transactionItemStyles.subtitleRow}>
           <Text style={transactionItemStyles.subtitle} numberOfLines={1}>

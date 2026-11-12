@@ -1307,6 +1307,53 @@
       "deleteLoanSheet": {
         "title": "حذف هذا القرض؟",
         "description": "يُحذف القرض. تبقى معاملاته في سجلّك دون ارتباط بأي قرض."
+      },
+      "items": {
+        "toggle": "تفصيل العناصر",
+        "addItem": "إضافة عنصر",
+        "editItem": "تعديل العنصر",
+        "name": "اسم العنصر",
+        "namePlaceholder": "مثال: حليب",
+        "unitPrice": "سعر الوحدة",
+        "quantity": "الكمية",
+        "total": "مجموع العناصر",
+        "a11y": {
+          "count_zero": "لا عناصر",
+          "count_one": "عنصر واحد",
+          "count_two": "عنصران",
+          "count_few": "{{count}} عناصر",
+          "count_many": "{{count}} عنصراً",
+          "count_other": "{{count}} عنصر",
+          "added": "تمت إضافة {{name}}",
+          "addRecent": "إضافة {{name}}، {{price}}",
+          "recentAdded_zero": "",
+          "recentAdded_one": "، أُضيف {{count}}",
+          "recentAdded_two": "، أُضيف {{count}}",
+          "recentAdded_few": "، أُضيف {{count}}",
+          "recentAdded_many": "، أُضيف {{count}}",
+          "recentAdded_other": "، أُضيف {{count}}",
+          "newName": "اسم العنصر الجديد",
+          "priceEach": "سعر الوحدة",
+          "decrease": "إنقاص الكمية",
+          "increase": "زيادة الكمية",
+          "remove": "إزالة العنصر"
+        },
+        "recent": "الأخيرة",
+        "newPlaceholder": "أضف عنصراً",
+        "needName": "أضف اسماً",
+        "needPrice": "أضف سعراً",
+        "removed": "تمت إزالة {{name}}",
+        "breakdown": "{{count}} × {{price}}",
+        "confirmOff": {
+          "title_zero": "إزالة العناصر؟",
+          "title_one": "إزالة عنصر واحد؟",
+          "title_two": "إزالة عنصرين؟",
+          "title_few": "إزالة {{count}} عناصر؟",
+          "title_many": "إزالة {{count}} عنصراً؟",
+          "title_other": "إزالة {{count}} عنصر؟",
+          "description": "سيبقى المبلغ {{amount}}، ويمكنك تعديله."
+        },
+        "chooseAccount": "اختر حساباً لتفصيل هذه المعاملة إلى عناصر."
       }
     },
     "recurring": {
@@ -1680,7 +1727,8 @@
       "toAccountForTransfer": "يرجى اختيار حساب الوجهة للتحويل.",
       "category": "الفئة مطلوبة",
       "accounts": "يرجى اختيار حساب واحد على الأقل",
-      "categories": "يرجى اختيار فئة واحدة على الأقل"
+      "categories": "يرجى اختيار فئة واحدة على الأقل",
+      "itemName": "اسم العنصر مطلوب"
     },
     "tooLong": {
       "name": "الاسم طويل جداً"

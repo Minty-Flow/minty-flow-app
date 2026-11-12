@@ -1247,6 +1247,41 @@
       "deleteLoanSheet": {
         "title": "Delete this loan?",
         "description": "This removes the loan. Its transactions stay in your history, no longer linked to a loan."
+      },
+      "items": {
+        "toggle": "Itemize",
+        "addItem": "Add item",
+        "editItem": "Edit item",
+        "name": "Item name",
+        "namePlaceholder": "e.g. Milk",
+        "unitPrice": "Price per unit",
+        "quantity": "Quantity",
+        "total": "Items total",
+        "a11y": {
+          "count_one": "{{count}} item",
+          "count_other": "{{count}} items",
+          "added": "Added {{name}}",
+          "addRecent": "Add {{name}}, {{price}}",
+          "recentAdded_one": ", {{count}} added",
+          "recentAdded_other": ", {{count}} added",
+          "newName": "New item name",
+          "priceEach": "Price each",
+          "decrease": "Decrease quantity",
+          "increase": "Increase quantity",
+          "remove": "Remove item"
+        },
+        "recent": "Recent",
+        "newPlaceholder": "Add an item",
+        "needName": "Add a name",
+        "needPrice": "Add a price",
+        "removed": "Removed {{name}}",
+        "breakdown": "{{count}} × {{price}}",
+        "confirmOff": {
+          "title_one": "Remove {{count}} item?",
+          "title_other": "Remove {{count}} items?",
+          "description": "The amount will stay {{amount}}, and you can edit it."
+        },
+        "chooseAccount": "Choose an account to itemize this transaction."
       }
     },
     "recurring": {
@@ -1580,7 +1615,8 @@
       "toAccountForTransfer": "Please select a destination account for the transfer.",
       "category": "Category is required",
       "accounts": "Please select at least one account",
-      "categories": "Please select at least one category"
+      "categories": "Please select at least one category",
+      "itemName": "Item name is required"
     },
     "tooLong": {
       "name": "Name is too long"

@@ -160,6 +160,7 @@ function buildImportOf(accountId: string): MintyFlowBackup {
       transactions: [],
       transfers: [],
       transaction_tags: [],
+      transaction_items: [],
       budget_accounts: [],
       budget_categories: [],
       goal_accounts: [],

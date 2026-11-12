@@ -32,6 +32,7 @@ export const transactionItemStyles = StyleSheet.create((theme) => ({
     fontWeight: "500",
     color: theme.colors.onSurface,
   },
+  itemCount: { flexDirection: "row", alignItems: "center", gap: 2 },
   subtitleRow: {
     flexDirection: "row",
     alignItems: "center",
