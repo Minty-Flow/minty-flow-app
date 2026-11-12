@@ -91,15 +91,20 @@ function ItemEditorSheetInner({
           <Text variant="default">
             {t("components.transactionForm.items.quantity")}
           </Text>
-          <Input
-            value={quantityText}
-            onChangeText={(text) => setQuantityText(text.replace(/\D/g, ""))}
-            onBlur={() => setQuantityText(String(quantity))}
-            keyboardType="number-pad"
-            maxLength={4}
-            style={styles.quantityInput}
-            accessibilityLabel={t("components.transactionForm.items.quantity")}
-          />
+          {/* Input's wrapper fills the row; the box keeps it narrow. */}
+          <View style={styles.quantityBox}>
+            <Input
+              value={quantityText}
+              onChangeText={(text) => setQuantityText(text.replace(/\D/g, ""))}
+              onBlur={() => setQuantityText(String(quantity))}
+              keyboardType="number-pad"
+              maxLength={4}
+              style={styles.quantityInput}
+              accessibilityLabel={t(
+                "components.transactionForm.items.quantity",
+              )}
+            />
+          </View>
         </View>
 
         <View style={styles.buttonRow}>

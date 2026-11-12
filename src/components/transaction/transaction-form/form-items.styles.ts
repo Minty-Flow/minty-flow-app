@@ -3,8 +3,8 @@ import { StyleSheet } from "react-native-unistyles"
 import { H_PAD } from "./form.styles"
 
 export const formItemsStyles = StyleSheet.create((theme) => ({
+  // Rows carry the side padding so their press ripple reaches the screen edges.
   list: {
-    paddingHorizontal: H_PAD,
     gap: 4,
     marginBottom: 12,
   },
@@ -14,6 +14,7 @@ export const formItemsStyles = StyleSheet.create((theme) => ({
     justifyContent: "space-between",
     gap: 12,
     paddingVertical: 10,
+    paddingHorizontal: H_PAD,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.semantic.semi,
   },
@@ -35,6 +36,7 @@ export const formItemsStyles = StyleSheet.create((theme) => ({
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 8,
+    paddingHorizontal: H_PAD,
   },
   totalLabel: {
     fontWeight: "600",
@@ -50,8 +52,10 @@ export const formItemsStyles = StyleSheet.create((theme) => ({
     justifyContent: "space-between",
     gap: 12,
   },
+  quantityBox: {
+    width: 96,
+  },
   quantityInput: {
-    minWidth: 80,
     textAlign: "center",
   },
   buttonRow: {
