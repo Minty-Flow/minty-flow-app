@@ -371,6 +371,11 @@
             "title": "Money Formatting",
             "previewLabel": "Preview",
             "displayFormatLabel": "Display format",
+            "homeLabel": "Home screen",
+            "showBalanceOnHome": {
+              "label": "Show balance on home",
+              "description": "Show your total balance above the income and expense summary"
+            },
             "options": {
               "symbol": {
                 "label": "Symbol",
