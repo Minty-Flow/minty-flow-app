@@ -9,11 +9,13 @@ import {
   settingsStyles,
 } from "~/components/settings/settings-list"
 import type { TranslationKey } from "~/i18n/config"
+import { useWhatsNewStore } from "~/stores/whats-new.store"
 
 interface PreferenceItem {
   titleKey: TranslationKey
   route: Href
   icon: IconSvgName
+  isNew?: boolean
 }
 
 // Basic app-wide preferences.
@@ -100,17 +102,25 @@ const customizationItems: PreferenceItem[] = [
     route: "/settings/preferences/button-placement",
     icon: "circles-outline",
   },
+  {
+    titleKey: "screens.settings.preferences.appearance.homeScreen.title",
+    route: "/settings/preferences/home-screen",
+    icon: "home-cog-outline",
+    isNew: true,
+  },
 ]
 
 export default function PreferencesScreen() {
   const router = useRouter()
   const { t } = useTranslation()
+  const homeScreenSeen = useWhatsNewStore((s) => s.homeScreenSeen)
   const renderItem = (item: PreferenceItem) => (
     <ActionItem
       key={item.titleKey}
       icon={item.icon}
       title={t(item.titleKey)}
       onPress={() => router.push(item.route)}
+      isNew={item.isNew && !homeScreenSeen}
     />
   )
 

@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-11-12T10:42:28.504Z
+Generated on: 2026-11-12T13:32:07.317Z
 
 ```
 ./
@@ -226,6 +226,7 @@ Generated on: 2026-11-12T10:42:28.504Z
 │   │   │   │   ├── button-placement.tsx
 │   │   │   │   ├── calendar-formatting.tsx
 │   │   │   │   ├── exchange-rates.tsx
+│   │   │   │   ├── home-screen.tsx
 │   │   │   │   ├── index.tsx
 │   │   │   │   ├── language.tsx
 │   │   │   │   ├── money-formatting.tsx
@@ -688,7 +689,8 @@ Generated on: 2026-11-12T10:42:28.504Z
 │   │   ├── transfers-preferences.store.ts
 │   │   ├── trash-bin.store.ts
 │   │   ├── upcoming-section.store.ts
-│   │   └── week-start.store.ts
+│   │   ├── week-start.store.ts
+│   │   └── whats-new.store.ts
 │   ├── styles/
 │   │   ├── theme/
 │   │   │   ├── schemes/
@@ -768,6 +770,7 @@ Generated on: 2026-11-12T10:42:28.504Z
 ├── LICENSE
 ├── metro.config.js
 ├── minty-flow-upload.keystore
+├── mise.toml
 ├── package.json
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml

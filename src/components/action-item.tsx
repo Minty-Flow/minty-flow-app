@@ -14,6 +14,8 @@ interface ActionItemProps {
   description?: string
   onPress: () => void
   soon?: boolean
+  /** Shows a "New" badge until the user follows it. */
+  isNew?: boolean
   loading?: boolean
 }
 
@@ -23,6 +25,7 @@ export function ActionItem({
   description,
   onPress,
   soon,
+  isNew,
   loading,
 }: ActionItemProps) {
   const { t } = useTranslation()
@@ -62,7 +65,14 @@ export function ActionItem({
       {loading ? (
         <ActivityIndicatorMinty size="small" />
       ) : (
-        <ChevronIcon direction="trailing" size={18} />
+        <View style={styles.trailing}>
+          {isNew && (
+            <View style={styles.newBadge}>
+              <Text style={styles.newBadgeText}>{t("common.states.new")}</Text>
+            </View>
+          )}
+          <ChevronIcon direction="trailing" size={18} />
+        </View>
       )}
     </ListItem>
   )
@@ -107,6 +117,22 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: theme.radius,
+  },
+  trailing: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  newBadge: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: theme.radius,
+  },
+  newBadgeText: {
+    fontSize: theme.typography.labelSmall.fontSize,
+    fontWeight: "600",
+    color: theme.colors.onPrimary,
   },
   badgeText: {
     fontSize: theme.typography.labelSmall.fontSize,

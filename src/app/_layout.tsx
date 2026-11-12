@@ -440,6 +440,14 @@ function AppRootLayout() {
                   }}
                 />
                 <Stack.Screen
+                  name="settings/preferences/home-screen"
+                  options={{
+                    title: t(
+                      "screens.settings.preferences.appearance.homeScreen.title",
+                    ),
+                  }}
+                />
+                <Stack.Screen
                   name="settings/preferences/transfers"
                   options={{ title: t("screens.settings.transfers.title") }}
                 />
