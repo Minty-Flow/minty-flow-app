@@ -5,7 +5,6 @@ import { useUnistyles } from "react-native-unistyles"
 import { ConfirmSheet } from "~/components/confirm-sheet"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { Money } from "~/components/money"
-import { Input } from "~/components/ui/input"
 import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Switch } from "~/components/ui/switch"
@@ -13,18 +12,12 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TransactionItem } from "~/types/transactions"
 import { TransactionTypeEnum } from "~/types/transactions"
-import { minorUnitsToDecimalString } from "~/utils/money"
 import { formatMoney } from "~/utils/number-format"
 import { Toast } from "~/utils/toast"
 
 import { transactionFormStyles } from "./form.styles"
 import { formItemsStyles as styles } from "./form-items.styles"
-import {
-  addOrIncrementItem,
-  itemsTotal,
-  parsePriceInput,
-  sanitizePriceInput,
-} from "./form-utils"
+import { addOrIncrementItem, itemsTotal } from "./form-utils"
 import { ItemEditorSheet } from "./item-editor-sheet"
 import { ItemEntryRow } from "./item-entry-row"
 import { StepButton } from "./step-button"
@@ -87,24 +80,6 @@ function ItemsSection({
     setEnabled(false)
   }
 
-  // The "each" line turns into a price field; Return or leaving it saves.
-  const [priceEdit, setPriceEdit] = useState<{
-    index: number
-    text: string
-  } | null>(null)
-  const commitPrice = () => {
-    if (!priceEdit) return
-    const price = parsePriceInput(priceEdit.text, currencyCode)
-    setPriceEdit(null)
-    // An emptied field keeps the old price.
-    if (price === null) return
-    onChange(
-      items.map((it, i) =>
-        i === priceEdit.index ? { ...it, unitPrice: price } : it,
-      ),
-    )
-  }
-
   const setQuantity = (index: number, quantity: number) =>
     onChange(items.map((it, i) => (i === index ? { ...it, quantity } : it)))
 
@@ -158,74 +133,29 @@ function ItemsSection({
               style={styles.row}
             >
               <View style={styles.rowInner}>
-                <View style={styles.rowMain}>
-                  <Pressable
-                    onPress={() => {
-                      setEditing(index)
-                      setSheetVisible(true)
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={t(
-                      "components.transactionForm.items.editItem",
-                    )}
-                    accessibilityHint={item.name}
-                  >
-                    <Text
-                      variant="default"
-                      numberOfLines={1}
-                      style={styles.name}
-                    >
-                      {item.name}
-                    </Text>
-                  </Pressable>
-                  {priceEdit?.index === index ? (
-                    <Input
-                      autoFocus
-                      value={priceEdit.text}
-                      onChangeText={(text) =>
-                        setPriceEdit({
-                          index,
-                          text: sanitizePriceInput(text, currencyCode),
-                        })
-                      }
-                      onSubmitEditing={commitPrice}
-                      onBlur={commitPrice}
-                      keyboardType="decimal-pad"
-                      returnKeyType="done"
-                      selectTextOnFocus
-                      style={styles.inlinePrice}
-                      accessibilityLabel={t(
-                        "components.transactionForm.items.a11y.priceEach",
-                      )}
-                    />
-                  ) : (
-                    <Pressable
-                      onPress={() =>
-                        setPriceEdit({
-                          index,
-                          text: minorUnitsToDecimalString(
-                            item.unitPrice,
-                            currencyCode,
-                          ),
-                        })
-                      }
-                      accessibilityRole="button"
-                      accessibilityLabel={t(
-                        "components.transactionForm.items.a11y.editPrice",
-                        { name: item.name },
-                      )}
-                      hitSlop={8}
-                    >
-                      <Text variant="small" style={styles.each}>
-                        {t("components.transactionForm.items.each", {
-                          price: formatMoney(item.unitPrice, currencyCode, {
-                            hideSign: true,
-                          }),
-                        })}
-                      </Text>
-                    </Pressable>
+                <Pressable
+                  style={styles.rowMain}
+                  onPress={() => {
+                    setEditing(index)
+                    setSheetVisible(true)
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t(
+                    "components.transactionForm.items.editItem",
                   )}
-                </View>
+                  accessibilityHint={item.name}
+                >
+                  <Text variant="default" numberOfLines={1} style={styles.name}>
+                    {item.name}
+                  </Text>
+                  <Text variant="small" style={styles.each}>
+                    {t("components.transactionForm.items.each", {
+                      price: formatMoney(item.unitPrice, currencyCode, {
+                        hideSign: true,
+                      }),
+                    })}
+                  </Text>
+                </Pressable>
 
                 <View style={styles.stepper}>
                   <StepButton

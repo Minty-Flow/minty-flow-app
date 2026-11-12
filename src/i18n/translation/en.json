@@ -1263,8 +1263,7 @@
           "priceEach": "Price each",
           "decrease": "Decrease quantity",
           "increase": "Increase quantity",
-          "remove": "Remove item",
-          "editPrice": "Edit price of {{name}}"
+          "remove": "Remove item"
         },
         "recent": "Recent",
         "newPlaceholder": "Add an item",

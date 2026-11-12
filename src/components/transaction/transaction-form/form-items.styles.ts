@@ -26,10 +26,6 @@ export const formItemsStyles = StyleSheet.create((theme) => ({
     justifyContent: "center",
     gap: 2,
   },
-  inlinePrice: {
-    paddingVertical: 4,
-    fontVariant: ["tabular-nums"],
-  },
   name: {
     color: theme.colors.onSurface,
   },
@@ -39,24 +35,6 @@ export const formItemsStyles = StyleSheet.create((theme) => ({
   stepper: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  stepButton: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: theme.colors.semantic.semi,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepDisabled: {
-    opacity: 0.4,
   },
   stepCount: {
     minWidth: 24,

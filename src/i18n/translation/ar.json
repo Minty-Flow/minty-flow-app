@@ -1331,8 +1331,7 @@
           "priceEach": "سعر الوحدة",
           "decrease": "إنقاص الكمية",
           "increase": "زيادة الكمية",
-          "remove": "إزالة العنصر",
-          "editPrice": "تعديل سعر {{name}}"
+          "remove": "إزالة العنصر"
         },
         "recent": "الأخيرة",
         "newPlaceholder": "أضف عنصراً",

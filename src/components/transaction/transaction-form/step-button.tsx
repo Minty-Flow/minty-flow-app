@@ -1,10 +1,7 @@
 import { useUnistyles } from "react-native-unistyles"
 
 import { IconSvg, type IconSvgName } from "~/components/icons"
-import { Pressable } from "~/components/ui/pressable"
-import { View } from "~/components/ui/view"
-
-import { formItemsStyles as styles } from "./form-items.styles"
+import { Button } from "~/components/ui/button"
 
 interface Props {
   icon: IconSvgName
@@ -13,21 +10,19 @@ interface Props {
   disabled?: boolean
 }
 
-/** A round −/+ button: 32px to see, 44px to touch. */
+/** A −/+ icon button; the press ripple stays inside the button. */
 export function StepButton({ icon, label, onPress, disabled = false }: Props) {
   const { theme } = useUnistyles()
   return (
-    <Pressable
-      style={styles.stepButton}
+    <Button
+      variant="ghost"
+      size="icon"
       onPress={onPress}
       disabled={disabled}
-      accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled }}
     >
-      <View style={[styles.stepCircle, disabled && styles.stepDisabled]}>
-        <IconSvg name={icon} size={16} color={theme.colors.onSurface} />
-      </View>
-    </Pressable>
+      <IconSvg name={icon} size={18} color={theme.colors.onSurface} />
+    </Button>
   )
 }
