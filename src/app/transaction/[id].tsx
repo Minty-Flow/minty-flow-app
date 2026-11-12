@@ -5,9 +5,10 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { RouteLoadingState } from "~/components/route-load-state"
 import { TransactionForm } from "~/components/transaction/transaction-form"
+import { withPrimaryAccount } from "~/components/transaction/transaction-form/form-utils"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useActiveAccountsWith } from "~/database/drizzle/read-models/account-read-model"
+import { useActiveAccountsWithQuery } from "~/database/drizzle/read-models/account-read-model"
 import { useAllBudgets } from "~/database/drizzle/read-models/budget-read-model"
 import { useCategoriesByTypeQuery } from "~/database/drizzle/read-models/category-read-model"
 import { useGoalsByType } from "~/database/drizzle/read-models/goal-read-model"
@@ -75,16 +76,22 @@ function TransactionEditor({
     transaction?.type ?? initialType ?? TransactionTypeEnum.EXPENSE,
   )
 
-  const accounts = useActiveAccountsWith(
+  const accountsQuery = useActiveAccountsWithQuery(
     transaction?.accountId,
     transaction?.relatedAccountId,
   )
+  const accounts = accountsQuery.data
   // Counts feed the picker's "Most used" row.
   const categories = useCategoriesByTypeQuery(transactionType, true).data
   const tags = useTags()
   const goals = useGoalsByType(transactionTypeToGoalType(transactionType))
   const budgets = useAllBudgets()
   const loans = useAllLoans()
+
+  // The form reads its defaults once, so it needs the accounts (for the
+  // primary one) on its first render. They are normally there already; this
+  // only waits if the synchronous read failed.
+  if (accountsQuery.status === "loading") return <RouteLoadingState />
 
   return (
     <TransactionForm
@@ -93,7 +100,7 @@ function TransactionEditor({
       onTransactionTypeChange={setTransactionType}
       initialTagIds={initialTagIds}
       initialKind={transaction?.kind ?? initialKind}
-      prefill={prefill}
+      prefill={transaction ? prefill : withPrimaryAccount(prefill, accounts)}
       accounts={accounts}
       categories={categories}
       tags={tags}
