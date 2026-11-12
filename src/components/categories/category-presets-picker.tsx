@@ -2,7 +2,7 @@
  * Category presets picker shared by onboarding and Settings → Categories →
  * Presets: the core categories first, then optional packs grouped by life
  * situation (Student, Car owner, …). A pack header adds or removes its whole
- * pack. Presets the user already has are shown as added and can't be picked.
+ * pack. Presets the user already has show checked and dimmed and can't be picked.
  */
 import { type ReactNode, useState, useTransition } from "react"
 import { useTranslation } from "react-i18next"
@@ -19,6 +19,7 @@ import { View } from "~/components/ui/view"
 import {
   type CategoryPreset,
   getPresetGroups,
+  isPresetAdded,
   presetKey,
 } from "~/constants/pre-sets-categories"
 import { useCategoriesByTypeQuery } from "~/database/drizzle/read-models/category-read-model"
@@ -26,9 +27,6 @@ import { createCategory } from "~/database/services/category-service"
 import type { Category, CategoryType } from "~/types/categories"
 import { logger } from "~/utils/logger"
 import { Toast } from "~/utils/toast"
-
-const COLUMNS = 3
-const FILLER_KEYS = ["filler-a", "filler-b"]
 
 type Props = {
   type: CategoryType
@@ -63,11 +61,7 @@ function PickerInner({
   const allPresets = [...core, ...packs.flatMap((p) => p.presets)]
 
   const addedKeys = new Set(
-    allPresets
-      .filter((p) =>
-        categories.some((c) => c.icon === p.icon && c.type === p.type),
-      )
-      .map(presetKey),
+    allPresets.filter((p) => isPresetAdded(p, categories)).map(presetKey),
   )
   const availableKeys = (presets: CategoryPreset[]) =>
     presets.map(presetKey).filter((k) => !addedKeys.has(k))
@@ -122,33 +116,24 @@ function PickerInner({
     })
   }
 
-  const renderGrid = (presets: CategoryPreset[]) => {
-    const rows: CategoryPreset[][] = []
-    for (let i = 0; i < presets.length; i += COLUMNS) {
-      rows.push(presets.slice(i, i + COLUMNS))
-    }
-    return rows.map((row) => (
-      <View key={row.map(presetKey).join("|")} style={styles.gridRow}>
-        {row.map((preset) => {
-          const key = presetKey(preset)
-          return (
-            <PresetListItem
-              key={key}
-              icon={preset.icon}
-              label={t(preset.name)}
-              isSelected={selected.has(key)}
-              isAdded={addedKeys.has(key)}
-              onPress={() => setMany([key], !selected.has(key))}
-            />
-          )
-        })}
-        {/* Fillers keep a short last row at full-grid column widths. */}
-        {FILLER_KEYS.slice(0, COLUMNS - row.length).map((key) => (
-          <View key={key} style={styles.filler} />
-        ))}
-      </View>
-    ))
-  }
+  const renderList = (presets: CategoryPreset[]) => (
+    <View style={styles.card}>
+      {presets.map((preset, index) => {
+        const key = presetKey(preset)
+        return (
+          <PresetListItem
+            key={key}
+            icon={preset.icon}
+            label={t(preset.name)}
+            isSelected={selected.has(key)}
+            isAdded={addedKeys.has(key)}
+            isLast={index === presets.length - 1}
+            onPress={() => setMany([key], !selected.has(key))}
+          />
+        )
+      })}
+    </View>
+  )
 
   return (
     <View style={styles.container}>
@@ -183,7 +168,7 @@ function PickerInner({
         <Text style={styles.sectionTitle}>
           {t("components.categories.presets.essentials")}
         </Text>
-        {renderGrid(core)}
+        {renderList(core)}
 
         {packs.length > 0 ? (
           <>
@@ -220,7 +205,7 @@ function PickerInner({
                   </Pressable>
                 ) : null}
               </View>
-              {renderGrid(pack.presets)}
+              {renderList(pack.presets)}
             </View>
           )
         })}
@@ -306,12 +291,10 @@ const styles = StyleSheet.create((theme) => ({
     ...theme.typography.titleSmall,
     color: theme.colors.onSurface,
   },
-  gridRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  filler: {
-    flex: 1,
+  card: {
+    borderRadius: theme.radius,
+    backgroundColor: theme.colors.secondary,
+    overflow: "hidden",
   },
   buttonRow: {
     paddingHorizontal: 20,

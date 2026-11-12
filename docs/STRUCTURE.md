@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-11-12T09:37:15.526Z
+Generated on: 2026-11-12T10:19:01.785Z
 
 ```
 ./
@@ -20,6 +20,7 @@ Generated on: 2026-11-12T09:37:15.526Z
 │   │   ├── date-range-presets.test.ts
 │   │   └── transaction-form-payload.test.ts
 │   ├── constants/
+│   │   ├── category-presets.test.ts
 │   │   └── trash-retention.test.ts
 │   ├── database/
 │   │   ├── backup/
