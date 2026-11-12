@@ -88,8 +88,9 @@ function TransactionEditor({
   const budgets = useAllBudgets()
   const loans = useAllLoans()
 
-  // The form reads its defaults once: wait for the accounts so the primary
-  // one can be the starting account of a new transaction.
+  // The form reads its defaults once, so it needs the accounts (for the
+  // primary one) on its first render. They are normally there already; this
+  // only waits if the synchronous read failed.
   if (accountsQuery.status === "loading") return <RouteLoadingState />
 
   return (
