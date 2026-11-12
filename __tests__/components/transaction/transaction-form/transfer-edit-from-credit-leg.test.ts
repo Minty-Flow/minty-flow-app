@@ -55,7 +55,7 @@ const amountOf = (id: string) =>
 
 /** What the form submits for a title-only edit of the transfer it opened. */
 function titleOnlyEdit(leg: TransactionWithRelations, rate: number) {
-  const values = getDefaultValues(leg, [], "transfer")
+  const values = getDefaultValues(leg, "transfer")
   return {
     fromAccountId: values.accountId,
     toAccountId: values.toAccountId,
@@ -110,8 +110,8 @@ describe("editing a transfer from its credit leg", () => {
 
   it("defaults the form to the debit amount whichever leg is opened", async () => {
     const { debit, credit } = await pendingCrossCurrencyTransfer("a2", "b2")
-    const fromDebit = getDefaultValues(debit, [], "transfer")
-    const fromCredit = getDefaultValues(credit, [], "transfer")
+    const fromDebit = getDefaultValues(debit, "transfer")
+    const fromCredit = getDefaultValues(credit, "transfer")
     expect(fromCredit.amount).toBe(10_000)
     expect(fromCredit.amount).toBe(fromDebit.amount)
     expect(fromCredit.accountId).toBe("a2")
@@ -225,7 +225,7 @@ describe("form defaults for a same-currency transfer and for other rows", () => 
       amount: 5_000,
       transferSourceAmount: 5_000,
     } as unknown as TransactionWithRelations
-    expect(getDefaultValues(credit, [], "transfer").amount).toBe(5_000)
+    expect(getDefaultValues(credit, "transfer").amount).toBe(5_000)
   })
 
   it("falls back to the leg's own amount when the debit amount is unknown", () => {
@@ -236,7 +236,7 @@ describe("form defaults for a same-currency transfer and for other rows", () => 
       amount: -5_000,
       transferSourceAmount: null,
     } as unknown as TransactionWithRelations
-    expect(getDefaultValues(debit, [], "transfer").amount).toBe(5_000)
+    expect(getDefaultValues(debit, "transfer").amount).toBe(5_000)
   })
 
   it("does not touch the amount of an ordinary transaction", () => {
@@ -249,6 +249,6 @@ describe("form defaults for a same-currency transfer and for other rows", () => 
       amount: 1_234,
       transferSourceAmount: null,
     } as unknown as TransactionWithRelations
-    expect(getDefaultValues(expense, [], "expense").amount).toBe(1_234)
+    expect(getDefaultValues(expense, "expense").amount).toBe(1_234)
   })
 })

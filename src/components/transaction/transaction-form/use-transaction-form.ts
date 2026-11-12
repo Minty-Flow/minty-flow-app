@@ -104,7 +104,6 @@ export function useTransactionForm({
     useRecurringRuleState(transaction?.recurringId ?? null)
   const defaultValues = getDefaultValues(
     transaction,
-    accounts,
     transactionType,
     initialTagIds,
     prefill,
