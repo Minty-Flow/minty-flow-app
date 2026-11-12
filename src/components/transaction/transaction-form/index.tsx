@@ -161,6 +161,7 @@ export function TransactionForm(props: TransactionFormProps) {
               <FormItemsSection
                 items={f.items}
                 currencyCode={f.selectedAccount?.currencyCode ?? "USD"}
+                amount={f.amount ?? 0}
                 onChange={f.setItems}
               />
             )}

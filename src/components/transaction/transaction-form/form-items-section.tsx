@@ -1,52 +1,88 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
-import { Button } from "~/components/ui/button"
 import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TransactionItem } from "~/types/transactions"
+import { TransactionTypeEnum } from "~/types/transactions"
+import { formatMoney } from "~/utils/number-format"
+import { Toast } from "~/utils/toast"
 
 import { transactionFormStyles } from "./form.styles"
 import { formItemsStyles as styles } from "./form-items.styles"
-import { itemsTotal } from "./form-utils"
+import { addOrIncrementItem, itemsTotal } from "./form-utils"
 import { ItemEditorSheet } from "./item-editor-sheet"
+import { ItemEntryRow } from "./item-entry-row"
+
+const MAX_QUANTITY = 9999
+const UNDO_MS = 4000
 
 interface Props {
   items: TransactionItem[]
   currencyCode: string
+  /** Current form amount, quoted when turning Itemize off. */
+  amount: number
   onChange: (items: TransactionItem[]) => void
 }
 
 /**
- * The "Itemize" switch and, when on, the list of line items. Off keeps the
- * single amount as before; turning it off clears the items.
+ * The "Itemize" switch and, when on, the line items: rows with a quantity
+ * stepper, recent-item chips and an inline entry row. Off keeps the single
+ * amount as before.
  */
-export function FormItemsSection({ items, currencyCode, onChange }: Props) {
+export function FormItemsSection({
+  items,
+  currencyCode,
+  amount,
+  onChange,
+}: Props) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const [enabled, setEnabled] = useState(items.length > 0)
-  // null: closed, -1: adding, otherwise the index being edited.
+  const [confirmOff, setConfirmOff] = useState(false)
+  // The index stays set while the sheet animates out, so it keeps its item.
   const [editing, setEditing] = useState<number | null>(null)
+  const [sheetVisible, setSheetVisible] = useState(false)
+  // Undo runs after later edits; it must restore into the list as it is then.
+  const itemsRef = useRef(items)
+  useEffect(() => {
+    itemsRef.current = items
+  }, [items])
 
   const toggle = () => {
-    if (enabled) onChange([])
-    setEnabled(!enabled)
+    if (!enabled) return setEnabled(true)
+    if (items.length > 0) return setConfirmOff(true)
+    setEnabled(false)
   }
 
-  const saveItem = (item: TransactionItem) => {
-    if (editing === null) return
-    onChange(
-      editing === -1
-        ? [...items, item]
-        : items.map((it, i) => (i === editing ? item : it)),
-    )
+  const setQuantity = (index: number, quantity: number) =>
+    onChange(items.map((it, i) => (i === index ? { ...it, quantity } : it)))
+
+  const remove = (index: number) => {
+    const removed = items[index]
+    onChange(items.filter((_, i) => i !== index))
+    Toast.info({
+      title: t("components.transactionForm.items.removed", {
+        name: removed.name,
+      }),
+      visibilityTime: UNDO_MS,
+      action: {
+        label: t("common.actions.undo"),
+        onPress: () => {
+          const current = itemsRef.current
+          const at = Math.min(index, current.length)
+          onChange([...current.slice(0, at), removed, ...current.slice(at)])
+        },
+      },
+    })
   }
 
   return (
@@ -74,31 +110,90 @@ export function FormItemsSection({ items, currencyCode, onChange }: Props) {
       {enabled ? (
         <View style={styles.list}>
           {items.map((item, index) => (
-            <Pressable
+            <View
               // biome-ignore lint/suspicious/noArrayIndexKey: items have no id until saved, and the order is the identity
               key={index}
               style={styles.row}
-              onPress={() => setEditing(index)}
-              accessibilityLabel={item.name}
             >
-              <View style={styles.rowName}>
+              <Pressable
+                style={styles.rowMain}
+                onPress={() => {
+                  setEditing(index)
+                  setSheetVisible(true)
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={t(
+                  "components.transactionForm.items.editItem",
+                )}
+                accessibilityHint={item.name}
+              >
                 <Text variant="default" numberOfLines={1} style={styles.name}>
                   {item.name}
                 </Text>
-                {item.quantity > 1 ? (
-                  <Text variant="small" style={styles.quantity}>
-                    ×{item.quantity}
-                  </Text>
-                ) : null}
+                <Text variant="small" style={styles.each}>
+                  {t("components.transactionForm.items.each", {
+                    price: formatMoney(item.unitPrice, currencyCode, {
+                      hideSign: true,
+                    }),
+                  })}
+                </Text>
+              </Pressable>
+
+              <View style={styles.stepper}>
+                <Pressable
+                  style={styles.stepButton}
+                  onPress={() =>
+                    item.quantity > 1
+                      ? setQuantity(index, item.quantity - 1)
+                      : remove(index)
+                  }
+                  accessibilityRole="button"
+                  accessibilityLabel={t(
+                    item.quantity > 1
+                      ? "components.transactionForm.items.a11y.decrease"
+                      : "components.transactionForm.items.a11y.remove",
+                  )}
+                >
+                  <IconSvg
+                    name={item.quantity > 1 ? "minus-outline" : "x-outline"}
+                    size={18}
+                  />
+                </Pressable>
+                <Text variant="default" style={styles.stepCount}>
+                  {item.quantity}
+                </Text>
+                <Pressable
+                  style={styles.stepButton}
+                  disabled={item.quantity >= MAX_QUANTITY}
+                  onPress={() => setQuantity(index, item.quantity + 1)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t(
+                    "components.transactionForm.items.a11y.increase",
+                  )}
+                >
+                  <IconSvg name="plus-outline" size={18} />
+                </Pressable>
               </View>
+
               <Money
                 value={item.unitPrice * item.quantity}
                 currency={currencyCode}
+                tone={TransactionTypeEnum.INCOME}
                 hideSign
                 variant="default"
+                style={styles.lineTotal}
               />
-            </Pressable>
+            </View>
           ))}
+
+          <ItemEntryRow
+            items={items}
+            currencyCode={currencyCode}
+            onAdd={(item) => onChange([...items, item])}
+            onAddRecent={(recent) =>
+              onChange(addOrIncrementItem(items, recent))
+            }
+          />
 
           {items.length > 0 ? (
             <View style={styles.totalRow}>
@@ -113,21 +208,39 @@ export function FormItemsSection({ items, currencyCode, onChange }: Props) {
               />
             </View>
           ) : null}
-
-          <Button variant="ghost" onPress={() => setEditing(-1)}>
-            <IconSvg name="plus-outline" size={18} />
-            <Text>{t("components.transactionForm.items.addItem")}</Text>
-          </Button>
         </View>
       ) : null}
 
+      {/* The sheet edits an existing line; adding happens inline. */}
       <ItemEditorSheet
-        visible={editing !== null}
-        item={editing !== null && editing >= 0 ? items[editing] : null}
+        visible={sheetVisible}
+        item={editing !== null ? (items[editing] ?? null) : null}
         currencyCode={currencyCode}
-        onSave={saveItem}
-        onDelete={() => onChange(items.filter((_, i) => i !== editing))}
-        onClose={() => setEditing(null)}
+        onSave={(item) =>
+          onChange(items.map((it, i) => (i === editing ? item : it)))
+        }
+        onDelete={() => editing !== null && remove(editing)}
+        onClose={() => setSheetVisible(false)}
+      />
+
+      <ConfirmSheet
+        visible={confirmOff}
+        onRequestClose={() => setConfirmOff(false)}
+        onConfirm={() => {
+          onChange([])
+          setEnabled(false)
+        }}
+        title={t("components.transactionForm.items.confirmOff.title", {
+          count: items.length,
+        })}
+        description={t(
+          "components.transactionForm.items.confirmOff.description",
+          {
+            amount: formatMoney(amount, currencyCode, { hideSign: true }),
+          },
+        )}
+        confirmLabel={t("common.actions.delete")}
+        variant="destructive"
       />
     </View>
   )

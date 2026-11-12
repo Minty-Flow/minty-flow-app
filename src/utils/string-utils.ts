@@ -10,3 +10,7 @@ export const getInitials = (name: string): string => {
   if (words.length === 1) return words[0][0]?.toUpperCase() ?? "?"
   return (words[0][0] + words[words.length - 1][0]).toUpperCase()
 }
+
+/** Trimmed, case-insensitive key that groups line-item names. */
+export const normalizeItemName = (name: string): string =>
+  name.trim().toLowerCase()

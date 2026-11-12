@@ -1254,7 +1254,27 @@
         "total": "Items total",
         "a11y": {
           "count_one": "{{count}} item",
-          "count_other": "{{count}} items"
+          "count_other": "{{count}} items",
+          "added": "Added {{name}}",
+          "addRecent": "Add {{name}}, {{price}}",
+          "recentAdded_one": ", {{count}} added",
+          "recentAdded_other": ", {{count}} added",
+          "newName": "New item name",
+          "priceEach": "Price each",
+          "decrease": "Decrease quantity",
+          "increase": "Increase quantity",
+          "remove": "Remove item"
+        },
+        "recent": "Recent",
+        "newPlaceholder": "Add an item",
+        "needName": "Add a name",
+        "needPrice": "Add a price",
+        "removed": "Removed {{name}}",
+        "each": "{{price}} each",
+        "confirmOff": {
+          "title_one": "Remove {{count}} item?",
+          "title_other": "Remove {{count}} items?",
+          "description": "The amount will stay {{amount}}, and you can edit it."
         }
       }
     },

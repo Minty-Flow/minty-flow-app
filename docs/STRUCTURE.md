@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-11-12T08:15:29.755Z
+Generated on: 2026-11-12T08:33:40.331Z
 
 ```
 ./
@@ -27,6 +27,7 @@ Generated on: 2026-11-12T08:15:29.755Z
 │   │   │   └── post-import-repairs.test.ts
 │   │   ├── drizzle/
 │   │   │   └── read-models/
+│   │   │       ├── recent-items.test.ts
 │   │   │       ├── stats-data.test.ts
 │   │   │       └── trash-by-deletion-date.test.ts
 │   │   ├── services/
@@ -451,6 +452,7 @@ Generated on: 2026-11-12T08:15:29.755Z
 │   │   │   │   ├── form.styles.ts
 │   │   │   │   ├── index.tsx
 │   │   │   │   ├── item-editor-sheet.tsx
+│   │   │   │   ├── item-entry-row.tsx
 │   │   │   │   ├── kind-info-sheet.tsx
 │   │   │   │   ├── kind-info.ts
 │   │   │   │   ├── on-kind-change.ts
@@ -571,6 +573,7 @@ Generated on: 2026-11-12T08:15:29.755Z
 │   │   │   │   ├── stats-data.ts
 │   │   │   │   ├── stats-read-model.ts
 │   │   │   │   ├── tag-read-model.ts
+│   │   │   │   ├── transaction-item-read-model.ts
 │   │   │   │   └── transaction-read-model.ts
 │   │   │   ├── db.ts
 │   │   │   └── schema.ts
