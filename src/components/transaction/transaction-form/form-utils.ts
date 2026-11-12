@@ -72,6 +72,19 @@ export function itemsTotal(items: TransactionItem[]): number {
   return items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
 }
 
+/**
+ * A new transaction starts on the primary account unless the caller already
+ * chose one (e.g. adding from an account's screen).
+ */
+export function withPrimaryAccount(
+  prefill: Partial<TransactionFormValues> | undefined,
+  accounts: Pick<Account, "id" | "isPrimary">[],
+): Partial<TransactionFormValues> | undefined {
+  if (prefill?.accountId) return prefill
+  const primary = accounts.find((a) => a.isPrimary)
+  return primary ? { ...prefill, accountId: primary.id } : prefill
+}
+
 export function getDefaultValues(
   transaction: TransactionWithRelations | null,
   transactionType: TransactionType,
@@ -85,7 +98,7 @@ export function getDefaultValues(
       amount: 0,
       type: transactionType,
       transactionDate: new Date(),
-      // No default account: the user picks one (or a prefill passes it).
+      // The route passes the primary account in as a prefill once accounts load.
       accountId: "",
       toAccountId:
         transactionType === TransactionTypeEnum.TRANSFER ? "" : undefined,

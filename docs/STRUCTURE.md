@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-11-12T09:05:51.622Z
+Generated on: 2026-11-12T09:18:57.896Z
 
 ```
 ./
@@ -15,7 +15,8 @@ Generated on: 2026-11-12T09:05:51.622Z
 │   │   │   └── transaction-form/
 │   │   │       ├── form-items.test.ts
 │   │   │       ├── transfer-edit-from-credit-leg.test.ts
-│   │   │       └── transfer-rate.test.ts
+│   │   │       ├── transfer-rate.test.ts
+│   │   │       └── with-primary-account.test.ts
 │   │   ├── date-range-presets.test.ts
 │   │   └── transaction-form-payload.test.ts
 │   ├── constants/

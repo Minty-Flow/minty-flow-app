@@ -39,9 +39,20 @@ export function useActiveAccounts(): Account[] {
 export function useActiveAccountsWith(
   ...ids: (string | null | undefined)[]
 ): Account[] {
-  return useAccounts().filter(
-    (account) => !account.isArchived || ids.includes(account.id),
-  )
+  return useActiveAccountsWithQuery(...ids).data
+}
+
+/** `useActiveAccountsWith` plus the load status, for a form that must wait. */
+export function useActiveAccountsWithQuery(
+  ...ids: (string | null | undefined)[]
+): LiveReadModelResult<Account[]> {
+  const result = useAccountsQuery()
+  return {
+    ...result,
+    data: result.data.filter(
+      (account) => !account.isArchived || ids.includes(account.id),
+    ),
+  }
 }
 
 export function useActiveAccountsQuery(): LiveReadModelResult<Account[]> {
