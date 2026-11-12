@@ -112,6 +112,7 @@ import Dashboard from "./filled/Dashboard"
 import Database from "./filled/Database"
 import DeviceDesktop from "./filled/DeviceDesktop"
 import DeviceGamepad from "./filled/DeviceGamepad"
+import DeviceGamepad2 from "./filled/DeviceGamepad2"
 import DeviceHeartMonitor from "./filled/DeviceHeartMonitor"
 import DeviceMobile from "./filled/DeviceMobile"
 import DeviceSpeaker from "./filled/DeviceSpeaker"
@@ -369,6 +370,7 @@ import Filter2X from "./outline/Filter2X"
 import FilterOff from "./outline/FilterOff"
 import Fingerprint from "./outline/Fingerprint"
 import FingerprintScan from "./outline/FingerprintScan"
+import FirstAidKit from "./outline/FirstAidKit"
 import GraphOutline from "./outline/Graph"
 import GripHorizontal from "./outline/GripHorizontal"
 import HandSanitizer from "./outline/HandSanitizer"
@@ -392,8 +394,10 @@ import MapPinOutline from "./outline/MapPin"
 import MathSymbols from "./outline/MathSymbols"
 import Minus from "./outline/Minus"
 import MoonStars from "./outline/MoonStars"
+import Movie from "./outline/Movie"
 import PageBreak from "./outline/PageBreak"
 import Paperclip from "./outline/Paperclip"
+import Parking from "./outline/Parking"
 import PasswordFingerprint from "./outline/PasswordFingerprint"
 import PasswordMobilePhone from "./outline/PasswordMobilePhone"
 import PawOutline from "./outline/Paw"
@@ -431,6 +435,8 @@ import TagOutline from "./outline/Tag"
 import TagPlus from "./outline/TagPlus"
 import TagsOutline from "./outline/Tags"
 import Target from "./outline/Target"
+import Tool from "./outline/Tool"
+import ToolsKitchen3 from "./outline/ToolsKitchen3"
 import Transfer from "./outline/Transfer"
 import TrashOutline from "./outline/Trash"
 import TrashOff from "./outline/TrashOff"
@@ -1849,6 +1855,24 @@ const ICON_MAP = {
   },
   get "receipt-refund-outline"() {
     return ReceiptRefund
+  },
+  get "device-gamepad-2"() {
+    return DeviceGamepad2
+  },
+  get "first-aid-kit-outline"() {
+    return FirstAidKit
+  },
+  get "movie-outline"() {
+    return Movie
+  },
+  get "parking-outline"() {
+    return Parking
+  },
+  get "tool-outline"() {
+    return Tool
+  },
+  get "tools-kitchen-3-outline"() {
+    return ToolsKitchen3
   },
 } as const satisfies Record<string, FC<SvgProps>>
 

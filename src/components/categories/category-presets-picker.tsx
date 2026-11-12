@@ -19,6 +19,7 @@ import { View } from "~/components/ui/view"
 import {
   type CategoryPreset,
   getPresetGroups,
+  isPresetAdded,
   presetKey,
 } from "~/constants/pre-sets-categories"
 import { useCategoriesByTypeQuery } from "~/database/drizzle/read-models/category-read-model"
@@ -63,11 +64,7 @@ function PickerInner({
   const allPresets = [...core, ...packs.flatMap((p) => p.presets)]
 
   const addedKeys = new Set(
-    allPresets
-      .filter((p) =>
-        categories.some((c) => c.icon === p.icon && c.type === p.type),
-      )
-      .map(presetKey),
+    allPresets.filter((p) => isPresetAdded(p, categories)).map(presetKey),
   )
   const availableKeys = (presets: CategoryPreset[]) =>
     presets.map(presetKey).filter((k) => !addedKeys.has(k))
