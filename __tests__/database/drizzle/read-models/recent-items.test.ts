@@ -53,7 +53,21 @@ const buy = (
   } as Parameters<typeof createTransaction>[0])
 
 describe("getRecentItems", () => {
-  it("keeps one per name, newest spelling and price first, in the currency only", async () => {
+  it("puts the most used name first, newest first among equals", async () => {
+    seedAccount("eur", "EUR")
+    await buy("eur", 1, [{ name: "Rice", unitPrice: 300 }])
+    await buy("eur", 2, [{ name: "Rice", unitPrice: 320 }])
+    await buy("eur", 3, [{ name: "Salt", unitPrice: 50 }])
+    await buy("eur", 4, [{ name: "Oil", unitPrice: 700 }])
+
+    expect(getRecentItems("EUR")).toEqual([
+      { name: "Rice", unitPrice: 320 },
+      { name: "Oil", unitPrice: 700 },
+      { name: "Salt", unitPrice: 50 },
+    ])
+  })
+
+  it("keeps one per name with its latest spelling and price, in the currency only", async () => {
     seedAccount("usd", "USD")
     seedAccount("syp", "SYP")
     await buy("usd", 1, [
@@ -70,6 +84,6 @@ describe("getRecentItems", () => {
       { name: "Bread", unitPrice: 80 },
     ])
     expect(getRecentItems("SYP")).toEqual([{ name: "Tea", unitPrice: 5000 }])
-    expect(getRecentItems("EUR")).toEqual([])
+    expect(getRecentItems("GBP")).toEqual([])
   })
 })

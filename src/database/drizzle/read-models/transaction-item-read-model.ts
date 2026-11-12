@@ -16,8 +16,9 @@ export interface RecentItem {
 const SCAN_LIMIT = 500
 
 /**
- * Item names used before in `currencyCode`, newest first, one per name, with
- * the latest spelling and unit price. Trashed transactions don't count.
+ * Item names used before in `currencyCode`, most used first (ties: newest
+ * first), one per name, with the latest spelling and unit price. Trashed
+ * transactions don't count.
  */
 export function getRecentItems(currencyCode: string, limit = 8): RecentItem[] {
   const rows = drizzleDb
@@ -45,14 +46,17 @@ export function getRecentItems(currencyCode: string, limit = 8): RecentItem[] {
     .limit(SCAN_LIMIT)
     .all()
 
-  const seen = new Set<string>()
-  const recent: RecentItem[] = []
+  // Rows come newest first, so the first row per name is its latest use.
+  const byName = new Map<string, RecentItem & { uses: number }>()
   for (const row of rows) {
     const key = normalizeItemName(row.name)
-    if (seen.has(key)) continue
-    seen.add(key)
-    recent.push(row)
-    if (recent.length === limit) break
+    const seen = byName.get(key)
+    if (seen) seen.uses += 1
+    else byName.set(key, { ...row, uses: 1 })
   }
-  return recent
+  // Stable sort: equal counts keep their newest-first order.
+  return [...byName.values()]
+    .sort((a, b) => b.uses - a.uses)
+    .slice(0, limit)
+    .map(({ name, unitPrice }) => ({ name, unitPrice }))
 }

@@ -36,6 +36,9 @@ export const formItemsStyles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     alignItems: "center",
   },
+  sheetStepper: {
+    gap: 8,
+  },
   stepCount: {
     minWidth: 24,
     textAlign: "center",

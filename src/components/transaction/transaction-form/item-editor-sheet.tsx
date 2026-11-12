@@ -88,7 +88,7 @@ function ItemEditorSheetInner({
           <Text variant="default">
             {t("components.transactionForm.items.quantity")}
           </Text>
-          <View style={styles.stepper}>
+          <View style={[styles.stepper, styles.sheetStepper]}>
             <StepButton
               icon="minus-outline"
               disabled={quantity <= 1}
