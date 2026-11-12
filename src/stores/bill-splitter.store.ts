@@ -2,6 +2,7 @@ import { createMMKV } from "react-native-mmkv"
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
+import { LOW_PRICE_CRYPTO_CODES } from "~/services/currency-registry"
 import type {
   BillItem,
   BillSummaryEntry,
@@ -137,18 +138,36 @@ export const useBillSplitterStore = create<BillSplitterState>()(
     }),
     {
       name: "bill-splitter-store",
-      version: 3,
-      migrate: () => ({
-        participants: [],
-        items: [],
-        payerId: null,
-        accountId: null,
-        currencyCode: null,
-      }),
+      version: 4,
+      migrate: (persisted, version) => {
+        // v4 (#161): PEPE/SHIB went from 8 to 2 minor digits; keep a v3
+        // draft and rescale its prices. Older drafts start over, as before.
+        if (version === 3) return rescaleLegacyCryptoDraft(persisted)
+        return {
+          participants: [],
+          items: [],
+          payerId: null,
+          accountId: null,
+          currencyCode: null,
+        }
+      },
       storage: mmkvJSONStorage(billSplitterStorage),
     },
   ),
 )
+
+function rescaleLegacyCryptoDraft(persisted: unknown) {
+  const draft = persisted as Pick<BillSplitterState, "items" | "currencyCode">
+  const codes: readonly string[] = LOW_PRICE_CRYPTO_CODES
+  if (!codes.includes(draft.currencyCode ?? "")) return draft
+  return {
+    ...draft,
+    items: draft.items.map((item) => ({
+      ...item,
+      price: roundToSafeInteger(item.price / 1_000_000),
+    })),
+  }
+}
 
 function redistributeEvenly(splits: ItemSplit[]): ItemSplit[] {
   const selected = splits.filter((s) => s.selected)

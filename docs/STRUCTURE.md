@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-11-12T09:21:07.211Z
+Generated on: 2026-11-12T09:37:15.526Z
 
 ```
 ./
@@ -31,6 +31,8 @@ Generated on: 2026-11-12T09:21:07.211Z
 │   │   │       ├── recent-items.test.ts
 │   │   │       ├── stats-data.test.ts
 │   │   │       └── trash-by-deletion-date.test.ts
+│   │   ├── migrations/
+│   │   │   └── rescale-low-price-crypto.test.ts
 │   │   ├── services/
 │   │   │   ├── account-balance-adjustment.test.ts
 │   │   │   ├── backup-after-account-delete.test.ts
@@ -78,6 +80,7 @@ Generated on: 2026-11-12T09:21:07.211Z
 │   │   ├── exchange-rates.test.ts
 │   │   └── pending-transaction-notifications.test.ts
 │   ├── stores/
+│   │   ├── bill-splitter.store.test.ts
 │   │   ├── export-history.store.test.ts
 │   │   └── onboarding.store.test.ts
 │   └── utils/
@@ -145,7 +148,8 @@ Generated on: 2026-11-12T09:21:07.211Z
 │   │   ├── 0003_snapshot.json
 │   │   ├── 0004_snapshot.json
 │   │   ├── 0005_snapshot.json
-│   │   └── 0006_snapshot.json
+│   │   ├── 0006_snapshot.json
+│   │   └── 0007_snapshot.json
 │   ├── 0000_safe_maximus.sql
 │   ├── 0001_deep_daredevil.sql
 │   ├── 0002_famous_bastion.sql
@@ -153,6 +157,7 @@ Generated on: 2026-11-12T09:21:07.211Z
 │   ├── 0004_repair_recurring_template_refs.sql
 │   ├── 0005_align_loan_row_kind.sql
 │   ├── 0006_transaction_items.sql
+│   ├── 0007_rescale_low_price_crypto.sql
 │   ├── migrations.d.ts
 │   └── migrations.js
 ├── plugins/
@@ -565,7 +570,8 @@ Generated on: 2026-11-12T09:21:07.211Z
 │   │   │   ├── backup-format.ts
 │   │   │   ├── backup-import-plan.ts
 │   │   │   ├── backup-settings.ts
-│   │   │   └── import-marker.ts
+│   │   │   ├── import-marker.ts
+│   │   │   └── upgrade-backup-data.ts
 │   │   ├── drizzle/
 │   │   │   ├── read-models/
 │   │   │   │   ├── account-read-model.ts

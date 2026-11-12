@@ -26,6 +26,7 @@ import {
   readImportMarker,
   writeImportMarker,
 } from "~/database/backup/import-marker"
+import { upgradeBackupData } from "~/database/backup/upgrade-backup-data"
 import { drizzleDb } from "~/database/drizzle/db"
 import { runInTransaction } from "~/database/transaction"
 import type { RowTransaction, RowTransactionItem } from "~/database/types/rows"
@@ -544,6 +545,8 @@ export async function recoverInterruptedImport(): Promise<boolean> {
     return false
   }
 
+  // A snapshot written by an older app version holds data at its schema.
+  upgradeBackupData(snapshot.meta.schemaVersion, snapshot.data)
   await resetDatabaseForBackupImport()
   await runInTransaction("recover.insert", (db) => {
     insertBackupData(db, snapshot.data)
