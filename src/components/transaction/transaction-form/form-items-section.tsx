@@ -112,16 +112,21 @@ function ItemsSection({
       >
         <View style={transactionFormStyles.switchLeft}>
           <DynamicIcon
-            icon="list-outline"
+            icon={enabled ? "list-outline" : "plus-outline"}
             size={20}
             color={theme.colors.primary}
             variant="badge"
           />
           <Text variant="default" style={transactionFormStyles.switchLabel}>
-            {t("components.transactionForm.items.toggle")}
+            {t(
+              enabled
+                ? "components.transactionForm.items.toggle"
+                : "components.transactionForm.items.add",
+            )}
           </Text>
         </View>
-        <Switch value={enabled} />
+        {/* Off, the row is a quiet "add" action; the switch appears once items are on. */}
+        {enabled ? <Switch value /> : null}
       </ListItem>
 
       {enabled ? (

@@ -1254,6 +1254,7 @@
       },
       "items": {
         "toggle": "Itemize",
+        "add": "Add items",
         "addItem": "Add item",
         "editItem": "Edit item",
         "name": "Item name",
