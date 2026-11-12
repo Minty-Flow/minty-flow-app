@@ -1211,7 +1211,8 @@
         "errors": {
           "invalidExpression": "تعبير غير صالح",
           "divisionByZero": "لا يمكن القسمة على صفر",
-          "invalidResult": "نتيجة غير صالحة"
+          "invalidResult": "نتيجة غير صالحة",
+          "tooLarge": "المبلغ كبير جداً"
         }
       },
       "attachments": {

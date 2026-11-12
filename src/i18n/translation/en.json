@@ -1178,7 +1178,8 @@
         "errors": {
           "invalidExpression": "Invalid expression",
           "divisionByZero": "Cannot divide by zero",
-          "invalidResult": "Invalid result"
+          "invalidResult": "Invalid result",
+          "tooLarge": "Amount too large"
         }
       },
       "attachments": {
