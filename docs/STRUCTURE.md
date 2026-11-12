@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-11-12T09:11:27.406Z
+Generated on: 2026-11-12T07:56:04.539Z
 
 ```
 ./
@@ -77,6 +77,7 @@ Generated on: 2026-11-12T09:11:27.406Z
 │   │   ├── export-history.store.test.ts
 │   │   └── onboarding.store.test.ts
 │   └── utils/
+│       ├── account-balances.test.ts
 │       ├── chart-path.test.ts
 │       ├── csv.test.ts
 │       ├── live-progress.test.ts
@@ -270,7 +271,9 @@ Generated on: 2026-11-12T09:11:27.406Z
 │   │   │   ├── account-card.tsx
 │   │   │   ├── account-delete-error.ts
 │   │   │   ├── account-picker-sheet.tsx
-│   │   │   └── account-type-inline.tsx
+│   │   │   ├── account-type-inline.tsx
+│   │   │   ├── total-balance.styles.ts
+│   │   │   └── total-balance.tsx
 │   │   ├── bill-splitter/
 │   │   │   ├── add-name-sheet.tsx
 │   │   │   └── bill-item-card.tsx
@@ -699,6 +702,7 @@ Generated on: 2026-11-12T09:11:27.406Z
 │   │   ├── transaction-filters.ts
 │   │   └── transactions.ts
 │   └── utils/
+│       ├── account-balances.ts
 │       ├── account-types-list.ts
 │       ├── attachments.ts
 │       ├── chart-path.ts
