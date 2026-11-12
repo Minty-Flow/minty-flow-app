@@ -1315,7 +1315,6 @@
       "presets": {
         "addSelected": "Add {{count}} Selected",
         "selectAll": "Select all",
-        "deselectAll": "Deselect all",
         "selectedCount": "{{count}} selected",
         "noneSelected": "None selected",
         "expense": {
@@ -1378,8 +1377,7 @@
         "essentials": "Essentials",
         "packsTitle": "Fits your life",
         "packsHint": "Add a few extras that match your situation.",
-        "addPack": "Add all",
-        "removePack": "Remove"
+        "selectPack": "Select all in {{name}}"
       },
       "search": {
         "placeholder": "Search {{tab}} categories..."
