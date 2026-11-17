@@ -34,6 +34,8 @@ export function AccountModifyContent({
 }: AccountModifyContentProps) {
   const { t } = useTranslation()
   const [footerHeight, setFooterHeight] = useState(0)
+  // An unusable amount expression (e.g. 5/0) shows its own error; do not save over it.
+  const [amountInvalid, setAmountInvalid] = useState(false)
   const {
     isAddMode,
     control,
@@ -103,6 +105,7 @@ export function AccountModifyContent({
               name="balance"
               render={({ field: { value, onChange } }) => (
                 <SmartAmountInput
+                  onInvalidChange={setAmountInvalid}
                   valueMinor={value}
                   onChangeMinor={(v) => onChange(v)}
                   currencyCode={formCurrencyCode}
@@ -192,7 +195,9 @@ export function AccountModifyContent({
         isSubmitting={isSubmitting}
         hideSave={isArchived}
         onCancel={handleGoBack}
-        onSave={handleSubmit}
+        onSave={() => {
+          if (!amountInvalid) handleSubmit()
+        }}
       />
 
       <AccountFormSheets

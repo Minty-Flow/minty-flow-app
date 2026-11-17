@@ -70,6 +70,8 @@ export function BudgetModifyContent({
 }: BudgetModifyContentProps) {
   const { t } = useTranslation()
   const [footerHeight, setFooterHeight] = useState(0)
+  // An unusable amount expression (e.g. 5/0) shows its own error; do not save over it.
+  const [amountInvalid, setAmountInvalid] = useState(false)
   const router = useRouter()
   const isAddMode = budgetModifyId === NewEnum.NEW || !budgetModifyId
   const handleGoBack = () => {
@@ -283,6 +285,7 @@ export function BudgetModifyContent({
                 name="amount"
                 render={({ field: { onChange, value } }) => (
                   <SmartAmountInput
+                    onInvalidChange={setAmountInvalid}
                     valueMinor={value}
                     onChangeMinor={onChange}
                     currencyCode={watchedCurrencyCode}
@@ -506,7 +509,9 @@ export function BudgetModifyContent({
         isDirty={isDirty}
         isSubmitting={isSubmitting}
         onCancel={handleGoBack}
-        onSave={handleSubmit}
+        onSave={() => {
+          if (!amountInvalid) handleSubmit()
+        }}
       />
 
       <BudgetFormSheets

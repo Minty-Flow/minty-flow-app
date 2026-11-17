@@ -83,6 +83,7 @@ export default function AddItemScreen() {
   )
   const [addNameVisible, setAddNameVisible] = useState(false)
   const [footerHeight, setFooterHeight] = useState(0)
+  const [amountInvalid, setAmountInvalid] = useState(false)
   const [multiplierExpanded, setMultiplierExpanded] = useState(
     editItem ? editItem.quantity !== 1 : false,
   )
@@ -192,7 +193,10 @@ export default function AddItemScreen() {
       ? theme.colors.error
       : theme.colors.onSecondary
   const isSaveDisabled =
-    !name.trim() || selectedCount === 0 || (!splitEvenly && !isExact)
+    amountInvalid ||
+    !name.trim() ||
+    selectedCount === 0 ||
+    (!splitEvenly && !isExact)
   return (
     <View style={styles.container}>
       <KeyboardAwareScrollView
@@ -221,6 +225,7 @@ export default function AddItemScreen() {
 
         <View style={styles.card}>
           <SmartAmountInput
+            onInvalidChange={setAmountInvalid}
             valueMinor={price}
             onChangeMinor={setPrice}
             currencyCode={currency}
