@@ -150,7 +150,7 @@ const styles = StyleSheet.create((theme, rt) => ({
     marginHorizontal: 20,
     // Below the status bar / notch whatever the device.
     marginTop: rt.insets.top + 12,
-    marginBottom: 20,
+    marginBottom: 6,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

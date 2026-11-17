@@ -7,11 +7,6 @@ export type CategoryPreset = {
   type: CategoryType
   icon: IconSvgName
   colorSchemeName: string
-  /**
-   * Icons this preset shipped with in earlier releases. A category using one
-   * of them counts as this preset already added, so it is not offered twice.
-   */
-  oldIcons: readonly string[]
 }
 
 export type CategoryPresetPack = {
@@ -27,43 +22,31 @@ export const presetKey = (preset: CategoryPreset) =>
 
 /**
  * Whether the user already has this preset: a category of the same type
- * with its current icon or one it used to have. Names are not compared, since
- * users rename categories and names follow the app language.
+ * with its current icon. Icons from earlier releases do not count: those
+ * categories are the user's own, and the current preset is offered anew.
+ * Names are not compared, since users rename categories.
  */
 export function isPresetAdded(
   preset: CategoryPreset,
   categories: readonly { icon?: string | null; type: string }[],
 ): boolean {
   return categories.some(
-    (c) =>
-      c.type === preset.type &&
-      !!c.icon &&
-      (c.icon === preset.icon || preset.oldIcons.includes(c.icon)),
+    (c) => c.type === preset.type && c.icon === preset.icon,
   )
 }
 
-const expense = (
-  key: string,
-  icon: IconSvgName,
-  oldIcons: readonly string[] = [],
-): CategoryPreset => ({
+const expense = (key: string, icon: IconSvgName): CategoryPreset => ({
   name: `components.categories.presets.expense.${key}` as TranslationKey,
   type: "expense",
   icon,
   colorSchemeName: "",
-  oldIcons,
 })
 
-const income = (
-  key: string,
-  icon: IconSvgName,
-  oldIcons: readonly string[] = [],
-): CategoryPreset => ({
+const income = (key: string, icon: IconSvgName): CategoryPreset => ({
   name: `components.categories.presets.income.${key}` as TranslationKey,
   type: "income",
   icon,
   colorSchemeName: "",
-  oldIcons,
 })
 
 const pack = (
@@ -77,21 +60,17 @@ const pack = (
   presets,
 })
 
-// Old icons come from the presets shipped in v0.0.11 and v0.0.12-0.0.13.
-// `shield` was Insurance in v0.0.11 and Health since v0.0.12; it is matched
-// to Health, the newer and more common meaning.
-
 /** What nearly everyone spends and earns on; pre-selected in onboarding. */
 const CORE_PRESETS: CategoryPreset[] = [
   expense("groceries", "basket"),
-  expense("eatingOut", "tools-kitchen-3-outline", ["tools-kitchen-2", "pizza"]),
-  expense("transport", "bus", ["car"]),
-  expense("housing", "home-dollar-outline", ["building-outline"]),
+  expense("eatingOut", "tools-kitchen-3-outline"),
+  expense("transport", "bus"),
+  expense("housing", "home-dollar-outline"),
   expense("utilities", "plug-outline"),
-  expense("health", "first-aid-kit-outline", ["shield", "heart"]),
+  expense("health", "first-aid-kit-outline"),
   expense("shopping", "shopping-cart"),
-  expense("entertainment", "movie-outline", ["ball-bowling", "headphones"]),
-  expense("subscriptions", "repeat-outline", ["cloud"]),
+  expense("entertainment", "movie-outline"),
+  expense("subscriptions", "repeat-outline"),
   expense("gifts", "gift"),
 
   income("salary", "wallet-outline"),
@@ -104,17 +83,17 @@ const CORE_PRESETS: CategoryPreset[] = [
 const PRESET_PACKS: CategoryPresetPack[] = [
   pack("car", "car", [
     expense("fuel", "gas-station"),
-    expense("carMaintenance", "tool-outline", ["car-suv"]),
+    expense("carMaintenance", "tool-outline"),
     expense("parking", "parking-outline"),
   ]),
   pack("kids", "baby-carriage", [
-    expense("childCare", "baby-carriage", ["mood-happy"]),
+    expense("childCare", "baby-carriage"),
     expense("education", "school"),
   ]),
-  pack("pets", "paw", [expense("petCare", "paw", ["paw-print-outline"])]),
+  pack("pets", "paw", [expense("petCare", "paw")]),
   pack("homeBills", "home", [
     expense("insurance", "shield-check"),
-    expense("taxes", "building-bank-outline", ["receipt-outline"]),
+    expense("taxes", "building-bank-outline"),
   ]),
   pack("selfCare", "sparkles", [
     expense("fitness", "barbell"),
@@ -132,7 +111,7 @@ const PRESET_PACKS: CategoryPresetPack[] = [
   ]),
   pack("lifestyle", "plane", [
     expense("travel", "plane"),
-    expense("hobbies", "device-gamepad-2", ["ping-pong-outline"]),
+    expense("hobbies", "device-gamepad-2"),
     expense("donations", "heart-handshake-outline"),
   ]),
 
