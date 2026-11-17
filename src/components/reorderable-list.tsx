@@ -13,8 +13,6 @@ import Animated, {
 
 const SETTLE_MS = 150
 const PICKUP_MS = 250
-// Resting size in reorder mode: slightly smaller cards read as "movable".
-const REORDER_SCALE = 0.97
 
 function pickUpFeedback() {
   void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
@@ -112,16 +110,13 @@ function ReorderableRow<T>({
     const a = active.get()
     if (a === -1) {
       return {
-        transform: [
-          { translateY: 0 },
-          { scale: reordering ? REORDER_SCALE : 1 },
-        ],
+        transform: [{ translateY: 0 }],
         zIndex: 0,
       }
     }
     if (a === index) {
       return {
-        transform: [{ translateY: dragY.get() }, { scale: 1.04 }],
+        transform: [{ translateY: dragY.get() }],
         zIndex: 10,
         shadowOpacity: 0.25,
         shadowRadius: 12,
@@ -133,10 +128,7 @@ function ReorderableRow<T>({
     if (a < index && index <= t) shift = -slot.get()
     else if (t <= index && index < a) shift = slot.get()
     return {
-      transform: [
-        { translateY: withTiming(shift, { duration: SETTLE_MS }) },
-        { scale: reordering ? REORDER_SCALE : 1 },
-      ],
+      transform: [{ translateY: withTiming(shift, { duration: SETTLE_MS }) }],
       zIndex: 0,
     }
   })
@@ -163,7 +155,7 @@ interface ReorderableListProps<T> {
   onReorder: (newData: T[]) => void
   renderItem: ListRenderItem<T>
   keyExtractor: (item: T, index: number) => string
-  /** Reorder mode: cards shrink slightly and can be held and dragged. */
+  /** Reorder mode: cards can be held and dragged. */
   reordering?: boolean
   style?: ViewStyle
   contentContainerStyle?: ViewStyle
