@@ -1,11 +1,11 @@
 import * as FileSystem from "expo-file-system/legacy"
-import { useRouter } from "expo-router"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList, Platform, Share } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 import { useShallow } from "zustand/react/shallow"
 
+import { useBackupImport } from "~/components/backup/use-backup-import"
 import { ConfirmSheet } from "~/components/confirm-sheet"
 import { IconSvg, type IconSvgName } from "~/components/icons"
 import { BottomSheet } from "~/components/ui/bottom-sheet"
@@ -199,7 +199,7 @@ interface ConfirmState {
 }
 export default function ExportHistoryScreen() {
   const { t } = useTranslation()
-  const router = useRouter()
+  const { start: startImport, sheet: importSheet } = useBackupImport()
   const { exports, removeExport, clearAll } = useExportHistoryStore(
     useShallow((s) => ({
       exports: s.exports,
@@ -244,10 +244,7 @@ export default function ExportHistoryScreen() {
   const handleImport = () => {
     if (!activeRecord) return
     setActionId(null)
-    router.push({
-      pathname: "/settings/restore",
-      params: { uri: activeRecord.uri, name: activeRecord.fileName },
-    })
+    startImport({ uri: activeRecord.uri, name: activeRecord.fileName })
   }
   const handleSave = async () => {
     if (!activeRecord) return
@@ -365,6 +362,8 @@ export default function ExportHistoryScreen() {
         onShare={handleShare}
         onDelete={handleDeletePress}
       />
+
+      {importSheet}
 
       <ConfirmSheet
         visible={confirm.visible}
