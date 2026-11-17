@@ -23,8 +23,6 @@
       "saveChanges": "حفظ التغييرات",
       "discard": "تجاهل",
       "previous": "السابق",
-      "moveUp": "نقل للأعلى",
-      "moveDown": "نقل للأسفل",
       "undo": "تراجع"
     },
     "states": {
