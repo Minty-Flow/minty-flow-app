@@ -23,8 +23,6 @@
       "saveChanges": "Save Changes",
       "discard": "Discard",
       "previous": "Previous",
-      "moveUp": "Move up",
-      "moveDown": "Move down",
       "undo": "Undo"
     },
     "states": {
