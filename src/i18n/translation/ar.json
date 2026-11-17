@@ -188,6 +188,7 @@
       "title": "جميع الحسابات",
       "addNew": "إضافة حساب جديد",
       "addNewAccount": "حساب جديد",
+      "reorderHint": "اضغط مطولاً على البطاقة ثم اسحبها لإعادة الترتيب",
       "totalBalance": "الرصيد الإجمالي",
       "countLabel": "الحسابات",
       "archivedSection": "مؤرشف",
