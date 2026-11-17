@@ -6,7 +6,7 @@
  */
 import { type ReactNode, useEffect, useState, useTransition } from "react"
 import { useTranslation } from "react-i18next"
-import { InteractionManager, ScrollView } from "react-native"
+import { ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { DynamicIcon } from "~/components/dynamic-icon"
@@ -47,8 +47,8 @@ export function CategoryPresetsPicker(props: Props) {
   // to finish and show the spinner meanwhile instead of a frozen, half-drawn list.
   const [ready, setReady] = useState(false)
   useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(() => setReady(true))
-    return () => task.cancel()
+    const id = requestIdleCallback(() => setReady(true))
+    return () => cancelIdleCallback(id)
   }, [])
   if (status === "loading" || !ready)
     return (
