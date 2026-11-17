@@ -19,6 +19,8 @@ interface ExportHistoryStore {
   exports: ExportRecord[]
   /** Returns the records pushed out of the history, whose files are now unreferenced. */
   addExport: (record: Omit<ExportRecord, "id">) => ExportRecord[]
+  /** Adds records whose file is not in the history yet. Returns the records pushed out. */
+  mergeExports: (records: Omit<ExportRecord, "id">[]) => ExportRecord[]
   removeExport: (id: string) => void
   clearAll: () => void
 }
@@ -39,6 +41,22 @@ export const useExportHistoryStore = create<ExportHistoryStore>()(
           ...get().exports,
         ]
         // Keep only the most recent N items
+        set({ exports: all.slice(0, MAX_EXPORT_HISTORY) })
+        return all.slice(MAX_EXPORT_HISTORY)
+      },
+
+      mergeExports: (records) => {
+        const known = new Set(get().exports.map((e) => e.uri))
+        const fresh = records
+          .filter((r) => !known.has(r.uri))
+          .map((r, i) => ({
+            ...r,
+            id: `${Date.now()}-${i}-${Math.random().toString(36).slice(2, 8)}`,
+          }))
+        if (fresh.length === 0) return []
+        const all = [...get().exports, ...fresh].sort((a, b) =>
+          b.exportedAt.localeCompare(a.exportedAt),
+        )
         set({ exports: all.slice(0, MAX_EXPORT_HISTORY) })
         return all.slice(MAX_EXPORT_HISTORY)
       },
