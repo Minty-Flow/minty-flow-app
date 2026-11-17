@@ -45,12 +45,13 @@ function ItemEditorSheetInner({
   const { theme } = useUnistyles()
   const [name, setName] = useState(item?.name ?? "")
   const [unitPrice, setUnitPrice] = useState(item?.unitPrice ?? 0)
+  const [priceInvalid, setPriceInvalid] = useState(false)
   const [quantityText, setQuantityText] = useState(String(item?.quantity ?? 1))
   const quantity = Math.min(
     Math.max(Number.parseInt(quantityText, 10) || 1, 1),
     MAX_QUANTITY,
   )
-  const canSave = name.trim().length > 0
+  const canSave = name.trim().length > 0 && !priceInvalid
   const stepTo = (next: number) => setQuantityText(String(next))
 
   const handleSave = () => {
@@ -77,6 +78,7 @@ function ItemEditorSheetInner({
         />
 
         <SmartAmountInput
+          onInvalidChange={setPriceInvalid}
           valueMinor={unitPrice}
           onChangeMinor={setUnitPrice}
           currencyCode={currencyCode}

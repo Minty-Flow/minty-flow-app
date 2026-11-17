@@ -58,6 +58,8 @@ export function LoanModifyContent({
 }: LoanModifyContentProps) {
   const { t } = useTranslation()
   const [footerHeight, setFooterHeight] = useState(0)
+  // An unusable amount expression (e.g. 5/0) shows its own error; do not save over it.
+  const [amountInvalid, setAmountInvalid] = useState(false)
   const router = useRouter()
   const { theme } = useUnistyles()
   const isAddMode = loanModifyId === NewEnum.NEW || !loanModifyId
@@ -315,6 +317,7 @@ export function LoanModifyContent({
                 name="principalAmount"
                 render={({ field: { onChange, value } }) => (
                   <SmartAmountInput
+                    onInvalidChange={setAmountInvalid}
                     valueMinor={value}
                     onChangeMinor={onChange}
                     currencyCode={currencyCode}
@@ -449,7 +452,9 @@ export function LoanModifyContent({
         isDirty={isDirty}
         isSubmitting={isSubmitting}
         onCancel={handleGoBack}
-        onSave={handleSubmit}
+        onSave={() => {
+          if (!amountInvalid) handleSubmit()
+        }}
       />
 
       <LoanFormSheets

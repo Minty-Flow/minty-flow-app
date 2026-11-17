@@ -59,6 +59,8 @@ export function GoalModifyContent({
 }: GoalModifyContentProps) {
   const { t } = useTranslation()
   const [footerHeight, setFooterHeight] = useState(0)
+  // An unusable amount expression (e.g. 5/0) shows its own error; do not save over it.
+  const [amountInvalid, setAmountInvalid] = useState(false)
   const router = useRouter()
   const { theme } = useUnistyles()
   const isAddMode = goalModifyId === NewEnum.NEW || !goalModifyId
@@ -301,6 +303,7 @@ export function GoalModifyContent({
               name="targetAmount"
               render={({ field: { onChange, value } }) => (
                 <SmartAmountInput
+                  onInvalidChange={setAmountInvalid}
                   valueMinor={value}
                   onChangeMinor={onChange}
                   currencyCode={formCurrencyCode}
@@ -408,7 +411,9 @@ export function GoalModifyContent({
         isDirty={isDirty}
         isSubmitting={isSubmitting}
         onCancel={handleGoBack}
-        onSave={handleSubmit}
+        onSave={() => {
+          if (!amountInvalid) handleSubmit()
+        }}
       />
 
       <GoalFormSheets
