@@ -491,48 +491,6 @@ export async function saveExistingFileToDevice(
   return (await saveToDevice(uri, fileName)) === "saved"
 }
 
-interface StoredExport {
-  uri: string
-  fileName: string
-  type: "json" | "csv" | "zip"
-  exportedAt: string
-}
-
-/**
- * Backup files already in the app's export folder (`exports/<timestamp>/<file>`),
- * so history can show ones it lost track of, such as the pre-update backup.
- * Only a directory listing: no file is opened.
- */
-export async function listStoredExports(): Promise<StoredExport[]> {
-  const root = `${FileSystem.documentDirectory}exports/`
-  try {
-    const folders = await FileSystem.readDirectoryAsync(root)
-    const found = await Promise.all(
-      folders.map(async (folder) => {
-        const timestamp = Number(folder)
-        if (!Number.isFinite(timestamp)) return []
-        const files = await FileSystem.readDirectoryAsync(`${root}${folder}/`)
-        return files.flatMap<StoredExport>((fileName) => {
-          const type = getFileExtension(fileName)
-          if (type !== "json" && type !== "csv" && type !== "zip") return []
-          return [
-            {
-              uri: `${root}${folder}/${fileName}`,
-              fileName,
-              type,
-              exportedAt: new Date(timestamp).toISOString(),
-            },
-          ]
-        })
-      }),
-    )
-    return found.flat()
-  } catch {
-    // No exports folder yet.
-    return []
-  }
-}
-
 // ponytail: leaves the export's now-empty parent folder behind. Delete the folder too
 // once history records predating per-export folders can no longer be in the store.
 export async function deleteExportFile(uri: string): Promise<void> {

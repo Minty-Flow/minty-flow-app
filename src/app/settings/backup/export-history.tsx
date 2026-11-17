@@ -17,7 +17,6 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import {
   deleteExportFile,
-  listStoredExports,
   saveExistingFileToDevice,
 } from "~/database/services/data-management-service"
 import type { TranslationKey } from "~/i18n/config"
@@ -201,29 +200,19 @@ interface ConfirmState {
 export default function ExportHistoryScreen() {
   const { t } = useTranslation()
   const { start: startImport, sheet: importSheet } = useBackupImport()
-  const { exports, removeExport, clearAll, mergeExports } =
-    useExportHistoryStore(
-      useShallow((s) => ({
-        exports: s.exports,
-        removeExport: s.removeExport,
-        clearAll: s.clearAll,
-        mergeExports: s.mergeExports,
-      })),
-    )
+  const { exports, removeExport, clearAll } = useExportHistoryStore(
+    useShallow((s) => ({
+      exports: s.exports,
+      removeExport: s.removeExport,
+      clearAll: s.clearAll,
+    })),
+  )
   const [fileSizes, setFileSizes] = useState<Record<string, number | null>>({})
   const [actionId, setActionId] = useState<string | null>(null)
   const [confirm, setConfirm] = useState<ConfirmState>({
     visible: false,
     type: "remove",
   })
-  // Pick up backups on disk the history does not list (e.g. the pre-update one).
-  // biome-ignore lint/correctness/useExhaustiveDependencies: once on open
-  useEffect(() => {
-    void listStoredExports().then((stored) => {
-      const evicted = mergeExports(stored)
-      for (const old of evicted) void deleteExportFile(old.uri)
-    })
-  }, [])
   useEffect(() => {
     let cancelled = false
     async function loadSizes() {
