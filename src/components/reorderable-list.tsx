@@ -1,3 +1,4 @@
+import * as Haptics from "expo-haptics"
 import { type ReactElement, useRef } from "react"
 import type { LayoutChangeEvent, ListRenderItem, ViewStyle } from "react-native"
 import { Gesture, GestureDetector } from "react-native-gesture-handler"
@@ -9,12 +10,15 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated"
-import { StyleSheet, useUnistyles } from "react-native-unistyles"
-
-import { IconSvg } from "~/components/icons"
-import { View } from "~/components/ui/view"
 
 const SETTLE_MS = 150
+const PICKUP_MS = 250
+// Resting size in reorder mode: slightly smaller cards read as "movable".
+const REORDER_SCALE = 0.97
+
+function pickUpFeedback() {
+  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+}
 
 /**
  * Pure helper function to move an item in an array
@@ -60,11 +64,14 @@ function ReorderableRow<T>({
   onLayoutRow,
   onDrop,
 }: ReorderableRowProps<T>) {
-  const { theme } = useUnistyles()
   const { active, target, dragY, tops, heights, slot } = drag
 
   const pan = Gesture.Pan()
+    .enabled(reordering)
+    // A quick swipe still scrolls; hold to pick the card up.
+    .activateAfterLongPress(PICKUP_MS)
     .onStart(() => {
+      runOnJS(pickUpFeedback)()
       const t = tops.get()
       const h = heights.get()
       // Rows are equally spaced, so the gap after row 0 is the gap everywhere.
@@ -103,11 +110,22 @@ function ReorderableRow<T>({
 
   const animatedStyle = useAnimatedStyle(() => {
     const a = active.get()
-    if (a === -1) return { transform: [{ translateY: 0 }], zIndex: 0 }
+    if (a === -1) {
+      return {
+        transform: [
+          { translateY: 0 },
+          { scale: reordering ? REORDER_SCALE : 1 },
+        ],
+        zIndex: 0,
+      }
+    }
     if (a === index) {
       return {
-        transform: [{ translateY: dragY.get() }, { scale: 1.03 }],
+        transform: [{ translateY: dragY.get() }, { scale: 1.04 }],
         zIndex: 10,
+        shadowOpacity: 0.25,
+        shadowRadius: 12,
+        elevation: 8,
       }
     }
     const t = target.get()
@@ -115,14 +133,17 @@ function ReorderableRow<T>({
     if (a < index && index <= t) shift = -slot.get()
     else if (t <= index && index < a) shift = slot.get()
     return {
-      transform: [{ translateY: withTiming(shift, { duration: SETTLE_MS }) }],
+      transform: [
+        { translateY: withTiming(shift, { duration: SETTLE_MS }) },
+        { scale: reordering ? REORDER_SCALE : 1 },
+      ],
       zIndex: 0,
     }
   })
 
   return (
-    <Animated.View onLayout={onLayoutRow} style={[styles.row, animatedStyle]}>
-      <View style={{ flex: 1 }}>
+    <GestureDetector gesture={pan}>
+      <Animated.View onLayout={onLayoutRow} style={animatedStyle}>
         {renderItem({
           item,
           index,
@@ -132,20 +153,8 @@ function ReorderableRow<T>({
             updateProps: () => {},
           },
         })}
-      </View>
-
-      {reordering && (
-        <GestureDetector gesture={pan}>
-          <Animated.View style={styles.handle}>
-            <IconSvg
-              name="grip-horizontal-outline"
-              size={22}
-              color={theme.colors.onPrimary}
-            />
-          </Animated.View>
-        </GestureDetector>
-      )}
-    </Animated.View>
+      </Animated.View>
+    </GestureDetector>
   )
 }
 
@@ -154,7 +163,7 @@ interface ReorderableListProps<T> {
   onReorder: (newData: T[]) => void
   renderItem: ListRenderItem<T>
   keyExtractor: (item: T, index: number) => string
-  /** Show a drag handle on each row. */
+  /** Reorder mode: cards shrink slightly and can be held and dragged. */
   reordering?: boolean
   style?: ViewStyle
   contentContainerStyle?: ViewStyle
@@ -245,20 +254,3 @@ export function ReorderableList<T>({
     </Animated.ScrollView>
   )
 }
-
-const styles = StyleSheet.create((theme) => ({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  handle: {
-    width: 44,
-    alignSelf: "stretch",
-    maxHeight: 64,
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-}))

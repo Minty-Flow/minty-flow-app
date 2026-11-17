@@ -184,6 +184,7 @@
       "title": "All Accounts",
       "addNew": "Add new account",
       "addNewAccount": "New Account",
+      "reorderHint": "Hold a card, then drag it to reorder",
       "totalBalance": "Total Balance",
       "countLabel": "Accounts",
       "archivedSection": "Archived",

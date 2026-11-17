@@ -158,6 +158,12 @@ function AccountsScreen() {
         />
       </View>
 
+      {isReorderMode ? (
+        <Text style={styles.reorderHint}>
+          {t("screens.accounts.reorderHint")}
+        </Text>
+      ) : null}
+
       <ReorderableList
         data={displayAccounts}
         keyExtractor={(item) => item.id}
@@ -222,6 +228,12 @@ const styles = StyleSheet.create((theme, rt) => ({
     marginHorizontal: 20,
   },
   scrollView: { flex: 1 },
+  reorderHint: {
+    textAlign: "center",
+    color: theme.colors.onSecondary,
+    marginBottom: 8,
+    paddingHorizontal: 20,
+  },
   scrollContent: {
     paddingBottom: 100,
     gap: 10,
