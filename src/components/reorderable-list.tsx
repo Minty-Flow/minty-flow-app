@@ -1,11 +1,12 @@
 import * as Haptics from "expo-haptics"
-import { type ReactElement, useLayoutEffect, useRef } from "react"
+import { type ReactElement, useRef } from "react"
 import type { LayoutChangeEvent, ListRenderItem, ViewStyle } from "react-native"
 import { Gesture, GestureDetector } from "react-native-gesture-handler"
 import Animated, {
   runOnJS,
   type SharedValue,
   useAnimatedProps,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -33,19 +34,12 @@ interface DragState {
   dragY: SharedValue<number>
   tops: SharedValue<number[]>
   heights: SharedValue<number[]>
-  /**
-   * Row keys in the order they had when the drag began. Rows find their place
-   * here, not from their render index, so a reorder committed on drop does not
-   * move them again before the drag state is cleared.
-   */
-  keys: SharedValue<string[]>
   /** Height of the dragged row plus the gap below it: how far the others shift. */
   slot: SharedValue<number>
 }
 
 interface ReorderableRowProps<T> {
   item: T
-  rowKey: string
   index: number
   count: number
   renderItem: ListRenderItem<T>
@@ -58,7 +52,6 @@ interface ReorderableRowProps<T> {
 
 function ReorderableRow<T>({
   item,
-  rowKey,
   index,
   count,
   renderItem,
@@ -68,7 +61,11 @@ function ReorderableRow<T>({
   onPickUp,
   onDrop,
 }: ReorderableRowProps<T>) {
-  const { active, target, dragY, tops, heights, keys, slot } = drag
+  const { active, target, dragY, tops, heights, slot } = drag
+  // Each row owns its offset. Rows that move on drop are remounted (see the
+  // list's `versions`), which resets this to 0 in the same commit as the new
+  // order, so nothing is ever drawn at a stale offset.
+  const offset = useSharedValue(0)
 
   const pan = Gesture.Pan()
     .enabled(reordering)
@@ -112,32 +109,40 @@ function ReorderableRow<T>({
       )
     })
 
-  const animatedStyle = useAnimatedStyle(() => {
-    const a = active.get()
-    if (a === -1) {
-      return {
-        transform: [{ translateY: 0 }],
-        zIndex: 0,
+  // The dragged row follows the finger.
+  useAnimatedReaction(
+    () => dragY.get(),
+    (y) => {
+      if (active.get() === index) offset.set(y)
+    },
+  )
+
+  // The others make room.
+  useAnimatedReaction(
+    () => target.get(),
+    (t) => {
+      const a = active.get()
+      if (a < 0 || t < 0 || a === index) return
+      let shift = 0
+      if (a < index && index <= t) shift = -slot.get()
+      else if (t <= index && index < a) shift = slot.get()
+      if (shift !== offset.get()) {
+        offset.set(withTiming(shift, { duration: SETTLE_MS }))
       }
-    }
-    if (a === keys.get().indexOf(rowKey)) {
+    },
+  )
+
+  const animatedStyle = useAnimatedStyle(() => {
+    if (active.get() === index) {
       return {
-        transform: [{ translateY: dragY.get() }],
+        transform: [{ translateY: offset.get() }],
         zIndex: 10,
         shadowOpacity: 0.25,
         shadowRadius: 12,
         elevation: 8,
       }
     }
-    const t = target.get()
-    const home = keys.get().indexOf(rowKey)
-    let shift = 0
-    if (a < home && home <= t) shift = -slot.get()
-    else if (t <= home && home < a) shift = slot.get()
-    return {
-      transform: [{ translateY: withTiming(shift, { duration: SETTLE_MS }) }],
-      zIndex: 0,
-    }
+    return { transform: [{ translateY: offset.get() }], zIndex: 0 }
   })
 
   return (
@@ -171,7 +176,7 @@ interface ReorderableListProps<T> {
 }
 
 /**
- * A list whose rows you reorder by dragging their handle.
+ * A list whose rows you reorder by holding a card and dragging it.
  *
  * shortcut: renders every row (no virtualization), no auto-scroll while
  * dragging near the edge, and rows must be spaced evenly. Fine for the short
@@ -193,63 +198,40 @@ export function ReorderableList<T>({
   const dragY = useSharedValue(0)
   const tops = useSharedValue<number[]>([])
   const heights = useSharedValue<number[]>([])
-  const keys = useSharedValue<string[]>([])
   const slot = useSharedValue(0)
-  const drag: DragState = { active, target, dragY, tops, heights, keys, slot }
+  const drag: DragState = { active, target, dragY, tops, heights, slot }
 
   const layouts = useRef<Record<string, { y: number; h: number }>>({})
   // Latest props for the drop callback, which a gesture may call a frame late.
   const latest = useRef({ data, onReorder })
   latest.current = { data, onReorder }
 
-  // True from pick-up until the dropped order is on screen: layout updates
-  // must not change what the rows use mid-drag.
-  const dragging = useRef(false)
-  const resetPending = useRef(false)
-  const resetTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  )
+  // Bumped for every row a drop moves, so React remounts it with a fresh offset.
+  const versions = useRef<Record<string, number>>({})
 
   const syncLayouts = () => {
-    if (dragging.current) return
     const order = data.map(keyExtractor)
-    keys.set(order)
     tops.set(order.map((k) => layouts.current[k]?.y ?? 0))
     heights.set(order.map((k) => layouts.current[k]?.h ?? 0))
   }
 
-  const resetDrag = () => {
-    clearTimeout(resetTimer.current)
-    resetPending.current = false
-    dragging.current = false
-    active.set(-1)
-    target.set(-1)
-    dragY.set(0)
-    keys.set(data.map(keyExtractor))
-  }
-
   const handlePickUp = () => {
-    dragging.current = true
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
   }
 
-  // Clearing the drag state in the same commit as the new row order keeps the
-  // rows from snapping for a frame; clearing it in the drop handler ran first.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: runs when the order changes
-  useLayoutEffect(() => {
-    if (resetPending.current) resetDrag()
-  }, [data])
-
   const handleDrop = (from: number, to: number) => {
     const { data: current, onReorder: commit } = latest.current
-    if (from === to) {
-      resetDrag()
-      return
+    if (from !== to) {
+      for (let i = Math.min(from, to); i <= Math.max(from, to); i++) {
+        const key = keyExtractor(current[i], i)
+        versions.current[key] = (versions.current[key] ?? 0) + 1
+      }
     }
-    resetPending.current = true
-    // If the parent never applies the new order, do not stay stuck mid-drag.
-    resetTimer.current = setTimeout(resetDrag, 400)
-    commit(moveItem(current, from, to))
+    // Rows keep their offsets here; the remount does the reset with the commit.
+    active.set(-1)
+    target.set(-1)
+    dragY.set(0)
+    if (from !== to) commit(moveItem(current, from, to))
   }
 
   // No scrolling while a row is held, or the list fights the drag.
@@ -268,8 +250,7 @@ export function ReorderableList<T>({
         const key = keyExtractor(item, index)
         return (
           <ReorderableRow
-            key={key}
-            rowKey={key}
+            key={`${key}:${versions.current[key] ?? 0}`}
             item={item}
             index={index}
             count={data.length}
