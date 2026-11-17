@@ -160,6 +160,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   titleInput: {
     flex: 1,
+    textAlign: "center",
     paddingHorizontal: 0,
     paddingVertical: 8,
     fontSize: theme.typography.headlineLarge.fontSize,

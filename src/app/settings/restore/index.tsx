@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
@@ -46,7 +46,12 @@ export default function RestoreScreen() {
 
   // Onboarding sends the user here to restore a backup instead of starting
   // fresh; after the restore they land in the app, not back in onboarding.
-  const { fromOnboarding } = useLocalSearchParams<{ fromOnboarding?: string }>()
+  // `uri` + `name` come from Export history: import that file, skip the picker.
+  const { fromOnboarding, uri, name } = useLocalSearchParams<{
+    fromOnboarding?: string
+    uri?: string
+    name?: string
+  }>()
   const importOnly = fromOnboarding === "true"
   const setOnboardingCompleted = useOnboardingStore((s) => s.setCompleted)
 
@@ -60,10 +65,10 @@ export default function RestoreScreen() {
     stagingDir: null,
   })
 
-  function handleImportJson() {
+  function handleImportJson(preset?: { uri: string; name: string }) {
     setIsPickingFile(true)
 
-    Promise.resolve(pickBackupFile())
+    Promise.resolve(preset ?? pickBackupFile())
       .then((file) => {
         // null means the user cancelled the picker — nothing to report.
         if (!file) return null
@@ -114,6 +119,11 @@ export default function RestoreScreen() {
         setIsPickingFile(false)
       })
   }
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: run once on arrival
+  useEffect(() => {
+    if (uri && name) handleImportJson({ uri, name })
+  }, [])
 
   // Returns the promise so ConfirmSheet can own the spinner and close on resolve.
   function handleConfirmImport() {
@@ -211,7 +221,7 @@ export default function RestoreScreen() {
           icon="database-import-outline"
           title={t("screens.settings.dataManagement.importJson")}
           description={t("screens.settings.dataManagement.importJsonDesc")}
-          onPress={handleImportJson}
+          onPress={() => handleImportJson()}
           loading={isPickingFile}
         />
       </View>

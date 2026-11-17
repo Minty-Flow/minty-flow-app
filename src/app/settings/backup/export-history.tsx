@@ -1,4 +1,5 @@
 import * as FileSystem from "expo-file-system/legacy"
+import { useRouter } from "expo-router"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList, Platform, Share } from "react-native"
@@ -81,6 +82,7 @@ interface ActionSheetProps {
   record: ExportRecord | null
   fileSize: number | null
   onClose: () => void
+  onImport: () => void
   onSave: () => void
   onShare: () => void
   onDelete: () => void
@@ -90,6 +92,7 @@ function ActionSheet({
   record,
   fileSize,
   onClose,
+  onImport,
   onSave,
   onShare,
   onDelete,
@@ -130,6 +133,14 @@ function ActionSheet({
           ]}
         />
 
+        {/* A CSV export is not a backup, so it cannot be restored. */}
+        {record?.type !== "csv" && (
+          <ActionButton
+            icon="database-import-outline"
+            label={t("screens.settings.dataManagement.history.import")}
+            onPress={onImport}
+          />
+        )}
         <ActionButton
           icon="download-outline"
           label={t("screens.settings.dataManagement.history.saveAs")}
@@ -188,6 +199,7 @@ interface ConfirmState {
 }
 export default function ExportHistoryScreen() {
   const { t } = useTranslation()
+  const router = useRouter()
   const { exports, removeExport, clearAll } = useExportHistoryStore(
     useShallow((s) => ({
       exports: s.exports,
@@ -229,6 +241,14 @@ export default function ExportHistoryScreen() {
   const activeRecord = actionId
     ? (exports.find((e) => e.id === actionId) ?? null)
     : null
+  const handleImport = () => {
+    if (!activeRecord) return
+    setActionId(null)
+    router.push({
+      pathname: "/settings/restore",
+      params: { uri: activeRecord.uri, name: activeRecord.fileName },
+    })
+  }
   const handleSave = async () => {
     if (!activeRecord) return
     setActionId(null)
@@ -340,6 +360,7 @@ export default function ExportHistoryScreen() {
         record={activeRecord}
         fileSize={activeRecord ? (fileSizes[activeRecord.id] ?? null) : null}
         onClose={() => setActionId(null)}
+        onImport={handleImport}
         onSave={handleSave}
         onShare={handleShare}
         onDelete={handleDeletePress}
