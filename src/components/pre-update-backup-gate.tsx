@@ -11,8 +11,12 @@ import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { hasPendingMigrationsWithData } from "~/database/pending-migrations"
-import { saveZipToDevice } from "~/database/services/data-management-service"
+import {
+  deleteExportFile,
+  saveZipToDevice,
+} from "~/database/services/data-management-service"
 import { useAppLockStore } from "~/stores/app-lock.store"
+import { useExportHistoryStore } from "~/stores/export-history.store"
 import { logger } from "~/utils/logger"
 
 import migrations from "../../drizzle/migrations"
@@ -50,7 +54,17 @@ export function PreUpdateBackupGate({ children }: { children: ReactNode }) {
     try {
       const saved = await saveZipToDevice("minty-flow-before-update")
       // Cancelling the save dialog keeps the prompt open.
-      if (saved.savedToDevice) setPhase("ready")
+      if (saved.savedToDevice) {
+        // Like any other export, so it shows in Export history.
+        const evicted = useExportHistoryStore.getState().addExport({
+          uri: saved.uri,
+          fileName: saved.fileName,
+          type: "zip",
+          exportedAt: new Date().toISOString(),
+        })
+        for (const old of evicted) void deleteExportFile(old.uri)
+        setPhase("ready")
+      }
       setFailed(false)
     } catch (error) {
       logger.error("Pre-update backup failed", {
