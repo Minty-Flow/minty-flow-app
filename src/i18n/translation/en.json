@@ -995,6 +995,7 @@
           "empty": "No exports yet",
           "emptyDescription": "Exported files will appear here",
           "saveAs": "Save As",
+          "import": "Import",
           "clearAll": "Clear All",
           "remove": "Remove",
           "clearAllConfirmTitle": "Clear Export History?",

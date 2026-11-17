@@ -5,6 +5,7 @@ import { FlatList, Platform, Share } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 import { useShallow } from "zustand/react/shallow"
 
+import { useBackupImport } from "~/components/backup/use-backup-import"
 import { ConfirmSheet } from "~/components/confirm-sheet"
 import { IconSvg, type IconSvgName } from "~/components/icons"
 import { BottomSheet } from "~/components/ui/bottom-sheet"
@@ -81,6 +82,7 @@ interface ActionSheetProps {
   record: ExportRecord | null
   fileSize: number | null
   onClose: () => void
+  onImport: () => void
   onSave: () => void
   onShare: () => void
   onDelete: () => void
@@ -90,6 +92,7 @@ function ActionSheet({
   record,
   fileSize,
   onClose,
+  onImport,
   onSave,
   onShare,
   onDelete,
@@ -130,6 +133,14 @@ function ActionSheet({
           ]}
         />
 
+        {/* A CSV export is not a backup, so it cannot be restored. */}
+        {record?.type !== "csv" && (
+          <ActionButton
+            icon="database-import-outline"
+            label={t("screens.settings.dataManagement.history.import")}
+            onPress={onImport}
+          />
+        )}
         <ActionButton
           icon="download-outline"
           label={t("screens.settings.dataManagement.history.saveAs")}
@@ -188,6 +199,7 @@ interface ConfirmState {
 }
 export default function ExportHistoryScreen() {
   const { t } = useTranslation()
+  const { start: startImport, sheet: importSheet } = useBackupImport()
   const { exports, removeExport, clearAll } = useExportHistoryStore(
     useShallow((s) => ({
       exports: s.exports,
@@ -229,6 +241,11 @@ export default function ExportHistoryScreen() {
   const activeRecord = actionId
     ? (exports.find((e) => e.id === actionId) ?? null)
     : null
+  const handleImport = () => {
+    if (!activeRecord) return
+    setActionId(null)
+    startImport({ uri: activeRecord.uri, name: activeRecord.fileName })
+  }
   const handleSave = async () => {
     if (!activeRecord) return
     setActionId(null)
@@ -340,10 +357,13 @@ export default function ExportHistoryScreen() {
         record={activeRecord}
         fileSize={activeRecord ? (fileSizes[activeRecord.id] ?? null) : null}
         onClose={() => setActionId(null)}
+        onImport={handleImport}
         onSave={handleSave}
         onShare={handleShare}
         onDelete={handleDeletePress}
       />
+
+      {importSheet}
 
       <ConfirmSheet
         visible={confirm.visible}
