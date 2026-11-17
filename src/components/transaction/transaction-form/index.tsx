@@ -48,6 +48,7 @@ export function TransactionForm(props: TransactionFormProps) {
   const f = useTransactionForm(props)
   const readOnly = isFormReadOnly(transaction)
   const [footerHeight, setFooterHeight] = useState(0)
+  const [amountInvalid, setAmountInvalid] = useState(false)
 
   const showUntitledForBlankTitle = useTransactionItemAppearanceStore(
     (s) => s.showUntitledForBlankTitle,
@@ -152,6 +153,7 @@ export function TransactionForm(props: TransactionFormProps) {
                 label={t("components.transactionForm.fields.amountLabel")}
                 placeholder="0"
                 type={transactionType}
+                onInvalidChange={setAmountInvalid}
               />
             </View>
 
@@ -420,7 +422,10 @@ export function TransactionForm(props: TransactionFormProps) {
           isDirty={f.hasUnsavedChanges}
           readOnly={readOnly}
           onCancel={f.handleCancelPress}
-          onSave={f.submit}
+          // An unusable expression shows its own error under the amount.
+          onSave={() => {
+            if (!amountInvalid) f.submit()
+          }}
         />
       </KeyboardStickyFooter>
 

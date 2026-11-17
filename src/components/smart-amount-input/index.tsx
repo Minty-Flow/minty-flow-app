@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Keyboard, type TextInput } from "react-native"
 
@@ -45,6 +45,11 @@ interface SmartAmountInputProps {
   placeholder?: string
   /** Transaction type (affects currency color) */
   type?: TransactionType
+  /**
+   * Reports whether the typed expression is currently unusable (e.g. "5/0"),
+   * so the form can refuse to save instead of keeping the last good amount.
+   */
+  onInvalidChange?: (invalid: boolean) => void
 }
 /**
  * Parse what is typed, forgiving a dangling "." or operator: "12." is 12 and a
@@ -63,6 +68,7 @@ export const SmartAmountInput = ({
   label,
   placeholder = "0",
   type,
+  onInvalidChange,
 }: SmartAmountInputProps) => {
   const { wrapperRef, scrollIntoView } = useScrollIntoView()
   const [isEditing, setIsEditing] = useState(false)
@@ -125,6 +131,27 @@ export const SmartAmountInput = ({
   const previewError = previewErrorCode
     ? t(previewErrorKeys[previewErrorCode])
     : null
+  // Keep the form on the live result, so Save never reads a stale amount while
+  // an expression is still open (the same as pressing "=" then OK).
+  const liveMinor = (() => {
+    if (!isEditing || previewError) return null
+    if (previewMinor !== null) return previewMinor
+    try {
+      return parseSettled(displayValue, currencyCode)
+    } catch {
+      return null
+    }
+  })()
+  // biome-ignore lint/correctness/useExhaustiveDependencies: sync only when the live result changes
+  useEffect(() => {
+    if (liveMinor !== null && liveMinor !== valueMinor) onChangeMinor(liveMinor)
+  }, [liveMinor])
+  const isInvalid = previewError !== null
+  // biome-ignore lint/correctness/useExhaustiveDependencies: report only when validity changes
+  useEffect(() => {
+    onInvalidChange?.(isInvalid)
+    return () => onInvalidChange?.(false)
+  }, [isInvalid])
   const handleFocus = () => {
     if (!requireCurrency()) return
     if (!isEditing) {
