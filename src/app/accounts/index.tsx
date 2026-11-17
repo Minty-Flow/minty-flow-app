@@ -162,7 +162,7 @@ function AccountsScreen() {
         data={displayAccounts}
         keyExtractor={(item) => item.id}
         onReorder={(newAccounts) => setReorderedAccounts(newAccounts)}
-        showButtons={isReorderMode}
+        reordering={isReorderMode}
         renderItem={({ item }) => {
           const cardProps: AccountCardProps = {
             account: item,
