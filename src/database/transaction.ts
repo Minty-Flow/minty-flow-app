@@ -113,16 +113,21 @@ export async function runInAsyncTransaction<T>(
   }
 
   return enqueueWrite(async () => {
+    // BEGIN sits outside the inner try so a failed BEGIN neither triggers a
+    // ROLLBACK nor leaks txDepth; a leaked count would make every later write
+    // skip the queue and run unwrapped.
     txDepth++
-    drizzleDb.run(sql.raw("BEGIN"))
     try {
-      const result = await fn(db)
-      drizzleDb.run(sql.raw("COMMIT"))
-      emitWriteCommitted(name)
-      return result
-    } catch (error) {
-      drizzleDb.run(sql.raw("ROLLBACK"))
-      throw error
+      drizzleDb.run(sql.raw("BEGIN"))
+      try {
+        const result = await fn(db)
+        drizzleDb.run(sql.raw("COMMIT"))
+        emitWriteCommitted(name)
+        return result
+      } catch (error) {
+        drizzleDb.run(sql.raw("ROLLBACK"))
+        throw error
+      }
     } finally {
       txDepth--
     }
