@@ -8,6 +8,18 @@ import {
   transactions,
 } from "~/database/drizzle/schema"
 import {
+  createTransactionInTx,
+  createTransferInTx,
+  deleteTransaction,
+  updateTransaction,
+} from "~/database/services/ledger-service"
+import {
+  deleteAllRecurringInstances,
+  deleteFutureRecurringInstances,
+  detachFromRule,
+  updateFutureRecurringInstances,
+} from "~/database/services/recurring-instance-service"
+import {
   type DbTransaction,
   runInAsyncTransaction,
   runInTransaction,
@@ -396,13 +408,6 @@ export async function applyRecurringEditScope({
   recurrence?: Recurrence
   until?: Date | null
 }): Promise<void> {
-  const { updateTransaction } = await import("./ledger-service")
-  const {
-    deleteFutureRecurringInstances,
-    detachFromRule,
-    updateFutureRecurringInstances,
-  } = await import("./recurring-instance-service")
-
   let recurrenceChanged = false
   // One transaction for every step: a failure halfway through must not leave
   // the instance detached or the future instances rewritten without the rule.
@@ -504,10 +509,6 @@ export async function applyRecurringDeleteScope({
   transactionDate: Date
   ruleId: string
 }): Promise<void> {
-  const { deleteTransaction } = await import("./ledger-service")
-  const { deleteAllRecurringInstances, deleteFutureRecurringInstances } =
-    await import("./recurring-instance-service")
-
   await runInAsyncTransaction("recurring.deleteScope", async () => {
     switch (scope) {
       case "this":
@@ -715,10 +716,6 @@ async function synchronizeRecurringTransaction(
       // transaction. Two separate writes left a window where the instance
       // existed but the cursor did not move, and the rule then stalled.
       // ------------------------------------------------------------------
-
-      const { createTransactionInTx, createTransferInTx } = await import(
-        "./ledger-service"
-      )
 
       if (!isTransfer) {
         const txData: TransactionFormValues = {
