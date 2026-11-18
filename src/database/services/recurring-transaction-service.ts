@@ -396,12 +396,12 @@ export async function applyRecurringEditScope({
   recurrence?: Recurrence
   until?: Date | null
 }): Promise<void> {
+  const { updateTransaction } = await import("./ledger-service")
   const {
     deleteFutureRecurringInstances,
     detachFromRule,
     updateFutureRecurringInstances,
-    updateTransaction,
-  } = await import("./ledger-service")
+  } = await import("./recurring-instance-service")
 
   let recurrenceChanged = false
   // One transaction for every step: a failure halfway through must not leave
@@ -504,11 +504,9 @@ export async function applyRecurringDeleteScope({
   transactionDate: Date
   ruleId: string
 }): Promise<void> {
-  const {
-    deleteAllRecurringInstances,
-    deleteFutureRecurringInstances,
-    deleteTransaction,
-  } = await import("./ledger-service")
+  const { deleteTransaction } = await import("./ledger-service")
+  const { deleteAllRecurringInstances, deleteFutureRecurringInstances } =
+    await import("./recurring-instance-service")
 
   await runInAsyncTransaction("recurring.deleteScope", async () => {
     switch (scope) {
