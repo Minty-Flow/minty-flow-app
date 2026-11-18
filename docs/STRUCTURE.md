@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-11-18T09:48:34.848Z
+Generated on: 2026-11-18T11:17:26.586Z
 
 ```
 ./
@@ -603,10 +603,13 @@ Generated on: 2026-11-18T09:48:34.848Z
 │   │   │   ├── category-service.ts
 │   │   │   ├── data-management-service.ts
 │   │   │   ├── goal-service.ts
+│   │   │   ├── ledger-rows.ts
 │   │   │   ├── ledger-service.ts
 │   │   │   ├── loan-service.ts
+│   │   │   ├── recurring-instance-service.ts
 │   │   │   ├── recurring-transaction-service.ts
-│   │   │   └── tag-service.ts
+│   │   │   ├── tag-service.ts
+│   │   │   └── trash-service.ts
 │   │   ├── types/
 │   │   │   └── rows.ts
 │   │   ├── utils/

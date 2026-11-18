@@ -52,9 +52,9 @@ import { accounts, transactionItems } from "~/database/drizzle/schema"
 import { importBackup } from "~/database/services/data-management-service"
 import {
   createTransaction,
-  destroyTransaction,
   updateTransaction,
 } from "~/database/services/ledger-service"
+import { destroyTransaction } from "~/database/services/trash-service"
 
 const now = "2026-01-01T00:00:00.000Z"
 

@@ -25,9 +25,11 @@ import {
   createTransaction,
   createTransfer,
   deleteTransaction,
+} from "~/database/services/ledger-service"
+import {
   destroyAllDeletedTransactions,
   destroyTransaction,
-} from "~/database/services/ledger-service"
+} from "~/database/services/trash-service"
 
 const now = "2026-01-01T00:00:00.000Z"
 

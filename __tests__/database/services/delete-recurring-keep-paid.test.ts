@@ -18,7 +18,7 @@ import {
 import {
   deleteAllRecurringInstances,
   deleteFutureRecurringInstances,
-} from "~/database/services/ledger-service"
+} from "~/database/services/recurring-instance-service"
 
 const now = "2026-01-01T00:00:00.000Z"
 

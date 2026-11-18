@@ -11,7 +11,6 @@ import {
   createTransfer,
   deleteTransaction,
   deleteTransfer,
-  destroyTransaction,
   editTransfer,
   restoreTransaction,
   updateTransaction,
@@ -22,6 +21,7 @@ import {
   isLoanOpeningTransaction,
 } from "~/database/services/loan-service"
 import { createRecurringRule } from "~/database/services/recurring-transaction-service"
+import { destroyTransaction } from "~/database/services/trash-service"
 import { getRepaymentTypeForLoan } from "~/domain/transaction-kind"
 import { useBalanceAtTransaction } from "~/hooks/use-balance-before"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"

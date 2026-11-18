@@ -1,7 +1,5 @@
-import { startOfDay, subDays } from "date-fns"
-import { and, sql as drizzleSql, eq, gte, inArray, lt, or } from "drizzle-orm"
+import { and, sql as drizzleSql, eq, inArray, or } from "drizzle-orm"
 
-import { getTrashRetentionDays } from "~/constants/trash-retention"
 import { drizzleDb } from "~/database/drizzle/db"
 import {
   accounts,
@@ -11,12 +9,16 @@ import {
   transactionTags,
   transfers,
 } from "~/database/drizzle/schema"
+import {
+  type Db,
+  getPartnerTxId,
+  getTransferLegs,
+  getTransferRow,
+  requireTx,
+  txSelection,
+} from "~/database/services/ledger-rows"
 import { type DbTransaction, runInTransaction } from "~/database/transaction"
 import type { RowTransaction } from "~/database/types/rows"
-import {
-  attachmentFilesFromExtra,
-  deleteAttachmentFiles,
-} from "~/database/utils/attachment-files"
 import { generateId } from "~/database/utils/generate-id"
 import { getBalanceDelta } from "~/database/utils/get-balance-delta"
 import { hasAttachmentsFromExtra } from "~/database/utils/has-attachments-from-extra"
@@ -24,7 +26,6 @@ import { getOpeningTypeForLoan } from "~/domain/transaction-kind"
 import type {
   CreateTransferParams,
   EditTransferFields,
-  RecurringEditPayload,
   TransactionFormValues,
 } from "~/schemas/transactions.schema"
 import type { LoanType } from "~/types/loans"
@@ -53,45 +54,6 @@ function assertPendingKindAllowed(isPending: boolean, kind: string): void {
     if (__DEV__) throw new Error(msg)
     logger.error(msg, { kind })
   }
-}
-
-type Db = Parameters<Parameters<typeof runInTransaction>[1]>[0]
-
-const txSelection = {
-  id: transactions.id,
-  account_id: transactions.accountId,
-  category_id: transactions.categoryId,
-  amount: transactions.amount,
-  type: transactions.type,
-  transaction_date: transactions.transactionDate,
-  title: transactions.title,
-  description: transactions.description,
-  is_deleted: transactions.isDeleted,
-  deleted_at: transactions.deletedAt,
-  is_pending: transactions.isPending,
-  requires_manual_confirmation: transactions.requiresManualConfirmation,
-  account_balance_before: transactions.accountBalanceBefore,
-  subtype: transactions.subtype,
-  kind: transactions.kind,
-  extra: transactions.extra,
-  has_attachments: transactions.hasAttachments,
-  recurring_id: transactions.recurringId,
-  location: transactions.location,
-  goal_id: transactions.goalId,
-  budget_id: transactions.budgetId,
-  loan_id: transactions.loanId,
-  created_at: transactions.createdAt,
-  updated_at: transactions.updatedAt,
-}
-
-function requireTx(db: Db, id: string): RowTransaction {
-  const row = db
-    .select(txSelection)
-    .from(transactions)
-    .where(eq(transactions.id, id))
-    .get()
-  if (!row) throw new Error(`Transaction ${id} not found`)
-  return row
 }
 
 /**
@@ -147,76 +109,6 @@ function replaceItems(db: Db, txId: string, items: TransactionItem[]): void {
 function toDateMs(v: number | Date | undefined, fallback: number): number {
   if (v === undefined) return fallback
   return typeof v === "number" ? v : v.getTime()
-}
-
-function getPartnerTxId(
-  txId: string,
-  db: Db,
-): { partnerId: string; isDebit: boolean } | null {
-  const row = db
-    .select({
-      fromTransactionId: transfers.fromTransactionId,
-      toTransactionId: transfers.toTransactionId,
-    })
-    .from(transfers)
-    .where(
-      or(
-        eq(transfers.fromTransactionId, txId),
-        eq(transfers.toTransactionId, txId),
-      ),
-    )
-    .get()
-  if (!row) return null
-  if (row.fromTransactionId === txId) {
-    return { partnerId: row.toTransactionId, isDebit: true }
-  }
-  return { partnerId: row.fromTransactionId, isDebit: false }
-}
-
-function getTransferRow(
-  txId: string,
-  db: Db,
-): {
-  id: string
-  fromTransactionId: string
-  toTransactionId: string
-  fromAccountId: string
-  toAccountId: string
-  conversionRate: number
-} | null {
-  return (
-    db
-      .select()
-      .from(transfers)
-      .where(
-        or(
-          eq(transfers.fromTransactionId, txId),
-          eq(transfers.toTransactionId, txId),
-        ),
-      )
-      .get() ?? null
-  )
-}
-
-function getTransferLegs(txId: string, db: Db): RowTransaction[] {
-  const tx = db
-    .select(txSelection)
-    .from(transactions)
-    .where(eq(transactions.id, txId))
-    .get()
-  if (!tx) return []
-
-  const legs: RowTransaction[] = [tx]
-  const partner = getPartnerTxId(txId, db)
-  if (!partner) return legs
-
-  const paired = db
-    .select(txSelection)
-    .from(transactions)
-    .where(eq(transactions.id, partner.partnerId))
-    .get()
-  if (paired) legs.push(paired)
-  return legs
 }
 
 function deleteTransferById(txId: string, db: Db): void {
@@ -287,43 +179,6 @@ function restoreTransferById(txId: string, db: Db): void {
         .run()
     }
   }
-}
-
-function destroyTransferById(txId: string, db: Db, files?: Set<string>): void {
-  const legs = getTransferLegs(txId, db)
-
-  for (const leg of legs) {
-    if (!leg.is_deleted && !leg.is_pending) {
-      const delta = getBalanceDelta(
-        leg.amount,
-        leg.type as TransactionType,
-        leg.subtype,
-      )
-      db.update(accounts)
-        .set({
-          balance: drizzleSql`${accounts.balance} - ${delta}`,
-          updatedAt: new Date().toISOString(),
-        })
-        .where(eq(accounts.id, leg.account_id))
-        .run()
-    }
-  }
-
-  for (const leg of legs) {
-    for (const f of attachmentFilesFromExtra(leg.extra)) files?.add(f)
-    db.delete(transactionTags)
-      .where(eq(transactionTags.transactionId, leg.id))
-      .run()
-    db.delete(transactions).where(eq(transactions.id, leg.id)).run()
-  }
-  db.delete(transfers)
-    .where(
-      or(
-        eq(transfers.fromTransactionId, txId),
-        eq(transfers.toTransactionId, txId),
-      ),
-    )
-    .run()
 }
 
 // ── Create ───────────────────────────────────────────────────────────────────
@@ -610,7 +465,7 @@ export async function updateTransaction(
   )
 }
 
-function updateTransactionInTx(
+export function updateTransactionInTx(
   db: DbTransaction,
   id: string,
   data: Partial<TransactionFormValues>,
@@ -1056,7 +911,7 @@ export async function deleteTransaction(id: string): Promise<void> {
   )
 }
 
-function deleteTransactionInTx(db: DbTransaction, id: string): void {
+export function deleteTransactionInTx(db: DbTransaction, id: string): void {
   const now = new Date().toISOString()
 
   const tx = requireTx(db, id)
@@ -1177,86 +1032,6 @@ export async function restoreTransaction(id: string): Promise<void> {
         .run()
     }
   })
-}
-
-// ── Permanent Destroy ─────────────────────────────────────────────────────────
-
-/**
- * Run a permanent delete and, once it has committed, remove the attachment
- * files of every row it destroyed. Deleting before the commit would lose files
- * a rolled-back delete still references. The set de-duplicates a retried run.
- */
-async function destroyingTransactions(
-  name: string,
-  fn: (db: DbTransaction, files: Set<string>) => void,
-): Promise<void> {
-  const files = new Set<string>()
-  await runInTransaction(name, (db) => fn(db, files))
-  await deleteAttachmentFiles(files)
-}
-
-export async function destroyTransaction(id: string): Promise<void> {
-  await destroyingTransactions("transaction.destroy", (db, files) =>
-    destroyTransactionInTx(db, id, files),
-  )
-}
-
-function destroyTransactionInTx(
-  db: DbTransaction,
-  id: string,
-  files: Set<string>,
-): void {
-  const now = new Date().toISOString()
-
-  const tx = requireTx(db, id)
-
-  const transferPartner = db
-    .select({ id: transfers.id })
-    .from(transfers)
-    .where(
-      or(
-        eq(transfers.fromTransactionId, id),
-        eq(transfers.toTransactionId, id),
-      ),
-    )
-    .get()
-  if (transferPartner) {
-    destroyTransferById(tx.id, db, files)
-    return
-  }
-
-  if (!tx.is_deleted) {
-    if (!tx.is_pending) {
-      const delta = getBalanceDelta(
-        tx.amount,
-        tx.type as TransactionType,
-        tx.subtype,
-      )
-      db.update(accounts)
-        .set({
-          balance: drizzleSql`${accounts.balance} - ${delta}`,
-          updatedAt: now,
-        })
-        .where(eq(accounts.id, tx.account_id))
-        .run()
-    }
-  }
-
-  db.delete(transactionTags).where(eq(transactionTags.transactionId, id)).run()
-
-  if (tx.type === "transfer") {
-    db.delete(transfers)
-      .where(
-        or(
-          eq(transfers.fromTransactionId, id),
-          eq(transfers.toTransactionId, id),
-        ),
-      )
-      .run()
-  }
-
-  for (const f of attachmentFilesFromExtra(tx.extra)) files.add(f)
-  db.delete(transactions).where(eq(transactions.id, id)).run()
 }
 
 // ── Confirm / Hold ────────────────────────────────────────────────────────────
@@ -1407,255 +1182,6 @@ function confirmTransactionInTx(
         })
         .where(eq(transactions.id, leg.id))
         .run()
-    }
-  }
-}
-
-// ── Recurring scope helpers ───────────────────────────────────────────────────
-
-/** Live (non-deleted) transactions of a recurring rule, optionally from a date / pending only. */
-function getRuleInstanceIds(
-  ruleId: string,
-  opts: { fromDate?: Date; pendingOnly?: boolean } = {},
-): string[] {
-  return drizzleDb
-    .select({ id: transactions.id })
-    .from(transactions)
-    .where(
-      and(
-        eq(transactions.recurringId, ruleId),
-        opts.fromDate
-          ? gte(transactions.transactionDate, opts.fromDate.toISOString())
-          : undefined,
-        opts.pendingOnly ? eq(transactions.isPending, 1) : undefined,
-        eq(transactions.isDeleted, 0),
-      ),
-    )
-    .all()
-    .map((row) => row.id)
-}
-
-/**
- * `keepPaid` spares confirmed instances: they are history the user already
- * lived, and deleting the schedule must not rewrite balances. `alsoId` is the
- * row the user explicitly deleted, which goes even when it is paid.
- */
-export interface DeleteInstancesOptions {
-  keepPaid?: boolean
-  alsoId?: string
-}
-
-function pickInstanceIds(
-  ruleId: string,
-  { keepPaid = false, alsoId }: DeleteInstancesOptions,
-  fromDate?: Date,
-): string[] {
-  const ids = getRuleInstanceIds(ruleId, { fromDate, pendingOnly: keepPaid })
-  if (keepPaid && alsoId && !ids.includes(alsoId)) ids.push(alsoId)
-  return ids
-}
-
-export async function deleteAllRecurringInstances(
-  ruleId: string,
-  opts: DeleteInstancesOptions = {},
-): Promise<void> {
-  const ids = pickInstanceIds(ruleId, opts)
-  await runInTransaction("recurring.deleteAll", (db) => {
-    for (const id of ids) deleteTransactionInTx(db, id)
-  })
-}
-
-export async function deleteFutureRecurringInstances(
-  ruleId: string,
-  fromDate: Date,
-  opts: DeleteInstancesOptions = {},
-): Promise<void> {
-  const ids = pickInstanceIds(ruleId, opts, fromDate)
-  await runInTransaction("recurring.deleteFuture", (db) => {
-    for (const id of ids) deleteTransactionInTx(db, id)
-  })
-}
-
-export async function detachFromRule(id: string): Promise<void> {
-  const now = new Date().toISOString()
-  await runInTransaction("transaction.detach", (db) => {
-    // A transfer is two rows under one rule; detaching one leg would leave the
-    // other for a later "delete this and future" to remove on its own.
-    const ids = [id]
-    const partner = getPartnerTxId(id, db)
-    if (partner) ids.push(partner.partnerId)
-    // Older screens read `extra.recurringId`, so drop the copy kept there too.
-    for (const row of db
-      .select({ id: transactions.id, extra: transactions.extra })
-      .from(transactions)
-      .where(inArray(transactions.id, ids))
-      .all()) {
-      db.update(transactions)
-        .set({
-          recurringId: null,
-          extra: withoutRuleKeys(row.extra),
-          updatedAt: now,
-        })
-        .where(eq(transactions.id, row.id))
-        .run()
-    }
-  })
-}
-
-function withoutRuleKeys(extra: string | null): string | null {
-  if (!extra) return extra
-  try {
-    const parsed: unknown = JSON.parse(extra)
-    if (typeof parsed !== "object" || parsed === null) return extra
-    const {
-      recurringId: _id,
-      recurringInitialDate: _date,
-      ...rest
-    } = parsed as Record<string, unknown>
-    return Object.keys(rest).length > 0 ? JSON.stringify(rest) : null
-  } catch {
-    return extra
-  }
-}
-
-/**
- * Apply the edited fields to every pending instance of a rule from `fromDate`
- * on. Each instance keeps its own date; `dateShiftMs` moves all of them by the
- * same amount when the user changed the edited instance's date.
- *
- * Instances stay pending: `isPending` belongs to the edited instance, and
- * copying it would confirm future instances early. The manual-confirmation
- * flag is copied only when `applyManualConfirmation` is set.
- */
-export async function updateFutureRecurringInstances(
-  ruleId: string,
-  fromDate: Date,
-  payload: Omit<RecurringEditPayload, "transactionDate" | "isPending">,
-  { dateShiftMs = 0, applyManualConfirmation = false } = {},
-): Promise<void> {
-  const rows = drizzleDb
-    .select({
-      id: transactions.id,
-      transactionDate: transactions.transactionDate,
-    })
-    .from(transactions)
-    .where(
-      and(
-        eq(transactions.recurringId, ruleId),
-        gte(transactions.transactionDate, fromDate.toISOString()),
-        eq(transactions.isPending, 1),
-        eq(transactions.isDeleted, 0),
-      ),
-    )
-    .all()
-  if (payload.amount !== undefined) assertMinorUnits(payload.amount)
-  await runInTransaction("recurring.updateFuture", (db) => {
-    for (const { id, transactionDate } of rows) {
-      updateTransactionInTx(db, id, {
-        amount: payload.amount,
-        type: payload.type,
-        transactionDate:
-          dateShiftMs === 0
-            ? undefined
-            : new Date(new Date(transactionDate).getTime() + dateShiftMs),
-        categoryId: payload.categoryId,
-        accountId: payload.accountId,
-        title: payload.title,
-        description: payload.description,
-        requiresManualConfirmation: applyManualConfirmation
-          ? payload.requiresManualConfirmation
-          : undefined,
-        tags: payload.tags,
-        // Attachment URIs point at one file; sharing them would let deleting
-        // one instance's attachment delete the file for every instance.
-        extra: withoutAttachments(payload.extra),
-        subtype: payload.subtype,
-      })
-    }
-  })
-}
-
-function withoutAttachments(
-  extra: RecurringEditPayload["extra"],
-): RecurringEditPayload["extra"] {
-  if (!extra || !("attachments" in extra)) return extra
-  const { attachments: _attachments, ...rest } = extra
-  return rest
-}
-
-// ── Trash helpers ─────────────────────────────────────────────────────────────
-
-/**
- * Destroying one leg of a transfer hard-deletes both, so in a batch the second
- * leg's id may already be gone. Skip it instead of failing the whole batch.
- */
-function destroyTransactionIfPresent(
-  db: DbTransaction,
-  id: string,
-  files: Set<string>,
-): void {
-  const exists = db
-    .select({ id: transactions.id })
-    .from(transactions)
-    .where(eq(transactions.id, id))
-    .get()
-  if (exists) destroyTransactionInTx(db, id, files)
-}
-
-export async function destroyAllDeletedTransactions(): Promise<void> {
-  // Select inside the write transaction: a restore queued after the read would
-  // otherwise be hard-deleted.
-  await destroyingTransactions("trash.destroyAll", (db, files) => {
-    const deleted = db
-      .select(txSelection)
-      .from(transactions)
-      .where(eq(transactions.isDeleted, 1))
-      .all()
-    for (const tx of deleted) destroyTransactionIfPresent(db, tx.id, files)
-  })
-}
-
-export async function autoPurgeTrash(retentionValue: string): Promise<void> {
-  const days = getTrashRetentionDays(retentionValue)
-  if (days === null) return
-
-  const cutoff = startOfDay(subDays(new Date(), days)).toISOString()
-
-  let toPurge: RowTransaction[] = []
-
-  try {
-    await destroyingTransactions("trash.autoPurge", (db, files) => {
-      // Read inside the transaction so a concurrent restore is not purged.
-      toPurge = db
-        .select(txSelection)
-        .from(transactions)
-        .where(
-          and(
-            eq(transactions.isDeleted, 1),
-            lt(transactions.deletedAt, cutoff),
-          ),
-        )
-        .all()
-      for (const tx of toPurge) destroyTransactionIfPresent(db, tx.id, files)
-    })
-    return
-  } catch (err) {
-    logger.error("[autoPurgeTrash] batch failed, retrying row by row", {
-      error: err instanceof Error ? err.message : String(err),
-    })
-  }
-
-  // One bad row rolled the batch back; isolate it so the rest still purge.
-  for (const tx of toPurge) {
-    try {
-      await destroyingTransactions("trash.autoPurgeRow", (db, files) =>
-        destroyTransactionIfPresent(db, tx.id, files),
-      )
-    } catch (err) {
-      logger.error("[autoPurgeTrash] failed to destroy transaction", {
-        id: tx.id,
-        error: err instanceof Error ? err.message : String(err),
-      })
     }
   }
 }

@@ -16,11 +16,11 @@ import {
   transactions,
   transfers,
 } from "~/database/drizzle/schema"
+import { createTransfer } from "~/database/services/ledger-service"
 import {
-  createTransfer,
   deleteFutureRecurringInstances,
   detachFromRule,
-} from "~/database/services/ledger-service"
+} from "~/database/services/recurring-instance-service"
 
 const now = "2026-01-01T00:00:00.000Z"
 
