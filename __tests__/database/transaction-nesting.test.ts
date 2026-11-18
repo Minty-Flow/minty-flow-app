@@ -9,7 +9,7 @@ vi.mock("~/database/drizzle/db", async () => {
 import { onWriteCommitted } from "~/database/commit-events"
 import { drizzleDb } from "~/database/drizzle/db"
 import { accounts } from "~/database/drizzle/schema"
-import { runInTransaction } from "~/database/transaction"
+import { runInAsyncTransaction, runInTransaction } from "~/database/transaction"
 
 const now = "2026-01-01T00:00:00.000Z"
 
@@ -67,5 +67,31 @@ describe("nested runInTransaction", () => {
     off()
 
     expect(seen).toEqual(["outer.name"])
+  })
+})
+
+describe("runInAsyncTransaction", () => {
+  it("keeps later writes transactional after a failed BEGIN", async () => {
+    const run = vi.spyOn(drizzleDb, "run")
+    run.mockImplementationOnce(() => {
+      throw new Error("begin failed")
+    })
+    await expect(
+      runInAsyncTransaction("begin.fails", async () => undefined),
+    ).rejects.toThrow("begin failed")
+    run.mockRestore()
+
+    // A leaked txDepth would run this unwrapped, so the write would survive the throw.
+    await expect(
+      runInTransaction("after.failed.begin", (db) => {
+        db.update(accounts)
+          .set({ balance: 99 })
+          .where(eq(accounts.id, "nested-acc"))
+          .run()
+        throw new Error("rollback me")
+      }),
+    ).rejects.toThrow("rollback me")
+
+    expect(balanceOf()).not.toBe(99)
   })
 })
