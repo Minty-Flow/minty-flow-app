@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react"
 
-import { autoPurgeTrash } from "~/database/services/ledger-service"
+import { autoPurgeTrash } from "~/database/services/trash-service"
 import { useTrashBinStore } from "~/stores/trash-bin.store"
 import { logger } from "~/utils/logger"
 

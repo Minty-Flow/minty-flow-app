@@ -1,6 +1,6 @@
 # Project Structure
 
-Generated on: 2026-11-18T11:15:45.191Z
+Generated on: 2026-11-18T11:16:41.408Z
 
 ```
 ./
@@ -608,7 +608,8 @@ Generated on: 2026-11-18T11:15:45.191Z
 │   │   │   ├── loan-service.ts
 │   │   │   ├── recurring-instance-service.ts
 │   │   │   ├── recurring-transaction-service.ts
-│   │   │   └── tag-service.ts
+│   │   │   ├── tag-service.ts
+│   │   │   └── trash-service.ts
 │   │   ├── types/
 │   │   │   └── rows.ts
 │   │   ├── utils/

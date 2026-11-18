@@ -20,11 +20,11 @@ import {
   useDeletedTransactionCount,
   useTransactions,
 } from "~/database/drizzle/read-models/transaction-read-model"
+import { restoreTransaction } from "~/database/services/ledger-service"
 import {
   destroyAllDeletedTransactions,
   destroyTransaction,
-  restoreTransaction,
-} from "~/database/services/ledger-service"
+} from "~/database/services/trash-service"
 import {
   useSelectedMonth,
   useSingleOpenSwipeable,

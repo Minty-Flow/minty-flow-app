@@ -13,10 +13,10 @@ import { TRASH_RETENTION_CHOICES } from "~/constants/trash-retention"
 import { drizzleDb } from "~/database/drizzle/db"
 import { accounts, transactions } from "~/database/drizzle/schema"
 import {
-  autoPurgeTrash,
   createTransaction,
   deleteTransaction,
 } from "~/database/services/ledger-service"
+import { autoPurgeTrash } from "~/database/services/trash-service"
 
 const now = "2026-01-01T00:00:00.000Z"
 
