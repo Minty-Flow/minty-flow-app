@@ -98,13 +98,16 @@ export const useBillSplitterStore = create<BillSplitterState>()(
           participants: state.participants.filter((p) => p.id !== id),
           items: state.items.map((item) => {
             const newSplits = item.splits.filter((s) => s.participantId !== id)
+            // An item paid by the removed person falls back to the bill payer.
+            const payerId = item.payerId === id ? undefined : item.payerId
             if (item.splitEvenly) {
               return {
                 ...item,
+                payerId,
                 splits: redistributeEvenly(newSplits),
               }
             }
-            return { ...item, splits: newSplits }
+            return { ...item, payerId, splits: newSplits }
           }),
           payerId: state.payerId === id ? null : state.payerId,
           selfId: state.selfId === id ? null : state.selfId,
@@ -306,59 +309,68 @@ export function getDefaultSplits(
 export type SettlementAction = {
   participantId: string
   amount: number
-} /** The user paid: this participant owes the user their share. */ & (
+} /** This participant owes the user, net across all items. */ & (
   | { kind: "lent"; name: string }
-  /** The user paid: their own share is an expense. */
+  /** The user's own share of every item, whoever paid it: an expense. */
   | { kind: "share" }
-  /** Someone else paid: the user owes the payer (keyed on the payer). */
-  | { kind: "borrowed"; payerName: string }
+  /** The user owes this participant, net across all items. */
+  | { kind: "borrowed"; name: string }
 )
 
 /**
  * What the user records for a split bill, one action per participant at most.
- * The user's own share is always an expense, so the meal shows up as spending.
- * The user paid: plus a lent loan per debtor; together they equal the bill
- * total. Someone else paid: plus one borrowed loan to the payer, whose income
- * entry cancels the expense until the user pays them back. The other
- * participants' debts do not involve the user.
+ *
+ * Each item is paid by its own payer, or the bill payer (`defaultPayerId`).
+ * The user's share of every item is one expense, so everything they consumed
+ * counts as spending. Against each other participant the user's position is
+ * netted: what they owe the user for items the user paid, minus what the user
+ * owes them for items they paid. Positive is a lent loan, negative a borrowed
+ * loan, zero records nothing. Debts between other participants do not involve
+ * the user and are left out.
+ *
+ * Invariant: share + lent - borrowed equals what the user paid, so the net
+ * change to the account matches reality (lent opening entries are expenses,
+ * borrowed ones income).
+ *
+ * Empty until the user is chosen and every item has a payer.
  */
 export function getSettlementPlan(
-  summary: BillSummaryEntry[],
+  items: BillItem[],
+  participants: Participant[],
   selfId: string | null,
-  payerId: string | null,
+  defaultPayerId: string | null,
 ): SettlementAction[] {
-  if (!selfId || !payerId) return []
-  if (selfId !== payerId) {
-    const self = summary.find((s) => s.participantId === selfId)
-    const payer = summary.find((s) => s.participantId === payerId)
-    if (!self || !payer || self.owedAmount <= 0) return []
-    return [
-      { kind: "share", participantId: selfId, amount: self.owedAmount },
-      {
-        kind: "borrowed",
-        participantId: payerId,
-        amount: self.owedAmount,
-        payerName: payer.name,
-      },
-    ]
+  if (!selfId) return []
+  const known = new Set(participants.map((p) => p.id))
+  let share = 0
+  const net = new Map<string, number>()
+  for (const item of items) {
+    const payer = item.payerId ?? defaultPayerId
+    if (!payer || !known.has(payer)) return []
+    const allocations = getItemAllocations(item)
+    share += allocations.get(selfId) ?? 0
+    if (payer === selfId) {
+      for (const [id, amount] of allocations) {
+        if (id !== selfId) net.set(id, (net.get(id) ?? 0) + amount)
+      }
+    } else {
+      net.set(payer, (net.get(payer) ?? 0) - (allocations.get(selfId) ?? 0))
+    }
   }
-  return summary.flatMap((s): SettlementAction[] => {
-    if (s.owedAmount <= 0) return []
-    return s.participantId === selfId
-      ? [
-          {
-            kind: "share",
-            participantId: s.participantId,
-            amount: s.owedAmount,
-          },
-        ]
-      : [
-          {
-            kind: "lent",
-            participantId: s.participantId,
-            amount: s.owedAmount,
-            name: s.name,
-          },
-        ]
-  })
+  const plan: SettlementAction[] = []
+  if (share > 0)
+    plan.push({ kind: "share", participantId: selfId, amount: share })
+  for (const p of participants) {
+    const amount = net.get(p.id) ?? 0
+    if (amount > 0)
+      plan.push({ kind: "lent", participantId: p.id, amount, name: p.name })
+    else if (amount < 0)
+      plan.push({
+        kind: "borrowed",
+        participantId: p.id,
+        amount: -amount,
+        name: p.name,
+      })
+  }
+  return plan
 }

@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { TextInput } from "react-native"
+import { ScrollView, TextInput } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
@@ -59,6 +59,17 @@ export default function AddItemScreen() {
   const isEditMode = !!editItem
   // The item added before this one (excluding itself when editing).
   const previousItem = items.filter((i) => i.id !== params.itemId).at(-1)
+  const billPayerId = useBillSplitterStore((s) => s.payerId)
+  // Who paid this item; undefined means the bill payer. A new item reuses the
+  // previous item's payer, since receipts paid by one person come in runs.
+  const [itemPayerId, setItemPayerId] = useState<string | undefined>(
+    () => editItem?.payerId ?? previousItem?.payerId,
+  )
+  const effectivePayerId = itemPayerId ?? billPayerId
+  const effectivePayerName = participants.find(
+    (p) => p.id === effectivePayerId,
+  )?.name
+  const [payerExpanded, setPayerExpanded] = useState(false)
   const [name, setName] = useState(editItem?.name ?? "")
   const [price, setPrice] = useState(editItem?.price ?? 0)
   const [quantity, setQuantity] = useState(editItem?.quantity ?? 1)
@@ -187,6 +198,7 @@ export default function AddItemScreen() {
         }))
       : effectiveSplits
     const itemData = {
+      payerId: itemPayerId,
       name,
       price,
       quantity: quantityNum,
@@ -308,6 +320,59 @@ export default function AddItemScreen() {
             />
           </View>
         )}
+
+        {/* Paid by — collapsed by default, like the multiplier */}
+        <Pressable
+          style={styles.multiplierTrigger}
+          onPress={() => setPayerExpanded((v) => !v)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: payerExpanded }}
+        >
+          <View style={styles.switchLeft}>
+            <IconSvg
+              name="wallet-outline"
+              size={20}
+              color={
+                payerExpanded ? theme.colors.primary : theme.colors.onSecondary
+              }
+            />
+            <View>
+              <Text style={styles.multiplierLabel}>
+                {t("screens.settings.billSplitter.item.paidBy")}
+              </Text>
+              <Text style={styles.multiplierHint}>
+                {effectivePayerName ??
+                  t("screens.settings.billSplitter.item.paidByUnset")}
+              </Text>
+            </View>
+          </View>
+          <IconSvg
+            name={payerExpanded ? "chevron-up-outline" : "chevron-down-outline"}
+            size={18}
+            color={theme.colors.onSecondary}
+          />
+        </Pressable>
+        {payerExpanded ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.payerChips}
+          >
+            {participants.map((p) => (
+              <Chip
+                key={p.id}
+                label={p.name}
+                hideCheck
+                selected={p.id === effectivePayerId}
+                onPress={() =>
+                  // Matching the bill payer stores nothing, so the item keeps
+                  // following the bill payer if it changes.
+                  setItemPayerId(p.id === billPayerId ? undefined : p.id)
+                }
+              />
+            ))}
+          </ScrollView>
+        ) : null}
 
         {/* Split Evenly toggle — switchRow pattern from budget-modify */}
         <ListItem
@@ -581,6 +646,10 @@ const styles = StyleSheet.create((theme) => ({
   quickSelectRow: {
     flexDirection: "row",
     flexWrap: "wrap",
+    gap: 8,
+  },
+  payerChips: {
+    flexDirection: "row",
     gap: 8,
   },
   participantsList: {

@@ -37,6 +37,7 @@ export default function BillSplitterScreen() {
   const participants = useBillSplitterStore((s) => s.participants)
   const items = useBillSplitterStore((s) => s.items)
   const accountId = useBillSplitterStore((s) => s.accountId)
+  const payerId = useBillSplitterStore((s) => s.payerId)
   const setAccountId = useBillSplitterStore((s) => s.setAccountId)
   const removeItem = useBillSplitterStore((s) => s.removeItem)
   const addItem = useBillSplitterStore((s) => s.addItem)
@@ -98,6 +99,7 @@ export default function BillSplitterScreen() {
     <BillItemCard
       item={item}
       participants={participants}
+      billPayerId={payerId}
       currency={currency}
       onDelete={() => {
         const { id: _id, ...removed } = item
