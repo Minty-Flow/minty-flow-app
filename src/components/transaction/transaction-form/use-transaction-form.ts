@@ -32,6 +32,7 @@ import {
   transactionSchema,
 } from "~/schemas/transactions.schema"
 import { currencyRegistryService } from "~/services/currency-registry"
+import { useBillSplitterStore } from "~/stores/bill-splitter.store"
 import { useTransactionLocationStore } from "~/stores/transaction-location.store"
 import { NewEnum } from "~/types/new"
 import {
@@ -83,8 +84,10 @@ export function useTransactionForm({
   const router = useRouter()
   const navigation = useNavigation()
   const { t } = useTranslation()
-  const { id } = useLocalSearchParams<{
+  const { id, billParticipantId } = useLocalSearchParams<{
     id: string
+    /** Set when the bill splitter opened this form for a participant. */
+    billParticipantId?: string
   }>()
   const isNew = id === NewEnum.NEW
   const locationEnabled = useTransactionLocationStore((s) => s.isEnabled)
@@ -689,6 +692,8 @@ export function useTransactionForm({
         })
       }
       flushRemovedAttachments()
+      if (isNew && billParticipantId)
+        useBillSplitterStore.getState().markRecorded(billParticipantId)
       allowNavigation()
       router.back()
     } catch (error) {

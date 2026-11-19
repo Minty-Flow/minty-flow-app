@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useNavigation, useRouter } from "expo-router"
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
 import { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
@@ -38,6 +38,7 @@ import {
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import type { TranslationKey } from "~/i18n/config"
 import { type AddLoanFormSchema, addLoanSchema } from "~/schemas/loans.schema"
+import { useBillSplitterStore } from "~/stores/bill-splitter.store"
 import { getThemeStrict } from "~/styles/theme/registry"
 import { type LoanType, LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
@@ -138,6 +139,10 @@ export function LoanModifyContent({
     }
   }
   const navigation = useNavigation()
+  // Set when the bill splitter opened this form for a participant.
+  const { billParticipantId } = useLocalSearchParams<{
+    billParticipantId?: string
+  }>()
   const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
     navigation,
@@ -165,6 +170,8 @@ export function LoanModifyContent({
             { name: trimmedName },
           ),
         })
+        if (billParticipantId)
+          useBillSplitterStore.getState().markRecorded(billParticipantId)
         allowNavigation()
         handleGoBack()
       } else {
