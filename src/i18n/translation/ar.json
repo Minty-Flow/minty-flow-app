@@ -913,7 +913,7 @@
           "clearBill": "مسح",
           "summary": "الملخص",
           "addItem": "إضافة عنصر",
-          "generateLoans": "إنشاء القرض التالي"
+          "generateLoans": "سجّل التالي"
         },
         "items": {
           "empty": {
@@ -953,12 +953,15 @@
           "owedToYou": "حصتك",
           "selectAccount": "اختر حساباً",
           "noAccount": "يرجى اختيار حساب أولاً.",
-          "noPayer": "يرجى تحديد من أنت أولاً.",
           "noItems": "أضف عناصر ومشاركين لعرض الملخص.",
           "loanDescription": "تقسيم فاتورة",
           "whoAreYou": {
             "title": "من أنت؟"
-          }
+          },
+          "whoPaid": "من دفع؟",
+          "recordShare": "سجّل حصتي",
+          "youOwe": "عليك حصتك لهذا الشخص",
+          "owesYou": "مدين لك"
         },
         "clear": {
           "confirm": {

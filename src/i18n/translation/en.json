@@ -873,7 +873,7 @@
           "clearBill": "Clear",
           "summary": "Summary",
           "addItem": "Add Item",
-          "generateLoans": "Generate Next Loan"
+          "generateLoans": "Record Next"
         },
         "items": {
           "empty": {
@@ -909,12 +909,15 @@
           "owedToYou": "Your share",
           "selectAccount": "Select an account",
           "noAccount": "Please select an account first.",
-          "noPayer": "Please select who you are first.",
           "noItems": "Add items and participants to see the summary.",
           "loanDescription": "Bill split",
           "whoAreYou": {
             "title": "Who Are You?"
-          }
+          },
+          "whoPaid": "Who Paid?",
+          "recordShare": "Record my share",
+          "youOwe": "You owe them your share",
+          "owesYou": "Owes you"
         },
         "clear": {
           "confirm": {

@@ -153,6 +153,8 @@ export default function TransactionScreen() {
     accountId: prefillAccountId,
     categoryId: prefillCategoryId,
     loanId: prefillLoanId,
+    amount: amountParam,
+    title: prefillTitle,
     kind: kindParam,
   } = useLocalSearchParams<{
     id: string
@@ -160,18 +162,32 @@ export default function TransactionScreen() {
     accountId?: string
     categoryId?: string
     loanId?: string
+    /** Minor units. */
+    amount?: string
+    title?: string
     kind?: string
   }>()
   const isNew = id === NewEnum.NEW
   const initialType = parseTransactionType(typeParam)
   const initialKind = parseTransactionKind(kindParam)
 
+  const prefillAmount = Number(amountParam)
+  const hasPrefillAmount =
+    Number.isSafeInteger(prefillAmount) && prefillAmount > 0
+
   const prefill: Partial<TransactionFormValues> | undefined =
-    isNew && (prefillAccountId || prefillCategoryId || prefillLoanId)
+    isNew &&
+    (prefillAccountId ||
+      prefillCategoryId ||
+      prefillLoanId ||
+      hasPrefillAmount ||
+      prefillTitle)
       ? {
           ...(prefillAccountId ? { accountId: prefillAccountId } : {}),
           ...(prefillCategoryId ? { categoryId: prefillCategoryId } : {}),
           ...(prefillLoanId ? { loanId: prefillLoanId } : {}),
+          ...(hasPrefillAmount ? { amount: prefillAmount } : {}),
+          ...(prefillTitle ? { title: prefillTitle } : {}),
         }
       : undefined
 
