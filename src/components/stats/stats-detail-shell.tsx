@@ -77,7 +77,7 @@ function toDate(value: string | undefined): Date | undefined {
  * unparseable date yields NaN fields. Falling back to `undefined` lets
  * `buildInitialState` default to `thisMonth`.
  */
-function useStatsInitFromParams(): UseStatsInit {
+export function useStatsInitFromParams(): UseStatsInit {
   const params = useLocalSearchParams<{
     currency?: string
     preset?: string
@@ -234,7 +234,7 @@ const styles = StyleSheet.create((theme) => ({
     height: 40,
   },
   bottomSpacerDashboard: {
-    height: 100,
+    height: 140,
   },
   loading: {
     alignItems: "center",

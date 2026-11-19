@@ -213,6 +213,14 @@ function AppRootLayout() {
                   name="stats/calendar"
                   options={{ title: t("screens.stats.calendar.title") }}
                 />
+                <Stack.Screen
+                  name="stats/recurring"
+                  options={{ title: t("screens.stats.recurring.title") }}
+                />
+                <Stack.Screen
+                  name="stats/spending-map"
+                  options={{ title: t("screens.stats.spendingMap.title") }}
+                />
 
                 {/* settings screens */}
                 <Stack.Screen

@@ -29,6 +29,7 @@
 │   │   │   └── read-models/
 │   │   │       ├── recent-items.test.ts
 │   │   │       ├── stats-data.test.ts
+│   │   │       ├── stats-extras-data.test.ts
 │   │   │       └── trash-by-deletion-date.test.ts
 │   │   ├── migrations/
 │   │   │   └── rescale-low-price-crypto.test.ts
@@ -255,6 +256,8 @@
 │   │   │   ├── index.tsx
 │   │   │   ├── insights.tsx
 │   │   │   ├── net-worth.tsx
+│   │   │   ├── recurring.tsx
+│   │   │   ├── spending-map.tsx
 │   │   │   └── wrapped.tsx
 │   │   ├── transaction/
 │   │   │   └── [id].tsx
@@ -389,6 +392,8 @@
 │   │   │   │   ├── insights-section.tsx
 │   │   │   │   ├── net-worth-card.tsx
 │   │   │   │   ├── pace-card.tsx
+│   │   │   │   ├── recurring-card.tsx
+│   │   │   │   ├── spending-map-card.tsx
 │   │   │   │   ├── stat-card.tsx
 │   │   │   │   ├── top-categories-card.tsx
 │   │   │   │   └── wrapped-card.tsx
@@ -400,6 +405,7 @@
 │   │   │   ├── rhythm-insight-card.tsx
 │   │   │   ├── sankey-flow.tsx
 │   │   │   ├── spending-heatmap.tsx
+│   │   │   ├── spending-map.tsx
 │   │   │   ├── stats-category-pie.tsx
 │   │   │   ├── stats-currency-toggle.tsx
 │   │   │   ├── stats-detail-shell.tsx
@@ -560,6 +566,7 @@
 │   ├── constants/
 │   │   ├── app-data.ts
 │   │   ├── fab-button.ts
+│   │   ├── maplibre.ts
 │   │   ├── minty-icons-selection.ts
 │   │   ├── notification-channels.ts
 │   │   ├── pre-sets-accounts.ts
@@ -584,6 +591,7 @@
 │   │   │   │   ├── loan-read-model.ts
 │   │   │   │   ├── progress-read-model.ts
 │   │   │   │   ├── stats-data.ts
+│   │   │   │   ├── stats-extras-data.ts
 │   │   │   │   ├── stats-read-model.ts
 │   │   │   │   ├── tag-read-model.ts
 │   │   │   │   ├── transaction-item-read-model.ts

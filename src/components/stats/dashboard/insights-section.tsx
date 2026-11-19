@@ -4,7 +4,8 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { CalendarCard } from "~/components/stats/dashboard/calendar-card"
 import { NetWorthCard } from "~/components/stats/dashboard/net-worth-card"
-import { StatCard } from "~/components/stats/dashboard/stat-card"
+import { RecurringCard } from "~/components/stats/dashboard/recurring-card"
+import { SpendingMapCard } from "~/components/stats/dashboard/spending-map-card"
 import { WrappedCard } from "~/components/stats/dashboard/wrapped-card"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -20,6 +21,8 @@ export type StatsInsightsRoute =
   | "/stats/wrapped"
   | "/stats/net-worth"
   | "/stats/calendar"
+  | "/stats/recurring"
+  | "/stats/spending-map"
 
 interface StatsInsightsSectionProps {
   stats: CurrencyStats
@@ -73,17 +76,17 @@ export function StatsInsightsSection({
           currency={stats.currency}
           onPress={() => onNavigate("/stats/calendar")}
         />
-        <StatCard
-          title={t("screens.stats.dashboard.recurring")}
-          icon="repeat-outline"
-          soon
+        <RecurringCard
+          dateRange={dateRange}
+          currency={stats.currency}
+          onPress={() => onNavigate("/stats/recurring")}
         />
       </View>
 
-      <StatCard
-        title={t("screens.stats.dashboard.spendingMap")}
-        icon="map-outline"
-        soon
+      <SpendingMapCard
+        dateRange={dateRange}
+        currency={stats.currency}
+        onPress={() => onNavigate("/stats/spending-map")}
       />
     </>
   )

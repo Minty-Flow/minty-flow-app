@@ -96,7 +96,7 @@ function isRealIncome(row: {
  * Normal expenses contribute a positive amount.
  * Non-real-expense rows return 0.
  */
-function expenseContribution(row: {
+export function expenseContribution(row: {
   type: string
   subtype: string | null
   amount: number
