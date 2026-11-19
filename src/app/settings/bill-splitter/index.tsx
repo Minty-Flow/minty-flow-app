@@ -5,8 +5,8 @@ import { FlatList, View as RNView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
 import { AccountPickerSheet } from "~/components/accounts/account-picker-sheet"
+import { ActionChoiceSheet } from "~/components/action-choice-sheet"
 import { BillItemCard } from "~/components/bill-splitter/bill-item-card"
-import { ConfirmSheet } from "~/components/confirm-sheet"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { InfoSheet } from "~/components/info-sheet"
@@ -295,17 +295,35 @@ export default function BillSplitterScreen() {
         title={t("screens.settings.billSplitter.info.title")}
         description={t("screens.settings.billSplitter.info.description")}
       />
-      <ConfirmSheet
+      <ActionChoiceSheet
         visible={clearVisible}
-        onRequestClose={() => setClearVisible(false)}
-        onConfirm={clearBill}
-        title={t("screens.settings.billSplitter.clear.confirm.title")}
-        description={t(
-          "screens.settings.billSplitter.clear.confirm.description",
-        )}
-        confirmLabel={t("common.actions.clear")}
-        variant="destructive"
+        onClose={() => setClearVisible(false)}
         icon="trash-outline"
+        accentColor={theme.colors.error}
+        title={t("screens.settings.billSplitter.clear.confirm.title")}
+        options={[
+          {
+            key: "items",
+            label: t("screens.settings.billSplitter.clear.items.label"),
+            sublabel: t("screens.settings.billSplitter.clear.items.sublabel"),
+            onPress: () => {
+              setClearVisible(false)
+              clearBill()
+            },
+          },
+          {
+            key: "everything",
+            label: t("screens.settings.billSplitter.clear.everything.label"),
+            sublabel: t(
+              "screens.settings.billSplitter.clear.everything.sublabel",
+            ),
+            destructive: true,
+            onPress: () => {
+              setClearVisible(false)
+              clearBill({ everything: true })
+            },
+          },
+        ]}
       />
     </View>
   )

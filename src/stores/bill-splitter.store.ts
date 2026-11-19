@@ -54,7 +54,11 @@ interface BillSplitterState {
   markRecorded: (participantId: string) => void
   setAccountId: (id: string | null) => void
   setCurrencyCode: (currencyCode: string) => void
-  clearBill: () => void
+  /**
+   * Start a new bill. By default keeps the people (participants, who the user
+   * is, the account); `everything` wipes them too.
+   */
+  clearBill: (options?: { everything?: boolean }) => void
 }
 
 /**
@@ -62,6 +66,16 @@ interface BillSplitterState {
  */
 const generateId = () =>
   Math.random().toString(36).substring(2) + Date.now().toString(36)
+
+const EMPTY_BILL = {
+  participants: [],
+  items: [],
+  payerId: null,
+  selfId: null,
+  recordedIds: [],
+  accountId: null,
+  currencyCode: null,
+}
 
 export const useBillSplitterStore = create<BillSplitterState>()(
   persist(
@@ -148,16 +162,17 @@ export const useBillSplitterStore = create<BillSplitterState>()(
               : state.items,
         })),
 
-      clearBill: () =>
-        set({
-          participants: [],
-          items: [],
-          payerId: null,
-          selfId: null,
-          recordedIds: [],
-          accountId: null,
-          currencyCode: null,
-        }),
+      clearBill: (options) =>
+        set((state) =>
+          options?.everything
+            ? EMPTY_BILL
+            : {
+                items: [],
+                recordedIds: [],
+                // The user usually pays the next bill; they can change it.
+                payerId: state.selfId,
+              },
+        ),
     }),
     {
       name: "bill-splitter-store",
@@ -173,14 +188,7 @@ export const useBillSplitterStore = create<BillSplitterState>()(
           ) as Pick<BillSplitterState, "payerId">
           return { ...draft, selfId: draft.payerId ?? null }
         }
-        return {
-          participants: [],
-          items: [],
-          payerId: null,
-          selfId: null,
-          accountId: null,
-          currencyCode: null,
-        }
+        return EMPTY_BILL
       },
       storage: mmkvJSONStorage(billSplitterStorage),
     },
