@@ -17,10 +17,12 @@ import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-m
 import {
   getBillSummary,
   getBillTotal,
+  getSettlementPlan,
+  type SettlementAction,
   useBillSplitterStore,
 } from "~/stores/bill-splitter.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
-import type { BillSummaryEntry } from "~/types/bill-splitter"
+import type { BillSummaryEntry, Participant } from "~/types/bill-splitter"
 import { LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
 import { Toast } from "~/utils/toast"
@@ -34,68 +36,129 @@ export default function SummaryScreen() {
   const participants = useBillSplitterStore((s) => s.participants)
   const items = useBillSplitterStore((s) => s.items)
   const payerId = useBillSplitterStore((s) => s.payerId)
+  const selfId = useBillSplitterStore((s) => s.selfId)
   const accountId = useBillSplitterStore((s) => s.accountId)
   const setPayerId = useBillSplitterStore((s) => s.setPayerId)
+  const setSelfId = useBillSplitterStore((s) => s.setSelfId)
   const setCurrencyCode = useBillSplitterStore((s) => s.setCurrencyCode)
   useEffect(() => {
     if (!billCurrency) setCurrencyCode(currency)
   }, [billCurrency, currency, setCurrencyCode])
   const summary = getBillSummary(items, participants)
   const totalBill = getBillTotal(items)
-  // Amount the payer themselves owes (their own share of the bill)
-  const payerEntry = summary.find((s) => s.participantId === payerId) ?? null
-  // Debtors whose loan form was already opened, so a re-tap does not queue a
-  // second loan for the same person.
+  // The user's own share of the bill
+  const selfEntry = summary.find((s) => s.participantId === selfId) ?? null
+  const plan = getSettlementPlan(summary, selfId, payerId)
+  const actionFor = (participantId: string) =>
+    plan.find((a) => a.participantId === participantId)
+  // Participants whose form was already opened, so a re-tap does not queue a
+  // second entry for the same person.
   const [doneIds, setDoneIds] = useState<string[]>([])
+  // Picking "who you are" first also fills "who paid" with the same person,
+  // the common case; the user can still change the payer after.
+  const handleSelectSelf = (id: string | null) => {
+    if (!payerId || payerId === selfId) setPayerId(id)
+    setSelfId(id)
+  }
   const accounts = useActiveAccounts()
   // An archived or deleted account would prefill the loan form with a dead id.
   const hasValidAccount = accounts.some((a) => a.id === accountId)
-  const hasPendingDebtor = summary.some(
-    (s) =>
-      s.participantId !== payerId &&
-      s.owedAmount > 0 &&
-      !doneIds.includes(s.participantId),
-  )
-  const handleGenerateLoan = (entry: BillSummaryEntry) => {
+  const nextAction = plan.find((a) => !doneIds.includes(a.participantId))
+  const handleAction = (action: SettlementAction) => {
     if (!accountId || !hasValidAccount) {
       Toast.warn({
         title: t("screens.settings.billSplitter.summary.noAccount"),
       })
       return
     }
-    if (!payerId) {
-      Toast.warn({
-        title: t("screens.settings.billSplitter.summary.noPayer"),
+    setDoneIds((ids) => [...ids, action.participantId])
+    const description = t(
+      "screens.settings.billSplitter.summary.loanDescription",
+    )
+    if (action.kind === "share") {
+      router.push({
+        pathname: "/transaction/[id]",
+        params: {
+          id: NewEnum.NEW,
+          type: "expense",
+          accountId,
+          amount: action.amount.toString(),
+          title: description,
+        },
       })
       return
     }
-    setDoneIds((ids) => [...ids, entry.participantId])
     router.push({
       pathname: "/settings/loans/[loanId]/modify",
       params: {
         loanId: NewEnum.NEW,
-        prefillName: entry.name,
-        prefillDescription: t(
-          "screens.settings.billSplitter.summary.loanDescription",
-        ),
+        prefillName: action.kind === "lent" ? action.name : action.payerName,
+        prefillDescription: description,
         prefillAccountId: accountId,
-        prefillAmount: entry.owedAmount.toString(),
-        prefillLoanType: LoanTypeEnum.LENT,
+        prefillAmount: action.amount.toString(),
+        prefillLoanType:
+          action.kind === "lent" ? LoanTypeEnum.LENT : LoanTypeEnum.BORROWED,
       },
     })
   }
+  const actionHint = (action: SettlementAction) => {
+    if (action.kind === "share")
+      return t("screens.settings.billSplitter.summary.recordShare")
+    if (action.kind === "borrowed")
+      return t("screens.settings.billSplitter.summary.youOwe", {
+        name: action.payerName,
+      })
+    return t("screens.settings.billSplitter.summary.owesYou")
+  }
+  const renderPeopleChips = (
+    selectedId: string | null,
+    onSelect: (id: string | null) => void,
+  ) => (
+    <FlatList
+      horizontal
+      data={participants}
+      keyExtractor={(participant: Participant) => participant.id}
+      renderItem={({ item: participant }) => {
+        const isSelected = participant.id === selectedId
+        return (
+          <Pressable
+            onPress={() => onSelect(isSelected ? null : participant.id)}
+            style={[styles.chip, isSelected && styles.chipSelected]}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: isSelected }}
+          >
+            <Text
+              style={[styles.chipText, isSelected && styles.chipTextSelected]}
+            >
+              {participant.name}
+            </Text>
+          </Pressable>
+        )
+      }}
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.chipsRow}
+    />
+  )
   const renderItem = ({ item }: { item: BillSummaryEntry }) => {
-    const isPayer = item.participantId === payerId
+    const isSelf = item.participantId === selfId
+    const action = actionFor(item.participantId)
     return (
       <Pressable
-        style={[styles.summaryCard, isPayer && styles.summaryCardPayer]}
-        onPress={() => !isPayer && handleGenerateLoan(item)}
-        disabled={isPayer}
+        style={[styles.summaryCard, !action && styles.summaryCardInactive]}
+        onPress={() => action && handleAction(action)}
+        disabled={!action}
       >
-        <Text style={styles.nameText} numberOfLines={1}>
-          {item.name}
-          {isPayer ? ` (${t("common.you")})` : ""}
-        </Text>
+        <View style={styles.nameBlock}>
+          <Text style={styles.nameText} numberOfLines={1}>
+            {item.name}
+            {isSelf ? ` (${t("common.you")})` : ""}
+          </Text>
+          {action ? (
+            <Text variant="small" style={styles.hintText} numberOfLines={1}>
+              {actionHint(action)}
+            </Text>
+          ) : null}
+        </View>
         <View style={styles.amountContainer}>
           <Money
             value={item.owedAmount}
@@ -103,7 +166,7 @@ export default function SummaryScreen() {
             hideSign
             style={styles.amountText}
           />
-          {!isPayer ? (
+          {action ? (
             <IconSvg
               name="chevron-right-outline"
               size={16}
@@ -127,40 +190,18 @@ export default function SummaryScreen() {
               {t("screens.settings.billSplitter.summary.title")}
             </Text>
 
-            {/* Inline payer chip selector */}
             <View style={styles.payerSection}>
               <Text style={styles.payerLabel}>
                 {t("screens.settings.billSplitter.summary.whoAreYou.title")}
               </Text>
-              <FlatList
-                horizontal
-                data={participants}
-                keyExtractor={(participant) => participant.id}
-                renderItem={({ item: participant }) => {
-                  const isSelected = participant.id === payerId
-                  return (
-                    <Pressable
-                      onPress={() =>
-                        setPayerId(isSelected ? null : participant.id)
-                      }
-                      style={[styles.chip, isSelected && styles.chipSelected]}
-                      accessibilityRole="radio"
-                      accessibilityState={{ selected: isSelected }}
-                    >
-                      <Text
-                        style={[
-                          styles.chipText,
-                          isSelected && styles.chipTextSelected,
-                        ]}
-                      >
-                        {participant.name}
-                      </Text>
-                    </Pressable>
-                  )
-                }}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.chipsRow}
-              />
+              {renderPeopleChips(selfId, handleSelectSelf)}
+            </View>
+
+            <View style={styles.payerSection}>
+              <Text style={styles.payerLabel}>
+                {t("screens.settings.billSplitter.summary.whoPaid")}
+              </Text>
+              {renderPeopleChips(payerId, setPayerId)}
             </View>
 
             {/* Total summary: total bill and, once a payer is chosen, their own share */}
@@ -176,13 +217,13 @@ export default function SummaryScreen() {
                   style={styles.totalsAmount}
                 />
               </View>
-              {payerEntry ? (
+              {selfEntry ? (
                 <View style={styles.totalsRow}>
                   <Text style={styles.totalsLabel}>
                     {t("screens.settings.billSplitter.summary.owedToYou")}
                   </Text>
                   <Money
-                    value={payerEntry.owedAmount}
+                    value={selfEntry.owedAmount}
                     currency={currency}
                     hideSign
                     style={styles.totalsAmount}
@@ -204,17 +245,9 @@ export default function SummaryScreen() {
       {/* Bottom action — disabled until payer is selected */}
       <FooterBar>
         <Button
-          onPress={() => {
-            // One form per tap: pushing several at once stacks them.
-            const next = summary.find(
-              (s) =>
-                s.participantId !== payerId &&
-                s.owedAmount > 0 &&
-                !doneIds.includes(s.participantId),
-            )
-            if (next) handleGenerateLoan(next)
-          }}
-          disabled={!payerId || !hasPendingDebtor}
+          // One form per tap: pushing several at once stacks them.
+          onPress={() => nextAction && handleAction(nextAction)}
+          disabled={!nextAction}
           style={footerBarStyles.button}
         >
           <Text>
@@ -318,11 +351,18 @@ const styles = StyleSheet.create((theme) => ({
     borderWidth: 1,
     borderColor: theme.colors.semantic.semi,
   },
-  summaryCardPayer: {
+  summaryCardInactive: {
     opacity: 0.5,
   },
-  nameText: {
+  nameBlock: {
     flex: 1,
+    gap: 2,
+  },
+  hintText: {
+    fontSize: theme.typography.labelSmall.fontSize,
+    color: theme.colors.onSecondary,
+  },
+  nameText: {
     fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "600",
     color: theme.colors.onSurface,

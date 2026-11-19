@@ -32,7 +32,10 @@ const billSplitterStorage = createMMKV({
 interface BillSplitterState {
   participants: Participant[]
   items: BillItem[]
+  /** Who paid the bill. */
   payerId: string | null
+  /** Which participant is the user. */
+  selfId: string | null
   accountId: string | null
   currencyCode: string | null
 
@@ -42,6 +45,7 @@ interface BillSplitterState {
   updateItem: (id: string, item: Omit<BillItem, "id">) => void
   removeItem: (id: string) => void
   setPayerId: (id: string | null) => void
+  setSelfId: (id: string | null) => void
   setAccountId: (id: string | null) => void
   setCurrencyCode: (currencyCode: string) => void
   clearBill: () => void
@@ -59,6 +63,7 @@ export const useBillSplitterStore = create<BillSplitterState>()(
       participants: [],
       items: [],
       payerId: null,
+      selfId: null,
       accountId: null,
       currencyCode: null,
 
@@ -81,6 +86,7 @@ export const useBillSplitterStore = create<BillSplitterState>()(
             return { ...item, splits: newSplits }
           }),
           payerId: state.payerId === id ? null : state.payerId,
+          selfId: state.selfId === id ? null : state.selfId,
         })),
 
       addItem: (item) => {
@@ -109,6 +115,7 @@ export const useBillSplitterStore = create<BillSplitterState>()(
         })),
 
       setPayerId: (id) => set({ payerId: id }),
+      setSelfId: (id) => set({ selfId: id }),
 
       setAccountId: (id) => set({ accountId: id }),
       setCurrencyCode: (currencyCode) =>
@@ -132,21 +139,30 @@ export const useBillSplitterStore = create<BillSplitterState>()(
           participants: [],
           items: [],
           payerId: null,
+          selfId: null,
           accountId: null,
           currencyCode: null,
         }),
     }),
     {
       name: "bill-splitter-store",
-      version: 4,
+      version: 5,
       migrate: (persisted, version) => {
         // v4 (#161): PEPE/SHIB went from 8 to 2 minor digits; keep a v3
         // draft and rescale its prices. Older drafts start over, as before.
-        if (version === 3) return rescaleLegacyCryptoDraft(persisted)
+        // v5 (#213): "who are you" split from "who paid"; until now the user
+        // was always the payer.
+        if (version === 3 || version === 4) {
+          const draft = (
+            version === 3 ? rescaleLegacyCryptoDraft(persisted) : persisted
+          ) as Pick<BillSplitterState, "payerId">
+          return { ...draft, selfId: draft.payerId ?? null }
+        }
         return {
           participants: [],
           items: [],
           payerId: null,
+          selfId: null,
           accountId: null,
           currencyCode: null,
         }
@@ -262,4 +278,61 @@ export function getDefaultSplits(
       : true,
     percentage: 0,
   }))
+}
+
+export type SettlementAction = {
+  participantId: string
+  amount: number
+} /** The user paid: this participant owes the user their share. */ & (
+  | { kind: "lent"; name: string }
+  /** The user paid: their own share is an expense. */
+  | { kind: "share" }
+  /** Someone else paid: the user owes the payer their share. */
+  | { kind: "borrowed"; payerName: string }
+)
+
+/**
+ * What the user records for a split bill, one action per participant at most.
+ * The user paid: a lent loan per debtor plus an expense for their own share,
+ * which together equal the bill total. Someone else paid: one borrowed loan to
+ * the payer; the other participants' debts do not involve the user.
+ */
+export function getSettlementPlan(
+  summary: BillSummaryEntry[],
+  selfId: string | null,
+  payerId: string | null,
+): SettlementAction[] {
+  if (!selfId || !payerId) return []
+  if (selfId !== payerId) {
+    const self = summary.find((s) => s.participantId === selfId)
+    const payer = summary.find((s) => s.participantId === payerId)
+    if (!self || !payer || self.owedAmount <= 0) return []
+    return [
+      {
+        kind: "borrowed",
+        participantId: selfId,
+        amount: self.owedAmount,
+        payerName: payer.name,
+      },
+    ]
+  }
+  return summary.flatMap((s): SettlementAction[] => {
+    if (s.owedAmount <= 0) return []
+    return s.participantId === selfId
+      ? [
+          {
+            kind: "share",
+            participantId: s.participantId,
+            amount: s.owedAmount,
+          },
+        ]
+      : [
+          {
+            kind: "lent",
+            participantId: s.participantId,
+            amount: s.owedAmount,
+            name: s.name,
+          },
+        ]
+  })
 }
