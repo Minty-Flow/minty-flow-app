@@ -891,7 +891,10 @@
           "total": "Total",
           "selectAll": "All",
           "selectNone": "None",
-          "sameAsLast": "Same as last item"
+          "sameAsLast": "Same as last item",
+          "paidBy": "Paid by",
+          "paidByUnset": "Pick who paid this item",
+          "paidByName": "Paid by {{name}}"
         },
         "names": {
           "title": "Participants",
@@ -916,7 +919,7 @@
           },
           "whoPaid": "Who Paid?",
           "recordShare": "Record my share",
-          "youOwe": "You owe them your share",
+          "youOwe": "You owe them",
           "owesYou": "Owes you",
           "recorded": "Recorded",
           "billDone": {

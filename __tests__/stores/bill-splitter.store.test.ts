@@ -10,12 +10,13 @@ vi.mock("~/utils/mmkv-storage", () => ({
 vi.mock("react-native-mmkv", () => ({ createMMKV: () => ({}) }))
 
 import {
-  getBillSummary,
   getBillTotal,
   getDefaultSplits,
   getSettlementPlan,
+  type SettlementAction,
   useBillSplitterStore,
 } from "~/stores/bill-splitter.store"
+import type { BillItem } from "~/types/bill-splitter"
 
 const migrate = (state: unknown, version: number) => {
   const run = useBillSplitterStore.persist.getOptions().migrate
@@ -60,41 +61,91 @@ describe("getSettlementPlan", () => {
     { id: "b", name: "Bea" },
     { id: "c", name: "Cy" },
   ]
-  // 1001 split three ways: allocations carry the odd minor units.
-  const items = [
-    {
-      id: "1",
-      name: "dinner",
-      price: 1001,
-      quantity: 1,
-      splitEvenly: true,
-      splits: people.map((p) => ({
-        participantId: p.id,
-        selected: true,
-        percentage: 100 / 3,
-      })),
-    },
-  ]
-  const summary = getBillSummary(items, people)
+  const item = (
+    id: string,
+    price: number,
+    sharedBy: string[],
+    payerId?: string,
+  ): BillItem => ({
+    id,
+    name: id,
+    price,
+    quantity: 1,
+    splitEvenly: true,
+    payerId,
+    splits: sharedBy.map((participantId) => ({
+      participantId,
+      selected: true,
+      percentage: 100 / sharedBy.length,
+    })),
+  })
+  const byKind = (plan: SettlementAction[]) =>
+    Object.fromEntries(
+      plan.map((a) => [`${a.kind}:${a.participantId}`, a.amount]),
+    )
+  // share + lent - borrowed must equal what the user paid.
+  const accountChange = (plan: SettlementAction[]) =>
+    plan.reduce(
+      (sum, a) => sum + (a.kind === "borrowed" ? -a.amount : a.amount),
+      0,
+    )
+  const paidBy = (items: BillItem[], who: string, fallback: string) =>
+    items
+      .filter((i) => (i.payerId ?? fallback) === who)
+      .reduce((sum, i) => sum + i.price, 0)
 
-  it("user paid: lent loans plus own share add up to the bill", () => {
-    const plan = getSettlementPlan(summary, "me", "me")
+  it("user paid everything: lent loans plus own share add up to the bill", () => {
+    // 1001 split three ways: allocations carry the odd minor unit.
+    const items = [item("dinner", 1001, ["me", "b", "c"])]
+    const plan = getSettlementPlan(items, people, "me", "me")
     expect(plan.map((a) => a.kind).sort()).toEqual(["lent", "lent", "share"])
-    expect(plan.reduce((sum, a) => sum + a.amount, 0)).toBe(getBillTotal(items))
+    expect(accountChange(plan)).toBe(getBillTotal(items))
   })
 
-  it("someone else paid: the user's share as an expense plus a borrowed loan to the payer", () => {
-    const plan = getSettlementPlan(summary, "me", "b")
-    const mine = summary.find((s) => s.participantId === "me")?.owedAmount
-    expect(plan).toEqual([
-      { kind: "share", participantId: "me", amount: mine },
-      { kind: "borrowed", participantId: "b", amount: mine, payerName: "Bea" },
-    ])
+  it("someone else paid everything: own share plus a borrowed loan to them", () => {
+    const items = [item("dinner", 900, ["me", "b", "c"])]
+    expect(byKind(getSettlementPlan(items, people, "me", "b"))).toEqual({
+      "share:me": 300,
+      "borrowed:b": 300,
+    })
   })
 
-  it("does nothing until both people are chosen", () => {
-    expect(getSettlementPlan(summary, null, "me")).toEqual([])
-    expect(getSettlementPlan(summary, "me", null)).toEqual([])
+  it("nets each person across items paid by different people", () => {
+    const items = [
+      item("hotel", 900, ["me", "b", "c"], "b"), // me owes Bea 300
+      item("taxi", 600, ["me", "b", "c"], "me"), // Bea and Cy owe me 200 each
+      item("lunch", 400, ["me", "c"], "c"), // me owes Cy 200
+    ]
+    const plan = getSettlementPlan(items, people, "me", "me")
+    expect(byKind(plan)).toEqual({
+      "share:me": 700,
+      "borrowed:b": 100,
+    })
+    expect(accountChange(plan)).toBe(paidBy(items, "me", "me"))
+  })
+
+  it("records nothing for a person whose amounts cancel out", () => {
+    const items = [
+      item("coffee", 400, ["me", "b"], "me"), // Bea owes me 200
+      item("snacks", 400, ["me", "b"], "b"), // me owes Bea 200
+    ]
+    expect(byKind(getSettlementPlan(items, people, "me", "me"))).toEqual({
+      "share:me": 400,
+    })
+  })
+
+  it("leaves out debts between other participants", () => {
+    const items = [item("drinks", 600, ["b", "c"], "b")]
+    expect(getSettlementPlan(items, people, "me", "me")).toEqual([])
+  })
+
+  it("waits for the user and a payer for every item", () => {
+    const items = [item("dinner", 900, ["me", "b"])]
+    expect(getSettlementPlan(items, people, null, "me")).toEqual([])
+    expect(getSettlementPlan(items, people, "me", null)).toEqual([])
+    expect(
+      getSettlementPlan([item("x", 900, ["me"], "me")], people, "me", null),
+    ).toHaveLength(1)
   })
 })
 
@@ -190,5 +241,24 @@ describe("clearBill", () => {
     expect(s.participants).toEqual([])
     expect(s.selfId).toBeNull()
     expect(s.accountId).toBeNull()
+  })
+})
+
+describe("removing an item's payer", () => {
+  it("makes the item fall back to the bill payer", () => {
+    const store = useBillSplitterStore
+    store.getState().clearBill({ everything: true })
+    store.getState().addParticipant("Bea")
+    const [bea] = store.getState().participants
+    store.getState().addItem({
+      name: "hotel",
+      price: 900,
+      quantity: 1,
+      splitEvenly: true,
+      splits: [],
+      payerId: bea.id,
+    })
+    store.getState().removeParticipant(bea.id)
+    expect(store.getState().items[0].payerId).toBeUndefined()
   })
 })

@@ -931,7 +931,10 @@
           "total": "الإجمالي",
           "selectAll": "الكل",
           "selectNone": "لا أحد",
-          "sameAsLast": "مثل العنصر السابق"
+          "sameAsLast": "مثل العنصر السابق",
+          "paidBy": "دفعها",
+          "paidByUnset": "اختر من دفع هذا العنصر",
+          "paidByName": "دفعها {{name}}"
         },
         "names": {
           "title": "المشاركون",
@@ -960,7 +963,7 @@
           },
           "whoPaid": "من دفع؟",
           "recordShare": "سجّل حصتي",
-          "youOwe": "عليك حصتك لهذا الشخص",
+          "youOwe": "عليك دين لهذا الشخص",
           "owesYou": "مدين لك",
           "recorded": "تم التسجيل",
           "billDone": {

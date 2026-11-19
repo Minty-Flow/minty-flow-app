@@ -52,7 +52,7 @@ export default function SummaryScreen() {
   const totalBill = getBillTotal(items)
   // The user's own share of the bill
   const selfEntry = summary.find((s) => s.participantId === selfId) ?? null
-  const plan = getSettlementPlan(summary, selfId, payerId)
+  const plan = getSettlementPlan(items, participants, selfId, payerId)
   const actionFor = (participantId: string) =>
     plan.find((a) => a.participantId === participantId)
   const isRecorded = (participantId: string) =>
@@ -105,7 +105,7 @@ export default function SummaryScreen() {
       pathname: "/settings/loans/[loanId]/modify",
       params: {
         loanId: NewEnum.NEW,
-        prefillName: action.kind === "lent" ? action.name : action.payerName,
+        prefillName: action.name,
         prefillDescription: description,
         prefillAccountId: accountId,
         prefillAmount: action.amount.toString(),

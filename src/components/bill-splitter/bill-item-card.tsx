@@ -13,6 +13,8 @@ import { roundToSafeInteger } from "~/utils/money"
 interface BillItemCardProps {
   item: BillItem
   participants: Participant[]
+  /** The bill payer; the card names the item's payer only when it differs. */
+  billPayerId: string | null
   currency: string
   onDelete: () => void
   onEdit: () => void
@@ -21,6 +23,7 @@ interface BillItemCardProps {
 export function BillItemCard({
   item,
   participants,
+  billPayerId,
   currency,
   onDelete,
   onEdit,
@@ -31,6 +34,10 @@ export function BillItemCard({
   const itemTotal = roundToSafeInteger(item.price * item.quantity)
   const allocations = getItemAllocations(item)
   const selectedSplits = item.splits.filter((s) => s.selected)
+  const otherPayerName =
+    item.payerId && item.payerId !== billPayerId
+      ? participants.find((p) => p.id === item.payerId)?.name
+      : undefined
 
   return (
     // Outer wrapper provides relative positioning anchor for the delete button
@@ -63,6 +70,14 @@ export function BillItemCard({
             style={styles.totalAmount}
           />
         </View>
+
+        {otherPayerName ? (
+          <Text style={styles.paidBy} numberOfLines={1}>
+            {t("screens.settings.billSplitter.item.paidByName", {
+              name: otherPayerName,
+            })}
+          </Text>
+        ) : null}
 
         {/* Per-person breakdown rows — no progress bars */}
         {selectedSplits.map((split) => {
@@ -168,6 +183,10 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.onSurface,
   },
   // Per-person row: name left, amount right — no absolute positioning
+  paidBy: {
+    ...theme.typography.labelMedium,
+    color: theme.colors.primary,
+  },
   personRow: {
     flexDirection: "row",
     justifyContent: "space-between",

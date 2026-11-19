@@ -16,6 +16,8 @@ export interface BillItem {
   quantity: number
   splitEvenly: boolean
   splits: ItemSplit[]
+  /** Who paid this item. Missing means the bill's payer. */
+  payerId?: string
 }
 
 export interface BillSummaryEntry {
