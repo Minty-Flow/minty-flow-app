@@ -312,13 +312,7 @@
         "places_two": "مكانان",
         "places_few": "{{count}} أماكن",
         "places_many": "{{count}} مكانًا",
-        "places_other": "{{count}} مكان",
-        "placesWithTop_zero": "{{count}} مكان · الأعلى: {{top}}",
-        "placesWithTop_one": "مكان واحد · الأعلى: {{top}}",
-        "placesWithTop_two": "مكانان · الأعلى: {{top}}",
-        "placesWithTop_few": "{{count}} أماكن · الأعلى: {{top}}",
-        "placesWithTop_many": "{{count}} مكانًا · الأعلى: {{top}}",
-        "placesWithTop_other": "{{count}} مكان · الأعلى: {{top}}"
+        "places_other": "{{count}} مكان"
       },
       "cashFlow": {
         "title": "التدفق النقدي",

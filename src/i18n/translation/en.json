@@ -271,9 +271,7 @@
         "recurringCount_one": "{{count}} payment",
         "recurringCount_other": "{{count}} payments",
         "places_one": "{{count}} place",
-        "places_other": "{{count}} places",
-        "placesWithTop_one": "{{count}} place · top: {{top}}",
-        "placesWithTop_other": "{{count}} places · top: {{top}}"
+        "places_other": "{{count}} places"
       },
       "cashFlow": {
         "title": "Cash flow",
