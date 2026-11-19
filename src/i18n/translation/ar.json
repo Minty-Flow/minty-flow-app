@@ -928,7 +928,10 @@
           "quantity": "المضاعف",
           "quantityDescription": "يُضرب في كل عنصر، مفيد للضريبة",
           "splitEvenly": "تقسيم بالتساوي",
-          "total": "الإجمالي"
+          "total": "الإجمالي",
+          "selectAll": "الكل",
+          "selectNone": "لا أحد",
+          "sameAsLast": "مثل العنصر السابق"
         },
         "names": {
           "title": "المشاركون",

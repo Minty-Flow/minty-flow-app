@@ -244,3 +244,22 @@ export function getItemAllocations(item: BillItem): Map<string, number> {
   }
   return new Map(allocations.map((row) => [row.id, row.amount]))
 }
+
+/**
+ * Starting selection for a new item: the same people as `previous` (most
+ * consecutive items are shared by the same group), or everyone when there is
+ * no previous item. Percentages are filled in by the even-split pass.
+ */
+export function getDefaultSplits(
+  participants: Participant[],
+  previous: BillItem | undefined,
+): ItemSplit[] {
+  return participants.map((p) => ({
+    participantId: p.id,
+    selected: previous
+      ? (previous.splits.find((s) => s.participantId === p.id)?.selected ??
+        false)
+      : true,
+    percentage: 0,
+  }))
+}
