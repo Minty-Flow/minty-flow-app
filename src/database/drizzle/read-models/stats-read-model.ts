@@ -11,8 +11,15 @@ import {
   fetchWrappedInsights,
 } from "~/database/drizzle/read-models/stats-data"
 import {
+  fetchRecurringSummary,
+  fetchSpendingPlaces,
+  type RecurringSummary,
+  type SpendingPlace,
+} from "~/database/drizzle/read-models/stats-extras-data"
+import {
   accounts,
   categories,
+  recurringTransactions,
   tags,
   transactions,
 } from "~/database/drizzle/schema"
@@ -72,12 +79,16 @@ function useStatsDatabaseChangeSignal(): string {
   const account = useLiveQuery(drizzleDb.select({ n: count }).from(accounts))
   const category = useLiveQuery(drizzleDb.select({ n: count }).from(categories))
   const tag = useLiveQuery(drizzleDb.select({ n: count }).from(tags))
+  const recurring = useLiveQuery(
+    drizzleDb.select({ n: count }).from(recurringTransactions),
+  )
 
   return [
     tx.updatedAt?.getTime() ?? 0,
     account.updatedAt?.getTime() ?? 0,
     category.updatedAt?.getTime() ?? 0,
     tag.updatedAt?.getTime() ?? 0,
+    recurring.updatedAt?.getTime() ?? 0,
   ].join(":")
 }
 
@@ -341,4 +352,36 @@ export function useWrappedInsights(
   }, [dateRange, dbChangeSignal])
 
   return { insights, isLoading }
+}
+
+/** Active recurring expenses for `currency`; null until the first read. */
+export function useRecurringSummary(currency: string): RecurringSummary | null {
+  const dbChangeSignal = useStatsDatabaseChangeSignal()
+  const dayKey = useDayKey()
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-read on db changes and day rollover
+  return useMemo(() => {
+    try {
+      return fetchRecurringSummary(currency)
+    } catch (error) {
+      logger.error("recurring summary fetch failed", { error: String(error) })
+      return null
+    }
+  }, [currency, dbChangeSignal, dayKey])
+}
+
+/** Located expenses in `dateRange` for `currency`, grouped by place. */
+export function useSpendingPlaces(
+  dateRange: StatsDateRange,
+  currency: string,
+): SpendingPlace[] {
+  const dbChangeSignal = useStatsDatabaseChangeSignal()
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-read on db changes
+  return useMemo(() => {
+    try {
+      return fetchSpendingPlaces(dateRange, currency)
+    } catch (error) {
+      logger.error("spending places fetch failed", { error: String(error) })
+      return []
+    }
+  }, [dateRange, currency, dbChangeSignal])
 }

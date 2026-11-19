@@ -248,7 +248,6 @@
     "stats": {
       "moreOptions": "More options",
       "dashboard": {
-        "soon": "Soon",
         "cashFlow": "Cash flow",
         "overspent": "Overspent",
         "saved": "Saved",
@@ -267,7 +266,15 @@
         "calendar": "Calendar",
         "recurring": "Recurring",
         "spendingMap": "Spending map",
-        "noSpendingWindow": "No spending in this window."
+        "noSpendingWindow": "No spending in this window.",
+        "perMonth": "/ mo",
+        "noRecurring": "No recurring expenses yet.",
+        "recurringActive_one": "{{count}} active",
+        "recurringActive_other": "{{count}} active",
+        "places_one": "{{count}} place",
+        "places_other": "{{count}} places",
+        "placesWithTop_one": "{{count}} place · top: {{top}}",
+        "placesWithTop_other": "{{count}} places · top: {{top}}"
       },
       "cashFlow": {
         "title": "Cash flow",
@@ -308,6 +315,26 @@
         "spentIn": "Spent in {{period}}",
         "less": "Less",
         "more": "More"
+      },
+      "recurring": {
+        "title": "Recurring",
+        "perMonth": "Recurring spending per month",
+        "subscriptions": "Subscriptions",
+        "repetitive": "Repetitive",
+        "untitled": "Untitled",
+        "schedule": "{{every}} · next {{date}}",
+        "empty": "No active recurring expenses.",
+        "every_one": "Every {{unit}}",
+        "every_other": "Every {{count}} {{unit}}"
+      },
+      "spendingMap": {
+        "title": "Spending map",
+        "topPlaces": "Top places",
+        "unnamedPlace": "Unnamed place",
+        "offline": "The map needs an internet connection.",
+        "empty": "No expenses with a location in this period.",
+        "entries_one": "{{count}} entry",
+        "entries_other": "{{count}} entries"
       },
       "currency": {
         "showing": "Showing {{currency}}",
