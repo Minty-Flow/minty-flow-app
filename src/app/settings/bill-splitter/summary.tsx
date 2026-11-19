@@ -9,6 +9,7 @@ import { footerBarStyles } from "~/components/footer-bar.styles"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
 import { Button } from "~/components/ui/button"
+import { Chip } from "~/components/ui/chips"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
@@ -119,18 +120,14 @@ export default function SummaryScreen() {
       renderItem={({ item: participant }) => {
         const isSelected = participant.id === selectedId
         return (
-          <Pressable
+          <Chip
+            label={participant.name}
+            selected={isSelected}
+            hideCheck
             onPress={() => onSelect(isSelected ? null : participant.id)}
-            style={[styles.chip, isSelected && styles.chipSelected]}
             accessibilityRole="radio"
             accessibilityState={{ selected: isSelected }}
-          >
-            <Text
-              style={[styles.chipText, isSelected && styles.chipTextSelected]}
-            >
-              {participant.name}
-            </Text>
-          </Pressable>
+          />
         )
       }}
       showsHorizontalScrollIndicator={false}
@@ -144,6 +141,8 @@ export default function SummaryScreen() {
       <Pressable
         style={[styles.summaryCard, !action && styles.summaryCardInactive]}
         onPress={() => action && handleAction(action)}
+        accessibilityRole="button"
+        accessibilityHint={action ? actionHint(action) : undefined}
         disabled={!action}
       >
         <View style={styles.nameBlock}>
@@ -291,26 +290,6 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     gap: 8,
     paddingBottom: 4,
-  },
-  chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: `${theme.colors.onSurface}10`,
-    borderWidth: 1,
-    borderColor: theme.colors.semantic.semi,
-  },
-  chipSelected: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  chipText: {
-    fontSize: theme.typography.labelLarge.fontSize,
-    fontWeight: "500",
-    color: theme.colors.onSurface,
-  },
-  chipTextSelected: {
-    color: theme.colors.onPrimary,
   },
   // Totals summary card
   totalsCard: {
