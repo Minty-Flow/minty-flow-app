@@ -135,7 +135,7 @@ describe("getDefaultSplits", () => {
 describe("recorded participants", () => {
   it("records once, forgets removed people, and resets with the bill", () => {
     const store = useBillSplitterStore
-    store.getState().clearBill()
+    store.getState().clearBill({ everything: true })
     store.getState().addParticipant("A")
     const [a] = store.getState().participants
     store.getState().markRecorded(a.id)
@@ -147,5 +147,48 @@ describe("recorded participants", () => {
     store.getState().markRecorded(store.getState().participants[0].id)
     store.getState().clearBill()
     expect(store.getState().recordedIds).toEqual([])
+  })
+})
+
+describe("clearBill", () => {
+  const seed = () => {
+    const store = useBillSplitterStore
+    store.getState().clearBill({ everything: true })
+    store.getState().addParticipant("Me")
+    store.getState().addParticipant("Bea")
+    const [me, bea] = store.getState().participants
+    store.getState().setSelfId(me.id)
+    store.getState().setPayerId(bea.id)
+    store.getState().setAccountId("acc")
+    store.getState().addItem({
+      name: "x",
+      price: 100,
+      quantity: 1,
+      splitEvenly: true,
+      splits: [],
+    })
+    store.getState().markRecorded(me.id)
+    return { store, me }
+  }
+
+  it("keeps the people by default and resets the payer to the user", () => {
+    const { store, me } = seed()
+    store.getState().clearBill()
+    const s = store.getState()
+    expect(s.items).toEqual([])
+    expect(s.recordedIds).toEqual([])
+    expect(s.participants).toHaveLength(2)
+    expect(s.selfId).toBe(me.id)
+    expect(s.payerId).toBe(me.id)
+    expect(s.accountId).toBe("acc")
+  })
+
+  it("wipes everything when asked", () => {
+    const { store } = seed()
+    store.getState().clearBill({ everything: true })
+    const s = store.getState()
+    expect(s.participants).toEqual([])
+    expect(s.selfId).toBeNull()
+    expect(s.accountId).toBeNull()
   })
 })

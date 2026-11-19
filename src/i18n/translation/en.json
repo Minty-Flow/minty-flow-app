@@ -921,14 +921,21 @@
           "recorded": "Recorded",
           "billDone": {
             "title": "Bill done",
-            "description": "Everything is recorded. Clear this bill to start a new one?",
+            "description": "Everything is recorded. Clear the items to start a new bill? Participants and the account stay.",
             "keep": "Keep"
           }
         },
         "clear": {
           "confirm": {
-            "title": "Clear Bill?",
-            "description": "This will remove all items and reset the bill. Participants will be kept."
+            "title": "Clear Bill?"
+          },
+          "items": {
+            "label": "Clear items",
+            "sublabel": "Remove the items. Keep the participants and account for the next bill."
+          },
+          "everything": {
+            "label": "Clear everything",
+            "sublabel": "Remove items, participants and account."
           }
         }
       },
