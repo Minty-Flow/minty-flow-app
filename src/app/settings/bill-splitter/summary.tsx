@@ -105,9 +105,7 @@ export default function SummaryScreen() {
     if (action.kind === "share")
       return t("screens.settings.billSplitter.summary.recordShare")
     if (action.kind === "borrowed")
-      return t("screens.settings.billSplitter.summary.youOwe", {
-        name: action.payerName,
-      })
+      return t("screens.settings.billSplitter.summary.youOwe")
     return t("screens.settings.billSplitter.summary.owesYou")
   }
   const renderPeopleChips = (

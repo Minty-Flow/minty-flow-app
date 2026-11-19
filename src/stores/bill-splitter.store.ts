@@ -287,15 +287,17 @@ export type SettlementAction = {
   | { kind: "lent"; name: string }
   /** The user paid: their own share is an expense. */
   | { kind: "share" }
-  /** Someone else paid: the user owes the payer their share. */
+  /** Someone else paid: the user owes the payer (keyed on the payer). */
   | { kind: "borrowed"; payerName: string }
 )
 
 /**
  * What the user records for a split bill, one action per participant at most.
- * The user paid: a lent loan per debtor plus an expense for their own share,
- * which together equal the bill total. Someone else paid: one borrowed loan to
- * the payer; the other participants' debts do not involve the user.
+ * The user's own share is always an expense, so the meal shows up as spending.
+ * The user paid: plus a lent loan per debtor; together they equal the bill
+ * total. Someone else paid: plus one borrowed loan to the payer, whose income
+ * entry cancels the expense until the user pays them back. The other
+ * participants' debts do not involve the user.
  */
 export function getSettlementPlan(
   summary: BillSummaryEntry[],
@@ -308,9 +310,10 @@ export function getSettlementPlan(
     const payer = summary.find((s) => s.participantId === payerId)
     if (!self || !payer || self.owedAmount <= 0) return []
     return [
+      { kind: "share", participantId: selfId, amount: self.owedAmount },
       {
         kind: "borrowed",
-        participantId: selfId,
+        participantId: payerId,
         amount: self.owedAmount,
         payerName: payer.name,
       },

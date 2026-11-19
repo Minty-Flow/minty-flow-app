@@ -960,7 +960,7 @@
           },
           "whoPaid": "من دفع؟",
           "recordShare": "سجّل حصتي",
-          "youOwe": "أنت مدين لـ {{name}}",
+          "youOwe": "عليك حصتك لهذا الشخص",
           "owesYou": "مدين لك"
         },
         "clear": {

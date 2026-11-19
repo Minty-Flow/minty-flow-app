@@ -83,11 +83,12 @@ describe("getSettlementPlan", () => {
     expect(plan.reduce((sum, a) => sum + a.amount, 0)).toBe(getBillTotal(items))
   })
 
-  it("someone else paid: one borrowed loan to the payer for the user's share", () => {
+  it("someone else paid: the user's share as an expense plus a borrowed loan to the payer", () => {
     const plan = getSettlementPlan(summary, "me", "b")
     const mine = summary.find((s) => s.participantId === "me")?.owedAmount
     expect(plan).toEqual([
-      { kind: "borrowed", participantId: "me", amount: mine, payerName: "Bea" },
+      { kind: "share", participantId: "me", amount: mine },
+      { kind: "borrowed", participantId: "b", amount: mine, payerName: "Bea" },
     ])
   })
 
