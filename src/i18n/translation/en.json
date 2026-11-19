@@ -793,7 +793,8 @@
           "descriptionPlaceholder": "Optional note about this loan",
           "amountLabel": "Principal Amount",
           "deleteLabel": "Delete Loan",
-          "dueDateLabel": "Due Date"
+          "dueDateLabel": "Due Date",
+          "editLabel": "Edit Loan"
         },
         "detail": {
           "title": "Loan",
@@ -817,7 +818,8 @@
         "initialTransaction": {
           "title": "Loan: {{name}}"
         },
-        "editTitle": "Edit Loan"
+        "editTitle": "Edit Loan",
+        "settledSection": "Settled ({{count}})"
       },
       "tags": {
         "title": "Tags",

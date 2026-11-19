@@ -107,18 +107,29 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
     navigation.setOptions({
       title: t("screens.settings.loans.detail.title"),
       headerRight: () => (
-        <Button
-          variant="ghost"
-          size="icon"
-          onPress={() =>
-            router.push({
-              pathname: "/settings/loans/[loanId]/modify",
-              params: { loanId },
-            })
-          }
-        >
-          <IconSvg name="pencil-outline" size={20} />
-        </Button>
+        <View style={styles.headerActions}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onPress={() => setDeleteLoanVisible(true)}
+            accessibilityLabel={t("common.actions.delete")}
+          >
+            <IconSvg name="trash-outline" size={20} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onPress={() =>
+              router.push({
+                pathname: "/settings/loans/[loanId]/modify",
+                params: { loanId },
+              })
+            }
+            accessibilityLabel={t("screens.settings.loans.form.editLabel")}
+          >
+            <IconSvg name="pencil-outline" size={20} />
+          </Button>
+        </View>
       ),
     })
   }, [navigation, router, loanId, t])
@@ -418,6 +429,10 @@ export default function LoanDetailScreen() {
 /* Styles                                                             */
 /* ------------------------------------------------------------------ */
 const styles = StyleSheet.create((theme) => ({
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   // Header card
   loanName: {
     fontSize: theme.typography.titleMedium.fontSize,

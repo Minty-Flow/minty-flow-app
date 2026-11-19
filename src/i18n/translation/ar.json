@@ -829,7 +829,8 @@
           "descriptionPlaceholder": "ملاحظة اختيارية عن هذا القرض",
           "amountLabel": "المبلغ الأصلي",
           "deleteLabel": "حذف القرض",
-          "dueDateLabel": "تاريخ الاستحقاق"
+          "dueDateLabel": "تاريخ الاستحقاق",
+          "editLabel": "تعديل القرض"
         },
         "detail": {
           "title": "قرض",
@@ -853,7 +854,8 @@
         "initialTransaction": {
           "title": "قرض: {{name}}"
         },
-        "editTitle": "تعديل القرض"
+        "editTitle": "تعديل القرض",
+        "settledSection": "المسددة ({{count}})"
       },
       "tags": {
         "title": "الوسوم",
