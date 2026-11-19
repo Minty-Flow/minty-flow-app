@@ -219,6 +219,7 @@ const styles = StyleSheet.create((t) => ({
     marginHorizontal: -20,
     paddingHorizontal: 20,
     paddingVertical: 12,
+    minHeight: 48,
   },
   settledHeaderText: {
     fontSize: t.typography.labelMedium.fontSize,
