@@ -5,6 +5,7 @@ import {
   eq,
   gte,
   inArray,
+  isNotNull,
   lte,
   or,
   type SQL,
@@ -66,6 +67,8 @@ export interface TransactionFilters {
   loanId?: string
   goalId?: string
   budgetId?: string
+  /** Only rows spawned by a recurring rule. */
+  recurringOnly?: boolean
   isPending?: boolean
   deletedOnly?: boolean
   includeDeleted?: boolean
@@ -195,6 +198,8 @@ function getConditions(filters: TransactionFilters): SQL[] {
   if (filters.goalId) conditions.push(eq(transactions.goalId, filters.goalId))
   if (filters.budgetId)
     conditions.push(eq(transactions.budgetId, filters.budgetId))
+  if (filters.recurringOnly)
+    conditions.push(isNotNull(transactions.recurringId))
   return conditions
 }
 

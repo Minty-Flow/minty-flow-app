@@ -267,10 +267,9 @@
         "recurring": "Recurring",
         "spendingMap": "Spending map",
         "noSpendingWindow": "No spending in this window.",
-        "perMonth": "/ mo",
-        "noRecurring": "No recurring expenses yet.",
-        "recurringActive_one": "{{count}} active",
-        "recurringActive_other": "{{count}} active",
+        "noRecurring": "None in this period.",
+        "recurringCount_one": "{{count}} payment",
+        "recurringCount_other": "{{count}} payments",
         "places_one": "{{count}} place",
         "places_other": "{{count}} places",
         "placesWithTop_one": "{{count}} place · top: {{top}}",
@@ -318,14 +317,10 @@
       },
       "recurring": {
         "title": "Recurring",
-        "perMonth": "Recurring spending per month",
+        "spentIn": "Spent on recurring in {{period}}",
         "subscriptions": "Subscriptions",
         "repetitive": "Repetitive",
-        "untitled": "Untitled",
-        "schedule": "{{every}} · next {{date}}",
-        "empty": "No active recurring expenses.",
-        "every_one": "Every {{unit}}",
-        "every_other": "Every {{count}} {{unit}}"
+        "empty": "No recurring expenses in this period."
       },
       "spendingMap": {
         "title": "Spending map",

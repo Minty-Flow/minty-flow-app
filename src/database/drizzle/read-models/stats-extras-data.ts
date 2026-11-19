@@ -2,153 +2,37 @@ import { sql } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
 import { expenseContribution } from "~/database/drizzle/read-models/stats-data"
-import type { RowAccount, RowCategory } from "~/database/types/rows"
 import type { StatsDateRange } from "~/types/stats"
-import type {
-  Recurrence,
-  TransactionKind,
-  TransactionLocation,
-} from "~/types/transactions"
-import { TransactionKindEnum } from "~/types/transactions"
-import { roundToSafeInteger } from "~/utils/money"
-import { nextAbsoluteOccurrence, parseRecurrence } from "~/utils/recurrence"
+import type { TransactionLocation } from "~/types/transactions"
 
 /* ------------------------------------------------------------------ */
-/* Recurring commitments                                               */
+/* Recurring spend                                                     */
 /* ------------------------------------------------------------------ */
 
-export interface RecurringCommitment {
-  id: string
-  title: string | null
-  categoryName: string | null
-  categoryIcon: string | null
-  kind: TransactionKind
-  amount: number
-  /** `amount` scaled to one month, in minor units. */
-  monthlyAmount: number
-  recurrence: Recurrence
-  nextDate: Date
-  /** Newest generated transaction; editing the rule goes through it. */
-  latestTransactionId: string | null
-}
-
-export interface RecurringSummary {
-  currency: string
-  monthlyTotal: number
-  subscriptions: RecurringCommitment[]
-  repetitive: RecurringCommitment[]
-}
-
-const MONTHS_PER_UNIT: Record<Recurrence["unit"], number> = {
-  day: 12 / 365.25,
-  week: 12 / 52,
-  month: 1,
-  year: 12,
-}
-
-/** What a rule costs per month: "every 2 weeks" of 100 is about 217. */
-export function monthlyEquivalent(amount: number, recurrence: Recurrence) {
-  const months = MONTHS_PER_UNIT[recurrence.unit] * recurrence.interval
-  return roundToSafeInteger(Math.abs(amount) / months)
-}
-
-interface RecurringRow {
-  id: string
-  json_transaction_template: string
-  range: string
-  rules: string
-  latest_transaction_id: string | null
-}
-
-interface TemplateShape {
-  amount?: number
-  type?: string
-  accountId?: string
-  categoryId?: string | null
-  title?: string | null
-  kind?: TransactionKind
-}
-
-function parseJson<T>(raw: string): T | null {
-  try {
-    return JSON.parse(raw) as T
-  } catch {
-    return null
-  }
+export interface RecurringSpend {
+  total: number
+  count: number
 }
 
 /**
- * Active expense rules whose account uses `currency`, split by kind. A rule
- * counts as active while it is enabled and still has an occurrence after `now`.
+ * Expenses spawned by a recurring rule in `range` on accounts using
+ * `currency`, upcoming ones included: the same rows the Recurring screen lists.
  */
-export function fetchRecurringSummary(
+export function fetchRecurringSpend(
+  range: Pick<StatsDateRange, "from" | "to">,
   currency: string,
-  now: Date = new Date(),
-): RecurringSummary {
-  const rows = drizzleDb.all<RecurringRow>(sql`
-    SELECT r.id, r.json_transaction_template, r.range, r.rules,
-      (SELECT t.id FROM transactions t
-        WHERE t.recurring_id = r.id AND t.is_deleted = 0
-        ORDER BY t.transaction_date DESC LIMIT 1) AS latest_transaction_id
-     FROM recurring_transactions r
-     WHERE r.disabled = 0`)
-
-  const accountRows = drizzleDb.all<RowAccount>(sql`SELECT * FROM accounts`)
-  const categoryRows = drizzleDb.all<RowCategory>(sql`SELECT * FROM categories`)
-  const accountCurrency = new Map(
-    accountRows.map((a) => [a.id, a.currency_code]),
-  )
-  const categoryMap = new Map(categoryRows.map((c) => [c.id, c]))
-
-  const summary: RecurringSummary = {
-    currency,
-    monthlyTotal: 0,
-    subscriptions: [],
-    repetitive: [],
-  }
-
-  for (const row of rows) {
-    const template = parseJson<TemplateShape>(row.json_transaction_template)
-    const range = parseJson<{ from: number; to: number }>(row.range)
-    const rules = parseJson<string[]>(row.rules)
-    if (!template || !range || !rules?.length) continue
-    if (template.type !== "expense" || !template.accountId) continue
-    if (accountCurrency.get(template.accountId) !== currency) continue
-
-    const nextDate = nextAbsoluteOccurrence(rules, range, now)
-    if (!nextDate) continue
-
-    const recurrence = parseRecurrence(rules[0])
-    const amount = Math.abs(template.amount ?? 0)
-    const category = template.categoryId
-      ? categoryMap.get(template.categoryId)
-      : undefined
-    const kind = template.kind ?? TransactionKindEnum.REPETITIVE
-    const item: RecurringCommitment = {
-      id: row.id,
-      title: template.title?.trim() || null,
-      categoryName: category?.name ?? null,
-      categoryIcon: category?.icon ?? null,
-      kind,
-      amount,
-      monthlyAmount: monthlyEquivalent(amount, recurrence),
-      recurrence,
-      nextDate,
-      latestTransactionId: row.latest_transaction_id,
-    }
-    summary.monthlyTotal += item.monthlyAmount
-    if (kind === TransactionKindEnum.SUBSCRIPTION) {
-      summary.subscriptions.push(item)
-    } else {
-      summary.repetitive.push(item)
-    }
-  }
-
-  const byMonthly = (a: RecurringCommitment, b: RecurringCommitment) =>
-    b.monthlyAmount - a.monthlyAmount
-  summary.subscriptions.sort(byMonthly)
-  summary.repetitive.sort(byMonthly)
-  return summary
+): RecurringSpend {
+  const row = drizzleDb.get<{ total: number | null; count: number }>(sql`
+    SELECT SUM(ABS(t.amount)) AS total, COUNT(*) AS count
+     FROM transactions t
+     JOIN accounts a ON a.id = t.account_id
+     WHERE t.is_deleted = 0
+       AND t.recurring_id IS NOT NULL
+       AND t.type = 'expense'
+       AND a.currency_code = ${currency}
+       AND t.transaction_date >= ${range.from.toISOString()}
+       AND t.transaction_date <= ${range.to.toISOString()}`)
+  return { total: row?.total ?? 0, count: row?.count ?? 0 }
 }
 
 /* ------------------------------------------------------------------ */
@@ -172,6 +56,14 @@ export interface PlaceRow {
   loanId: string | null
   kind: string | null
   location: string | null
+}
+
+function parseJson<T>(raw: string): T | null {
+  try {
+    return JSON.parse(raw) as T
+  } catch {
+    return null
+  }
 }
 
 function parseLocation(raw: string | null): TransactionLocation | null {
@@ -222,7 +114,7 @@ export function groupSpendingPlaces(rows: PlaceRow[]): SpendingPlace[] {
 
 /** Confirmed, located expenses in `range` on accounts using `currency`. */
 export function fetchSpendingPlaces(
-  range: StatsDateRange,
+  range: Pick<StatsDateRange, "from" | "to">,
   currency: string,
 ): SpendingPlace[] {
   const rows = drizzleDb.all<{

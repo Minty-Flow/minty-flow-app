@@ -4,20 +4,24 @@ import { StyleSheet } from "react-native-unistyles"
 import { Money } from "~/components/money"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useRecurringSummary } from "~/database/drizzle/read-models/stats-read-model"
+import { useRecurringSpend } from "~/database/drizzle/read-models/stats-read-model"
+import type { StatsDateRange } from "~/types/stats"
 
 import { StatCard } from "./stat-card"
 
 interface RecurringCardProps {
+  dateRange: StatsDateRange
   currency: string
   onPress: () => void
 }
 
-export function RecurringCard({ currency, onPress }: RecurringCardProps) {
+export function RecurringCard({
+  dateRange,
+  currency,
+  onPress,
+}: RecurringCardProps) {
   const { t } = useTranslation()
-  const summary = useRecurringSummary(currency)
-  const count =
-    (summary?.subscriptions.length ?? 0) + (summary?.repetitive.length ?? 0)
+  const { total, count } = useRecurringSpend(dateRange, currency)
 
   return (
     <StatCard
@@ -25,23 +29,20 @@ export function RecurringCard({ currency, onPress }: RecurringCardProps) {
       icon="repeat-outline"
       onPress={onPress}
     >
-      {count > 0 && summary ? (
+      {count > 0 ? (
         <View style={styles.body}>
-          <View style={styles.amountRow}>
-            <Money
-              value={summary.monthlyTotal}
-              currency={currency}
-              tone="transfer"
-              visualTone="expense"
-              variant="h4"
-              compact
-              fit
-              style={styles.amount}
-            />
-            <Text variant="muted">{t("screens.stats.dashboard.perMonth")}</Text>
-          </View>
+          <Money
+            value={total}
+            currency={currency}
+            tone="transfer"
+            visualTone="expense"
+            variant="h4"
+            compact
+            fit
+            style={styles.amount}
+          />
           <Text variant="muted">
-            {t("screens.stats.dashboard.recurringActive", { count })}
+            {t("screens.stats.dashboard.recurringCount", { count })}
           </Text>
         </View>
       ) : (
@@ -55,13 +56,7 @@ const styles = StyleSheet.create(() => ({
   body: {
     gap: 4,
   },
-  amountRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: 4,
-  },
   amount: {
-    flexShrink: 1,
     fontWeight: "700",
   },
 }))

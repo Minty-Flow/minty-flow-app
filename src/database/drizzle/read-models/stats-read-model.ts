@@ -11,15 +11,14 @@ import {
   fetchWrappedInsights,
 } from "~/database/drizzle/read-models/stats-data"
 import {
-  fetchRecurringSummary,
+  fetchRecurringSpend,
   fetchSpendingPlaces,
-  type RecurringSummary,
+  type RecurringSpend,
   type SpendingPlace,
 } from "~/database/drizzle/read-models/stats-extras-data"
 import {
   accounts,
   categories,
-  recurringTransactions,
   tags,
   transactions,
 } from "~/database/drizzle/schema"
@@ -79,16 +78,12 @@ function useStatsDatabaseChangeSignal(): string {
   const account = useLiveQuery(drizzleDb.select({ n: count }).from(accounts))
   const category = useLiveQuery(drizzleDb.select({ n: count }).from(categories))
   const tag = useLiveQuery(drizzleDb.select({ n: count }).from(tags))
-  const recurring = useLiveQuery(
-    drizzleDb.select({ n: count }).from(recurringTransactions),
-  )
 
   return [
     tx.updatedAt?.getTime() ?? 0,
     account.updatedAt?.getTime() ?? 0,
     category.updatedAt?.getTime() ?? 0,
     tag.updatedAt?.getTime() ?? 0,
-    recurring.updatedAt?.getTime() ?? 0,
   ].join(":")
 }
 
@@ -354,19 +349,21 @@ export function useWrappedInsights(
   return { insights, isLoading }
 }
 
-/** Active recurring expenses for `currency`; null until the first read. */
-export function useRecurringSummary(currency: string): RecurringSummary | null {
+/** Recurring expenses in `dateRange` for `currency`. */
+export function useRecurringSpend(
+  dateRange: StatsDateRange,
+  currency: string,
+): RecurringSpend {
   const dbChangeSignal = useStatsDatabaseChangeSignal()
-  const dayKey = useDayKey()
-  // biome-ignore lint/correctness/useExhaustiveDependencies: re-read on db changes and day rollover
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-read on db changes
   return useMemo(() => {
     try {
-      return fetchRecurringSummary(currency)
+      return fetchRecurringSpend(dateRange, currency)
     } catch (error) {
-      logger.error("recurring summary fetch failed", { error: String(error) })
-      return null
+      logger.error("recurring spend fetch failed", { error: String(error) })
+      return { total: 0, count: 0 }
     }
-  }, [currency, dbChangeSignal, dayKey])
+  }, [dateRange, currency, dbChangeSignal])
 }
 
 /** Located expenses in `dateRange` for `currency`, grouped by place. */

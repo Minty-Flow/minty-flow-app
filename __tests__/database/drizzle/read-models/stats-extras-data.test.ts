@@ -14,29 +14,15 @@ vi.mock("~/database/drizzle/db", async () => {
   return { drizzleDb: await createTestDb() }
 })
 
-import { like } from "drizzle-orm"
-
 import { drizzleDb } from "~/database/drizzle/db"
 import {
-  fetchRecurringSummary,
+  fetchRecurringSpend,
   groupSpendingPlaces,
-  monthlyEquivalent,
   type PlaceRow,
 } from "~/database/drizzle/read-models/stats-extras-data"
-import { accounts, recurringTransactions } from "~/database/drizzle/schema"
+import { accounts } from "~/database/drizzle/schema"
 import { createRecurringRule } from "~/database/services/recurring-transaction-service"
-import type { RecurrenceUnit } from "~/types/transactions"
 import { buildRRuleString } from "~/utils/recurrence"
-
-describe("monthlyEquivalent", () => {
-  it("scales each unit to one month", () => {
-    expect(monthlyEquivalent(1_000, { interval: 1, unit: "month" })).toBe(1_000)
-    expect(monthlyEquivalent(12_000, { interval: 1, unit: "year" })).toBe(1_000)
-    expect(monthlyEquivalent(1_200, { interval: 3, unit: "month" })).toBe(400)
-    expect(monthlyEquivalent(1_200, { interval: 1, unit: "week" })).toBe(5_200)
-    expect(monthlyEquivalent(100, { interval: 1, unit: "day" })).toBe(3_044)
-  })
-})
 
 describe("groupSpendingPlaces", () => {
   const row = (
@@ -89,7 +75,7 @@ describe("groupSpendingPlaces", () => {
   })
 })
 
-describe("fetchRecurringSummary", () => {
+describe("fetchRecurringSpend", () => {
   const now = "2026-01-01T00:00:00.000Z"
   for (const [id, currencyCode] of [
     ["acc-usd", "USD"],
@@ -108,16 +94,12 @@ describe("fetchRecurringSummary", () => {
       .run()
   }
 
-  const start = Date.now() - 60_000
+  // Whole seconds: RRule drops milliseconds from DTSTART.
+  const start = Math.floor((Date.now() - 60_000) / 1000) * 1000
   const rule = (
     title: string,
     amount: number,
-    opts: {
-      type?: "expense" | "income"
-      accountId?: string
-      kind?: "subscription" | "repetitive"
-      unit?: RecurrenceUnit
-    } = {},
+    opts: { type?: "expense" | "income"; accountId?: string } = {},
   ) =>
     createRecurringRule({
       amount,
@@ -128,43 +110,34 @@ describe("fetchRecurringSummary", () => {
       description: null,
       subtype: null,
       tags: [],
-      kind: opts.kind ?? "subscription",
+      kind: "subscription",
       range: { from: start, to: new Date(2099, 11, 31).getTime() },
       rules: [
         buildRRuleString({
           interval: 1,
-          unit: opts.unit ?? "month",
+          unit: "month",
           startDate: new Date(start),
         }),
       ],
     })
 
-  it("lists active expense rules of one currency, split by kind", async () => {
+  it("sums recurring expenses of one currency in the range", async () => {
     await rule("Netflix", 1_500)
-    await rule("Gym", 12_000, { unit: "year" })
-    await rule("Groceries", 1_000, { kind: "repetitive", unit: "week" })
     await rule("Salary", 500_000, { type: "income" })
     await rule("Paris flat", 90_000, { accountId: "acc-eur" })
-    await rule("Old", 9_999)
-    drizzleDb
-      .update(recurringTransactions)
-      .set({ disabled: 1 })
-      .where(like(recurringTransactions.jsonTransactionTemplate, '%"Old"%'))
-      .run()
 
-    const summary = fetchRecurringSummary("USD")
-
-    expect(
-      summary.subscriptions.map((s) => [s.title, s.monthlyAmount]),
-    ).toEqual([
-      ["Netflix", 1_500],
-      ["Gym", 1_000],
-    ])
-    expect(summary.repetitive.map((s) => s.title)).toEqual(["Groceries"])
-    expect(summary.monthlyTotal).toBe(1_500 + 1_000 + 4_333)
-    expect(summary.subscriptions[0].latestTransactionId).not.toBeNull()
-    expect(summary.subscriptions[0].nextDate.getTime()).toBeGreaterThan(
-      Date.now(),
-    )
+    // Each rule spawns today's instance plus next month's upcoming one.
+    const range = {
+      from: new Date(start - 1_000),
+      to: new Date(start + 1_000),
+    }
+    expect(fetchRecurringSpend(range, "USD")).toEqual({
+      total: 1_500,
+      count: 1,
+    })
+    expect(fetchRecurringSpend(range, "EUR")).toEqual({
+      total: 90_000,
+      count: 1,
+    })
   })
 })

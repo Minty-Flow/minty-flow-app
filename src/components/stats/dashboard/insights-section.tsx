@@ -77,6 +77,7 @@ export function StatsInsightsSection({
           onPress={() => onNavigate("/stats/calendar")}
         />
         <RecurringCard
+          dateRange={dateRange}
           currency={stats.currency}
           onPress={() => onNavigate("/stats/recurring")}
         />
