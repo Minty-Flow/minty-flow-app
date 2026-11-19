@@ -23,9 +23,7 @@
       "saveChanges": "حفظ التغييرات",
       "discard": "تجاهل",
       "previous": "السابق",
-      "undo": "تراجع",
-      "edit": "تعديل",
-      "moreActions": "المزيد من الإجراءات"
+      "undo": "تراجع"
     },
     "states": {
       "soon": "قريباً",
@@ -831,7 +829,8 @@
           "descriptionPlaceholder": "ملاحظة اختيارية عن هذا القرض",
           "amountLabel": "المبلغ الأصلي",
           "deleteLabel": "حذف القرض",
-          "dueDateLabel": "تاريخ الاستحقاق"
+          "dueDateLabel": "تاريخ الاستحقاق",
+          "editLabel": "تعديل القرض"
         },
         "detail": {
           "title": "قرض",

@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next"
 import { ScrollView, SectionList } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
-import { ConfirmSheet } from "~/components/confirm-sheet"
 import { IconSvg } from "~/components/icons"
 import { LoanCard } from "~/components/loans/loan-card"
 import { RouteLoadingState } from "~/components/route-load-state"
@@ -17,13 +16,10 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useAccounts } from "~/database/drizzle/read-models/account-read-model"
 import { useLoansQuery } from "~/database/drizzle/read-models/loan-read-model"
-import { deleteLoanById } from "~/database/services/loan-service"
 import { useLoanTermReconcile } from "~/hooks/use-loan-term-reconcile"
 import type { Loan, LoanTerm } from "~/types/loans"
 import { LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
-import { logger } from "~/utils/logger"
-import { Toast } from "~/utils/toast"
 
 type LoanTypeFilter = "all" | "lent" | "borrowed"
 export default function LoansScreen() {
@@ -39,7 +35,6 @@ export default function LoansScreen() {
   const [activeFilter, setActiveFilter] = useState<LoanTypeFilter>("all")
   const [activeTerm, setActiveTerm] = useState<LoanTerm>("one_time")
   const [settledOpen, setSettledOpen] = useState(false)
-  const [deleteLoanId, setDeleteLoanId] = useState<string | null>(null)
   const isFiltered = activeFilter !== "all"
   const toggleFilter = useCallback(() => {
     setFilterVisible((v) => !v)
@@ -73,31 +68,11 @@ export default function LoansScreen() {
   const handleLoanPress = (loanId: string) => {
     router.push(`/settings/loans/${loanId}`)
   }
-  const handleDeleteConfirm = async () => {
-    if (!deleteLoanId) return
-    try {
-      await deleteLoanById(deleteLoanId)
-      Toast.success({
-        title: t("components.transactionForm.toast.loanDeleted"),
-      })
-    } catch (error) {
-      logger.error("Failed to delete loan", { error })
-      Toast.error({ title: t("common.toast.error") })
-      return false
-    }
-  }
   const renderLoanItem = ({ item }: { item: Loan }) => (
     <LoanCard
       loan={item}
       account={accountById.get(item.accountId)}
       onPress={() => handleLoanPress(item.id)}
-      onEdit={() =>
-        router.push({
-          pathname: "/settings/loans/[loanId]/modify",
-          params: { loanId: item.id },
-        })
-      }
-      onDelete={() => setDeleteLoanId(item.id)}
     />
   )
   const filteredLoans = (() => {
@@ -203,20 +178,6 @@ export default function LoansScreen() {
         }
         renderItem={renderLoanItem}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
-
-      <ConfirmSheet
-        visible={deleteLoanId !== null}
-        onRequestClose={() => setDeleteLoanId(null)}
-        onConfirm={handleDeleteConfirm}
-        title={t("components.transactionForm.deleteLoanSheet.title")}
-        description={t(
-          "components.transactionForm.deleteLoanSheet.description",
-        )}
-        confirmLabel={t("common.actions.delete")}
-        cancelLabel={t("common.actions.cancel")}
-        variant="destructive"
-        icon="trash-outline"
       />
 
       <Fab

@@ -23,9 +23,7 @@
       "saveChanges": "Save Changes",
       "discard": "Discard",
       "previous": "Previous",
-      "undo": "Undo",
-      "edit": "Edit",
-      "moreActions": "More actions"
+      "undo": "Undo"
     },
     "states": {
       "soon": "Soon",
@@ -795,7 +793,8 @@
           "descriptionPlaceholder": "Optional note about this loan",
           "amountLabel": "Principal Amount",
           "deleteLabel": "Delete Loan",
-          "dueDateLabel": "Due Date"
+          "dueDateLabel": "Due Date",
+          "editLabel": "Edit Loan"
         },
         "detail": {
           "title": "Loan",
