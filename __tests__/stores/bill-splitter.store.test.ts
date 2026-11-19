@@ -9,7 +9,10 @@ vi.mock("~/utils/mmkv-storage", () => ({
 }))
 vi.mock("react-native-mmkv", () => ({ createMMKV: () => ({}) }))
 
-import { useBillSplitterStore } from "~/stores/bill-splitter.store"
+import {
+  getDefaultSplits,
+  useBillSplitterStore,
+} from "~/stores/bill-splitter.store"
 
 const migrate = (state: unknown, version: number) => {
   const run = useBillSplitterStore.persist.getOptions().migrate
@@ -31,5 +34,39 @@ describe("bill splitter draft upgrade (v3 → v4)", () => {
 
   it("keeps any other draft as it was", () => {
     expect(migrate(draft("BTC"), 3)).toEqual(draft("BTC"))
+  })
+})
+
+describe("getDefaultSplits", () => {
+  const people = [
+    { id: "a", name: "A" },
+    { id: "b", name: "B" },
+    { id: "c", name: "C" },
+  ]
+  const selectedIds = (
+    splits: { participantId: string; selected: boolean }[],
+  ) => splits.filter((s) => s.selected).map((s) => s.participantId)
+
+  it("selects everyone for the first item", () => {
+    expect(selectedIds(getDefaultSplits(people, undefined))).toEqual([
+      "a",
+      "b",
+      "c",
+    ])
+  })
+
+  it("copies the previous item's group and leaves newcomers out", () => {
+    const previous = {
+      id: "1",
+      name: "x",
+      price: 100,
+      quantity: 1,
+      splitEvenly: true,
+      splits: [
+        { participantId: "a", selected: true, percentage: 100 },
+        { participantId: "b", selected: false, percentage: 0 },
+      ],
+    }
+    expect(selectedIds(getDefaultSplits(people, previous))).toEqual(["a"])
   })
 })

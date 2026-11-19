@@ -886,7 +886,10 @@
           "quantity": "Multiplier",
           "quantityDescription": "Multiplied to every item, useful for tax",
           "splitEvenly": "Split Evenly",
-          "total": "Total"
+          "total": "Total",
+          "selectAll": "All",
+          "selectNone": "None",
+          "sameAsLast": "Same as last item"
         },
         "names": {
           "title": "Participants",

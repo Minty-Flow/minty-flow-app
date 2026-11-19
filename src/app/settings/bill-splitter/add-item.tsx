@@ -14,6 +14,7 @@ import { Money } from "~/components/money"
 import { SmartAmountInput } from "~/components/smart-amount-input"
 import { Button } from "~/components/ui/button"
 import { Checkbox } from "~/components/ui/checkbox"
+import { Chip } from "~/components/ui/chips"
 import { Input } from "~/components/ui/input"
 import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
@@ -21,6 +22,7 @@ import { Switch } from "~/components/ui/switch"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import {
+  getDefaultSplits,
   getItemAllocations,
   useBillSplitterStore,
 } from "~/stores/bill-splitter.store"
@@ -55,6 +57,8 @@ export default function AddItemScreen() {
     ? items.find((i) => i.id === params.itemId)
     : undefined
   const isEditMode = !!editItem
+  // The item added before this one (excluding itself when editing).
+  const previousItem = items.filter((i) => i.id !== params.itemId).at(-1)
   const [name, setName] = useState(editItem?.name ?? "")
   const [price, setPrice] = useState(editItem?.price ?? 0)
   const [quantity, setQuantity] = useState(editItem?.quantity ?? 1)
@@ -64,11 +68,7 @@ export default function AddItemScreen() {
   const [splitEvenly, setSplitEvenly] = useState(editItem?.splitEvenly ?? true)
   const [splits, setSplits] = useState<ItemSplit[]>(() => {
     if (editItem) return editItem.splits
-    return participants.map((p) => ({
-      participantId: p.id,
-      selected: true,
-      percentage: participants.length > 0 ? 100 / participants.length : 0,
-    }))
+    return getDefaultSplits(participants, previousItem)
   })
   // String state for percentage inputs — prevents "33." from resetting to "33"
   const [percentageStrings, setPercentageStrings] = useState<PercentageStrings>(
@@ -95,9 +95,15 @@ export default function AddItemScreen() {
     // Merge in any participants not yet present in splits
     const existingIds = new Set(splits.map((s) => s.participantId))
     const merged = [...splits]
+    // A newcomer joins the item only when everyone else is already on it.
+    const allSelected = splits.every((s) => s.selected)
     for (const p of participants) {
       if (!existingIds.has(p.id)) {
-        merged.push({ participantId: p.id, selected: true, percentage: 0 })
+        merged.push({
+          participantId: p.id,
+          selected: allSelected,
+          percentage: 0,
+        })
       }
     }
     // Remove splits for deleted participants
@@ -118,6 +124,20 @@ export default function AddItemScreen() {
       effectiveSplits.map((s) =>
         s.participantId === participantId ? { ...s, selected: !s.selected } : s,
       ),
+    )
+  }
+  const selectAll = (selected: boolean) => {
+    setSplits(effectiveSplits.map((s) => ({ ...s, selected })))
+  }
+  const selectSameAsPrevious = () => {
+    const previous = getDefaultSplits(participants, previousItem)
+    setSplits(
+      effectiveSplits.map((s) => ({
+        ...s,
+        selected:
+          previous.find((p) => p.participantId === s.participantId)?.selected ??
+          false,
+      })),
     )
   }
   // Only update numeric split state on blur — keeps string state authoritative during typing
@@ -309,6 +329,28 @@ export default function AddItemScreen() {
         <Text style={styles.sectionLabel}>
           {t("screens.settings.billSplitter.names.title")}
         </Text>
+
+        <View style={styles.quickSelectRow}>
+          <Chip
+            label={t("screens.settings.billSplitter.item.selectAll")}
+            hideCheck
+            selected={selectedCount === effectiveSplits.length}
+            onPress={() => selectAll(true)}
+          />
+          <Chip
+            label={t("screens.settings.billSplitter.item.selectNone")}
+            hideCheck
+            selected={selectedCount === 0}
+            onPress={() => selectAll(false)}
+          />
+          {previousItem ? (
+            <Chip
+              label={t("screens.settings.billSplitter.item.sameAsLast")}
+              hideCheck
+              onPress={selectSameAsPrevious}
+            />
+          ) : null}
+        </View>
 
         <View style={styles.participantsList}>
           {effectiveSplits.map((split) => {
@@ -535,6 +577,11 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.bodyLarge.fontSize,
     fontWeight: "500",
     color: theme.colors.onSurface,
+  },
+  quickSelectRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
   },
   participantsList: {
     gap: 8,
