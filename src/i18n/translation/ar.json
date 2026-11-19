@@ -372,7 +372,8 @@
         "entries_two": "عمليتان",
         "entries_few": "{{count}} عمليات",
         "entries_many": "{{count}} عملية",
-        "entries_other": "{{count}} عملية"
+        "entries_other": "{{count}} عملية",
+        "retry": "إعادة المحاولة"
       },
       "pendingNotice_zero": "{{count}} معاملة مجدولة مستبعدة من الإحصائيات",
       "pendingNotice_one": "معاملة مجدولة واحدة مستبعدة من الإحصائيات",

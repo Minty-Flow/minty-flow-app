@@ -7,7 +7,7 @@ import {
   MAPLIBRE_JS_SRI,
   MAPLIBRE_VERSION,
   WEBVIEW_ORIGINS,
-} from "~/components/transaction/location-picker-modal"
+} from "~/constants/maplibre"
 import type { SpendingPlace } from "~/database/drizzle/read-models/stats-extras-data"
 
 interface SpendingMapProps {
@@ -61,10 +61,14 @@ function buildSpendingMapHtml(places: SpendingPlace[], color: string): string {
         zoom: 12,
         attributionControl: { compact: true }
       });
+      // Only a failed style (offline) counts: one missing tile or sprite
+      // still leaves a usable map. A load that never finishes counts too.
       let loaded = false;
-      map.on('error', () => { if (!loaded) fail(); });
+      const timeout = setTimeout(() => { if (!loaded) fail(); }, 15000);
+      map.on('error', () => { if (!loaded && !map.isStyleLoaded()) fail(); });
       map.on('load', () => {
         loaded = true;
+        clearTimeout(timeout);
         map.addSource('places', {
           type: 'geojson',
           data: data,

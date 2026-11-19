@@ -78,8 +78,9 @@ function parseLocation(raw: string | null): TransactionLocation | null {
 }
 
 /**
- * Groups located expenses by place: the same address is one place; without an
- * address, coordinates rounded to 3 decimals (about 100 m) are. Sorted by
+ * Groups located expenses by place: the same address within about 1 km is one
+ * place (so "Home" typed in two cities stays two); without an address,
+ * coordinates rounded to 3 decimals (about 100 m) are. Sorted by
  * total spent, places that net to zero or less (refunds) are dropped.
  */
 export function groupSpendingPlaces(rows: PlaceRow[]): SpendingPlace[] {
@@ -91,7 +92,7 @@ export function groupSpendingPlaces(rows: PlaceRow[]): SpendingPlace[] {
     if (!loc) continue
     const address = loc.address?.trim() || null
     const key = address
-      ? `a:${address.toLowerCase()}`
+      ? `a:${address.toLowerCase()}@${loc.latitude.toFixed(2)},${loc.longitude.toFixed(2)}`
       : `c:${loc.latitude.toFixed(3)},${loc.longitude.toFixed(3)}`
     const place = places.get(key)
     if (place) {

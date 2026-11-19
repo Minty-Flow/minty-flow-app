@@ -25,6 +25,8 @@ function SpendingMapContent({
   const places = useSpendingPlaces(dateRange, currency)
   const mapRef = useRef<WebView>(null)
   const [mapFailed, setMapFailed] = useState(false)
+  // Bumped on Retry so the WebView remounts and loads from scratch.
+  const [mapAttempt, setMapAttempt] = useState(0)
 
   if (places.length === 0) {
     return <Text variant="muted">{t("screens.stats.spendingMap.empty")}</Text>
@@ -39,11 +41,26 @@ function SpendingMapContent({
             size={18}
             color={theme.colors.semantic.semi}
           />
-          <Text variant="muted">{t("screens.stats.spendingMap.offline")}</Text>
+          <Text variant="muted" style={styles.offlineText}>
+            {t("screens.stats.spendingMap.offline")}
+          </Text>
+          <Pressable
+            onPress={() => {
+              setMapFailed(false)
+              setMapAttempt((n) => n + 1)
+            }}
+            accessibilityRole="button"
+            hitSlop={8}
+          >
+            <Text style={styles.retry}>
+              {t("screens.stats.spendingMap.retry")}
+            </Text>
+          </Pressable>
         </View>
       ) : (
         <View style={styles.mapCard}>
           <SpendingMap
+            key={mapAttempt}
             ref={mapRef}
             places={places}
             color={theme.colors.primary}
@@ -117,6 +134,13 @@ const styles = StyleSheet.create((theme) => ({
     padding: 16,
     borderRadius: theme.radius,
     backgroundColor: theme.colors.secondary,
+  },
+  offlineText: {
+    flex: 1,
+  },
+  retry: {
+    color: theme.colors.primary,
+    fontWeight: "700",
   },
   sectionTitle: {
     fontWeight: "700",

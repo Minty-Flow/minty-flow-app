@@ -16,6 +16,12 @@ import { Button } from "~/components/ui/button"
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import {
+  MAPLIBRE_CSS_SRI,
+  MAPLIBRE_JS_SRI,
+  MAPLIBRE_VERSION,
+  WEBVIEW_ORIGINS,
+} from "~/constants/maplibre"
 import type { TransactionLocation } from "~/types/transactions"
 import { Toast } from "~/utils/toast"
 
@@ -24,20 +30,6 @@ const DEFAULT_MAP_CENTER = { latitude: 37.7749, longitude: -122.4194 }
 const LOCATE_TIMEOUT_MS = 10_000
 // A cached position this recent is good enough to move the map immediately.
 const LAST_KNOWN_MAX_AGE_MS = 5 * 60_000
-// The map script runs inside a WebView that receives the chosen coordinates, so
-// it is pinned to an exact version and checked against its hash. Bumping the
-// version means recomputing both hashes (sha384 of the unpkg files).
-export const MAPLIBRE_VERSION = "5.24.0"
-export const MAPLIBRE_JS_SRI =
-  "sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp"
-export const MAPLIBRE_CSS_SRI =
-  "sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK"
-// Module-level so the WebView prop is referentially stable across re-renders.
-export const WEBVIEW_ORIGINS = [
-  "https://unpkg.com",
-  "https://tiles.openfreemap.org",
-  "about:blank",
-]
 interface LocationPickerModalProps {
   visible: boolean
   initialLocation?: TransactionLocation | null

@@ -327,7 +327,8 @@
         "offline": "The map needs an internet connection.",
         "empty": "No expenses with a location in this period.",
         "entries_one": "{{count}} entry",
-        "entries_other": "{{count}} entries"
+        "entries_other": "{{count}} entries",
+        "retry": "Retry"
       },
       "currency": {
         "showing": "Showing {{currency}}",

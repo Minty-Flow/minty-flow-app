@@ -403,19 +403,26 @@ export function useWrappedInsights(
  * Returns `initial` until the first read.
  */
 function useStatsRead<T>(read: () => T, key: string, initial: T): T {
-  const [result, setResult] = useState<{ key: string; value: T } | null>(null)
+  const [result, setResult] = useState<{
+    key: string
+    signal: string
+    value: T
+  } | null>(null)
   const dbChangeSignal = useStatsDatabaseChangeSignal()
   const isFocused = useIsFocused()
   const isTabActive = useIsActiveTab()
   const isVisible = isFocused && isTabActive
   const lastKey = result?.key
+  const lastSignal = result?.signal
   // biome-ignore lint/correctness/useExhaustiveDependencies: `read` is rebuilt every render; `key` names its inputs
   useEffect(() => {
     if (!isVisible) return
+    // Refocus with nothing changed: the stored value is still current.
+    if (lastKey === key && lastSignal === dbChangeSignal) return
     const timer = setTimeout(
       () => {
         try {
-          setResult({ key, value: read() })
+          setResult({ key, signal: dbChangeSignal, value: read() })
         } catch (error) {
           logger.error("stats read failed", { key, error: String(error) })
         }

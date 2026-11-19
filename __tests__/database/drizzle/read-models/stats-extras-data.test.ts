@@ -58,6 +58,17 @@ describe("groupSpendingPlaces", () => {
     ])
   })
 
+  it("keeps one address typed at two far-apart spots as two places", () => {
+    const places = groupSpendingPlaces([
+      row(500, { latitude: 1, longitude: 2, address: "Home" }),
+      row(300, { latitude: 40, longitude: 2, address: "Home" }),
+    ])
+    expect(places.map((p) => [p.address, p.total])).toEqual([
+      ["Home", 500],
+      ["Home", 300],
+    ])
+  })
+
   it("skips income, loans, bad locations and refunded-away places", () => {
     const places = groupSpendingPlaces([
       row(500, cafe, { type: "income" }),
