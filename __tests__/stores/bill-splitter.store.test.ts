@@ -131,3 +131,21 @@ describe("getDefaultSplits", () => {
     expect(selectedIds(getDefaultSplits(people, previous))).toEqual(["a"])
   })
 })
+
+describe("recorded participants", () => {
+  it("records once, forgets removed people, and resets with the bill", () => {
+    const store = useBillSplitterStore
+    store.getState().clearBill()
+    store.getState().addParticipant("A")
+    const [a] = store.getState().participants
+    store.getState().markRecorded(a.id)
+    store.getState().markRecorded(a.id)
+    expect(store.getState().recordedIds).toEqual([a.id])
+    store.getState().removeParticipant(a.id)
+    expect(store.getState().recordedIds).toEqual([])
+    store.getState().addParticipant("B")
+    store.getState().markRecorded(store.getState().participants[0].id)
+    store.getState().clearBill()
+    expect(store.getState().recordedIds).toEqual([])
+  })
+})

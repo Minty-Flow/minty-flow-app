@@ -917,7 +917,13 @@
           "whoPaid": "Who Paid?",
           "recordShare": "Record my share",
           "youOwe": "You owe them your share",
-          "owesYou": "Owes you"
+          "owesYou": "Owes you",
+          "recorded": "Recorded",
+          "billDone": {
+            "title": "Bill done",
+            "description": "Everything is recorded. Clear this bill to start a new one?",
+            "keep": "Keep"
+          }
         },
         "clear": {
           "confirm": {

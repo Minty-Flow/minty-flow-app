@@ -36,6 +36,11 @@ interface BillSplitterState {
   payerId: string | null
   /** Which participant is the user. */
   selfId: string | null
+  /**
+   * Participants whose loan or share expense was saved. Lives in the store,
+   * not the screen, so leaving and coming back cannot record anyone twice.
+   */
+  recordedIds: string[]
   accountId: string | null
   currencyCode: string | null
 
@@ -46,6 +51,7 @@ interface BillSplitterState {
   removeItem: (id: string) => void
   setPayerId: (id: string | null) => void
   setSelfId: (id: string | null) => void
+  markRecorded: (participantId: string) => void
   setAccountId: (id: string | null) => void
   setCurrencyCode: (currencyCode: string) => void
   clearBill: () => void
@@ -64,6 +70,7 @@ export const useBillSplitterStore = create<BillSplitterState>()(
       items: [],
       payerId: null,
       selfId: null,
+      recordedIds: [],
       accountId: null,
       currencyCode: null,
 
@@ -87,6 +94,7 @@ export const useBillSplitterStore = create<BillSplitterState>()(
           }),
           payerId: state.payerId === id ? null : state.payerId,
           selfId: state.selfId === id ? null : state.selfId,
+          recordedIds: state.recordedIds.filter((r) => r !== id),
         })),
 
       addItem: (item) => {
@@ -116,6 +124,12 @@ export const useBillSplitterStore = create<BillSplitterState>()(
 
       setPayerId: (id) => set({ payerId: id }),
       setSelfId: (id) => set({ selfId: id }),
+      markRecorded: (participantId) =>
+        set((state) =>
+          state.recordedIds.includes(participantId)
+            ? state
+            : { recordedIds: [...state.recordedIds, participantId] },
+        ),
 
       setAccountId: (id) => set({ accountId: id }),
       setCurrencyCode: (currencyCode) =>
@@ -140,6 +154,7 @@ export const useBillSplitterStore = create<BillSplitterState>()(
           items: [],
           payerId: null,
           selfId: null,
+          recordedIds: [],
           accountId: null,
           currencyCode: null,
         }),

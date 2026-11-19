@@ -1,9 +1,10 @@
 import { useRouter } from "expo-router"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FlatList } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { FooterBar } from "~/components/footer-bar"
 import { footerBarStyles } from "~/components/footer-bar.styles"
 import { IconSvg } from "~/components/icons"
@@ -41,6 +42,8 @@ export default function SummaryScreen() {
   const accountId = useBillSplitterStore((s) => s.accountId)
   const setPayerId = useBillSplitterStore((s) => s.setPayerId)
   const setSelfId = useBillSplitterStore((s) => s.setSelfId)
+  const recordedIds = useBillSplitterStore((s) => s.recordedIds)
+  const clearBill = useBillSplitterStore((s) => s.clearBill)
   const setCurrencyCode = useBillSplitterStore((s) => s.setCurrencyCode)
   useEffect(() => {
     if (!billCurrency) setCurrencyCode(currency)
@@ -52,9 +55,18 @@ export default function SummaryScreen() {
   const plan = getSettlementPlan(summary, selfId, payerId)
   const actionFor = (participantId: string) =>
     plan.find((a) => a.participantId === participantId)
-  // Participants whose form was already opened, so a re-tap does not queue a
-  // second entry for the same person.
-  const [doneIds, setDoneIds] = useState<string[]>([])
+  const isRecorded = (participantId: string) =>
+    recordedIds.includes(participantId)
+  const allRecorded =
+    plan.length > 0 && plan.every((a) => isRecorded(a.participantId))
+  // Offer to clear only when the last entry is saved while the user is here,
+  // not every time a finished bill is reopened.
+  const [billDoneVisible, setBillDoneVisible] = useState(false)
+  const wasAllRecorded = useRef(allRecorded)
+  useEffect(() => {
+    if (allRecorded && !wasAllRecorded.current) setBillDoneVisible(true)
+    wasAllRecorded.current = allRecorded
+  }, [allRecorded])
   // Picking "who you are" first also fills "who paid" with the same person,
   // the common case; the user can still change the payer after.
   const handleSelectSelf = (id: string | null) => {
@@ -64,7 +76,7 @@ export default function SummaryScreen() {
   const accounts = useActiveAccounts()
   // An archived or deleted account would prefill the loan form with a dead id.
   const hasValidAccount = accounts.some((a) => a.id === accountId)
-  const nextAction = plan.find((a) => !doneIds.includes(a.participantId))
+  const nextAction = plan.find((a) => !isRecorded(a.participantId))
   const handleAction = (action: SettlementAction) => {
     if (!accountId || !hasValidAccount) {
       Toast.warn({
@@ -72,7 +84,6 @@ export default function SummaryScreen() {
       })
       return
     }
-    setDoneIds((ids) => [...ids, action.participantId])
     const description = t(
       "screens.settings.billSplitter.summary.loanDescription",
     )
@@ -85,6 +96,7 @@ export default function SummaryScreen() {
           accountId,
           amount: action.amount.toString(),
           title: description,
+          billParticipantId: action.participantId,
         },
       })
       return
@@ -99,10 +111,13 @@ export default function SummaryScreen() {
         prefillAmount: action.amount.toString(),
         prefillLoanType:
           action.kind === "lent" ? LoanTypeEnum.LENT : LoanTypeEnum.BORROWED,
+        billParticipantId: action.participantId,
       },
     })
   }
   const actionHint = (action: SettlementAction) => {
+    if (isRecorded(action.participantId))
+      return t("screens.settings.billSplitter.summary.recorded")
     if (action.kind === "share")
       return t("screens.settings.billSplitter.summary.recordShare")
     if (action.kind === "borrowed")
@@ -137,13 +152,14 @@ export default function SummaryScreen() {
   const renderItem = ({ item }: { item: BillSummaryEntry }) => {
     const isSelf = item.participantId === selfId
     const action = actionFor(item.participantId)
+    const canAct = !!action && !isRecorded(item.participantId)
     return (
       <Pressable
-        style={[styles.summaryCard, !action && styles.summaryCardInactive]}
-        onPress={() => action && handleAction(action)}
+        style={[styles.summaryCard, !canAct && styles.summaryCardInactive]}
+        onPress={() => action && canAct && handleAction(action)}
         accessibilityRole="button"
         accessibilityHint={action ? actionHint(action) : undefined}
-        disabled={!action}
+        disabled={!canAct}
       >
         <View style={styles.nameBlock}>
           <Text style={styles.nameText} numberOfLines={1}>
@@ -163,7 +179,7 @@ export default function SummaryScreen() {
             hideSign
             style={styles.amountText}
           />
-          {action ? (
+          {canAct ? (
             <IconSvg
               name="chevron-right-outline"
               size={16}
@@ -252,6 +268,20 @@ export default function SummaryScreen() {
           </Text>
         </Button>
       </FooterBar>
+
+      <ConfirmSheet
+        visible={billDoneVisible}
+        onRequestClose={() => setBillDoneVisible(false)}
+        onConfirm={clearBill}
+        onConfirmed={() => router.back()}
+        title={t("screens.settings.billSplitter.summary.billDone.title")}
+        description={t(
+          "screens.settings.billSplitter.summary.billDone.description",
+        )}
+        confirmLabel={t("common.actions.clear")}
+        cancelLabel={t("screens.settings.billSplitter.summary.billDone.keep")}
+        icon="check-outline"
+      />
     </View>
   )
 }
