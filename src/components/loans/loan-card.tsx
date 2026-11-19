@@ -1,3 +1,4 @@
+import MenuView from "@expo/ui/community/menu"
 import { useTranslation } from "react-i18next"
 import { type DimensionValue, View as RNView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
@@ -18,9 +19,17 @@ interface LoanCardProps {
   /** The loan's account, looked up once by the list instead of per card. */
   account: Account | undefined
   onPress: () => void
+  onEdit: () => void
+  onDelete: () => void
 }
 
-export function LoanCard({ loan, account, onPress }: LoanCardProps) {
+export function LoanCard({
+  loan,
+  account,
+  onPress,
+  onEdit,
+  onDelete,
+}: LoanCardProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
   const isRTL = useLanguageStore((s) => s.isRTL)
@@ -90,6 +99,39 @@ export function LoanCard({ loan, account, onPress }: LoanCardProps) {
             {badgeLabel}
           </Text>
         </View>
+
+        <MenuView
+          actions={[
+            {
+              id: "edit",
+              title: t("common.actions.edit"),
+              image: "pencil",
+            },
+            {
+              id: "delete",
+              title: t("common.actions.delete"),
+              image: "trash",
+              attributes: { destructive: true },
+            },
+          ]}
+          onPressAction={({ nativeEvent }) => {
+            if (nativeEvent.event === "edit") onEdit()
+            else if (nativeEvent.event === "delete") onDelete()
+          }}
+        >
+          <View
+            style={styles.menuButton}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel={t("common.actions.moreActions")}
+          >
+            <IconSvg
+              name="dots-vertical-outline"
+              size={18}
+              color={theme.colors.onSecondary}
+            />
+          </View>
+        </MenuView>
       </View>
 
       {isLongTerm ? (
@@ -209,6 +251,12 @@ const styles = StyleSheet.create((t) => ({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 100,
+  },
+  // Negative margins grow the touch target without growing the row.
+  menuButton: {
+    padding: 10,
+    marginVertical: -10,
+    marginEnd: -10,
   },
   badgeText: {
     fontSize: t.typography.labelXSmall.fontSize,

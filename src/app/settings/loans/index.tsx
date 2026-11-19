@@ -1,9 +1,10 @@
 import { useNavigation, useRouter } from "expo-router"
 import { useCallback, useLayoutEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FlatList, ScrollView } from "react-native"
+import { ScrollView, SectionList } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { ConfirmSheet } from "~/components/confirm-sheet"
 import { IconSvg } from "~/components/icons"
 import { LoanCard } from "~/components/loans/loan-card"
 import { RouteLoadingState } from "~/components/route-load-state"
@@ -12,13 +13,17 @@ import { Chip } from "~/components/ui/chips"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Fab } from "~/components/ui/fab"
 import { Pressable } from "~/components/ui/pressable"
+import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import { useAccounts } from "~/database/drizzle/read-models/account-read-model"
 import { useLoansQuery } from "~/database/drizzle/read-models/loan-read-model"
+import { deleteLoanById } from "~/database/services/loan-service"
 import { useLoanTermReconcile } from "~/hooks/use-loan-term-reconcile"
 import type { Loan, LoanTerm } from "~/types/loans"
 import { LoanTypeEnum } from "~/types/loans"
 import { NewEnum } from "~/types/new"
+import { logger } from "~/utils/logger"
+import { Toast } from "~/utils/toast"
 
 type LoanTypeFilter = "all" | "lent" | "borrowed"
 export default function LoansScreen() {
@@ -33,6 +38,8 @@ export default function LoansScreen() {
   const [filterVisible, setFilterVisible] = useState(false)
   const [activeFilter, setActiveFilter] = useState<LoanTypeFilter>("all")
   const [activeTerm, setActiveTerm] = useState<LoanTerm>("one_time")
+  const [settledOpen, setSettledOpen] = useState(false)
+  const [deleteLoanId, setDeleteLoanId] = useState<string | null>(null)
   const isFiltered = activeFilter !== "all"
   const toggleFilter = useCallback(() => {
     setFilterVisible((v) => !v)
@@ -66,11 +73,31 @@ export default function LoansScreen() {
   const handleLoanPress = (loanId: string) => {
     router.push(`/settings/loans/${loanId}`)
   }
+  const handleDeleteConfirm = async () => {
+    if (!deleteLoanId) return
+    try {
+      await deleteLoanById(deleteLoanId)
+      Toast.success({
+        title: t("components.transactionForm.toast.loanDeleted"),
+      })
+    } catch (error) {
+      logger.error("Failed to delete loan", { error })
+      Toast.error({ title: t("common.toast.error") })
+      return false
+    }
+  }
   const renderLoanItem = ({ item }: { item: Loan }) => (
     <LoanCard
       loan={item}
       account={accountById.get(item.accountId)}
       onPress={() => handleLoanPress(item.id)}
+      onEdit={() =>
+        router.push({
+          pathname: "/settings/loans/[loanId]/modify",
+          params: { loanId: item.id },
+        })
+      }
+      onDelete={() => setDeleteLoanId(item.id)}
     />
   )
   const filteredLoans = (() => {
@@ -80,6 +107,19 @@ export default function LoansScreen() {
       return byTerm.filter((l) => l.loanType === LoanTypeEnum.LENT)
     return byTerm.filter((l) => l.loanType === LoanTypeEnum.BORROWED)
   })()
+  const openLoans = filteredLoans.filter((l) => !l.isClosed)
+  const settledLoans = filteredLoans.filter((l) => l.isClosed)
+  // No sections at all when nothing matches: SectionList counts section
+  // headers as items, so an empty section would hide ListEmptyComponent.
+  const sections =
+    filteredLoans.length === 0
+      ? []
+      : [
+          { key: "open", data: openLoans },
+          ...(settledLoans.length > 0
+            ? [{ key: "settled", data: settledOpen ? settledLoans : [] }]
+            : []),
+        ]
   const chips: {
     key: LoanTypeFilter
     label: string
@@ -127,9 +167,33 @@ export default function LoansScreen() {
         </View>
       ) : null}
 
-      <FlatList
-        data={filteredLoans}
+      <SectionList
+        sections={sections}
         keyExtractor={(item) => item.id}
+        stickySectionHeadersEnabled={false}
+        renderSectionHeader={({ section }) =>
+          section.key === "settled" ? (
+            <Pressable
+              style={styles.settledHeader}
+              onPress={() => setSettledOpen((v) => !v)}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: settledOpen }}
+            >
+              <Text variant="small" style={styles.settledHeaderText}>
+                {t("screens.settings.loans.settledSection", {
+                  count: settledLoans.length,
+                })}
+              </Text>
+              <IconSvg
+                name={
+                  settledOpen ? "chevron-up-outline" : "chevron-down-outline"
+                }
+                size={16}
+                color={theme.colors.onSecondary}
+              />
+            </Pressable>
+          ) : null
+        }
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <EmptyState
@@ -139,6 +203,20 @@ export default function LoansScreen() {
         }
         renderItem={renderLoanItem}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
+      />
+
+      <ConfirmSheet
+        visible={deleteLoanId !== null}
+        onRequestClose={() => setDeleteLoanId(null)}
+        onConfirm={handleDeleteConfirm}
+        title={t("components.transactionForm.deleteLoanSheet.title")}
+        description={t(
+          "components.transactionForm.deleteLoanSheet.description",
+        )}
+        confirmLabel={t("common.actions.delete")}
+        cancelLabel={t("common.actions.cancel")}
+        variant="destructive"
+        icon="trash-outline"
       />
 
       <Fab
@@ -171,6 +249,20 @@ const styles = StyleSheet.create((t) => ({
   },
   separator: {
     height: 0,
+  },
+  settledHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    marginTop: 8,
+  },
+  settledHeaderText: {
+    fontSize: t.typography.labelMedium.fontSize,
+    fontWeight: "600",
+    color: t.colors.onSecondary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   headerFilterButton: {
     padding: 6,

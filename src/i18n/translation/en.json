@@ -23,7 +23,9 @@
       "saveChanges": "Save Changes",
       "discard": "Discard",
       "previous": "Previous",
-      "undo": "Undo"
+      "undo": "Undo",
+      "edit": "Edit",
+      "moreActions": "More actions"
     },
     "states": {
       "soon": "Soon",
@@ -817,7 +819,8 @@
         "initialTransaction": {
           "title": "Loan: {{name}}"
         },
-        "editTitle": "Edit Loan"
+        "editTitle": "Edit Loan",
+        "settledSection": "Settled ({{count}})"
       },
       "tags": {
         "title": "Tags",

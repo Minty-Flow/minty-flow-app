@@ -23,7 +23,9 @@
       "saveChanges": "حفظ التغييرات",
       "discard": "تجاهل",
       "previous": "السابق",
-      "undo": "تراجع"
+      "undo": "تراجع",
+      "edit": "تعديل",
+      "moreActions": "المزيد من الإجراءات"
     },
     "states": {
       "soon": "قريباً",
@@ -853,7 +855,8 @@
         "initialTransaction": {
           "title": "قرض: {{name}}"
         },
-        "editTitle": "تعديل القرض"
+        "editTitle": "تعديل القرض",
+        "settledSection": "المسددة ({{count}})"
       },
       "tags": {
         "title": "الوسوم",

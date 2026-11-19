@@ -353,6 +353,7 @@ import DeviceMobileOff from "./outline/DeviceMobileOff"
 import DeviceMobileVibration from "./outline/DeviceMobileVibration"
 import Dice from "./outline/Dice"
 import Divide from "./outline/Divide"
+import DotsVerticalOutline from "./outline/DotsVertical"
 import DownloadOutline from "./outline/Download"
 import Equal from "./outline/Equal"
 import Eraser from "./outline/Eraser"
@@ -1784,6 +1785,9 @@ const ICON_MAP = {
   },
   get "pencil-outline"() {
     return PencilOutline
+  },
+  get "dots-vertical-outline"() {
+    return DotsVerticalOutline
   },
   get "star-outline"() {
     return StarOutline
