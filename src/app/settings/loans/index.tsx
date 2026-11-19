@@ -218,8 +218,7 @@ const styles = StyleSheet.create((t) => ({
     justifyContent: "space-between",
     marginHorizontal: -20,
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingVertical: 12,
   },
   settledHeaderText: {
     fontSize: t.typography.labelMedium.fontSize,
