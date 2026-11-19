@@ -15,8 +15,8 @@ export interface RecurringSpend {
 }
 
 /**
- * Expenses spawned by a recurring rule in `range` on accounts using
- * `currency`, upcoming ones included: the same rows the Recurring screen lists.
+ * Confirmed expenses spawned by a recurring rule in `range` on accounts using
+ * `currency`. Upcoming rows are left out, as in every other stats total.
  */
 export function fetchRecurringSpend(
   range: Pick<StatsDateRange, "from" | "to">,
@@ -27,6 +27,7 @@ export function fetchRecurringSpend(
      FROM transactions t
      JOIN accounts a ON a.id = t.account_id
      WHERE t.is_deleted = 0
+       AND t.is_pending = 0
        AND t.recurring_id IS NOT NULL
        AND t.type = 'expense'
        AND a.currency_code = ${currency}

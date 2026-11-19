@@ -1,7 +1,7 @@
 import { router } from "expo-router"
 import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
-import { ScrollView } from "react-native"
+import { SectionList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { Money } from "~/components/money"
@@ -10,7 +10,7 @@ import { StatsPeriodHeader } from "~/components/stats/stats-period-header"
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
-import { useStats } from "~/database/drizzle/read-models/stats-read-model"
+import { useStatsRange } from "~/database/drizzle/read-models/stats-read-model"
 import {
   type TransactionWithRelations,
   useTransactions,
@@ -19,119 +19,118 @@ import { useSingleOpenSwipeable } from "~/hooks/use-transaction-list-state"
 import { TransactionKindEnum } from "~/types/transactions"
 import { formatRangeLabel } from "~/utils/stats-date-range"
 
-/** Expense total per currency, in first-seen order. */
+/** Confirmed expense total per currency; upcoming rows are listed, not counted. */
 function totalsByCurrency(rows: TransactionWithRelations[]) {
   const totals = new Map<string, number>()
   for (const row of rows) {
     const currency = row.account?.currencyCode
     if (!currency) continue
-    totals.set(currency, (totals.get(currency) ?? 0) + Math.abs(row.amount))
+    // Upcoming-only currencies still show, as 0.
+    const amount = row.isPending ? 0 : Math.abs(row.amount)
+    totals.set(currency, (totals.get(currency) ?? 0) + amount)
   }
   return [...totals]
 }
 
+const keyExtractor = (row: TransactionWithRelations) => row.id
+
 export default function StatsRecurringScreen() {
   const { t } = useTranslation()
-  const {
-    dateRange,
-    activePreset,
-    activeYear,
-    activeMonth,
-    setMonthRange,
-    setCustomRange,
-    navigate,
-  } = useStats(useStatsInitFromParams())
+  const range = useStatsRange(useStatsInitFromParams())
+  const { dateRange } = range
   const { items } = useTransactions({
     from: dateRange.from.toISOString(),
     to: dateRange.to.toISOString(),
     recurringOnly: true,
   })
   const { onWillOpen, closeOpen } = useSingleOpenSwipeable()
-  const openTransaction = useCallback(
-    (id: string) =>
-      router.push({ pathname: "/transaction/[id]", params: { id } }),
-    [],
+  const renderItem = useCallback(
+    ({ item }: { item: TransactionWithRelations }) => (
+      <TransactionItem
+        transactionWithRelations={item}
+        onPress={() =>
+          router.push({
+            pathname: "/transaction/[id]",
+            params: { id: item.id },
+          })
+        }
+        onDelete={closeOpen}
+        onWillOpen={onWillOpen}
+      />
+    ),
+    [closeOpen, onWillOpen],
   )
 
   const expenses = items.filter((row) => row.type === "expense")
-  const subscriptions = expenses.filter(
-    (row) => row.kind === TransactionKindEnum.SUBSCRIPTION,
-  )
-  const repetitive = expenses.filter(
-    (row) => row.kind !== TransactionKindEnum.SUBSCRIPTION,
-  )
-
-  const section = (title: string, rows: TransactionWithRelations[]) =>
-    rows.length > 0 ? (
-      <View style={styles.section}>
-        <Text variant="h4" style={styles.sectionTitle}>
-          {title}
-        </Text>
-        {rows.map((row) => (
-          <TransactionItem
-            key={row.id}
-            transactionWithRelations={row}
-            onPress={() => openTransaction(row.id)}
-            onDelete={closeOpen}
-            onWillOpen={onWillOpen}
-          />
-        ))}
-      </View>
-    ) : null
+  const totals = totalsByCurrency(expenses)
+  const sections = [
+    {
+      title: t("screens.stats.recurring.subscriptions"),
+      data: expenses.filter(
+        (row) => row.kind === TransactionKindEnum.SUBSCRIPTION,
+      ),
+    },
+    {
+      title: t("screens.stats.recurring.repetitive"),
+      data: expenses.filter(
+        (row) => row.kind !== TransactionKindEnum.SUBSCRIPTION,
+      ),
+    },
+  ].filter((section) => section.data.length > 0)
 
   return (
-    <ScrollView
+    <SectionList
       contentInsetAdjustmentBehavior="automatic"
-      style={styles.scroll}
+      style={styles.list}
       contentContainerStyle={styles.content}
-    >
-      <StatsPeriodHeader
-        activeYear={activeYear}
-        activeMonth={activeMonth}
-        activePreset={activePreset}
-        dateRange={dateRange}
-        setMonthRange={setMonthRange}
-        setCustomRange={setCustomRange}
-        navigate={navigate}
-      />
-
-      <View style={styles.header}>
-        <Text variant="muted">
-          {t("screens.stats.recurring.spentIn", {
-            period: formatRangeLabel(dateRange),
-          })}
+      sections={sections}
+      keyExtractor={keyExtractor}
+      renderItem={renderItem}
+      stickySectionHeadersEnabled={false}
+      renderSectionHeader={({ section }) => (
+        <Text variant="h4" style={styles.sectionTitle}>
+          {section.title}
         </Text>
-        {expenses.length === 0 ? (
-          <Text variant="muted">{t("screens.stats.recurring.empty")}</Text>
-        ) : (
-          totalsByCurrency(expenses).map(([currency, total]) => (
-            <Money
-              key={currency}
-              value={total}
-              currency={currency}
-              tone="transfer"
-              visualTone="expense"
-              variant="h2"
-              compact
-              style={styles.total}
-            />
-          ))
-        )}
-      </View>
-
-      {section(t("screens.stats.recurring.subscriptions"), subscriptions)}
-      {section(t("screens.stats.recurring.repetitive"), repetitive)}
-    </ScrollView>
+      )}
+      ListHeaderComponent={
+        <>
+          <StatsPeriodHeader {...range} />
+          <View style={styles.header}>
+            <Text variant="muted">
+              {t("screens.stats.recurring.spentIn", {
+                period: formatRangeLabel(dateRange),
+              })}
+            </Text>
+            {totals.map(([currency, total]) => (
+              <Money
+                key={currency}
+                value={total}
+                currency={currency}
+                tone="transfer"
+                visualTone="expense"
+                variant="h2"
+                compact
+                style={styles.total}
+              />
+            ))}
+          </View>
+        </>
+      }
+      ListEmptyComponent={
+        <Text variant="muted" style={styles.empty}>
+          {t("screens.stats.recurring.empty")}
+        </Text>
+      }
+    />
   )
 }
 
 const styles = StyleSheet.create((theme) => ({
-  scroll: {
+  list: {
     flex: 1,
     backgroundColor: theme.colors.surface,
   },
   content: {
-    gap: 12,
     paddingTop: 8,
     paddingBottom: 40,
   },
@@ -143,11 +142,13 @@ const styles = StyleSheet.create((theme) => ({
   total: {
     fontWeight: "700",
   },
-  section: {
-    gap: 4,
-  },
   sectionTitle: {
     fontWeight: "700",
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 4,
+  },
+  empty: {
     paddingHorizontal: 20,
   },
 }))

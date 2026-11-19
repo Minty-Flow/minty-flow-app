@@ -17,10 +17,12 @@ vi.mock("~/database/drizzle/db", async () => {
 import { drizzleDb } from "~/database/drizzle/db"
 import {
   fetchRecurringSpend,
+  fetchSpendingPlaces,
   groupSpendingPlaces,
   type PlaceRow,
 } from "~/database/drizzle/read-models/stats-extras-data"
 import { accounts } from "~/database/drizzle/schema"
+import { createTransaction } from "~/database/services/ledger-service"
 import { createRecurringRule } from "~/database/services/recurring-transaction-service"
 import { buildRRuleString } from "~/utils/recurrence"
 
@@ -126,10 +128,11 @@ describe("fetchRecurringSpend", () => {
     await rule("Salary", 500_000, { type: "income" })
     await rule("Paris flat", 90_000, { accountId: "acc-eur" })
 
-    // Each rule spawns today's instance plus next month's upcoming one.
+    // Each rule spawns today's instance plus next month's upcoming one; the
+    // range covers both, and only the confirmed one counts.
     const range = {
       from: new Date(start - 1_000),
-      to: new Date(start + 1_000),
+      to: new Date(start + 40 * 24 * 60 * 60 * 1_000),
     }
     expect(fetchRecurringSpend(range, "USD")).toEqual({
       total: 1_500,
@@ -139,5 +142,46 @@ describe("fetchRecurringSpend", () => {
       total: 90_000,
       count: 1,
     })
+  })
+})
+
+describe("fetchSpendingPlaces", () => {
+  const at = (address: string) =>
+    JSON.stringify({ latitude: 1, longitude: 2, address })
+  const expense = (
+    accountId: string,
+    amount: number,
+    date: Date,
+    location: string,
+    extra: Record<string, unknown> = {},
+  ) =>
+    createTransaction({
+      amount,
+      type: "expense",
+      transactionDate: date,
+      accountId,
+      title: "x",
+      tags: [],
+      isPending: false,
+      kind: "default",
+      location,
+      ...extra,
+    } as Parameters<typeof createTransaction>[0])
+
+  it("keeps only confirmed expenses of one currency inside the range", async () => {
+    const inRange = new Date(2025, 5, 15, 12)
+    await expense("acc-usd", 700, inRange, at("Kept"))
+    await expense("acc-usd", 900, inRange, at("Upcoming"), {
+      isPending: true,
+      kind: "upcoming",
+    })
+    await expense("acc-eur", 800, inRange, at("Euro"))
+    await expense("acc-usd", 600, new Date(2025, 7, 1, 12), at("Later"))
+
+    const places = fetchSpendingPlaces(
+      { from: new Date(2025, 5, 1), to: new Date(2025, 5, 30, 23, 59) },
+      "USD",
+    )
+    expect(places.map((p) => [p.address, p.total])).toEqual([["Kept", 700]])
   })
 })
