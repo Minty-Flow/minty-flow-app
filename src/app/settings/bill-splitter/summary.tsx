@@ -53,6 +53,7 @@ export default function SummaryScreen() {
   // The user's own share of the bill
   const selfEntry = summary.find((s) => s.participantId === selfId) ?? null
   const plan = getSettlementPlan(items, participants, selfId, payerId)
+  const hasItemPayers = items.some((i) => i.payerId)
   const actionFor = (participantId: string) =>
     plan.find((a) => a.participantId === participantId)
   const isRecorded = (participantId: string) =>
@@ -214,6 +215,11 @@ export default function SummaryScreen() {
               <Text style={styles.payerLabel}>
                 {t("screens.settings.billSplitter.summary.whoPaid")}
               </Text>
+              {hasItemPayers ? (
+                <Text variant="small" style={styles.hintText}>
+                  {t("screens.settings.billSplitter.summary.whoPaidHint")}
+                </Text>
+              ) : null}
               {renderPeopleChips(payerId, setPayerId)}
             </View>
 
