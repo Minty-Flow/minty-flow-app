@@ -234,7 +234,7 @@ const styles = StyleSheet.create((theme) => ({
     height: 40,
   },
   bottomSpacerDashboard: {
-    height: 100,
+    height: 140,
   },
   loading: {
     alignItems: "center",
