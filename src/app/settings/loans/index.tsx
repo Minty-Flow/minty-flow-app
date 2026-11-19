@@ -211,12 +211,15 @@ const styles = StyleSheet.create((t) => ({
   separator: {
     height: 0,
   },
+  // Bleeds through listContent's 20px padding so the ripple spans the screen.
   settledHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 8,
-    marginTop: 8,
+    marginHorizontal: -20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
   settledHeaderText: {
     fontSize: t.typography.labelMedium.fontSize,
