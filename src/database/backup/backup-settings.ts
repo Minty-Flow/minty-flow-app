@@ -155,7 +155,7 @@ export const PORTABLE_SETTINGS: Record<string, SettingsSpec> = {
   // stays out, or a restore would notify again for the same period.
   budgetPace: {
     version: 0,
-    fields: { disabledBudgetIds: isBudgetIdList },
+    fields: { disabledBudgetIds: isBudgetIdList, showOnHome: isBoolean },
   },
   hiddenRecentItems: { version: 0, fields: { hidden: isHiddenRecentItems } },
 }

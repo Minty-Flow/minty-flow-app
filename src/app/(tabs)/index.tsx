@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
 import { TotalBalance } from "~/components/accounts/total-balance"
+import { HomePaceAlerts } from "~/components/budgets/home-pace-alerts"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { PrivacyEyeControl } from "~/components/privacy-eye-control"
@@ -18,6 +19,7 @@ import { useActiveAccounts } from "~/database/drizzle/read-models/account-read-m
 import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import { useProfileImage } from "~/hooks/use-profile-image"
 import { useDayKey } from "~/hooks/use-time-reactivity"
+import { useBudgetPaceStore } from "~/stores/budget-pace.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { usePendingTransactionsStore } from "~/stores/pending-transactions.store"
 import { useProfileStore } from "~/stores/profile.store"
@@ -52,6 +54,7 @@ function HomeScreen() {
   const image = useProfileImage()
   const accounts = useActiveAccounts()
   const showBalanceOnHome = useMoneyFormattingStore((s) => s.showBalanceOnHome)
+  const showPaceOnHome = useBudgetPaceStore((s) => s.showOnHome)
   // dayKey re-bumps on app-foreground and at each date change, so "this month"
   // re-derives after a month rollover instead of serving a memoized stale range.
   const dayKey = useDayKey()
@@ -77,6 +80,7 @@ function HomeScreen() {
           <TotalBalance accounts={accounts} compact />
         </View>
       ) : null}
+      {showPaceOnHome ? <HomePaceAlerts /> : null}
       <SummarySection
         transactionsWithRelations={filteredTransactions}
         filtered={hasActiveFilters(filterState, searchState)}

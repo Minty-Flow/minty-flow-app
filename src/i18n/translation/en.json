@@ -464,6 +464,10 @@
             "showBalanceOnHome": {
               "label": "Show balance on home",
               "description": "Show your total balance above the income and expense summary"
+            },
+            "showPaceOnHome": {
+              "label": "Show budget pace warnings",
+              "description": "List budgets on pace to exceed their limit above the summary"
             }
           }
         },
@@ -728,7 +732,8 @@
             "dailyPace_one": "{{amount}}/day for {{count}} day",
             "dailyPace_other": "{{amount}}/day for {{count}} days"
           },
-          "paceWarning": "On pace to exceed by {{amount}}"
+          "paceWarning": "On pace to exceed by {{amount}}",
+          "paceWarningNamed": "{{name}} is on pace to exceed by {{amount}}"
         },
         "detail": {
           "title": "Budget",

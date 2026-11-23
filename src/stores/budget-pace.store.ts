@@ -15,6 +15,9 @@ interface BudgetPaceStore {
   disabledBudgetIds: string[]
   /** Budget id → period key of the last pace notification. */
   alerted: Record<string, string>
+  /** List on-pace budgets at the top of the home screen. */
+  showOnHome: boolean
+  setShowOnHome: (value: boolean) => void
   setDisabled: (budgetId: string, disabled: boolean) => void
   markAlerted: (budgetId: string, periodKey: string) => void
 }
@@ -24,6 +27,8 @@ export const useBudgetPaceStore = create<BudgetPaceStore>()(
     (set) => ({
       disabledBudgetIds: [],
       alerted: {},
+      showOnHome: true,
+      setShowOnHome: (value) => set({ showOnHome: value }),
       setDisabled: (budgetId, disabled) =>
         set((s) => ({
           disabledBudgetIds: disabled

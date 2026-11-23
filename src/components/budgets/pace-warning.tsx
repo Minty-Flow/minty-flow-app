@@ -17,6 +17,24 @@ interface Props {
   variant: "banner" | "text"
 }
 
+/** The overage as shown in the app: privacy mode masks the digits. */
+export function formatPaceAmount(
+  overage: number,
+  currencyCode: string,
+  opts: {
+    currencyLook: ReturnType<
+      typeof useMoneyFormattingStore.getState
+    >["currencyLook"]
+    privacyMode: boolean
+  },
+): string {
+  const raw = formatMoney(roundToSafeInteger(overage), currencyCode, {
+    currencyDisplay: opts.currencyLook,
+    hideSign: true,
+  })
+  return opts.privacyMode ? raw.replace(/[\d٠-٩۰-۹]/gu, "⁕") : raw
+}
+
 /** "On pace to exceed" warning; renders nothing when the budget is on track. */
 export function PaceWarning({ budget, progress, variant }: Props) {
   const { t } = useTranslation()
@@ -24,12 +42,11 @@ export function PaceWarning({ budget, progress, variant }: Props) {
   const currencyLook = useMoneyFormattingStore((s) => s.currencyLook)
   const overage = useBudgetPaceOverage(budget, progress)
   if (overage === null) return null
-  const raw = formatMoney(roundToSafeInteger(overage), budget.currencyCode, {
-    currencyDisplay: currencyLook,
-    hideSign: true,
-  })
   const text = t("screens.settings.budgets.card.paceWarning", {
-    amount: privacyMode ? raw.replace(/[\d٠-٩۰-۹]/gu, "⁕") : raw,
+    amount: formatPaceAmount(overage, budget.currencyCode, {
+      currencyLook,
+      privacyMode,
+    }),
   })
   if (variant === "banner")
     return (
