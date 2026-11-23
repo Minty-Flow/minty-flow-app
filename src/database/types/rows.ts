@@ -87,16 +87,6 @@ export interface RowCategory {
   updated_at: string // UTC ISO
 }
 
-export interface RowTag {
-  id: string
-  name: string
-  type: string
-  color_scheme_name: string | null
-  icon: string | null
-  created_at: string // UTC ISO
-  updated_at: string // UTC ISO
-}
-
 /**
  * Raw row from the `transaction_tags` join table.
  *
@@ -115,95 +105,4 @@ export interface RowTransactionItem {
   unit_price: number
   quantity: number
   sort_order: number
-}
-
-/**
- * Raw row from the `budgets` table.
- *
- * `period` is one of `daily | weekly | monthly | yearly | custom`.
- * For `custom` period, `end_date` is required; otherwise it is `null`.
- * `alert_threshold` is a 1–100 integer; a warning toast fires once per mount
- * when `spent / amount >= alert_threshold / 100`.
- */
-export interface RowBudget {
-  id: string
-  name: string
-  amount: number
-  currency_code: string
-  period: string
-  start_date: string // UTC ISO
-  end_date: string | null // UTC ISO
-  alert_threshold: number | null
-  is_active: number // 0 | 1
-  icon: string | null
-  color_scheme_name: string | null
-  created_at: string // UTC ISO
-  updated_at: string // UTC ISO
-}
-
-/** Raw row from the `budget_accounts` many-to-many join table. */
-export interface RowBudgetAccount {
-  budget_id: string
-  account_id: string
-  created_at: string // UTC ISO
-}
-
-/** Raw row from the `budget_categories` many-to-many join table. */
-export interface RowBudgetCategory {
-  budget_id: string
-  category_id: string
-  created_at: string // UTC ISO
-}
-
-/**
- * Raw row from the `goals` table.
- *
- * Progress toward `target_amount` is computed at query time from the linked
- * accounts' transactions — it is not stored on this row.
- * `is_archived` drives the active vs. archived split in the goals store.
- */
-export interface RowGoal {
-  id: string
-  name: string
-  description: string | null
-  target_amount: number
-  currency_code: string
-  target_date: string | null // UTC ISO
-  icon: string | null
-  color_scheme_name: string | null
-  goal_type: string
-  is_archived: number // 0 | 1
-  created_at: string // UTC ISO
-  updated_at: string // UTC ISO
-}
-
-/** Raw row from the `goal_accounts` many-to-many join table. */
-export interface RowGoalAccount {
-  goal_id: string
-  account_id: string
-  created_at: string // UTC ISO
-}
-
-/**
- * Raw row from the `loans` table.
- *
- * `loan_type` is one of `lent | borrowed`.
- * Unlike budgets and goals, loans use direct FK columns (`account_id`,
- * `category_id`) rather than join tables.
- * Payment progress is computed from `transactions.loan_id` at query time.
- */
-export interface RowLoan {
-  id: string
-  name: string
-  description: string | null
-  principal_amount: number
-  loan_type: string
-  term: string
-  due_date: string | null // UTC ISO
-  account_id: string
-  category_id: string
-  icon: string | null
-  color_scheme_name: string | null
-  created_at: string // UTC ISO
-  updated_at: string // UTC ISO
 }

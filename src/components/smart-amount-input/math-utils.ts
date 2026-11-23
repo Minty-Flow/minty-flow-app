@@ -1,5 +1,3 @@
-export const MAX_AMOUNT_INPUT_LENGTH = 14
-
 /**
  * Longest major-unit text that cannot overflow `Number.MAX_SAFE_INTEGER` minor
  * units for a currency with `minorUnitDigits` fraction digits. The old flat 14
