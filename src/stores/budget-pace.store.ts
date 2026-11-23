@@ -27,7 +27,7 @@ export const useBudgetPaceStore = create<BudgetPaceStore>()(
     (set) => ({
       disabledBudgetIds: [],
       alerted: {},
-      showOnHome: true,
+      showOnHome: false,
       setShowOnHome: (value) => set({ showOnHome: value }),
       setDisabled: (budgetId, disabled) =>
         set((s) => ({
