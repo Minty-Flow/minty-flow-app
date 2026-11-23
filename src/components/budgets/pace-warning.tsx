@@ -1,8 +1,9 @@
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
-import { InfoBanner } from "~/components/ui/info-banner"
+import { IconSvg } from "~/components/icons"
 import { Text } from "~/components/ui/text"
+import { View } from "~/components/ui/view"
 import { useBudgetPaceOverage } from "~/hooks/use-budget-pace"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import type { Budget } from "~/types/budgets"
@@ -30,7 +31,15 @@ export function PaceWarning({ budget, progress, variant }: Props) {
   const text = t("screens.settings.budgets.card.paceWarning", {
     amount: privacyMode ? raw.replace(/[\d٠-٩۰-۹]/gu, "⁕") : raw,
   })
-  if (variant === "banner") return <InfoBanner text={text} />
+  if (variant === "banner")
+    return (
+      <View style={styles.row}>
+        <IconSvg name="alert-triangle" size={18} color={styles.text.color} />
+        <Text variant="small" style={[styles.text, styles.rowText]}>
+          {text}
+        </Text>
+      </View>
+    )
   return (
     <Text variant="small" style={styles.text}>
       {text}
@@ -39,6 +48,12 @@ export function PaceWarning({ budget, progress, variant }: Props) {
 }
 
 const styles = StyleSheet.create((theme) => ({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  rowText: { flex: 1 },
   text: {
     fontSize: theme.typography.labelSmall.fontSize,
     color: theme.colors.semantic.warning,

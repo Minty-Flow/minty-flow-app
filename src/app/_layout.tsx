@@ -21,7 +21,10 @@ import {
 import { RouteErrorBoundary } from "~/components/route-error-boundary"
 import { ToastManager } from "~/components/ui/toast"
 import { TooltipProvider } from "~/components/ui/tooltip"
-import { TRANSACTION_REMINDERS_CHANNEL_ID } from "~/constants/notification-channels"
+import {
+  BUDGET_ALERTS_CHANNEL_ID,
+  TRANSACTION_REMINDERS_CHANNEL_ID,
+} from "~/constants/notification-channels"
 import { drizzleDb, expoDb } from "~/database/drizzle/db"
 import { useBudgetPaceAlertSync } from "~/hooks/use-budget-pace-alert-sync"
 import { useImportRecovery } from "~/hooks/use-import-recovery"
@@ -128,6 +131,10 @@ function AppRootLayout() {
           importance: Notifications.AndroidImportance.HIGH,
         },
       ).catch(() => {})
+      Notifications.setNotificationChannelAsync(BUDGET_ALERTS_CHANNEL_ID, {
+        name: "Budget Alerts",
+        importance: Notifications.AndroidImportance.HIGH,
+      }).catch(() => {})
     }
   }, [])
 

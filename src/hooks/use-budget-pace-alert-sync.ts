@@ -2,6 +2,7 @@ import * as Notifications from "expo-notifications"
 import { useEffect, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 
+import { BUDGET_ALERTS_CHANNEL_ID } from "~/constants/notification-channels"
 import { useAllBudgets } from "~/database/drizzle/read-models/budget-read-model"
 import { useTransactions } from "~/database/drizzle/read-models/transaction-read-model"
 import { useDayKey } from "~/hooks/use-time-reactivity"
@@ -95,7 +96,8 @@ export function useBudgetPaceAlertSync(): void {
             }),
             data: { itemType: "budget", id: budget.id },
           },
-          trigger: null,
+          // Without a channel Android drops it silently (no fallback channel).
+          trigger: { channelId: BUDGET_ALERTS_CHANNEL_ID },
         }).catch((e) =>
           logger.error("budget pace alert failed", { error: String(e) }),
         )
