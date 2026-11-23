@@ -21,12 +21,6 @@ export const ALLOWED_TYPES_BY_KIND = {
   borrowed: EXPENSE_INCOME,
 } as const satisfies Record<TransactionKind, readonly TransactionType[]>
 
-export function getAllowedTransactionTypes(
-  kind: TransactionKind,
-): readonly TransactionType[] {
-  return ALLOWED_TYPES_BY_KIND[kind]
-}
-
 export function isKindTypeValid(
   kind: TransactionKind,
   type: TransactionType,
