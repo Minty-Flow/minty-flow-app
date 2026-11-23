@@ -127,16 +127,16 @@ function AppRootLayout() {
       Notifications.setNotificationChannelAsync(
         TRANSACTION_REMINDERS_CHANNEL_ID,
         {
-          name: "Transaction Reminders",
+          name: t("notificationChannels.transactionReminders"),
           importance: Notifications.AndroidImportance.HIGH,
         },
       ).catch(() => {})
       Notifications.setNotificationChannelAsync(BUDGET_ALERTS_CHANNEL_ID, {
-        name: "Budget Alerts",
+        name: t("notificationChannels.budgetAlerts"),
         importance: Notifications.AndroidImportance.HIGH,
       }).catch(() => {})
     }
-  }, [])
+  }, [t])
 
   /** Header title for a create / edit route: `newTitle` when the id param is "new". */
   const modifyTitle =

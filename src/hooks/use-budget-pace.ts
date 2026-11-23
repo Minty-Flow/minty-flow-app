@@ -46,7 +46,7 @@ export function useBudgetPaceOverage(
   return isOnPaceToExceed(input, sensitivity) ? paceOverageMinor(input) : null
 }
 
-export interface BudgetOnPace {
+interface BudgetOnPace {
   budget: Budget
   periodKey: string
   overage: number
@@ -77,7 +77,10 @@ export function useBudgetsOnPace(): BudgetOnPace[] {
     )
     return new Date(Math.min(...starts)).toISOString()
   }, [active, dayKey])
-  const { items } = useTransactions(from ? { from } : {})
+  // No budgets, or warnings off: match nothing rather than load all history.
+  const { items } = useTransactions(
+    enabled && from ? { from } : { accountIds: ["__none__"] },
+  )
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: dayKey moves the period windows at the day boundary
   return useMemo(() => {

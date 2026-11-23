@@ -171,6 +171,7 @@ export function BudgetModifyContent({
         return false
       }
       await deleteBudgetById(budgetModifyId)
+      useBudgetPaceStore.getState().forget(budgetModifyId)
     } catch (error) {
       logger.error("Error deleting budget", { error })
       Toast.error({
@@ -487,7 +488,7 @@ export function BudgetModifyContent({
                 onPress={() => setPaceAlertOff(!paceAlertOff)}
               >
                 <View style={budgetModifyStyles.switchLeft}>
-                  <IconSvg name="circle-dot-outline" size={24} />
+                  <IconSvg name="alert-triangle" size={24} />
                   <Text
                     variant="default"
                     style={budgetModifyStyles.switchLabel}

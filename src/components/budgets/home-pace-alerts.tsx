@@ -34,7 +34,6 @@ export function HomePaceAlerts() {
               params: { budgetId: budget.id },
             })
           }
-          accessibilityRole="button"
         >
           <IconSvg name="alert-triangle" size={18} color={styles.text.color} />
           <Text variant="small" style={[styles.text, styles.rowText]}>

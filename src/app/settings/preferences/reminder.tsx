@@ -151,35 +151,6 @@ export default function ReminderScreen() {
         onValueChange={handleToggleDailyReminder}
       />
 
-      <SettingsSwitchRow
-        label={t("screens.settings.reminders.paceAlerts.label")}
-        description={t("screens.settings.reminders.paceAlerts.description")}
-        value={isPaceAlertEnabled}
-        onValueChange={setPaceAlertEnabled}
-      />
-
-      {isPaceAlertEnabled && (
-        <View style={styles.section}>
-          <Text style={styles.headerLabel}>
-            {t("screens.settings.reminders.paceAlerts.sensitivityLabel")}
-          </Text>
-          <View style={styles.chipRow}>
-            {PACE_SENSITIVITY_OPTIONS.map((option) => (
-              <Chip
-                key={option}
-                label={t(
-                  "screens.settings.reminders.paceAlerts.sensitivityValue",
-                  { percent: formatNumber(Math.round(option * 100)) },
-                )}
-                selected={paceSensitivity === option}
-                hideCheck
-                onPress={() => setPaceSensitivity(option)}
-              />
-            ))}
-          </View>
-        </View>
-      )}
-
       {isDailyReminderEnabled && (
         <>
           <View style={styles.section}>
@@ -214,6 +185,35 @@ export default function ReminderScreen() {
 
           <InfoBanner text={t("screens.settings.reminders.footerCaption")} />
         </>
+      )}
+
+      <SettingsSwitchRow
+        label={t("screens.settings.reminders.paceAlerts.label")}
+        description={t("screens.settings.reminders.paceAlerts.description")}
+        value={isPaceAlertEnabled}
+        onValueChange={setPaceAlertEnabled}
+      />
+
+      {isPaceAlertEnabled && (
+        <View style={styles.section}>
+          <Text style={styles.headerLabel}>
+            {t("screens.settings.reminders.paceAlerts.sensitivityLabel")}
+          </Text>
+          <View style={styles.chipRow}>
+            {PACE_SENSITIVITY_OPTIONS.map((option) => (
+              <Chip
+                key={option}
+                label={t(
+                  "screens.settings.reminders.paceAlerts.sensitivityValue",
+                  { percent: formatNumber(Math.round(option * 100)) },
+                )}
+                selected={paceSensitivity === option}
+                hideCheck
+                onPress={() => setPaceSensitivity(option)}
+              />
+            ))}
+          </View>
+        </View>
       )}
     </ScrollView>
   )

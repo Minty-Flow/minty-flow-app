@@ -1774,5 +1774,9 @@
     "lastDay": "Last {{day}}",
     "nextDay": "Next {{day}}",
     "weekOf": "Week of {{date}}"
+  },
+  "notificationChannels": {
+    "transactionReminders": "Transaction Reminders",
+    "budgetAlerts": "Budget Alerts"
   }
 }

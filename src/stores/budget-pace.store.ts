@@ -20,6 +20,8 @@ interface BudgetPaceStore {
   setShowOnHome: (value: boolean) => void
   setDisabled: (budgetId: string, disabled: boolean) => void
   markAlerted: (budgetId: string, periodKey: string) => void
+  /** Drops a deleted budget's entries. */
+  forget: (budgetId: string) => void
 }
 
 export const useBudgetPaceStore = create<BudgetPaceStore>()(
@@ -37,6 +39,16 @@ export const useBudgetPaceStore = create<BudgetPaceStore>()(
         })),
       markAlerted: (budgetId, periodKey) =>
         set((s) => ({ alerted: { ...s.alerted, [budgetId]: periodKey } })),
+      forget: (budgetId) =>
+        set((s) => {
+          const { [budgetId]: _, ...alerted } = s.alerted
+          return {
+            alerted,
+            disabledBudgetIds: s.disabledBudgetIds.filter(
+              (id) => id !== budgetId,
+            ),
+          }
+        }),
     }),
     {
       name: "budget-pace-store",

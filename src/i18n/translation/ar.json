@@ -1886,5 +1886,9 @@
     "thisDay": "هذا {{day}}",
     "lastDay": "آخر {{day}}",
     "nextDay": "{{day}} القادم"
+  },
+  "notificationChannels": {
+    "transactionReminders": "تذكيرات المعاملات",
+    "budgetAlerts": "تنبيهات الميزانية"
   }
 }
