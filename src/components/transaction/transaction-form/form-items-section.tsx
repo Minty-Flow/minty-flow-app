@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable"
 import { useUnistyles } from "react-native-unistyles"
 
 import { ConfirmSheet } from "~/components/confirm-sheet"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { Money } from "~/components/money"
+import { SwipeAction } from "~/components/transaction/transaction-item/swipe-action"
 import { ListItem } from "~/components/ui/list-item"
 import { Pressable } from "~/components/ui/pressable"
 import { Switch } from "~/components/ui/switch"
@@ -12,7 +14,7 @@ import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
 import type { TransactionItem } from "~/types/transactions"
 import { TransactionTypeEnum } from "~/types/transactions"
-import { formatMoney } from "~/utils/number-format"
+import { formatMoney, formatNumber } from "~/utils/number-format"
 import { Toast } from "~/utils/toast"
 
 import { transactionFormStyles } from "./form.styles"
@@ -24,6 +26,8 @@ import { StepButton } from "./step-button"
 
 const MAX_QUANTITY = 9999
 const UNDO_MS = 4000
+// Raw drag needed to open the delete action (threshold × friction ≈ 50px).
+const SWIPE_THRESHOLD = 25
 
 interface Props {
   items: TransactionItem[]
@@ -127,90 +131,127 @@ function ItemsSection({
       {enabled ? (
         <View style={styles.list}>
           {items.map((item, index) => (
-            <View
+            // Swipe left to delete the whole line, whatever its quantity.
+            <Swipeable
               // biome-ignore lint/suspicious/noArrayIndexKey: items have no id until saved, and the order is the identity
               key={index}
-              style={styles.row}
-            >
-              <View style={styles.rowInner}>
-                <Pressable
-                  style={styles.rowMain}
+              friction={2}
+              rightThreshold={SWIPE_THRESHOLD}
+              overshootRight={false}
+              containerStyle={styles.swipeContainer}
+              renderRightActions={(progress, _translation, swipe) => (
+                <SwipeAction
+                  kind="trash"
+                  progress={progress}
                   onPress={() => {
-                    setEditing(index)
-                    setSheetVisible(true)
+                    // Keys are indexes: close first, or the next line
+                    // would inherit this open row.
+                    swipe.close()
+                    remove(index)
                   }}
-                  accessibilityRole="button"
                   accessibilityLabel={t(
-                    "components.transactionForm.items.editItem",
+                    "components.transactionForm.items.a11y.remove",
                   )}
-                  accessibilityHint={item.name}
-                >
-                  <Text variant="default" numberOfLines={1} style={styles.name}>
-                    {item.name}
-                  </Text>
-                  {/* At one, the unit price equals the line total: skip it. */}
-                  {item.quantity > 1 ? (
-                    <Text variant="small" style={styles.each}>
-                      {t("components.transactionForm.items.breakdown", {
-                        count: item.quantity,
-                        price: formatMoney(item.unitPrice, currencyCode, {
-                          hideSign: true,
-                        }),
-                      })}
-                    </Text>
-                  ) : null}
-                </Pressable>
-
-                <View style={styles.stepper}>
-                  <StepButton
-                    icon="minus-outline"
-                    onPress={() =>
-                      item.quantity > 1
-                        ? setQuantity(index, item.quantity - 1)
-                        : remove(index)
-                    }
-                    label={t(
-                      item.quantity > 1
-                        ? "components.transactionForm.items.a11y.decrease"
-                        : "components.transactionForm.items.a11y.remove",
+                />
+              )}
+            >
+              <View style={styles.row}>
+                <View style={styles.rowInner}>
+                  <Pressable
+                    style={styles.rowMain}
+                    onPress={() => {
+                      setEditing(index)
+                      setSheetVisible(true)
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={t(
+                      "components.transactionForm.items.editItem",
                     )}
-                  />
-                  <Text variant="default" style={styles.stepCount}>
-                    {item.quantity}
-                  </Text>
-                  <StepButton
-                    icon="plus-outline"
-                    disabled={item.quantity >= MAX_QUANTITY}
-                    onPress={() => setQuantity(index, item.quantity + 1)}
-                    label={t("components.transactionForm.items.a11y.increase")}
+                    accessibilityHint={item.name}
+                    // The swipe has no touch-free equivalent otherwise.
+                    accessibilityActions={[
+                      {
+                        name: "remove",
+                        label: t(
+                          "components.transactionForm.items.a11y.remove",
+                        ),
+                      },
+                    ]}
+                    onAccessibilityAction={(event) => {
+                      if (event.nativeEvent.actionName === "remove")
+                        remove(index)
+                    }}
+                  >
+                    <Text
+                      variant="default"
+                      numberOfLines={1}
+                      style={styles.name}
+                    >
+                      {item.name}
+                    </Text>
+                    {/* At one, the unit price equals the line total: skip it. */}
+                    {item.quantity > 1 ? (
+                      <Text variant="small" style={styles.each}>
+                        {t("components.transactionForm.items.breakdown", {
+                          count: item.quantity,
+                          price: formatMoney(item.unitPrice, currencyCode, {
+                            hideSign: true,
+                          }),
+                        })}
+                      </Text>
+                    ) : null}
+                  </Pressable>
+
+                  <View style={styles.stepper}>
+                    <StepButton
+                      icon="minus-outline"
+                      onPress={() =>
+                        item.quantity > 1
+                          ? setQuantity(index, item.quantity - 1)
+                          : remove(index)
+                      }
+                      label={t(
+                        item.quantity > 1
+                          ? "components.transactionForm.items.a11y.decrease"
+                          : "components.transactionForm.items.a11y.remove",
+                      )}
+                    />
+                    <Text variant="default" style={styles.stepCount}>
+                      {item.quantity}
+                    </Text>
+                    <StepButton
+                      icon="plus-outline"
+                      disabled={item.quantity >= MAX_QUANTITY}
+                      onPress={() => setQuantity(index, item.quantity + 1)}
+                      label={t(
+                        "components.transactionForm.items.a11y.increase",
+                      )}
+                    />
+                  </View>
+
+                  <Money
+                    value={item.unitPrice * item.quantity}
+                    currency={currencyCode}
+                    // Line totals stay neutral; green is for the total.
+                    tone={TransactionTypeEnum.TRANSFER}
+                    variant="default"
+                    style={styles.lineTotal}
                   />
                 </View>
-
-                <Money
-                  value={item.unitPrice * item.quantity}
-                  currency={currencyCode}
-                  tone={TransactionTypeEnum.INCOME}
-                  hideSign
-                  variant="default"
-                  style={styles.lineTotal}
-                />
               </View>
-            </View>
+            </Swipeable>
           ))}
 
-          <ItemEntryRow
-            items={items}
-            currencyCode={currencyCode}
-            onAdd={(item) => onChange([...items, item])}
-            onAddRecent={(recent) =>
-              onChange(addOrIncrementItem(items, recent))
-            }
-          />
-
+          {/* The total sits under the lines it sums. */}
           {items.length > 0 ? (
             <View style={styles.totalRow}>
               <Text variant="small" style={styles.totalLabel}>
-                {t("components.transactionForm.items.total")}
+                {/* Units, not lines: two coffees count as two. */}
+                {t("components.transactionForm.items.totalWithCount", {
+                  units: formatNumber(
+                    items.reduce((sum, item) => sum + item.quantity, 0),
+                  ),
+                })}
               </Text>
               <Money
                 value={itemsTotal(items)}
@@ -220,6 +261,15 @@ function ItemsSection({
               />
             </View>
           ) : null}
+
+          <ItemEntryRow
+            items={items}
+            currencyCode={currencyCode}
+            onAdd={(item) => onChange([...items, item])}
+            onAddRecent={(recent) =>
+              onChange(addOrIncrementItem(items, recent))
+            }
+          />
         </View>
       ) : null}
 

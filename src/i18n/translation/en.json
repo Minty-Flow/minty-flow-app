@@ -1286,11 +1286,13 @@
         "unitPrice": "Price per unit",
         "quantity": "Quantity",
         "total": "Items total",
+        "totalWithCount": "Items total · {{units}}",
         "a11y": {
           "count_one": "{{count}} item",
           "count_other": "{{count}} items",
           "added": "Added {{name}}",
           "addRecent": "Add {{name}}, {{price}}",
+          "hideRecent": "Hide {{name}} from recent",
           "recentAdded_one": ", {{count}} added",
           "recentAdded_other": ", {{count}} added",
           "newName": "New item name",
@@ -1300,6 +1302,7 @@
           "remove": "Remove item"
         },
         "recent": "Recent",
+        "editRecent": "Edit",
         "newPlaceholder": "Add an item",
         "needName": "Add a name",
         "needPrice": "Add a price",

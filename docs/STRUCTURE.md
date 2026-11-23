@@ -160,7 +160,10 @@
 │   ├── migrations.d.ts
 │   └── migrations.js
 ├── plugins/
-│   └── with-android-release-signing.mts
+│   ├── .env.local
+│   ├── minty-flow-upload.keystore
+│   ├── with-android-release-signing.mts
+│   └── with-sqlite-source-build.mts
 ├── scripts/
 │   ├── checks/
 │   │   ├── verify-migration-0001.mts
@@ -677,6 +680,7 @@
 │   │   ├── development-notice.store.ts
 │   │   ├── exchange-rates-preferences.store.ts
 │   │   ├── export-history.store.ts
+│   │   ├── hidden-recent-items.store.ts
 │   │   ├── language.store.ts
 │   │   ├── money-formatting.store.ts
 │   │   ├── notification.store.ts

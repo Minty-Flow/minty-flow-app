@@ -12,6 +12,7 @@ import {
 
 import { useButtonPlacementStore } from "./button-placement.store"
 import { useCalendarFormatStore } from "./calendar-format.store"
+import { useHiddenRecentItemsStore } from "./hidden-recent-items.store"
 import { useLanguageStore } from "./language.store"
 import { useMoneyFormattingStore } from "./money-formatting.store"
 import { useNotificationStore } from "./notification.store"
@@ -79,6 +80,7 @@ const STORES: Record<string, PortableStore> = {
   trashBin: plain(useTrashBinStore),
   transfersPreferences: plain(useTransfersPreferencesStore),
   transactionLocation: plain(useTransactionLocationStore),
+  hiddenRecentItems: plain(useHiddenRecentItemsStore),
 }
 
 /** The portable preferences as they are now, for a backup. */

@@ -39,6 +39,18 @@ const isCurrency: Validator = (v) => {
     return false
   }
 }
+// Currency → item names. Capped so a crafted backup can't bloat storage.
+const isHiddenRecentItems: Validator = (v) =>
+  typeof v === "object" &&
+  v !== null &&
+  !Array.isArray(v) &&
+  Object.entries(v).every(
+    ([currency, names]) =>
+      isCurrency(currency) &&
+      Array.isArray(names) &&
+      names.length <= 500 &&
+      names.every((n) => typeof n === "string" && n.length <= 255),
+  )
 const isButtonOrder: Validator = (v) =>
   Array.isArray(v) &&
   v.length === 3 &&
@@ -132,6 +144,7 @@ export const PORTABLE_SETTINGS: Record<string, SettingsSpec> = {
     version: 0,
     fields: { isEnabled: isBoolean, autoAttach: isBoolean },
   },
+  hiddenRecentItems: { version: 0, fields: { hidden: isHiddenRecentItems } },
 }
 
 /**

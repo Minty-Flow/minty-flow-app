@@ -126,6 +126,10 @@ export function TransactionForm(props: TransactionFormProps) {
                 name="title"
                 render={({ field: { value, onChange } }) => (
                   <Input
+                    // Android drops a centered placeholder that changes after
+                    // mount (edit loads the category late): remount on change.
+                    // Typing never changes it, so focus is kept while typing.
+                    key={titlePlaceholder}
                     value={value ?? ""}
                     onChangeText={onChange}
                     placeholder={titlePlaceholder}

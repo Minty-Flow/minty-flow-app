@@ -6,17 +6,24 @@ export const formItemsStyles = StyleSheet.create((theme) => ({
   // Rows carry the side padding so their press ripple reaches the screen edges.
   list: {
     gap: 4,
-    marginBottom: 12,
+    // Extra room so the recent chips don't run into the category chips.
+    marginBottom: 20,
   },
+  swipeContainer: {
+    overflow: "hidden",
+  },
+  // Opaque, so the delete action stays hidden until the row slides.
   row: {
     paddingHorizontal: H_PAD,
+    backgroundColor: theme.colors.surface,
   },
   // The divider sits on the inner row so it lines up with the content.
   rowInner: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingVertical: 6,
+    minHeight: 52,
+    paddingVertical: 4,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: theme.colors.semantic.semi,
   },
@@ -53,7 +60,23 @@ export const formItemsStyles = StyleSheet.create((theme) => ({
   entry: {
     paddingHorizontal: H_PAD,
     paddingTop: 12,
+    gap: 12,
+  },
+  recents: {
     gap: 8,
+  },
+  recentsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  // Pulled out by its padding so the text lines up with the chips' edge.
+  recentsEdit: {
+    marginEnd: -12,
+  },
+  recentsEditText: {
+    fontWeight: "600",
+    color: theme.colors.primary,
   },
   chips: {
     alignItems: "center",
@@ -64,7 +87,25 @@ export const formItemsStyles = StyleSheet.create((theme) => ({
     color: theme.colors.onSecondary,
   },
   chip: {
-    maxWidth: 160,
+    maxWidth: 180,
+    paddingStart: 6,
+  },
+  chipTile: {
+    minWidth: 28,
+    height: 28,
+    paddingHorizontal: 6,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.secondary,
+  },
+  chipTileAdded: {
+    backgroundColor: theme.colors.primary,
+  },
+  chipCount: {
+    fontWeight: "700",
+    color: theme.colors.onPrimary,
+    fontVariant: ["tabular-nums"],
   },
   chipContent: {
     flexDirection: "row",
@@ -78,10 +119,6 @@ export const formItemsStyles = StyleSheet.create((theme) => ({
   },
   chipPrice: {
     color: theme.colors.onSecondary,
-  },
-  chipBadge: {
-    fontWeight: "700",
-    color: theme.colors.primary,
   },
   entryRow: {
     flexDirection: "row",
@@ -129,7 +166,7 @@ export const formItemsStyles = StyleSheet.create((theme) => ({
   },
   totalLabel: {
     fontWeight: "600",
-    color: theme.colors.semantic.semi,
+    color: theme.colors.onSecondary,
   },
   sheet: {
     paddingVertical: 8,

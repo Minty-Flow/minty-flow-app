@@ -160,7 +160,8 @@ const styles = StyleSheet.create((theme) => ({
   },
   titleInput: {
     flex: 1,
-    textAlign: "center",
+    // Start-aligned: Android misplaces the cursor and placeholder of an
+    // empty centered field. Start also follows RTL.
     paddingHorizontal: 0,
     paddingVertical: 8,
     fontSize: theme.typography.headlineLarge.fontSize,

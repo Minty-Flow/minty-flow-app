@@ -5,6 +5,7 @@ import { useUnistyles } from "react-native-unistyles"
 
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
+import { Button } from "~/components/ui/button"
 import { Chip } from "~/components/ui/chips"
 import { Input } from "~/components/ui/input"
 import { Pressable } from "~/components/ui/pressable"
@@ -15,6 +16,7 @@ import {
   type RecentItem,
 } from "~/database/drizzle/read-models/transaction-item-read-model"
 import { currencyRegistryService } from "~/services/currency-registry"
+import { useHiddenRecentItemsStore } from "~/stores/hidden-recent-items.store"
 import type { TransactionItem } from "~/types/transactions"
 import { logger } from "~/utils/logger"
 import { minorUnitsToDecimalString } from "~/utils/money"
@@ -23,6 +25,9 @@ import { normalizeItemName } from "~/utils/string-utils"
 
 import { formItemsStyles as styles } from "./form-items.styles"
 import { parsePriceInput, sanitizePriceInput } from "./form-utils"
+
+const RECENT_SHOWN = 8
+const RECENT_FETCH = 40
 
 interface Props {
   items: TransactionItem[]
@@ -51,11 +56,16 @@ export function ItemEntryRow({
   const [priceText, setPriceText] = useState("")
   const [error, setError] = useState<"name" | "price" | null>(null)
   const [recents, setRecents] = useState<RecentItem[]>([])
+  const [editingRecents, setEditingRecents] = useState(false)
+  const hidden = useHiddenRecentItemsStore((s) => s.hidden[currencyCode])
+  const hideRecent = useHiddenRecentItemsStore((s) => s.hide)
+  const unhideRecent = useHiddenRecentItemsStore((s) => s.unhide)
 
   // Once per open and per currency: a USD expense never suggests SYP prices.
+  // Fetches extra so hidden names don't leave the row short.
   useEffect(() => {
     try {
-      setRecents(getRecentItems(currencyCode))
+      setRecents(getRecentItems(currencyCode, RECENT_FETCH))
     } catch (e) {
       logger.error("Failed to load recent items", { error: e })
       setRecents([])
@@ -63,9 +73,12 @@ export function ItemEntryRow({
   }, [currencyCode])
 
   const query = normalizeItemName(name)
-  const visibleRecents = query
-    ? recents.filter((r) => normalizeItemName(r.name).includes(query))
-    : recents
+  const visibleRecents = recents
+    .filter((r) => !hidden?.includes(normalizeItemName(r.name)))
+    .filter((r) => !query || normalizeItemName(r.name).includes(query))
+    .slice(0, RECENT_SHOWN)
+  // Hiding the last chip ends editing with it.
+  const isEditing = editingRecents && visibleRecents.length > 0
   const quantityOf = (recentName: string) =>
     items.find(
       (item) => normalizeItemName(item.name) === normalizeItemName(recentName),
@@ -91,6 +104,8 @@ export function ItemEntryRow({
       return
     }
     onAdd({ name: name.trim(), unitPrice: price, quantity: 1 })
+    // Typing a hidden name again means it is wanted back.
+    unhideRecent(currencyCode, name)
     announceAdded(name.trim())
     setName("")
     setPriceText("")
@@ -110,63 +125,6 @@ export function ItemEntryRow({
 
   return (
     <View style={styles.entry}>
-      {visibleRecents.length > 0 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyboardShouldPersistTaps="always"
-          contentContainerStyle={styles.chips}
-        >
-          <Text variant="small" style={styles.chipsLabel}>
-            {t("components.transactionForm.items.recent")}
-          </Text>
-          {visibleRecents.map((recent) => {
-            const count = quantityOf(recent.name)
-            const priceLabel = formatMoney(recent.unitPrice, currencyCode, {
-              hideSign: true,
-            })
-            return (
-              <Chip
-                key={normalizeItemName(recent.name)}
-                selected={count > 0}
-                hideCheck
-                onPress={() => pickRecent(recent)}
-                style={styles.chip}
-                accessibilityLabel={
-                  t("components.transactionForm.items.a11y.addRecent", {
-                    name: recent.name.trim(),
-                    price: priceLabel,
-                  }) +
-                  (count > 0
-                    ? t("components.transactionForm.items.a11y.recentAdded", {
-                        count,
-                      })
-                    : "")
-                }
-              >
-                <View style={styles.chipContent}>
-                  <Text numberOfLines={1} style={styles.chipName}>
-                    {recent.name.trim()}
-                  </Text>
-                  <Money
-                    value={recent.unitPrice}
-                    currency={currencyCode}
-                    hideSign
-                    variant="small"
-                    style={styles.chipPrice}
-                  />
-                  {count > 0 ? (
-                    <Text variant="small" style={styles.chipBadge}>
-                      ×{count}
-                    </Text>
-                  ) : null}
-                </View>
-              </Chip>
-            )
-          })}
-        </ScrollView>
-      ) : null}
-
       <View style={styles.entryRow}>
         <View style={styles.entryName}>
           <Input
@@ -235,6 +193,115 @@ export function ItemEntryRow({
               : "components.transactionForm.items.needPrice",
           )}
         </Text>
+      ) : null}
+
+      {visibleRecents.length > 0 ? (
+        <View style={styles.recents}>
+          <View style={styles.recentsHeader}>
+            <Text variant="small" style={styles.chipsLabel}>
+              {t("components.transactionForm.items.recent")}
+            </Text>
+            <Button
+              variant="ghost"
+              size="sm"
+              onPress={() => setEditingRecents(!isEditing)}
+              style={styles.recentsEdit}
+            >
+              <Text variant="small" style={styles.recentsEditText}>
+                {isEditing
+                  ? t("common.actions.done")
+                  : t("components.transactionForm.items.editRecent")}
+              </Text>
+            </Button>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyboardShouldPersistTaps="always"
+            contentContainerStyle={styles.chips}
+          >
+            {visibleRecents.map((recent) => {
+              const count = quantityOf(recent.name)
+              const priceLabel = formatMoney(recent.unitPrice, currencyCode, {
+                hideSign: true,
+              })
+              return (
+                <Chip
+                  key={normalizeItemName(recent.name)}
+                  selected={count > 0}
+                  hideCheck
+                  onPress={() =>
+                    isEditing
+                      ? hideRecent(currencyCode, recent.name)
+                      : pickRecent(recent)
+                  }
+                  trailing={
+                    isEditing ? (
+                      <IconSvg
+                        name="x-outline"
+                        size={14}
+                        color={theme.colors.onSurface}
+                      />
+                    ) : undefined
+                  }
+                  style={styles.chip}
+                  // Added: how many are in the list. Not yet: a plus.
+                  leading={
+                    <View
+                      style={[
+                        styles.chipTile,
+                        count > 0 && styles.chipTileAdded,
+                      ]}
+                    >
+                      {count > 0 ? (
+                        <Text variant="small" style={styles.chipCount}>
+                          {count}
+                        </Text>
+                      ) : (
+                        <IconSvg
+                          name="plus-outline"
+                          size={14}
+                          color={theme.colors.onSurface}
+                        />
+                      )}
+                    </View>
+                  }
+                  accessibilityLabel={
+                    isEditing
+                      ? t("components.transactionForm.items.a11y.hideRecent", {
+                          name: recent.name.trim(),
+                        })
+                      : t("components.transactionForm.items.a11y.addRecent", {
+                          name: recent.name.trim(),
+                          price: priceLabel,
+                        }) +
+                        (count > 0
+                          ? t(
+                              "components.transactionForm.items.a11y.recentAdded",
+                              {
+                                count,
+                              },
+                            )
+                          : "")
+                  }
+                >
+                  <View style={styles.chipContent}>
+                    <Text numberOfLines={1} style={styles.chipName}>
+                      {recent.name.trim()}
+                    </Text>
+                    <Money
+                      value={recent.unitPrice}
+                      currency={currencyCode}
+                      hideSign
+                      variant="small"
+                      style={styles.chipPrice}
+                    />
+                  </View>
+                </Chip>
+              )
+            })}
+          </ScrollView>
+        </View>
       ) : null}
     </View>
   )

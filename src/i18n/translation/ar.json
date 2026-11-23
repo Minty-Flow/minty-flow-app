@@ -1346,6 +1346,7 @@
         "unitPrice": "سعر الوحدة",
         "quantity": "الكمية",
         "total": "مجموع العناصر",
+        "totalWithCount": "مجموع العناصر · {{units}}",
         "a11y": {
           "count_zero": "لا عناصر",
           "count_one": "عنصر واحد",
@@ -1355,6 +1356,7 @@
           "count_other": "{{count}} عنصر",
           "added": "تمت إضافة {{name}}",
           "addRecent": "إضافة {{name}}، {{price}}",
+          "hideRecent": "إخفاء {{name}} من الأخيرة",
           "recentAdded_zero": "",
           "recentAdded_one": "، أُضيف {{count}}",
           "recentAdded_two": "، أُضيف {{count}}",
@@ -1368,6 +1370,7 @@
           "remove": "إزالة العنصر"
         },
         "recent": "الأخيرة",
+        "editRecent": "تعديل",
         "newPlaceholder": "أضف عنصراً",
         "needName": "أضف اسماً",
         "needPrice": "أضف سعراً",

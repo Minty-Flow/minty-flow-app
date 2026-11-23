@@ -57,6 +57,26 @@ describe("sanitizeSettings", () => {
     expect(out).toEqual({})
   })
 
+  it("keeps hidden recent items only when every entry is valid", () => {
+    const hidden = { USD: ["coffee", "test ddd"], EUR: [] }
+    expect(
+      sanitizeSettings(section("hiddenRecentItems", { hidden }))
+        .hiddenRecentItems.state,
+    ).toEqual({ hidden })
+    for (const bad of [
+      { XXX_NOT_A_CODE: ["coffee"] },
+      { USD: "coffee" },
+      { USD: [42] },
+      { USD: ["x".repeat(256)] },
+      ["coffee"],
+    ]) {
+      expect(
+        sanitizeSettings(section("hiddenRecentItems", { hidden: bad }))
+          .hiddenRecentItems?.state.hidden,
+      ).toBeUndefined()
+    }
+  })
+
   it("ignores a section saved at another store version", () => {
     const out = sanitizeSettings({
       weekStart: { version: 99, state: { weekStart: "monday" } },
