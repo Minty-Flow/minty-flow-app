@@ -32,6 +32,7 @@
 - Log income, expense, and transfers through a fast, uncluttered entry form
 - Unlimited accounts, multi-currency, with exchange-rate conversion
 - Organise with categories, tags, file attachments, and optional geo-tagging
+- Itemize a receipt into lines, with one-tap re-adding of recent items
 - Automate the repeat stuff: recurring transactions (RRULE) and a built-in bill splitter
 
 **Stay ahead of your money**

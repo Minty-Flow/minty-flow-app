@@ -19,6 +19,9 @@ units. Its meaning is fixed by two independent axes plus one flag:
   (name, unit price, quantity). The items' sum fills the amount, which the user
   may still change (tax, discount). Stats and budgets count the transaction,
   not its items.
+- **recent item** — an item name used before in the same currency, offered for
+  one-tap re-adding with its latest unit price. Derived from past items, so
+  hiding one removes the suggestion only; entering that name again restores it.
 
 ### kind values
 
