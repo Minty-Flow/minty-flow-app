@@ -58,20 +58,21 @@ export function HomePaceAlerts() {
 }
 
 const styles = StyleSheet.create((theme) => ({
+  // Each row is its own bordered press target, so the ripple fills its shape.
   box: {
     marginHorizontal: 20,
     marginBottom: 12,
-    borderRadius: theme.radius,
-    borderWidth: 1,
-    borderColor: theme.colors.semantic.warning,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    gap: 8,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingVertical: 8,
+    borderRadius: theme.radius,
+    borderWidth: 1,
+    borderColor: theme.colors.semantic.warning,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
   },
   rowText: { flex: 1 },
   text: {
