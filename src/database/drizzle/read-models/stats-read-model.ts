@@ -11,6 +11,12 @@ import {
   fetchWrappedInsights,
 } from "~/database/drizzle/read-models/stats-data"
 import {
+  fetchRecurringSpend,
+  fetchSpendingPlaces,
+  type RecurringSpend,
+  type SpendingPlace,
+} from "~/database/drizzle/read-models/stats-extras-data"
+import {
   accounts,
   categories,
   tags,
@@ -126,7 +132,25 @@ function buildInitialState(init?: UseStatsInit): {
   return { preset, range: buildStatsDateRange(preset) }
 }
 
-export function useStats(init?: UseStatsInit): UseStatsReturn {
+interface UseStatsRangeReturn {
+  dateRange: StatsDateRange
+  activePreset: DateRangePresetId
+  activeYear: number
+  activeMonth: number
+  setPreset: (preset: StatsDateRangePreset) => void
+  setCustomRange: (from: Date, to: Date, source?: DateRangePresetId) => void
+  setMonthRange: (year: number, month: number) => void
+  navigate: (direction: "prev" | "next") => void
+}
+
+/**
+ * The stats period and its controls, without fetching anything. `onChange`
+ * runs whenever the user (or a day rollover) moves the period.
+ */
+export function useStatsRange(
+  init?: UseStatsInit,
+  onChange?: () => void,
+): UseStatsRangeReturn {
   const [activeYear, setActiveYear] = useState(() =>
     (init?.from ?? new Date()).getFullYear(),
   )
@@ -142,24 +166,6 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
     initial.preset === "thisWeek"
       ? initial.range.from
       : (init?.from ?? new Date()),
-  )
-  const [byCurrency, setByCurrency] = useState<CurrencyStats[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const fetchIdRef = useRef(0)
-  const activeFetchCountRef = useRef(0)
-  const accounts = useActiveAccounts()
-  const dbChangeSignal = useStatsDatabaseChangeSignal()
-  // `accounts` is rebuilt every render, so key the supplements on its content.
-  const accountsSignature = accounts
-    .map(
-      (a) =>
-        `${a.id}:${a.balance}:${a.currencyCode}:${a.excludeFromBalance}:${a.name}:${a.icon}:${a.colorSchemeName}`,
-    )
-    .join("|")
-  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on accountsSignature
-  const supplementByCurrency = useMemo(
-    () => computeSupplements(accounts),
-    [accountsSignature],
   )
   const _weekStart = useWeekStartStore((s) => s.weekStart)
   const weekStartsOn = getWeekStartsOn()
@@ -187,11 +193,112 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
       activePreset === "thisYear" ||
       activePreset === "last30"
     ) {
-      setIsLoading(true)
+      onChange?.()
       if (activePreset === "thisWeek") setWeekAnchor(new Date())
       else setRange(buildStatsDateRange(activePreset))
     }
   }, [dayKey])
+  const setPreset = useCallback(
+    (preset: StatsDateRangePreset) => {
+      onChange?.()
+      setActivePreset(preset)
+      if (preset === "thisWeek") {
+        setWeekAnchor(new Date())
+      } else {
+        setRange(buildStatsDateRange(preset))
+      }
+    },
+    [onChange],
+  )
+  const setCustomRange = useCallback(
+    (from: Date, to: Date, source?: DateRangePresetId) => {
+      onChange?.()
+      const mappedPreset: StatsDateRangePreset =
+        source === "thisWeek" ||
+        source === "thisMonth" ||
+        source === "thisYear" ||
+        source === "last30" ||
+        source === "allTime"
+          ? source
+          : "custom"
+      setActivePreset(source ?? "custom")
+      if (source === "byMonth") {
+        setRange(buildMonthRange(from.getFullYear(), from.getMonth()))
+      } else if (mappedPreset === "thisWeek") {
+        setWeekAnchor(new Date(from))
+      } else if (mappedPreset !== "custom") {
+        setRange(buildStatsDateRange(mappedPreset))
+      } else {
+        setRange(buildStatsDateRange("custom", from, to))
+      }
+      setActiveYear(from.getFullYear())
+      setActiveMonth(from.getMonth())
+    },
+    [onChange],
+  )
+  const setMonthRange = useCallback(
+    (year: number, month: number) => {
+      onChange?.()
+      setActiveYear(year)
+      setActiveMonth(month)
+      setActivePreset("byMonth")
+      setRange(buildMonthRange(year, month))
+    },
+    [onChange],
+  )
+  const navigate = useCallback(
+    (direction: "prev" | "next") => {
+      onChange?.()
+      if (activePreset === "thisWeek") {
+        setWeekAnchor((prev) => addWeeks(prev, direction === "next" ? 1 : -1))
+        return
+      }
+      setRange((prev) => navigateRange(prev, activePreset, direction))
+    },
+    [activePreset, onChange],
+  )
+  return {
+    dateRange,
+    activePreset,
+    activeYear,
+    activeMonth,
+    setPreset,
+    setCustomRange,
+    setMonthRange,
+    navigate,
+  }
+}
+
+export function useStats(init?: UseStatsInit): UseStatsReturn {
+  const [byCurrency, setByCurrency] = useState<CurrencyStats[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const markLoading = useCallback(() => setIsLoading(true), [])
+  const {
+    dateRange,
+    activePreset,
+    activeYear,
+    activeMonth,
+    setPreset,
+    setCustomRange,
+    setMonthRange,
+    navigate,
+  } = useStatsRange(init, markLoading)
+  const fetchIdRef = useRef(0)
+  const activeFetchCountRef = useRef(0)
+  const accounts = useActiveAccounts()
+  const dbChangeSignal = useStatsDatabaseChangeSignal()
+  // `accounts` is rebuilt every render, so key the supplements on its content.
+  const accountsSignature = accounts
+    .map(
+      (a) =>
+        `${a.id}:${a.balance}:${a.currencyCode}:${a.excludeFromBalance}:${a.name}:${a.icon}:${a.colorSchemeName}`,
+    )
+    .join("|")
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on accountsSignature
+  const supplementByCurrency = useMemo(
+    () => computeSupplements(accounts),
+    [accountsSignature],
+  )
   const fetchData = useCallback(async (range: StatsDateRange) => {
     const fetchId = ++fetchIdRef.current
     activeFetchCountRef.current++
@@ -242,59 +349,6 @@ export function useStats(init?: UseStatsInit): UseStatsReturn {
       clearTimeout(timer)
     }
   }, [dateRange, dbChangeSignal, fetchData, isVisible])
-  const setPreset = useCallback((preset: StatsDateRangePreset) => {
-    setIsLoading(true)
-    setActivePreset(preset)
-    if (preset === "thisWeek") {
-      setWeekAnchor(new Date())
-    } else {
-      setRange(buildStatsDateRange(preset))
-    }
-  }, [])
-  const setCustomRange = useCallback(
-    (from: Date, to: Date, source?: DateRangePresetId) => {
-      setIsLoading(true)
-      const mappedPreset: StatsDateRangePreset =
-        source === "thisWeek" ||
-        source === "thisMonth" ||
-        source === "thisYear" ||
-        source === "last30" ||
-        source === "allTime"
-          ? source
-          : "custom"
-      setActivePreset(source ?? "custom")
-      if (source === "byMonth") {
-        setRange(buildMonthRange(from.getFullYear(), from.getMonth()))
-      } else if (mappedPreset === "thisWeek") {
-        setWeekAnchor(new Date(from))
-      } else if (mappedPreset !== "custom") {
-        setRange(buildStatsDateRange(mappedPreset))
-      } else {
-        setRange(buildStatsDateRange("custom", from, to))
-      }
-      setActiveYear(from.getFullYear())
-      setActiveMonth(from.getMonth())
-    },
-    [],
-  )
-  const setMonthRange = useCallback((year: number, month: number) => {
-    setIsLoading(true)
-    setActiveYear(year)
-    setActiveMonth(month)
-    setActivePreset("byMonth")
-    setRange(buildMonthRange(year, month))
-  }, [])
-  const navigate = useCallback(
-    (direction: "prev" | "next") => {
-      setIsLoading(true)
-      if (activePreset === "thisWeek") {
-        setWeekAnchor((prev) => addWeeks(prev, direction === "next" ? 1 : -1))
-        return
-      }
-      setRange((prev) => navigateRange(prev, activePreset, direction))
-    },
-    [activePreset],
-  )
   const refetch = useCallback(() => {
     setIsLoading(true)
     return fetchData(dateRange)
@@ -341,4 +395,71 @@ export function useWrappedInsights(
   }, [dateRange, dbChangeSignal])
 
   return { insights, isLoading }
+}
+
+/**
+ * Runs a synchronous stats read like `useStats` fetches: skipped while the
+ * screen is hidden, immediate when `key` changes, debounced after writes.
+ * Returns `initial` until the first read.
+ */
+function useStatsRead<T>(read: () => T, key: string, initial: T): T {
+  const [result, setResult] = useState<{
+    key: string
+    signal: string
+    value: T
+  } | null>(null)
+  const dbChangeSignal = useStatsDatabaseChangeSignal()
+  const isFocused = useIsFocused()
+  const isTabActive = useIsActiveTab()
+  const isVisible = isFocused && isTabActive
+  const lastKey = result?.key
+  const lastSignal = result?.signal
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `read` is rebuilt every render; `key` names its inputs
+  useEffect(() => {
+    if (!isVisible) return
+    // Refocus with nothing changed: the stored value is still current.
+    if (lastKey === key && lastSignal === dbChangeSignal) return
+    const timer = setTimeout(
+      () => {
+        try {
+          setResult({ key, signal: dbChangeSignal, value: read() })
+        } catch (error) {
+          logger.error("stats read failed", { key, error: String(error) })
+        }
+      },
+      lastKey === key ? STATS_REFETCH_DEBOUNCE_MS : 0,
+    )
+    return () => clearTimeout(timer)
+  }, [key, dbChangeSignal, isVisible])
+  return result?.value ?? initial
+}
+
+const rangeKey = (range: StatsDateRange, currency: string) =>
+  `${range.from.toISOString()}|${range.to.toISOString()}|${currency}`
+
+const NO_RECURRING_SPEND: RecurringSpend = { total: 0, count: 0 }
+const NO_PLACES: SpendingPlace[] = []
+
+/** Confirmed recurring expenses in `dateRange` for `currency`. */
+export function useRecurringSpend(
+  dateRange: StatsDateRange,
+  currency: string,
+): RecurringSpend {
+  return useStatsRead(
+    () => fetchRecurringSpend(dateRange, currency),
+    rangeKey(dateRange, currency),
+    NO_RECURRING_SPEND,
+  )
+}
+
+/** Located expenses in `dateRange` for `currency`, grouped by place. */
+export function useSpendingPlaces(
+  dateRange: StatsDateRange,
+  currency: string,
+): SpendingPlace[] {
+  return useStatsRead(
+    () => fetchSpendingPlaces(dateRange, currency),
+    rangeKey(dateRange, currency),
+    NO_PLACES,
+  )
 }

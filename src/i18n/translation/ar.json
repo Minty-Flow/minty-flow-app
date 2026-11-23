@@ -281,7 +281,6 @@
       },
       "moreOptions": "المزيد من الخيارات",
       "dashboard": {
-        "soon": "قريباً",
         "cashFlow": "التدفق النقدي",
         "overspent": "تجاوزت الإنفاق",
         "saved": "وفّرت",
@@ -300,7 +299,20 @@
         "calendar": "التقويم",
         "recurring": "المتكررة",
         "spendingMap": "خريطة الإنفاق",
-        "noSpendingWindow": "لا يوجد إنفاق في هذه الفترة."
+        "noSpendingWindow": "لا يوجد إنفاق في هذه الفترة.",
+        "noRecurring": "لا شيء في هذه الفترة.",
+        "recurringCount_zero": "{{count}} دفعة",
+        "recurringCount_one": "دفعة واحدة",
+        "recurringCount_two": "دفعتان",
+        "recurringCount_few": "{{count}} دفعات",
+        "recurringCount_many": "{{count}} دفعة",
+        "recurringCount_other": "{{count}} دفعة",
+        "places_zero": "{{count}} مكان",
+        "places_one": "مكان واحد",
+        "places_two": "مكانان",
+        "places_few": "{{count}} أماكن",
+        "places_many": "{{count}} مكانًا",
+        "places_other": "{{count}} مكان"
       },
       "cashFlow": {
         "title": "التدفق النقدي",
@@ -341,6 +353,27 @@
         "spentIn": "أُنفق في {{period}}",
         "less": "أقل",
         "more": "أكثر"
+      },
+      "recurring": {
+        "title": "المتكررة",
+        "spentIn": "أُنفق على المتكررة في {{period}}",
+        "subscriptions": "الاشتراكات",
+        "repetitive": "المتكررة",
+        "empty": "لا توجد مصاريف متكررة في هذه الفترة."
+      },
+      "spendingMap": {
+        "title": "خريطة الإنفاق",
+        "topPlaces": "أعلى الأماكن",
+        "unnamedPlace": "مكان بدون اسم",
+        "offline": "تحتاج الخريطة إلى اتصال بالإنترنت.",
+        "empty": "لا توجد مصاريف بموقع في هذه الفترة.",
+        "entries_zero": "{{count}} عملية",
+        "entries_one": "عملية واحدة",
+        "entries_two": "عمليتان",
+        "entries_few": "{{count}} عمليات",
+        "entries_many": "{{count}} عملية",
+        "entries_other": "{{count}} عملية",
+        "retry": "إعادة المحاولة"
       },
       "pendingNotice_zero": "{{count}} معاملة مجدولة مستبعدة من الإحصائيات",
       "pendingNotice_one": "معاملة مجدولة واحدة مستبعدة من الإحصائيات",
