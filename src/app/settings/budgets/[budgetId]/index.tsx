@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { type DimensionValue, FlatList, View as RNView } from "react-native"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { PaceWarning } from "~/components/budgets/pace-warning"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { IconSvg } from "~/components/icons"
 import { Money } from "~/components/money"
@@ -314,6 +315,12 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
           ))}
         </View>
       )}
+
+      <PaceWarning
+        budget={budget}
+        progress={{ spent, limit, elapsedDays, totalDays, isOverBudget }}
+        variant="banner"
+      />
 
       {insight && <Text style={styles.insight}>{insight}</Text>}
 

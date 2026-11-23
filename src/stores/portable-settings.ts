@@ -10,6 +10,7 @@ import {
   resolveProfileImage,
 } from "~/utils/profile-image"
 
+import { useBudgetPaceStore } from "./budget-pace.store"
 import { useButtonPlacementStore } from "./button-placement.store"
 import { useCalendarFormatStore } from "./calendar-format.store"
 import { useHiddenRecentItemsStore } from "./hidden-recent-items.store"
@@ -81,6 +82,7 @@ const STORES: Record<string, PortableStore> = {
   transfersPreferences: plain(useTransfersPreferencesStore),
   transactionLocation: plain(useTransactionLocationStore),
   hiddenRecentItems: plain(useHiddenRecentItemsStore),
+  budgetPace: plain(useBudgetPaceStore),
 }
 
 /** The portable preferences as they are now, for a backup. */

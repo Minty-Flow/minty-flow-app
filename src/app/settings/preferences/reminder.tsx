@@ -8,6 +8,7 @@ import {
   SettingsSwitchRow,
   settingsStyles,
 } from "~/components/settings/settings-list"
+import { Chip } from "~/components/ui/chips"
 import {
   DateTimePickerSheet,
   useDateTimePicker,
@@ -20,6 +21,8 @@ import { View } from "~/components/ui/view"
 import { TRANSACTION_REMINDERS_CHANNEL_ID } from "~/constants/notification-channels"
 import { useNotificationPermissionStatus } from "~/hooks/use-permission-status"
 import { useNotificationStore } from "~/stores/notification.store"
+import { formatNumber } from "~/utils/number-format"
+import { PACE_SENSITIVITY_OPTIONS } from "~/utils/pace-alert"
 import { formatReadableTime } from "~/utils/time-utils"
 
 const DAILY_REMINDER_ID = "daily-check-in-reminder"
@@ -33,12 +36,20 @@ export default function ReminderScreen() {
     dailyReminderTime,
     setDailyReminderEnabled,
     setDailyReminderTime,
+    isPaceAlertEnabled,
+    paceSensitivity,
+    setPaceAlertEnabled,
+    setPaceSensitivity,
   } = useNotificationStore(
     useShallow((s) => ({
       isDailyReminderEnabled: s.isDailyReminderEnabled,
       dailyReminderTime: s.dailyReminderTime,
       setDailyReminderEnabled: s.setDailyReminderEnabled,
       setDailyReminderTime: s.setDailyReminderTime,
+      isPaceAlertEnabled: s.isPaceAlertEnabled,
+      paceSensitivity: s.paceSensitivity,
+      setPaceAlertEnabled: s.setPaceAlertEnabled,
+      setPaceSensitivity: s.setPaceSensitivity,
     })),
   )
 
@@ -140,6 +151,35 @@ export default function ReminderScreen() {
         onValueChange={handleToggleDailyReminder}
       />
 
+      <SettingsSwitchRow
+        label={t("screens.settings.reminders.paceAlerts.label")}
+        description={t("screens.settings.reminders.paceAlerts.description")}
+        value={isPaceAlertEnabled}
+        onValueChange={setPaceAlertEnabled}
+      />
+
+      {isPaceAlertEnabled && (
+        <View style={styles.section}>
+          <Text style={styles.headerLabel}>
+            {t("screens.settings.reminders.paceAlerts.sensitivityLabel")}
+          </Text>
+          <View style={styles.chipRow}>
+            {PACE_SENSITIVITY_OPTIONS.map((option) => (
+              <Chip
+                key={option}
+                label={t(
+                  "screens.settings.reminders.paceAlerts.sensitivityValue",
+                  { percent: formatNumber(Math.round(option * 100)) },
+                )}
+                selected={paceSensitivity === option}
+                hideCheck
+                onPress={() => setPaceSensitivity(option)}
+              />
+            ))}
+          </View>
+        </View>
+      )}
+
       {isDailyReminderEnabled && (
         <>
           <View style={styles.section}>
@@ -188,6 +228,11 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.headlineSmall.fontSize,
     fontWeight: "bold",
     marginBottom: 6,
+  },
+  chipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
   },
   timeCard: {
     backgroundColor: theme.colors.boxShadow,

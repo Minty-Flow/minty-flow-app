@@ -759,7 +759,8 @@
             "dailyPace_two": "{{amount}}/يوم لمدة {{count}} يوم",
             "dailyPace_few": "{{amount}}/يوم لمدة {{count}} يوم",
             "dailyPace_many": "{{amount}}/يوم لمدة {{count}} يوم"
-          }
+          },
+          "paceWarning": "بهذا المعدل ستتجاوز الميزانية بمقدار {{amount}}"
         },
         "detail": {
           "title": "ميزانية",
@@ -788,7 +789,11 @@
             "createFailed": "فشل إنشاء الميزانية.",
             "updateFailed": "فشل تحديث الميزانية.",
             "deleteFailed": "فشل حذف الميزانية."
-          }
+          },
+          "paceAlertLabel": "تنبيه وتيرة الإنفاق"
+        },
+        "paceNotification": {
+          "body": "بهذا المعدل ستتجاوز هذه الميزانية بمقدار {{amount}}"
         }
       },
       "loans": {
@@ -1109,6 +1114,12 @@
         "a11y": {
           "grantNotifications": "منح إذن الإشعارات",
           "permissionWarning": "لم يتم منح إذن الإشعارات"
+        },
+        "paceAlerts": {
+          "label": "تنبيهات وتيرة الميزانية",
+          "description": "نبّهني عندما تتجه ميزانية لتجاوز حدها",
+          "sensitivityLabel": "نبّهني عند تجاوز متوقع بنسبة",
+          "sensitivityValue": "{{percent}}٪"
         }
       },
       "transfers": {
