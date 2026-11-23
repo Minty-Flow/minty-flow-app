@@ -42,6 +42,7 @@ import {
   type AddBudgetFormSchema,
   addBudgetSchema,
 } from "~/schemas/budgets.schema"
+import { useBudgetPaceStore } from "~/stores/budget-pace.store"
 import { getThemeStrict } from "~/styles/theme/registry"
 import { BudgetPeriodEnum } from "~/types/budgets"
 import { NewEnum } from "~/types/new"
@@ -120,6 +121,13 @@ export function BudgetModifyContent({
     onBlock: () => setUnsavedSheetVisible(true),
   })
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false)
+  // Applies at once, like the Active switch's neighbours outside the form.
+  const paceAlertOff = useBudgetPaceStore((s) =>
+    budget ? s.disabledBudgetIds.includes(budget.id) : false,
+  )
+  const setPaceAlertOff = (off: boolean) => {
+    if (budget) useBudgetPaceStore.getState().setDisabled(budget.id, off)
+  }
   const startDatePicker = useDateTimePicker({
     onConfirm: (date) =>
       setValue("startDate", date.getTime(), { shouldDirty: true }),
@@ -163,6 +171,7 @@ export function BudgetModifyContent({
         return false
       }
       await deleteBudgetById(budgetModifyId)
+      useBudgetPaceStore.getState().forget(budgetModifyId)
     } catch (error) {
       logger.error("Error deleting budget", { error })
       Toast.error({
@@ -472,6 +481,27 @@ export function BudgetModifyContent({
                 </ListItem>
               )}
             />
+
+            {!isAddMode && budget && (
+              <ListItem
+                style={budgetModifyStyles.switchRow}
+                onPress={() => setPaceAlertOff(!paceAlertOff)}
+              >
+                <View style={budgetModifyStyles.switchLeft}>
+                  <IconSvg name="alert-triangle" size={24} />
+                  <Text
+                    variant="default"
+                    style={budgetModifyStyles.switchLabel}
+                  >
+                    {t("screens.settings.budgets.form.paceAlertLabel")}
+                  </Text>
+                </View>
+                <Switch
+                  value={!paceAlertOff}
+                  onValueChange={(on) => setPaceAlertOff(!on)}
+                />
+              </ListItem>
+            )}
           </View>
 
           {!isAddMode && <Separator />}

@@ -476,6 +476,10 @@
             "showBalanceOnHome": {
               "label": "إظهار الرصيد في الرئيسية",
               "description": "إظهار رصيدك الإجمالي فوق ملخص الدخل والمصروفات"
+            },
+            "showPaceOnHome": {
+              "label": "عرض تحذيرات وتيرة الميزانية",
+              "description": "عرض الميزانيات التي في طريقها لتجاوز حدها فوق الملخص"
             }
           }
         },
@@ -759,7 +763,9 @@
             "dailyPace_two": "{{amount}}/يوم لمدة {{count}} يوم",
             "dailyPace_few": "{{amount}}/يوم لمدة {{count}} يوم",
             "dailyPace_many": "{{amount}}/يوم لمدة {{count}} يوم"
-          }
+          },
+          "paceWarning": "بهذا المعدل ستتجاوز الميزانية بمقدار {{amount}}",
+          "paceWarningNamed": "{{name}} في طريقها لتجاوز الحد بمقدار {{amount}}"
         },
         "detail": {
           "title": "ميزانية",
@@ -788,7 +794,11 @@
             "createFailed": "فشل إنشاء الميزانية.",
             "updateFailed": "فشل تحديث الميزانية.",
             "deleteFailed": "فشل حذف الميزانية."
-          }
+          },
+          "paceAlertLabel": "تنبيه وتيرة الإنفاق"
+        },
+        "paceNotification": {
+          "body": "بهذا المعدل ستتجاوز هذه الميزانية بمقدار {{amount}}"
         }
       },
       "loans": {
@@ -1109,6 +1119,12 @@
         "a11y": {
           "grantNotifications": "منح إذن الإشعارات",
           "permissionWarning": "لم يتم منح إذن الإشعارات"
+        },
+        "paceAlerts": {
+          "label": "تنبيهات وتيرة الميزانية",
+          "description": "نبّهني عندما تتجه ميزانية لتجاوز حدها",
+          "sensitivityLabel": "نبّهني عند تجاوز متوقع بنسبة",
+          "sensitivityValue": "{{percent}}٪"
         }
       },
       "transfers": {
@@ -1870,5 +1886,9 @@
     "thisDay": "هذا {{day}}",
     "lastDay": "آخر {{day}}",
     "nextDay": "{{day}} القادم"
+  },
+  "notificationChannels": {
+    "transactionReminders": "تذكيرات المعاملات",
+    "budgetAlerts": "تنبيهات الميزانية"
   }
 }

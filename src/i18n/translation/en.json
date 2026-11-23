@@ -464,6 +464,10 @@
             "showBalanceOnHome": {
               "label": "Show balance on home",
               "description": "Show your total balance above the income and expense summary"
+            },
+            "showPaceOnHome": {
+              "label": "Show budget pace warnings",
+              "description": "List budgets on pace to exceed their limit above the summary"
             }
           }
         },
@@ -727,7 +731,9 @@
             },
             "dailyPace_one": "{{amount}}/day for {{count}} day",
             "dailyPace_other": "{{amount}}/day for {{count}} days"
-          }
+          },
+          "paceWarning": "On pace to exceed by {{amount}}",
+          "paceWarningNamed": "{{name}} is on pace to exceed by {{amount}}"
         },
         "detail": {
           "title": "Budget",
@@ -756,7 +762,11 @@
             "createFailed": "Failed to create budget.",
             "updateFailed": "Failed to update budget.",
             "deleteFailed": "Failed to delete budget."
-          }
+          },
+          "paceAlertLabel": "Pace alert"
+        },
+        "paceNotification": {
+          "body": "On pace to exceed this budget by {{amount}}"
         }
       },
       "loans": {
@@ -1065,6 +1075,12 @@
         "a11y": {
           "grantNotifications": "Grant notifications permission",
           "permissionWarning": "Notifications permission not granted"
+        },
+        "paceAlerts": {
+          "label": "Budget pace alerts",
+          "description": "Warn me when a budget is on pace to exceed its limit",
+          "sensitivityLabel": "Warn when projected over by",
+          "sensitivityValue": "{{percent}}%"
         }
       },
       "transfers": {
@@ -1758,5 +1774,9 @@
     "lastDay": "Last {{day}}",
     "nextDay": "Next {{day}}",
     "weekOf": "Week of {{date}}"
+  },
+  "notificationChannels": {
+    "transactionReminders": "Transaction Reminders",
+    "budgetAlerts": "Budget Alerts"
   }
 }

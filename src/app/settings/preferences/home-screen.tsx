@@ -7,6 +7,7 @@ import {
   SettingsSwitchRow,
   settingsStyles,
 } from "~/components/settings/settings-list"
+import { useBudgetPaceStore } from "~/stores/budget-pace.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { useWhatsNewStore } from "~/stores/whats-new.store"
 
@@ -16,6 +17,8 @@ export default function HomeScreenSettings() {
   const setShowBalanceOnHome = useMoneyFormattingStore(
     (s) => s.setShowBalanceOnHome,
   )
+  const showPaceOnHome = useBudgetPaceStore((s) => s.showOnHome)
+  const setShowPaceOnHome = useBudgetPaceStore((s) => s.setShowOnHome)
   const markSeen = useWhatsNewStore((s) => s.markHomeScreenSeen)
   // Opening the screen is the discovery: the "New" badges go away.
   useEffect(() => markSeen(), [markSeen])
@@ -35,6 +38,16 @@ export default function HomeScreenSettings() {
           )}
           value={showBalanceOnHome}
           onValueChange={setShowBalanceOnHome}
+        />
+        <SettingsSwitchRow
+          label={t(
+            "screens.settings.preferences.appearance.homeScreen.showPaceOnHome.label",
+          )}
+          description={t(
+            "screens.settings.preferences.appearance.homeScreen.showPaceOnHome.description",
+          )}
+          value={showPaceOnHome}
+          onValueChange={setShowPaceOnHome}
         />
       </SettingsSection>
     </ScrollView>

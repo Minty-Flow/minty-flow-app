@@ -77,6 +77,20 @@ describe("sanitizeSettings", () => {
     }
   })
 
+  it("keeps pace-alert opt-outs but never the alerted record", () => {
+    const state = {
+      disabledBudgetIds: ["b1", "b2"],
+      alerted: { b1: "2026-11" },
+    }
+    expect(
+      sanitizeSettings(section("budgetPace", state)).budgetPace.state,
+    ).toEqual({ disabledBudgetIds: ["b1", "b2"] })
+    expect(
+      sanitizeSettings(section("budgetPace", { disabledBudgetIds: ["b1", 7] }))
+        .budgetPace,
+    ).toBeUndefined()
+  })
+
   it("ignores a section saved at another store version", () => {
     const out = sanitizeSettings({
       weekStart: { version: 99, state: { weekStart: "monday" } },

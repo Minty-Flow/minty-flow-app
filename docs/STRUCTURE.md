@@ -89,6 +89,7 @@
 │       ├── live-progress.test.ts
 │       ├── local-day-key.test.ts
 │       ├── money.test.ts
+│       ├── pace-alert.test.ts
 │       ├── planning-progress.test.ts
 │       ├── profile-image.test.ts
 │       ├── recurrence.test.ts
@@ -299,7 +300,9 @@
 │   │   │   │   ├── budget-modify-content.tsx
 │   │   │   │   ├── budget-modify.styles.ts
 │   │   │   │   └── types.ts
-│   │   │   └── budget-card.tsx
+│   │   │   ├── budget-card.tsx
+│   │   │   ├── home-pace-alerts.tsx
+│   │   │   └── pace-warning.tsx
 │   │   ├── calendar-format/
 │   │   │   └── date-format-sheet.tsx
 │   │   ├── categories/
@@ -632,6 +635,8 @@
 │   ├── hooks/
 │   │   ├── exchange-rates-editor.reducer.ts
 │   │   ├── use-balance-before.ts
+│   │   ├── use-budget-pace-alert-sync.ts
+│   │   ├── use-budget-pace.ts
 │   │   ├── use-debounced-callback.ts
 │   │   ├── use-import-recovery.ts
 │   │   ├── use-loan-term-reconcile.ts
@@ -675,6 +680,7 @@
 │   │   ├── android-sound.store.ts
 │   │   ├── app-lock.store.ts
 │   │   ├── bill-splitter.store.ts
+│   │   ├── budget-pace.store.ts
 │   │   ├── button-placement.store.ts
 │   │   ├── calendar-format.store.ts
 │   │   ├── development-notice.store.ts
@@ -748,6 +754,7 @@
 │       ├── notify-format-change.ts
 │       ├── number-format.ts
 │       ├── open-file.ts
+│       ├── pace-alert.ts
 │       ├── parse-math-expression.ts
 │       ├── pending-transactions.ts
 │       ├── planning-progress.ts

@@ -1,6 +1,7 @@
 import { TRASH_RETENTION_CHOICES } from "~/constants/trash-retention"
 import { LangCodeEnum } from "~/i18n/language.constants"
 import { getMinorUnitDigits } from "~/utils/money"
+import { PACE_SENSITIVITY_OPTIONS } from "~/utils/pace-alert"
 
 /**
  * Preferences that travel in a full backup, so a restore on a new phone does
@@ -30,6 +31,10 @@ const intBetween =
   (min: number, max: number): Validator =>
   (v) =>
     typeof v === "number" && Number.isInteger(v) && v >= min && v <= max
+const isBudgetIdList: Validator = (v) =>
+  Array.isArray(v) &&
+  v.length <= 500 &&
+  v.every((x) => typeof x === "string" && x.length > 0 && x.length <= 255)
 const isCurrency: Validator = (v) => {
   if (typeof v !== "string") return false
   try {
@@ -113,6 +118,8 @@ export const PORTABLE_SETTINGS: Record<string, SettingsSpec> = {
       isDailyReminderEnabled: isBoolean,
       dailyReminderTime: (v) =>
         typeof v === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(v),
+      isPaceAlertEnabled: isBoolean,
+      paceSensitivity: (v) => PACE_SENSITIVITY_OPTIONS.some((o) => o === v),
     },
   },
   pendingTransactions: {
@@ -143,6 +150,12 @@ export const PORTABLE_SETTINGS: Record<string, SettingsSpec> = {
   transactionLocation: {
     version: 0,
     fields: { isEnabled: isBoolean, autoAttach: isBoolean },
+  },
+  // Only the opt-outs: ids survive a restore. The "already alerted" record
+  // stays out, or a restore would notify again for the same period.
+  budgetPace: {
+    version: 0,
+    fields: { disabledBudgetIds: isBudgetIdList, showOnHome: isBoolean },
   },
   hiddenRecentItems: { version: 0, fields: { hidden: isHiddenRecentItems } },
 }

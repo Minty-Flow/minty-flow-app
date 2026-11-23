@@ -4,6 +4,7 @@ import { type DimensionValue, View as RNView } from "react-native"
 import { createMMKV } from "react-native-mmkv"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
+import { PaceWarning } from "~/components/budgets/pace-warning"
 import { DynamicIcon } from "~/components/dynamic-icon"
 import { Money } from "~/components/money"
 import { Pressable } from "~/components/ui/pressable"
@@ -354,6 +355,8 @@ export function BudgetCard({ budget, categories, onPress }: BudgetCardProps) {
           {formatPercent(spendPercent, { maximumFractionDigits: 0 })}
         </Text>
       </View>
+
+      <PaceWarning budget={budget} progress={progress} variant="text" />
 
       {insight && (
         <Text variant="small" style={styles.insight}>

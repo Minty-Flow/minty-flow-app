@@ -4,7 +4,7 @@ import { useDrizzleStudio } from "expo-drizzle-studio-plugin"
 import { NavigationBar } from "expo-navigation-bar"
 import * as Notifications from "expo-notifications"
 import { Stack, useRouter, useSegments } from "expo-router"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { Platform } from "react-native"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
@@ -21,8 +21,12 @@ import {
 import { RouteErrorBoundary } from "~/components/route-error-boundary"
 import { ToastManager } from "~/components/ui/toast"
 import { TooltipProvider } from "~/components/ui/tooltip"
-import { TRANSACTION_REMINDERS_CHANNEL_ID } from "~/constants/notification-channels"
+import {
+  BUDGET_ALERTS_CHANNEL_ID,
+  TRANSACTION_REMINDERS_CHANNEL_ID,
+} from "~/constants/notification-channels"
 import { drizzleDb, expoDb } from "~/database/drizzle/db"
+import { useBudgetPaceAlertSync } from "~/hooks/use-budget-pace-alert-sync"
 import { useImportRecovery } from "~/hooks/use-import-recovery"
 import { useNotificationSync } from "~/hooks/use-notification-sync"
 import { usePreferredCurrencySync } from "~/hooks/use-preferred-currency-sync"
@@ -123,12 +127,16 @@ function AppRootLayout() {
       Notifications.setNotificationChannelAsync(
         TRANSACTION_REMINDERS_CHANNEL_ID,
         {
-          name: "Transaction Reminders",
+          name: t("notificationChannels.transactionReminders"),
           importance: Notifications.AndroidImportance.HIGH,
         },
       ).catch(() => {})
+      Notifications.setNotificationChannelAsync(BUDGET_ALERTS_CHANNEL_ID, {
+        name: t("notificationChannels.budgetAlerts"),
+        importance: Notifications.AndroidImportance.HIGH,
+      }).catch(() => {})
     }
-  }, [])
+  }, [t])
 
   /** Header title for a create / edit route: `newTitle` when the id param is "new". */
   const modifyTitle =
@@ -145,8 +153,27 @@ function AppRootLayout() {
   useRetentionCleanup()
   useTransactionLifecycleSync()
   useNotificationSync()
+  useBudgetPaceAlertSync()
   usePreferredCurrencySync()
   useImportRecovery()
+
+  // Tapping a budget pace notification opens that budget. The hook also
+  // yields the tap that launched the app, once onboarding is done; a ref
+  // keeps each response from navigating twice.
+  const lastResponse = Notifications.useLastNotificationResponse()
+  const handledResponse = useRef<string | null>(null)
+  useEffect(() => {
+    if (!lastResponse || !isOnboardingCompleted) return
+    const key = `${lastResponse.notification.request.identifier}:${lastResponse.notification.date}`
+    if (handledResponse.current === key) return
+    handledResponse.current = key
+    const data = lastResponse.notification.request.content.data
+    if (data?.itemType === "budget" && typeof data.id === "string")
+      router.push({
+        pathname: "/settings/budgets/[budgetId]",
+        params: { budgetId: data.id },
+      })
+  }, [lastResponse, isOnboardingCompleted, router])
 
   return (
     <GestureHandlerRootView
