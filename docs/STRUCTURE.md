@@ -162,8 +162,6 @@
 │   ├── migrations.d.ts
 │   └── migrations.js
 ├── plugins/
-│   ├── .env.local
-│   ├── minty-flow-upload.keystore
 │   ├── with-android-release-signing.mts
 │   └── with-sqlite-source-build.mts
 ├── scripts/
