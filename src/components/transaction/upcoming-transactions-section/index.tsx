@@ -1,15 +1,7 @@
-import { useRouter } from "expo-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useUnistyles } from "react-native-unistyles"
 
 import { ConfirmSheet } from "~/components/confirm-sheet"
-import { IconSvg } from "~/components/icons"
-import { Button } from "~/components/ui/button"
-import { ChevronIcon } from "~/components/ui/chevron-icon"
-import { Pressable } from "~/components/ui/pressable"
-import { Text } from "~/components/ui/text"
-import { View } from "~/components/ui/view"
 import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
 import {
   confirmTransaction,
@@ -29,18 +21,21 @@ import { Toast } from "~/utils/toast"
 import { applyTransferLayout } from "~/utils/transaction-list-utils"
 
 import { DeleteRecurringSheet } from "../delete-recurring-sheet"
-import { TransactionItem } from "../transaction-item"
-import type { UpcomingTransactionsSectionProps } from "./types"
-import { upcomingSectionStyles as sectionStyles } from "./upcoming-transactions-section.styles"
+import type { UpcomingRowHandlers } from "./parts"
+import type { UpcomingSection, UseUpcomingSectionOptions } from "./types"
 import { useAppForeground } from "./use-app-foreground"
 import { isUpcoming } from "./utils"
-export function UpcomingTransactionsSection({
+
+/**
+ * The upcoming rows as sections of the transaction list, so only the visible
+ * ones mount. `sheets` must be rendered outside the list.
+ */
+export function useUpcomingSection({
   transactions,
   onTransactionPress,
   horizonDays,
-}: UpcomingTransactionsSectionProps) {
+}: UseUpcomingSectionOptions) {
   const { t } = useTranslation()
-  const { theme } = useUnistyles()
   const updateDateUponConfirmation = usePendingTransactionsStore(
     (s) => s.updateDateUponConfirmation,
   )
@@ -81,9 +76,7 @@ export function UpcomingTransactionsSection({
     }
     return { recurring: recurringList, pending: pendingList }
   })()
-  const router = useRouter()
   const collapsed = useUpcomingSectionStore((s) => s.collapsed)
-  const setCollapsed = useUpcomingSectionStore((s) => s.setCollapsed)
   const [confirmAllSheetVisible, setConfirmAllSheetVisible] = useState(false)
   // The row stays set after the sheet closes so the sheet keeps its content
   // while it animates out; the next delete replaces it.
@@ -117,8 +110,6 @@ export function UpcomingTransactionsSection({
       })
     }
   }
-  const openConfirmAllSheet = () => setConfirmAllSheetVisible(true)
-  const closeConfirmAllSheet = () => setConfirmAllSheetVisible(false)
   const handleBeforeDelete = (row: TransactionWithRelations) => {
     if (row.recurringId) {
       setRecurringToDelete(row)
@@ -130,13 +121,38 @@ export function UpcomingTransactionsSection({
   const handleDeleteDone = (row: TransactionWithRelations) => {
     autoConfirmationService.cancelSchedule(row.id)
   }
-  const totalVisible = recurring.length + pending.length
-  if (totalVisible === 0) return null
+  const openConfirmAllSheet = () => setConfirmAllSheetVisible(true)
+  const closeConfirmAllSheet = () => setConfirmAllSheetVisible(false)
   const manualConfirmableCount = pending.filter((r) =>
     confirmable(r, nowMs),
   ).length
-  return (
-    <View style={sectionStyles.wrapper}>
+  // No data while collapsed, so no rows mount.
+  const sections: UpcomingSection[] =
+    recurring.length + pending.length === 0
+      ? []
+      : [
+          {
+            key: "upcoming",
+            upcoming: "summary",
+            recurringCount: recurring.length,
+            pendingCount: pending.length,
+            data: [],
+          },
+          {
+            key: "upcoming-recurring",
+            upcoming: "recurring",
+            data: collapsed ? [] : recurring,
+          },
+          {
+            key: "upcoming-pending",
+            upcoming: "pending",
+            data: collapsed ? [] : pending,
+            onConfirmAll:
+              manualConfirmableCount > 1 ? openConfirmAllSheet : undefined,
+          },
+        ]
+  const sheets = (
+    <>
       <ConfirmSheet
         visible={confirmAllSheetVisible}
         onRequestClose={closeConfirmAllSheet}
@@ -163,237 +179,16 @@ export function UpcomingTransactionsSection({
             }}
           />
         )}
-
-      <Pressable
-        style={sectionStyles.headerRow}
-        onPress={() => setCollapsed((c) => !c)}
-      >
-        <View style={sectionStyles.headerLeft}>
-          <IconSvg
-            name="history-toggle-outline"
-            size={18}
-            color={theme.colors.semantic.semi}
-          />
-          <Text style={sectionStyles.headerTitle}>
-            {t("screens.home.upcoming.header")}
-          </Text>
-          {collapsed ? (
-            <View style={sectionStyles.collapsedPills}>
-              {recurring.length > 0 && (
-                <View
-                  style={[
-                    sectionStyles.miniPill,
-                    { backgroundColor: `${theme.colors.semantic.info}18` },
-                  ]}
-                >
-                  <IconSvg
-                    name="repeat-outline"
-                    size={12}
-                    color={theme.colors.semantic.info}
-                  />
-                  <Text
-                    style={[
-                      sectionStyles.miniPillText,
-                      { color: theme.colors.semantic.info },
-                    ]}
-                  >
-                    {recurring.length}
-                  </Text>
-                </View>
-              )}
-              {pending.length > 0 && (
-                <View
-                  style={[
-                    sectionStyles.miniPill,
-                    { backgroundColor: `${theme.colors.semantic.warning}18` },
-                  ]}
-                >
-                  <IconSvg
-                    name="history-toggle-outline"
-                    size={12}
-                    color={theme.colors.semantic.warning}
-                  />
-                  <Text
-                    style={[
-                      sectionStyles.miniPillText,
-                      { color: theme.colors.semantic.warning },
-                    ]}
-                  >
-                    {pending.length}
-                  </Text>
-                </View>
-              )}
-            </View>
-          ) : (
-            <View
-              style={[
-                sectionStyles.countBadge,
-                { backgroundColor: theme.colors.secondary },
-              ]}
-            >
-              <Text style={sectionStyles.countBadgeText}>{totalVisible}</Text>
-            </View>
-          )}
-        </View>
-
-        <IconSvg
-          name={collapsed ? "chevron-down-outline" : "chevron-up-outline"}
-          size={16}
-          color={theme.colors.semantic.semi}
-        />
-      </Pressable>
-
-      {!collapsed && (
-        <>
-          <View style={sectionStyles.headerDivider} />
-
-          <View style={sectionStyles.pillRow}>
-            {recurring.length > 0 && (
-              <View
-                style={[
-                  sectionStyles.pill,
-                  { backgroundColor: `${theme.colors.semantic.info}18` },
-                ]}
-              >
-                <IconSvg
-                  name="repeat-outline"
-                  size={14}
-                  color={theme.colors.semantic.info}
-                />
-                <Text
-                  style={[
-                    sectionStyles.pillText,
-                    { color: theme.colors.semantic.info },
-                  ]}
-                >
-                  {t("screens.home.upcoming.recurringCount", {
-                    count: recurring.length,
-                  })}
-                </Text>
-              </View>
-            )}
-            {pending.length > 0 && (
-              <View
-                style={[
-                  sectionStyles.pill,
-                  { backgroundColor: `${theme.colors.semantic.warning}18` },
-                ]}
-              >
-                <IconSvg
-                  name="history-toggle-outline"
-                  size={14}
-                  color={theme.colors.semantic.warning}
-                />
-                <Text
-                  style={[
-                    sectionStyles.pillText,
-                    { color: theme.colors.semantic.warning },
-                  ]}
-                >
-                  {t("screens.home.upcoming.pendingCount", {
-                    count: pending.length,
-                  })}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          <View style={sectionStyles.listContainer}>
-            {recurring.length > 0 && (
-              <>
-                <View style={sectionStyles.subHeader}>
-                  <Text style={sectionStyles.subHeaderText}>
-                    {t("screens.home.upcoming.subHeaderRecurring")}
-                  </Text>
-                  <View style={sectionStyles.subHeaderDivider} />
-                </View>
-                {recurring.map((row) => (
-                  <TransactionItem
-                    key={row.id}
-                    transactionWithRelations={row}
-                    variant="upcoming"
-                    onPress={() => onTransactionPress(row.id)}
-                    onConfirm={() => handleConfirm(row.id)}
-                    onBeforeDelete={handleBeforeDelete}
-                    onDelete={() => handleDeleteDone(row)}
-                    rightActionAccessibilityLabel={t(
-                      "screens.home.upcoming.a11y.cancelTransaction",
-                    )}
-                  />
-                ))}
-              </>
-            )}
-
-            {pending.length > 0 && (
-              <>
-                <View style={sectionStyles.subHeader}>
-                  <Text style={sectionStyles.subHeaderText}>
-                    {t("screens.home.upcoming.a11y.header")}
-                  </Text>
-                  <View style={sectionStyles.subHeaderDivider} />
-                  {manualConfirmableCount > 1 && (
-                    <Button
-                      variant="ghost"
-                      onPress={openConfirmAllSheet}
-                      style={sectionStyles.confirmAllButton}
-                      accessibilityLabel={t(
-                        "screens.home.upcoming.a11y.confirmAll",
-                      )}
-                    >
-                      <IconSvg
-                        name="checks-outline"
-                        size={14}
-                        color={theme.colors.semantic.success}
-                      />
-                      <Text
-                        style={[
-                          sectionStyles.confirmAllText,
-                          { color: theme.colors.semantic.success },
-                        ]}
-                      >
-                        {t("screens.home.upcoming.a11y.confirmAllButton")}
-                      </Text>
-                    </Button>
-                  )}
-                </View>
-                {pending.map((row) => (
-                  <TransactionItem
-                    key={row.id}
-                    transactionWithRelations={row}
-                    variant="upcoming"
-                    onPress={() => onTransactionPress(row.id)}
-                    onConfirm={() => handleConfirm(row.id)}
-                    onBeforeDelete={handleBeforeDelete}
-                    onDelete={() => handleDeleteDone(row)}
-                    rightActionAccessibilityLabel={t(
-                      "screens.home.upcoming.a11y.cancelTransaction",
-                    )}
-                  />
-                ))}
-              </>
-            )}
-          </View>
-
-          <View style={sectionStyles.seeAllRow}>
-            <Button
-              variant="link"
-              size="sm"
-              onPress={() => router.push("/settings/pending-transactions")}
-              style={sectionStyles.seeAllButton}
-            >
-              <Text style={sectionStyles.seeAllText}>
-                {t("screens.home.upcoming.seeAll")}
-              </Text>
-
-              <ChevronIcon
-                direction={"trailing"}
-                size={18}
-                color={theme.colors.semantic.semi}
-              />
-            </Button>
-          </View>
-        </>
-      )}
-    </View>
+    </>
   )
+  return {
+    sections,
+    sheets,
+    rowHandlers: {
+      onPressId: onTransactionPress,
+      onConfirmId: handleConfirm,
+      onBeforeDelete: handleBeforeDelete,
+      onDeleteRow: handleDeleteDone,
+    } satisfies UpcomingRowHandlers,
+  }
 }

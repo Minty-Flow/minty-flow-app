@@ -264,6 +264,8 @@ function getSectionKeyAndTitle(
 }
 
 export interface TransactionSection {
+  /** Stable list key; section positions shift as the upcoming ones come and go. */
+  key: string
   title: string
   data: TransactionWithRelations[]
   totals: Record<string, number>
@@ -300,7 +302,7 @@ export function buildTransactionSections(
 
   if (groupBy === "allTime") {
     const key = "all"
-    grouped[key] = { title: allTimeLabel, data: [], totals: {} }
+    grouped[key] = { key, title: allTimeLabel, data: [], totals: {} }
     for (const row of sortedList) {
       grouped[key].data.push(row)
       const currency = row.account?.currencyCode ?? ""
@@ -325,7 +327,12 @@ export function buildTransactionSections(
       )
 
       if (!grouped[dateKey]) {
-        grouped[dateKey] = { title: headerTitle(), data: [], totals: {} }
+        grouped[dateKey] = {
+          key: dateKey,
+          title: headerTitle(),
+          data: [],
+          totals: {},
+        }
       }
 
       grouped[dateKey].data.push(row)

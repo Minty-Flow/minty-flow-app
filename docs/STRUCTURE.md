@@ -509,6 +509,7 @@
 │   │   │   │   └── transaction-item-right.tsx
 │   │   │   ├── upcoming-transactions-section/
 │   │   │   │   ├── index.tsx
+│   │   │   │   ├── parts.tsx
 │   │   │   │   ├── types.ts
 │   │   │   │   ├── upcoming-transactions-section.styles.ts
 │   │   │   │   ├── use-app-foreground.ts

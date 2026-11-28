@@ -19,7 +19,14 @@ import { StyleSheet } from "react-native-unistyles"
 
 import { Money } from "~/components/money"
 import { TransactionRow } from "~/components/transaction/transaction-row"
-import { UpcomingTransactionsSection } from "~/components/transaction/upcoming-transactions-section"
+import { useUpcomingSection } from "~/components/transaction/upcoming-transactions-section"
+import {
+  UpcomingFooter,
+  UpcomingRow,
+  UpcomingSubHeader,
+  UpcomingSummaryHeader,
+} from "~/components/transaction/upcoming-transactions-section/parts"
+import type { UpcomingSection } from "~/components/transaction/upcoming-transactions-section/types"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
@@ -27,6 +34,7 @@ import { TRANSACTION_LIST_WINDOW } from "~/constants/list-window"
 import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
 import { useSingleOpenSwipeable } from "~/hooks/use-transaction-list-state"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
+import { useUpcomingSectionStore } from "~/stores/upcoming-section.store"
 import { NewEnum } from "~/types/new"
 import type {
   SearchState,
@@ -60,6 +68,10 @@ interface TransactionSectionListProps {
   /** Additional content rendered at the top of the list (before upcoming). */
   ListHeaderComponent?: ComponentType<unknown> | ReactElement | null
 }
+type ListSection = TransactionSection | UpcomingSection
+
+const NO_TRANSACTIONS: TransactionWithRelations[] = []
+
 const keyExtractor = (item: TransactionWithRelations) => item.id
 
 export function TransactionSectionList({
@@ -88,7 +100,7 @@ export function TransactionSectionList({
     () => applyFiltersAndSearch(transactionsFull, filterState, searchState),
     [transactionsFull, filterState, searchState],
   )
-  const sections = useMemo(() => {
+  const dateSections = useMemo(() => {
     const withoutRecurring = transactionsFull.filter(
       (r) => r.recurringId == null,
     )
@@ -115,25 +127,14 @@ export function TransactionSectionList({
   )
   // TransactionItem handles transfer vs non-transfer delete (modal + deleteTransfer or deleteTransactionModel); we only close the swipeable.
   const handleDeleteDone = closeOpenSwipeable
-  // Elements, not render functions: a new function type each render would
-  // remount the header and lose its state (summary, upcoming sheets).
-  const header = (
-    <>
-      {ListHeaderComponent != null &&
-        (typeof ListHeaderComponent === "function" ? (
-          <ListHeaderComponent />
-        ) : (
-          ListHeaderComponent
-        ))}
-      {upcomingVisible && (
-        <UpcomingTransactionsSection
-          transactions={upcomingSource}
-          onTransactionPress={handleOnTransactionPress}
-          horizonDays={upcomingHorizonDays}
-        />
-      )}
-    </>
-  )
+  // An element, not a render function: a new function type each render would
+  // remount the header and lose its state.
+  const header =
+    typeof ListHeaderComponent === "function" ? (
+      <ListHeaderComponent />
+    ) : (
+      ListHeaderComponent
+    )
   const emptyList = (
     <View style={styles.emptyStateWrapper}>
       {transactionsFull.length > 0 ? (
@@ -161,68 +162,108 @@ export function TransactionSectionList({
       )}
     </View>
   )
-  const renderItem = useCallback(
-    ({ item }: { item: TransactionWithRelations }) => (
-      <TransactionRow
-        item={item}
-        onPressId={handleOnTransactionPress}
-        onDelete={handleDeleteDone}
-        onWillOpen={handleWillOpen}
-      />
-    ),
-    [handleOnTransactionPress, handleDeleteDone, handleWillOpen],
-  )
+  const upcoming = useUpcomingSection({
+    transactions: upcomingVisible ? upcomingSource : NO_TRANSACTIONS,
+    onTransactionPress: handleOnTransactionPress,
+    horizonDays: upcomingHorizonDays,
+  })
+  const upcomingCollapsed = useUpcomingSectionStore((s) => s.collapsed)
+  const sections: ListSection[] = [...upcoming.sections, ...dateSections]
   return (
-    <SectionList<TransactionWithRelations, TransactionSection>
-      sections={sections}
-      ListHeaderComponent={header}
-      ListEmptyComponent={emptyList}
-      keyExtractor={keyExtractor}
-      {...TRANSACTION_LIST_WINDOW}
-      renderItem={renderItem}
-      renderSectionHeader={({ section }) => {
-        const s = section
-        if (!s.title && s.data.length === 0) return null
-        return (
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionTitleRow}>
-              <Text variant="large" style={styles.sectionTitle}>
-                {s.title}
-              </Text>
-              <View style={styles.sectionDivider} />
-            </View>
-            <View style={styles.sectionTotalsContainer}>
-              <View style={styles.totalsContainer}>
-                {Object.entries(s.totals).map(([curr, total], idx) => (
-                  <Fragment key={curr + idx.toString()}>
-                    <Text variant="small" style={styles.sectionTotal}>
-                      {idx > 0 && "|"}
-                    </Text>
-                    <Money
-                      variant="small"
-                      style={styles.sectionTotal}
-                      value={total}
-                      currency={curr}
-                      tone="auto"
-                      visualTone="transfer"
-                      showSign
-                    />
-                  </Fragment>
-                ))}
+    <>
+      <SectionList<TransactionWithRelations, ListSection>
+        sections={sections}
+        ListHeaderComponent={header}
+        // A footer, not `ListEmptyComponent`: upcoming sections alone still
+        // leave the main list empty.
+        ListFooterComponent={dateSections.length === 0 ? emptyList : null}
+        keyExtractor={keyExtractor}
+        {...TRANSACTION_LIST_WINDOW}
+        renderItem={({ item, section }) =>
+          "upcoming" in section ? (
+            <UpcomingRow item={item} {...upcoming.rowHandlers} />
+          ) : (
+            <TransactionRow
+              item={item}
+              onPressId={handleOnTransactionPress}
+              onDelete={handleDeleteDone}
+              onWillOpen={handleWillOpen}
+            />
+          )
+        }
+        renderSectionHeader={({ section }) => {
+          const s = section
+          if ("upcoming" in s) {
+            if (s.upcoming === "summary") {
+              return (
+                <UpcomingSummaryHeader
+                  recurringCount={s.recurringCount}
+                  pendingCount={s.pendingCount}
+                />
+              )
+            }
+            if (s.data.length === 0) return null
+            return s.upcoming === "recurring" ? (
+              <UpcomingSubHeader
+                title={t("screens.home.upcoming.subHeaderRecurring")}
+              />
+            ) : (
+              <UpcomingSubHeader
+                title={t("screens.home.upcoming.a11y.header")}
+                onConfirmAll={s.onConfirmAll}
+              />
+            )
+          }
+          if (!s.title && s.data.length === 0) return null
+          return (
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionTitleRow}>
+                <Text variant="large" style={styles.sectionTitle}>
+                  {s.title}
+                </Text>
+                <View style={styles.sectionDivider} />
               </View>
-              <Text variant="small" style={styles.sectionTotal}>
-                {t("components.transactionList.transactionCount", {
-                  count: s.data.length,
-                })}
-              </Text>
+              <View style={styles.sectionTotalsContainer}>
+                <View style={styles.totalsContainer}>
+                  {Object.entries(s.totals).map(([curr, total], idx) => (
+                    <Fragment key={curr + idx.toString()}>
+                      <Text variant="small" style={styles.sectionTotal}>
+                        {idx > 0 && "|"}
+                      </Text>
+                      <Money
+                        variant="small"
+                        style={styles.sectionTotal}
+                        value={total}
+                        currency={curr}
+                        tone="auto"
+                        visualTone="transfer"
+                        showSign
+                      />
+                    </Fragment>
+                  ))}
+                </View>
+                <Text variant="small" style={styles.sectionTotal}>
+                  {t("components.transactionList.transactionCount", {
+                    count: s.data.length,
+                  })}
+                </Text>
+              </View>
             </View>
-          </View>
-        )
-      }}
-      contentContainerStyle={styles.listContent}
-      stickySectionHeadersEnabled={false}
-      showsVerticalScrollIndicator={false}
-    />
+          )
+        }}
+        renderSectionFooter={({ section }) =>
+          "upcoming" in section &&
+          section.upcoming === "pending" &&
+          !upcomingCollapsed ? (
+            <UpcomingFooter />
+          ) : null
+        }
+        contentContainerStyle={styles.listContent}
+        stickySectionHeadersEnabled={false}
+        showsVerticalScrollIndicator={false}
+      />
+      {upcomingVisible && upcoming.sheets}
+    </>
   )
 }
 const styles = StyleSheet.create((theme) => ({
