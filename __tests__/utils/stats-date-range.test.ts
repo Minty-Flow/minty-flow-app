@@ -7,7 +7,11 @@ vi.mock("~/stores/calendar-format.store", () => ({
 }))
 vi.mock("~/utils/get-week-start-on", () => ({ getWeekStartsOn: () => 1 }))
 
-import { buildStatsDateRange, navigateRange } from "~/utils/stats-date-range"
+import {
+  buildStatsDateRange,
+  navigateRange,
+  startAllTimeRange,
+} from "~/utils/stats-date-range"
 
 const endsAtEndOfDay = (d: Date) =>
   d.getHours() === 23 && d.getMinutes() === 59 && d.getSeconds() === 59
@@ -52,5 +56,24 @@ describe("previous period", () => {
     const next = navigateRange(range, "custom", "next")
     expect(endsAtEndOfDay(next.previousTo)).toBe(true)
     expect(next.previousFrom.getHours()).toBe(0)
+  })
+})
+
+describe("all time", () => {
+  const allTime = buildStatsDateRange("allTime")
+  const thisYear = new Date(new Date().getFullYear(), 0, 1)
+
+  it("starts with the year of the first transaction, also before 2000", () => {
+    const range = startAllTimeRange(allTime, new Date(1997, 6, 15))
+    expect(range.from).toEqual(new Date(1997, 0, 1))
+    // No previous period to compare against.
+    expect(range.previousFrom).toEqual(range.from)
+    expect(range.to).toEqual(allTime.to)
+  })
+
+  it("covers this year when there is nothing earlier", () => {
+    const future = new Date(new Date().getFullYear() + 2, 0, 1)
+    expect(startAllTimeRange(allTime, undefined).from).toEqual(thisYear)
+    expect(startAllTimeRange(allTime, future).from).toEqual(thisYear)
   })
 })

@@ -1,5 +1,5 @@
 import { addWeeks } from "date-fns/addWeeks"
-import { sql } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 import { useIsFocused } from "expo-router"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
@@ -38,6 +38,7 @@ import {
   buildMonthRange,
   buildStatsDateRange,
   navigateRange,
+  startAllTimeRange,
 } from "~/utils/stats-date-range"
 import type { DateRangePresetId } from "~/utils/time-utils"
 
@@ -170,19 +171,29 @@ export function useStatsRange(
   )
   const _weekStart = useWeekStartStore((s) => s.weekStart)
   const weekStartsOn = getWeekStartsOn()
-  const dateRange = useMemo(
-    () =>
-      activePreset === "thisWeek"
-        ? buildStatsDateRange(
-            "thisWeek",
-            undefined,
-            undefined,
-            weekAnchor,
-            weekStartsOn,
-          )
-        : range,
-    [activePreset, range, weekAnchor, weekStartsOn],
+  const firstTransaction = useLiveQuery(
+    drizzleDb
+      .select({ date: transactions.transactionDate })
+      .from(transactions)
+      .where(eq(transactions.isDeleted, 0))
+      .orderBy(transactions.transactionDate)
+      .limit(1),
   )
+  const firstDate = firstTransaction.data[0]?.date
+  const dateRange = useMemo(() => {
+    if (activePreset === "thisWeek") {
+      return buildStatsDateRange(
+        "thisWeek",
+        undefined,
+        undefined,
+        weekAnchor,
+        weekStartsOn,
+      )
+    }
+    return range.preset === "allTime"
+      ? startAllTimeRange(range, firstDate ? new Date(firstDate) : undefined)
+      : range
+  }, [activePreset, range, weekAnchor, weekStartsOn, firstDate])
   // §2.5: on a month rollover without a cold start, re-anchor the rolling
   // presets so "this month" doesn't show last month's window forever.
   const dayKey = useDayKey()
