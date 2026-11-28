@@ -3,7 +3,9 @@
  * Used by both the home screen and account detail screen.
  */
 
-import { addDays, endOfMonth, startOfMonth } from "date-fns"
+import { addDays } from "date-fns/addDays"
+import { endOfMonth } from "date-fns/endOfMonth"
+import { startOfMonth } from "date-fns/startOfMonth"
 
 import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
 import {

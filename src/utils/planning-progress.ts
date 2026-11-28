@@ -1,4 +1,4 @@
-import { differenceInCalendarDays } from "date-fns"
+import { differenceInCalendarDays } from "date-fns/differenceInCalendarDays"
 
 import type { Budget, BudgetPeriod } from "~/types/budgets"
 import type { Goal } from "~/types/goals"

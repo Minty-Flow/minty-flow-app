@@ -13,6 +13,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context"
 import { UnistylesRuntime, useUnistyles } from "react-native-unistyles"
 
 import { AppLockGate } from "~/components/app-lock-gate"
+import { BudgetPaceSync } from "~/components/budgets/budget-pace-sync"
 import { OnboardingResumeSheet } from "~/components/onboarding-resume-sheet"
 import {
   MigrationState,
@@ -26,7 +27,6 @@ import {
   TRANSACTION_REMINDERS_CHANNEL_ID,
 } from "~/constants/notification-channels"
 import { drizzleDb, expoDb } from "~/database/drizzle/db"
-import { useBudgetPaceAlertSync } from "~/hooks/use-budget-pace-alert-sync"
 import { useImportRecovery } from "~/hooks/use-import-recovery"
 import { useNotificationSync } from "~/hooks/use-notification-sync"
 import { usePreferredCurrencySync } from "~/hooks/use-preferred-currency-sync"
@@ -153,7 +153,6 @@ function AppRootLayout() {
   useRetentionCleanup()
   useTransactionLifecycleSync()
   useNotificationSync()
-  useBudgetPaceAlertSync()
   usePreferredCurrencySync()
   useImportRecovery()
 
@@ -533,6 +532,7 @@ function AppRootLayout() {
               </Stack>
             </RouteErrorBoundary>
 
+            <BudgetPaceSync />
             {/* Toasts go under the lock so nothing shows above the blur before unlock. */}
             <ToastManager />
             <AppLockGate />

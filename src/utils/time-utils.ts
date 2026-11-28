@@ -12,27 +12,23 @@
  * and everything date-related should be exported from this file instead.
  */
 
-import {
-  addWeeks,
-  type Day,
-  endOfMonth,
-  endOfWeek,
-  type FormatOptions,
-  format,
-  formatDistanceToNow,
-  getWeek,
-  isSameWeek,
-  isThisWeek,
-  isToday,
-  isTomorrow,
-  isValid,
-  isYesterday,
-  type Locale,
-  startOfMonth,
-  startOfWeek,
-  subWeeks,
-} from "date-fns"
-import { ar, enUS } from "date-fns/locale"
+import { addWeeks } from "date-fns/addWeeks"
+import { endOfMonth } from "date-fns/endOfMonth"
+import { endOfWeek } from "date-fns/endOfWeek"
+import { type FormatOptions, format } from "date-fns/format"
+import { formatDistanceToNow } from "date-fns/formatDistanceToNow"
+import { getWeek } from "date-fns/getWeek"
+import { isSameWeek } from "date-fns/isSameWeek"
+import { isThisWeek } from "date-fns/isThisWeek"
+import { isToday } from "date-fns/isToday"
+import { isTomorrow } from "date-fns/isTomorrow"
+import { isValid } from "date-fns/isValid"
+import { isYesterday } from "date-fns/isYesterday"
+import { ar } from "date-fns/locale/ar"
+import { enUS } from "date-fns/locale/en-US"
+import { startOfMonth } from "date-fns/startOfMonth"
+import { startOfWeek } from "date-fns/startOfWeek"
+import { subWeeks } from "date-fns/subWeeks"
 import { getCalendars } from "expo-localization"
 
 import i18n from "~/i18n/config"
@@ -45,6 +41,10 @@ import {
 } from "~/stores/calendar-format.store"
 
 import { getWeekStartsOn } from "./get-week-start-on"
+
+// date-fns exports these two types only through its index, so derive them.
+type Day = NonNullable<FormatOptions["weekStartsOn"]>
+type Locale = typeof enUS
 
 const { t } = i18n
 

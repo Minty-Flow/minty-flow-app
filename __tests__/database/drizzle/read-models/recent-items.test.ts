@@ -7,7 +7,9 @@ vi.mock("~/database/drizzle/db", async () => {
   const { createTestDb } = await import("@tests/helpers/create-test-db")
   return { drizzleDb: await createTestDb() }
 })
-vi.mock("drizzle-orm/expo-sqlite", () => ({ useLiveQuery: () => ({}) }))
+vi.mock("~/database/drizzle/use-live-query", () => ({
+  useLiveQuery: () => ({}),
+}))
 vi.mock("~/styles/theme/registry", () => ({ getThemeStrict: () => null }))
 
 import { drizzleDb } from "~/database/drizzle/db"

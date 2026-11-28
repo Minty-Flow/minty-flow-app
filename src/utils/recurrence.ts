@@ -1,4 +1,4 @@
-import { endOfDay } from "date-fns"
+import { endOfDay } from "date-fns/endOfDay"
 import type { RRuleSet } from "rrule"
 import * as rruleNs from "rrule"
 

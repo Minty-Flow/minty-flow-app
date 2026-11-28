@@ -1,12 +1,11 @@
-import { count, sql } from "drizzle-orm"
-import { useLiveQuery } from "drizzle-orm/expo-sqlite"
-
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Category, CategoryType } from "~/types/categories"
 import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
 
 import { drizzleDb } from "../db"
-import { categories, transactions } from "../schema"
+import { categories } from "../schema"
+import { useLiveQuery } from "../use-live-query"
+import { categoryCountsQuery } from "./category-counts-query"
 import {
   createLiveReadModelResult,
   type LiveReadModelResult,
@@ -24,21 +23,9 @@ export function useCategoriesQuery(
   const categoriesResult = useLiveQuery(
     drizzleDb.select().from(categories).orderBy(categories.name),
   )
-  const countsResult = useLiveQuery(
-    drizzleDb
-      .select({
-        categoryId: transactions.categoryId,
-        count: count(),
-      })
-      .from(transactions)
-      .where(
-        withCounts
-          ? sql`${transactions.categoryId} IS NOT NULL AND ${transactions.isDeleted} = 0`
-          : sql`1 = 0`,
-      )
-      .groupBy(transactions.categoryId),
-    [withCounts],
-  )
+  const countsResult = useLiveQuery(categoryCountsQuery(withCounts), [
+    withCounts,
+  ])
   const counts = new Map(
     countsResult.data.map((row) => [row.categoryId, row.count]),
   )

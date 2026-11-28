@@ -1,4 +1,4 @@
-import { startOfDay } from "date-fns"
+import { startOfDay } from "date-fns/startOfDay"
 import { z } from "zod"
 
 import type { BudgetPeriod } from "~/types/budgets"

@@ -1,11 +1,11 @@
 import { and, eq } from "drizzle-orm"
-import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Goal, GoalType } from "~/types/goals"
 
 import { drizzleDb } from "../db"
 import { goalAccounts, goals, transactions } from "../schema"
+import { useLiveQuery } from "../use-live-query"
 import {
   createLiveReadModelResult,
   type LiveReadModelResult,

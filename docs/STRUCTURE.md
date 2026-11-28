@@ -27,6 +27,8 @@
 │   │   │   └── post-import-repairs.test.ts
 │   │   ├── drizzle/
 │   │   │   └── read-models/
+│   │   │       ├── budget-spend-query.test.ts
+│   │   │       ├── query-plans.test.ts
 │   │   │       ├── recent-items.test.ts
 │   │   │       ├── stats-data.test.ts
 │   │   │       ├── stats-extras-data.test.ts
@@ -43,6 +45,7 @@
 │   │   │   ├── category-move.test.ts
 │   │   │   ├── color-clear.test.ts
 │   │   │   ├── delete-recurring-keep-paid.test.ts
+│   │   │   ├── destroy-account-large-history.test.ts
 │   │   │   ├── destroy-account-transfer-partner.test.ts
 │   │   │   ├── destroy-account-with-loans.test.ts
 │   │   │   ├── destroy-attachment-files.test.ts
@@ -63,6 +66,7 @@
 │   │   │   ├── trash-auto-purge.test.ts
 │   │   │   └── trashed-transactions-read-only.test.ts
 │   │   ├── utils/
+│   │   │   ├── change-batcher.test.ts
 │   │   │   └── get-balance-delta.test.ts
 │   │   ├── commit-events.test.ts
 │   │   └── transaction-nesting.test.ts
@@ -75,6 +79,7 @@
 │   │   ├── accounts.schema.test.ts
 │   │   └── budgets.schema.test.ts
 │   ├── services/
+│   │   ├── auto-confirmation-service.test.ts
 │   │   ├── currency-registry.test.ts
 │   │   ├── exchange-rate-sources.test.ts
 │   │   ├── exchange-rates.test.ts
@@ -302,6 +307,7 @@
 │   │   │   │   ├── budget-modify.styles.ts
 │   │   │   │   └── types.ts
 │   │   │   ├── budget-card.tsx
+│   │   │   ├── budget-pace-sync.tsx
 │   │   │   ├── home-pace-alerts.tsx
 │   │   │   └── pace-warning.tsx
 │   │   ├── calendar-format/
@@ -589,6 +595,8 @@
 │   │   │   ├── read-models/
 │   │   │   │   ├── account-read-model.ts
 │   │   │   │   ├── budget-read-model.ts
+│   │   │   │   ├── budget-spend-query.ts
+│   │   │   │   ├── category-counts-query.ts
 │   │   │   │   ├── category-read-model.ts
 │   │   │   │   ├── entity-read-model.ts
 │   │   │   │   ├── goal-read-model.ts
@@ -601,7 +609,8 @@
 │   │   │   │   ├── transaction-item-read-model.ts
 │   │   │   │   └── transaction-read-model.ts
 │   │   │   ├── db.ts
-│   │   │   └── schema.ts
+│   │   │   ├── schema.ts
+│   │   │   └── use-live-query.ts
 │   │   ├── mappers/
 │   │   │   ├── account.mapper.ts
 │   │   │   ├── category.mapper.ts
@@ -624,6 +633,7 @@
 │   │   │   └── rows.ts
 │   │   ├── utils/
 │   │   │   ├── attachment-files.ts
+│   │   │   ├── change-batcher.ts
 │   │   │   ├── generate-id.ts
 │   │   │   ├── get-balance-delta.ts
 │   │   │   ├── has-attachments-from-extra.ts
@@ -687,6 +697,7 @@
 │   │   ├── app-lock.store.ts
 │   │   ├── bill-splitter.store.ts
 │   │   ├── budget-pace.store.ts
+│   │   ├── budgets-on-pace.store.ts
 │   │   ├── button-placement.store.ts
 │   │   ├── calendar-format.store.ts
 │   │   ├── development-notice.store.ts

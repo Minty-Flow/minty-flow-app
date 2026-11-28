@@ -44,20 +44,17 @@
           "level": "error",
           "options": {
             "paths": {
-              "date-fns": {
-                "importNames": [
-                  "startOfWeek",
-                  "endOfWeek",
-                  "isSameWeek",
-                  "isThisWeek",
-                  "getWeek",
-                  "getISOWeek",
-                  "eachWeekOfInterval",
-                  "getWeekOfMonth",
-                  "startOfWeekYear"
-                ],
-                "message": "Week boundaries and week numbering depend on the user's week-start setting; these default to Sunday (or, for getISOWeek, hardcode Monday). Use startOfAppWeek / endOfAppWeek / isSameAppWeek / getAppWeek from ~/utils/time-utils, or add a wrapper there."
-              }
+              "date-fns": "The index loads every function. Import from date-fns/<function>.",
+              "date-fns/locale": "The index loads every locale. Import from date-fns/locale/<code>.",
+              "date-fns/startOfWeek": "Week boundaries and week numbering depend on the user's week-start setting; these default to Sunday (or, for getISOWeek, hardcode Monday). Use startOfAppWeek / endOfAppWeek / isSameAppWeek / getAppWeek from ~/utils/time-utils, or add a wrapper there.",
+              "date-fns/endOfWeek": "Week boundaries and week numbering depend on the user's week-start setting; these default to Sunday (or, for getISOWeek, hardcode Monday). Use startOfAppWeek / endOfAppWeek / isSameAppWeek / getAppWeek from ~/utils/time-utils, or add a wrapper there.",
+              "date-fns/isSameWeek": "Week boundaries and week numbering depend on the user's week-start setting; these default to Sunday (or, for getISOWeek, hardcode Monday). Use startOfAppWeek / endOfAppWeek / isSameAppWeek / getAppWeek from ~/utils/time-utils, or add a wrapper there.",
+              "date-fns/isThisWeek": "Week boundaries and week numbering depend on the user's week-start setting; these default to Sunday (or, for getISOWeek, hardcode Monday). Use startOfAppWeek / endOfAppWeek / isSameAppWeek / getAppWeek from ~/utils/time-utils, or add a wrapper there.",
+              "date-fns/getWeek": "Week boundaries and week numbering depend on the user's week-start setting; these default to Sunday (or, for getISOWeek, hardcode Monday). Use startOfAppWeek / endOfAppWeek / isSameAppWeek / getAppWeek from ~/utils/time-utils, or add a wrapper there.",
+              "date-fns/getISOWeek": "Week boundaries and week numbering depend on the user's week-start setting; these default to Sunday (or, for getISOWeek, hardcode Monday). Use startOfAppWeek / endOfAppWeek / isSameAppWeek / getAppWeek from ~/utils/time-utils, or add a wrapper there.",
+              "date-fns/eachWeekOfInterval": "Week boundaries and week numbering depend on the user's week-start setting; these default to Sunday (or, for getISOWeek, hardcode Monday). Use startOfAppWeek / endOfAppWeek / isSameAppWeek / getAppWeek from ~/utils/time-utils, or add a wrapper there.",
+              "date-fns/getWeekOfMonth": "Week boundaries and week numbering depend on the user's week-start setting; these default to Sunday (or, for getISOWeek, hardcode Monday). Use startOfAppWeek / endOfAppWeek / isSameAppWeek / getAppWeek from ~/utils/time-utils, or add a wrapper there.",
+              "date-fns/startOfWeekYear": "Week boundaries and week numbering depend on the user's week-start setting; these default to Sunday (or, for getISOWeek, hardcode Monday). Use startOfAppWeek / endOfAppWeek / isSameAppWeek / getAppWeek from ~/utils/time-utils, or add a wrapper there."
             }
           }
         }
@@ -74,7 +71,15 @@
       "linter": {
         "rules": {
           "style": {
-            "noRestrictedImports": "off"
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "date-fns": "The index loads every function. Import from date-fns/<function>.",
+                  "date-fns/locale": "The index loads every locale. Import from date-fns/locale/<code>."
+                }
+              }
+            }
           }
         }
       }

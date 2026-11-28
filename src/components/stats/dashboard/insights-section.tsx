@@ -1,4 +1,4 @@
-import { isSameMonth } from "date-fns"
+import { isSameMonth } from "date-fns/isSameMonth"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 

@@ -1,5 +1,4 @@
-import { and, eq, gte, inArray, isNull, lte, ne, sql } from "drizzle-orm"
-import { useLiveQuery } from "drizzle-orm/expo-sqlite"
+import { and, eq, gte, isNull, lte, ne, sql } from "drizzle-orm"
 import { useMemo } from "react"
 
 import type { Budget } from "~/types/budgets"
@@ -12,64 +11,26 @@ import {
 
 import { drizzleDb } from "../db"
 import { accounts, transactions } from "../schema"
+import { useLiveQuery } from "../use-live-query"
+import { budgetSpentQuery } from "./budget-spend-query"
 
 // Live queries only re-run when the FROM table changes, so these join
 // `accounts` but are driven by `transactions` writes (what moves progress).
 
-const notTransferLeg = sql`NOT EXISTS (
-  SELECT 1 FROM transfers tr
-  WHERE tr.from_transaction_id = ${transactions.id}
-     OR tr.to_transaction_id = ${transactions.id}
-)`
-
 /**
  * Amount spent against a budget in `[from, to]`, computed in SQL so the card
- * never hydrates transaction rows. Mirrors `getLiveBudgetSpent`: confirmed,
- * non-deleted expenses outside transfers and loans, in the budget currency,
- * refunds subtracting, floored at zero.
+ * never hydrates transaction rows. Floored at zero.
  */
 export function useBudgetSpent(budget: Budget, from: Date, to: Date): number {
-  const accountIds =
-    budget.accountIds.length > 0 ? budget.accountIds : ["__none__"]
-  const categoryIds =
-    budget.categoryIds.length > 0 ? budget.categoryIds : ["__none__"]
-  const fromIso = from.toISOString()
-  const toIso = to.toISOString()
   const key = JSON.stringify([
     budget.id,
     budget.currencyCode,
-    accountIds,
-    categoryIds,
-    fromIso,
-    toIso,
+    budget.accountIds,
+    budget.categoryIds,
+    from.toISOString(),
+    to.toISOString(),
   ])
-  const { data } = useLiveQuery(
-    drizzleDb
-      .select({
-        total: sql<number>`COALESCE(SUM(CASE WHEN ${transactions.subtype} = ${TransactionSubTypeEnum.REFUND} THEN -${transactions.amount} ELSE ${transactions.amount} END), 0)`,
-      })
-      .from(transactions)
-      .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-      .where(
-        and(
-          eq(transactions.isDeleted, 0),
-          eq(transactions.isPending, 0),
-          eq(transactions.type, TransactionTypeEnum.EXPENSE),
-          eq(accounts.currencyCode, budget.currencyCode),
-          inArray(transactions.accountId, accountIds),
-          gte(transactions.transactionDate, fromIso),
-          lte(transactions.transactionDate, toIso),
-          inArray(transactions.categoryId, categoryIds),
-          // Lending and repaying move money; they are not spending.
-          isNull(transactions.loanId),
-          // Deleting a loan nulls loanId but keeps the kind; exclude those too.
-          ne(transactions.kind, TransactionKindEnum.LENT),
-          ne(transactions.kind, TransactionKindEnum.BORROWED),
-          notTransferLeg,
-        ),
-      ),
-    [key],
-  )
+  const { data } = useLiveQuery(budgetSpentQuery(budget, from, to), [key])
   return Math.max(0, data[0]?.total ?? 0)
 }
 

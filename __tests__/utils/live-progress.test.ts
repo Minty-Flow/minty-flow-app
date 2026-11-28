@@ -7,6 +7,7 @@ import {
   getLiveBudgetSpent,
   getLiveBudgetSpentByCategory,
   getLiveGoalProgress,
+  isBudgetTransaction,
 } from "~/utils/live-progress"
 
 const date = new Date(2026, 0, 10)
@@ -41,6 +42,7 @@ function expense(
     id,
     type: "expense",
     amount,
+    accountId: "acc-1",
     categoryId,
     isPending: false,
     isTransfer: false,
@@ -96,6 +98,32 @@ describe("getLiveBudgetSpentByCategory", () => {
 })
 
 describe("loans in budgets", () => {
+  it("does not count a row left over from a deleted loan", () => {
+    for (const kind of ["lent", "borrowed"]) {
+      const orphan = {
+        ...expense("orphan", "food", 4_000),
+        kind,
+        loanId: null,
+      } as unknown as TransactionWithRelations
+      const rows = [orphan, ...spending]
+      expect(getLiveBudgetSpent(budget(["food"]), rows)).toBe(1_000)
+      expect(getLiveBudgetSpentByCategory(budget(["food"]), rows)).toEqual({
+        food: 1_000,
+      })
+      expect(isBudgetTransaction(budget(["food"]), orphan)).toBe(false)
+    }
+  })
+
+  it("does not count an account outside the budget", () => {
+    const elsewhere = {
+      ...expense("other", "food", 2_000),
+      accountId: "acc-2",
+    } as TransactionWithRelations
+    expect(getLiveBudgetSpent(budget(["food"]), [elsewhere, ...spending])).toBe(
+      1_000,
+    )
+  })
+
   it("does not count lending as spending", () => {
     const lent = {
       ...expense("loan-1", "food", 4_000),

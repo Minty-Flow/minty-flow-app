@@ -1,4 +1,4 @@
-import { endOfDay } from "date-fns"
+import { endOfDay } from "date-fns/endOfDay"
 import { and, count, desc, eq, sql } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
@@ -557,6 +557,34 @@ export function isPermanentRuleError(message: string): boolean {
   return /constraint failed|missing transferToAccountId/i.test(message)
 }
 
+/**
+ * The latest occurrence slot any live instance of a rule fills, as epoch ms:
+ * one aggregate instead of a query per instance, run for every occurrence.
+ * @internal Exported for its query plan test.
+ */
+export function latestRuleSlotQuery(ruleId: string) {
+  return (
+    drizzleDb
+      .select({
+        max: sql<number | null>`MAX(COALESCE(
+          CASE WHEN json_valid(${transactions.extra})
+            THEN CAST(json_extract(${transactions.extra}, '$.recurringInitialDate') AS INTEGER)
+          END,
+          CAST(strftime('%s', ${transactions.transactionDate}) AS INTEGER) * 1000
+        ))`,
+      })
+      .from(transactions)
+      // The unary + keeps the planner off the deleted-flag index, which would
+      // read nearly every row; the rule's own index reads only its instances.
+      .where(
+        and(
+          eq(transactions.recurringId, ruleId),
+          sql`+${transactions.isDeleted} = 0`,
+        ),
+      )
+  )
+}
+
 async function synchronizeRecurringTransaction(
   ruleId: string,
   anchor: Date = new Date(),
@@ -633,24 +661,7 @@ async function synchronizeRecurringTransaction(
       // duplicate-prevention mechanism.
       // ------------------------------------------------------------------
 
-      // One aggregate instead of a query per instance, on every catch-up pass.
-      const effectiveLastMs = drizzleDb
-        .select({
-          max: sql<number | null>`MAX(COALESCE(
-            CASE WHEN json_valid(${transactions.extra})
-              THEN CAST(json_extract(${transactions.extra}, '$.recurringInitialDate') AS INTEGER)
-            END,
-            CAST(strftime('%s', ${transactions.transactionDate}) AS INTEGER) * 1000
-          ))`,
-        })
-        .from(transactions)
-        .where(
-          and(
-            eq(transactions.recurringId, ruleId),
-            eq(transactions.isDeleted, 0),
-          ),
-        )
-        .get()?.max
+      const effectiveLastMs = latestRuleSlotQuery(ruleId).get()?.max
 
       if (effectiveLastMs != null) {
         if (nextOccurrence.getTime() <= effectiveLastMs) {

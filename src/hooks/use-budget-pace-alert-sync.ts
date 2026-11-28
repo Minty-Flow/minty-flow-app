@@ -4,20 +4,18 @@ import { useTranslation } from "react-i18next"
 
 import { formatPaceAmount } from "~/components/budgets/pace-warning"
 import { BUDGET_ALERTS_CHANNEL_ID } from "~/constants/notification-channels"
-import { useBudgetsOnPace } from "~/hooks/use-budget-pace"
 import { useBudgetPaceStore } from "~/stores/budget-pace.store"
+import type { BudgetOnPace } from "~/stores/budgets-on-pace.store"
 import { useMoneyFormattingStore } from "~/stores/money-formatting.store"
 import { logger } from "~/utils/logger"
 
 /**
- * Posts one local notification the first time an active budget is on pace to
- * exceed its limit in a period; tapping it opens the budget. Re-checks when
- * transactions change and at each day boundary. Does nothing while the global
- * or per-budget switch is off, or OS notifications are not allowed.
+ * Posts one local notification the first time a budget in `onPace` is on pace
+ * to exceed its limit in a period; tapping it opens the budget. Does nothing
+ * while OS notifications are not allowed.
  */
-export function useBudgetPaceAlertSync(): void {
+export function useBudgetPaceAlertSync(onPace: BudgetOnPace[]): void {
   const { t } = useTranslation()
-  const onPace = useBudgetsOnPace()
   const alerted = useBudgetPaceStore((s) => s.alerted)
   const due = useMemo(
     () =>

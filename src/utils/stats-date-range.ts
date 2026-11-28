@@ -1,19 +1,17 @@
-import {
-  addDays,
-  addMonths,
-  addWeeks,
-  addYears,
-  differenceInDays,
-  endOfDay,
-  endOfMonth,
-  endOfYear,
-  startOfDay,
-  startOfMonth,
-  startOfYear,
-  subDays,
-  subMonths,
-  subYears,
-} from "date-fns"
+import { addDays } from "date-fns/addDays"
+import { addMonths } from "date-fns/addMonths"
+import { addWeeks } from "date-fns/addWeeks"
+import { addYears } from "date-fns/addYears"
+import { differenceInDays } from "date-fns/differenceInDays"
+import { endOfDay } from "date-fns/endOfDay"
+import { endOfMonth } from "date-fns/endOfMonth"
+import { endOfYear } from "date-fns/endOfYear"
+import { startOfDay } from "date-fns/startOfDay"
+import { startOfMonth } from "date-fns/startOfMonth"
+import { startOfYear } from "date-fns/startOfYear"
+import { subDays } from "date-fns/subDays"
+import { subMonths } from "date-fns/subMonths"
+import { subYears } from "date-fns/subYears"
 
 import type { StatsDateRange, StatsDateRangePreset } from "~/types/stats"
 import { getWeekStartsOn } from "~/utils/get-week-start-on"

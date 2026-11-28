@@ -5,7 +5,10 @@
  * first), so the picker state lives here, above the range sheet's content.
  */
 
-import { endOfMonth, endOfYear, startOfMonth, startOfYear } from "date-fns"
+import { endOfMonth } from "date-fns/endOfMonth"
+import { endOfYear } from "date-fns/endOfYear"
+import { startOfMonth } from "date-fns/startOfMonth"
+import { startOfYear } from "date-fns/startOfYear"
 import { useEffect, useState } from "react"
 
 import { MonthPickerSheet } from "~/components/month-picker-sheet"

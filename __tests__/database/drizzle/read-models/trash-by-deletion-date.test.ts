@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 
-vi.mock("drizzle-orm/expo-sqlite", () => ({ useLiveQuery: vi.fn() }))
+vi.mock("~/database/drizzle/use-live-query", () => ({ useLiveQuery: vi.fn() }))
 vi.mock("~/database/utils/generate-id", () => ({
   generateId: () => crypto.randomUUID(),
 }))

@@ -9,7 +9,10 @@ import {
 } from "react"
 import { useTranslation } from "react-i18next"
 import { Alert, BackHandler, View as RNView } from "react-native"
-import { usePagerView } from "react-native-pager-view"
+import PagerView, {
+  type PagerViewOnPageSelectedEvent,
+  type PageScrollStateChangedNativeEvent,
+} from "react-native-pager-view"
 import Animated, {
   createAnimatedComponent,
   Easing,
@@ -52,32 +55,34 @@ type FABOption = {
   label: string
   onPress: () => void
 }
+// The screens are built once, so mounting one tab re-renders none of the others.
 const TABS = [
   {
     key: "home",
     icon: "circle-outline",
     label: "navigation.tabs.home",
-    component: HomeScreen,
+    screen: <HomeScreen />,
   },
   {
     key: "stats",
     icon: "graph-outline",
     label: "navigation.tabs.statistics",
-    component: StatsScreen,
+    screen: <StatsScreen />,
   },
   {
     key: "accounts",
     icon: "wallet-outline",
     label: "navigation.tabs.accounts",
-    component: AccountsScreen,
+    screen: <AccountsScreen />,
   },
   {
     key: "settings",
     icon: "settings-outline",
     label: "navigation.tabs.settings",
-    component: SettingsScreen,
+    screen: <SettingsScreen />,
   },
 ] as const
+
 const CENTER_SPACER_INDEX = 2
 const TAB_BAR_BOTTOM = 8
 const TAB_BAR_HEIGHT = 54
@@ -184,22 +189,76 @@ function useFabAnimation(isExpanded: boolean) {
   }))
   return { rotateStyle, overlayStyle }
 }
+/**
+ * Pager state. A tab mounts the first time it is needed (a swipe towards it or a
+ * tab press) and stays mounted, so unvisited tabs run no queries.
+ */
+function useTabPager() {
+  const ref = useRef<PagerView>(null)
+  const [activePage, setActivePage] = useState(0)
+  const [mountedTabs, setMountedTabs] = useState<ReadonlySet<number>>(
+    () => new Set([0]),
+  )
+  /** A tab press waiting for its screen to mount before the pager moves. */
+  const pendingPage = useRef<number | null>(null)
+
+  const mountTabs = useCallback((...pages: number[]) => {
+    setMountedTabs((mounted) => {
+      const missing = pages.filter(
+        (page) => page >= 0 && page < TABS.length && !mounted.has(page),
+      )
+      return missing.length ? new Set([...mounted, ...missing]) : mounted
+    })
+  }, [])
+
+  const setPage = useCallback(
+    (page: number) => {
+      if (mountedTabs.has(page)) {
+        pendingPage.current = null
+        ref.current?.setPage(page)
+      } else {
+        pendingPage.current = page
+        mountTabs(page)
+      }
+    },
+    [mountedTabs, mountTabs],
+  )
+
+  useEffect(() => {
+    const page = pendingPage.current
+    if (page === null || !mountedTabs.has(page)) return
+    pendingPage.current = null
+    ref.current?.setPage(page)
+  }, [mountedTabs])
+
+  return {
+    ref,
+    activePage,
+    mountedTabs,
+    setPage,
+    onPageSelected: (e: PagerViewOnPageSelectedEvent) => {
+      mountTabs(e.nativeEvent.position)
+      setActivePage(e.nativeEvent.position)
+    },
+    onPageScrollStateChanged: (e: PageScrollStateChangedNativeEvent) => {
+      if (e.nativeEvent.pageScrollState === "dragging") {
+        mountTabs(activePage - 1, activePage + 1)
+      }
+    },
+  }
+}
+
 const TabLayout = () => {
   const { theme } = useUnistyles()
   const { t } = useTranslation()
   const {
-    AnimatedPagerView,
     ref,
     activePage,
+    mountedTabs,
     setPage,
     onPageSelected,
-    onPageScroll,
     onPageScrollStateChanged,
-  } = usePagerView()
-  // Tabs mount on first visit and stay mounted, so hidden tabs don't run their
-  // queries (or re-run them on every DB write) until the user opens them.
-  const mountedTabs = useRef(new Set([0]))
-  mountedTabs.current.add(activePage)
+  } = useTabPager()
   const [fabExpanded, setFabExpanded] = useState(false)
   const { rotateStyle, overlayStyle } = useFabAnimation(fabExpanded)
   const router = useRouter()
@@ -298,26 +357,25 @@ const TabLayout = () => {
     <View style={styles.container}>
       {/* PAGER */}
       <ActiveTabContext.Provider value={activePage}>
-        <AnimatedPagerView
+        <PagerView
           collapsable={false}
           ref={ref}
           style={styles.pager}
           initialPage={0}
           layoutDirection={isRTL ? DirectionEnum.RTL : DirectionEnum.LTR}
           onPageSelected={onPageSelected}
-          onPageScroll={onPageScroll}
           onPageScrollStateChanged={onPageScrollStateChanged}
         >
           {TABS.map((tab, i) =>
-            mountedTabs.current.has(i) ? (
+            mountedTabs.has(i) ? (
               <TabIndexContext.Provider key={tab.key} value={i}>
-                <tab.component />
+                {tab.screen}
               </TabIndexContext.Provider>
             ) : (
               <RNView key={tab.key} collapsable={false} />
             ),
           )}
-        </AnimatedPagerView>
+        </PagerView>
       </ActiveTabContext.Provider>
 
       <RNView

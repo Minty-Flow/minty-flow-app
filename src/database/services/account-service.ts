@@ -200,154 +200,104 @@ export async function destroyAccount(id: string): Promise<void> {
     // Loans owned by the account, plus any loan that has a row on it (a
     // repayment can live on a different account). Deleting either would leave
     // the loan pointing at a row that no longer exists.
-    const loanIds = new Set(
-      db
-        .select({ id: loans.id })
-        .from(loans)
-        .where(eq(loans.accountId, id))
-        .all()
-        .map((row) => row.id),
-    )
-    for (const row of db
-      .selectDistinct({ loanId: transactions.loanId })
-      .from(transactions)
+    // Rows are selected by subquery throughout: binding one id per transaction
+    // runs past SQLite's variable limit on a long history.
+    const accountLoans = db
+      .select({ name: loans.name })
+      .from(loans)
       .where(
-        and(eq(transactions.accountId, id), isNotNull(transactions.loanId)),
+        or(
+          eq(loans.accountId, id),
+          inArray(
+            loans.id,
+            db
+              .select({ id: transactions.loanId })
+              .from(transactions)
+              .where(
+                and(
+                  eq(transactions.accountId, id),
+                  isNotNull(transactions.loanId),
+                ),
+              ),
+          ),
+        ),
       )
-      .all()) {
-      if (row.loanId) loanIds.add(row.loanId)
-    }
-    if (loanIds.size > 0) {
-      const accountLoans = db
-        .select({ name: loans.name })
-        .from(loans)
-        .where(inArray(loans.id, [...loanIds]))
-        .orderBy(loans.name)
-        .all()
-      if (accountLoans.length > 0) {
-        throw new AccountHasLoansError(accountLoans.map((loan) => loan.name))
-      }
+      .orderBy(loans.name)
+      .all()
+    if (accountLoans.length > 0) {
+      throw new AccountHasLoansError(accountLoans.map((loan) => loan.name))
     }
 
-    const txs = db
-      .select()
+    const accountTxIds = db
+      .select({ id: transactions.id })
       .from(transactions)
       .where(eq(transactions.accountId, id))
-      .all()
-
-    const allTxIds = txs.map((t) => t.id)
-    const transferTxRows = allTxIds.length
-      ? db
-          .select({
-            fromTransactionId: transfers.fromTransactionId,
-            toTransactionId: transfers.toTransactionId,
-          })
+    // The other leg of every transfer that has a leg on this account.
+    const isPartnerTx = or(
+      inArray(
+        transactions.id,
+        db
+          .select({ id: transfers.toTransactionId })
           .from(transfers)
-          .where(
-            or(
-              inArray(transfers.fromTransactionId, allTxIds),
-              inArray(transfers.toTransactionId, allTxIds),
-            ),
-          )
-          .all()
-      : []
-    const transferTxIdSet = new Set<string>()
-    for (const row of transferTxRows) {
-      transferTxIdSet.add(row.fromTransactionId)
-      transferTxIdSet.add(row.toTransactionId)
-    }
-    const transferTxIds = txs.flatMap((t) =>
-      transferTxIdSet.has(t.id) ? [t.id] : [],
+          .where(inArray(transfers.fromTransactionId, accountTxIds)),
+      ),
+      inArray(
+        transactions.id,
+        db
+          .select({ id: transfers.fromTransactionId })
+          .from(transfers)
+          .where(inArray(transfers.toTransactionId, accountTxIds)),
+      ),
     )
 
-    if (transferTxIds.length > 0) {
-      const transferRows = db
-        .select({
-          fromTransactionId: transfers.fromTransactionId,
-          toTransactionId: transfers.toTransactionId,
+    const partnerTxs = db
+      .select({
+        accountId: transactions.accountId,
+        amount: transactions.amount,
+        isDeleted: transactions.isDeleted,
+        isPending: transactions.isPending,
+      })
+      .from(transactions)
+      .where(isPartnerTx)
+      .all()
+
+    const partnerAccountDeltas = new Map<string, number>()
+    for (const tx of partnerTxs) {
+      if (!tx.isDeleted && !tx.isPending) {
+        partnerAccountDeltas.set(
+          tx.accountId,
+          (partnerAccountDeltas.get(tx.accountId) ?? 0) + tx.amount,
+        )
+      }
+    }
+
+    for (const [accId, totalDelta] of partnerAccountDeltas) {
+      db.update(accounts)
+        .set({
+          balance: sql`${accounts.balance} - ${totalDelta}`,
+          updatedAt: now,
         })
-        .from(transfers)
-        .where(
-          or(
-            inArray(transfers.fromTransactionId, transferTxIds),
-            inArray(transfers.toTransactionId, transferTxIds),
-          ),
-        )
-        .all()
-
-      const txIdSet = new Set(transferTxIds)
-      const partnerTxIds = [
-        ...new Set(
-          transferRows.flatMap((row) => {
-            const parts: string[] = []
-            if (txIdSet.has(row.fromTransactionId))
-              parts.push(row.toTransactionId)
-            if (txIdSet.has(row.toTransactionId))
-              parts.push(row.fromTransactionId)
-            return parts
-          }),
-        ),
-      ]
-
-      if (partnerTxIds.length > 0) {
-        const partnerTxs = db
-          .select()
-          .from(transactions)
-          .where(inArray(transactions.id, partnerTxIds))
-          .all()
-
-        const partnerAccountDeltas = new Map<string, number>()
-        for (const tx of partnerTxs) {
-          if (!tx.isDeleted && !tx.isPending) {
-            const delta = tx.amount
-            partnerAccountDeltas.set(
-              tx.accountId,
-              (partnerAccountDeltas.get(tx.accountId) ?? 0) + delta,
-            )
-          }
-        }
-
-        for (const [accId, totalDelta] of partnerAccountDeltas) {
-          db.update(accounts)
-            .set({
-              balance: sql`${accounts.balance} - ${totalDelta}`,
-              updatedAt: now,
-            })
-            .where(eq(accounts.id, accId))
-            .run()
-        }
-
-        const partnerIdsToDelete = partnerTxs.flatMap((tx) =>
-          tx.isDeleted ? [] : [tx.id],
-        )
-        if (partnerIdsToDelete.length > 0) {
-          db.update(transactions)
-            .set({ isDeleted: 1, deletedAt: now, updatedAt: now })
-            .where(inArray(transactions.id, partnerIdsToDelete))
-            .run()
-        }
-
-        const affectedTransferTxIds = [...transferTxIds, ...partnerTxIds]
-        db.delete(transfers)
-          .where(
-            or(
-              inArray(transfers.fromTransactionId, affectedTransferTxIds),
-              inArray(transfers.toTransactionId, affectedTransferTxIds),
-            ),
-          )
-          .run()
-      }
-    }
-
-    if (txs.length > 0) {
-      for (const tx of txs) {
-        for (const f of attachmentFilesFromExtra(tx.extra)) files.add(f)
-      }
-      db.delete(transactionTags)
-        .where(inArray(transactionTags.transactionId, allTxIds))
+        .where(eq(accounts.id, accId))
         .run()
-      db.delete(transactions).where(eq(transactions.accountId, id)).run()
     }
+
+    db.update(transactions)
+      .set({ isDeleted: 1, deletedAt: now, updatedAt: now })
+      .where(and(isPartnerTx, eq(transactions.isDeleted, 0)))
+      .run()
+
+    for (const row of db
+      .select({ extra: transactions.extra })
+      .from(transactions)
+      .where(and(eq(transactions.accountId, id), isNotNull(transactions.extra)))
+      .all()) {
+      for (const f of attachmentFilesFromExtra(row.extra)) files.add(f)
+    }
+    db.delete(transactionTags)
+      .where(inArray(transactionTags.transactionId, accountTxIds))
+      .run()
+    // The transfer links go with these rows, by foreign key cascade.
+    db.delete(transactions).where(eq(transactions.accountId, id)).run()
 
     disableRecurringRulesForAccount(db, id)
     // Switch off budgets left with no account, before the links are removed

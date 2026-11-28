@@ -1,10 +1,8 @@
-import {
-  differenceInDays,
-  getDay,
-  startOfMonth,
-  startOfYear,
-  subMonths,
-} from "date-fns"
+import { differenceInDays } from "date-fns/differenceInDays"
+import { getDay } from "date-fns/getDay"
+import { startOfMonth } from "date-fns/startOfMonth"
+import { startOfYear } from "date-fns/startOfYear"
+import { subMonths } from "date-fns/subMonths"
 import { sql } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"
