@@ -4,7 +4,10 @@ import {
 } from "@expo/ui/community/bottom-sheet"
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { ScrollView, useWindowDimensions, View } from "react-native"
-import { useKeyboardState } from "react-native-keyboard-controller"
+import {
+  KeyboardController,
+  useKeyboardState,
+} from "react-native-keyboard-controller"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useUnistyles } from "react-native-unistyles"
 
@@ -56,6 +59,8 @@ function resolvePadding(p: Padding = {}) {
 
 /** Room kept for the drag handle and a little air under the status bar. */
 const SHEET_CHROME = 48
+/** Longest a sheet waits for the keyboard to report that it has closed. */
+const KEYBOARD_CLOSE_TIMEOUT_MS = 400
 
 /**
  * Project-wide native bottom sheet: Material ModalBottomSheet on Android, SwiftUI
@@ -98,10 +103,24 @@ export function BottomSheet({
   if (isPresented) retainedChildren.current = children
   const content = isPresented ? children : retainedChildren.current
   // Open from the first presentation until the native dismiss completes.
-  const [open, setOpen] = useState(isPresented)
-  if (isPresented && !open) setOpen(true)
+  const [open, setOpen] = useState(false)
   useEffect(() => {
-    if (!isPresented) sheetRef.current?.close()
+    if (!isPresented) {
+      sheetRef.current?.close()
+      return
+    }
+    // The sheet is its own window. Opened over a visible keyboard, the screen
+    // behind never hears it close and its sticky footer stays raised.
+    let cancelled = false
+    const show = () => {
+      if (!cancelled) setOpen(true)
+    }
+    const fallback = setTimeout(show, KEYBOARD_CLOSE_TIMEOUT_MS)
+    KeyboardController.dismiss().then(show)
+    return () => {
+      cancelled = true
+      clearTimeout(fallback)
+    }
   }, [isPresented])
   const handleDismiss = () => {
     setOpen(false)
