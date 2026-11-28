@@ -11,7 +11,6 @@ import {
   type SQL,
   sql,
 } from "drizzle-orm"
-import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 import { useMemo } from "react"
 
 import { mapAccount } from "~/database/mappers/account.mapper"
@@ -37,6 +36,7 @@ import {
   transactionTags,
   transfers,
 } from "../schema"
+import { useLiveQuery } from "../use-live-query"
 
 export interface TransactionWithRelations extends Transaction {
   account: Account | undefined
@@ -356,20 +356,19 @@ export function useTransactions(filters: TransactionFilters): {
   const transactionsResult = useLiveQuery(queries.rows, [filterHash])
   const accountsResult = useLiveQuery(queries.accounts)
   const categoriesResult = useLiveQuery(queries.categories)
-  // Restores and re-dates rewrite only `transactions`; re-load the relation
-  // rows whenever the main result changes so tags/transfers are not stale.
-  const tagLinksResult = useLiveQuery(queries.tags, [
-    filterHash,
-    transactionsResult.updatedAt,
-  ])
-  const itemsResult = useLiveQuery(queries.items, [
-    filterHash,
-    transactionsResult.updatedAt,
-  ])
-  const transfersResult = useLiveQuery(queries.transfers, [
-    filterHash,
-    transactionsResult.updatedAt,
-  ])
+  // Restores and re-dates rewrite only `transactions`, so the relation rows
+  // watch it too, or tags and transfers would go stale.
+  const tagLinksResult = useLiveQuery(
+    queries.tags,
+    [filterHash],
+    [transactions],
+  )
+  const itemsResult = useLiveQuery(queries.items, [filterHash], [transactions])
+  const transfersResult = useLiveQuery(
+    queries.transfers,
+    [filterHash],
+    [transactions],
+  )
 
   const items = useMemo(
     () =>

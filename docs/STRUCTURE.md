@@ -64,6 +64,7 @@
 │   │   │   ├── trash-auto-purge.test.ts
 │   │   │   └── trashed-transactions-read-only.test.ts
 │   │   ├── utils/
+│   │   │   ├── change-batcher.test.ts
 │   │   │   └── get-balance-delta.test.ts
 │   │   ├── commit-events.test.ts
 │   │   └── transaction-nesting.test.ts
@@ -602,7 +603,8 @@
 │   │   │   │   ├── transaction-item-read-model.ts
 │   │   │   │   └── transaction-read-model.ts
 │   │   │   ├── db.ts
-│   │   │   └── schema.ts
+│   │   │   ├── schema.ts
+│   │   │   └── use-live-query.ts
 │   │   ├── mappers/
 │   │   │   ├── account.mapper.ts
 │   │   │   ├── category.mapper.ts
@@ -625,6 +627,7 @@
 │   │   │   └── rows.ts
 │   │   ├── utils/
 │   │   │   ├── attachment-files.ts
+│   │   │   ├── change-batcher.ts
 │   │   │   ├── generate-id.ts
 │   │   │   ├── get-balance-delta.ts
 │   │   │   ├── has-attachments-from-extra.ts

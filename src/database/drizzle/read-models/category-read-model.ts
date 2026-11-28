@@ -1,5 +1,4 @@
 import { count, sql } from "drizzle-orm"
-import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 
 import { getThemeStrict } from "~/styles/theme/registry"
 import type { Category, CategoryType } from "~/types/categories"
@@ -7,6 +6,7 @@ import { type TransactionType, TransactionTypeEnum } from "~/types/transactions"
 
 import { drizzleDb } from "../db"
 import { categories, transactions } from "../schema"
+import { useLiveQuery } from "../use-live-query"
 import {
   createLiveReadModelResult,
   type LiveReadModelResult,

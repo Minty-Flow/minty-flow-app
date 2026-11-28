@@ -9,7 +9,9 @@ vi.mock("~/database/drizzle/db", async () => {
   return { drizzleDb: await createTestDb() }
 })
 // The read model imports a live-query hook that needs expo-sqlite.
-vi.mock("drizzle-orm/expo-sqlite", () => ({ useLiveQuery: () => ({}) }))
+vi.mock("~/database/drizzle/use-live-query", () => ({
+  useLiveQuery: () => ({}),
+}))
 vi.mock("~/styles/theme/registry", () => ({ getThemeStrict: () => null }))
 
 // importBackup snapshots the database first; keep that snapshot in memory so

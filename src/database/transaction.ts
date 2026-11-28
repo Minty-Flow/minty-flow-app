@@ -21,6 +21,11 @@ export type DbTransaction = Parameters<
  */
 let txDepth = 0
 
+/** True while a write transaction has begun and not yet settled. */
+export function isTransactionOpen(): boolean {
+  return txDepth > 0
+}
+
 /**
  * Drizzle's expo-sqlite transactions are synchronous: a callback that returns
  * a promise would commit before its awaited work runs, and the global depth

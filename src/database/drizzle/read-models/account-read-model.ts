@@ -1,4 +1,3 @@
-import { useLiveQuery } from "drizzle-orm/expo-sqlite"
 import { useState } from "react"
 
 import { toAccount } from "~/database/mappers/account.mapper"
@@ -7,6 +6,7 @@ import { logger } from "~/utils/logger"
 
 import { drizzleDb } from "../db"
 import { accounts } from "../schema"
+import { useLiveQuery } from "../use-live-query"
 import {
   createLiveReadModelResult,
   type LiveReadModelResult,
