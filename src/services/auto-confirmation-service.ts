@@ -1,6 +1,10 @@
 import { useSyncExternalStore } from "react"
 
 import {
+  onWriteCommitted,
+  writeAffectsPendingTransactions,
+} from "~/database/commit-events"
+import {
   getPendingTransactions,
   type TransactionWithRelations,
 } from "~/database/drizzle/read-models/transaction-read-model"
@@ -25,8 +29,9 @@ import { logger } from "~/utils/logger"
  * - Exposes a `version` counter so React can subscribe via
  *   useSyncExternalStore (no useEffect needed in consumers).
  * - `sweep()` runs on: startup + every app foreground (from the owning hook),
- *   a 60 s self-interval while active (long foreground sessions), and each
- *   scheduled per-row timeout.
+ *   every committed write that can change a pending transaction, a 60 s
+ *   self-interval while active (long foreground sessions), and each scheduled
+ *   per-row timeout.
  *
  * Hydration-aware:
  * - Requires explicit configure() call with store config after hydration.
@@ -36,7 +41,7 @@ import { logger } from "~/utils/logger"
  * Failure handling:
  * - Per-row confirms are isolated (Promise.allSettled) — one bad row can't
  *   abort the rest.
- * - A sweep is a no-op while a previous sweep is still in flight.
+ * - A sweep asked for while one is in flight runs once after it.
  * - A row whose DB-level confirm keeps throwing is abandoned after
  *   MAX_CONFIRM_FAILURES tries (logged once), until it succeeds or leaves the
  *   pending set. `write-queue.ts` already retries SQLITE_BUSY/LOCKED beneath us.
@@ -45,6 +50,8 @@ import { logger } from "~/utils/logger"
 const MAX_CONFIRM_FAILURES = 3
 /** Self-tick so a long foreground session confirms rows as they come due. */
 const SWEEP_INTERVAL_MS = 60_000
+/** Writes that land together (a recurring catch-up) sweep once. */
+const WRITE_COALESCE_MS = 100
 
 interface AutoConfirmConfig {
   autoPaySubscriptions: boolean
@@ -60,6 +67,9 @@ class AutoConfirmationService {
   private isActive = false
   private config: AutoConfirmConfig | null = null
   private sweeping = false
+  private sweepAgain = false
+  private stopWatchingWrites: (() => void) | null = null
+  private writeSweepTimer: ReturnType<typeof setTimeout> | null = null
   /** txId -> consecutive DB-level confirm failures. */
   private failCounts = new Map<string, number>()
 
@@ -116,6 +126,14 @@ class AutoConfirmationService {
     this.sweepInterval = setInterval(() => {
       void this.sweep().catch(() => {})
     }, SWEEP_INTERVAL_MS)
+    // A newly saved pending row needs its exact timer now, not at the next tick.
+    this.stopWatchingWrites = onWriteCommitted((name) => {
+      if (!writeAffectsPendingTransactions(name) || this.writeSweepTimer) return
+      this.writeSweepTimer = setTimeout(() => {
+        this.writeSweepTimer = null
+        void this.sweep().catch(() => {})
+      }, WRITE_COALESCE_MS)
+    })
   }
 
   stop() {
@@ -123,6 +141,13 @@ class AutoConfirmationService {
     this.clearAllSchedules()
     this.failCounts.clear()
     this.sweeping = false
+    this.sweepAgain = false
+    this.stopWatchingWrites?.()
+    this.stopWatchingWrites = null
+    if (this.writeSweepTimer) {
+      clearTimeout(this.writeSweepTimer)
+      this.writeSweepTimer = null
+    }
     if (this.sweepInterval) {
       clearInterval(this.sweepInterval)
       this.sweepInterval = null
@@ -133,11 +158,15 @@ class AutoConfirmationService {
    * The single resilient pass. Reads every pending row and, for each one that is
    * pre-approved and not fail-capped: confirms it now if past due, otherwise
    * schedules an exact-time timeout (within the 24 h cap). Past-due confirms run
-   * isolated via Promise.allSettled. A no-op while a previous sweep is running.
+   * isolated via Promise.allSettled. Asked for while a previous sweep is
+   * running, it runs once more after that one.
    */
   async sweep(): Promise<void> {
     if (!this.config) return
-    if (this.sweeping) return
+    if (this.sweeping) {
+      this.sweepAgain = true
+      return
+    }
     this.sweeping = true
     try {
       const { updateDateUponConfirmation } = this.config
@@ -183,6 +212,11 @@ class AutoConfirmationService {
       })
     } finally {
       this.sweeping = false
+      // The running pass may have read the rows before that change landed.
+      if (this.sweepAgain) {
+        this.sweepAgain = false
+        void this.sweep()
+      }
     }
   }
 

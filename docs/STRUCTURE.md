@@ -77,6 +77,7 @@
 │   │   ├── accounts.schema.test.ts
 │   │   └── budgets.schema.test.ts
 │   ├── services/
+│   │   ├── auto-confirmation-service.test.ts
 │   │   ├── currency-registry.test.ts
 │   │   ├── exchange-rate-sources.test.ts
 │   │   ├── exchange-rates.test.ts

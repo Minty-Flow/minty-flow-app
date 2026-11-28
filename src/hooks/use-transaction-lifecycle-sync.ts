@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef } from "react"
 import { AppState } from "react-native"
 
-import { synchronizeAllRecurringTransactions } from "~/database/services/recurring-transaction-service"
+import {
+  type RecurringSyncFailure,
+  synchronizeAllRecurringTransactions,
+} from "~/database/services/recurring-transaction-service"
 import { useDebouncedCallback } from "~/hooks/use-debounced-callback"
 import i18n from "~/i18n/config"
 import { autoConfirmationService } from "~/services/auto-confirmation-service"
@@ -22,6 +25,21 @@ const SYNC_DEBOUNCE_MS = 1_000
  * its own 60s tick, so quick app switches need not rescan everything.
  */
 const FOREGROUND_SYNC_MIN_GAP_MS = 60_000
+
+// Outside the hook: React Compiler cannot compile a loop inside its try block.
+function notifyStoppedRules(stopped: RecurringSyncFailure[]) {
+  for (const rule of stopped) {
+    Toast.error({
+      title: i18n.t("components.transactionForm.toast.recurringStopped"),
+      description: i18n.t(
+        "components.transactionForm.toast.recurringStoppedDescription",
+        {
+          title: rule.title ?? i18n.t("common.transaction.untitledTransaction"),
+        },
+      ),
+    })
+  }
+}
 
 /**
  * The single owner of the transaction lifecycle. On mount and on every app
@@ -74,19 +92,7 @@ export function useTransactionLifecycleSync(): void {
   const sync = useCallback(async () => {
     lastSyncAtRef.current = Date.now()
     try {
-      const stopped = await synchronizeAllRecurringTransactions()
-      for (const rule of stopped) {
-        Toast.error({
-          title: i18n.t("components.transactionForm.toast.recurringStopped"),
-          description: i18n.t(
-            "components.transactionForm.toast.recurringStoppedDescription",
-            {
-              title:
-                rule.title ?? i18n.t("common.transaction.untitledTransaction"),
-            },
-          ),
-        })
-      }
+      notifyStoppedRules(await synchronizeAllRecurringTransactions())
 
       // Skip auto-confirm until preferences have hydrated — configuring with
       // default switch values would auto-confirm rows the user opted out of.
