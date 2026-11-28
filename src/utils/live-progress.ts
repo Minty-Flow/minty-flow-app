@@ -2,11 +2,15 @@ import type { TransactionWithRelations } from "~/database/drizzle/read-models/tr
 import type { Budget } from "~/types/budgets"
 import type { Goal } from "~/types/goals"
 import {
+  TransactionKindEnum,
   TransactionSubTypeEnum,
   TransactionTypeEnum,
 } from "~/types/transactions"
 
-/** Signed effect of one row on a budget: refunds subtract, everything else adds. */
+/**
+ * Signed effect of one row on a budget: refunds subtract, everything else adds.
+ * Same rules as the `useBudgetSpent` query; change both together.
+ */
 function budgetDelta(
   budget: Budget,
   transaction: TransactionWithRelations,
@@ -16,7 +20,11 @@ function budgetDelta(
     transaction.type !== TransactionTypeEnum.EXPENSE ||
     transaction.isTransfer ||
     transaction.loanId ||
-    transaction.account?.currencyCode !== budget.currencyCode
+    // Deleting a loan nulls loanId but keeps the kind.
+    transaction.kind === TransactionKindEnum.LENT ||
+    transaction.kind === TransactionKindEnum.BORROWED ||
+    transaction.account?.currencyCode !== budget.currencyCode ||
+    !budget.accountIds.includes(transaction.accountId)
   ) {
     return 0
   }
