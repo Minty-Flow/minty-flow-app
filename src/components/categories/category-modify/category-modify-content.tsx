@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useNavigation, useRouter } from "expo-router"
 import { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
 import { CategoryTypeInline } from "~/components/categories/category-type-inline"
@@ -62,7 +62,6 @@ export function CategoryModifyContent({
     control,
     handleSubmit: handleFormSubmit,
     formState: { errors, isDirty, isSubmitting },
-    watch,
     setValue,
   } = useForm({
     resolver: zodResolver(addCategoriesSchema),
@@ -73,10 +72,9 @@ export function CategoryModifyContent({
       colorSchemeName: category?.colorSchemeName || undefined,
     },
   })
-  const formName = watch("name")
-  const formIcon = watch("icon")
-  const formColorSchemeName = watch("colorSchemeName")
-  const formType = watch("type")
+  const formIcon = useWatch({ control, name: "icon" })
+  const formColorSchemeName = useWatch({ control, name: "colorSchemeName" })
+  const formType = useWatch({ control, name: "type" })
   const navigation = useNavigation()
   const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
@@ -109,28 +107,30 @@ export function CategoryModifyContent({
       .catch((error) => logger.error("Error reading category usage", { error }))
   }, [isAddMode, categoryModifyId])
 
-  const onSubmit = async (data: AddCategoriesFormSchema) => {
+  const saveCategory = async (data: AddCategoriesFormSchema) => {
     const trimmedName = data.name.trim()
-    try {
-      if (isAddMode) {
-        await createCategory({
-          name: trimmedName,
-          type: data.type,
-          icon: data.icon,
-          colorSchemeName: data.colorSchemeName,
-        })
-        allowNavigation()
-        handleGoBack()
-      } else {
-        await updateCategoryById(categoryModifyId, {
-          name: trimmedName,
-          icon: data.icon,
-          colorSchemeName: data.colorSchemeName,
-        })
-        allowNavigation()
-        handleGoBack()
-      }
-    } catch (error) {
+    if (isAddMode) {
+      await createCategory({
+        name: trimmedName,
+        type: data.type,
+        icon: data.icon,
+        colorSchemeName: data.colorSchemeName,
+      })
+      allowNavigation()
+      handleGoBack()
+    } else {
+      await updateCategoryById(categoryModifyId, {
+        name: trimmedName,
+        icon: data.icon,
+        colorSchemeName: data.colorSchemeName,
+      })
+      allowNavigation()
+      handleGoBack()
+    }
+  }
+  // `.catch`, not try/catch, which React Compiler cannot compile here.
+  const onSubmit = (data: AddCategoriesFormSchema) =>
+    saveCategory(data).catch((error) => {
       logger.error("Error saving category", { error })
       Toast.error({
         title: t("common.toast.error"),
@@ -138,46 +138,48 @@ export function CategoryModifyContent({
           ? t("components.categories.form.toast.createFailed")
           : t("components.categories.form.toast.updateFailed"),
       })
-    }
-  }
+    })
   const handleSubmit = handleFormSubmit(onSubmit)
-  const handleDeletePress = async () => {
-    try {
-      const loanNames = await getLoansUsingCategory(categoryModifyId)
-      if (loanNames.length > 0) {
-        Toast.error({
-          title: t("components.categories.form.toast.cannotDelete"),
-          description: t("components.categories.form.toast.cannotDeleteLoans", {
-            names: loanNames.join(", "),
-          }),
-        })
-        return
-      }
-      setBudgetsLosingCategory(
-        await getBudgetsLosingLastCategory(categoryModifyId),
-      )
-      setDeleteSheetVisible(true)
-    } catch (error) {
+  const openDeleteSheet = async () => {
+    const loanNames = await getLoansUsingCategory(categoryModifyId)
+    if (loanNames.length > 0) {
+      Toast.error({
+        title: t("components.categories.form.toast.cannotDelete"),
+        description: t("components.categories.form.toast.cannotDeleteLoans", {
+          names: loanNames.join(", "),
+        }),
+      })
+      return
+    }
+    setBudgetsLosingCategory(
+      await getBudgetsLosingLastCategory(categoryModifyId),
+    )
+    setDeleteSheetVisible(true)
+  }
+  // `.catch`, not try/catch, which React Compiler cannot compile here.
+  const handleDeletePress = () =>
+    openDeleteSheet().catch((error) => {
       logger.error("Error checking category before delete", { error })
       Toast.error({
         title: t("common.toast.error"),
         description: t("components.categories.form.toast.deleteFailed"),
       })
-    }
-  }
-  const handleDelete = async () => {
-    try {
-      if (!category) {
-        Toast.error({
-          title: t("common.toast.error"),
-          description: t("components.categories.form.toast.notFound"),
-        })
-        return false
-      }
-      await deleteCategoryById(categoryModifyId, {
-        moveToCategoryId: moveTarget?.id,
+    })
+  const deleteCategory = async () => {
+    if (!category) {
+      Toast.error({
+        title: t("common.toast.error"),
+        description: t("components.categories.form.toast.notFound"),
       })
-    } catch (error) {
+      return false
+    }
+    await deleteCategoryById(categoryModifyId, {
+      moveToCategoryId: moveTarget?.id,
+    })
+  }
+  // `.catch`, not try/catch, which React Compiler cannot compile here.
+  const handleDelete = () =>
+    deleteCategory().catch((error) => {
       logger.error("Error deleting category", { error })
       Toast.error({
         title: t("common.toast.error"),
@@ -189,8 +191,7 @@ export function CategoryModifyContent({
             : t("components.categories.form.toast.deleteFailed"),
       })
       return false
-    }
-  }
+    })
   // Runs once the delete sheet has closed: leaving earlier tears it down mid-animation.
   const handleDeleted = () => {
     allowNavigation()
@@ -269,7 +270,7 @@ export function CategoryModifyContent({
 
       <ModifyFormFooter
         onHeightChange={setFooterHeight}
-        formName={formName}
+        control={control}
         isAddMode={isAddMode}
         isDirty={isDirty}
         isSubmitting={isSubmitting}

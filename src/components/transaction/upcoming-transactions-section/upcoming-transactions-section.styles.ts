@@ -87,9 +87,6 @@ export const upcomingSectionStyles = StyleSheet.create((theme) => ({
     ...theme.typography.labelMedium,
     fontWeight: "600",
   },
-  listContainer: {
-    paddingBottom: 4,
-  },
   subHeader: {
     flexDirection: "row",
     alignItems: "center",

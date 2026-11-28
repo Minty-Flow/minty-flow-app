@@ -11,7 +11,7 @@ import {
   type SQL,
   sql,
 } from "drizzle-orm"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 
 import { mapAccount } from "~/database/mappers/account.mapper"
 import { mapCategory } from "~/database/mappers/category.mapper"
@@ -27,6 +27,7 @@ import type { Account } from "~/types/accounts"
 import type { Category } from "~/types/categories"
 import type { Transaction, TransactionItem } from "~/types/transactions"
 
+import { createRowReuser } from "../../utils/reuse-rows"
 import { drizzleDb } from "../db"
 import {
   accounts,
@@ -38,14 +39,20 @@ import {
 } from "../schema"
 import { useLiveQuery } from "../use-live-query"
 
+/**
+ * The account of a listed transaction. Balance changes do not refresh a row,
+ * so read balances from the account read models instead.
+ */
+export type RowRelatedAccount = Omit<Account, "balance" | "updatedAt">
+
 export interface TransactionWithRelations extends Transaction {
-  account: Account | undefined
+  account: RowRelatedAccount | undefined
   category: Category | undefined
   isTransfer: boolean
   transferId: string | null
   transferGroupId: string | null
   relatedAccountId: string | null
-  relatedAccount: Account | undefined
+  relatedAccount: RowRelatedAccount | undefined
   conversionRate: number | null
   /**
    * Amount of the transfer's debit leg, in the source account's currency,
@@ -301,13 +308,23 @@ function hydrateTransactionRows({
   })
 }
 
+// Every write to an account moves its balance; rows do not show it.
+const UNSHOWN_ACCOUNT_FIELDS = new Set(["balance", "updatedAt"])
+
+export function createTransactionRowReuser() {
+  return createRowReuser<TransactionWithRelations>({
+    account: UNSHOWN_ACCOUNT_FIELDS,
+    relatedAccount: UNSHOWN_ACCOUNT_FIELDS,
+  })
+}
+
 /**
  * The six queries a hydrated transaction list needs, shared by the live hook
  * and the one-off loader. Tags, items and transfers are scoped to the loaded
  * transactions with a subquery (not an id list, which would hit SQLite's
  * bound-variable limit).
  */
-function buildTransactionQueries(filters: TransactionFilters) {
+export function buildTransactionQueries(filters: TransactionFilters) {
   const conditions = getConditions(filters)
   const matching = () =>
     drizzleDb
@@ -370,17 +387,23 @@ export function useTransactions(filters: TransactionFilters): {
     [transactions],
   )
 
+  const [reuseRows] = useState(createTransactionRowReuser)
   const items = useMemo(
     () =>
-      hydrateTransactionRows({
-        rows: transactionsResult.data,
-        accountRows: accountsResult.data,
-        categoryRows: categoriesResult.data,
-        tagRows: tagLinksResult.data,
-        itemRows: itemsResult.data,
-        transferRows: transfersResult.data,
-      }),
+      reuseRows(
+        hydrateTransactionRows({
+          rows: transactionsResult.data,
+          accountRows: accountsResult.data,
+          categoryRows: categoriesResult.data,
+          tagRows: tagLinksResult.data,
+          itemRows: itemsResult.data,
+          transferRows: transfersResult.data,
+        }),
+        // Rows label dates relative to today.
+        new Date().toDateString(),
+      ),
     [
+      reuseRows,
       transactionsResult.data,
       accountsResult.data,
       categoriesResult.data,

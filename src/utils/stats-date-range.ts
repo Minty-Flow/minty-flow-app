@@ -106,11 +106,9 @@ export function buildStatsDateRange(
     }
 
     case "allTime": {
-      // TODO: transactions dated before 2000 are excluded. The floor is a fixed
-      // date rather than MIN(transaction_date) because `from` sizes a per-day
-      // bucket array; the epoch would double it to ~20k entries to cover a case
-      // that shouldn't happen. Query the real minimum if it ever does.
-      const from = startOfYear(new Date(2000, 0, 1))
+      // Starts this year until `startAllTimeRange` moves it back to the first
+      // transaction.
+      const from = startOfYear(now)
       const to = endOfDay(now)
       // No prior period exists. `fetchAllStatsData` detects that via
       // `previousFrom === from` and reports no previous rather than comparing
@@ -227,6 +225,20 @@ export function formatRangeLabel(range: StatsDateRange): string {
     return `${formatShortMonthDay(range.from)} – ${formatShortMonthDayYear(range.to)}`
   }
   return `${formatShortMonthDayYear(range.from)} – ${formatShortMonthDayYear(range.to)}`
+}
+
+/**
+ * An all-time range starting with the year of the first transaction. Without
+ * one, or with only future ones, it covers the current year.
+ */
+export function startAllTimeRange(
+  range: StatsDateRange,
+  firstDate: Date | undefined,
+): StatsDateRange {
+  const from = startOfYear(
+    firstDate && firstDate < range.to ? firstDate : range.to,
+  )
+  return { ...range, from, previousFrom: from }
 }
 
 /**

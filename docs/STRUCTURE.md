@@ -32,6 +32,7 @@
 │   │   │       ├── recent-items.test.ts
 │   │   │       ├── stats-data.test.ts
 │   │   │       ├── stats-extras-data.test.ts
+│   │   │       ├── transaction-row-reuse.test.ts
 │   │   │       └── trash-by-deletion-date.test.ts
 │   │   ├── migrations/
 │   │   │   └── rescale-low-price-crypto.test.ts
@@ -53,6 +54,7 @@
 │   │   │   ├── edit-transfer-validation.test.ts
 │   │   │   ├── empty-trash.test.ts
 │   │   │   ├── import-recovery.test.ts
+│   │   │   ├── insert-backup-data.test.ts
 │   │   │   ├── loan-hold-guard.test.ts
 │   │   │   ├── loan-type-switch.test.ts
 │   │   │   ├── pending-transfer.test.ts
@@ -92,6 +94,7 @@
 │       ├── account-balances.test.ts
 │       ├── chart-path.test.ts
 │       ├── csv.test.ts
+│       ├── device-calendar.test.ts
 │       ├── live-progress.test.ts
 │       ├── local-day-key.test.ts
 │       ├── money.test.ts
@@ -155,7 +158,8 @@
 │   │   ├── 0004_snapshot.json
 │   │   ├── 0005_snapshot.json
 │   │   ├── 0006_snapshot.json
-│   │   └── 0007_snapshot.json
+│   │   ├── 0007_snapshot.json
+│   │   └── 0008_snapshot.json
 │   ├── 0000_safe_maximus.sql
 │   ├── 0001_deep_daredevil.sql
 │   ├── 0002_famous_bastion.sql
@@ -164,6 +168,7 @@
 │   ├── 0005_align_loan_row_kind.sql
 │   ├── 0006_transaction_items.sql
 │   ├── 0007_rescale_low_price_crypto.sql
+│   ├── 0008_transaction_state_indexes.sql
 │   ├── migrations.d.ts
 │   └── migrations.js
 ├── plugins/
@@ -485,6 +490,7 @@
 │   │   │   │   ├── on-kind-change.ts
 │   │   │   │   ├── recurrence-card.tsx
 │   │   │   │   ├── recurrence-unit-sheet.tsx
+│   │   │   │   ├── save-transaction.ts
 │   │   │   │   ├── step-button.tsx
 │   │   │   │   ├── tag-picker-sheet.tsx
 │   │   │   │   ├── transaction-top-tabs.tsx
@@ -505,6 +511,7 @@
 │   │   │   │   └── transaction-item-right.tsx
 │   │   │   ├── upcoming-transactions-section/
 │   │   │   │   ├── index.tsx
+│   │   │   │   ├── parts.tsx
 │   │   │   │   ├── types.ts
 │   │   │   │   ├── upcoming-transactions-section.styles.ts
 │   │   │   │   ├── use-app-foreground.ts
@@ -514,6 +521,7 @@
 │   │   │   ├── edit-recurring-sheet.tsx
 │   │   │   ├── location-picker-modal.tsx
 │   │   │   ├── notes-modal.tsx
+│   │   │   ├── transaction-row.tsx
 │   │   │   └── transaction-section-list.tsx
 │   │   ├── ui/
 │   │   │   ├── date-time-picker/
@@ -576,6 +584,7 @@
 │   ├── constants/
 │   │   ├── app-data.ts
 │   │   ├── fab-button.ts
+│   │   ├── list-window.ts
 │   │   ├── maplibre.ts
 │   │   ├── minty-icons-selection.ts
 │   │   ├── notification-channels.ts
@@ -638,7 +647,8 @@
 │   │   │   ├── get-balance-delta.ts
 │   │   │   ├── has-attachments-from-extra.ts
 │   │   │   ├── import-snapshot.ts
-│   │   │   └── recurring-template-refs.ts
+│   │   │   ├── recurring-template-refs.ts
+│   │   │   └── reuse-rows.ts
 │   │   ├── commit-events.ts
 │   │   ├── db.ts
 │   │   ├── pending-migrations.ts
@@ -665,6 +675,7 @@
 │   │   ├── use-profile-image.ts
 │   │   ├── use-recurring-rule.ts
 │   │   ├── use-retention-cleanup.ts
+│   │   ├── use-screen-transition-done.ts
 │   │   ├── use-scroll-into-view.ts
 │   │   ├── use-shake-listener.ts
 │   │   ├── use-sheet-open-key.ts
@@ -758,6 +769,7 @@
 │       ├── attachments.ts
 │       ├── chart-path.ts
 │       ├── csv.ts
+│       ├── device-calendar.ts
 │       ├── device-locale.ts
 │       ├── file-icon.ts
 │       ├── format-file-size.ts
@@ -778,6 +790,7 @@
 │       ├── profile-image.ts
 │       ├── recurrence.ts
 │       ├── reload-app.ts
+│       ├── splash.ts
 │       ├── stats-date-range.ts
 │       ├── string-utils.ts
 │       ├── time-utils.ts

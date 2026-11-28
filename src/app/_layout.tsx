@@ -6,7 +6,7 @@ import * as Notifications from "expo-notifications"
 import { Stack, useRouter, useSegments } from "expo-router"
 import { useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
-import { Platform } from "react-native"
+import { AppState, Platform } from "react-native"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import { SafeAreaProvider } from "react-native-safe-area-context"
@@ -38,7 +38,9 @@ import { DirectionEnum } from "~/i18n/language.constants"
 import { useLanguageStore } from "~/stores/language.store"
 import { useOnboardingStore } from "~/stores/onboarding.store"
 import { NewEnum } from "~/types/new"
+import { forgetDeviceCalendar } from "~/utils/device-calendar"
 import { logger } from "~/utils/logger"
+import { hideSplash, holdSplash } from "~/utils/splash"
 
 import migrations from "../../drizzle/migrations"
 
@@ -53,6 +55,13 @@ Notifications.setNotificationHandler({
     shouldShowBanner: true,
     shouldShowList: true,
   }),
+})
+
+holdSplash()
+
+// Added before any screen's own listener, so they all read fresh settings.
+AppState.addEventListener("change", (state) => {
+  if (state === "active") forgetDeviceCalendar()
 })
 
 export default function RootLayout() {
@@ -72,6 +81,7 @@ function DrizzleMigratedApp() {
       logger.error("Database migration failed", {
         error: migration.error.message,
       })
+      hideSplash()
     }
   }, [migration.error])
 
@@ -121,6 +131,17 @@ function AppRootLayout() {
       router.replace("/onboarding")
     }
   }, [isOnboardingCompleted, isOnboardingInProgress, segments, router])
+
+  const isRedirectingToOnboarding =
+    !isOnboardingCompleted &&
+    !isOnboardingInProgress &&
+    segments[0] !== "onboarding"
+  useEffect(() => {
+    if (isRedirectingToOnboarding) return
+    // One frame later, so the first screen is drawn when the splash lifts.
+    const frame = requestAnimationFrame(hideSplash)
+    return () => cancelAnimationFrame(frame)
+  }, [isRedirectingToOnboarding])
 
   useEffect(() => {
     if (Platform.OS === "android") {

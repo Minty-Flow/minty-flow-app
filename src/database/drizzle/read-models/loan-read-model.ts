@@ -1,5 +1,5 @@
 import { endOfDay } from "date-fns/endOfDay"
-import { and, eq, isNotNull, sql } from "drizzle-orm"
+import { and, isNotNull, sql } from "drizzle-orm"
 
 import { getRepaymentTypeForLoan } from "~/domain/transaction-kind"
 import { getThemeStrict } from "~/styles/theme/registry"
@@ -13,25 +13,30 @@ import {
   type LiveReadModelResult,
 } from "./entity-read-model"
 
-/** Repaid total per loan: Σ amount of non-deleted, non-pending, loan-linked rows, keyed by (loanId, type). */
+/** Σ amount of non-deleted, non-pending, loan-linked rows, per (loanId, type). */
+export function repaidByLoanQuery() {
+  return drizzleDb
+    .select({
+      loanId: transactions.loanId,
+      type: transactions.type,
+      total: sql<number>`sum(${transactions.amount})`,
+    })
+    .from(transactions)
+    .where(
+      and(
+        isNotNull(transactions.loanId),
+        // `+` keeps the flags off the pending index, which would walk every
+        // confirmed row instead of only the loan-linked ones.
+        sql`+${transactions.isDeleted} = 0`,
+        sql`+${transactions.isPending} = 0`,
+      ),
+    )
+    .groupBy(transactions.loanId, transactions.type)
+}
+
+/** Repaid total per loan, keyed by (loanId, type). */
 function useRepaidByLoan() {
-  const result = useLiveQuery(
-    drizzleDb
-      .select({
-        loanId: transactions.loanId,
-        type: transactions.type,
-        total: sql<number>`sum(${transactions.amount})`,
-      })
-      .from(transactions)
-      .where(
-        and(
-          isNotNull(transactions.loanId),
-          eq(transactions.isDeleted, 0),
-          eq(transactions.isPending, 0),
-        ),
-      )
-      .groupBy(transactions.loanId, transactions.type),
-  )
+  const result = useLiveQuery(repaidByLoanQuery())
 
   const sums = new Map<string, { income: number; expense: number }>()
   for (const row of result.data) {

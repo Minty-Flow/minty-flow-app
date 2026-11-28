@@ -1,6 +1,5 @@
-import { getCalendars } from "expo-localization"
-
 import { useWeekStartStore } from "~/stores/week-start.store"
+import { getDeviceCalendar } from "~/utils/device-calendar"
 
 /**
  * Resolve the first day of the week (0=Sunday … 6=Saturday).
@@ -25,8 +24,7 @@ export const getWeekStartsOn = (): 0 | 1 | 2 | 3 | 4 | 5 | 6 => {
 export const getDeviceWeekStartsOn = (): 0 | 1 | 2 | 3 | 4 | 5 | 6 => {
   // Primary: expo-localization
   try {
-    const calendars = getCalendars()
-    const firstWeekday = calendars[0]?.firstWeekday
+    const firstWeekday = getDeviceCalendar()?.firstWeekday
     if (firstWeekday != null) {
       return ((firstWeekday - 1) % 7) as 0 | 1 | 2 | 3 | 4 | 5 | 6
     }

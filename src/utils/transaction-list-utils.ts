@@ -219,50 +219,53 @@ export function applySearch(
   )
 }
 
+/** `title` is built on demand: it is only needed when a section starts. */
 function getSectionKeyAndTitle(
   date: Date,
   groupBy: GroupByOption,
   allTimeLabel: string,
-): { key: string; title: string } {
+): { key: string; title: () => string } {
   switch (groupBy) {
     case "hour":
       return {
         key: formatHourKey(date),
-        title: formatHourTitle(date),
+        title: () => formatHourTitle(date),
       }
     case "day":
       return {
         key: formatDateKey(date),
-        title: formatSectionDateTitle(date),
+        title: () => formatSectionDateTitle(date),
       }
     case "week": {
       const weekStart = startOfAppWeek(date)
       return {
         key: formatWeekKey(weekStart),
-        title: formatWeekTitle(weekStart),
+        title: () => formatWeekTitle(weekStart),
       }
     }
     case "month":
       return {
         key: formatMonthKey(date),
-        title: formatMonthTitle(date),
+        title: () => formatMonthTitle(date),
       }
     case "year":
       return {
         key: formatYear(date),
-        title: formatYear(date),
+        title: () => formatYear(date),
       }
     case "allTime":
-      return { key: "all", title: allTimeLabel }
+      return { key: "all", title: () => allTimeLabel }
     default:
       return {
         key: formatDateKey(date),
-        title: formatSectionDateTitle(date),
+        title: () => formatSectionDateTitle(date),
       }
   }
 }
 
 export interface TransactionSection {
+  /** Stable list key; section positions shift as the upcoming ones come and go. */
+  key: string
   title: string
   data: TransactionWithRelations[]
   totals: Record<string, number>
@@ -299,7 +302,7 @@ export function buildTransactionSections(
 
   if (groupBy === "allTime") {
     const key = "all"
-    grouped[key] = { title: allTimeLabel, data: [], totals: {} }
+    grouped[key] = { key, title: allTimeLabel, data: [], totals: {} }
     for (const row of sortedList) {
       grouped[key].data.push(row)
       const currency = row.account?.currencyCode ?? ""
@@ -324,7 +327,12 @@ export function buildTransactionSections(
       )
 
       if (!grouped[dateKey]) {
-        grouped[dateKey] = { title: headerTitle, data: [], totals: {} }
+        grouped[dateKey] = {
+          key: dateKey,
+          title: headerTitle(),
+          data: [],
+          totals: {},
+        }
       }
 
       grouped[dateKey].data.push(row)

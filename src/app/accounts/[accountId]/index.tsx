@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet, useUnistyles } from "react-native-unistyles"
 
@@ -51,6 +51,7 @@ export default function AccountDetailsScreen() {
     filterState,
     setFilterState,
     searchState,
+    listSearchState,
     setSearchState,
     showFilters,
     toggleFilters,
@@ -62,9 +63,14 @@ export default function AccountDetailsScreen() {
   const liveAccount = accountsQuery.data.find((a) => a.id === accountId)
   // Keep the account on screen after it is deleted, so the delete sheet is not
   // unmounted before it has closed and the screen leaves.
-  const lastAccount = useRef(liveAccount)
-  if (liveAccount) lastAccount.current = liveAccount
-  const account = liveAccount ?? lastAccount.current
+  const [lastAccount, setLastAccount] = useState(liveAccount)
+  if (
+    liveAccount &&
+    liveAccount.updatedAt.getTime() !== lastAccount?.updatedAt.getTime()
+  ) {
+    setLastAccount(liveAccount)
+  }
+  const account = liveAccount ?? lastAccount
   useEffect(() => {
     if (!deleteSheetVisible || !accountId) return
     getAccountTransactionCount(accountId).then(setTransactionCount)
@@ -127,7 +133,7 @@ export default function AccountDetailsScreen() {
       Toast.error({ title: t("common.toast.error") })
     }
   }
-  const filtersApplied = hasActiveFilters(filterState, searchState)
+  const filtersApplied = hasActiveFilters(filterState, listSearchState)
   useLayoutEffect(() => {
     navigation.setOptions({
       title: account?.name ?? "",
@@ -309,7 +315,7 @@ export default function AccountDetailsScreen() {
       <TransactionSectionList
         transactionsFull={transactionsFull}
         filterState={filterState}
-        searchState={searchState}
+        searchState={listSearchState}
         showUpcoming
         ListHeaderComponent={headerContent}
       />

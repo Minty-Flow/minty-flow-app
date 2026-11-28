@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useNavigation, useRouter } from "expo-router"
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
 import { getAccountDeleteErrorDescription } from "~/components/accounts/account-delete-error"
@@ -49,7 +49,6 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
     control,
     handleSubmit: handleFormSubmit,
     formState: { errors, isDirty, isSubmitting, dirtyFields },
-    watch,
     setValue,
   } = useForm({
     resolver: zodResolver(isAddMode ? addAccountsSchema : editAccountsSchema),
@@ -64,13 +63,12 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
       excludeFromBalance: account?.excludeFromBalance || false,
     },
   })
-  const formName = watch("name")
-  const formIcon = watch("icon")
-  const formColorSchemeName = watch("colorSchemeName")
-  const formType = watch("type")
-  const formCurrencyCode = watch("currencyCode")
-  const formBalance = watch("balance")
-  const formIsPrimary = watch("isPrimary")
+  const formIcon = useWatch({ control, name: "icon" })
+  const formColorSchemeName = useWatch({ control, name: "colorSchemeName" })
+  const formType = useWatch({ control, name: "type" })
+  const formCurrencyCode = useWatch({ control, name: "currencyCode" })
+  const formBalance = useWatch({ control, name: "balance" })
+  const formIsPrimary = useWatch({ control, name: "isPrimary" })
   const navigation = useNavigation()
   const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
@@ -178,7 +176,6 @@ export function useAccountForm({ accountId, account }: UseAccountFormProps) {
     errors,
     isDirty,
     isSubmitting,
-    formName,
     formIcon,
     formColorSchemeName,
     formType,

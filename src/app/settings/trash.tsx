@@ -15,6 +15,7 @@ import { TransactionItem } from "~/components/transaction/transaction-item"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { View } from "~/components/ui/view"
+import { TRANSACTION_LIST_WINDOW } from "~/constants/list-window"
 import {
   type TransactionWithRelations,
   useDeletedTransactionCount,
@@ -50,6 +51,7 @@ export default function TrashScreen() {
     filterState,
     setFilterState,
     searchState,
+    listSearchState,
     setSearchState,
     showFilters,
     toggleFilters,
@@ -66,10 +68,13 @@ export default function TrashScreen() {
     deletedOnly: true,
   })
   const transactionsFull = applyTransferLayout(
-    applySearch(applyTransactionFilters(allDeleted, filterState), searchState),
+    applySearch(
+      applyTransactionFilters(allDeleted, filterState),
+      listSearchState,
+    ),
     transferLayout,
   )
-  const filtersApplied = hasActiveFilters(filterState, searchState)
+  const filtersApplied = hasActiveFilters(filterState, listSearchState)
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -186,6 +191,7 @@ export default function TrashScreen() {
       )}
 
       <FlatList
+        {...TRANSACTION_LIST_WINDOW}
         contentContainerStyle={[
           styles.content,
           transactionsFull.length === 0 && styles.contentEmpty,

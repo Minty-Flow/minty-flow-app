@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useDeferredValue, useRef, useState } from "react"
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable"
 
 import type {
@@ -18,12 +18,15 @@ export function useTransactionListFilters() {
   )
   const [searchState, setSearchState] =
     useState<SearchState>(DEFAULT_SEARCH_STATE)
+  // The list reads the deferred copy, so typing never waits for it.
+  const listSearchState = useDeferredValue(searchState)
   const [showFilters, setShowFilters] = useState(false)
   const toggleFilters = useCallback(() => setShowFilters((v) => !v), [])
   return {
     filterState,
     setFilterState,
     searchState,
+    listSearchState,
     setSearchState,
     showFilters,
     toggleFilters,

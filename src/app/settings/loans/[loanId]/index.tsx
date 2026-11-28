@@ -15,11 +15,12 @@ import {
   RouteLoadingState,
   RouteNotFoundState,
 } from "~/components/route-load-state"
-import { TransactionItem } from "~/components/transaction/transaction-item"
+import { TransactionRow } from "~/components/transaction/transaction-row"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { TRANSACTION_LIST_WINDOW } from "~/constants/list-window"
 import { useAccount } from "~/database/drizzle/read-models/account-read-model"
 import { useLoansQuery } from "~/database/drizzle/read-models/loan-read-model"
 import {
@@ -95,9 +96,9 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
   }: {
     item: TransactionWithRelations
   }) => (
-    <TransactionItem
-      transactionWithRelations={item}
-      onPress={() => handleTransactionPress(item.id)}
+    <TransactionRow
+      item={item}
+      onPressId={handleTransactionPress}
       onBeforeDelete={handleBeforeDelete}
       onDelete={handleDeleteDone}
       onWillOpen={handleWillOpen}
@@ -377,6 +378,7 @@ function LoanDetailInner({ loanId }: { loanId: string }) {
   return (
     <View style={planningDetailStyles.container}>
       <FlatList
+        {...TRANSACTION_LIST_WINDOW}
         data={transactionsFull}
         keyExtractor={(item) => item.id}
         renderItem={renderTransactionItem}

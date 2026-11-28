@@ -6,6 +6,7 @@ import m0004 from "./0004_repair_recurring_template_refs.sql"
 import m0005 from "./0005_align_loan_row_kind.sql"
 import m0006 from "./0006_transaction_items.sql"
 import m0007 from "./0007_rescale_low_price_crypto.sql"
+import m0008 from "./0008_transaction_state_indexes.sql"
 import journal from "./meta/_journal.json"
 
 export default {
@@ -19,5 +20,6 @@ export default {
     m0005,
     m0006,
     m0007,
+    m0008,
   },
 }

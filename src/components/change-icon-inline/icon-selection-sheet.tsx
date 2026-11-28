@@ -27,6 +27,8 @@ interface IconSelectionSheetProps {
 }
 // Grid layout configuration
 const COLUMNS = 6
+// With `numColumns` the list counts rows, not icons.
+const VISIBLE_ROWS = 7
 const IconItem = ({
   iconName,
   isSelected,
@@ -224,9 +226,9 @@ export const IconSelectionSheet = ({
           keyExtractor={keyExtractor}
           contentContainerStyle={styles.flatListContent}
           showsVerticalScrollIndicator
-          initialNumToRender={60}
-          maxToRenderPerBatch={60}
-          windowSize={7}
+          initialNumToRender={VISIBLE_ROWS}
+          maxToRenderPerBatch={VISIBLE_ROWS}
+          windowSize={5}
           removeClippedSubviews={false}
           bounces
           keyboardDismissMode="none"

@@ -322,6 +322,7 @@
       },
       "spendingMap": {
         "title": "Spending map",
+        "showAll": "Show all ({{count}})",
         "topPlaces": "Top places",
         "unnamedPlace": "Unnamed place",
         "offline": "The map needs an internet connection.",

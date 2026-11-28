@@ -13,6 +13,8 @@ import { View } from "~/components/ui/view"
 import { useSpendingPlaces } from "~/database/drizzle/read-models/stats-read-model"
 import type { StatsDateRange } from "~/types/stats"
 
+const TOP_PLACES_PREVIEW = 20
+
 function SpendingMapContent({
   dateRange,
   currency,
@@ -27,10 +29,15 @@ function SpendingMapContent({
   const [mapFailed, setMapFailed] = useState(false)
   // Bumped on Retry so the WebView remounts and loads from scratch.
   const [mapAttempt, setMapAttempt] = useState(0)
+  const [showAllPlaces, setShowAllPlaces] = useState(false)
 
   if (places.length === 0) {
     return <Text variant="muted">{t("screens.stats.spendingMap.empty")}</Text>
   }
+
+  const listedPlaces = showAllPlaces
+    ? places
+    : places.slice(0, TOP_PLACES_PREVIEW)
 
   return (
     <>
@@ -73,7 +80,7 @@ function SpendingMapContent({
         {t("screens.stats.spendingMap.topPlaces")}
       </Text>
       <View style={styles.card}>
-        {places.map((place) => (
+        {listedPlaces.map((place) => (
           <Pressable
             key={place.key}
             style={styles.row}
@@ -105,6 +112,17 @@ function SpendingMapContent({
             />
           </Pressable>
         ))}
+        {!showAllPlaces && places.length > TOP_PLACES_PREVIEW && (
+          <Pressable
+            style={styles.showAll}
+            accessibilityRole="button"
+            onPress={() => setShowAllPlaces(true)}
+          >
+            <Text style={styles.showAllText}>
+              {t("screens.stats.spendingMap.showAll", { count: places.length })}
+            </Text>
+          </Pressable>
+        )}
       </View>
     </>
   )
@@ -139,6 +157,15 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   retry: {
+    color: theme.colors.primary,
+    fontWeight: "700",
+  },
+  showAll: {
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 48,
+  },
+  showAllText: {
     color: theme.colors.primary,
     fontWeight: "700",
   },

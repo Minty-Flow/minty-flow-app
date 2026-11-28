@@ -35,6 +35,20 @@ export async function createTestDb() {
   sqlite.run("PRAGMA foreign_keys=ON;")
 
   const db = drizzle(sqlite, { schema })
+  // The part of the `expo-sqlite` client the app calls directly.
+  const $client = {
+    prepareSync(source: string) {
+      const statement = sqlite.prepare(source)
+      return {
+        executeSync(params: (string | number | null)[]) {
+          statement.run(params)
+        },
+        finalizeSync() {
+          statement.free()
+        },
+      }
+    },
+  }
   migrate(db, { migrationsFolder: MIGRATIONS_FOLDER })
-  return db
+  return Object.assign(db, { $client })
 }

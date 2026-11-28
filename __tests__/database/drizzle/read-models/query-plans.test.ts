@@ -8,9 +8,13 @@ vi.mock("~/database/drizzle/db", async () => {
 vi.mock("~/database/utils/generate-id", () => ({
   generateId: () => crypto.randomUUID(),
 }))
+vi.mock("~/database/drizzle/use-live-query", () => ({ useLiveQuery: vi.fn() }))
+vi.mock("~/styles/theme/registry", () => ({ getThemeStrict: () => null }))
 
 import { drizzleDb } from "~/database/drizzle/db"
 import { categoryCountsQuery } from "~/database/drizzle/read-models/category-counts-query"
+import { repaidByLoanQuery } from "~/database/drizzle/read-models/loan-read-model"
+import { buildTransactionQueries } from "~/database/drizzle/read-models/transaction-read-model"
 import { accounts, categories, transactions } from "~/database/drizzle/schema"
 import { latestRuleSlotQuery } from "~/database/services/recurring-transaction-service"
 
@@ -98,5 +102,22 @@ describe("category counts", () => {
       { categoryId: "food", count: 1 },
     ])
     expect(categoryCountsQuery(false).all()).toEqual([])
+  })
+})
+
+describe("pending, loan and goal reads", () => {
+  it.each([
+    [{ isPending: true }, "idx_tx_pending_date"],
+    [{ loanId: "loan" }, "idx_tx_loan_deleted_date"],
+    [{ goalId: "goal" }, "idx_tx_goal_deleted_date"],
+  ])("lists %o through its index", (filters, index) => {
+    const plan = planOf(buildTransactionQueries(filters).rows)
+    expect(plan).toContain(index)
+    // The index also provides the order.
+    expect(plan).not.toContain("TEMP B-TREE")
+  })
+
+  it("sums repayments over the loan-linked rows only", () => {
+    expect(planOf(repaidByLoanQuery())).toContain("idx_tx_loan_deleted_date")
   })
 })

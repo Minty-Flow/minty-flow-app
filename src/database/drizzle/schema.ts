@@ -149,9 +149,6 @@ export const transactions = sqliteTable(
       "transactions_has_attachments_check",
       sql`${table.hasAttachments} IN (0, 1)`,
     ),
-    index("idx_tx_date").on(table.transactionDate),
-    index("idx_tx_account").on(table.accountId),
-    index("idx_tx_category").on(table.categoryId),
     index("idx_tx_deleted_date").on(
       table.isDeleted,
       table.transactionDate,
@@ -165,10 +162,19 @@ export const transactions = sqliteTable(
     ),
     index("idx_tx_deleted_at").on(table.isDeleted, table.deletedAt),
     index("idx_tx_category_deleted").on(table.categoryId, table.isDeleted),
-    index("idx_tx_goal").on(table.goalId),
+    index("idx_tx_pending_date").on(
+      table.isPending,
+      table.isDeleted,
+      table.transactionDate,
+      table.createdAt,
+    ),
+    index("idx_tx_goal_deleted_date")
+      .on(table.goalId, table.isDeleted, table.transactionDate, table.createdAt)
+      .where(sql`${table.goalId} IS NOT NULL`),
     index("idx_tx_budget").on(table.budgetId),
-    index("idx_tx_loan").on(table.loanId),
-    index("idx_tx_loan_deleted").on(table.loanId, table.isDeleted),
+    index("idx_tx_loan_deleted_date")
+      .on(table.loanId, table.isDeleted, table.transactionDate, table.createdAt)
+      .where(sql`${table.loanId} IS NOT NULL`),
     index("idx_tx_recurring").on(table.recurringId),
     index("idx_tx_date_created").on(table.transactionDate, table.createdAt),
   ],
@@ -205,7 +211,6 @@ export const transactionTags = sqliteTable(
   },
   (table) => [
     primaryKey({ columns: [table.transactionId, table.tagId] }),
-    index("idx_ttag_tx").on(table.transactionId),
     index("idx_ttag_tag").on(table.tagId),
   ],
 )
@@ -257,8 +262,6 @@ export const transfers = sqliteTable(
   (table) => [
     unique().on(table.fromTransactionId),
     unique().on(table.toTransactionId),
-    index("idx_transfer_from_tx").on(table.fromTransactionId),
-    index("idx_transfer_to_tx").on(table.toTransactionId),
   ],
 )
 
@@ -301,7 +304,6 @@ export const goalAccounts = sqliteTable(
   },
   (table) => [
     primaryKey({ columns: [table.goalId, table.accountId] }),
-    index("idx_ga_goal").on(table.goalId),
     index("idx_ga_account").on(table.accountId),
   ],
 )
@@ -406,7 +408,6 @@ export const budgetAccounts = sqliteTable(
   },
   (table) => [
     primaryKey({ columns: [table.budgetId, table.accountId] }),
-    index("idx_ba_budget").on(table.budgetId),
     index("idx_ba_account").on(table.accountId),
   ],
 )
@@ -424,7 +425,6 @@ export const budgetCategories = sqliteTable(
   },
   (table) => [
     primaryKey({ columns: [table.budgetId, table.categoryId] }),
-    index("idx_bc_budget").on(table.budgetId),
     index("idx_bc_category").on(table.categoryId),
   ],
 )

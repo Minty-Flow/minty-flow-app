@@ -12,6 +12,7 @@ import { TransactionFilterHeader } from "~/components/transaction/transaction-fi
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { EmptyState } from "~/components/ui/empty-state"
 import { View } from "~/components/ui/view"
+import { TRANSACTION_LIST_WINDOW } from "~/constants/list-window"
 import {
   type TransactionWithRelations,
   useTransactions,
@@ -43,6 +44,7 @@ export default function PendingTransactionsScreen() {
     filterState,
     setFilterState,
     searchState,
+    listSearchState,
     setSearchState,
     showFilters,
     toggleFilters,
@@ -60,13 +62,16 @@ export default function PendingTransactionsScreen() {
   })
   const transferLayout = useTransfersPreferencesStore((s) => s.layout)
   const transactionsFull = applyTransferLayout(
-    applySearch(applyTransactionFilters(allPending, filterState), searchState),
+    applySearch(
+      applyTransactionFilters(allPending, filterState),
+      listSearchState,
+    ),
     transferLayout,
   )
   const updateDateUponConfirmation = usePendingTransactionsStore(
     (s) => s.updateDateUponConfirmation,
   )
-  const filtersApplied = hasActiveFilters(filterState, searchState)
+  const filtersApplied = hasActiveFilters(filterState, listSearchState)
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -136,6 +141,7 @@ export default function PendingTransactionsScreen() {
       )}
 
       <FlatList
+        {...TRANSACTION_LIST_WINDOW}
         contentContainerStyle={[
           styles.content,
           transactionsFull.length === 0 && styles.contentEmpty,
