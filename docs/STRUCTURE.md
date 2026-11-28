@@ -32,6 +32,7 @@
 │   │   │       ├── recent-items.test.ts
 │   │   │       ├── stats-data.test.ts
 │   │   │       ├── stats-extras-data.test.ts
+│   │   │       ├── transaction-row-reuse.test.ts
 │   │   │       └── trash-by-deletion-date.test.ts
 │   │   ├── migrations/
 │   │   │   └── rescale-low-price-crypto.test.ts
@@ -517,6 +518,7 @@
 │   │   │   ├── edit-recurring-sheet.tsx
 │   │   │   ├── location-picker-modal.tsx
 │   │   │   ├── notes-modal.tsx
+│   │   │   ├── transaction-row.tsx
 │   │   │   └── transaction-section-list.tsx
 │   │   ├── ui/
 │   │   │   ├── date-time-picker/
@@ -642,7 +644,8 @@
 │   │   │   ├── get-balance-delta.ts
 │   │   │   ├── has-attachments-from-extra.ts
 │   │   │   ├── import-snapshot.ts
-│   │   │   └── recurring-template-refs.ts
+│   │   │   ├── recurring-template-refs.ts
+│   │   │   └── reuse-rows.ts
 │   │   ├── commit-events.ts
 │   │   ├── db.ts
 │   │   ├── pending-migrations.ts

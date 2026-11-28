@@ -7,10 +7,8 @@
 
 import { useRouter } from "expo-router"
 import {
-  type ComponentProps,
   type ComponentType,
   Fragment,
-  memo,
   type ReactElement,
   useCallback,
   useMemo,
@@ -20,7 +18,7 @@ import { SectionList } from "react-native"
 import { StyleSheet } from "react-native-unistyles"
 
 import { Money } from "~/components/money"
-import { TransactionItem } from "~/components/transaction/transaction-item"
+import { TransactionRow } from "~/components/transaction/transaction-row"
 import { UpcomingTransactionsSection } from "~/components/transaction/upcoming-transactions-section"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
@@ -62,35 +60,6 @@ interface TransactionSectionListProps {
   /** Additional content rendered at the top of the list (before upcoming). */
   ListHeaderComponent?: ComponentType<unknown> | ReactElement | null
 }
-interface TransactionRowProps {
-  item: TransactionWithRelations
-  onPressId: (transactionId: string) => void
-  onDelete: () => void
-  onWillOpen: ComponentProps<typeof TransactionItem>["onWillOpen"]
-}
-
-// Stable props let React skip rows whose data did not change (search typing,
-// filter toggles, unrelated parent state).
-const TransactionRow = memo(function TransactionRow({
-  item,
-  onPressId,
-  onDelete,
-  onWillOpen,
-}: TransactionRowProps) {
-  const handlePress = useCallback(
-    () => onPressId(item.id),
-    [onPressId, item.id],
-  )
-  return (
-    <TransactionItem
-      transactionWithRelations={item}
-      onPress={handlePress}
-      onDelete={onDelete}
-      onWillOpen={onWillOpen}
-    />
-  )
-})
-
 const keyExtractor = (item: TransactionWithRelations) => item.id
 
 export function TransactionSectionList({

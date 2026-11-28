@@ -13,7 +13,7 @@ import {
   RouteLoadingState,
   RouteNotFoundState,
 } from "~/components/route-load-state"
-import { TransactionItem } from "~/components/transaction/transaction-item"
+import { TransactionRow } from "~/components/transaction/transaction-row"
 import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
@@ -112,9 +112,9 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
   }: {
     item: TransactionWithRelations
   }) => (
-    <TransactionItem
-      transactionWithRelations={item}
-      onPress={() => handleTransactionPress(item.id)}
+    <TransactionRow
+      item={item}
+      onPressId={handleTransactionPress}
       onDelete={handleDeleteDone}
       onWillOpen={handleWillOpen}
     />
