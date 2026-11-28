@@ -43,6 +43,7 @@
 │   │   │   ├── category-move.test.ts
 │   │   │   ├── color-clear.test.ts
 │   │   │   ├── delete-recurring-keep-paid.test.ts
+│   │   │   ├── destroy-account-large-history.test.ts
 │   │   │   ├── destroy-account-transfer-partner.test.ts
 │   │   │   ├── destroy-account-with-loans.test.ts
 │   │   │   ├── destroy-attachment-files.test.ts
