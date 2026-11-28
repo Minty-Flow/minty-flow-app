@@ -1,4 +1,5 @@
-import { endOfDay, startOfDay } from "date-fns"
+import { endOfDay } from "date-fns/endOfDay"
+import { startOfDay } from "date-fns/startOfDay"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView, View } from "react-native"

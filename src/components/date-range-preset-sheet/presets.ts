@@ -1,12 +1,10 @@
-import {
-  endOfDay,
-  endOfMonth,
-  endOfYear,
-  startOfDay,
-  startOfMonth,
-  startOfYear,
-  subDays,
-} from "date-fns"
+import { endOfDay } from "date-fns/endOfDay"
+import { endOfMonth } from "date-fns/endOfMonth"
+import { endOfYear } from "date-fns/endOfYear"
+import { startOfDay } from "date-fns/startOfDay"
+import { startOfMonth } from "date-fns/startOfMonth"
+import { startOfYear } from "date-fns/startOfYear"
+import { subDays } from "date-fns/subDays"
 
 import { endOfAppWeek, startOfAppWeek } from "~/utils/time-utils"
 

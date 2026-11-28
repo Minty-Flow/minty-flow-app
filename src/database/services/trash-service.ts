@@ -1,4 +1,5 @@
-import { startOfDay, subDays } from "date-fns"
+import { startOfDay } from "date-fns/startOfDay"
+import { subDays } from "date-fns/subDays"
 import { and, sql as drizzleSql, eq, lt, or } from "drizzle-orm"
 
 import { getTrashRetentionDays } from "~/constants/trash-retention"

@@ -1,4 +1,7 @@
-import { eachDayOfInterval, isValid, max, subWeeks } from "date-fns"
+import { eachDayOfInterval } from "date-fns/eachDayOfInterval"
+import { isValid } from "date-fns/isValid"
+import { max } from "date-fns/max"
+import { subWeeks } from "date-fns/subWeeks"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { ScrollView } from "react-native"

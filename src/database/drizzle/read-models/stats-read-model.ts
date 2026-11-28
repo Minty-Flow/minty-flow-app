@@ -1,4 +1,4 @@
-import { addWeeks } from "date-fns"
+import { addWeeks } from "date-fns/addWeeks"
 import { sql } from "drizzle-orm"
 import { useIsFocused } from "expo-router"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"

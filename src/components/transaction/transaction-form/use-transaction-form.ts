@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { endOfDay } from "date-fns"
+import { endOfDay } from "date-fns/endOfDay"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
 import { useEffect, useReducer, useRef, useState } from "react"
 import { type Resolver, useForm } from "react-hook-form"

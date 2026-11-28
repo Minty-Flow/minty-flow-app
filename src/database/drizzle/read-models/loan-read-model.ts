@@ -1,4 +1,4 @@
-import { endOfDay } from "date-fns"
+import { endOfDay } from "date-fns/endOfDay"
 import { and, eq, isNotNull, sql } from "drizzle-orm"
 
 import { getRepaymentTypeForLoan } from "~/domain/transaction-kind"

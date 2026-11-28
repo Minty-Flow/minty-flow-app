@@ -1,4 +1,4 @@
-import { endOfDay } from "date-fns"
+import { endOfDay } from "date-fns/endOfDay"
 import { and, count, desc, eq, sql } from "drizzle-orm"
 
 import { drizzleDb } from "~/database/drizzle/db"

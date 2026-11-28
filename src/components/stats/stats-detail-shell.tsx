@@ -1,4 +1,4 @@
-import { isValid } from "date-fns"
+import { isValid } from "date-fns/isValid"
 import { useLocalSearchParams } from "expo-router"
 import { type ReactNode, useState } from "react"
 import { RefreshControl, ScrollView } from "react-native"
