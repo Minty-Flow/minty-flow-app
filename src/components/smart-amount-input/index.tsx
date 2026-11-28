@@ -60,6 +60,33 @@ function parseSettled(text: string, currencyCode: string): number {
   return settled === "" ? 0 : parseMajorUnits(settled, currencyCode)
 }
 
+/** `parseSettled`, or null while the text cannot become an amount yet. */
+function tryParseSettled(text: string, currencyCode: string): number | null {
+  try {
+    return parseSettled(text, currencyCode)
+  } catch {
+    return null
+  }
+}
+
+/** The minor units of a sanitized entry, or null while it is incomplete. */
+function tryParseEntry(text: string, currencyCode: string): number | null {
+  try {
+    return text ? parseMajorUnits(text, currencyCode) : 0
+  } catch {
+    return null
+  }
+}
+
+/** null for a missing or unknown currency, which has no known precision. */
+function tryGetMinorUnitDigits(currencyCode: string): number | null {
+  try {
+    return getMinorUnitDigits(currencyCode)
+  } catch {
+    return null
+  }
+}
+
 export const SmartAmountInput = ({
   valueMinor,
   onChangeMinor,
@@ -81,13 +108,7 @@ export const SmartAmountInput = ({
   // throw is load-bearing elsewhere (backup/import validation), so it
   // can't be softened at the source; guard it here instead and fall back
   // to the common 2-decimal default until a real currency is selected.
-  const minorUnitDigits = (() => {
-    try {
-      return getMinorUnitDigits(currencyCode)
-    } catch {
-      return null
-    }
-  })()
+  const minorUnitDigits = tryGetMinorUnitDigits(currencyCode)
   const hasCurrency = minorUnitDigits !== null
   const maximumFractionDigits = minorUnitDigits ?? 2
   // An amount cannot become minor units without a currency, so typing is
@@ -136,11 +157,7 @@ export const SmartAmountInput = ({
   const liveMinor = (() => {
     if (!isEditing || previewError) return null
     if (previewMinor !== null) return previewMinor
-    try {
-      return parseSettled(displayValue, currencyCode)
-    } catch {
-      return null
-    }
+    return tryParseSettled(displayValue, currencyCode)
   })()
   // biome-ignore lint/correctness/useExhaustiveDependencies: sync only when the live result changes
   useEffect(() => {
@@ -176,12 +193,10 @@ export const SmartAmountInput = ({
     setTooLarge(false)
     setIsEditing(true)
     setInputValue(sanitized)
+    // An incomplete value stays in the field until it becomes valid.
     if (!showMathToolbar) {
-      try {
-        onChangeMinor(sanitized ? parseMajorUnits(sanitized, currencyCode) : 0)
-      } catch {
-        // Keep the incomplete editing value until it becomes valid.
-      }
+      const parsed = tryParseEntry(sanitized, currencyCode)
+      if (parsed !== null) onChangeMinor(parsed)
     }
   }
   const handleOperatorPress = (op: string) => {
@@ -204,14 +219,10 @@ export const SmartAmountInput = ({
   const commitValue = (): boolean => {
     if (!requireCurrency()) return false
     if (previewError) return false
-    let finalValue = previewMinor ?? 0
-    try {
-      if (previewMinor === null && displayValue) {
-        finalValue = parseSettled(displayValue, currencyCode)
-      }
-    } catch {
-      return false
-    }
+    const finalValue =
+      previewMinor ??
+      (displayValue ? tryParseSettled(displayValue, currencyCode) : 0)
+    if (finalValue === null) return false
     onChangeMinor(finalValue)
     setIsEditing(false)
     setInputValue("")
@@ -236,11 +247,8 @@ export const SmartAmountInput = ({
     const newValue = currentValue.slice(0, -1)
     setInputValue(newValue)
     if (!showMathToolbar) {
-      try {
-        onChangeMinor(newValue ? parseMajorUnits(newValue, currencyCode) : 0)
-      } catch {
-        // Keep the incomplete editing value until it becomes valid.
-      }
+      const parsed = tryParseEntry(newValue, currencyCode)
+      if (parsed !== null) onChangeMinor(parsed)
     }
   }
   const handleClear = () => {
@@ -257,14 +265,10 @@ export const SmartAmountInput = ({
       // Keep the incomplete value; the field will re-enter editing on focus.
       return
     }
-    let finalValue = previewMinor ?? 0
-    if (previewMinor === null && displayValue) {
-      try {
-        finalValue = parseSettled(displayValue, currencyCode)
-      } catch {
-        return
-      }
-    }
+    const finalValue =
+      previewMinor ??
+      (displayValue ? tryParseSettled(displayValue, currencyCode) : 0)
+    if (finalValue === null) return
     onChangeMinor(finalValue)
     setIsEditing(false)
     setInputValue("")

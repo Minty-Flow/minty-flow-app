@@ -127,30 +127,23 @@ export function useFormAttachments(
     setAttachmentState({ list: [] })
     mirrorListToForm([])
   }
-  const handleSelectFromFiles = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: "*/*",
-        copyToCacheDirectory: true,
-      })
-      if (result.canceled) return
-      const file = result.assets[0]
-      const ext = getFileExtension(file.name)
-      await addAttachments([
-        {
-          uri: file.uri,
-          name: file.name,
-          size: file.size ?? 0,
-          addedAt: new Date(),
-          ext,
-        },
-      ])
-    } catch (e) {
-      logger.error("Document picker error", { e })
-      Toast.error({
-        title: t("components.transactionForm.toast.couldNotSelectFile"),
-      })
-    }
+  const selectFromFiles = async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: "*/*",
+      copyToCacheDirectory: true,
+    })
+    if (result.canceled) return
+    const file = result.assets[0]
+    const ext = getFileExtension(file.name)
+    await addAttachments([
+      {
+        uri: file.uri,
+        name: file.name,
+        size: file.size ?? 0,
+        addedAt: new Date(),
+        ext,
+      },
+    ])
   }
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync()
@@ -239,7 +232,7 @@ export function useFormAttachments(
   }
   // A picker can throw (no camera, revoked permission, copy failure); say so
   // instead of leaving an unhandled rejection behind.
-  const guarded = (pick: () => Promise<void>) => async () => {
+  const guarded = async (pick: () => Promise<void>) => {
     try {
       await pick()
     } catch (e) {
@@ -256,9 +249,9 @@ export function useFormAttachments(
     flushRemovedAttachments,
     discardAddedAttachments,
     clearAttachments,
-    handleSelectFromFiles,
-    handleTakePhoto: guarded(takePhoto),
-    handleSelectMultipleMedia: guarded(selectMultipleMedia),
-    handleSelectSinglePhoto: guarded(selectSinglePhoto),
+    handleSelectFromFiles: () => guarded(selectFromFiles),
+    handleTakePhoto: () => guarded(takePhoto),
+    handleSelectMultipleMedia: () => guarded(selectMultipleMedia),
+    handleSelectSinglePhoto: () => guarded(selectSinglePhoto),
   }
 }

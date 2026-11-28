@@ -1,5 +1,5 @@
 import { useReducer, useRef } from "react"
-import type { UseFormSetValue, UseFormWatch } from "react-hook-form"
+import type { UseFormGetValues, UseFormSetValue } from "react-hook-form"
 import { Platform } from "react-native"
 
 import { DateTimePicker } from "~/components/ui/date-time-picker"
@@ -14,7 +14,7 @@ type PickerMode = "date" | "time"
 export function useFormDatePicker(
   recurring: RecurringState,
   setRecurring: (update: Partial<RecurringState>) => void,
-  watch: UseFormWatch<TransactionFormValues>,
+  getValues: UseFormGetValues<TransactionFormValues>,
   setValue: UseFormSetValue<TransactionFormValues>,
 ) {
   const [datePicker, setDatePicker] = useReducer(
@@ -44,7 +44,7 @@ export function useFormDatePicker(
   const currentValue = () =>
     datePickerTargetRef.current === "recurringEnd"
       ? (recurring.until ?? new Date())
-      : watch("transactionDate")
+      : getValues("transactionDate")
   const applyPicked = (picked: Date, mode: PickerMode) => {
     const date = mergePart(currentValue(), picked, mode)
     if (datePickerTargetRef.current === "recurringEnd") {

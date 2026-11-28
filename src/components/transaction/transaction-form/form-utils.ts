@@ -4,6 +4,7 @@ import type { Account } from "~/types/accounts"
 import {
   type TransactionItem,
   type TransactionKind,
+  type TransactionLocation,
   type TransactionType,
   TransactionTypeEnum,
 } from "~/types/transactions"
@@ -174,4 +175,16 @@ export function isFormReadOnly(
   transaction: { isDeleted: boolean } | null,
 ): boolean {
   return transaction?.isDeleted === true
+}
+
+/** The stored location string as a location, or null when empty or corrupt. */
+export function parseFormLocation(
+  raw: string | null | undefined,
+): TransactionLocation | null {
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as TransactionLocation
+  } catch {
+    return null
+  }
 }

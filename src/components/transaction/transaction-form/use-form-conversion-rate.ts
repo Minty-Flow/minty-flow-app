@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { UseFormSetValue } from "react-hook-form"
 
 import { getConversionRateForTransaction } from "~/database/services/ledger-service"
@@ -74,18 +74,15 @@ export function useFormConversionRate(
       : null
   // The stored rate belongs to the pair the form opened with. After a
   // retarget it must come from the API (or custom rates) instead.
-  const initialPairRef = useRef<{
-    sourceKey: string
-    pairKey: string | null
-  } | null>(null)
-  if (
-    initialPairRef.current === null ||
-    initialPairRef.current.sourceKey !== transactionKey
-  ) {
-    initialPairRef.current = {
+  const [initialPair, setInitialPair] = useState({
+    sourceKey: transactionKey,
+    pairKey: conversionRatePairKey,
+  })
+  if (initialPair.sourceKey !== transactionKey) {
+    setInitialPair({
       sourceKey: transactionKey,
       pairKey: conversionRatePairKey,
-    }
+    })
   }
   const customConversionRate = useMemo(
     () =>
@@ -108,13 +105,12 @@ export function useFormConversionRate(
   // object and would otherwise overwrite a rate the user just typed.
   // biome-ignore lint/correctness/useExhaustiveDependencies: `transactionKey` is the id of `transaction`; depending on the object itself would re-run on every refresh.
   useEffect(() => {
-    const initial = initialPairRef.current
     if (
       !transaction ||
       transactionType !== "transfer" ||
       !conversionRatePairKey ||
-      initial?.sourceKey !== transactionKey ||
-      initial.pairKey !== conversionRatePairKey
+      initialPair.sourceKey !== transactionKey ||
+      initialPair.pairKey !== conversionRatePairKey
     )
       return
     let cancelled = false
@@ -130,7 +126,7 @@ export function useFormConversionRate(
     return () => {
       cancelled = true
     }
-  }, [conversionRatePairKey, transactionKey, transactionType])
+  }, [conversionRatePairKey, initialPair, transactionKey, transactionType])
 
   const lookupKey = conversionRatePairKey
     ? `${transactionKey}:${conversionRatePairKey}`

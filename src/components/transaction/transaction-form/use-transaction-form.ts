@@ -2,27 +2,20 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { endOfDay } from "date-fns/endOfDay"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
 import { useEffect, useReducer, useRef, useState } from "react"
-import { type Resolver, useForm } from "react-hook-form"
+import { type Resolver, useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
 import type { IconSvgName } from "~/components/icons"
 import {
-  createTransaction,
-  createTransfer,
   deleteTransaction,
   deleteTransfer,
-  editTransfer,
   restoreTransaction,
-  updateTransaction,
 } from "~/database/services/ledger-service"
 import {
-  createLoanWithOpeningEntry,
   deleteLoanById,
   isLoanOpeningTransaction,
 } from "~/database/services/loan-service"
-import { createRecurringRule } from "~/database/services/recurring-transaction-service"
 import { destroyTransaction } from "~/database/services/trash-service"
-import { getRepaymentTypeForLoan } from "~/domain/transaction-kind"
 import { useBalanceAtTransaction } from "~/hooks/use-balance-before"
 import { useNavigationGuard } from "~/hooks/use-navigation-guard"
 import { useRecurringRuleState } from "~/hooks/use-recurring-rule"
@@ -32,31 +25,29 @@ import {
   transactionSchema,
 } from "~/schemas/transactions.schema"
 import { currencyRegistryService } from "~/services/currency-registry"
-import { useBillSplitterStore } from "~/stores/bill-splitter.store"
 import { useTransactionLocationStore } from "~/stores/transaction-location.store"
 import { NewEnum } from "~/types/new"
 import {
   type TransactionItem,
   type TransactionKind,
-  type TransactionLocation,
   TransactionSubTypeEnum,
   TransactionTypeEnum,
 } from "~/types/transactions"
-import { toStoredAttachment } from "~/utils/attachments"
 import { logger } from "~/utils/logger"
 import { rescaleMinorUnits } from "~/utils/money"
-import {
-  buildRRuleString,
-  countOccurrencesBetween,
-  parseRecurrence,
-} from "~/utils/recurrence"
+import { countOccurrencesBetween, parseRecurrence } from "~/utils/recurrence"
 import { Toast } from "~/utils/toast"
 
-import { EMPTY_TAG_IDS } from "./constants"
-import { getDefaultValues, itemsTotal, mergeReducer } from "./form-utils"
+import { EMPTY_ITEMS, EMPTY_TAG_IDS } from "./constants"
+import {
+  getDefaultValues,
+  itemsTotal,
+  mergeReducer,
+  parseFormLocation,
+} from "./form-utils"
 import { KIND_ICONS } from "./kind-info"
 import { onKindChange } from "./on-kind-change"
-import { checkTransferRate } from "./transfer-rate"
+import { saveTransaction } from "./save-transaction"
 import type {
   OverlayState,
   RecurringState,
@@ -66,7 +57,6 @@ import { useFormAttachments } from "./use-form-attachments"
 import { useFormConversionRate } from "./use-form-conversion-rate"
 import { useFormDatePicker } from "./use-form-date-picker"
 import { useFormLocation } from "./use-form-location"
-import { buildTransactionPayload } from "./use-transaction-form.submit"
 
 export function useTransactionForm({
   transaction,
@@ -116,7 +106,6 @@ export function useTransactionForm({
   const {
     control,
     handleSubmit,
-    watch,
     getValues,
     setValue,
     formState: { errors, isDirty },
@@ -125,31 +114,24 @@ export function useTransactionForm({
     defaultValues,
   })
   // Recurring toggle states
-  const amount = watch("amount")
-  const accountId = watch("accountId")
-  const toAccountId = watch("toAccountId")
-  const categoryId = watch("categoryId")
-  const date = watch("transactionDate")
-  const description = watch("description")
-  const tagIds = watch("tags")
-  const items = watch("items") ?? []
-  const goalId = watch("goalId")
-  const budgetId = watch("budgetId")
-  const loanId = watch("loanId")
-  const locationString = watch("location")
-  const location: TransactionLocation | null =
-    locationString != null && locationString !== ""
-      ? (() => {
-          try {
-            return JSON.parse(locationString) as TransactionLocation
-          } catch {
-            return null
-          }
-        })()
-      : null
-  const isRefund = watch("subtype") === TransactionSubTypeEnum.REFUND
-  const kind = (watch("kind") ?? "default") as TransactionKind
-  const topTabType = watch("type")
+  const amount = useWatch({ control, name: "amount" })
+  const accountId = useWatch({ control, name: "accountId" })
+  const toAccountId = useWatch({ control, name: "toAccountId" })
+  const categoryId = useWatch({ control, name: "categoryId" })
+  const date = useWatch({ control, name: "transactionDate" })
+  const description = useWatch({ control, name: "description" })
+  const tagIds = useWatch({ control, name: "tags" })
+  const items = useWatch({ control, name: "items" }) ?? EMPTY_ITEMS
+  const goalId = useWatch({ control, name: "goalId" })
+  const budgetId = useWatch({ control, name: "budgetId" })
+  const loanId = useWatch({ control, name: "loanId" })
+  const locationString = useWatch({ control, name: "location" })
+  const location = parseFormLocation(locationString)
+  const subtype = useWatch({ control, name: "subtype" })
+  const isRefund = subtype === TransactionSubTypeEnum.REFUND
+  const watchedKind = useWatch({ control, name: "kind" })
+  const kind = (watchedKind ?? "default") as TransactionKind
+  const topTabType = useWatch({ control, name: "type" })
   const tabLabels: [string, string, string] =
     kind === "lent" || kind === "borrowed"
       ? [
@@ -213,7 +195,7 @@ export function useTransactionForm({
       setValue(
         "amount",
         rescaleMinorUnits(
-          amount ?? 0,
+          getValues("amount") ?? 0,
           selectedAccount.currencyCode,
           nextAccount.currencyCode,
         ),
@@ -258,22 +240,20 @@ export function useTransactionForm({
   const [recurring, setRecurring] = useReducer(mergeReducer<RecurringState>, {
     recurrence: { interval: 1, unit: "month" },
     until: null,
-    startDate: watch("transactionDate"),
+    startDate: date,
   })
   // §3.4b: a cadence-only edit never touched react-hook-form, so Save stayed
-  // disabled. The seeding effect stores the rule baseline in `seededCadenceRef`;
+  // disabled. The seeding effect stores the rule baseline in `seededCadence`;
   // diff the card against it and treat a change as dirty.
-  const seededFromRuleRef = useRef(false)
-  const seededCadenceRef = useRef<RecurringState | null>(null)
-  const isCadenceDirty = (() => {
-    const seeded = seededCadenceRef.current
-    if (!seeded) return false
-    return (
-      recurring.recurrence.interval !== seeded.recurrence.interval ||
-      recurring.recurrence.unit !== seeded.recurrence.unit ||
-      (recurring.until?.getTime() ?? null) !== (seeded.until?.getTime() ?? null)
-    )
-  })()
+  const [seededCadence, setSeededCadence] = useState<RecurringState | null>(
+    null,
+  )
+  const isCadenceDirty =
+    seededCadence !== null &&
+    (recurring.recurrence.interval !== seededCadence.recurrence.interval ||
+      recurring.recurrence.unit !== seededCadence.recurrence.unit ||
+      (recurring.until?.getTime() ?? null) !==
+        (seededCadence.until?.getTime() ?? null))
   const hasUnsavedChanges = isDirty || isCadenceDirty
   const { allowNavigation } = useNavigationGuard({
     navigation,
@@ -307,7 +287,7 @@ export function useTransactionForm({
     confirmIosDate,
     handleSetNow,
     pickerElement: datePickerAndroidElement,
-  } = useFormDatePicker(recurring, setRecurring, watch, setValue)
+  } = useFormDatePicker(recurring, setRecurring, getValues, setValue)
   const { isCapturingLocation, handleLocationConfirm, handleClearLocation } =
     useFormLocation(isNew, locationEnabled, autoAttach, setValue, () =>
       setOverlays({ locationPickerVisible: false }),
@@ -347,17 +327,17 @@ export function useTransactionForm({
   // ES-8: seed the recurrence card from the stored rule exactly once when
   // editing a rule-linked instance. After this the user's card edits win.
   useEffect(() => {
-    if (seededFromRuleRef.current) return
+    if (seededCadence) return
     if (!transaction?.recurringId || !recurringRule) return
-    seededFromRuleRef.current = true
     const to = recurringRule.range.to
-    seededCadenceRef.current = {
+    const seeded: RecurringState = {
       recurrence: parseRecurrence(recurringRule.rules[0] ?? ""),
       until: to >= new Date(2099, 0, 1).getTime() ? null : new Date(to),
       startDate: new Date(recurringRule.range.from), // RS-2 anchor
     }
-    setRecurring(seededCadenceRef.current)
-  }, [transaction?.recurringId, recurringRule])
+    setSeededCadence(seeded)
+    setRecurring(seeded)
+  }, [transaction?.recurringId, recurringRule, seededCadence])
   // ES-4/5/8: kind is locked once a transaction is tied to a loan or a
   // recurring rule (recurrence editing lands in Slice 2, loan wiring in Slice 4).
   const canEditKind =
@@ -433,278 +413,41 @@ export function useTransactionForm({
     if (submitLatch.current || recurringRuleLoading) return
     submitLatch.current = true
     setIsSaving(true)
-    try {
-      // ─── Transfer ─────────────────────────────────────────────────────────
-      if (data.type === TransactionTypeEnum.TRANSFER) {
-        const fromId = data.accountId
-        const toId = data.toAccountId ?? ""
-        if (!toId) {
-          Toast.error({
-            title: t("components.transactionForm.toast.selectDestination"),
-          })
-          return
-        }
-        if (fromId === toId) {
-          Toast.error({
-            title: t("components.transactionForm.toast.fromToDifferent"),
-          })
-          return
-        }
-        const fromAccount = accounts.find((a) => a.id === fromId)
-        const toAccount = accounts.find((a) => a.id === toId)
-        const differentCurrencies =
-          fromAccount &&
-          toAccount &&
-          fromAccount.currencyCode !== toAccount.currencyCode
-        const rateCheck = checkTransferRate({
-          differentCurrencies: !!differentCurrencies,
-          conversionRate,
-          isLoading: isConversionRateLoading,
+    // Promise methods, not try/finally, which React Compiler cannot compile.
+    await saveTransaction(data, {
+      t,
+      router,
+      accounts,
+      categories,
+      loans,
+      transaction,
+      isNew,
+      isRecurringKind,
+      isNewRecurringRule,
+      recurring,
+      recurringRule,
+      selectedAccount,
+      usdCode,
+      conversionRate,
+      isConversionRateLoading,
+      derivedTransferTitle,
+      attachments: attachmentState.list,
+      hasLoanDueDate,
+      billParticipantId,
+      setOverlays,
+      flushRemovedAttachments,
+      allowNavigation,
+    })
+      .catch((error) => {
+        logger.error("Failed to save transaction", {
+          message: error instanceof Error ? error.message : String(error),
         })
-        if (!rateCheck.ok) {
-          Toast.error({
-            title:
-              rateCheck.reason === "loading"
-                ? t("components.transactionForm.toast.rateLoading")
-                : t("components.transactionForm.toast.setDifferentCurrencies"),
-          })
-          return
-        }
-        const effectiveDate = data.transactionDate
-        const transferPayload = {
-          fromAccountId: fromId,
-          toAccountId: toId,
-          amount: data.amount,
-          ...(rateCheck.conversionRate != null
-            ? { conversionRate: rateCheck.conversionRate }
-            : {}),
-          transactionDate: isNew ? effectiveDate.getTime() : effectiveDate,
-          title:
-            data.title?.trim() ||
-            derivedTransferTitle ||
-            t("components.transactionForm.fields.transferTitle"),
-          notes: data.description?.trim() || null,
-        }
-        if (isNew) {
-          await createTransfer(
-            {
-              ...transferPayload,
-              transactionDate: effectiveDate.getTime(),
-            },
-            // A future-dated transfer is pending like any other row.
-            { isPending: data.isPending },
-          )
-          Toast.success({
-            title: t("components.transactionForm.toast.transferCreated"),
-          })
-        } else if (transaction) {
-          await editTransfer(transaction.id, {
-            ...transferPayload,
-            transactionDate: effectiveDate,
-          })
-          Toast.success({
-            title: t("components.transactionForm.toast.transferUpdated"),
-          })
-        }
-        allowNavigation()
-        router.back()
-        return
-      }
-      // Only a new rule starts at the recurrence card's start date. An edited
-      // instance keeps its own date; `recurring.startDate` is the rule's first
-      // date there.
-      const effectiveDate =
-        isNew && isRecurringKind ? recurring.startDate : data.transactionDate
-      const attachmentsJson =
-        attachmentState.list.length > 0
-          ? JSON.stringify(attachmentState.list.map(toStoredAttachment))
-          : null
-      const payload = buildTransactionPayload(data, {
-        isNew,
-        transaction,
-        selectedAccount,
-        usdCode,
-        attachmentsJson,
-        effectiveDate,
-        recurringEnabled: isNewRecurringRule,
+        Toast.error({ title: t("components.transactionForm.toast.saveFailed") })
       })
-      if (isNew) {
-        if (data.kind === "subscription" || data.kind === "repetitive") {
-          try {
-            const startDate = data.transactionDate
-            const untilEod = recurring.until ? endOfDay(recurring.until) : null
-
-            // RS-4: until before start -> no valid occurrences; block the save.
-            if (
-              untilEod &&
-              countOccurrencesBetween(
-                startDate,
-                untilEod,
-                recurring.recurrence,
-              ) === 0
-            ) {
-              Toast.error({
-                title: t(
-                  "components.transactionForm.toast.recurringUntilBeforeStart",
-                ),
-              })
-              return
-            }
-
-            const rruleStr = buildRRuleString({
-              interval: recurring.recurrence.interval,
-              unit: recurring.recurrence.unit,
-              startDate,
-              until: recurring.until,
-            })
-            const rangeEnd =
-              untilEod?.getTime() ?? new Date(2099, 11, 31).getTime()
-            await createRecurringRule({
-              amount: data.amount,
-              type: data.type,
-              accountId: data.accountId,
-              categoryId: data.categoryId ?? null,
-              title: data.title?.trim() ?? null,
-              description: data.description?.trim() ?? null,
-              subtype: data.subtype ?? null,
-              tags: data.tags ?? [],
-              kind: data.kind,
-              range: {
-                from: startDate.getTime(),
-                to: rangeEnd,
-              },
-              rules: [rruleStr],
-            })
-            Toast.success({
-              title: t("components.transactionForm.toast.recurringCreated"),
-            })
-          } catch (recErr) {
-            logger.error("Failed to create recurring rule", {
-              message:
-                recErr instanceof Error ? recErr.message : String(recErr),
-            })
-            Toast.error({
-              title: t(
-                "components.transactionForm.toast.recurringCreateFailed",
-              ),
-            })
-            return
-          }
-        } else if (data.kind === "lent" || data.kind === "borrowed") {
-          try {
-            if (!data.categoryId) {
-              Toast.error({
-                title: t("components.transactionForm.toast.loanNeedsCategory"),
-              })
-              return
-            }
-            const categoryName = categories.find(
-              (c) => c.id === data.categoryId,
-            )?.name
-            const loanName =
-              data.title?.trim() ||
-              categoryName ||
-              t("components.transactionForm.loan.nameLabel")
-            await createLoanWithOpeningEntry(
-              {
-                name: loanName,
-                principalAmount: data.amount,
-                loanType: data.kind,
-                term: "one_time",
-                accountId: data.accountId,
-                categoryId: data.categoryId,
-                // The date field is the optional due date; the opening
-                // cash-flow entry is dated now (the money moved today).
-                dueDate: hasLoanDueDate ? data.transactionDate.getTime() : null,
-              },
-              {
-                title: data.title?.trim() || null,
-                description: data.description?.trim() || null,
-                transactionDate: new Date(),
-                tags: data.tags ?? [],
-                location: data.location ?? null,
-                extra: payload.extra ?? null,
-              },
-            )
-            Toast.success({
-              title: t("components.transactionForm.toast.transactionCreated"),
-            })
-          } catch (loanErr) {
-            logger.error("Failed to save loan", {
-              message:
-                loanErr instanceof Error ? loanErr.message : String(loanErr),
-            })
-            Toast.error({
-              title: t("components.transactionForm.toast.saveFailed"),
-            })
-            return
-          }
-        } else {
-          // LP-1: a repayment linked via the loan picker can't overshoot.
-          if (data.loanId) {
-            const loan = loans.find((l) => l.id === data.loanId)
-            if (
-              loan &&
-              data.type === getRepaymentTypeForLoan(loan.loanType) &&
-              data.amount > loan.remainingAmount
-            ) {
-              Toast.error({
-                title: t(
-                  "components.transactionForm.toast.loanAmountExceedsRemaining",
-                ),
-              })
-              return
-            }
-          }
-          await createTransaction(payload)
-          Toast.success({
-            title: t("components.transactionForm.toast.transactionCreated"),
-          })
-        }
-      } else if (transaction) {
-        if (transaction.recurringId && recurringRule) {
-          setOverlays({
-            pendingEditPayload: {
-              amount: payload.amount,
-              type: payload.type,
-              transactionDate: payload.transactionDate,
-              categoryId: payload.categoryId ?? null,
-              accountId: payload.accountId,
-              title: payload.title,
-              description: payload.description,
-              isPending: payload.isPending,
-              requiresManualConfirmation: payload.requiresManualConfirmation,
-              tags: payload.tags ?? [],
-              extra: payload.extra,
-              subtype: payload.subtype,
-              goalId: payload.goalId,
-              budgetId: payload.budgetId,
-              loanId: payload.loanId,
-              location: payload.location,
-            },
-            editRecurringSheetVisible: true,
-          })
-          return
-        }
-        await updateTransaction(transaction.id, payload)
-        Toast.success({
-          title: t("components.transactionForm.toast.transactionUpdated"),
-        })
-      }
-      flushRemovedAttachments()
-      if (isNew && billParticipantId)
-        useBillSplitterStore.getState().markRecorded(billParticipantId)
-      allowNavigation()
-      router.back()
-    } catch (error) {
-      logger.error("Failed to save transaction", {
-        message: error instanceof Error ? error.message : String(error),
+      .finally(() => {
+        submitLatch.current = false
+        setIsSaving(false)
       })
-      Toast.error({ title: t("components.transactionForm.toast.saveFailed") })
-    } finally {
-      submitLatch.current = false
-      setIsSaving(false)
-    }
   }
   const handleCancelPress = () => {
     if (hasUnsavedChanges) {
@@ -895,14 +638,14 @@ export function useTransactionForm({
   return {
     // form primitives
     control,
-    watch,
     setValue,
     errors,
     isDirty,
     hasUnsavedChanges,
     isSaving: isSaving || recurringRuleLoading,
     isNew,
-    submit: handleSubmit(onSubmit),
+    // Built on press: `handleSubmit` reads the submit latch through `onSubmit`.
+    submit: () => handleSubmit(onSubmit)(),
 
     // watched fields
     amount,
