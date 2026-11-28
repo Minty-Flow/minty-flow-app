@@ -155,7 +155,8 @@
 │   │   ├── 0004_snapshot.json
 │   │   ├── 0005_snapshot.json
 │   │   ├── 0006_snapshot.json
-│   │   └── 0007_snapshot.json
+│   │   ├── 0007_snapshot.json
+│   │   └── 0008_snapshot.json
 │   ├── 0000_safe_maximus.sql
 │   ├── 0001_deep_daredevil.sql
 │   ├── 0002_famous_bastion.sql
@@ -164,6 +165,7 @@
 │   ├── 0005_align_loan_row_kind.sql
 │   ├── 0006_transaction_items.sql
 │   ├── 0007_rescale_low_price_crypto.sql
+│   ├── 0008_transaction_state_indexes.sql
 │   ├── migrations.d.ts
 │   └── migrations.js
 ├── plugins/

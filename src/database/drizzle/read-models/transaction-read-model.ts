@@ -307,7 +307,7 @@ function hydrateTransactionRows({
  * transactions with a subquery (not an id list, which would hit SQLite's
  * bound-variable limit).
  */
-function buildTransactionQueries(filters: TransactionFilters) {
+export function buildTransactionQueries(filters: TransactionFilters) {
   const conditions = getConditions(filters)
   const matching = () =>
     drizzleDb
