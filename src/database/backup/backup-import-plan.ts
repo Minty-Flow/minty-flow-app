@@ -8,6 +8,7 @@ import {
   type RawRow,
   RESET_ORDER,
 } from "~/database/backup/backup-format"
+import { drizzleDb } from "~/database/drizzle/db"
 import { runInTransaction } from "~/database/transaction"
 import { deriveKind } from "~/domain/derive-kind"
 import { LoanTermEnum } from "~/types/loans"
@@ -67,13 +68,13 @@ export async function resetDatabaseForBackupImport(): Promise<void> {
 }
 
 /**
- * Insert rows into a table using parameterized INSERT.
+ * Insert rows into a table through one prepared statement. Runs on the app's
+ * only connection, so it is part of the caller's transaction.
  * Unknown columns (e.g., WDB `id` in join tables) are silently dropped via ALLOWED_COLUMNS.
  * WDB Unix-ms timestamps are converted to ISO strings via normalizeColumnValue.
  * has_attachments is re-derived from extra JSON for transactions.
  */
 function insertRows(
-  db: Db,
   tableName: string,
   rows: RawRow[],
   loanTypeById?: Map<string, "lent" | "borrowed">,
@@ -83,27 +84,28 @@ function insertRows(
   if (cols.length === 0) return
   const isTransactions = tableName === "transactions"
   const isLoans = tableName === "loans"
-  const queryPrefix = `INSERT INTO ${tableName} (${cols.join(", ")}) VALUES `
-
-  for (const row of rows) {
-    const values = cols.map((col) => {
-      if (isTransactions && col === "has_attachments") {
-        return deriveHasAttachments(row.extra)
-      }
-      if (isTransactions && col === "kind") {
-        return resolveTransactionKind(row, loanTypeById ?? new Map())
-      }
-      if (isLoans && col === "term") {
-        return resolveLoanTerm(row)
-      }
-      return normalizeColumnValue(col, row[col])
-    })
-    db.run(
-      sql`${sql.raw(queryPrefix)}(${sql.join(
-        values.map((value) => sql`${value as string | number | null}`),
-        sql`, `,
-      )})`,
-    )
+  // Preparing the statement for every row dominates a large import.
+  const statement = drizzleDb.$client.prepareSync(
+    `INSERT INTO ${tableName} (${cols.join(", ")}) VALUES (${cols.map(() => "?").join(", ")})`,
+  )
+  try {
+    for (const row of rows) {
+      const values = cols.map((col) => {
+        if (isTransactions && col === "has_attachments") {
+          return deriveHasAttachments(row.extra)
+        }
+        if (isTransactions && col === "kind") {
+          return resolveTransactionKind(row, loanTypeById ?? new Map())
+        }
+        if (isLoans && col === "term") {
+          return resolveLoanTerm(row)
+        }
+        return normalizeColumnValue(col, row[col])
+      })
+      statement.executeSync(values as (string | number | null)[])
+    }
+  } finally {
+    statement.finalizeSync()
   }
 }
 
@@ -147,34 +149,29 @@ const POST_IMPORT_REPAIRS = [
 
 export function insertBackupData(db: Db, data: MintyFlowBackup["data"]): void {
   // Tier 1: no FK dependencies
-  insertRows(db, "categories", data.categories)
-  insertRows(db, "tags", data.tags)
-  insertRows(db, "accounts", data.accounts)
+  insertRows("categories", data.categories)
+  insertRows("tags", data.tags)
+  insertRows("accounts", data.accounts)
 
   // Tier 2: depend on Tier 1
-  insertRows(db, "recurring_transactions", data.recurring_transactions)
-  insertRows(db, "budgets", data.budgets)
-  insertRows(db, "goals", data.goals)
-  insertRows(db, "loans", data.loans)
+  insertRows("recurring_transactions", data.recurring_transactions)
+  insertRows("budgets", data.budgets)
+  insertRows("goals", data.goals)
+  insertRows("loans", data.loans)
 
   // Tier 3: transactions — `kind`-less rows are backfilled via deriveKind, which
   // needs each linked loan's type.
-  insertRows(
-    db,
-    "transactions",
-    data.transactions,
-    buildLoanTypeMap(data.loans),
-  )
+  insertRows("transactions", data.transactions, buildLoanTypeMap(data.loans))
 
   // Tier 4: transfers
-  insertRows(db, "transfers", data.transfers)
+  insertRows("transfers", data.transfers)
 
   // Tier 5: join tables
-  insertRows(db, "transaction_tags", data.transaction_tags)
-  insertRows(db, "transaction_items", data.transaction_items)
-  insertRows(db, "budget_accounts", data.budget_accounts)
-  insertRows(db, "budget_categories", data.budget_categories)
-  insertRows(db, "goal_accounts", data.goal_accounts)
+  insertRows("transaction_tags", data.transaction_tags)
+  insertRows("transaction_items", data.transaction_items)
+  insertRows("budget_accounts", data.budget_accounts)
+  insertRows("budget_categories", data.budget_categories)
+  insertRows("goal_accounts", data.goal_accounts)
 
   repairImportedData(db)
 }
