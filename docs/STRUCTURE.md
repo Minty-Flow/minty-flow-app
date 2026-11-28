@@ -92,6 +92,7 @@
 │       ├── account-balances.test.ts
 │       ├── chart-path.test.ts
 │       ├── csv.test.ts
+│       ├── device-calendar.test.ts
 │       ├── live-progress.test.ts
 │       ├── local-day-key.test.ts
 │       ├── money.test.ts
@@ -762,6 +763,7 @@
 │       ├── attachments.ts
 │       ├── chart-path.ts
 │       ├── csv.ts
+│       ├── device-calendar.ts
 │       ├── device-locale.ts
 │       ├── file-icon.ts
 │       ├── format-file-size.ts

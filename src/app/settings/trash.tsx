@@ -51,6 +51,7 @@ export default function TrashScreen() {
     filterState,
     setFilterState,
     searchState,
+    listSearchState,
     setSearchState,
     showFilters,
     toggleFilters,
@@ -67,10 +68,13 @@ export default function TrashScreen() {
     deletedOnly: true,
   })
   const transactionsFull = applyTransferLayout(
-    applySearch(applyTransactionFilters(allDeleted, filterState), searchState),
+    applySearch(
+      applyTransactionFilters(allDeleted, filterState),
+      listSearchState,
+    ),
     transferLayout,
   )
-  const filtersApplied = hasActiveFilters(filterState, searchState)
+  const filtersApplied = hasActiveFilters(filterState, listSearchState)
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (

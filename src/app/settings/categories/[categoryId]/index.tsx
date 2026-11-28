@@ -40,6 +40,7 @@ export default function CategoryDetailsScreen() {
     filterState,
     setFilterState,
     searchState,
+    listSearchState,
     setSearchState,
     showFilters,
     toggleFilters,
@@ -77,7 +78,7 @@ export default function CategoryDetailsScreen() {
       ...totals,
     }))
   })()
-  const filtersApplied = hasActiveFilters(filterState, searchState)
+  const filtersApplied = hasActiveFilters(filterState, listSearchState)
   useLayoutEffect(() => {
     navigation.setOptions({
       title: category?.name ?? "",
@@ -189,7 +190,7 @@ export default function CategoryDetailsScreen() {
       <TransactionSectionList
         transactionsFull={transactionsFull}
         filterState={filterState}
-        searchState={searchState}
+        searchState={listSearchState}
         showUpcoming
         ListHeaderComponent={headerContent}
       />

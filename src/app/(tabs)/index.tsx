@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router"
-import { useMemo, useState } from "react"
+import { useDeferredValue, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
@@ -55,6 +55,8 @@ function HomeScreen() {
   const accounts = useActiveAccounts()
   const showBalanceOnHome = useMoneyFormattingStore((s) => s.showBalanceOnHome)
   const showPaceOnHome = useBudgetPaceStore((s) => s.showOnHome)
+  // The list and summary read the deferred copy, so typing never waits for them.
+  const listSearchState = useDeferredValue(searchState)
   // dayKey re-bumps on app-foreground and at each date change, so "this month"
   // re-derives after a month rollover instead of serving a memoized stale range.
   const dayKey = useDayKey()
@@ -69,8 +71,8 @@ function HomeScreen() {
     })
   // The summary describes the rows the filters keep, like the list below it.
   const filteredTransactions = useMemo(
-    () => applyFiltersAndSearch(transactionsFull, filterState, searchState),
-    [transactionsFull, filterState, searchState],
+    () => applyFiltersAndSearch(transactionsFull, filterState, listSearchState),
+    [transactionsFull, filterState, listSearchState],
   )
   const summaryHeader = (
     <>
@@ -83,7 +85,7 @@ function HomeScreen() {
       {showPaceOnHome ? <HomePaceAlerts /> : null}
       <SummarySection
         transactionsWithRelations={filteredTransactions}
-        filtered={hasActiveFilters(filterState, searchState)}
+        filtered={hasActiveFilters(filterState, listSearchState)}
       />
     </>
   )
@@ -127,7 +129,7 @@ function HomeScreen() {
       <TransactionSectionList
         transactionsFull={transactionsFull}
         filterState={filterState}
-        searchState={searchState}
+        searchState={listSearchState}
         showUpcoming
         upcomingHorizonDays={homeTimeframe}
         ListHeaderComponent={summaryHeader}

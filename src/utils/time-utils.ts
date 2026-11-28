@@ -29,7 +29,6 @@ import { enUS } from "date-fns/locale/en-US"
 import { startOfMonth } from "date-fns/startOfMonth"
 import { startOfWeek } from "date-fns/startOfWeek"
 import { subWeeks } from "date-fns/subWeeks"
-import { getCalendars } from "expo-localization"
 
 import i18n from "~/i18n/config"
 import { LangCodeEnum, type LangCodeType } from "~/i18n/language.constants"
@@ -40,6 +39,7 @@ import {
   useCalendarFormatStore,
 } from "~/stores/calendar-format.store"
 
+import { getDeviceCalendar } from "./device-calendar"
 import { getWeekStartsOn } from "./get-week-start-on"
 
 // date-fns exports these two types only through its index, so derive them.
@@ -125,7 +125,7 @@ function dateOrder(): ResolvedDateOrder {
 /** The device's 12h/24h clock setting, or undefined when it can't be read. */
 function deviceUses24HourClock(): boolean | undefined {
   try {
-    return getCalendars()[0]?.uses24hourClock ?? undefined
+    return getDeviceCalendar()?.uses24hourClock ?? undefined
   } catch {
     return undefined
   }

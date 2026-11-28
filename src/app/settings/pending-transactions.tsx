@@ -44,6 +44,7 @@ export default function PendingTransactionsScreen() {
     filterState,
     setFilterState,
     searchState,
+    listSearchState,
     setSearchState,
     showFilters,
     toggleFilters,
@@ -61,13 +62,16 @@ export default function PendingTransactionsScreen() {
   })
   const transferLayout = useTransfersPreferencesStore((s) => s.layout)
   const transactionsFull = applyTransferLayout(
-    applySearch(applyTransactionFilters(allPending, filterState), searchState),
+    applySearch(
+      applyTransactionFilters(allPending, filterState),
+      listSearchState,
+    ),
     transferLayout,
   )
   const updateDateUponConfirmation = usePendingTransactionsStore(
     (s) => s.updateDateUponConfirmation,
   )
-  const filtersApplied = hasActiveFilters(filterState, searchState)
+  const filtersApplied = hasActiveFilters(filterState, listSearchState)
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
