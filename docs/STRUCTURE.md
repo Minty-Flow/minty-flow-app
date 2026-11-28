@@ -789,6 +789,7 @@
 │       ├── profile-image.ts
 │       ├── recurrence.ts
 │       ├── reload-app.ts
+│       ├── splash.ts
 │       ├── stats-date-range.ts
 │       ├── string-utils.ts
 │       ├── time-utils.ts

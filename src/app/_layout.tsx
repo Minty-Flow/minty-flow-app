@@ -40,6 +40,7 @@ import { useOnboardingStore } from "~/stores/onboarding.store"
 import { NewEnum } from "~/types/new"
 import { forgetDeviceCalendar } from "~/utils/device-calendar"
 import { logger } from "~/utils/logger"
+import { hideSplash, holdSplash } from "~/utils/splash"
 
 import migrations from "../../drizzle/migrations"
 
@@ -55,6 +56,8 @@ Notifications.setNotificationHandler({
     shouldShowList: true,
   }),
 })
+
+holdSplash()
 
 // Added before any screen's own listener, so they all read fresh settings.
 AppState.addEventListener("change", (state) => {
@@ -78,6 +81,7 @@ function DrizzleMigratedApp() {
       logger.error("Database migration failed", {
         error: migration.error.message,
       })
+      hideSplash()
     }
   }, [migration.error])
 
@@ -127,6 +131,17 @@ function AppRootLayout() {
       router.replace("/onboarding")
     }
   }, [isOnboardingCompleted, isOnboardingInProgress, segments, router])
+
+  const isRedirectingToOnboarding =
+    !isOnboardingCompleted &&
+    !isOnboardingInProgress &&
+    segments[0] !== "onboarding"
+  useEffect(() => {
+    if (isRedirectingToOnboarding) return
+    // One frame later, so the first screen is drawn when the splash lifts.
+    const frame = requestAnimationFrame(hideSplash)
+    return () => cancelAnimationFrame(frame)
+  }, [isRedirectingToOnboarding])
 
   useEffect(() => {
     if (Platform.OS === "android") {

@@ -14,11 +14,11 @@ import { logger } from "~/utils/logger"
 const WRITE_SETTLE_MS = 500
 
 /**
- * Syncs pending-transaction notifications: once on mount, whenever the app
- * returns to foreground, whenever the notify/earlyReminderInSeconds
- * preferences or the language change, and after any write that can change a pending
- * transaction. Runs never overlap, so a sync that starts mid-run repeats once
- * afterwards instead of racing the first.
+ * Syncs pending-transaction notifications: when the app first goes idle,
+ * whenever it returns to foreground, whenever the notify/earlyReminderInSeconds
+ * preferences or the language change, and after any write that can change a
+ * pending transaction. Runs never overlap, so a sync that starts mid-run repeats
+ * once afterwards instead of racing the first.
  */
 export function useNotificationSync(): void {
   useEffect(() => {
@@ -45,7 +45,8 @@ export function useNotificationSync(): void {
       }
     }
 
-    run()
+    // Not during the first render, which the splash is waiting for.
+    const firstRun = requestIdleCallback(() => run())
 
     const writeSub = onWriteCommitted((name) => {
       if (!writeAffectsPendingTransactions(name)) return
@@ -72,6 +73,7 @@ export function useNotificationSync(): void {
 
     return () => {
       i18n.off("languageChanged", run)
+      cancelIdleCallback(firstRun)
       if (settleTimer) clearTimeout(settleTimer)
       writeSub()
       appStateSub.remove()

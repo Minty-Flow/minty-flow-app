@@ -18,14 +18,28 @@ import {
 import { useAppLockStore } from "~/stores/app-lock.store"
 import { useExportHistoryStore } from "~/stores/export-history.store"
 import { logger } from "~/utils/logger"
+import { hideSplash } from "~/utils/splash"
 
 import migrations from "../../drizzle/migrations"
 
-type Phase = "checking" | "prompt" | "ready"
+type Phase = "prompt" | "ready"
+
+function checkPhase(): Phase {
+  try {
+    return hasPendingMigrationsWithData(migrations) ? "prompt" : "ready"
+  } catch (error) {
+    // Never block the app on a failed check; the migrator reports real problems.
+    logger.error("Pending migration check failed", {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return "ready"
+  }
+}
 
 export function PreUpdateBackupGate({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
-  const [phase, setPhase] = useState<Phase>("checking")
+  // Checked while the first state is made: the splash is still up.
+  const [phase, setPhase] = useState(checkPhase)
   // Toasts are not mounted yet at this point, so a failure is shown in the sheet.
   const [failed, setFailed] = useState(false)
   // Reading the store forces its synchronous MMKV rehydration before the
@@ -33,16 +47,8 @@ export function PreUpdateBackupGate({ children }: { children: ReactNode }) {
   const lockAppEnabled = useAppLockStore((s) => s.lockAppEnabled)
 
   useEffect(() => {
-    try {
-      setPhase(hasPendingMigrationsWithData(migrations) ? "prompt" : "ready")
-    } catch (error) {
-      // Never block the app on a failed check; the migrator reports real problems.
-      logger.error("Pending migration check failed", {
-        error: error instanceof Error ? error.message : String(error),
-      })
-      setPhase("ready")
-    }
-  }, [])
+    if (phase === "prompt") hideSplash()
+  }, [phase])
 
   const handleSaveBackup = async () => {
     // §7.1: an export hands over the full DB + attachments, so re-verify the
