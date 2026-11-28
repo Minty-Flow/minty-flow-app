@@ -50,11 +50,8 @@ export function EmptyState({
         </Text>
       ) : null}
       {action ? (
-        <Button
-          variant="secondary"
-          style={styles.action}
-          onPress={action.onPress}
-        >
+        // The primary style: the card itself is the secondary colour.
+        <Button style={styles.action} onPress={action.onPress}>
           <Text>{action.label}</Text>
         </Button>
       ) : null}
