@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useNavigation, useRouter } from "expo-router"
 import { useState } from "react"
-import { Controller, useForm } from "react-hook-form"
+import { Controller, useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
 import { ChangeIconInline } from "~/components/change-icon-inline"
@@ -82,7 +82,6 @@ export function BudgetModifyContent({
     control,
     handleSubmit: handleFormSubmit,
     formState: { errors, isDirty, isSubmitting },
-    watch,
     setValue,
   } = useForm<AddBudgetFormSchema>({
     resolver: zodResolver(addBudgetSchema),
@@ -101,18 +100,17 @@ export function BudgetModifyContent({
       isActive: budget?.isActive ?? true,
     },
   })
-  const formName = watch("name")
-  const formIcon = watch("icon")
-  const formColorSchemeName = watch("colorSchemeName")
-  const watchedCurrencyCode = watch("currencyCode")
-  const watchedAmount = watch("amount")
-  const watchedAccountIds = watch("accountIds")
-  const watchedPeriod = watch("period")
-  const watchedCategoryIds = watch("categoryIds")
-  const watchedAlertThreshold = watch("alertThreshold")
-  const watchedStartDate = watch("startDate")
-  const watchedEndDate = watch("endDate")
-  const isActive = watch("isActive")
+  const formIcon = useWatch({ control, name: "icon" })
+  const formColorSchemeName = useWatch({ control, name: "colorSchemeName" })
+  const watchedCurrencyCode = useWatch({ control, name: "currencyCode" })
+  const watchedAmount = useWatch({ control, name: "amount" })
+  const watchedAccountIds = useWatch({ control, name: "accountIds" })
+  const watchedPeriod = useWatch({ control, name: "period" })
+  const watchedCategoryIds = useWatch({ control, name: "categoryIds" })
+  const watchedAlertThreshold = useWatch({ control, name: "alertThreshold" })
+  const watchedStartDate = useWatch({ control, name: "startDate" })
+  const watchedEndDate = useWatch({ control, name: "endDate" })
+  const isActive = useWatch({ control, name: "isActive" })
   const navigation = useNavigation()
   const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
@@ -534,7 +532,7 @@ export function BudgetModifyContent({
 
       <ModifyFormFooter
         onHeightChange={setFooterHeight}
-        formName={formName}
+        control={control}
         isAddMode={isAddMode}
         isDirty={isDirty}
         isSubmitting={isSubmitting}

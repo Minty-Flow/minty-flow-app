@@ -1,3 +1,9 @@
+import {
+  type Control,
+  type FieldValues,
+  type Path,
+  useWatch,
+} from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
 import { FooterBar } from "~/components/footer-bar"
@@ -6,8 +12,9 @@ import { KeyboardStickyFooter } from "~/components/keyboard-sticky-footer"
 import { Button } from "~/components/ui/button"
 import { Text } from "~/components/ui/text"
 
-interface ModifyFormFooterProps {
-  formName: string
+interface ModifyFormFooterProps<TValues extends FieldValues, TOutput> {
+  /** The form's control. The footer reads its `name`, so typing it renders only here. */
+  control: Control<TValues, unknown, TOutput>
   isAddMode: boolean
   isDirty: boolean
   isSubmitting: boolean
@@ -20,8 +27,8 @@ interface ModifyFormFooterProps {
 }
 
 /** Cancel / Create-or-Save footer shared by every create / edit form. */
-export function ModifyFormFooter({
-  formName,
+export function ModifyFormFooter<TValues extends FieldValues, TOutput>({
+  control,
   isAddMode,
   isDirty,
   isSubmitting,
@@ -29,8 +36,10 @@ export function ModifyFormFooter({
   onCancel,
   onSave,
   onHeightChange,
-}: ModifyFormFooterProps) {
+}: ModifyFormFooterProps<TValues, TOutput>) {
   const { t } = useTranslation()
+  const name: string =
+    useWatch({ control, name: "name" as Path<TValues> }) ?? ""
 
   return (
     <KeyboardStickyFooter onHeightChange={onHeightChange}>
@@ -49,9 +58,7 @@ export function ModifyFormFooter({
             variant="default"
             onPress={onSave}
             style={footerBarStyles.button}
-            disabled={
-              !formName.trim() || (!isAddMode && !isDirty) || isSubmitting
-            }
+            disabled={!name.trim() || (!isAddMode && !isDirty) || isSubmitting}
           >
             <Text variant="default" style={footerBarStyles.saveText}>
               {isSubmitting

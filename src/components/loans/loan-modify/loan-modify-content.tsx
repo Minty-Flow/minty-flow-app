@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
 import { useState } from "react"
-import { Controller, useForm } from "react-hook-form"
+import { Controller, useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
@@ -72,7 +72,6 @@ export function LoanModifyContent({
     control,
     handleSubmit: handleFormSubmit,
     formState: { errors, isDirty, isSubmitting },
-    watch,
     setValue,
   } = useForm<AddLoanFormSchema>({
     resolver: zodResolver(addLoanSchema),
@@ -89,15 +88,14 @@ export function LoanModifyContent({
       dueDate: loan?.dueDate ? loan.dueDate.getTime() : null,
     },
   })
-  const formLoanType = watch("loanType")
-  const formTerm = watch("term") ?? "one_time"
-  const formName = watch("name")
-  const formIcon = watch("icon")
-  const formColorSchemeName = watch("colorSchemeName")
-  const formAccountId = watch("accountId")
-  const formPrincipalAmount = watch("principalAmount")
-  const formCategoryId = watch("categoryId")
-  const formDueDate = watch("dueDate")
+  const formLoanType = useWatch({ control, name: "loanType" })
+  const formTerm = useWatch({ control, name: "term" }) ?? "one_time"
+  const formIcon = useWatch({ control, name: "icon" })
+  const formColorSchemeName = useWatch({ control, name: "colorSchemeName" })
+  const formAccountId = useWatch({ control, name: "accountId" })
+  const formPrincipalAmount = useWatch({ control, name: "principalAmount" })
+  const formCategoryId = useWatch({ control, name: "categoryId" })
+  const formDueDate = useWatch({ control, name: "dueDate" })
   // Filter categories by the loan type currently selected in the form:
   // LENT loans create an expense transaction → show expense categories
   // BORROWED loans create an income transaction → show income categories
@@ -154,63 +152,65 @@ export function LoanModifyContent({
     onConfirm: (date) =>
       setValue("dueDate", date.getTime(), { shouldDirty: true }),
   })
-  const onSubmit = async (data: AddLoanFormSchema) => {
+  const saveLoan = async (data: AddLoanFormSchema) => {
     const trimmedName = data.name.trim()
-    try {
-      if (isAddMode) {
-        await createLoan({
-          ...data,
-          name: trimmedName,
-          description: data.description ?? null,
-          dueDate: data.dueDate ?? null,
-          icon: data.icon ?? null,
-          colorSchemeName: data.colorSchemeName ?? null,
-          initialTransactionTitle: t(
-            "screens.settings.loans.initialTransaction.title",
-            { name: trimmedName },
-          ),
-        })
-        if (billParticipantId)
-          useBillSplitterStore.getState().markRecorded(billParticipantId)
-        allowNavigation()
-        handleGoBack()
-      } else {
-        await updateLoanById(loanModifyId, {
-          ...data,
-          name: trimmedName,
-          description: data.description ?? null,
-          dueDate: data.dueDate ?? null,
-          icon: data.icon ?? null,
-          colorSchemeName: data.colorSchemeName ?? null,
-        })
-        allowNavigation()
-        handleGoBack()
-      }
-    } catch (error) {
+    if (isAddMode) {
+      await createLoan({
+        ...data,
+        name: trimmedName,
+        description: data.description ?? null,
+        dueDate: data.dueDate ?? null,
+        icon: data.icon ?? null,
+        colorSchemeName: data.colorSchemeName ?? null,
+        initialTransactionTitle: t(
+          "screens.settings.loans.initialTransaction.title",
+          { name: trimmedName },
+        ),
+      })
+      if (billParticipantId)
+        useBillSplitterStore.getState().markRecorded(billParticipantId)
+      allowNavigation()
+      handleGoBack()
+    } else {
+      await updateLoanById(loanModifyId, {
+        ...data,
+        name: trimmedName,
+        description: data.description ?? null,
+        dueDate: data.dueDate ?? null,
+        icon: data.icon ?? null,
+        colorSchemeName: data.colorSchemeName ?? null,
+      })
+      allowNavigation()
+      handleGoBack()
+    }
+  }
+  // `.catch`, not try/catch, which React Compiler cannot compile here.
+  const onSubmit = (data: AddLoanFormSchema) =>
+    saveLoan(data).catch((error) => {
       logger.error("Error saving loan", { error })
       Toast.error({
         title: t("common.toast.error"),
       })
-    }
-  }
+    })
   const handleSubmit = handleFormSubmit(onSubmit)
-  const handleDelete = async () => {
-    try {
-      if (!loan) {
-        Toast.error({
-          title: t("common.toast.error"),
-        })
-        return false
-      }
-      await deleteLoanById(loanModifyId)
-    } catch (error) {
-      logger.error("Error deleting loan", { error })
+  const deleteLoan = async () => {
+    if (!loan) {
       Toast.error({
         title: t("common.toast.error"),
       })
       return false
     }
+    await deleteLoanById(loanModifyId)
   }
+  // `.catch`, not try/catch, which React Compiler cannot compile here.
+  const handleDelete = () =>
+    deleteLoan().catch((error) => {
+      logger.error("Error deleting loan", { error })
+      Toast.error({
+        title: t("common.toast.error"),
+      })
+      return false
+    })
   // Runs once the delete sheet has closed: leaving earlier tears it down mid-animation.
   const handleDeleted = () => {
     allowNavigation()
@@ -454,7 +454,7 @@ export function LoanModifyContent({
 
       <ModifyFormFooter
         onHeightChange={setFooterHeight}
-        formName={formName}
+        control={control}
         isAddMode={isAddMode}
         isDirty={isDirty}
         isSubmitting={isSubmitting}

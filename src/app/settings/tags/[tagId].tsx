@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router"
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { StyleSheet } from "react-native-unistyles"
 
@@ -47,7 +47,6 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
     control,
     handleSubmit: handleFormSubmit,
     formState: { errors, isDirty, isSubmitting },
-    watch,
     setValue,
   } = useForm({
     resolver: zodResolver(addTagsSchema),
@@ -58,10 +57,9 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
       colorSchemeName: tag?.colorSchemeName || undefined,
     },
   })
-  const formName = watch("name")
-  const formIcon = watch("icon")
-  const formColorSchemeName = watch("colorSchemeName")
-  const formType = watch("type")
+  const formIcon = useWatch({ control, name: "icon" })
+  const formColorSchemeName = useWatch({ control, name: "colorSchemeName" })
+  const formType = useWatch({ control, name: "type" })
   const iconBasedType = (type?: TagKindType): IconSvgName => {
     if (type === TagKindEnum.CONTACT) return "address-book-outline"
     if (type === TagKindEnum.LOCATION) return "map-outline"
@@ -162,7 +160,7 @@ function EditTagScreenInner({ tagId, tag }: EditTagScreenInnerProps) {
 
       <ModifyFormFooter
         onHeightChange={setFooterHeight}
-        formName={formName}
+        control={control}
         isAddMode={isAddMode}
         isDirty={isDirty}
         isSubmitting={isSubmitting}

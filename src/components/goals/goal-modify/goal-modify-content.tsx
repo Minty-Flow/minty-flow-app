@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useNavigation, useRouter } from "expo-router"
 import { useState } from "react"
-import { Controller, useForm } from "react-hook-form"
+import { Controller, useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useUnistyles } from "react-native-unistyles"
 
@@ -71,7 +71,6 @@ export function GoalModifyContent({
     control,
     handleSubmit: handleFormSubmit,
     formState: { errors, isDirty, isSubmitting },
-    watch,
     setValue,
   } = useForm<AddGoalFormSchema>({
     resolver: zodResolver(addGoalSchema),
@@ -87,15 +86,14 @@ export function GoalModifyContent({
       targetDate: goal?.targetDate ? goal.targetDate.getTime() : null,
     },
   })
-  const formGoalType = watch("goalType")
-  const formName = watch("name")
-  const formIcon = watch("icon")
-  const formColorSchemeName = watch("colorSchemeName")
+  const formGoalType = useWatch({ control, name: "goalType" })
+  const formIcon = useWatch({ control, name: "icon" })
+  const formColorSchemeName = useWatch({ control, name: "colorSchemeName" })
   const hasLinkedTransactions = useGoalHasLinkedTransactions(goal?.id)
-  const formCurrencyCode = watch("currencyCode")
-  const formAccountIds = watch("accountIds")
-  const formTargetAmount = watch("targetAmount")
-  const formTargetDate = watch("targetDate")
+  const formCurrencyCode = useWatch({ control, name: "currencyCode" })
+  const formAccountIds = useWatch({ control, name: "accountIds" })
+  const formTargetAmount = useWatch({ control, name: "targetAmount" })
+  const formTargetDate = useWatch({ control, name: "targetDate" })
   const navigation = useNavigation()
   const [unsavedSheetVisible, setUnsavedSheetVisible] = useState(false)
   const { allowNavigation } = useNavigationGuard({
@@ -406,7 +404,7 @@ export function GoalModifyContent({
 
       <ModifyFormFooter
         onHeightChange={setFooterHeight}
-        formName={formName}
+        control={control}
         isAddMode={isAddMode}
         isDirty={isDirty}
         isSubmitting={isSubmitting}

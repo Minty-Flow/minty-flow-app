@@ -42,7 +42,6 @@ export function AccountModifyContent({
     errors,
     isDirty,
     isSubmitting,
-    formName,
     formIcon,
     formColorSchemeName,
     formType,
@@ -189,7 +188,7 @@ export function AccountModifyContent({
 
       <ModifyFormFooter
         onHeightChange={setFooterHeight}
-        formName={formName}
+        control={control}
         isAddMode={isAddMode}
         isDirty={isDirty}
         isSubmitting={isSubmitting}
