@@ -28,6 +28,7 @@
 │   │   ├── drizzle/
 │   │   │   └── read-models/
 │   │   │       ├── budget-spend-query.test.ts
+│   │   │       ├── query-plans.test.ts
 │   │   │       ├── recent-items.test.ts
 │   │   │       ├── stats-data.test.ts
 │   │   │       ├── stats-extras-data.test.ts
@@ -595,6 +596,7 @@
 │   │   │   │   ├── account-read-model.ts
 │   │   │   │   ├── budget-read-model.ts
 │   │   │   │   ├── budget-spend-query.ts
+│   │   │   │   ├── category-counts-query.ts
 │   │   │   │   ├── category-read-model.ts
 │   │   │   │   ├── entity-read-model.ts
 │   │   │   │   ├── goal-read-model.ts
