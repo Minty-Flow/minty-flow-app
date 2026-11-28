@@ -12,6 +12,7 @@ import { ActivityIndicatorMinty } from "~/components/ui/activity-indicator-minty
 import { Pressable } from "~/components/ui/pressable"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { useScreenTransitionDone } from "~/hooks/use-screen-transition-done"
 import type { TransactionLocation } from "~/types/transactions"
 
 const H_PAD = 20
@@ -74,6 +75,8 @@ export function FormLocationPicker({
 }: FormLocationPickerProps) {
   const { t } = useTranslation()
   const { theme } = useUnistyles()
+  // Starting a web view during the screen transition drops frames.
+  const isScreenSettled = useScreenTransitionDone()
   const previewHtml = (() => {
     if (!location) return null
     return buildPreviewHtml(
@@ -90,18 +93,22 @@ export function FormLocationPicker({
         <Pressable style={StyleSheet.absoluteFill} onPress={onPress}>
           {/* WebView is visual-only; pointer events disabled so Pressable gets taps */}
           <View style={StyleSheet.absoluteFill} pointerEvents="none">
-            <WebView
-              style={styles.webview}
-              source={{ html: previewHtml }}
-              scrollEnabled={false}
-              javaScriptEnabled
-              domStorageEnabled
-              originWhitelist={[
-                "https://unpkg.com",
-                "https://*.tile.openstreetmap.org",
-                "about:blank",
-              ]}
-            />
+            {isScreenSettled ? (
+              <WebView
+                style={styles.webview}
+                source={{ html: previewHtml }}
+                scrollEnabled={false}
+                javaScriptEnabled
+                domStorageEnabled
+                originWhitelist={[
+                  "https://unpkg.com",
+                  "https://*.tile.openstreetmap.org",
+                  "about:blank",
+                ]}
+              />
+            ) : (
+              <View style={styles.webview} />
+            )}
           </View>
         </Pressable>
 

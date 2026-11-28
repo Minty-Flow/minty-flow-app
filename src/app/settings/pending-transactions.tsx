@@ -12,6 +12,7 @@ import { TransactionFilterHeader } from "~/components/transaction/transaction-fi
 import { TransactionItem } from "~/components/transaction/transaction-item"
 import { EmptyState } from "~/components/ui/empty-state"
 import { View } from "~/components/ui/view"
+import { TRANSACTION_LIST_WINDOW } from "~/constants/list-window"
 import {
   type TransactionWithRelations,
   useTransactions,
@@ -136,6 +137,7 @@ export default function PendingTransactionsScreen() {
       )}
 
       <FlatList
+        {...TRANSACTION_LIST_WINDOW}
         contentContainerStyle={[
           styles.content,
           transactionsFull.length === 0 && styles.contentEmpty,

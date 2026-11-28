@@ -19,6 +19,7 @@ import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { TRANSACTION_LIST_WINDOW } from "~/constants/list-window"
 import { useAccounts } from "~/database/drizzle/read-models/account-read-model"
 import { useGoalsQuery } from "~/database/drizzle/read-models/goal-read-model"
 import {
@@ -307,6 +308,7 @@ function GoalDetailInner({ goalId }: { goalId: string }) {
   return (
     <View style={planningDetailStyles.container}>
       <FlatList
+        {...TRANSACTION_LIST_WINDOW}
         data={transactionsFull}
         keyExtractor={(item) => item.id}
         renderItem={renderTransactionItem}

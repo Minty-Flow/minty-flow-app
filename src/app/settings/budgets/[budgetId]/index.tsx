@@ -18,6 +18,7 @@ import { Button } from "~/components/ui/button"
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { TRANSACTION_LIST_WINDOW } from "~/constants/list-window"
 import { useAccounts } from "~/database/drizzle/read-models/account-read-model"
 import { useBudgetsQuery } from "~/database/drizzle/read-models/budget-read-model"
 import { useCategories } from "~/database/drizzle/read-models/category-read-model"
@@ -338,6 +339,7 @@ function BudgetDetailInner({ budgetId }: { budgetId: string }) {
   return (
     <View style={planningDetailStyles.container}>
       <FlatList
+        {...TRANSACTION_LIST_WINDOW}
         data={budgetTransactions}
         keyExtractor={(item) => item.id}
         renderItem={renderTransactionItem}

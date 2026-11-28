@@ -4,6 +4,7 @@
  *
  * Used by both the home screen and the account detail screen.
  */
+
 import { useRouter } from "expo-router"
 import {
   type ComponentProps,
@@ -24,6 +25,7 @@ import { UpcomingTransactionsSection } from "~/components/transaction/upcoming-t
 import { EmptyState } from "~/components/ui/empty-state"
 import { Text } from "~/components/ui/text"
 import { View } from "~/components/ui/view"
+import { TRANSACTION_LIST_WINDOW } from "~/constants/list-window"
 import type { TransactionWithRelations } from "~/database/drizzle/read-models/transaction-read-model"
 import { useSingleOpenSwipeable } from "~/hooks/use-transaction-list-state"
 import { useTransfersPreferencesStore } from "~/stores/transfers-preferences.store"
@@ -207,9 +209,7 @@ export function TransactionSectionList({
       ListHeaderComponent={header}
       ListEmptyComponent={emptyList}
       keyExtractor={keyExtractor}
-      initialNumToRender={12}
-      windowSize={7}
-      maxToRenderPerBatch={10}
+      {...TRANSACTION_LIST_WINDOW}
       renderItem={renderItem}
       renderSectionHeader={({ section }) => {
         const s = section
