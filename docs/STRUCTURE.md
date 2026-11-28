@@ -27,6 +27,7 @@
 │   │   │   └── post-import-repairs.test.ts
 │   │   ├── drizzle/
 │   │   │   └── read-models/
+│   │   │       ├── budget-spend-query.test.ts
 │   │   │       ├── recent-items.test.ts
 │   │   │       ├── stats-data.test.ts
 │   │   │       ├── stats-extras-data.test.ts
@@ -305,6 +306,7 @@
 │   │   │   │   ├── budget-modify.styles.ts
 │   │   │   │   └── types.ts
 │   │   │   ├── budget-card.tsx
+│   │   │   ├── budget-pace-sync.tsx
 │   │   │   ├── home-pace-alerts.tsx
 │   │   │   └── pace-warning.tsx
 │   │   ├── calendar-format/
@@ -592,6 +594,7 @@
 │   │   │   ├── read-models/
 │   │   │   │   ├── account-read-model.ts
 │   │   │   │   ├── budget-read-model.ts
+│   │   │   │   ├── budget-spend-query.ts
 │   │   │   │   ├── category-read-model.ts
 │   │   │   │   ├── entity-read-model.ts
 │   │   │   │   ├── goal-read-model.ts
@@ -692,6 +695,7 @@
 │   │   ├── app-lock.store.ts
 │   │   ├── bill-splitter.store.ts
 │   │   ├── budget-pace.store.ts
+│   │   ├── budgets-on-pace.store.ts
 │   │   ├── button-placement.store.ts
 │   │   ├── calendar-format.store.ts
 │   │   ├── development-notice.store.ts
